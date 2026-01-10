@@ -1,7 +1,6 @@
 title: Stream Tiered Assessment Framework
 description: "A tiered, functions-based framework for stream assessment."
 remote_theme: just-the-docs/just-the-docs
-theme: just-the-docs
 color_scheme: light
 search_enabled: false
 nav_enabled: false
