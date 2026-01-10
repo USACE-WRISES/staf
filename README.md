@@ -13,6 +13,7 @@ If you want to preview locally, you can run Jekyll from the `docs/` folder:
 ```bash
 bundle install
 bundle exec jekyll serve
+bundle exec jekyll serve --livereload
 ```
 
 If you do not have Jekyll installed, you can rely on GitHub Pages to build the site.
