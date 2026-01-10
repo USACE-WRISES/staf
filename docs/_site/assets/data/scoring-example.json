@@ -1,0 +1,22 @@
+[
+  {"function_id": "catchment-hydrology", "score": 9.0},
+  {"function_id": "surface-water-storage", "score": 8.5},
+  {"function_id": "reach-inflow", "score": 7.0},
+  {"function_id": "streamflow-regime", "score": 10.0},
+  {"function_id": "low-flow-baseflow-dynamics", "score": 9.0},
+  {"function_id": "high-flow-dynamics", "score": 7.5},
+  {"function_id": "floodplain-connectivity", "score": 8.5},
+  {"function_id": "hyporheic-connectivity", "score": 7.5},
+  {"function_id": "channel-evolution", "score": 7.0},
+  {"function_id": "channel-floodplain-dynamics", "score": 7.5},
+  {"function_id": "sediment-continuity", "score": 8.5},
+  {"function_id": "bed-composition-bedform-dynamics", "score": 9.0},
+  {"function_id": "light-thermal-regime", "score": 6.0},
+  {"function_id": "carbon-processing", "score": 7.5},
+  {"function_id": "nutrient-cycling", "score": 8.5},
+  {"function_id": "water-soil-quality", "score": 6.0},
+  {"function_id": "habitat-provision", "score": 10.5},
+  {"function_id": "population-support", "score": 10.0},
+  {"function_id": "community-dynamics", "score": 9.0},
+  {"function_id": "watershed-connectivity", "score": 8.5}
+]

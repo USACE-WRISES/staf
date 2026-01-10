@@ -1,0 +1,37 @@
+title: Stream Tiered Assessment Framework
+description: "A tiered, functions-based framework for stream assessment."
+remote_theme: just-the-docs/just-the-docs
+theme: just-the-docs
+color_scheme: light
+search_enabled: false
+nav_enabled: false
+
+# If your site is served from a subpath, set baseurl (example: /stream-tiered-assessment-framework)
+baseurl: ""
+permalink: pretty
+
+plugins:
+  - jekyll-remote-theme
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
+
+just_the_docs:
+  custom_css:
+    - assets/css/custom.css
+  custom_js:
+    - assets/js/tier-selector.js
+    - assets/js/functions-explorer.js
+    - assets/js/scoring-sandbox.js
+
+footer_content: "Last updated: 2025-01-01"
+
+gh_edit_link: false
+gh_edit_link_text: "Edit this page on GitHub"
+gh_edit_repository: "https://github.com/YOUR_ORG/stream-tiered-assessment-framework"
+gh_edit_branch: "main"
+gh_edit_view_mode: "tree"
