@@ -24,7 +24,7 @@ description: "Landing page for the Stream Tiered Assessment Framework."
       <div class="hero-media reveal">
         <div class="hero-carousel image-frame" data-interval="10000">
           <div class="hero-carousel-track">
-            {% assign image_files = site.static_files | where_exp: "file", "file.path contains 'assets/images/' or file.path contains 'assets\\\\images\\\\'" %}
+            {% assign image_files = site.static_files | where_exp: "file", "file.relative_path contains '/assets/images/'" %}
             {% assign carousel_images = image_files | where_exp: "file", "file.extname == '.jpg' or file.extname == '.jpeg' or file.extname == '.png' or file.extname == '.webp' or file.extname == '.JPG' or file.extname == '.JPEG' or file.extname == '.PNG' or file.extname == '.WEBP'" | where_exp: "file", "file.name != 'large-image.jpg' and file.name != 'small-image.jpg'" | sort: "name" %}
             {% if carousel_images.size > 0 %}
               {% for image in carousel_images %}
