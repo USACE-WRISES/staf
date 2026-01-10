@@ -26,13 +26,16 @@ description: "Landing page for the Stream Tiered Assessment Framework."
           <div class="hero-carousel-track">
             {% assign carousel_count = 0 %}
             {% assign sorted_files = site.static_files | sort: "name" %}
+            {% assign normalized_source = site.source | replace: '\\', '/' %}
             {% for file in sorted_files %}
-              {% if file.relative_path contains '/assets/images/' %}
+              {% assign normalized_path = file.path | replace: '\\', '/' %}
+              {% if normalized_path contains '/assets/images/' %}
                 {% assign ext = file.extname | downcase %}
                 {% if ext == '.jpg' or ext == '.jpeg' or ext == '.png' or ext == '.webp' %}
                   {% if file.name != 'large-image.jpg' and file.name != 'small-image.jpg' %}
                     {% assign carousel_count = carousel_count | plus: 1 %}
-                    <img class="carousel-image{% if carousel_count == 1 %} is-active{% endif %}" src="{{ file.path | relative_url }}" alt="Stream image {{ carousel_count }}">
+                    {% assign relative_image = normalized_path | replace: normalized_source, '' %}
+                    <img class="carousel-image{% if carousel_count == 1 %} is-active{% endif %}" src="{{ relative_image | relative_url }}" alt="Stream image {{ carousel_count }}">
                   {% endif %}
                 {% endif %}
               {% endif %}
