@@ -6,7 +6,8 @@ search_enabled: false
 nav_enabled: false
 
 # If your site is served from a subpath, set baseurl (example: /stream-tiered-assessment-framework)
-baseurl: ""
+url: "https://usace-wrises.github.io"
+baseurl: "/stream-tiered-assessment-framework"
 permalink: pretty
 
 plugins:
@@ -31,6 +32,6 @@ footer_content: "Last updated: 2025-01-01"
 
 gh_edit_link: false
 gh_edit_link_text: "Edit this page on GitHub"
-gh_edit_repository: "https://github.com/YOUR_ORG/stream-tiered-assessment-framework"
+gh_edit_repository: "https://github.com/USACE-WRISES/stream-tiered-assessment-framework"
 gh_edit_branch: "main"
 gh_edit_view_mode: "tree"
