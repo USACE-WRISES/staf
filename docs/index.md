@@ -24,13 +24,20 @@ description: "Landing page for the Stream Tiered Assessment Framework."
       <div class="hero-media reveal">
         <div class="hero-carousel image-frame" data-interval="10000">
           <div class="hero-carousel-track">
-            {% assign image_files = site.static_files | where_exp: "file", "file.relative_path contains '/assets/images/'" %}
-            {% assign carousel_images = image_files | where_exp: "file", "file.extname == '.jpg' or file.extname == '.jpeg' or file.extname == '.png' or file.extname == '.webp' or file.extname == '.JPG' or file.extname == '.JPEG' or file.extname == '.PNG' or file.extname == '.WEBP'" | where_exp: "file", "file.name != 'large-image.jpg' and file.name != 'small-image.jpg'" | sort: "name" %}
-            {% if carousel_images.size > 0 %}
-              {% for image in carousel_images %}
-                <img class="carousel-image{% if forloop.first %} is-active{% endif %}" src="{{ image.path | relative_url }}" alt="Stream image {{ forloop.index }}">
-              {% endfor %}
-            {% else %}
+            {% assign carousel_count = 0 %}
+            {% assign sorted_files = site.static_files | sort: "name" %}
+            {% for file in sorted_files %}
+              {% if file.relative_path contains '/assets/images/' %}
+                {% assign ext = file.extname | downcase %}
+                {% if ext == '.jpg' or ext == '.jpeg' or ext == '.png' or ext == '.webp' %}
+                  {% if file.name != 'large-image.jpg' and file.name != 'small-image.jpg' %}
+                    {% assign carousel_count = carousel_count | plus: 1 %}
+                    <img class="carousel-image{% if carousel_count == 1 %} is-active{% endif %}" src="{{ file.path | relative_url }}" alt="Stream image {{ carousel_count }}">
+                  {% endif %}
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            {% if carousel_count == 0 %}
               <div class="carousel-empty">No images found in assets/images.</div>
             {% endif %}
           </div>
