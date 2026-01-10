@@ -1,0 +1,182 @@
+[
+  {
+    "id": "project-phase",
+    "question": "Project phase",
+    "answers": [
+      {
+        "value": "screening",
+        "label": "Watershed scoping or early screening",
+        "score_screening": 3,
+        "score_rapid": 1,
+        "score_detailed": 0,
+        "rationale_snippet": "Early scoping usually aligns with Screening effort."
+      },
+      {
+        "value": "alternatives",
+        "label": "Alternatives comparison or conceptual design",
+        "score_screening": 1,
+        "score_rapid": 3,
+        "score_detailed": 1,
+        "rationale_snippet": "Alternatives evaluation often needs Rapid field evidence."
+      },
+      {
+        "value": "final-design",
+        "label": "Final design, compliance, or monitoring",
+        "score_screening": 0,
+        "score_rapid": 1,
+        "score_detailed": 3,
+        "rationale_snippet": "High-stakes phases point to the Detailed tier."
+      }
+    ]
+  },
+  {
+    "id": "site-count",
+    "question": "Number of sites under consideration",
+    "answers": [
+      {
+        "value": "many",
+        "label": "Many (20+)",
+        "score_screening": 3,
+        "score_rapid": 1,
+        "score_detailed": 0,
+        "rationale_snippet": "A large number of sites favors a Screening pass."
+      },
+      {
+        "value": "some",
+        "label": "Some (5-20)",
+        "score_screening": 1,
+        "score_rapid": 3,
+        "score_detailed": 1,
+        "rationale_snippet": "A moderate site count supports Rapid assessment."
+      },
+      {
+        "value": "few",
+        "label": "Few (1-5)",
+        "score_screening": 0,
+        "score_rapid": 1,
+        "score_detailed": 3,
+        "rationale_snippet": "A small number of sites can justify Detailed effort."
+      }
+    ]
+  },
+  {
+    "id": "time-per-site",
+    "question": "Time available per site",
+    "answers": [
+      {
+        "value": "under-hour",
+        "label": "Less than 1 hour",
+        "score_screening": 3,
+        "score_rapid": 1,
+        "score_detailed": 0,
+        "rationale_snippet": "Very limited time favors Screening metrics."
+      },
+      {
+        "value": "day",
+        "label": "A few hours to one day",
+        "score_screening": 1,
+        "score_rapid": 3,
+        "score_detailed": 1,
+        "rationale_snippet": "A day of effort aligns with Rapid protocols."
+      },
+      {
+        "value": "multiple-days",
+        "label": "Multiple days or more",
+        "score_screening": 0,
+        "score_rapid": 1,
+        "score_detailed": 3,
+        "rationale_snippet": "Multiple days of effort supports Detailed methods."
+      }
+    ]
+  },
+  {
+    "id": "decision-risk",
+    "question": "Decision risk and tolerance for uncertainty",
+    "answers": [
+      {
+        "value": "low",
+        "label": "Low risk, higher uncertainty acceptable",
+        "score_screening": 3,
+        "score_rapid": 1,
+        "score_detailed": 0,
+        "rationale_snippet": "Low-risk decisions can use Screening results."
+      },
+      {
+        "value": "moderate",
+        "label": "Moderate risk, moderate uncertainty",
+        "score_screening": 1,
+        "score_rapid": 3,
+        "score_detailed": 1,
+        "rationale_snippet": "Moderate risk often points to Rapid assessment."
+      },
+      {
+        "value": "high",
+        "label": "High risk, low uncertainty required",
+        "score_screening": 0,
+        "score_rapid": 1,
+        "score_detailed": 3,
+        "rationale_snippet": "High-risk decisions call for Detailed evidence."
+      }
+    ]
+  },
+  {
+    "id": "data-intensity",
+    "question": "Data needs and calibration",
+    "answers": [
+      {
+        "value": "desktop-only",
+        "label": "Desktop data is sufficient",
+        "score_screening": 3,
+        "score_rapid": 1,
+        "score_detailed": 0,
+        "rationale_snippet": "Desktop data suggests a Screening tier."
+      },
+      {
+        "value": "field-required",
+        "label": "Field observations needed",
+        "score_screening": 1,
+        "score_rapid": 3,
+        "score_detailed": 1,
+        "rationale_snippet": "Field observations align with Rapid protocols."
+      },
+      {
+        "value": "calibration-needed",
+        "label": "Regional calibration or lab data required",
+        "score_screening": 0,
+        "score_rapid": 1,
+        "score_detailed": 3,
+        "rationale_snippet": "Calibration needs usually point to Detailed work."
+      }
+    ]
+  },
+  {
+    "id": "budget-expertise",
+    "question": "Budget and expertise availability",
+    "answers": [
+      {
+        "value": "limited",
+        "label": "Limited budget and generalist staff",
+        "score_screening": 3,
+        "score_rapid": 1,
+        "score_detailed": 0,
+        "rationale_snippet": "Limited resources favor Screening methods."
+      },
+      {
+        "value": "moderate",
+        "label": "Moderate budget and trained field staff",
+        "score_screening": 1,
+        "score_rapid": 3,
+        "score_detailed": 1,
+        "rationale_snippet": "Moderate resources align with Rapid protocols."
+      },
+      {
+        "value": "high",
+        "label": "High budget and specialized expertise",
+        "score_screening": 0,
+        "score_rapid": 1,
+        "score_detailed": 3,
+        "rationale_snippet": "Specialized resources allow Detailed assessment."
+      }
+    ]
+  }
+]

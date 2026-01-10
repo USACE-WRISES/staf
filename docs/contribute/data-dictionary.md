@@ -1,0 +1,45 @@
+---
+title: Data Dictionary
+parent: Contribute
+description: "Field definitions for JSON data files used by widgets."
+---
+
+# Data dictionary
+
+<div class="button-row">
+  <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
+</div>
+
+This page defines the fields used by JSON files in `docs/assets/data/`.
+
+## functions.json
+- `id`: stable function identifier (string)
+- `category`: Hydrology, Hydraulics, Geomorphology, Physicochemistry, Biology
+- `name`: display name
+- `short_description`: one-line description
+- `long_description`: longer description used in the explorer details panel
+- `example_metrics`: object with arrays per tier
+  - `screening`: list of starter metrics
+  - `rapid`: list of starter metrics
+  - `detailed`: list of starter metrics
+
+## cwa-mapping.json
+- `id`: function id
+- `physical`: mapping code `D`, `i`, or `-`
+- `chemical`: mapping code `D`, `i`, or `-`
+- `biological`: mapping code `D`, `i`, or `-`
+
+## tier-questions.json
+- `id`: question id
+- `question`: question text
+- `answers`: array of answer objects
+  - `value`: machine-readable answer id
+  - `label`: answer label shown to the user
+  - `score_screening`: numeric score for Screening
+  - `score_rapid`: numeric score for Rapid
+  - `score_detailed`: numeric score for Detailed
+  - `rationale_snippet`: short explanation used in the results
+
+## scoring-example.json
+- `function_id`: function id
+- `score`: numeric score from 0 to 10

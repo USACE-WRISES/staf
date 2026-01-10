@@ -1,0 +1,242 @@
+[
+  {
+    "id": "catchment-hydrology",
+    "category": "Hydrology",
+    "name": "Catchment hydrology",
+    "short_description": "Land uses alter water quantity and quality delivered to the stream.",
+    "long_description": "Represents watershed-scale drivers that change runoff, infiltration, and pollutant delivery. It reflects how land cover and management shape the volume and timing of water entering the stream network.",
+    "example_metrics": {
+      "screening": ["Percent impervious cover", "Runoff potential index"],
+      "rapid": ["Field evidence of altered runoff", "Stormwater outfall density"],
+      "detailed": ["Modeled runoff coefficients", "Continuous flow monitoring"]
+    }
+  },
+  {
+    "id": "surface-water-storage",
+    "category": "Hydrology",
+    "name": "Surface water storage",
+    "short_description": "Natural or artificial storage attenuates flows and increases residence time.",
+    "long_description": "Represents the capacity of wetlands, ponds, and floodplain features to store water. Storage moderates peak flows and supports baseflow by slowing runoff.",
+    "example_metrics": {
+      "screening": ["Wetland area percent", "Pond density"],
+      "rapid": ["Field inventory of storage features", "Floodplain ponding evidence"],
+      "detailed": ["Hydrologic storage modeling", "Stage-storage curves"]
+    }
+  },
+  {
+    "id": "reach-inflow",
+    "category": "Hydrology",
+    "name": "Reach inflow",
+    "short_description": "Local inputs alter magnitude, timing, and quality of flow.",
+    "long_description": "Captures tributaries, ditches, pipes, and other local inflows that change discharge or water quality at the reach scale.",
+    "example_metrics": {
+      "screening": ["Known inflow points", "Mapped drainage connections"],
+      "rapid": ["Field counts of inflows", "Observed flow contribution"],
+      "detailed": ["Measured inflow hydrographs", "Source water chemistry profiles"]
+    }
+  },
+  {
+    "id": "streamflow-regime",
+    "category": "Hydrology",
+    "name": "Streamflow regime",
+    "short_description": "Characteristic flow pattern that shapes habitat and transport.",
+    "long_description": "Represents the timing, magnitude, frequency, and duration of flow events that structure physical and ecological processes.",
+    "example_metrics": {
+      "screening": ["Flow alteration index", "Hydrologic class match"],
+      "rapid": ["Evidence of altered baseflow", "Recent high-water marks"],
+      "detailed": ["Long-term gage analysis", "Flow duration curves"]
+    }
+  },
+  {
+    "id": "low-flow-baseflow-dynamics",
+    "category": "Hydraulics",
+    "name": "Low flow and baseflow dynamics",
+    "short_description": "Maintains wetted habitat and moderates conditions during low water.",
+    "long_description": "Represents how low flows sustain habitat, temperature moderation, and water quality during dry periods.",
+    "example_metrics": {
+      "screening": ["Baseflow index", "Groundwater recharge potential"],
+      "rapid": ["Observed wetted perimeter", "Low-flow habitat continuity"],
+      "detailed": ["Seepage runs", "Continuous stage monitoring"]
+    }
+  },
+  {
+    "id": "high-flow-dynamics",
+    "category": "Hydraulics",
+    "name": "High flow dynamics",
+    "short_description": "Drives erosion and channel maintenance during peaks.",
+    "long_description": "Represents the energy of high flows that mobilize sediment, shape channels, and connect to floodplains.",
+    "example_metrics": {
+      "screening": ["Peak flow change index", "Storm intensity proxy"],
+      "rapid": ["Bankfull indicators", "Recent scour evidence"],
+      "detailed": ["Hydraulic modeling", "Shear stress estimates"]
+    }
+  },
+  {
+    "id": "floodplain-connectivity",
+    "category": "Hydraulics",
+    "name": "Floodplain connectivity",
+    "short_description": "Lateral exchange supports nutrient cycling and habitat.",
+    "long_description": "Represents how often and how effectively the channel connects with its floodplain to exchange water, sediment, and organic matter.",
+    "example_metrics": {
+      "screening": ["Floodplain width ratio", "Valley confinement index"],
+      "rapid": ["Bankfull to floodplain access", "Floodplain surface condition"],
+      "detailed": ["Hydraulic inundation modeling", "Floodplain sediment deposition rates"]
+    }
+  },
+  {
+    "id": "hyporheic-connectivity",
+    "category": "Hydraulics",
+    "name": "Hyporheic connectivity",
+    "short_description": "Surface-subsurface exchange supports temperature and nutrient regulation.",
+    "long_description": "Represents exchange between surface water and shallow subsurface flow paths that influence temperature, nutrients, and habitat.",
+    "example_metrics": {
+      "screening": ["Alluvial extent proxy", "Valley bottom sediment type"],
+      "rapid": ["Upwelling indicators", "Bed permeability observations"],
+      "detailed": ["Tracer studies", "Temperature profiling"]
+    }
+  },
+  {
+    "id": "channel-evolution",
+    "category": "Geomorphology",
+    "name": "Channel evolution",
+    "short_description": "Changes in channel dimensions and slope reflecting adjustment.",
+    "long_description": "Represents the stage of channel adjustment driven by legacy impacts, altered flows, or sediment imbalance.",
+    "example_metrics": {
+      "screening": ["Historical channel change from imagery", "Incision potential"],
+      "rapid": ["Bank height ratio", "Stage of channel evolution observations"],
+      "detailed": ["Cross-section surveys", "Longitudinal profile analysis"]
+    }
+  },
+  {
+    "id": "channel-floodplain-dynamics",
+    "category": "Geomorphology",
+    "name": "Channel and floodplain dynamics",
+    "short_description": "Bank processes and planform dynamics that affect complexity.",
+    "long_description": "Represents lateral migration, bar formation, and floodplain building that create channel complexity.",
+    "example_metrics": {
+      "screening": ["Planform sinuosity", "Active channel width changes"],
+      "rapid": ["Bank erosion evidence", "Bar and pool frequency"],
+      "detailed": ["Repeat topographic surveys", "Sediment budget analysis"]
+    }
+  },
+  {
+    "id": "sediment-continuity",
+    "category": "Geomorphology",
+    "name": "Sediment continuity",
+    "short_description": "Balanced sediment supply and transport maintaining form and habitat.",
+    "long_description": "Represents whether sediment supply, transport, and storage are in balance for the reach and watershed.",
+    "example_metrics": {
+      "screening": ["Upstream dam density", "Road crossing density"],
+      "rapid": ["Bed sediment size trends", "Sediment source observations"],
+      "detailed": ["Bedload sampling", "Sediment transport modeling"]
+    }
+  },
+  {
+    "id": "bed-composition-bedform-dynamics",
+    "category": "Geomorphology",
+    "name": "Bed composition and bedform dynamics",
+    "short_description": "Substrate and bedforms (and wood effects) supporting habitat and exchange.",
+    "long_description": "Represents the size, sorting, and structure of bed materials and bedforms that support habitat and hyporheic exchange.",
+    "example_metrics": {
+      "screening": ["Surficial geology proxy", "Wood load index"],
+      "rapid": ["Pebble counts", "Bedform diversity observations"],
+      "detailed": ["Grain size distribution", "Wood loading surveys"]
+    }
+  },
+  {
+    "id": "light-thermal-regime",
+    "category": "Physicochemistry",
+    "name": "Light & thermal regime",
+    "short_description": "Regulates temperature and energy inputs shaping chemistry.",
+    "long_description": "Represents shading, solar input, and thermal buffering that influence water temperature and ecosystem metabolism.",
+    "example_metrics": {
+      "screening": ["Riparian canopy cover", "Thermal risk index"],
+      "rapid": ["Shade measurements", "Temperature spot checks"],
+      "detailed": ["Continuous temperature logging", "Heat budget modeling"]
+    }
+  },
+  {
+    "id": "carbon-processing",
+    "category": "Physicochemistry",
+    "name": "Carbon processing",
+    "short_description": "Organic matter dynamics supporting food webs and metabolism.",
+    "long_description": "Represents inputs, storage, and breakdown of organic matter that drive ecosystem respiration and production.",
+    "example_metrics": {
+      "screening": ["Forest cover proxy", "Large wood potential index"],
+      "rapid": ["Coarse organic matter cover", "Leaf pack observations"],
+      "detailed": ["Metabolism measurements", "Organic carbon sampling"]
+    }
+  },
+  {
+    "id": "nutrient-cycling",
+    "category": "Physicochemistry",
+    "name": "Nutrient cycling",
+    "short_description": "N and P transformations controlling productivity and water quality.",
+    "long_description": "Represents uptake, retention, and transformation of nutrients within the stream corridor.",
+    "example_metrics": {
+      "screening": ["Nutrient loading potential", "Agricultural land use percent"],
+      "rapid": ["Periphyton cover", "Nutrient source indicators"],
+      "detailed": ["Nutrient uptake length", "Water chemistry sampling"]
+    }
+  },
+  {
+    "id": "water-soil-quality",
+    "category": "Physicochemistry",
+    "name": "Water & soil quality",
+    "short_description": "Contaminants and constituents influencing chemical condition.",
+    "long_description": "Represents chemical stressors in water and soils that affect aquatic life and system health.",
+    "example_metrics": {
+      "screening": ["Impairment listings", "Known contamination sites"],
+      "rapid": ["Field chemistry probes", "Visual water quality indicators"],
+      "detailed": ["Lab chemistry panels", "Sediment contaminant analysis"]
+    }
+  },
+  {
+    "id": "habitat-provision",
+    "category": "Biology",
+    "name": "Habitat provision",
+    "short_description": "Physical habitat diversity supporting life stages and taxa.",
+    "long_description": "Represents the variety and quality of physical habitats that support organisms across life stages.",
+    "example_metrics": {
+      "screening": ["Habitat complexity proxy", "Channel type classification"],
+      "rapid": ["Habitat unit counts", "Cover availability"],
+      "detailed": ["Habitat suitability indices", "High-resolution habitat mapping"]
+    }
+  },
+  {
+    "id": "population-support",
+    "category": "Biology",
+    "name": "Population support",
+    "short_description": "Survival, reproduction, and movement of key taxa.",
+    "long_description": "Represents the capacity of the reach to sustain populations, including access to spawning and rearing areas.",
+    "example_metrics": {
+      "screening": ["Barrier density", "Habitat connectivity proxy"],
+      "rapid": ["Observed species presence", "Barrier passability"],
+      "detailed": ["Population surveys", "Telemetry or mark-recapture"]
+    }
+  },
+  {
+    "id": "community-dynamics",
+    "category": "Biology",
+    "name": "Community dynamics",
+    "short_description": "Balanced assemblages of native taxa and resilience.",
+    "long_description": "Represents community composition, diversity, and invasive pressure within the reach.",
+    "example_metrics": {
+      "screening": ["Known invasive species records", "Biodiversity proxy"],
+      "rapid": ["Rapid bioassessment scores", "Invasive presence observations"],
+      "detailed": ["Community index scores", "Taxa richness and evenness"]
+    }
+  },
+  {
+    "id": "watershed-connectivity",
+    "category": "Biology",
+    "name": "Watershed connectivity",
+    "short_description": "Longitudinal and lateral connectivity enabling recovery.",
+    "long_description": "Represents connectivity that enables recolonization, gene flow, and recovery after disturbance.",
+    "example_metrics": {
+      "screening": ["Culvert density", "Dam fragmentation index"],
+      "rapid": ["Barrier assessment", "Connectivity observations"],
+      "detailed": ["Connectivity modeling", "Passage monitoring"]
+    }
+  }
+]
