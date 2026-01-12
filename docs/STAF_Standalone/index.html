@@ -1,0 +1,442 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- STAF standalone HTML shell. This loads local styles and scripts only. -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>STAF Standalone</title>
+    <link rel="stylesheet" href="staf.css" />
+</head>
+<body>
+    <div class="staf-app">
+        <div id="loading" class="loading">Loading...</div>
+
+        <div id="app-content" class="app-content is-hidden">
+            <header class="toolbar">
+                <div class="model-name">
+                    <label for="model-name-input">Model Name</label>
+                    <input id="model-name-input" type="text" inputmode="text" autocomplete="off" />
+                </div>
+
+                <div class="menus">
+                    <div class="menu">
+                        <button id="export-menu-button" class="btn btn-secondary" type="button">Export</button>
+                        <div id="export-menu" class="menu-list">
+                            <button class="menu-item" type="button" data-action="export-excel">Excel</button>
+                            <button class="menu-item" type="button" data-action="export-csv">Csv</button>
+                        </div>
+                    </div>
+
+                    <div class="menu">
+                        <button id="import-menu-button" class="btn btn-secondary" type="button">Import</button>
+                        <div id="import-menu" class="menu-list">
+                            <button class="menu-item" type="button" data-action="trigger-import">Csv</button>
+                        </div>
+                    </div>
+
+                    <input id="import-file-input" type="file" accept=".csv" class="sr-only" />
+                </div>
+            </header>
+
+            <nav class="tabs" role="tablist">
+                <button class="tab-button is-active" type="button" data-tab="variables" role="tab" aria-selected="true">Variables</button>
+                <button class="tab-button" type="button" data-tab="metrics" role="tab" aria-selected="false">Metrics</button>
+                <button class="tab-button" type="button" data-tab="scoring" role="tab" aria-selected="false">Scoring</button>
+            </nav>
+
+            <section id="tab-variables" class="tab-panel is-active" role="tabpanel">
+                <div class="table-container">
+                    <table class="staf-table" aria-label="Variables">
+                        <thead>
+                            <tr>
+                                <th class="header-font-size">Functional Category</th>
+                                <th class="header-font-size">Functional Variable</th>
+                                <th class="header-font-size">Description</th>
+                                <th class="header-font-size">Physical</th>
+                                <th class="header-font-size">Chemical</th>
+                                <th class="header-font-size">Biological</th>
+                            </tr>
+                        </thead>
+                        <tbody id="variables-table-body"></tbody>
+                        <tfoot id="variables-table-foot"></tfoot>
+                    </table>
+                </div>
+            </section>
+
+            <section id="tab-metrics" class="tab-panel" role="tabpanel">
+                <div class="table-container">
+                    <table class="staf-table" aria-label="Metrics">
+                        <thead>
+                            <tr>
+                                <th class="header-font-size">Functional Category</th>
+                                <th class="header-font-size">Functional Variable</th>
+                                <th class="header-font-size">Metrics</th>
+                                <th class="header-font-size">Sources</th>
+                                <th class="header-font-size">Methods</th>
+                                <th class="header-font-size">Performance Criteria</th>
+                            </tr>
+                        </thead>
+                        <tbody id="metrics-table-body"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="tab-scoring" class="tab-panel" role="tabpanel">
+                <div class="table-container">
+                    <table class="staf-table" aria-label="Scoring">
+                        <thead>
+                            <tr>
+                                <th class="header-font-size">Functional Category</th>
+                                <th class="header-font-size">Functional Variable</th>
+                                <th class="header-font-size">Metrics</th>
+                                <th class="header-font-size">Metric Score<br />(0-1.0)</th>
+                                <th class="header-font-size">Variable Score<br />(0-1.0)</th>
+                                <th class="header-font-size">Physical</th>
+                                <th class="header-font-size">Chemical</th>
+                                <th class="header-font-size">Biological</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scoring-table-body"></tbody>
+                        <tfoot id="scoring-table-foot"></tfoot>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Variable selection dialog -->
+    <div id="variable-dialog" class="modal" aria-hidden="true">
+        <div class="modal-overlay" data-action="close-modal" data-modal="variable"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="variable-dialog-title"></h2>
+            </div>
+            <div class="modal-toolbar">
+                <button class="link-button" type="button" data-action="select-all-variables">Select All</button>
+                <span>|</span>
+                <button class="link-button" type="button" data-action="unselect-all-variables">Unselect All</button>
+            </div>
+            <div class="table-container dialog-table">
+                <table class="staf-table">
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Functional Variable</th>
+                            <th>Functional Statement</th>
+                            <th>Physical</th>
+                            <th>Chemical</th>
+                            <th>Biological</th>
+                        </tr>
+                    </thead>
+                    <tbody id="variable-dialog-body"></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" type="button" data-action="save-variables">Save</button>
+                <button class="btn btn-secondary" type="button" data-action="close-modal" data-modal="variable">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metric selection dialog -->
+    <div id="metric-dialog" class="modal" aria-hidden="true">
+        <div class="modal-overlay" data-action="close-modal" data-modal="metric"></div>
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h2>Select Metrics for <span id="metric-dialog-title"></span></h2>
+            </div>
+            <div class="modal-toolbar">
+                <button class="link-button" type="button" data-action="select-all-metrics">Select All</button>
+                <span>|</span>
+                <button class="link-button" type="button" data-action="unselect-all-metrics">Unselect All</button>
+            </div>
+
+            <div class="filter-bar">
+                <input id="metric-search-input" type="text" placeholder="Search" inputmode="search" />
+                <button id="metric-clear-filters" class="btn btn-secondary" type="button">Clear Filters</button>
+            </div>
+
+            <div class="filter-row">
+                <input id="metric-filter-assessment" type="text" placeholder="Assessment" />
+                <input id="metric-filter-id" type="text" placeholder="Metric ID" />
+                <input id="metric-filter-name" type="text" placeholder="Metric Name" />
+                <input id="metric-filter-standard" type="text" placeholder="Performance Standard" />
+                <input id="metric-filter-method" type="text" placeholder="Method" />
+                <input id="metric-filter-tier" type="text" placeholder="Tier" />
+            </div>
+
+            <div class="table-container dialog-table">
+                <table class="staf-table data-grid">
+                    <thead>
+                        <tr>
+                            <th>Select</th>
+                            <th>Assessment</th>
+                            <th>Metric ID</th>
+                            <th>Metric Name</th>
+                            <th>Performance Standard</th>
+                            <th>Method</th>
+                            <th>Tier</th>
+                        </tr>
+                    </thead>
+                    <tbody id="metric-dialog-body"></tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <div class="pagination-info" id="metric-pagination-info"></div>
+                <div class="pagination-controls">
+                    <label for="metric-page-size">Page size</label>
+                    <select id="metric-page-size">
+                        <option value="10">10</option>
+                        <option value="25" selected>25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                    <button id="metric-page-prev" class="btn btn-secondary" type="button">Prev</button>
+                    <button id="metric-page-next" class="btn btn-secondary" type="button">Next</button>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" type="button" data-action="save-metrics">Save</button>
+                <button class="btn btn-secondary" type="button" data-action="close-modal" data-modal="metric">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score edit dialog -->
+    <div id="score-dialog" class="modal" aria-hidden="true">
+        <div class="modal-overlay" data-action="close-modal" data-modal="score"></div>
+        <div class="modal-content modal-wide">
+            <div class="modal-header">
+                <h2>Edit Performance Criteria <span id="score-dialog-title"></span></h2>
+            </div>
+            <div class="score-layout">
+                <div class="lookup-panel">
+                    <table class="staf-table">
+                        <thead>
+                            <tr>
+                                <th>X (Measurement Value)</th>
+                                <th>Y (Metric Score)</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="lookup-table-body"></tbody>
+                    </table>
+                    <button class="btn btn-primary" type="button" data-action="add-lookup-row">Add Row</button>
+                </div>
+                <div class="chart-panel">
+                    <canvas id="score-chart"></canvas>
+                    <div class="chart-labels">
+                        <span>Measurement Value</span>
+                        <span>Metric Index Score</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="score-input">
+                <label for="score-input">Edit Score for <span id="score-dialog-score-label"></span></label>
+                <input id="score-input" type="number" min="0" max="1" step="0.01" />
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" type="button" data-action="save-score">Save</button>
+                <button class="btn btn-secondary" type="button" data-action="cancel-score">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="vendor/exceljs.min.js"></script>
+    <script src="staf.js"></script>
+
+    <script id="stream-data" type="text/plain">
+Functional Category,Functional Variable,Functional Statement,Physical,Chemical,Biological
+Hydrology,Catchment hydrology,Alters water quantity and quality via land uses.,D,i,i
+Hydrology,Surface water storage,"Attenuates upstream flows via natural and artificial features (e.g., wetlands).",D,i,
+Hydrology,Reach inflow,"Addresses localized inputs from tributaries, ditches, and pipes.",D,i,
+Hydrology,Flow duration,Integrates the range of “typical” flows experienced by other processes.,D,,i
+Hydrology,Flow alteration,"Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",D,i,i
+Hydraulics,Low flow dynamics,Ensures habitat availability and water quality during low water levels.,D,i,i
+Hydraulics,Baseflow dynamics,Indicates non-storm conditions experienced the majority of the time.,D,i,i
+Hydraulics,High flow dynamics,Influences erosion and channel maintenance during peak flows.,D,D,
+Hydraulics,Floodplain connectivity,Enhances nutrient cycling and habitat availability via water exchange.,i,D,D
+Hydraulics,Hyporheic connectivity,"Addresses surface-subsurface connections important for temperature regulation, nutrient dynamics, and food webs.",i,D,D
+Geomorphology,Channel evolution,"Addresses legacy, ongoing, and anticipated change in channel form (i.e., dimension) and slope (i.e., profile) in response to flow and sediment inputs.",D,,
+Geomorphology,Lateral stability,Examines the role of bank processes and erosion in channel change.,D,i,
+Geomorphology,Planform change,Observes patterns in sinuosity and curvature affecting habitat complexity.,D,,i
+Geomorphology,Sediment continuity,Maintains channel morphology and habitats through sediment processes.,D,D,i
+Geomorphology,Large wood,Enhances habitat complexity and streambank stability.,i,,D
+Geomorphology,Bed composition,Supports aquatic habitats through streambed material and bedform dynamics.,D,,D
+Physicochemical,Light and thermal regime,"Regulates water chemistry, drives carbon sources and dynamics, and governs the breadth of niche space available for organisms.",,D,i
+Physicochemical,Carbon processing,"Dictates availability of energy sources and supports food webs with ties to pH, production, respiration, and overall system metabolism.",,i,D
+Physicochemical,Nutrient cycling,Drives productivity and quality of waters based on nitrogen & phosphorous.,,D,i
+Physicochemical,Water and soil quality,Indicates the fate and transport of contaminants and other focal constituents. ,,D,i
+Biology,Habitat provision,Supports diverse niches for a range of life stages of aquatic & riparian taxa.,,,D
+Biology,Population support,"Provides for reproduction, survival, and movement of key taxa.", ,i,D
+Biology,Community dynamics,"Facilitates balanced assemblages composed of native taxa with minimal invasive species dominance and representation of keystone species, ecological engineers, and other functionally important taxa. ", ,i,D
+Biology,Watershed connectivity,Facilitates colonization dynamics and capacity to recover after disturbance.,D,,D
+    </script>
+    <script id="metric-data" type="text/plain">
+Assessment,Year,Metric ID,Metric Name,Performance Standard,Performance Standard Source,Method,Stratification,Source,Tier,Catchment hydrology,Surface water storage,Reach inflow,Flow duration,Flow alteration,Low flow dynamics,Baseflow dynamics,High flow dynamics,Floodplain connectivity,Hyporheic connectivity,Channel evolution,Lateral stability,Planform change,Sediment continuity,Large wood,Bed composition,Light and thermal regime,Carbon processing,Nutrient cycling,Water and soil quality,Habitat provision,Population support,Community dynamics,Watershed connectivity
+Applachian HGM - High Gradient,2017,Vcanopy,Percent canopy over channel,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,,,,,,,,D,,,,i,,,
+Applachian HGM - High Gradient,2017,Vembed,Average embededness of channel,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,i,i,,,,,D,,,,,,,,
+Applachian HGM - High Gradient,2017,Vsubstrate,Median substrate particle size,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,i,,,,,,D,,,,,i,,,
+Applachian HGM - High Gradient,2017,Vbero,Percent of eroded stream channel bank,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,i,,,i,D,,i,,,,,,i,i,,,
+Applachian HGM - High Gradient,2017,Vlwd,Number down woody stems per 100 feet of stream,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,,i,,,,D,i,,i,,,i,,,
+Applachian HGM - High Gradient,2017,Vtdbh,Average dbh of trees,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,,,i,,,i,,,,,,,,,
+Applachian HGM - High Gradient,2017,Vsnag,Number of snags per 100 feet of stream,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,,,i,,,i,,,,,,,,,
+Applachian HGM - High Gradient,2017,Vssd,Number of saplings and shrubs per 100 feet of stream,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,,,i,,,i,,,,,,,,,
+Applachian HGM - High Gradient,2017,Vsrich,Riparian vegetation species richness,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,,,,,,i,,,,,,,,,
+Applachian HGM - High Gradient,2017,Vdetritus,"Average percent cover of leaves, sticks, etc",Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,,,,,,i,,,,,,,,,
+Applachian HGM - High Gradient,2017,Vherb,Average percent cover of herbaceous vegetation,Yes,HGM,Visual,High Gradient,HGM,Screening,,,,,,,,,,,,,,,i,,,,,,,,,
+Applachian HGM - High Gradient,2017,Vwluse,Weighted Average Runoff Score for Catchment,Yes,HGM,"Visual, GIS",High Gradient,HGM,Screening,D,,,,,,,,,,,,,,,,,,,,,,,
+Applachian HGM - Low Gradient,2017,Vcanopy,Percent canopy over channel,Yes,HGM,Visual,Low Gradient,HGM,Screening,,,,,,,,,,,,,,,,,D,,,,i,,,
+Applachian HGM - Low Gradient,2017,Vembed,Average embededness of channel,Yes,HGM,Visual,Low Gradient,HGM,Screening,,,,,,,,,,i,i,,,,,D,,,,,,,,
+Applachian HGM - Low Gradient,2017,Vsubstrate,Median substrate particle size,Yes,HGM,Visual,Low Gradient,HGM,Screening,,,,,,,,,,i,,,,,,D,,,,,i,,,
+Applachian HGM - Low Gradient,2017,Vbankstab,Weighted lengths of erosion by class,Yes,HGM,Visual,Low Gradient,HGM,Screening,,,,,,,,i,,,i,D,,i,,,,,,i,i,,,
+Applachian HGM - Low Gradient,2017,Vlwd,Number down woody stems per 100 feet of stream,Yes,HGM,Visual,Low Gradient,HGM,Screening,,,,,,,,,,,i,,,,D,i,,i,,,i,,,
+Applachian HGM - Low Gradient,2017,Vtdbh,Average dbh of trees,Yes,HGM,Visual,Low Gradient,HGM,Screening,,,,,,,,,,,,i,,,i,,,,,,,,,
+Applachian HGM - Low Gradient,2017,Vtdensity,Average density of trees,Yes,HGM,Visual,Low Gradient,HGM,Screening,,,,,,,,,,,,i,,,i,,,,,,,,,
+Applachian HGM - Low Gradient,2017,Vcvalue,Average coefficient of conservatism of riparian species,Yes,HGM,Visual,Low Gradient,HGM,Screening,,,,,,,,,,,,i,,,i,,,,,,,,,
+Applachian HGM - Low Gradient,2017,Vforest,Average percent cover of forested area for Catchment,Yes,HGM,"Streamstats, GIS",Low Gradient,HGM,Screening,D,,,,,,,,,,,i,,,i,,,,,,,,,
+QHEI,2006,QHEIsubstrate,Substrate ,Yes,QHEI,Visual,No,QHEI,Screening,,,,,,,,,,,,,,,,D,,,,,,,,
+QHEI,2006,InstreamC,Instream Cover,Yes,QHEI,Visual,No,QHEI,Screening,,,,,,,,,,,,,,,D,D,,,,,D,,,
+QHEI,2006,ChanMorph,Channel Morphology,Yes,QHEI,Visual,No,QHEI,Screening,,,,,,,,,,,D,,D,i,,D,,,,,i,,,
+QHEI,2006,BankRipZn,Bank Erosion and Riparian Zone,Yes,QHEI,Visual,No,QHEI,Screening,,,,,,,,,,,,D,,i,,,i,,,i,i,,,
+QHEI,2006,PoolRiffQ,Pool/Glide and Riffle/Run Quality,Yes,QHEI,Visual,No,QHEI,Screening,,,,,,D,D,,,i,,,,,,D,,,,,i,,,
+QHEI,2006,Gradient,Gradient,Yes,QHEI,Visual,Stream Size,QHEI,Screening,,,,,,,,,,,i,i,i,i,,i,,,,,,,,
+QHEI,2006,QHEIScore,Overall QHEI Score,Yes,QHEI,Visual,"DA (<20mi2,>20mi^2)",QHEI,Screening,,,,,,,,,,,,,,,,,,,,,,,,
+EPA RBP HABITAT,2001,EpifaunalS,Epifaunal Substrate,Yes,RBP,Visual,-,RBP,Screening,,,,,,,,,,i,,,,,,D,,,,,D,,,
+EPA RBP HABITAT,2001,Embedness,Embededness,Yes,RBP,Visual,-,RBP,Screening,,,,,,,,,,i,i,,,,,D,,,,,,,,
+EPA RBP HABITAT,2001,VelDepthR,Velocity Depth Regime,Yes,RBP,Visual,-,RBP,Screening,,,,,,i,D,,,,,,,,,,,,,,i,,,
+EPA RBP HABITAT,2001,SedDepo,Sediment Deposition,Yes,RBP,Visual,-,RBP,Screening,,,,,,,,,,i,i,,,D,,D,,,,,,,,
+EPA RBP HABITAT,2001,ChanFlow,Channel Flow Status,Yes,RBP,Visual,-,RBP,Screening,,,,D,,,,,,i,,,,,,,,,,,,,,
+EPA RBP HABITAT,2001,ChanAlter,Channel Alteration,Yes,RBP,Visual,-,RBP,Screening,,,,,,,,,,,D,D,,,,,,,,,,,,
+EPA RBP HABITAT,2001,RiffleFreq,Frequency of Riffles,Yes,RBP,Visual,-,RBP,Screening,,,,,,,,,,,i,,,,,D,,,,,i,,,
+EPA RBP HABITAT,2001,BankStab,Bank Stability (LB & RB),Yes,RBP,Visual,-,RBP,Screening,,,,,,,,,,,i,D,,i,,,,,,,,,,
+EPA RBP HABITAT,2001,VegProtect,Vegetative Protection (LB & RB),Yes,RBP,Visual,-,RBP,Screening,,,,,,,,,,,,D,i,,,,,,,,,,,
+EPA RBP HABITAT,2001,RipVegZn,Riparian Vegetative Zone (LB & RB),Yes,RBP,Visual,-,RBP,Screening,,,,,,,,,,,,D,i,,,,,,,,,,,
+SVAP 2,1998,ChanCond,Channel condition,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,D,,,,,,,,,,,,,
+SVAP 2,1998,HydroAlt,Hydrologic Alteration,Yes,SVAP,Visual,-,SVAP,Screening,,,,,D,,,,,,,,,,,,,,,,,,,
+SVAP 2,1998,BankCond,Bank Condition,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,D,,,,,,,,,,,,
+SVAP 2,1998,RipQtyQlty,Riparian area quantity and quality,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,i,,,,,,,,,,,,
+SVAP 2,1998,CanopyCov,Canopy cover,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,,D,,,,i,,,
+SVAP 2,1998,WaterAppr,Water appearance,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,,,,,D,,,,
+SVAP 2,1998,NutEnrich,Nutrient enrichment,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,,,,D,,,,,
+SVAP 2,1998,WastePres,Manure or human waste presence,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,,,,,D,,,,
+SVAP 2,1998,Pools,Pools,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,D,,,,,,,,
+SVAP 2,1998,AquaticBarr,Barriers to aquatic species movement,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,,,,,,,,,D
+SVAP 2,1998,FishHab,Fish habitat complexity,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,D,,,,,,,,
+SVAP 2,1998,InvertHab,Aquatic invertebrate habitat,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,D,,,,,D,,,
+SVAP 2,1998,InvertComm,Aquatic invertebrate community,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,D,,,,,D,,,
+SVAP 2,1998,RiffEmbed,Riffle embeddedness,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,i,i,,,,,D,,,,,,,,
+SVAP 2,1998,Salinity,Salinity,Yes,SVAP,Visual,-,SVAP,Screening,,,,,,,,,,,,,,,,,,,,D,,,,
+STREAMSTATS,2024,LC11IMP,Percent impervious area,?,-,"Streamstats, GIS",-,Streamstats,Screening,D,,i,i,,,,,,,,,,,,,,,,i,,,i,
+STREAMSTATS,2024,LC92STOR,Percent of water and wetlands determined from NLCD,?,-,"Streamstats, GIS",-,Streamstats,Screening,,D,,i,,,,,,,,,,,,,,,,,,,,
+STREAMSTATS,2024,LC11DEV,Percent developed (urban) in catchment from NLCD,?,-,"Streamstats, GIS",-,Streamstats,Screening,D,,i,i,,,,,,,,,,,,,,,,,,,,
+STREAMSTATS,2024,LFPLENGTH,Watershed slope (Change in elevation divided by length of points 10 and 85 percent),?,-,"Streamstats, GIS",-,Streamstats,Screening,D,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,BankHtR,Bank Height Ratio,,,,,,Screening,,,,,,,i,i,D,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,ChanAlter,Channel Alteration,,,,,,Screening,,,,,,,,,,,D,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,ChanStabE,Channel Stability and Evolution,,,,,,Screening,,,,,,,,,,,D,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,SubDepEmb,Instream substrate deposition and embeddedness,,,,,,Screening,,,,,,,,,,i,,,,,,D,,,,,,,,
+UTOY CREEK MODEL,2024,BankStab,Bank Stability (LB & RB),,,,,,Screening,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,HabCover,Habitat and available cover,,,,,,Screening,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,LargeWood,Large wood,,,,,,Screening,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,VelDepthR,Velocity Depth Regime,,,,,,Screening,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,AquaPass,Aquatic Organism Passage,,,,,,Screening,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,MatTrans,Material Transport,,,,,,Screening,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,BEHI,BEHI estimate,,,,,,Detailed,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,LongBedf,Longitudinal bedform survey,,,,,,Detailed,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,HydroStruc,Hydraulic structures within reach,,,,,,Detailed,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,BankXSRef,Bankfull XS Area/Reference XS Area,,,,,,Rapid,,,,,,,,D,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,CulvPass,Culvert Passage Rate,,,,,,Detailed,,,,,,,,,,,,,,,,,,,,,,,,D
+UTOY CREEK MODEL,2024,XSVelRef,Bankfull XS Vel/Reference XS Vel,,,,,,Rapid,,,,,,,i,D,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,HydroFlash,Hydrologic Flashiness,,,,,,Detailed,,,,,,,,,,,,,,,,,,,,,,,,
+UTOY CREEK MODEL,2024,HydroAtt,Hydrologic attenenuation,,,,,,Detailed,,,,,,,,,,,,,,,,,,,,,,,,
+OSAM,2024,BankHtR,Bank Height Ratio,Yes,OSAM,Measured,,,Detailed,,,,,,,,D,D,,,,,,,,,,,,,,,
+OSAM,2024,EntrenchR,Entrenchment Ratio,Yes,OSAM,Measured,,,Detailed,,,,,,,,D,D,,,,,,,,,,,,,,,
+OSAM,2024,LeftBuffW,Left Buffer Width (ft),Yes,OSAM,Measured,,,Rapid,,,,,,,,,,,,i,,,,,,,,,,,,
+OSAM,2024,RightBuffW,Right Buffer Width (ft),Yes,OSAM,Measured,,,Rapid,,,,,,,,,,,,i,,,,,,,,,,,,
+OSAM,2024,PoolSpcR,Pool Spacing Ratio,Yes,OSAM,Measured,,,Detailed,,,,,,,,,,,,,,,,D,,,,,,,,
+OSAM,2024,PctRiffle,% Riffle,Yes,OSAM,Measured,,,Detailed,,,,,,,,,,,,,,,,D,,,,,,,,
+OSAM,2024,LWDFreq,LWD Frequency,Yes,OSAM,Measured,,,Detailed,,,,,,,,,,,,,,,D,i,,,,,,,,
+HHEI,2024,ChanMod,Stream channel modifications,Yes,HHEI,Visual,,,Screening,,,,,,,,,,,D,i,,,,,,,,,,,,
+HHEI,2024,Substrate,Substrate,Yes,HHEI,Visual,,,Screening,,,,,,,,,,,,,,,,D,,,,,,,,
+HHEI,2024,MaxPoolD,Max pool depth,Yes,HHEI,Measurement,,,Screening,,,,,,,,,,,,,,,,D,,,,,i,,,
+HHEI,2024,BankFullW,Bank full width,Yes,HHEI,Measurement,,,Screening,,,,,,,,,,,i,,,,,D,,,,,i,,,
+HHEI,2024,RipWidth,Riparian width,Yes,HHEI,Visual,,,Screening,,,,,,,,,,,,i,,,,,,,,,,,,
+HHEI,2024,FloodQual,Floodplain quality,Yes,HHEI,Visual,,,Screening,,,,,,,,,,,,i,,,,,,,,,,,,
+HHEI,2024,FlowReg,Flow regime,Yes,HHEI,Visual,,,Screening,i,,,,,D,D,,,,,,,,,,,,,,,,,i
+HHEI,2024,Sinuosity,Sinuosity,Yes,HHEI,Visual,,,Screening,,,,,,,,,,,,i,D,,,,,,,,,,,
+HHEI,2024,StreamGrad,Stream gradient estimate,Yes,HHEI,Measurement,,,Screening,,,,,,,,,,,i,i,i,i,,i,,,,,,,,
+WV SWVM,2017,RBP,RBP,Yes,SWVM,Visual,-,SWVM,,,,,,,,,,,,,,,,,,,,,,,,,
+WV SWVM,2017,SpecCond,Specific conductivity,Yes,SWVM,Measurement,-,SWVM,,,,,,,,,,,,,,,,,,,,,D,,,,
+WV SWVM,2017,pH,pH,Yes,SWVM,Measurement,-,SWVM,,,,,,,,,,,,,,,,,,,,,D,,,,
+WV SWVM,2017,DissOxy,DO,Yes,SWVM,Measurement,-,SWVM,,,,,,,,,,,,,,,,,,,i,D,D,,,,
+WV SWVM,2017,WVSCI01,WV SCI 2001,Yes,SWVM,Measurement,-,SWVM,,,,,,,,,,,,,,,,,,,,,,D,D,D,
+WV SCI,2001,DissOxy2,Dissolved Oxygen,,,,,,,,,,,,,,,,,,,,,,,,,D,D,,,,
+WV SCI,2001,pH,pH,,,,,,,,,,,,,,,,,,,,,,,,,,D,,,,
+WV SCI,2001,Cond,Conductivity,,,,,,,,,,,,,,,,,,,,,,,,,,D,,,,
+WV SCI,2001,EpifaScore,Epifaunal substrate score,,,,,,,,,,,,,,,,,,,,,,,,,,,D,,,
+WV SCI,2001,ChanAltSc,channel alteration score,,,,,,,,,,,,,,,,,D,,,,,,,,,,i,,,
+WV SCI,2001,SedDepSc,sediment deposition score,,,,,,,,,,,,,,,,,,,,D,,D,,,,,i,,,
+WV SCI,2001,BankPresSc,bank disruptive pressure score,,,,,,,,,,,,,,,,,,D,,,,,,,,,,,,
+WV SCI,2001,RipVegSc,riparian zone vegetation width score,,,,,,,,,,,,,,,,,,D,,,,,,,,,,,,
+WV SCI,2001,TaxRich,taxonomic richness,,,,,,,,,,,,,,,,,,,,,,,,,,,i,D,,
+WV SCI,2001,TaxComp,taxonomic composition,,,,,,,,,,,,,,,,,,,,,,,,,,,,D,D,
+WV SCI,2001,FeedGrp,feeding groups,,,,,,,,,,,,,,,,,,,,,,,,,,,,D,D,
+WV SCI,2001,TolIntol,tolerance/intolerance,,,,,,,,,,,,,,,,,,,,,,,,,,,,D,D,
+SQT Catchment Assessment (NC),2018,ConcFlow,Concentrated Flow (Hydrology),,,,,,,,,D,,,,,,,,,,,,,,,,,i,,,,
+SQT Catchment Assessment (NC),2018,ImpCover,Impervious cover (Hydrology),,,,,,,D,,,i,,,,,,,,,,,,,,,,i,,,,
+SQT Catchment Assessment (NC),2018,SQTLandUse,Land Use Change  (Hydrology),,,,,,,D,,,,,,,,,,,,,,,,,,,i,,,,
+SQT Catchment Assessment (NC),2018,DistRoads,Distance to Roads (Hydrology),,,,,,,D,,i,i,,,,,,,,,,,,,,,,i,,,,
+SQT Catchment Assessment (NC),2018,PctForest,Percent Forested (Hydrology),,,,,,,D,,,,,,,,,,,,,,,,,,,,,,,
+SQT Catchment Assessment (NC),2018,RipVegGeo,Riparian Vegetation (Geomorphology),,,,,,,,,,,,,,,,,,D,,,,,,,,,,,,
+SQT Catchment Assessment (NC),2018,SedSupply,Sediment Supply (Geomorphology),,,,,,,,,,,,,,,,,D,,,D,,,,,,,,,,
+SQT Catchment Assessment (NC),2018,303dTMDL,Located on or downstream of a 303(d) listed stream TMDL list (Physicochemical),,,,,,,,,,,,,,,,,,,,,,,,,,D,,,,
+SQT Catchment Assessment (NC),2018,AgriLand,Agricultural Land Use (Physicochemical),,,,,,,,,,,,,,,,,,,,,,,,,,D,,,,
+SQT Catchment Assessment (NC),2018,NPDESPerm,NPDES Permits (Physicochemical),,,,,,,,,,,,,,,,,,,,,,,,,,D,,,,
+SQT Catchment Assessment (NC),2018,SpecCond25,Specific Conductance (uS/cm at 25oC) (Physicochemical),,,,,,,,,,,,,,,,,,,,,,,,,,D,,,,
+SQT Catchment Assessment (NC),2018,SQTimpound,Watershed impoundments  (Biology),,,,,,,,,,,i,,,,,,,,,,,,,,,,,,,D
+SQT Catchment Assessment (NC),2018,OrgRecruit,Organism Recruitment (Biology),,,,,,,,,,,,,,,,,,,,,,,,,,,,D,,
+SQT Catchment Assessment (NC),2018,PctEnhRest,Percent of Catchment being Enhanced or Restored,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,i
+Miscellaneous,2000,SQTCatch,SQT Catchment Assessment,,,,,,,D,,,,,,,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,VisLandUse,Visual inspection of land use,,,,,,,D,,,,,,,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,VisWetRun,Visual assessment of wetlands and runoff,,,,,,,,,D,,,,,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,VisStorage,"Visual obs of storage areas (e.g., wetlands)",,,,,,,,D,,,,,,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,StreamGau,Stream gauge data review,,,,,,,,,,D,,,,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,StreamGau,Stream gauge data review,,,,,,,,,,,D,,,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,VisChan,Visual inspection of channel,,,,,,,,,,,,,,,D,,,,,,,,,,,,,,,
+Miscellaneous,2000,BankHtPt,Bank Height Ratio (1 pt),,,,,,,,,,,,,,,D,,,,,,,,,,,,,,,
+Miscellaneous,2000,EntrenchPt,Entrenchment Ratio (1 pt),,,,,,,,,,,,,,,D,,,,,,,,,,,,,,,
+Miscellaneous,2000,VisFlowObs,Visual seasonal flow observations,,,,,,,,,,,,D,,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,StreamGau,Stream gauge data review,,,,,,,,,,,,D,,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,VisNoStorm,Visual non-storm flow observations,,,,,,,,,,,,,D,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,StreamGau,Stream gauge data review,,,,,,,,,,,,,D,,,,,,,,,,,,,,,,,
+Miscellaneous,2000,VisHighFl,Visual observation during high flow events,,,,,,,,,,,,,,D,,,,,,,,,,,,,,,,
+Miscellaneous,2000,StreamGau,Stream gauge data review,,,,,,,,,,,,,,D,,,,,,,,,,,,,,,,
+Miscellaneous,2000,VisChanEvo,Visual application of Channel Evolution Model,,,,,,,,,,,,,,,,,D,,,,,,,,,,,,,
+Miscellaneous,2000,VisRosgen,Visual application of Rosgen Classification,,,,,,,,,,,,,,,,,D,,,,,,,,,,,,,
+Miscellaneous,2000,CountDebris,Count visible debris from bank,,,,,,,,,,,,,,,,,,,,,D,,,,,,,,,
+Miscellaneous,2000,VisEros,Visual erosion assessment,,,,,,,,,,,,,,,,,,D,,,,,,,,,,,,
+Miscellaneous,2000,VisSedTr,Visual assessment of sediment transport,,,,,,,,,,,,,,,,,,,,D,,,,,,,,,,
+Miscellaneous,2000,VisSubType,Visual identification of substrate types,,,,,,,,,,,,,,,,,,,,,,D,,,,,,,,
+Miscellaneous,2000,VisBedForm,Visual inspection of bed forms,,,,,,,,,,,,,,,,,,,,,,D,,,,,,,,
+Miscellaneous,2000,AerialRev,Aerial photography review,,,,,,,,,,,,,,,,,,,D,,,,,,,,,,,
+Miscellaneous,2000,RipShade,Riparian shading observations,,,,,,,,,,,,,,,,,,,,,,,D,,,,,,,
+Miscellaneous,2000,VisAerDef,"Visual observation of aeration, deficiencies",,,,,,,,,,,,,,,,,,,,,,,,D,,,,,,
+Miscellaneous,2000,SpotDO,Spot-checks of dissolved oxygen,,,,,,,,,,,,,,,,,,,,,,,,D,,,,,,
+Miscellaneous,2000,VisOrgMat,Visual inspection of organic material,,,,,,,,,,,,,,,,,,,,,,,,D,,,,,,
+Miscellaneous,2000,VisTurb,Visual turbidity assessments,,,,,,,,,,,,,,,,,,,,,,,,,,D,,,,
+Miscellaneous,2000,VisDefic,"Visual observation of deficiencies (e.g., blooms)",,,,,,,,,,,,,,,,,,,,,,,,,D,,,,,
+Miscellaneous,2000,SpotWQ,Spot water quality tests,,,,,,,,,,,,,,,,,,,,,,,,,,D,,,,
+Miscellaneous,2000,FishInver,Visual fish and macroinvertebrate counts,,,,,,,,,,,,,,,,,,,,,,,,,,,,D,,
+Miscellaneous,2000,HabMap,Habitat feature mapping,,,,,,,,,,,,,,,,,,,,,,,,,,,D,,,
+Miscellaneous,2000,VisSpecies,Visual species diversity counts,,,,,,,,,,,,,,,,,,,,,,,,,,,,,D,
+Miscellaneous,2000,VisEPTFreq,Visual EPT presence/frequency,,,,,,,,,,,,,,,,,,,,,,,,,,,,,D,
+    </script>
+
+</body>
+</html>

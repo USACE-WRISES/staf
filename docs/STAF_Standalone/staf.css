@@ -1,0 +1,492 @@
+﻿/* STAF standalone styles: mirrors the MudBlazor table layout and colors using plain CSS. */
+:root {
+    --border-color: #000000;
+    --text-color: #000000;
+    --muted-text: #4f4f4f;
+    --link-color: #1a0dab;
+    --focus-color: dodgerblue;
+    --accent: #1e88e5;
+    --bg-hydrology: #d9e1f2;
+    --bg-hydraulics: #b4c6e7;
+    --bg-geomorphology: #fce4d6;
+    --bg-physicochemical: #fff2cc;
+    --bg-biology: #e2efda;
+    --bg-disabled: lightgray;
+    --bg-overlay: rgba(0, 0, 0, 0.45);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: "Roboto", Arial, sans-serif;
+    color: var(--text-color);
+    background: #ffffff;
+}
+
+.staf-app {
+    padding: 16px 24px 40px;
+}
+
+.loading {
+    font-size: 16px;
+    padding: 24px 0;
+}
+
+.app-content.is-hidden {
+    display: none;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 16px;
+    position: relative;
+}
+
+.model-name {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.model-name label {
+    font-size: 13px;
+    color: var(--muted-text);
+}
+
+.model-name input {
+    min-width: 200px;
+}
+
+.menus {
+    margin-left: auto;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn {
+    border: 1px solid #bdbdbd;
+    background: #f5f5f5;
+    color: #222222;
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background: #ececec;
+}
+
+.btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background: #1976d2;
+}
+
+.btn-secondary {
+    background: #ffffff;
+    border-color: #bdbdbd;
+    color: #333333;
+}
+
+.link-button {
+    background: none;
+    border: none;
+    color: #000000;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.link-button:hover {
+    color: var(--link-color);
+}
+
+.menu {
+    position: relative;
+}
+
+.menu-list {
+    display: none;
+    position: absolute;
+    top: 34px;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    min-width: 140px;
+    z-index: 20;
+    padding: 4px 0;
+}
+
+.menu-list.is-open {
+    display: block;
+}
+
+.menu-item {
+    width: 100%;
+    padding: 8px 12px;
+    background: #ffffff;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.menu-item:hover {
+    background: #f0f0f0;
+}
+
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tab-button {
+    border: 1px solid #cfcfcf;
+    background: #ffffff;
+    padding: 6px 14px;
+    cursor: pointer;
+    border-radius: 16px;
+    font-size: 14px;
+}
+
+.tab-button.is-active {
+    background: #e6eefb;
+    border-color: #8bb3f5;
+}
+
+.tab-panel {
+    display: none;
+}
+
+.tab-panel.is-active {
+    display: block;
+}
+
+.is-hidden {
+    display: none;
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.staf-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.staf-table th,
+.staf-table td {
+    border: 1px solid var(--border-color);
+    padding: 6px 8px;
+    vertical-align: middle;
+}
+
+.variable-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.staf-table th {
+    font-weight: 600;
+    text-align: center;
+    vertical-align: bottom;
+}
+
+.header-font-size {
+    font-size: 14px;
+}
+
+.nonclickabletext {
+    text-decoration: none;
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+.nonclickabletextsmall {
+    text-decoration: none;
+    font-size: 12px;
+    color: var(--text-color);
+}
+
+.clickabletext {
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+.clickabletext:hover {
+    text-decoration: underline;
+}
+
+.missingScore {
+    font-size: 12px;
+    font-style: italic;
+    color: darkgray;
+}
+
+.subindex-container {
+    line-height: 1.4;
+}
+
+.cell-disabled {
+    background: var(--bg-disabled);
+}
+
+.category-hydrology {
+    background: var(--bg-hydrology);
+}
+
+.category-hydraulics {
+    background: var(--bg-hydraulics);
+}
+
+.category-geomorphology {
+    background: var(--bg-geomorphology);
+}
+
+.category-physicochemical {
+    background: var(--bg-physicochemical);
+}
+
+.category-biology {
+    background: var(--bg-biology);
+}
+
+input[type="text"],
+input[type="number"],
+input[type="search"],
+select {
+    outline: 0;
+    border-width: 0 0 1px;
+    border-style: solid;
+    border-color: darkgray;
+    padding: 4px 2px;
+    font-size: 14px;
+    background: transparent;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+select:focus {
+    border-color: var(--focus-color);
+    border-width: 0 0 2px;
+    outline: 1px dotted #ffffff;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 40;
+}
+
+.modal.is-open {
+    display: flex;
+}
+
+.modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-overlay);
+}
+
+.modal-content {
+    position: relative;
+    background: #ffffff;
+    max-height: 90vh;
+    width: min(900px, 90vw);
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow: hidden;
+}
+
+.modal-wide {
+    width: min(1200px, 94vw);
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.modal-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.dialog-table {
+    max-height: 50vh;
+    overflow: auto;
+}
+
+.filter-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.filter-bar input {
+    flex: 1;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+}
+
+.data-grid th {
+    text-align: left;
+}
+
+.group-row td {
+    font-weight: 600;
+    background: #f5f5f5;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-controls label {
+    font-size: 13px;
+    color: var(--muted-text);
+}
+
+.score-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(320px, 2fr);
+    gap: 16px;
+}
+
+.lookup-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chart-panel {
+    border: 1px solid #d0d0d0;
+    padding: 8px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#score-chart {
+    width: 100%;
+    height: 260px;
+}
+
+.chart-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted-text);
+}
+
+.score-input {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.toast-container {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 60;
+}
+
+.toast {
+    background: #323232;
+    color: #ffffff;
+    padding: 8px 14px;
+    border-radius: 4px;
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+@media (max-width: 900px) {
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .menus {
+        margin-left: 0;
+        justify-content: flex-start;
+    }
+
+    .score-layout {
+        grid-template-columns: 1fr;
+    }
+}
