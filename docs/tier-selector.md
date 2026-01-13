@@ -3,6 +3,8 @@ title: Tier Selector
 nav_order: 3
 description: "Answer a few questions to pick the right tier of effort."
 ---
+<p class="hero-kicker">Stream Tiered Assessment Framework</p>
+
 
 # Tier Selector
 

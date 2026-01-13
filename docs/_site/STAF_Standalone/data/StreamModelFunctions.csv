@@ -1,0 +1,25 @@
+Functional Category,Functional Variable,Functional Statement,Physical,Chemical,Biological
+Hydrology,Catchment hydrology,Alters water quantity and quality via land uses.,D,i,i
+Hydrology,Surface water storage,"Attenuates upstream flows via natural and artificial features (e.g., wetlands).",D,i,
+Hydrology,Reach inflow,"Addresses localized inputs from tributaries, ditches, and pipes.",D,i,
+Hydrology,Flow duration,Integrates the range of “typical” flows experienced by other processes.,D,,i
+Hydrology,Flow alteration,"Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",D,i,i
+Hydraulics,Low flow dynamics,Ensures habitat availability and water quality during low water levels.,D,i,i
+Hydraulics,Baseflow dynamics,Indicates non-storm conditions experienced the majority of the time.,D,i,i
+Hydraulics,High flow dynamics,Influences erosion and channel maintenance during peak flows.,D,D,
+Hydraulics,Floodplain connectivity,Enhances nutrient cycling and habitat availability via water exchange.,i,D,D
+Hydraulics,Hyporheic connectivity,"Addresses surface-subsurface connections important for temperature regulation, nutrient dynamics, and food webs.",i,D,D
+Geomorphology,Channel evolution,"Addresses legacy, ongoing, and anticipated change in channel form (i.e., dimension) and slope (i.e., profile) in response to flow and sediment inputs.",D,,
+Geomorphology,Lateral stability,Examines the role of bank processes and erosion in channel change.,D,i,
+Geomorphology,Planform change,Observes patterns in sinuosity and curvature affecting habitat complexity.,D,,i
+Geomorphology,Sediment continuity,Maintains channel morphology and habitats through sediment processes.,D,D,i
+Geomorphology,Large wood,Enhances habitat complexity and streambank stability.,i,,D
+Geomorphology,Bed composition,Supports aquatic habitats through streambed material and bedform dynamics.,D,,D
+Physicochemical,Light and thermal regime,"Regulates water chemistry, drives carbon sources and dynamics, and governs the breadth of niche space available for organisms.",,D,i
+Physicochemical,Carbon processing,"Dictates availability of energy sources and supports food webs with ties to pH, production, respiration, and overall system metabolism.",,i,D
+Physicochemical,Nutrient cycling,Drives productivity and quality of waters based on nitrogen & phosphorous.,,D,i
+Physicochemical,Water and soil quality,Indicates the fate and transport of contaminants and other focal constituents. ,,D,i
+Biology,Habitat provision,Supports diverse niches for a range of life stages of aquatic & riparian taxa.,,,D
+Biology,Population support,"Provides for reproduction, survival, and movement of key taxa.", ,i,D
+Biology,Community dynamics,"Facilitates balanced assemblages composed of native taxa with minimal invasive species dominance and representation of keystone species, ecological engineers, and other functionally important taxa. ", ,i,D
+Biology,Watershed connectivity,Facilitates colonization dynamics and capacity to recover after disturbance.,D,,D

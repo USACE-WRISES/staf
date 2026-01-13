@@ -3,6 +3,8 @@ title: Stream Tiered Assessment Framework
 nav_order: 2
 description: "A practical, functions-based, three-tier framework for stream assessment that scales level of effort while preserving comparability."
 ---
+<p class="hero-kicker">Stream Tiered Assessment Framework</p>
+
 
 # Stream Tiered Assessment Framework
 

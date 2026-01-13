@@ -3,6 +3,8 @@ title: Rapid Tier
 nav_order: 5
 description: "Field-based rapid assessment for comparing sites and alternatives."
 ---
+<p class="hero-kicker">Stream Tiered Assessment Framework</p>
+
 
 # Rapid Tier
 

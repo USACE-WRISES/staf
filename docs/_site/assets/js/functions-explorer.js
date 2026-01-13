@@ -7,16 +7,11 @@
 
   const baseUrl = container.dataset.baseurl || '';
   const dataUrl = `${baseUrl}/assets/data/functions.json`;
-  const mappingUrl = `${baseUrl}/assets/data/cwa-mapping.json`;
   const fallback = container.querySelector('.functions-explorer-fallback');
   const ui = container.querySelector('.functions-explorer-ui');
 
-  const buildOutcomeText = (mapping) => {
-    if (!mapping) {
-      return 'P:- C:- B:-';
-    }
-    return `P:${mapping.physical} C:${mapping.chemical} B:${mapping.biological}`;
-  };
+  const slugCategory = (category) =>
+    `category-${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
   const buildDetails = (fn) => {
     const wrap = document.createElement('div');
@@ -57,58 +52,95 @@
     metrics.appendChild(metricsTitle);
     metrics.appendChild(lists);
 
-    const links = document.createElement('div');
-    links.className = 'details-links';
-    links.innerHTML = `<a href="${baseUrl}/tiers/screening/">Screening</a> | <a href="${baseUrl}/tiers/rapid/">Rapid</a> | <a href="${baseUrl}/tiers/detailed/">Detailed</a> | <a href="${baseUrl}/scoring/">Scoring</a>`;
-
     wrap.appendChild(desc);
     wrap.appendChild(metrics);
-    wrap.appendChild(links);
 
     return wrap;
   };
 
-  const renderTable = (functionsList, mappingById, tableBody) => {
+  const updateCategoryRowSpans = (tableBody) => {
+    const rows = Array.from(tableBody.querySelectorAll('tr'));
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+      const row = rows[rowIndex];
+      const categoryCell = row.querySelector('.category-cell');
+      if (!categoryCell) {
+        continue;
+      }
+
+      let span = 0;
+      for (let i = rowIndex; i < rows.length; i += 1) {
+        if (i > rowIndex && rows[i].querySelector('.category-cell')) {
+          break;
+        }
+        if (!rows[i].hidden) {
+          span += 1;
+        }
+      }
+
+      categoryCell.rowSpan = Math.max(span, 1);
+    }
+  };
+
+  const renderTable = (functionsList, tableBody) => {
     tableBody.innerHTML = '';
+
+    const spans = new Array(functionsList.length).fill(0);
+    let i = 0;
+    while (i < functionsList.length) {
+      const category = functionsList[i].category;
+      let j = i + 1;
+      while (j < functionsList.length && functionsList[j].category === category) {
+        j += 1;
+      }
+      spans[i] = j - i;
+      i = j;
+    }
 
     functionsList.forEach((fn, index) => {
       const row = document.createElement('tr');
+      const categoryClass = slugCategory(fn.category);
+      row.classList.add(categoryClass);
 
-      const categoryCell = document.createElement('td');
-      categoryCell.textContent = fn.category;
+      if (spans[index] > 0) {
+        const categoryCell = document.createElement('td');
+        categoryCell.textContent = fn.category;
+        categoryCell.rowSpan = spans[index];
+        categoryCell.classList.add('category-cell');
+        row.appendChild(categoryCell);
+      }
 
       const nameCell = document.createElement('td');
       nameCell.textContent = fn.name;
 
       const shortCell = document.createElement('td');
-      shortCell.textContent = fn.short_description;
+      const shortText = document.createElement('span');
+      shortText.className = 'description-text';
+      shortText.textContent = fn.short_description;
 
-      const outcomeCell = document.createElement('td');
-      outcomeCell.textContent = buildOutcomeText(mappingById[fn.id]);
-
-      const toggleCell = document.createElement('td');
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
-      toggleBtn.className = 'btn btn-small';
-      toggleBtn.textContent = 'Details';
+      toggleBtn.className = 'details-caret';
+      toggleBtn.textContent = '▾';
       const detailId = `details-${fn.id}`;
       toggleBtn.setAttribute('aria-expanded', 'false');
       toggleBtn.setAttribute('aria-controls', detailId);
-      toggleCell.appendChild(toggleBtn);
+      toggleBtn.setAttribute('aria-label', 'Toggle details');
+      toggleBtn.setAttribute('title', 'Toggle details');
 
-      row.appendChild(categoryCell);
+      shortCell.appendChild(shortText);
+      shortCell.appendChild(toggleBtn);
+
       row.appendChild(nameCell);
       row.appendChild(shortCell);
-      row.appendChild(outcomeCell);
-      row.appendChild(toggleCell);
 
       const detailsRow = document.createElement('tr');
       detailsRow.id = detailId;
       detailsRow.className = 'details-row';
+      detailsRow.classList.add(categoryClass);
       detailsRow.hidden = true;
 
       const detailsCell = document.createElement('td');
-      detailsCell.colSpan = 5;
+      detailsCell.colSpan = 2;
       detailsCell.appendChild(buildDetails(fn));
       detailsRow.appendChild(detailsCell);
 
@@ -116,19 +148,20 @@
         const isOpen = !detailsRow.hidden;
         detailsRow.hidden = isOpen;
         toggleBtn.setAttribute('aria-expanded', String(!isOpen));
+        toggleBtn.textContent = isOpen ? '▾' : '▴';
+        updateCategoryRowSpans(tableBody);
       });
 
       tableBody.appendChild(row);
       tableBody.appendChild(detailsRow);
     });
+
+    updateCategoryRowSpans(tableBody);
   };
 
   const init = async () => {
     try {
-      const [functionsList, mappingList] = await Promise.all([
-        fetch(dataUrl).then((r) => r.json()),
-        fetch(mappingUrl).then((r) => r.json())
-      ]);
+      const functionsList = await fetch(dataUrl).then((r) => r.json());
 
       if (fallback) {
         fallback.hidden = true;
@@ -136,11 +169,6 @@
       if (ui) {
         ui.hidden = false;
       }
-
-      const mappingById = mappingList.reduce((acc, item) => {
-        acc[item.id] = item;
-        return acc;
-      }, {});
 
       const controls = document.createElement('div');
       controls.className = 'functions-controls';
@@ -170,7 +198,7 @@
       const table = document.createElement('table');
       table.className = 'functions-table';
       const thead = document.createElement('thead');
-      thead.innerHTML = '<tr><th>Category</th><th>Function</th><th>Description</th><th>Outcomes</th><th></th></tr>';
+      thead.innerHTML = '<tr><th>Category</th><th>Function</th><th>Description</th></tr>';
       const tbody = document.createElement('tbody');
       table.appendChild(thead);
       table.appendChild(tbody);
@@ -186,7 +214,7 @@
           const matchesCategory = cat === 'all' || fn.category === cat;
           return matchesText && matchesCategory;
         });
-        renderTable(filtered, mappingById, tbody);
+        renderTable(filtered, tbody);
       };
 
       search.addEventListener('input', filterAndRender);
