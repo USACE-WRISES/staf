@@ -12,8 +12,8 @@ If you want to preview locally, you can run Jekyll from the `docs/` folder:
 
 ```bash
 bundle install
-bundle exec jekyll serve
 cd docs/
+bundle exec jekyll serve
 bundle exec jekyll serve --livereload
 ```
 
