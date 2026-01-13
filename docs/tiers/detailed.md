@@ -3,6 +3,8 @@ title: Detailed Tier
 nav_order: 6
 description: "Intensive assessment for compliance, crediting, and monitoring."
 ---
+<p class="hero-kicker">Stream Tiered Assessment Framework</p>
+
 
 # Detailed Tier
 
