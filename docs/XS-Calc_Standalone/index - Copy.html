@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>1D Cross-Section Hydraulics Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:#fff; --fg:#111; --muted:#666; --border:#ddd; --card:#fafafa;
+      --blue:#0b57d0; --magenta:#FF00FF; --green:#2e7d32; --dkgray:#444; /* magenta per spec */
+    }
+    *{box-sizing:border-box;}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Arial,sans-serif;margin:0;color:var(--fg);background:#fff;}
+    body.modal-open{overflow:hidden;overscroll-behavior:none;}
+
+    /* Base header styles (used by the top bar and overridden in modals) */
+    header{padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600;}
+
+    /* NEW: make the top-of-page header sticky */
+    .siteHdr{
+      position: sticky;
+      top: 0;
+      background: var(--bg);  /* cover content beneath while stuck */
+      z-index: 60;            /* above page content, below modals (z:9999) */
+    }
+
+    main{max-width:1340px;margin:0 auto;padding:20px;display:grid;gap:20px;}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
+    h2{margin:0;font-size:1.07rem;}
+    .small{font-size:.92rem;color:var(--muted);}
+    .cardHdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+    .helpBtn{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;border:1px solid #cfcfcf;background:#fff;color:#333;font-weight:600;cursor:pointer;}
+    .helpBtn.clicked{animation:btnflash 180ms ease-out}
+
+    /* NEW: small icon-only button (for Filter) */
+    .iconBtn{width:34px;height:34px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:10px}
+    .iconBtn svg{width:18px;height:18px;display:block}
+    /* Tabs */
+    .tabs{display:flex;gap:16px;border-bottom:1px solid #e6e6e6;margin:4px 0 10px;}
+    .tab{padding:8px 2px;cursor:pointer;color:#444;position:relative;font-weight:500;}
+    .tab.active{color:#0b3d91;}
+    .tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#0b57d0;border-radius:0;}
+    .tabPanel{display:none;}
+    .tabPanel.active{display:block;}
+    /* Inputs grid */
+    .controls{display:grid;grid-template-columns:repeat(5,minmax(180px,1fr));gap:12px;}
+    label{display:grid;gap:6px;font-size:.92rem;color:var(--muted);}
+    input,select,button{padding:10px;border:1px solid var(--border);border-radius:10px;font:inherit;background:#fff;}
+    input,select{width:100%;}
+    input:disabled, select:disabled { background:#f5f5f5; color:#888; }
+    button:disabled{opacity:.45;cursor:not-allowed;}
+    /* Accordion + small checkbox */
+    details.acc{border:1px solid #e7e7e7;border-radius:10px;padding:8px 10px;background:#fff}
+    details.acc+details.acc{margin-top:10px}
+    details.acc>summary{cursor:pointer;list-style:none;user-select:none;font-weight:700;color:#333;margin:2px 0 8px;display:flex;align-items:center}
+    details.acc>summary::-webkit-details-marker{display:none}
+    /* Accordion caret */
+    details.acc>summary::before{content:'\25B8'; /* ▸ */ display:inline-block; margin-right:6px; transition:transform .12s ease}
+    details.acc[open]>summary::before{transform:rotate(90deg)}
+    /* Unit tags */
+    .unit-len{color:#666}
+    .chk-sm{transform:scale(0.95); transform-origin:left center}
+    .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+    .designer-actions{gap:12px;margin-top:16px;align-items:center;}
+    .applyGroup{display:flex;align-items:center;gap:12px;}
+    .actions-xs{margin:4px 0 10px;}
+    button{background:#fff;cursor:pointer;}
+    button.clicked{animation:btnflash 180ms ease-out}
+    @keyframes btnflash{0%{background:#fff}40%{background:#e9e9e9}100%{background:#fff}}
+
+    .labelTitle{display:flex;align-items:center;gap:6px}
+    .info{position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid #bcbcbc;color:#555;background:#fff;font-size:11px;line-height:1;cursor:help;user-select:none}
+    .info::after{content:attr(data-tip);position:absolute;left:50%;transform:translateX(-50%);bottom:130%;width:290px;max-width:70vw;padding:8px 10px;border-radius:8px;background:rgba(20,20,20,.95);color:#fff;font-size:12px;line-height:1.35;box-shadow:0 6px 16px rgba(0,0,0,.2);opacity:0;pointer-events:none;transition:opacity .12s ease-out;z-index:1000}
+    .info::before{content:'';position:absolute;left:50%;transform:translateX(-50%);bottom:122%;border:6px solid transparent;border-top-color:rgba(20,20,20,.95);opacity:0;transition:opacity .12s ease-out}
+    .info:hover::after,.info:hover::before{opacity:1}
+    /* Two-pane */
+    .grid2{display:grid;grid-template-columns:420px 880px;gap:16px;align-items:start}
+    .resultsCard{width:880px}
+    @media(max-width:1200px){.grid2{grid-template-columns:1fr}.resultsCard{width:auto}}
+    @media(max-width:900px){.controls{grid-template-columns:repeat(3,minmax(160px,1fr))}}
+    @media(max-width:600px){.controls{grid-template-columns:repeat(1,minmax(160px,1fr))}}
+    /* Results header + switch */
+    .resultsHeader{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+    .plotSwitch{margin-left:auto;display:flex;align-items:center;gap:8px}
+    .segSwitch{display:inline-flex;border:1px solid #cfcfcf;border-radius:999px;overflow:hidden;background:#fff}
+    .segSwitch input{display:none}
+    .segSwitch label{padding:6px 10px;cursor:pointer;user-select:none;border-right:1px solid #e6e6e6;white-space:nowrap;font-size:.95rem}
+    .segSwitch label:last-of-type{border-right:none}
+    .segSwitch input:checked+label{background:#e9f0ff;color:#0b3d91}
+
+    /* NEW: bank tools */
+    .bankTools{display:flex;align-items:center;gap:14px}
+    .bankGroup{display:flex;align-items:center;gap:6px}
+    .btnTiny{padding:4px 8px;border-radius:999px;font-size:.9rem;line-height:1}
+    .bankToggle{padding:6px 12px;border-radius:999px;border:1px solid #cfcfcf;background:#fff;font-weight:600}
+    .bankToggle.active{background:#e9f0ff;color:#0b3d91;border-color:#b9ccff}
+    /* Tables */
+    table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed}
+    #xsTable:focus, #xsTable:focus-visible{outline:none; box-shadow:none}
+    th,td{padding:6px 8px;border-bottom:1px solid var(--border);border-right:1px solid var(--border)}
+    th:last-child,td:last-child{border-right:none}
+    th{text-align:left;color:#666;font-weight:600}
+    td{text-align:left;background:#fff;user-select:none}
+    #xsTable th:nth-child(1),#xsTable td.cell-id{width:28px}
+    #xsTable th:nth-child(2),#xsTable td.cell-station{width:60px}
+    #xsTable th:nth-child(3),#xsTable td.cell-elev{width:60px}
+    #xsTable th:nth-child(4),#xsTable td.cell-stage{width:54px}
+    #xsTable th:nth-child(5),#xsTable td.cell-n{width:58px}
+    .cell-id{background:#f0f0f0;color:#333;text-align:center;font-variant-numeric:tabular-nums}
+    .cell-station,.cell-elev{cursor:default}
+    .cell-station input,.cell-elev input,.cell-stage select,.cell-n input{
+      width:100%;border:none;outline:none;background:#fff;padding:8px 6px;border-radius:8px;text-align:left;cursor:default
+    }
+    .cell-stage select{ text-align:left; text-align-last:left; }
+    .cell-station input:focus,.cell-elev input:focus,.cell-n input:focus{cursor:text;caret-color:#000}
+    .cell-selected{background:#e6f0ff!important;box-shadow:inset 0 0 0 2px #bfd3ff}
+    /* HVn show/hide */
+    #xsTable th.col-n, #xsTable td.cell-n { display:none; }
+    body.hvn-on #xsTable th.col-n, body.hvn-on #xsTable td.cell-n { display:table-cell; }
+    body.hvn-on #nLOB, body.hvn-on #nMC, body.hvn-on #nROB { opacity:.5 }
+    /* Results + overlays */
+    .resultsWrap{display:grid;gap:10px}
+    .plotWrap,.summaryWrap,.convWrap,.distWrap{position:relative}
+    .overlayShade{position:absolute;inset:0;background:rgba(128,128,128,.35);border-radius:10px;display:none;pointer-events:none}
+    .overlayNote{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:#111;font-weight:700;text-align:center;pointer-events:none;padding:0 12px}
+    /* Plot */
+    svg{width:100%;aspect-ratio:1000/360;height:auto;background:#fff;border:1px solid var(--border);border-radius:10px}
+    .axis{stroke:#555;stroke-width:1.5;vector-effect:non-scaling-stroke}
+    .grid{stroke:#888;stroke-width:1;stroke-dasharray:2 6;opacity:.55;vector-effect:non-scaling-stroke}
+    .tick-mark{stroke:#333;stroke-width:2;vector-effect:non-scaling-stroke}
+    .tick-label{font-size:20px;fill:#333}
+    .axis-label{font-size:24px;fill:#222}
+    .point{stroke:#222;fill:#222}
+    .point.bank{stroke:#d32f2f;fill:#d32f2f}
+    .nlabel { font-size:18px; fill:#333; }
+    .prof-vel{stroke:#b71c1c;stroke-width:2;fill:none;vector-effect:non-scaling-stroke}
+    .prof-tau{stroke:#6f42c1;stroke-width:2;fill:none;vector-effect:non-scaling-stroke}
+    .secondary-axis{stroke:#333;stroke-width:1.5;vector-effect:non-scaling-stroke}
+    .secondary-tick{stroke-width:2;vector-effect:non-scaling-stroke}
+    .secondary-label{font-size:16px}
+    .slice-boundary{stroke:#777;stroke-width:1;stroke-dasharray:3 7;opacity:.55;vector-effect:non-scaling-stroke}
+    .summary,.dist{width:100%;border-collapse:collapse;margin-top:4px;background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+    .dist{table-layout:fixed}
+    .summary th,.summary td,.dist th,.dist td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:right}
+    .summary th:first-child,.dist th:first-child{text-align:left}
+    .dist th:first-child,.dist td:first-child{text-align:left;color:#444;white-space:nowrap}
+    .dist tfoot td{font-weight:600;background:#fafafa}
+    .disabled{opacity:.45;filter:grayscale(.6)}
+    .summary{table-layout:auto}
+    .summary th:first-child{min-width:220px;white-space:nowrap}
+    .summary th:nth-child(2),.summary td:nth-child(2){min-width:130px;white-space:nowrap}
+    .subhdr{display:flex;align-items:center;gap:8px;margin:12px 0 6px;}
+    .subhdr h4{margin:0;font-weight:500;color:#222;}
+    .btnAdd{padding:4px 10px;border-radius:999px;border:1px solid #cfcfcf;font-size:.9rem;}
+    .tbl-simple{width:100%;table-layout:fixed;border:1px solid #e8e8e8;border-radius:10px;overflow:hidden;background:#fff;}
+    .tbl-simple th,.tbl-simple td{border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:8px 10px;}
+    .tbl-simple th:last-child,.tbl-simple td:last-child{border-right:none;}
+    .tbl-simple th{font-weight:400;color:#555;}
+    .tbl-simple input{width:100%;padding:8px 8px;border:1px solid #e4e4e4;border-radius:8px;}
+    .tbl-simple .actCol{width:64px;text-align:center;}
+    .btnDel{padding:6px 8px;border-radius:8px;border:1px solid #e0e0e0;}
+    .tbl-ifa colgroup col.c-l,.tbl-obs colgroup col.c-l{width:22%;}
+    .tbl-ifa colgroup col.c-r,.tbl-obs colgroup col.c-r{width:22%;}
+    .tbl-ifa colgroup col.c-elev{width:26%;}
+    .tbl-obs colgroup col.c-top{width:36%;}
+    .tbl-ifa colgroup col.c-perm{width:14%;}
+    .tbl-ifa colgroup col.c-act,.tbl-obs colgroup col.c-act{width:10%;}
+    .tbl-lev colgroup col.c-side{width:18%;}
+    .tbl-lev colgroup col.c-en{width:16%;}
+    .tbl-lev colgroup col.c-sta{width:33%;}
+    .tbl-lev colgroup col.c-crest{width:33%;}
+    .modalBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9999;overscroll-behavior:contain}
+    .modal{width:min(980px,94vw);max-height:88vh;overflow:auto;background:#fff;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.28);padding:16px;display:grid;gap:8px;overscroll-behavior:contain}
+    .modal.modal-lg{width:min(1180px,96vw);max-height:90vh;}
+    .modal header{display:flex;align-items:center;justify-content:space-between;padding:0;border-bottom:none}
+    .modal h3{margin:0;font-size:1.05rem}
+    .modal .rightBtns{margin-left:auto;display:flex;gap:8px;align-items:center}
+    .btnSecondary{border-color:#cfcfcf}
+    .btnPrimary{background:#0b57d0;color:#fff;border-color:#0b57d0}
+    .btnLink{border:none;background:transparent;color:#0b57d0;text-decoration:underline;padding:6px 8px;border-radius:8px}
+    .pickerHeader{display:flex;align-items:center;gap:8px}
+    .pickerHeader .rightBtns{margin-left:auto}
+    .chips{display:flex;justify-content:center;gap:8px;margin:6px 0 8px}
+    .chips button{padding:6px 10px;border-radius:999px;border:1px solid #cfcfcf;background:#fff}
+    .chips button.active{background:#e9f0ff;color:#0b3d91}
+    .centerRow{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap}
+    .presetRow{margin:6px 0}
+    .presetRow .title{font-weight:600;color:#333}
+    .nValRow{margin:2px 0}
+    .nValRow .val{font-weight:700}
+    .quickGrid{display:grid;grid-template-columns:1fr;gap:10px;margin-top:8px}
+    .grp{border:1px solid #eee;border-radius:10px;padding:10px;background:#FAFAFA;}
+    .grp h4{margin:0 0 6px;font-size:.98rem;color:#333}
+    .cards{display:grid;grid-template-columns:repeat(3,minmax(170px,1fr));gap:8px}
+    @media(max-width:900px){.cards{grid-template-columns:repeat(2,minmax(160px,1fr))}}
+    @media(max-width:600px){.cards{grid-template-columns:1fr}}
+    .cardBtn{display:grid;gap:2px;border:1px solid #d9d9d9;border-radius:10px;padding:8px;background:#fff;text-align:left}
+    .cardBtn.active{outline:2px solid #0b57d0}
+    .cardBtn .lbl{font-weight:600;color:#222}
+    .cardBtn .rng{font-size:.85rem;color:#777}
+    .searchRow{display:flex;justify-content:center}
+    .searchRow input{width:min(520px,85vw)}
+    #nPickerMsg{ text-align:center;color:#b33;margin-top:6px;}
+    #usgsFrame{width:100%;height:78vh;border:none;border-radius:10px;background:#fff}
+
+    .ico-funnel{display:inline-block;width:16px;height:16px;vertical-align:-3px;margin-right:6px;position:relative}
+    .ico-funnel:before{content:"";position:absolute;left:50%;transform:translateX(-50%);top:0;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:8px solid #333}
+    .ico-funnel:after{content:"";position:absolute;left:50%;transform:translateX(-50%);top:8px;width:8px;height:6px;background:#333;border-radius:1px}
+    .actions.actions-xs #openFilter{ display:none !important; }
+
+    /* NEW: Filter iframe */
+    #filterFrame{width:100%;height:84vh;border:none;border-radius:10px;background:#fff}
+
+    /* Larger, stroke-only icons for the XS toolbar */
+    .iconBtn svg.ico-stroke { width:22px; height:22px; }
+    .iconBtn svg.ico-stroke * {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Make the "3DEP" text button match the 34px icon button height */
+    #open3DEP.btnSecondary{
+      height: 34px;
+      padding: 0 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      border-radius: 10px;
+    }
+
+    /* --- Toggle switches (for Setup + Designer Auto Apply) --- */
+    .toggle{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .switch{position:relative;display:inline-block;width:46px;height:26px;flex:0 0 auto}
+    .switch input{position:absolute;inset:0;opacity:0;margin:0;width:100%;height:100%;cursor:pointer}
+    .switch .slider{position:absolute;inset:0;background:#ddd;border-radius:999px;transition:background .15s ease}
+    .switch .slider::before{content:"";position:absolute;left:4px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s ease}
+    .switch input:checked + .slider{background:#0b57d0}
+    .switch input:checked + .slider::before{transform:translateX(20px)}
+
+  </style>
+</head>
+<body>
+<header class="siteHdr">1D Cross-Section Hydraulics Calculator</header>
+
+<main>
+  <!-- SETTINGS -->
+  <div class="card">
+    <div class="cardHdr">
+      <h2>Settings</h2>
+      <button id="openHelp" class="helpBtn" title="About & equations">?</button>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Settings Tabs">
+      <div class="tab active" data-tab="setup" role="tab" aria-selected="true" tabindex="0">Setup</div>
+      <div class="tab" data-tab="hcs" role="tab" aria-selected="false" tabindex="0">Hydraulic Controls &amp; Structures</div>
+      <div class="tab" data-tab="designer" role="tab" aria-selected="false" tabindex="0">Designer</div>
+    </div>
+
+    <!-- Setup Panel -->
+    <div id="tab-setup" class="tabPanel active">
+      <div class="controls">
+        <label>Unit system
+          <select id="units">
+            <option value="US">US Customary (ft, s)</option>
+            <option value="SI">SI (m, s)</option>
+          </select>
+        </label>
+        <label><span class="labelTitle">Bed/Energy Slope <span class="unit-slope">(ft/ft)</span></span>
+          <input id="slope" type="number" step="0.001" value="0.001">
+        </label>
+        <label>LOB n
+          <input id="nLOB" type="number" step="0.001" value="0.100">
+        </label>
+        <label>Channel n
+          <input id="nMC" type="number" step="0.001" value="0.035">
+        </label>
+        <label>ROB n
+          <input id="nROB" type="number" step="0.001" value="0.100">
+        </label>
+        <label><span class="labelTitle">Flow Depth <span class="unit-len">(ft)</span></span>
+          <input id="depth" type="number" step="any" value="2.5">
+        </label>
+        <label><span class="labelTitle">Discharge <span class="unit-q unit-len">(ft³/s)</span></span>
+          <input id="discharge" type="number" step="any" value="0" disabled>
+        </label>
+        <label>
+          <span class="labelTitle">LOB slices <span class="info" data-tip="Up to 45 slices across LOB, Channel, and ROB combined.">i</span></span>
+          <select id="N_LOB"></select>
+        </label>
+        <label>
+          <span class="labelTitle">Channel slices <span class="info" data-tip="Up to 45 slices across LOB, Channel, and ROB combined.">i</span></span>
+          <select id="N_CHAN"></select>
+        </label>
+        <label>
+          <span class="labelTitle">ROB slices <span class="info" data-tip="Up to 45 slices across LOB, Channel, and ROB combined.">i</span></span>
+          <select id="N_ROB"></select>
+        </label>
+
+        <!-- Converted to Toggle -->
+        <label class="toggle">
+          <span>Specify Discharge</span>
+          <span class="switch">
+            <input id="specifyQ" type="checkbox">
+            <span class="slider" aria-hidden="true"></span>
+          </span>
+        </label>
+
+        <!-- Converted to Toggle -->
+        <label class="toggle">
+          <span>Horizontal Variation of n</span>
+          <span class="switch">
+            <input id="hvnToggle" type="checkbox">
+            <span class="slider" aria-hidden="true"></span>
+          </span>
+        </label>
+      </div>
+      <div class="actions">
+        <button id="resetExample" class="harmonize">Reset Example</button>
+        <button id="openNPicker" title="Open n‑value picker">Open n picker</button>
+      </div>
+    </div>
+
+    <!-- HCS Panel -->
+    <div id="tab-hcs" class="tabPanel">
+      <div class="subhdr">
+        <h4>Ineffective Flow Areas</h4>
+        <button id="addIFA" class="btnAdd" title="Add IFA">Add</button>
+      </div>
+      <table id="ifaTable" class="tbl-simple tbl-ifa">
+        <colgroup>
+          <col class="c-l"><col class="c-r"><col class="c-elev"><col class="c-perm"><col class="c-act">
+        </colgroup>
+        <thead>
+        <tr>
+          <th>Left Sta</th>
+          <th>Right Sta</th>
+          <th>Effective Above Elev</th>
+          <th>Permanent</th>
+          <th class="actCol">Actions</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="subhdr" style="margin-top:14px;">
+        <h4>Obstructions</h4>
+        <button id="addOBS" class="btnAdd" title="Add Obstruction">Add</button>
+      </div>
+      <table id="obsTable" class="tbl-simple tbl-obs">
+        <colgroup>
+          <col class="c-l"><col class="c-r"><col class="c-top"><col class="c-act">
+        </colgroup>
+        <thead>
+        <tr>
+          <th>Left Sta</th>
+          <th>Right Sta</th>
+          <th>Top Elev</th>
+          <th class="actCol">Actions</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="subhdr" style="margin-top:14px;">
+        <h4>Levees</h4>
+      </div>
+      <table id="levTable" class="tbl-simple tbl-lev">
+        <colgroup>
+          <col class="c-side"><col class="c-en"><col class="c-sta"><col class="c-crest">
+        </colgroup>
+        <thead>
+        <tr>
+          <th>Side</th>
+          <th>Enable</th>
+          <th>Station</th>
+          <th>Crest Elev</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr data-side="left">
+          <td>Left</td>
+          <td style="text-align:center"><input type="checkbox" class="lev-en"></td>
+          <td><input type="number" step="any" class="lev-sta"></td>
+          <td><input type="number" step="any" class="lev-crest"></td>
+        </tr>
+        <tr data-side="right">
+          <td>Right</td>
+          <td style="text-align:center"><input type="checkbox" class="lev-en"></td>
+          <td><input type="number" step="any" class="lev-sta"></td>
+          <td><input type="number" step="any" class="lev-crest"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Designer Panel -->
+    <div id="tab-designer" class="tabPanel">
+      <div class="controls" style="margin-bottom:8px;">
+        <!-- Removed Auto Apply from here per spec -->
+        <label>
+          Number of Stages
+          <select id="des-numStages">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+        </label>
+      </div>
+
+      <details class="acc" open>
+        <summary>Stage 1 (Bankfull/Channel)</summary>
+        <div class="controls">
+          <label><span class="labelTitle">Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-Width" type="number" step="any" value="20">
+          </label>
+          <label><span class="labelTitle">Depth <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-Depth" type="number" step="any" value="2">
+          </label>
+          <label>Side Slope, m:1
+            <input id="des-s1-mbanks" type="number" step="any" value="2">
+          </label>
+          <label>Bed Slope, ybed
+            <input id="des-s1-ybed" type="number" step="any" value="0.5">
+          </label>
+          <label><span class="labelTitle">Thalweg Shift (+R/−L) <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-thalweg_shift" type="number" step="any" value="0">
+          </label>
+          <label><span class="labelTitle">Tie‑out L <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-Mtieout_L" type="number" step="any" value="3">
+          </label>
+          <label><span class="labelTitle">Tie‑out R <span class="unit-len">(ft)</span></span>
+            <input id="des-s1-Mtieout_R" type="number" step="any" value="3">
+          </label>
+          <label>Roundness (0–1)
+            <input id="des-s1-Roundness" type="number" step="any" value="0">
+          </label>
+        </div>
+      </details>
+
+      <details class="acc">
+        <summary>Stage 2 (Benches)</summary>
+        <div class="controls">
+          <label><span class="labelTitle">ΔDepth <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-D2stg" type="number" step="any" value="2">
+          </label>
+          <label>Side Slope, m:1
+            <input id="des-s2-Mbanks_2stg" type="number" step="any" value="2">
+          </label>
+          <label><span class="labelTitle">Bench L Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Wbench_L" type="number" step="any" value="10">
+          </label>
+          <label><span class="labelTitle">Bench R Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Wbench_R" type="number" step="any" value="10">
+          </label>
+          <label><span class="labelTitle">Bench L y <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Ybench_L" type="number" step="any" value="0.2">
+          </label>
+          <label><span class="labelTitle">Bench R y <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Ybench_R" type="number" step="any" value="0.2">
+          </label>
+          <label><span class="labelTitle">Tie‑out 2nd L <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Mtieout_2stg_L" type="number" step="any" value="3">
+          </label>
+          <label><span class="labelTitle">Tie‑out 2nd R <span class="unit-len">(ft)</span></span>
+            <input id="des-s2-Mtieout_2stg_R" type="number" step="any" value="3">
+          </label>
+        </div>
+      </details>
+
+      <details class="acc">
+        <summary>Stage 3 (Floodplain)</summary>
+        <div class="controls">
+          <label><span class="labelTitle">ΔDepth <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-D3stg" type="number" step="any" value="0.5">
+          </label>
+          <label>Side Slope, m:1
+            <input id="des-s3-Mbanks_3stg" type="number" step="any" value="2">
+          </label>
+          <label><span class="labelTitle">Stage 3 L Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-W3rdstage_L" type="number" step="any" value="10">
+          </label>
+          <label><span class="labelTitle">Stage 3 R Width <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-W3rdstage_R" type="number" step="any" value="10">
+          </label>
+          <label><span class="labelTitle">Stage 3 L y <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-y3rdStage_L" type="number" step="any" value="0.2">
+          </label>
+          <label><span class="labelTitle">Stage 3 R y <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-y3rdStage_R" type="number" step="any" value="0.2">
+          </label>
+          <label><span class="labelTitle">Tie‑out 3rd L <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-Mtieout_3stg_L" type="number" step="any" value="3">
+          </label>
+          <label><span class="labelTitle">Tie‑out 3rd R <span class="unit-len">(ft)</span></span>
+            <input id="des-s3-Mtieout_3stg_R" type="number" step="any" value="3">
+          </label>
+        </div>
+      </details>
+
+      <details class="acc">
+        <summary>Advanced</summary>
+        <div class="controls" style="margin-top:6px;">
+          <label>Left BKF H Mult
+            <input id="des-adv-Left_BKF_Height_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Right BKF H Mult
+            <input id="des-adv-Right_BKF_Height_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Left m@BKF Mult
+            <input id="des-adv-Left_Mbanks_BKF_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Right m@BKF Mult
+            <input id="des-adv-Right_Mbanks_BKF_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Left BKF bottom y Mult
+            <input id="des-adv-Left_BKF_Bottom_Slope_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label>Right BKF bottom y Mult
+            <input id="des-adv-Right_BKF_Bottom_Slope_Multiplier" type="number" step="any" value="1">
+          </label>
+          <label><span class="labelTitle">X datum <span class="unit-len">(ft)</span></span>
+            <input id="des-adv-X_datum" type="number" step="any" value="0">
+          </label>
+          <label><span class="labelTitle">Y datum <span class="unit-len">(ft)</span></span>
+            <input id="des-adv-Y_datum" type="number" step="any" value="0">
+          </label>
+        </div>
+      </details>
+
+      <div class="actions designer-actions">
+        <div class="segSwitch" role="radiogroup" aria-label="Replace or Merge mode">
+          <input type="radio" id="mergeReplace" name="mergeMode" value="replace" checked>
+          <label for="mergeReplace">Replace current XS</label>
+          <input type="radio" id="mergeMerge" name="mergeMode" value="merge">
+          <label for="mergeMerge">Merge into XS</label>
+        </div>
+
+        <div class="applyGroup">
+          <label class="toggle">
+            <span>Automatically Apply</span>
+            <span class="switch">
+              <input id="designerAutoApply" type="checkbox">
+              <span class="slider" aria-hidden="true"></span>
+            </span>
+          </label>
+
+          <button id="designerApply" title="Apply design to XS">Apply</button>
+        </div>
+      </div>
+
+      <input type="hidden" id="des-mergeMode" value="replace">
+
+    </div>
+  </div>
+
+  <div class="grid2">
+    <!-- CROSS‑SECTION -->
+    <div class="card">
+      <div class="cardHdr">
+        <h2>Cross‑Section Data</h2>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <!-- Copy (stroke-only, slightly larger) -->
+          <button id="btnCopyXS" class="btnSecondary iconBtn" title="Copy all to clipboard" aria-label="Copy to clipboard">
+            <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
+              <rect x="9" y="3" width="10" height="12" rx="2" ry="2"></rect>
+              <rect x="5" y="9" width="10" height="12" rx="2" ry="2"></rect>
+            </svg>
+          </button>
+
+          <!-- Paste (stroke-only, slightly larger; no fill) -->
+          <button id="btnPasteXS" class="btnSecondary iconBtn" title="Paste from clipboard" aria-label="Paste from clipboard">
+            <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
+              <rect x="6" y="4" width="12" height="16" rx="2" ry="2"></rect>
+              <rect x="9" y="2" width="6" height="4" rx="2" ry="2"></rect>
+              <path d="M12 9v6"></path>
+              <path d="M9 13l3 3 3-3"></path>
+            </svg>
+          </button>
+
+          <!-- Filter (stroke-only, slightly larger; no fill) -->
+          <button id="openFilter2" class="btnSecondary iconBtn" title="Filter cross-section points" aria-label="Filter points">
+            <svg viewBox="0 0 24 24" class="ico-stroke" role="img" aria-hidden="true">
+              <path d="M3 4h18l-7 9v5l-4 3v-8L3 4z"></path>
+            </svg>
+          </button>
+
+          <!-- 3DEP button (unchanged) -->
+          <button id="open3DEP" class="btnSecondary" title="Import a USGS 3DEP profile">3DEP</button>
+        </div>
+      </div>
+      <p class="small">
+        Stations increase left→right. Flow depth is from the lowest bed elevation (thalweg).
+        Mark exactly one <strong>LB</strong> and one <strong>RB</strong> row to split into
+        <em>Left Overbank</em>, <em>Main Channel</em>, and <em>Right Overbank</em>.
+      </p>
+      <div class="actions actions-xs">
+        <button id="insertRow">Insert Row</button>
+        <button id="deleteSelected" class="harmonize">Delete Selected</button>
+        <button id="sortBtn" class="harmonize" title="Sort stations ascending">Sort by Station</button>
+        <!-- Legacy Filter button kept in DOM but hidden via CSS -->
+        <button id="openFilter" class="btnSecondary" title="Filter cross‑section points">
+          <span class="ico-funnel" aria-hidden="true"></span>Filter
+        </button>
+      </div>
+      <table id="xsTable" tabindex="-1">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Station</th>
+          <th>Elevation</th>
+          <th>Stage</th>
+          <th class="col-n">n</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="card resultsWrap resultsCard">
+      <div class="resultsHeader">
+        <h2>Results</h2>
+        <div class="bankTools" role="group" aria-label="Bank tools">
+          <div class="bankGroup" aria-label="Left Bank controls">
+            <button id="lbLeft" class="btnSecondary btnTiny" title="Move LB to previous point" aria-label="Move LB left">◀</button>
+            <button id="setLB" class="bankToggle" aria-pressed="false" title="Click, then click on the plot to set Left Bank">LB</button>
+            <button id="lbRight" class="btnSecondary btnTiny" title="Move LB to next point" aria-label="Move LB right">▶</button>
+          </div>
+          <div class="bankGroup" aria-label="Right Bank controls">
+            <button id="rbLeft" class="btnSecondary btnTiny" title="Move RB to previous point" aria-label="Move RB left">◀</button>
+            <button id="setRB" class="bankToggle" aria-pressed="false" title="Click, then click on the plot to set Right Bank">RB</button>
+            <button id="rbRight" class="btnSecondary btnTiny" title="Move RB to next point" aria-label="Move RB right">▶</button>
+          </div>
+        </div>
+        <div class="plotSwitch" title="Plot depth-averaged Velocity (V) and Shear (τ)">
+          <div class="segSwitch" role="radiogroup" aria-label="Plot V, τ mode">
+            <input id="pmOff" type="radio" name="plotMode" value="off" checked><label for="pmOff">Off</label>
+            <input id="pmXS" type="radio" name="plotMode" value="xs"><label for="pmXS">V, τ (XS Avg)</label>
+            <input id="pmSlices" type="radio" name="plotMode" value="slices"><label for="pmSlices">V, τ (Slices)</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="plotWrap">
+        <svg id="plot" viewBox="0 0 1000 360" preserveAspectRatio="xMidYMid meet" aria-label="Cross-section plot"></svg>
+      </div>
+
+      <div class="summaryWrap">
+        <table id="summary" class="summary"></table>
+        <div class="overlayShade" id="resultsShade"></div>
+        <div class="overlayNote" id="resultsNote"></div>
+      </div>
+
+      <div class="convWrap">
+        <h3>Conveyance by n‑breaks</h3>
+        <table id="convTable" class="dist"></table>
+        <div class="overlayShade" id="convShade"></div>
+        <div class="overlayNote" id="convNote"></div>
+      </div>
+
+      <div class="distWrap">
+        <h3 style="margin:8px 0 6px;font-size:1rem;">Flow Distribution Detailed Output</h3>
+        <table id="distTable" class="dist"></table>
+        <div class="overlayShade" id="distShade"></div>
+        <div class="overlayNote" id="distNote"></div>
+      </div>
+
+      <p class="small" id="messages"></p>
+    </div>
+  </div>
+</main>
+
+<!-- Help Modal -->
+<div id="helpModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="modal">
+    <header>
+      <h3 id="helpTitle">About this tool & formulas</h3>
+      <div class="rightBtns"><button id="closeHelp" class="btnLink" aria-label="Close">Close</button></div>
+    </header>
+    <div class="helpContent">
+      <div class="helpPane">
+        <h4>Overview</h4>
+        <p>
+          This web app computes 1D open‑channel hydraulics for a single cross‑section using <em>Manning’s equation</em>.
+          Provide station–elevation geometry, mark Left/Right Bank to form a compound channel (Left Overbank, Main Channel, Right Overbank),
+          enter bed/energy slope <em>S</em>, and a flow depth <em>D</em> (measured from the thalweg). Optionally enable
+          <b>Horizontal Variation of n</b> to assign roughness by station with carry‑forward n between breaks.
+        </p>
+        <p>Units: US (ft, s) with <em>k</em>=<b>1.486</b>, <em>γ</em>=62.4 lb/ft³, <em>g</em>=32.174 ft/s²; or SI (m, s) with <em>k</em>=1.0, <em>γ</em>=9810 N/m³, <em>g</em>=9.80665 m/s².</p>
+      </div>
+      <div class="helpPane">
+        <h4>Equations Used</h4>
+        <div class="eq">Water surface: &nbsp; WSE = <span class="i">z</span><sub>thalweg</sub> + <span class="i">D</span></div>
+        <div class="eq">Hydraulic radius: &nbsp; <span class="i">R</span> = <span class="i">A</span> / <span class="i">P</span></div>
+        <div class="eq">Hydraulic depth: &nbsp; <span class="i">D</span><sub>avg</sub> = <span class="i">A</span> / <span class="i">T</span><sub>w</sub></div>
+        <div class="eq">Conveyance (per part): &nbsp; <span class="i">K</span> = (<span class="i">k</span>/<span class="i">n</span>) · <span class="i">A</span> · <span class="i">R</span><sup>2/3</sup></div>
+        <div class="eq">Compound conveyance: &nbsp; <span class="i">K</span><sub>TOT</sub> = Σ <span class="i">K</span><sub>parts</sub></div>
+        <div class="eq">Total discharge: &nbsp; <span class="i">Q</span> = <span class="i">K</span><sub>TOT</sub> · √<span class="i">S</span></div>
+        <div class="eq">Velocity: &nbsp; <span class="i">V</span> = <span class="i">Q</span> / <span class="i">A</span></div>
+        <div class="eq">Boundary shear: &nbsp; τ = <span class="i">γ</span> · <span class="i">R</span> · <span class="i">S</span></div>
+        <div class="eq">Unit stream power: &nbsp; <span class="i">p</span> = τ · <span class="i">V</span></div>
+        <div class="eq">Froude number: &nbsp; Fr = <span class="i">V</span> / √(<span class="i">g</span>·<span class="i">D</span><sub>avg</sub>)</div>
+        <div class="eq"><small>HVn: overbanks subdivided at n‑breaks; channel uses n‑breaks or a composite n if either bank slope is steeper than 5H:1V and multiple n values exist.</small></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- n Picker Modal -->
+<div id="nPickerModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="nPickerTitle">
+  <div class="modal">
+    <header class="pickerHeader">
+      <h3 id="nPickerTitle">Roughness (Manning’s n) Picker</h3>
+      <div class="rightBtns">
+        <button id="applyN" class="btnSecondary" title="Apply to selected segment">Apply</button>
+        <button id="applyCloseN" class="btnPrimary" title="Apply and close">Apply & Close</button>
+        <button id="closeNPicker" class="btnLink" aria-label="Close">Close</button>
+      </div>
+    </header>
+    <div class="chips">
+      <button data-seg="lob">Left Overbank (LOB)</button>
+      <button data-seg="chan" class="active">Channel</button>
+      <button data-seg="rob">Right Overbank (ROB)</button>
+    </div>
+    <div class="centerRow presetRow">
+      <span class="title">Preset:</span>
+      <button class="preset" data-a="min">MIN</button>
+      <button class="preset active" data-a="typ">TYP</button>
+      <button class="preset" data-a="max">MAX</button>
+    </div>
+    <div class="centerRow nValRow">
+      <span>n =&nbsp;<span id="nCurVal" class="val">0.035</span></span>
+      <button id="nMinus">-0.001</button>
+      <button id="nPlus">+0.001</button>
+    </div>
+    <div class="searchRow">
+      <input id="nSearch" placeholder="Search (e.g., 'winding', 'concrete', 'brush')" />
+    </div>
+    <div id="nCardGrid" class="quickGrid"></div>
+    <div class="small" id="nPickerMsg"></div>
+  </div>
+</div>
+
+<!-- USGS (3DEP) Import Modal -->
+<div id="usgsModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="usgsTitle">
+  <div class="modal modal-lg" style="padding:0;display:block;">
+    <iframe id="usgsFrame" title="USGS 3DEP Import" src="about:blank"></iframe>
+  </div>
+</div>
+
+<!-- Filter Modal (loads filter.html inside an iframe) -->
+<div id="filterModal" class="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="filterTitle">
+  <div class="modal modal-lg" style="padding:0;display:block;">
+    <iframe id="filterFrame" title="Cross‑Section Point Filter" src="about:blank" style="width:100%;height:84vh;border:none;border-radius:10px;background:#fff"></iframe>
+  </div>
+</div>
+
+<script src="designer.js"></script>
+<script src="app.core.js"></script>
+<script src="app.ui.js"></script>
+<script src="app.clipboard.js"></script>
+<script src="app.selection.extras.js"></script>
+<script src="app.scenarios.js"></script>
+
+<!-- Small helper to sync UI-only radio to a single value and to disable Apply when Auto is ON -->
+<script>
+(function(){
+  const rReplace = document.getElementById('mergeReplace');
+  const rMerge   = document.getElementById('mergeMerge');
+  const hidden   = document.getElementById('des-mergeMode');
+  function syncMerge(){ if(hidden) hidden.value = (rMerge && rMerge.checked) ? 'merge' : 'replace'; }
+  [rReplace, rMerge].forEach(el => { if(el) el.addEventListener('change', syncMerge); });
+  syncMerge();
+
+  const auto = document.getElementById('designerAutoApply');
+  const applyBtn = document.getElementById('designerApply');
+  function syncApplyDisabled(){ if (applyBtn && auto) applyBtn.disabled = !!auto.checked; }
+  if (auto) {
+    auto.addEventListener('change', syncApplyDisabled);
+    syncApplyDisabled();
+  }
+})();
+</script>
+
+</body>
+</html>
+
+

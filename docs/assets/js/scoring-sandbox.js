@@ -149,10 +149,10 @@
       });
 
       const labelItems = [
-        'Weighted Score Total',
         'Direct Effect',
         'Indirect Effect',
-        'Max Score',
+        'Weighted Score Total',
+        'Max Weighted Score Total',
         'Condition Sub-Index',
         'Ecosystem Condition Index'
       ];
@@ -282,23 +282,27 @@
         const formatNumber = (value) => value.toFixed(2);
         const formatCount = (value) => String(value);
 
-        summaryRows.physical[0].textContent = formatNumber(pWeighted);
-        summaryRows.physical[1].textContent = formatCount(pDirect);
-        summaryRows.physical[2].textContent = formatCount(pIndirect);
-        summaryRows.physical[3].textContent = formatNumber(pSum);
+        summaryRows.physical[0].textContent = formatCount(pDirect);
+        summaryRows.physical[1].textContent = formatCount(pIndirect);
+        const pMaxWeighted = pSum * 15;
+        const cMaxWeighted = cSum * 15;
+        const bMaxWeighted = bSum * 15;
+
+        summaryRows.physical[2].textContent = formatNumber(pWeighted);
+        summaryRows.physical[3].textContent = formatNumber(pMaxWeighted);
         summaryRows.physical[4].textContent = formatNumber(physicalIndex);
 
-        summaryRows.chemical[0].textContent = formatNumber(cWeighted);
-        summaryRows.chemical[1].textContent = formatCount(cDirect);
-        summaryRows.chemical[2].textContent = formatCount(cIndirect);
-        summaryRows.chemical[3].textContent = formatNumber(cSum);
+        summaryRows.chemical[0].textContent = formatCount(cDirect);
+        summaryRows.chemical[1].textContent = formatCount(cIndirect);
+        summaryRows.chemical[2].textContent = formatNumber(cWeighted);
+        summaryRows.chemical[3].textContent = formatNumber(cMaxWeighted);
         summaryRows.chemical[4].textContent = formatNumber(chemicalIndex);
         summaryRows.chemical[5].textContent = formatNumber(ecosystemCondition);
 
-        summaryRows.biological[0].textContent = formatNumber(bWeighted);
-        summaryRows.biological[1].textContent = formatCount(bDirect);
-        summaryRows.biological[2].textContent = formatCount(bIndirect);
-        summaryRows.biological[3].textContent = formatNumber(bSum);
+        summaryRows.biological[0].textContent = formatCount(bDirect);
+        summaryRows.biological[1].textContent = formatCount(bIndirect);
+        summaryRows.biological[2].textContent = formatNumber(bWeighted);
+        summaryRows.biological[3].textContent = formatNumber(bMaxWeighted);
         summaryRows.biological[4].textContent = formatNumber(biologicalIndex);
       };
 

@@ -12,6 +12,11 @@ description: "Desktop-first screening for early planning and prioritization."
   <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
 </div>
 
+## Screening-Level Assessment Development
+Use the widget to try the default screening assessment or build your own. You can score metrics, and then scores are automatically rolled up into function scores, outcome sub-indices, and an overall ecosystem condition index.
+
+{% include screening_assessment_widget.html %}
+
 ## When to use
 - Watershed screening and prioritization
 - Early project planning across many sites
@@ -41,16 +46,6 @@ description: "Desktop-first screening for early planning and prioritization."
 
 ## How scoring works at this tier
 Use a single proxy metric per function when possible. Document scoring thresholds and note uncertainty. Weighting and roll-up logic should mirror the standard scoring pipeline described in the scoring page.
-
-## Recommended Core Metrics Starter Set
-A minimal starter table to help teams pick desktop metrics. Replace with region-specific options.
-
-| Function | Example desktop metric | Data source |
-|---|---|---|
-| Catchment hydrology | Percent impervious cover | National land cover data |
-| Streamflow regime | Flow alteration index | Regional gage summary |
-| Water & soil quality | Known impairments count | State 303(d) list |
-| Habitat provision | Riparian canopy extent | Aerial imagery |
 
 ## Downloads / resources
 - Screening metrics worksheet (placeholder)

@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Filter Cross‑Section Points</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{ --border:#e6e6e6; --muted:#666; --fg:#111; --blue:#0b57d0; --red:#d32f2f; }
+    html,body{height:100%;margin:0}
+    body{font:14px/1.35 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--fg);background:#fff}
+    header{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);background:#fafafa}
+    header h3{margin:0;font-size:1.02rem}
+    .right{margin-left:auto;display:flex;gap:8px}
+    button{font:inherit; padding:8px 10px; border:1px solid #d0d0d0; border-radius:10px; background:#fff; cursor:pointer}
+    .btnPrimary{background:#0b57d0;color:#fff;border-color:#0b57d0}
+    .btnLink{border:none;background:transparent;color:#0b57d0;text-decoration:underline}
+    main{display:grid;grid-template-rows:auto auto 1fr; gap:10px; padding:10px 12px}
+    .plotWrap{border:1px solid var(--border); border-radius:10px; padding:8px; background:#fff}
+    #plot{width:100%; height:320px; display:block}
+    .legend{font-size:12px; color:#444; display:flex; gap:16px; padding:4px 2px}
+    .chip{display:inline-flex; align-items:center; gap:6px}
+    .dot{width:12px;height:2px;background:#888;display:inline-block}
+    .dot.orig{background:#888}
+    .dot.filt{background:#0b57d0}
+    .dot.bank{width:10px;height:10px;border-radius:50%;background:#d32f2f}
+    /* Tabs */
+    .tabs{display:flex;gap:14px;border-bottom:1px solid var(--border)}
+    .tab{padding:8px 2px;cursor:pointer;color:#444;position:relative;font-weight:600}
+    .tab.active{color:#0b3d91}
+    .tab.active::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#0b57d0}
+    .panel{display:none;padding:8px 0}
+    .panel.active{display:block}
+    /* Inputs */
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(220px,1fr)); gap:12px}
+    label{display:grid; gap:6px; font-size:.92rem; color:#555}
+    input[type="number"], select{padding:8px;border:1px solid #ddd;border-radius:8px;font:inherit;background:#fff}
+    .row{display:flex;gap:12px;align-items:center}
+    .muted{color:#777;font-size:12px}
+    .note{color:#a25a00;font-size:12px;margin-top:4px}
+    @media(max-width:1000px){ .grid{grid-template-columns:1fr 1fr} }
+    @media(max-width:680px){ .grid{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <header>
+    <h3>Filter Cross‑Section Points</h3>
+    <div class="right">
+      <button id="restoreBtn" class="btnSecondary">Restore XS</button>
+      <button id="applyBtn"  class="btnSecondary" title="Preview and apply filter within this window">Filter Points</button>
+      <button id="okBtn"     class="btnPrimary">OK</button>
+      <button id="cancelBtn" class="btnLink">Cancel</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="plotWrap">
+      <canvas id="plot"></canvas>
+      <div class="legend">
+        <span class="chip"><span class="dot orig"></span> Original Ground</span>
+        <span class="chip"><span class="dot filt"></span> Filtered Ground</span>
+        <span class="chip"><span class="dot bank"></span> Bank Stations</span>
+        <span class="chip muted" id="unitsTag"></span>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <div class="tab active" data-tab="near">Near and Colinear Filter</div>
+      <div class="tab" data-tab="trim">Minimize Area Change</div>
+    </div>
+
+    <!-- Near + Colinear -->
+    <section id="panel-near" class="panel active">
+      <div class="grid">
+        <label>Filter Region
+          <select id="near-region">
+            <option value="all">All Points</option>
+            <option value="chan">Channel</option>
+            <option value="ob">Overbanks</option>
+            <option value="lob">Left Overbank</option>
+            <option value="rob">Right Overbank</option>
+          </select>
+        </label>
+
+        <label>Near Points – Horizontal Tolerance <span class="muted" id="tolXUnit">(ft)</span>
+          <input id="tolX" type="number" step="any" value="0.05">
+        </label>
+
+        <label>Near Points – Vertical Tolerance <span class="muted" id="tolZUnit">(ft)</span>
+          <input id="tolZ" type="number" step="any" value="0.05">
+        </label>
+
+        <label>Colinear – Vertical Tolerance <span class="muted" id="colZUnit">(ft)</span>
+          <input id="colTol" type="number" step="any" value="0.05">
+        </label>
+
+        <label>Colinear – Minimum Change in Slope
+          <input id="minSlope" type="number" step="any" value="0.001">
+        </label>
+
+        <label class="row" style="align-items:center">
+          <input id="onlyIfOver" type="checkbox">
+          <span>Only filter if > </span>
+          <input id="overN" type="number" step="1" value="500" style="width:90px">
+          <span>points</span>
+        </label>
+      </div>
+      <div class="note">Banks (LB/RB) are preserved automatically.</div>
+    </section>
+
+    <!-- Minimize Area Change -->
+    <section id="panel-trim" class="panel">
+      <div class="grid">
+        <label>Number of points to trim cross‑section down to
+          <input id="targetN" type="number" step="1" min="2" value="100">
+        </label>
+      </div>
+      <div class="note">Trimming uses a least‑area‑change (Visvalingam) heuristic and preserves LB/RB and outer endpoints.</div>
+    </section>
+  </main>
+
+  <script src="filter_logic.js"></script>
+</body>
+</html>

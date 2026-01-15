@@ -12,7 +12,9 @@ description: "How metrics roll up to functions, outcomes, and overall condition.
   <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
 </div>
 
-This page explains how function scores roll up into outcome sub-indices, and an overall ecosystem condition index.
+Try out the widget below to see how changing Function scores effects roll-up into Outcome Sub-indices and the Overall Ecosystem Condition Index. Beneath the widget is more detail on the scoring approach.
+
+{% include scoring_sandbox_widget.html %}
 
 ## Scoring approach
 1. Metrics are scored on a common scale and rolled up into function scores (metrics are tier-specific; see tier pages for metric guidance).
@@ -27,8 +29,6 @@ This page explains how function scores roll up into outcome sub-indices, and an 
 - **Physical outcome** focuses on hydrology, hydraulics, and geomorphic structure.
 - **Chemical outcome** focuses on thermal regime, nutrients, and water quality.
 - **Biological outcome** focuses on habitat, populations, and community dynamics.
-
-{% include scoring_sandbox_widget.html %}
 
 ## Downloads
 - Scoring workbook template (placeholder)

@@ -15,6 +15,7 @@ bundle install
 cd docs/
 bundle exec jekyll serve
 bundle exec jekyll serve --livereload
+http://127.0.0.1:4000/stream-tiered-assessment-framework/
 ```
 
 If you do not have Jekyll installed, you can rely on GitHub Pages to build the site.
