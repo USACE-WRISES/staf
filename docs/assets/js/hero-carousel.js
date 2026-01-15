@@ -151,7 +151,7 @@
     const condition = document.createElement('div');
     condition.className = 'overlay-condition';
     condition.textContent = `Ecosystem Condition: ${formatted.ecosystemCondition}`;
-    const list = document.createElement('div');
+    const list = document.createElement('ul');
     list.className = 'overlay-list';
     const items = [
       `Physical: ${formatted.physical}`,
@@ -159,7 +159,7 @@
       `Biological: ${formatted.biological}`,
     ];
     items.forEach((text) => {
-      const line = document.createElement('div');
+      const line = document.createElement('li');
       line.className = 'overlay-line';
       line.textContent = text;
       list.appendChild(line);

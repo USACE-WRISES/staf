@@ -1,0 +1,401 @@
+// app.plans.js
+// Left dock: scenario manager for cross-section state (session-only).
+// - Labeling: "Scenarios", header button "Add"
+// - Rename uses pencil icon; delete uses "X" icon
+// - Row "X" deletes THAT scenario row (not just the active one)
+// - Persistence: sessionStorage (clears when tab/window closes)
+// - Pencil icon restored to 18px but slightly shortened so both tip and end are clearly visible.
+//
+// Depends on app.core.js + app.ui.js for reading/applying UI state and compute().
+
+(function () {
+  // ---------- Persistence (session only) ----------
+  const SS_KEY = 'xsScenarios.session.v1';
+  const STORAGE = window.sessionStorage; // clears on tab/window close
+
+  // ---------- Styles ----------
+  const CSS = `
+    :root { --dockW: 252px; }
+    @media (min-width: 1080px){
+      main{ margin-left: calc(var(--dockW) + 24px) !important; }
+      #scenarioDock{
+        position: fixed; left: 20px; top: 68px; bottom: 20px; width: var(--dockW);
+        overflow: auto; background: var(--card); border:1px solid var(--border);
+        border-radius:12px; padding:12px; display:flex; flex-direction:column; gap:10px;
+      }
+    }
+    #scenarioDock .hdr{ display:flex; align-items:center; justify-content:space-between; }
+    #scenarioDock .hdr h3{ margin:0; font-size:1rem; }
+    #scenarioDock .hdr .btns{ display:flex; gap:8px; }
+    #scenarioDock button{ padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:#fff; cursor:pointer; }
+    #scenarioDock button:hover{ background:#f9f9f9; }
+    #scenarioDock ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:6px; }
+    #scenarioDock li{
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:#fff; cursor:pointer;
+    }
+    #scenarioDock li.active{ border-color:#0b57d0; box-shadow:0 0 0 2px rgba(11,87,208,.10) inset; }
+    #scenarioDock .name{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    #scenarioDock .rowBtns{ display:flex; gap:6px; }
+
+    /* Icon-only tiny buttons (lighter strokes for subtle look) */
+    #scenarioDock .iconTiny{
+      width:28px; height:28px; padding:0; display:inline-flex; align-items:center; justify-content:center;
+      border:1px solid var(--border); border-radius:8px; background:#fff; line-height:1;
+      font-weight:500; color:#444; user-select:none;
+    }
+    #scenarioDock .iconTiny:hover{ background:#f5f7ff; }
+    #scenarioDock .iconTiny svg{ width:18px; height:18px; display:block; }
+    #scenarioDock .iconTiny svg *{
+      fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;
+    }
+
+    #scenarioDock .ghost{ color:#999; font-size:.92rem; }
+  `;
+
+  // ---------- Utilities ----------
+  const $ = (sel) => document.querySelector(sel);
+  const clone = (o) => JSON.parse(JSON.stringify(o));
+  const nowISO = () => new Date().toISOString();
+
+  // ---------- UI <-> Scenario bridges ----------
+  function readSetupFromUI() {
+    const val = (id) => document.getElementById(id)?.value ?? '';
+    const num = (id) => { const v = parseFloat(val(id)); return Number.isFinite(v) ? v : null; };
+    const bool = (id) => !!document.getElementById(id)?.checked;
+    const plotMode = (document.querySelector('input[name="plotMode"]:checked') || {}).value || 'off';
+    return {
+      units: val('units'),
+      slope: num('slope'),
+      nLOB: num('nLOB'),
+      nMC:  num('nMC'),
+      nROB: num('nROB'),
+      depth: num('depth'),
+      specifyQ: bool('specifyQ'),
+      discharge: num('discharge'),
+      hvnOn: bool('hvnToggle'),
+      N_LOB: parseInt(document.getElementById('N_LOB')?.value || '1', 10),
+      N_CHAN: parseInt(document.getElementById('N_CHAN')?.value || '1', 10),
+      N_ROB: parseInt(document.getElementById('N_ROB')?.value || '1', 10),
+      plotMode
+    };
+  }
+  function applySetupToUI(s) {
+    if (!s) return;
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    const setChk = (id, on) => { const el = document.getElementById(id); if (el) el.checked = !!on; };
+    setVal('units', s.units);
+    setVal('slope', s.slope ?? '');
+    setVal('nLOB', s.nLOB ?? '');
+    setVal('nMC',  s.nMC  ?? '');
+    setVal('nROB', s.nROB ?? '');
+    setChk('specifyQ', !!s.specifyQ);
+    if (typeof window.updateQModeUI === 'function') window.updateQModeUI(!!s.specifyQ);
+    setVal('depth', s.depth ?? '');
+    setVal('discharge', s.discharge ?? '');
+    setChk('hvnToggle', !!s.hvnOn);
+    if (typeof window.updateHVnUI === 'function') window.updateHVnUI(!!s.hvnOn);
+    setVal('N_LOB', String(s.N_LOB ?? 1));
+    setVal('N_CHAN', String(s.N_CHAN ?? 1));
+    setVal('N_ROB', String(s.N_ROB ?? 1));
+    const pm = String(s.plotMode || 'off');
+    const pmRadio = document.querySelector(`input[name="plotMode"][value="${pm}"]`);
+    if (pmRadio) pmRadio.checked = true;
+    if (typeof window.updateSliceOptionStates === 'function') window.updateSliceOptionStates();
+    if (typeof window.updateXsLockFromAutoToggle === 'function') window.updateXsLockFromAutoToggle();
+  }
+
+  function readXsFromUI() {
+    const rows = (typeof window.getPointsWithStagesRaw === 'function') ? window.getPointsWithStagesRaw() : [];
+    return rows.map(r => ({ x: r.x, z: r.z, tag: r.tag || '', n: Number.isFinite(r.n) ? r.n : null }));
+  }
+  function applyXsToUI(rows) {
+    const tbody = document.querySelector('#xsTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (Array.isArray(rows)) {
+      rows.forEach(r => {
+        const st  = Number.isFinite(+r.x) ? r.x : '';
+        const el  = Number.isFinite(+r.z) ? r.z : '';
+        const tag = (r.tag === 'LB' || r.tag === 'RB') ? r.tag : '';
+        const nv  = Number.isFinite(+r.n) ? r.n : '';
+        if (typeof window.addRow === 'function') window.addRow(st, el, tag, nv);
+      });
+    }
+    if (typeof window.ensureTrailingBlankRow === 'function') window.ensureTrailingBlankRow();
+    if (typeof window.renumberIDs === 'function') window.renumberIDs();
+    if (typeof window.clearCellSelection === 'function') window.clearCellSelection();
+  }
+
+  function readHcsFromUI() {
+    return {
+      ineffectiveAreas: (window.ineffectiveAreas ? clone(window.ineffectiveAreas) : []),
+      obstructions:     (window.obstructions ? clone(window.obstructions) : []),
+      levees:           (window.levees ? clone(window.levees) : { left:{enabled:false}, right:{enabled:false} })
+    };
+  }
+  function applyHcsToUI(hcs) {
+    if (!hcs) return;
+    if ('ineffectiveAreas' in hcs) window.ineffectiveAreas = clone(hcs.ineffectiveAreas);
+    if ('obstructions'     in hcs) window.obstructions     = clone(hcs.obstructions);
+    if ('levees'           in hcs) window.levees           = clone(hcs.levees);
+    if (typeof window.renderIFATable === 'function') window.renderIFATable();
+    if (typeof window.renderObsTable === 'function') window.renderObsTable();
+    if (typeof window.renderLevTable === 'function') window.renderLevTable();
+  }
+
+  function captureScenarioFromUI(scen) {
+    return {
+      id: scen?.id || crypto.randomUUID(),
+      name: scen?.name || 'Scenario',
+      setup: readSetupFromUI(),
+      xs: readXsFromUI(),
+      hcs: readHcsFromUI(),
+      updatedAt: nowISO()
+    };
+  }
+  function applyScenarioToUI(scen) {
+    if (!scen) return;
+    applySetupToUI(scen.setup);
+    applyHcsToUI(scen.hcs);
+    applyXsToUI(scen.xs);
+    if (typeof window.compute === 'function') window.compute();
+  }
+
+  // ---------- Store (in-memory + sessionStorage) ----------
+  const Store = {
+    scenarios: [],
+    activeId: null,
+
+    load() {
+      try {
+        const json = STORAGE.getItem(SS_KEY);
+        if (!json) return false;
+        const data = JSON.parse(json);
+        if (!data || !Array.isArray(data.scenarios) || !data.scenarios.length) return false;
+        this.scenarios = data.scenarios;
+        this.activeId = data.activeId || this.scenarios[0].id;
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    save() {
+      try { STORAGE.setItem(SS_KEY, JSON.stringify({ scenarios: this.scenarios, activeId: this.activeId })); }
+      catch { /* ignore */ }
+    },
+    active() { return this.scenarios.find(s => s.id === this.activeId) || null; },
+    setActive(id) { this.activeId = id; this.save(); renderDock(); },
+
+    upsert(s) {
+      const i = this.scenarios.findIndex(x => x.id === s.id);
+      if (i >= 0) this.scenarios[i] = s; else this.scenarios.push(s);
+      this.save();
+    },
+    addLikeCurrent() {
+      const base = this.active() || this.scenarios[0] || null;
+      const snap = captureScenarioFromUI(base);
+      snap.id = crypto.randomUUID();
+      snap.name = nextScenarioName();
+      this.scenarios.push(snap);
+      this.activeId = snap.id;
+      this.save();
+      renderDock();
+      applyScenarioToUI(snap);
+    },
+    removeById(id) {
+      const idx = this.scenarios.findIndex(s => s.id === id);
+      if (idx < 0) return;
+      const wasActive = (this.activeId === id);
+      this.scenarios.splice(idx, 1);
+
+      if (!this.scenarios.length) {
+        // Keep at least one
+        const fresh = captureScenarioFromUI({ name:'Scenario 1' });
+        this.scenarios.push(fresh);
+        this.activeId = fresh.id;
+        applyScenarioToUI(fresh);
+      } else if (wasActive) {
+        const next = this.scenarios[Math.max(0, idx - 1)];
+        this.activeId = next.id;
+        applyScenarioToUI(next);
+      }
+      this.save();
+      renderDock();
+    },
+    rename(id, newName) {
+      const s = this.scenarios.find(it => it.id === id);
+      if (s) { s.name = String(newName || '').trim() || s.name; this.save(); renderDock(); }
+    }
+  };
+
+  function nextScenarioName() {
+    const base = 'Scenario ';
+    let n = Store.scenarios.length + 1;
+    const names = new Set(Store.scenarios.map(s => s.name));
+    while (names.has(base + n)) n++;
+    return base + n;
+  }
+
+  // ---------- Icons ----------
+  function pencilSvg() {
+    // Restore to 18px box, but shorten the drawing slightly so tip & eraser are fully visible.
+    // We shrink around the center (12,12) by ~12%.
+    const el = document.createElement('span');
+    el.innerHTML = `
+      <svg class="ico-pencil" viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img">
+        <g transform="translate(12,12) scale(0.88) translate(-12,-12)">
+          <path d="M3 17.5V21h3.5L19.5 8c.8-.8.8-2.1 0-2.9l-.6-.6c-.8-.8-2.1-.8-2.9 0L3 17.5Z"></path>
+          <path d="M14.5 5.5l4 4"></path>
+        </g>
+      </svg>`;
+    return el.firstElementChild;
+  }
+  function xSvg() {
+    const el = document.createElement('span');
+    el.innerHTML = `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img">
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+      </svg>`;
+    return el.firstElementChild;
+  }
+
+  // ---------- Dock UI ----------
+  function renderDock() {
+    const list = document.getElementById('scenarioList');
+    if (!list) return;
+    list.innerHTML = '';
+    if (!Store.scenarios.length) return;
+
+    for (const s of Store.scenarios) {
+      const li = document.createElement('li');
+      li.dataset.id = s.id;
+      if (s.id === Store.activeId) li.classList.add('active');
+
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = s.name;
+
+      const btns = document.createElement('div');
+      btns.className = 'rowBtns';
+
+      const btnRen = document.createElement('button');
+      btnRen.className = 'iconTiny';
+      btnRen.title = 'Rename scenario';
+      btnRen.setAttribute('aria-label', 'Rename scenario');
+      btnRen.appendChild(pencilSvg());
+
+      const btnDel = document.createElement('button');
+      btnDel.className = 'iconTiny';
+      btnDel.title = 'Delete scenario';
+      btnDel.setAttribute('aria-label', 'Delete scenario');
+      btnDel.appendChild(xSvg());
+
+      btns.appendChild(btnRen);
+      btns.appendChild(btnDel);
+
+      li.appendChild(name);
+      li.appendChild(btns);
+      list.appendChild(li);
+
+      // Rename (dblclick on name or click pencil)
+      function doRename() {
+        const nn = prompt('Rename scenario', s.name);
+        if (nn != null) Store.rename(s.id, nn);
+      }
+      name.addEventListener('dblclick', doRename);
+      btnRen.addEventListener('click', (e) => { e.stopPropagation(); doRename(); });
+
+      // Delete THIS scenario row
+      btnDel.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm(`Delete "${s.name}"?`)) Store.removeById(s.id);
+      });
+
+      // Activate on row click (not on inner buttons)
+      li.addEventListener('click', (e) => {
+        if (e.target.closest('button')) return;
+        if (s.id === Store.activeId) return;
+        if (Store.activeId) {
+          const snap = captureScenarioFromUI(Store.active());
+          Store.upsert(snap);
+        }
+        Store.setActive(s.id);
+        applyScenarioToUI(Store.active());
+      });
+    }
+  }
+
+  function ensureDock() {
+    if (document.getElementById('scenarioDock')) return;
+    // Style
+    const st = document.createElement('style');
+    st.textContent = CSS;
+    document.head.appendChild(st);
+    // Dock
+    const dock = document.createElement('aside');
+    dock.id = 'scenarioDock';
+    dock.innerHTML = `
+      <div class="hdr">
+        <h3>Scenarios</h3>
+        <div class="btns">
+          <button id="scenarioAdd">Add</button>
+        </div>
+      </div>
+      <ul id="scenarioList" role="listbox" aria-label="Scenarios"></ul>
+      <div class="ghost">Changes are auto‑saved to each scenario.</div>
+    `;
+    document.body.appendChild(dock);
+
+    document.getElementById('scenarioAdd').addEventListener('click', () => Store.addLikeCurrent());
+  }
+
+  // ---------- Autosave (debounced) ----------
+  let saveTimer = null;
+  function debouncedAutosave() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      if (!Store.activeId) return;
+      const snap = captureScenarioFromUI(Store.active());
+      Store.upsert(snap);
+    }, 200);
+  }
+  function wrapComputeForAutosave() {
+    const orig = window.compute;
+    if (typeof orig === 'function') {
+      window.compute = function () {
+        const r = orig.apply(this, arguments);
+        debouncedAutosave();
+        return r;
+      };
+    }
+  }
+
+  // ---------- Boot ----------
+  function initScenarios() {
+    ensureDock();
+
+    // Load from session or seed from current UI as "Scenario 1"
+    if (!Store.load()) {
+      const first = captureScenarioFromUI({ name: 'Scenario 1' });
+      Store.scenarios = [first];
+      Store.activeId = first.id;
+      Store.save();
+    }
+    renderDock();
+    applyScenarioToUI(Store.active());
+
+    // Persist active scenario after each compute() run
+    wrapComputeForAutosave();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initScenarios);
+  } else {
+    initScenarios();
+  }
+
+  // Optional debug
+  window.__Scenarios = Store;
+})();

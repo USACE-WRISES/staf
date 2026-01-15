@@ -267,7 +267,7 @@
   },"38": {
     "doc": "Scoring and Condition",
     "title": "Scoring and Condition",
-    "content": "Back to Home This page explains how function scores roll up into outcome sub-indices, and an overall ecosystem condition index. ",
+    "content": "Back to Home Try out the widget below to see how changing Function scores effects roll-up into Outcome Sub-indices and the Overall Ecosystem Condition Index. Beneath the widget is more detail on the scoring approach. The scoring sandbox needs JavaScript. Use the scoring equations in the guide if you prefer a manual calculation. ",
     "url": "/stream-tiered-assessment-framework/scoring/#scoring-and-condition",
     
     "relUrl": "/scoring/#scoring-and-condition"
@@ -281,7 +281,7 @@
   },"40": {
     "doc": "Scoring and Condition",
     "title": "Outcomes",
-    "content": ". | Physical outcome focuses on hydrology, hydraulics, and geomorphic structure. | Chemical outcome focuses on thermal regime, nutrients, and water quality. | Biological outcome focuses on habitat, populations, and community dynamics. | . The scoring sandbox needs JavaScript. Use the scoring equations in the guide if you prefer a manual calculation. ",
+    "content": ". | Physical outcome focuses on hydrology, hydraulics, and geomorphic structure. | Chemical outcome focuses on thermal regime, nutrients, and water quality. | Biological outcome focuses on habitat, populations, and community dynamics. | . ",
     "url": "/stream-tiered-assessment-framework/scoring/#outcomes",
     
     "relUrl": "/scoring/#outcomes"
@@ -462,53 +462,53 @@
     "relUrl": "/tiers/screening/#screening-tier"
   },"66": {
     "doc": "Screening Tier",
+    "title": "Screening-Level Assessment Development",
+    "content": "Use the widget to try the default screening assessment or build your own. You can score metrics, and then scores are automatically rolled up into function scores, outcome sub-indices, and an overall ecosystem condition index. This screening assessment widget needs JavaScript. Use the criteria table and scoring guidance if you prefer manual calculations. + Settings . Duplicate Delete Name Applicability Notes ",
+    "url": "/stream-tiered-assessment-framework/tiers/screening/#screening-level-assessment-development",
+    
+    "relUrl": "/tiers/screening/#screening-level-assessment-development"
+  },"67": {
+    "doc": "Screening Tier",
     "title": "When to use",
     "content": ". | Watershed screening and prioritization | Early project planning across many sites | Low-risk decisions where higher uncertainty is acceptable | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#when-to-use",
     
     "relUrl": "/tiers/screening/#when-to-use"
-  },"67": {
+  },"68": {
     "doc": "Screening Tier",
     "title": "What you get (outputs)",
     "content": ". | Function scores with clear uncertainty notes | Outcome indices (physical, chemical, biological) | Ranked list of candidate reaches for follow-on tiers | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#what-you-get-outputs",
     
     "relUrl": "/tiers/screening/#what-you-get-outputs"
-  },"68": {
+  },"69": {
     "doc": "Screening Tier",
     "title": "What it costs (effort/resources)",
     "content": ". | Minutes to hours per site | Primarily desktop time with optional field verification | Minimal specialized equipment or lab analysis | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#what-it-costs-effortresources",
     
     "relUrl": "/tiers/screening/#what-it-costs-effortresources"
-  },"69": {
+  },"70": {
     "doc": "Screening Tier",
     "title": "Typical data inputs",
     "content": ". | GIS land cover and impervious surface | Remote sensing and imagery | National datasets and existing reports | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#typical-data-inputs",
     
     "relUrl": "/tiers/screening/#typical-data-inputs"
-  },"70": {
+  },"71": {
     "doc": "Screening Tier",
     "title": "Workflow steps",
     "content": ". | Delineate reaches and catchments. | Compute a small set of desktop metrics. | Convert raw values to standardized scores. | Roll up to outcomes and overall condition. | Flag high-potential sites for Rapid tier work. | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#workflow-steps",
     
     "relUrl": "/tiers/screening/#workflow-steps"
-  },"71": {
+  },"72": {
     "doc": "Screening Tier",
     "title": "How scoring works at this tier",
     "content": "Use a single proxy metric per function when possible. Document scoring thresholds and note uncertainty. Weighting and roll-up logic should mirror the standard scoring pipeline described in the scoring page. ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#how-scoring-works-at-this-tier",
     
     "relUrl": "/tiers/screening/#how-scoring-works-at-this-tier"
-  },"72": {
-    "doc": "Screening Tier",
-    "title": "Recommended Core Metrics Starter Set",
-    "content": "A minimal starter table to help teams pick desktop metrics. Replace with region-specific options. | Function | Example desktop metric | Data source | . | Catchment hydrology | Percent impervious cover | National land cover data | . | Streamflow regime | Flow alteration index | Regional gage summary | . | Water &amp; soil quality | Known impairments count | State 303(d) list | . | Habitat provision | Riparian canopy extent | Aerial imagery | . ",
-    "url": "/stream-tiered-assessment-framework/tiers/screening/#recommended-core-metrics-starter-set",
-    
-    "relUrl": "/tiers/screening/#recommended-core-metrics-starter-set"
   },"73": {
     "doc": "Screening Tier",
     "title": "Downloads / resources",

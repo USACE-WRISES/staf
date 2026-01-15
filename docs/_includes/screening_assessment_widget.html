@@ -1,0 +1,42 @@
+<div class="screening-assessment widget" data-baseurl="{{ site.baseurl }}">
+  <div class="screening-assessment-fallback">
+    <p>This screening assessment widget needs JavaScript. Use the criteria table and scoring guidance if you prefer manual calculations.</p>
+  </div>
+  <div class="screening-assessment-ui" hidden>
+    <div class="screening-assessment-layout">
+      <div class="screening-assessment-main">
+        <div class="screening-tabs-bar">
+          <div class="screening-tabs" role="tablist" aria-label="Screening assessments"></div>
+          <button class="screening-tab-add" type="button" aria-label="Add assessment">+</button>
+        </div>
+        <section class="screening-settings-panel">
+          <div class="settings-header settings-header-row">
+            <h3>Settings</h3>
+            <div class="assessment-inline-actions">
+              <button class="btn btn-small screening-duplicate" type="button">Duplicate</button>
+              <button class="btn btn-small screening-delete" type="button">Delete</button>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <label class="settings-field">
+              <span>Name</span>
+              <input class="settings-name" type="text" />
+            </label>
+            <label class="settings-field">
+              <span>Applicability</span>
+              <input class="settings-applicability" type="text" />
+            </label>
+            <label class="settings-field settings-notes">
+              <span>Notes</span>
+              <textarea class="settings-notes-input" rows="2"></textarea>
+            </label>
+          </div>
+        </section>
+        <section class="screening-assessment-content">
+          <div class="screening-controls-host"></div>
+          <div class="screening-table-wrap"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
