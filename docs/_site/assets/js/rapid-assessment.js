@@ -360,6 +360,9 @@
 
         updateSpan('td.discipline-cell');
         updateSpan('td.function-cell');
+        updateSpan('td.physical-cell');
+        updateSpan('td.chemical-cell');
+        updateSpan('td.biological-cell');
       };
 
       const buildCriteriaBlock = (criteria) => {
@@ -559,34 +562,38 @@
           criteriaBtn.setAttribute('aria-label', 'Toggle criteria details');
           indicatorCell.appendChild(criteriaBtn);
 
+          row.appendChild(indicatorCell);
+          row.appendChild(indicatorScoreCell);
           const mapping =
             mappingByFunction[item.functionKey] || {
               physical: '-',
               chemical: '-',
               biological: '-',
             };
-          const physicalCell = document.createElement('td');
-          const chemicalCell = document.createElement('td');
-          const biologicalCell = document.createElement('td');
-          physicalCell.className = 'weight-cell col-physical';
-          chemicalCell.className = 'weight-cell col-chemical';
-          biologicalCell.className = 'weight-cell col-biological';
-          physicalCell.textContent = mapping.physical || '-';
-          chemicalCell.textContent = mapping.chemical || '-';
-          biologicalCell.textContent = mapping.biological || '-';
-
-          row.appendChild(indicatorCell);
-          row.appendChild(indicatorScoreCell);
-          row.appendChild(physicalCell);
-          row.appendChild(chemicalCell);
-          row.appendChild(biologicalCell);
+          if (functionSpan) {
+            const physicalCell = document.createElement('td');
+            const chemicalCell = document.createElement('td');
+            const biologicalCell = document.createElement('td');
+            physicalCell.className = 'weight-cell col-physical physical-cell';
+            chemicalCell.className = 'weight-cell col-chemical chemical-cell';
+            biologicalCell.className = 'weight-cell col-biological biological-cell';
+            physicalCell.textContent = mapping.physical || '-';
+            chemicalCell.textContent = mapping.chemical || '-';
+            biologicalCell.textContent = mapping.biological || '-';
+            physicalCell.rowSpan = functionSpan;
+            chemicalCell.rowSpan = functionSpan;
+            biologicalCell.rowSpan = functionSpan;
+            row.appendChild(physicalCell);
+            row.appendChild(chemicalCell);
+            row.appendChild(biologicalCell);
+          }
 
           const detailsRow = document.createElement('tr');
           detailsRow.id = detailsId;
           detailsRow.className = 'criteria-row';
           detailsRow.hidden = true;
           const detailsCell = document.createElement('td');
-          detailsCell.colSpan = 5;
+          detailsCell.colSpan = 2;
           const details = document.createElement('div');
           details.className = 'criteria-details';
           const criteriaSet = criteriaMap[item.criteriaKey] || {};
