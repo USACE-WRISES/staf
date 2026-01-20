@@ -1,0 +1,325 @@
+Indicator	Observation	Criteria	Sentiment
+Impervious surface area	Largely forest and pasture. Small town footprint.	<5% impervious	++
+Impervious surface area	Suburban neighborhoods with scattered commercial areas.	~5-10% impervious	+
+Impervious surface area	Mixed suburban and commercial corridors.	10-20% impervious	-
+Impervious surface area	Urban core and arterial corridors dominate lower basin.	>20% impervious	--
+Road density	Few local roads. Rare stream crossings.	<0.5 km roads/km2	++
+Road density	Collector roads present. Some drainage ditches.	~0.5-1.0 km/km2	+
+Road density	Grid network near town center. Several culvert crossings.	1-2 km/km2	-
+Road density	Highways and frontage roads crisscross basin. Frequent crossings to channel.	>2 km/km2	--
+Land use change	Stable land cover since 2001. Minor field rotations only.	<5% area converted (e.g., 2001-2019)	++
+Land use change	New subdivisions on outskirts.	5-15% converted	+
+Land use change	Widespread exurban growth and clearing.	~15-30% converted	-
+Land use change	Major urban expansion or large agricultural conversion.	>=30% converted	--
+Impoundments	No major dams. Only small farm ponds far upstream.	None or negligible influence	++
+Impoundments	One small off-channel dam upstream. Limited storage.	1-2 small dams, partial influence	+
+Impoundments	Several moderate impoundments in series.	Multiple moderate dams affecting peaks/baseflow	-
+Impoundments	Large reservoir close upstream with hydropeaking or strict seasonal rule curves.	Heavily regulated system	--
+Wetland Coverage	Wetlands within mapped floodplain or valley bottom	High (>5% of floodplain area)	++
+Wetland Coverage	Moderate (~2-5%)	Moderate (~2-5%)	+
+Wetland Coverage	Low (~1-2%)	Low (~1-2%)	-
+Wetland Coverage	Very low (<1%)	Very low (<1%)	--
+Floodplain Water Retention	Overbanking frequency based on field indicators and gage context	Floodplain engages at ~1-2 yr or 2-5 yr events	++
+Floodplain Water Retention	Overbanking requires slightly larger than bankfull but not rare	Overbanking requires slightly larger than bankfull but not rare	+
+Floodplain Water Retention	Overbanking mainly at ~5-10 yr events. Partial disconnection	Overbanking mainly at ~5-10 yr events. Partial disconnection	-
+Floodplain Water Retention	Rarely or never overbanking below ~10-yr events. Incision or levees present	Rarely or never overbanking below ~10-yr events. Incision or levees present	--
+In-channel Ponding / Beaver	Beaver dams or small ponds relative to natural capacity	Present where expected. Enhance baseflow and habitat. Minimal fragmentation	++
+In-channel Ponding / Beaver	One to two small obstructions. Minor impacts	One to two small obstructions. Minor impacts	+
+In-channel Ponding / Beaver	Multiple ponds that moderately disrupt connectivity	Multiple ponds that moderately disrupt connectivity	-
+In-channel Ponding / Beaver	Widespread channel fragmentation or overabundant ponding	Widespread channel fragmentation or overabundant ponding	--
+Off-channel Storage	Side channels, oxbows, and beaver wetlands connected near bankfull	Multiple features connect during moderate (bankfull) floods	++
+Off-channel Storage	Partial connection or few off-channel areas	Partial connection or few off-channel areas	+
+Off-channel Storage	Only large floods (>5-10 yr) access these areas	Only large floods (>5-10 yr) access these areas	-
+Off-channel Storage	Off-channel features mostly gone or permanently cut off	Off-channel features mostly gone or permanently cut off	--
+Concentrated flow inputs	Outfalls or ditches per 100 m	0-1	++
+Concentrated flow inputs	Outfalls or ditches per 100 m	2-3	+
+Concentrated flow inputs	Outfalls or ditches per 100 m	4-5	-
+Concentrated flow inputs	Outfalls or ditches per 100 m	>5	--
+Tributary condition and impact	Stability and turbidity at confluences during storms	Mostly natural tributaries with stable flows and typical sediment loads	++
+Tributary condition and impact	One or two moderately altered tributaries with occasional elevated turbidity	One or two moderately altered tributaries with occasional elevated turbidity	+
+Tributary condition and impact	Multiple significantly altered tributaries with frequent sediment plumes	Multiple significantly altered tributaries with frequent sediment plumes	-
+Tributary condition and impact	Widespread severely altered tributaries or severe pollution at many confluences	Widespread severely altered tributaries or severe pollution at many confluences	--
+Local runoff diversions	Withdrawals and return flows near the reach	No significant withdrawals or returns	++
+Local runoff diversions	Minor ditches or returns with limited effect	Minor ditches or returns with limited effect	+
+Local runoff diversions	Moderate diversions or large returns that cause seasonal stress	Moderate diversions or large returns that cause seasonal stress	-
+Local runoff diversions	Large or chronic diversions or major returns that alter the flow regime	Large or chronic diversions or major returns that alter the flow regime	--
+Road/highway drainage	Road or highway outfalls per 100 m	0-1	++
+Road/highway drainage	Road or highway outfalls per 100 m	2-3	+
+Road/highway drainage	Road or highway outfalls per 100 m	4-5	-
+Road/highway drainage	Road or highway outfalls per 100 m	>=5 or a major highway outfall	--
+Flow permanence	SDAM class, bed vegetation, mean annual flow, and flowing-days data (if available) match reference.	Flow duration class matches expected; mean annual flow and flowing days within ~10% of baseline.	++
+Flow permanence	Minor but consistent departures across indicators.	About 10-20% change in mean annual flow or flowing days, or slightly more/less bed vegetation than expected.	+
+Flow permanence	Substantial sustained shift in dryness or baseflow.	SDAM class trending away from reference or 20-50% change in mean annual flow/flowing days; vegetation suggests longer wet or dry intervals.	-
+Flow permanence	Major regime shift across lines of evidence.	Historically perennial reach now intermittent/ephemeral, >50% change in mean annual flow or flowing days, and vegetation contradicts expected scour/inundation.	--
+Flow statistics	Zero-flow days and dry spells match historical pattern.	Stable zero-flow counts and dry-period lengths relative to reference.	++
+Flow statistics	Slight increase in zero-flow days without changing flow class.	Minor increase in zero-flow days or short new dry periods.	+
+Flow statistics	New or longer dry periods restrict habitat for weeks.	Noticeable increase in zero-flow days or dry-spell length that reduces habitat availability.	-
+Flow statistics	Prolonged cessation shifts expected flow category.	Extended dry periods effectively change flow class (e.g., perennial to intermittent).	--
+Channel natural flow regime	IHA metrics and R-B flashiness near reference; no increase in low/zero-flow days.	Timing, magnitude, pulse frequency, and rise/fall rates within reference ranges; stable-flow windows intact.	++
+Channel natural flow regime	One or two IHA groups show modest departure; R-B slightly higher.	Small shifts in timing or pulse frequency; low-flow days increase only slightly.	+
+Channel natural flow regime	Several IHA components and R-B show clear departure.	More frequent surges, shorter stable-flow periods, and noticeable increases in low or zero-flow days.	-
+Channel natural flow regime	Most IHA metrics outside reference; R-B much higher.	Seasonal timing lost or shifted; extended low-flow or dry periods change expected flow duration class.	--
+Artificial structures and inputs	No major regulating structures or inputs affecting the reach.	No dams, levees, or diversions; IHA components generally within reference.	++
+Artificial structures and inputs	One small structure or minor diversion with limited local effects.	Localized regulation or slight departures in IHA components.	+
+Artificial structures and inputs	One or two moderate structures or diversions noticeably alter flows.	Reduced floodplain access, altered baseflow, or shifted seasonal timing.	-
+Artificial structures and inputs	Multiple or large structures strongly regulate or dewater.	Flattened peaks, daily stage swings, or widespread IHA departures.	--
+Low flow velocity	Measurable low-flow velocity with steady movement; no stagnation.	Velocity near reference for stream type (e.g., ~0.05-0.10 m/s in higher-gradient streams).	++
+Low flow velocity	Slightly reduced velocities with small stagnant pockets.	Minor reduction in velocity; movement persists through most of reach.	+
+Low flow velocity	Very low or near-stagnant velocities in a normally flowing reach.	Only slight thalweg movement; debris often stalls in pools or runs.	-
+Low flow velocity	Widespread stagnation or no visible movement.	Negligible low-flow velocity; scum or odor present.	--
+Low flow depth	Continuous wetted thread with short dry patches; pools hold water.	Wetted length >75% or exposed bed <25%, or Q90/Q10 within ~20% of reference.	++
+Low flow depth	Several dry riffles but pools connected; moderate depth.	Wetted length about 50-75% or exposed bed 25-50%, or Q90/Q10 within ~20-30% of reference.	+
+Low flow depth	Mostly isolated pools with narrow trickles; shallow depths.	Wetted length about 25-50% or exposed bed 50-75%, or Q90/Q10 differ ~30-50%.	-
+Low flow depth	Disconnected, very shallow pools; bed mostly exposed.	Wetted length <25% or exposed bed >75%, or Q90/Q10 differ >50%.	--
+Longitudinal connectivity	Most residual pools connected with continuous wetted thalweg.	>75% of pools connected; few or no dry gaps.	++
+Longitudinal connectivity	Some dry gaps but many pools still linked.	About 50-75% of pools connected with short dry gaps.	+
+Longitudinal connectivity	Several dry gaps; many pools isolated.	About 25-50% connected; riffles mostly dry.	-
+Longitudinal connectivity	Long dry segments; pools isolated.	<25% connected; no continuous surface flow.	--
+Lateral connectivity	Water contacts both banks along most of the reach; lateral pockets connected.	Most margins wetted with few dry shelves; small pockets remain connected.	++
+Lateral connectivity	Banks wetted in many places but intermittent dry shelves.	Some benches/backwaters connected while others are dry.	+
+Lateral connectivity	Long dry shelves common; only scattered wetted edges.	Most lateral pockets disconnected except during storms.	-
+Lateral connectivity	Banks largely dry; narrow central thread only.	Lateral pockets and benches mostly dry or isolated.	--
+Overbank Flow Frequency	Recent moderate events inundate low benches and side bars. Field stakes at bankfull are inundated about every other year.	Floodplain activation ~1-2 yr	++
+Overbank Flow Frequency	Benches inundated in a few recent years but not consistently.	Activation ~3-5 yr	+
+Overbank Flow Frequency	Only larger, less frequent events reach benches. Benches are dusty or vegetated with upland species.	Activation ~5-10 yr	-
+Overbank Flow Frequency	Benches rarely or never wet. Levees or incision isolate the floodplain except during extremes.	Activation rare except large floods	--
+Peak Flow Capacity (Morphological Check)	Bankfull width and depth closely match regional curves for the drainage area and slope. Bars and banks remain stable through ~1-2 yr flows.	Near regional curve; stable	++
+Peak Flow Capacity (Morphological Check)	Slightly oversized or undersized relative to curves. Isolated bank slumps after moderate events.	Mild departure; occasional instability	+
+Peak Flow Capacity (Morphological Check)	Noticeable mismatch to curves. Frequent bar growth or cutbank retreat after moderate events.	Significant departure; frequent instability	-
+Peak Flow Capacity (Morphological Check)	Highly out of family. Repeated blowouts, chute formation, or bank failures with moderate floods.	Severe departure; chronic instability	--
+Peak Flow Capacity (Velocity/ Shear Stress)	Velocity and shear match what the bed can resist. Only small bar tweaks or thin new deposits.	Near threshold; stable	++
+Peak Flow Capacity (Velocity/ Shear Stress)	Small scour spots or minor deposition in a few places.	Slight mismatch; occasional instability	+
+Peak Flow Capacity (Velocity/ Shear Stress)	Velocity and shear noticeably too high or too low. Bars grow, shift, or scour around structures after moderate flows.	Significant mismatch; frequent instability	-
+Peak Flow Capacity (Velocity/ Shear Stress)	Widespread bank retreat, channel shifts, or large sediment deposits after moderate flows.	Extreme mismatch; chronic instability	--
+Bed Mobilization Frequency	Painted tracers or pebble counts indicate surface mobility near bankfull. Historic records show similar behavior.	Motion near bankfull (~1-2 yr)	++
+Bed Mobilization Frequency	Motion occurs somewhat below or above bankfull. Habitat still diverse but trending.	Slightly off	+
+Bed Mobilization Frequency	Bed stays locked through multiple moderate floods, or mobilizes during sub-bankfull flows every season.	Often locked or often scoured	-
+Bed Mobilization Frequency	Bed rarely moves even in large events, or reworks dramatically during modest events.	Extreme mismatch	--
+Floodplain Complexity	Multiple active side channels, backwaters, and oxbows exchange flow during moderate floods. Field photos confirm inundation paths.	Several off-channel features connected at ~1-2 year stage; pattern resembles historical complexity.	++
+Floodplain Complexity	Some side channels remain but several are truncated by berms or levees. Connectivity occurs only in parts of the reach.	Partial complexity. Some features are disconnected at moderate floods.	+
+Floodplain Complexity	Only a small backwater remains. Most historic features are isolated or filled.	Most side channels lost or isolated. Minimal diversity of floodplain features.	-
+Floodplain Complexity	Both banks are leveed or the reach is straightened and dredged. No off-channel areas remain despite historical evidence.	Drastically simplified or leveed. No functional off-channel areas.	--
+Entrenchment (ER)	LiDAR cross-sections show flood-prone width more than 2.2 times bankfull width.	ER > 2.2.	++
+Entrenchment (ER)	Representative cross-section yields ER ~ 1.7.	ER ~1.4-2.2.	+
+Entrenchment (ER)	Three cross-sections yield ER ~ 1.2.	ER < 1.4.	-
+Entrenchment (ER)	Channel is walled or deeply incised with little widening at flood-prone elevation.	ER near 1.0 and confinement by levees or walls.	--
+Channel Condition	No levees or spoil banks. Sinuous planform. No signs of dredging.	Stable channel. Not incised or dredged. Frequent floodplain access.	++
+Channel Condition	Short straightened segment and intermittent spoil berm on one bank.	Slight channelization or partial dredging.	+
+Channel Condition	Reach is incised by about 1-2 m with continuous spoil banks on one or both banks.	Heavily modified or incised with limited floodplain access.	-
+Channel Condition	Recently dredged trapezoidal channel with levees along both banks.	Deeply dredged or fully channelized. No functional floodplain.	--
+Lateral Floodplain Inundation	HEC-RAS 2D shows the floodplain and backwaters inundate at ~Q2 with 0.3-0.6 m depths.	1-2 year floods inundate side and backwaters.	++
+Lateral Floodplain Inundation	Inundation begins near ~Q3-Q5 with patchy coverage.	3-5 year floods required for broad access.	+
+Lateral Floodplain Inundation	Little inundation until ~Q10. Backwaters remain dry in moderate events.	~10 year event needed for access.	-
+Lateral Floodplain Inundation	No inundation until very large floods because of levees and incision.	Only extreme events produce inundation.	--
+Channel Complexity for Exchange	Alternating riffle-pool sequence. Distinct head drops at riffles. Patchy dunes in sand-bed reaches.	Well-developed bedforms with obvious upwelling and downwelling zones.	++
+Channel Complexity for Exchange	Some riffles and shallow pools but long uniform runs between.	Bedform variety present but partially uniform.	+
+Channel Complexity for Exchange	Mostly long runs. Few weak riffles.	Mostly uniform habitat with limited exchange features.	-
+Channel Complexity for Exchange	Featureless, planar bed with silt cover.	Bed lacks form. Exchange likely negligible.	--
+Floodplain Permeability	Hand-textured sands and sandy loams in frequently inundated swales. Groundwater mounding observed after floods.	Predominantly permeable floodplain soils supporting subsurface flow.	++
+Floodplain Permeability	Mixed sand over clay. Localized perched layers.	Partially permeable. Some clogging layers.	+
+Floodplain Permeability	Clayey overbank deposits or shallow bedrock exposed.	Mostly fine or shallow bedrock that limits infiltration.	-
+Floodplain Permeability	Spoil berms or compacted fill along banks.	Heavily compacted or lined. Minimal subsurface exchange.	--
+Bed Surface Grain Size	Pebble count shows clean gravel-cobble with open interstices.	Fines < 25%. Low embeddedness.	++
+Bed Surface Grain Size	Some fine matrix visible between gravels.	Fines 25-50%. Moderate embeddedness.	+
+Bed Surface Grain Size	Gravels largely buried by sand/silt.	Fines 50-75%. High embeddedness.	-
+Bed Surface Grain Size	Bed surface mostly sand, silt, or consolidated fines.	Fines >75%. Very high embeddedness.	--
+Visible Hyporheic Indicators	Multiple small upwelling boils at pool tails. Cold seeps along margins during summer.	Clear, frequent indicators of sub-surface flow.	++
+Visible Hyporheic Indicators	One or two seeps noted. Weak infiltration on riffle crests.	Occasional indicators.	+
+Visible Hyporheic Indicators	Questionable features. Staining but no active upwelling observed.	Rare or uncertain indicators.	-
+Visible Hyporheic Indicators	No seeps or infiltration zones observed at baseflow or falling limb.	No evidence. Bed appears sealed or compacted.	--
+Channel evolution stage	Low, vegetated banks. Frequent overbanking near bankfull. No fresh downcutting.	Schumm Stage I or VI. Cluer & Thorne stages 0-1 or 6-8.	++
+Channel evolution stage	Point bars rebuilding. Patchy inset benches forming. Short raw segments remain.	Schumm Stage V or mid-range in Cluer & Thorne.	+
+Channel evolution stage	Fresh slumps common. Bed appears lowered relative to floodplain.	Schumm Stage III-IV.	-
+Channel evolution stage	Deeply entrenched cross-section with tall raw banks. Active knickpoint present.	Schumm Stage II or destructive phases.	--
+Incision trend (headcuts)	No headcuts mapped in imagery or field. Old steps fully vegetated.	No active headcuts.	++
+Incision trend (headcuts)	One small local knickpoint at a tributary junction with little change between dates.	Localized feature with limited progression.	+
+Incision trend (headcuts)	Headcut with fresh plunge pool and exposed strata observed in two locations. Upstream migration evident between image years.	One to two moderate, actively migrating headcuts.	-
+Incision trend (headcuts)	Several large headcuts marching upstream across the reach with widespread bank failures above cuts.	Multiple or large active headcuts with rapid advance.	--
+Widening trend	Digitized edges show minor width change over a decade. Bars and banks behave like nearby reference reaches.	Near-reference lateral change.	++
+Widening trend	Mild net widening over 10 years with occasional raw banks and quick revegetation.	Slightly above reference change.	+
+Widening trend	Width increased well beyond reference. Frequent mass failures or pronounced confinement in places.	Significantly above or below reference with instability or constraints.	-
+Widening trend	Rapid over-widening after storms, or planform fully locked by hardening that suppresses natural change.	Highly accelerated or heavily suppressed outside stable norms.	--
+Recovery indicators	Continuous inset benches on both banks with established woody and herbaceous cover.	Broad, established vegetated benches or inset floodplains.	++
+Recovery indicators	Patchy vegetated bars and short bench segments. Vegetation is establishing.	Noticeable but incomplete bench and bar formation.	+
+Recovery indicators	Narrow, mostly bare bars. Few inset surfaces. Fresh erosion visible.	Sparse new floodplain surfaces and limited vegetation.	-
+Recovery indicators	No benches or inset floodplains. Vertical raw banks dominate.	No meaningful signs of recovery.	--
+Bank Erosion Potential	Well-vegetated banks with low BEHI; few raw spots.	Only small, scattered eroding segments that recover quickly.	++
+Bank Erosion Potential	Patchy vegetation and moderate BEHI; some raw or slumping sections.	Noticeable but limited eroding length.	+
+Bank Erosion Potential	Many long raw sections; high BEHI; widespread erosion.	Large portions of bankline actively eroding or failing.	-
+Bank Erosion Potential	Very high BEHI; >50% bankline eroding or failing; failing armor.	Extensive bare/slumped banks and deteriorating protection.	--
+Bank Migration and Meander	Slow, natural bend movement matches nearby reference.	Cutoffs rare; migration rate near reference.	++
+Bank Migration and Meander	Slightly faster or constrained migration; occasional cutoffs.	Minor departure from reference behavior.	+
+Bank Migration and Meander	Noticeably accelerated migration or several cutoffs in recent decades.	Migration about 2-3x reference or chute cutoffs common.	-
+Bank Migration and Meander	Very rapid migration, avulsions, or channel jumps.	Frequent or large cutoffs; path strongly out of character for setting.	--
+Sinuosity	Meanders occupy valley floor; bars well developed.	Sinuosity ~1.2-1.5 or matches local reference.	++
+Sinuosity	Gentle bends with long straight runs.	Sinuosity ~1.1-1.2.	+
+Sinuosity	Mostly straight with infrequent bends.	Sinuosity ~1.05-1.1.	-
+Sinuosity	Channelized or straight through a meander belt.	Sinuosity <1.05 where meanders are expected.	--
+Channel pattern	Planform natural for valley; expected thread count; side channels connected.	Little/no straightening; side channels carry water near bankfull; pattern matches reference.	++
+Channel pattern	Some simplified segments but generally natural.	Minor realignment or slight thread-count departure; limited side-channel connectivity.	+
+Channel pattern	Clear realignment or planform departure; side channels mostly inactive.	Long straight segments or mismatched thread count; side channels disconnected except larger floods.	-
+Channel pattern	Heavily straightened or artificial planform.	Strongly out of character; side channels absent or blocked by berms/spoil/levees.	--
+Sediment Deposition Patterns	Point bars present on bends. No persistent mid-channel bars.	Bar types and locations match expected reference for a single-thread meandering channel (Leopold et al., 1964).	++
+Sediment Deposition Patterns	Small lateral bars and occasional temporary islands.	Minor departures from reference pattern.	+
+Sediment Deposition Patterns	Multiple mid-channel bars that persist year to year and split flow.	Pattern suggests imbalance in supply vs transport for expected channel type (Bridge 2003).	-
+Sediment Deposition Patterns	Reach clogged with large deposits that force multi-threading where not natural.	Widespread bar growth inconsistent with reference condition.	--
+Channel Degradation (Incision)	Low banks with inset benches. No active headcuts observed.	ER > 2.2. No active headcuts (Rosgen 1996, 2006).	++
+Channel Degradation (Incision)	Localized bed lowering. One small headcut with vegetation establishing.	ER ~1.4-2.2. Limited headcut activity (Rosgen 1996, 2006).	+
+Channel Degradation (Incision)	High banks and lowered bed. One to two moderate headcuts migrating.	ER < 1.4. Observable upstream migration of headcuts (Simon & Rinaldi 2006).	-
+Channel Degradation (Incision)	Multiple large active headcuts. Floodplain largely disconnected.	ER < 1.4 reach-wide. Widespread incision (Schumm et al., 1984; Rosgen 2006).	--
+Fine Sediment Balance	Gravel-cobble riffles with open voids. Thin or absent silt film.	Embeddedness < 25% (Class 1) (Sylte & Fischenich 2002).	++
+Fine Sediment Balance	Some fines in pools and along margins. Riffles mostly clean.	Embeddedness 25-50% (Class 2) (Sylte & Fischenich 2002).	+
+Fine Sediment Balance	Riffles partly blanketed in silt after storms. Fines persist for weeks.	Embeddedness 50-75% (Class 3) (Sylte & Fischenich 2002).	-
+Fine Sediment Balance	Substrate largely buried in fines. Chronic turbidity even at low flow.	Embeddedness > 75% (Class 4) (Sylte & Fischenich 2002).	--
+Transport Capacity	Bars form on inner bends and migrate gradually. Pools maintained.	Bankfull Shields stress ~0.03-0.06 and consistent with D50. Morphology shows balanced scour/fill (Buffington & Montgomery 1997).	++
+Transport Capacity	Modest bar growth in low-energy sections. Some narrowing.	Shields slightly below critical range. Minor deposition.	+
+Transport Capacity	Large new bars in straight sections. Pools infilling.	Shields well below critical range. Under-capacity relative to supply.	-
+Transport Capacity	Deep scour and exposed armor. Few bars remain.	Shields well above critical range. Persistent over-capacity (Knighton 1998).	--
+Large Wood Frequency and Diversity	Abundant large wood with key pieces/rootwads or small jams.	Meets upper-range reference for density and variety.	++
+Large Wood Frequency and Diversity	Moderate wood; some larger pieces but patchy.	Slightly below reference; habitat added but less consistent.	+
+Large Wood Frequency and Diversity	Very little wood; mostly small/decayed pieces.	Few or no key pieces; limited hydraulic influence.	-
+Large Wood Frequency and Diversity	Almost no large wood where expected.	No key pieces or jams; far below reference unless naturally low wood.	--
+Riparian Wood Recruitment	Continuous >=30 m mature forest on both banks.	Strong recruitment potential within ~30 m corridor.	++
+Riparian Wood Recruitment	15-30 m forested buffer with gaps or one bank narrower.	Partial coverage; recruitment reduced.	+
+Riparian Wood Recruitment	Narrow (<15 m) or patchy trees with frequent breaks.	Few large stems near channel.	-
+Riparian Wood Recruitment	No meaningful near-channel forest where forest is natural.	Grass/crops/development to top of bank; minimal recruitment.	--
+Substrate Composition	Gravel-cobble mix with low fines and open pore space.	<25% embeddedness; little/no crusting or armor.	++
+Substrate Composition	Slight fines or coarsening; moderate embeddedness.	Embeddedness about 25-50%; light crusting/armoring.	+
+Substrate Composition	Fines blanket bed or strong armor limits pore space.	Embeddedness about 50-75% or surface locked.	-
+Substrate Composition	Fine-dominated bed or heavily locked armor.	Embeddedness >75% or severe armoring; minimal pore space.	--
+Bedform Diversity	Clear riffle-run-pool or step-pool sequence at expected spacing.	Robust bedform variety for stream type.	++
+Bedform Diversity	Some diversity but units less distinct or irregular spacing.	Partially uniform bed with intermittent units.	+
+Bedform Diversity	Mostly homogeneous bed; sequences faint or discontinuous.	Minimal expression of expected units.	-
+Bedform Diversity	Flattened or artificially uniform bed.	No meaningful bedform sequence.	--
+Riparian Canopy Cover	Closed canopy of mature hardwoods and conifers. Continuous overchannel foliage.	75-100% shade where forested reference conditions are expected.	++
+Riparian Canopy Cover	Mixed canopy with gaps near crossings and meadows.	50-75% shade.	+
+Riparian Canopy Cover	Fragmented tree line with long open reaches beside pasture.	25-50% shade.	-
+Riparian Canopy Cover	Cleared banks and open valley floor in a historically forested setting.	<25% shade. Note that excessive shade would be flagged only in historically open systems.	--
+Stream Temperature (rapid)	Logger record shows summer highs below local standard. Small diel range.	Rarely surpasses local standard. For screening, <20 C in coldwater or <28 C in warmwater.	++
+Stream Temperature (rapid)	Occasional brief exceedances during heat waves.	Slightly exceeds threshold occasionally.	+
+Stream Temperature (rapid)	Repeated warm afternoons near or over the threshold each week.	Frequent near or over threshold.	-
+Stream Temperature (rapid)	Daily exceedance and several events approaching lethal levels.	Consistently high or lethal temperatures.	--
+Algal Growth (light-limited)	Thin periphyton film on stable cobbles. No mats.	Minimal algae. No nuisance mats.	++
+Algal Growth (light-limited)	Light filaments on sunlit margins.	Slightly elevated algae coverage.	+
+Algal Growth (light-limited)	Broad patches of filamentous algae covering riffles.	Large mats partially impair habitat.	-
+Algal Growth (light-limited)	Thick blooms and scums that blanket the bed and trap fine sediment.	Dense bloom or scum overshadowing substrate.	--
+Thermal Refugia	Multiple cold seeps and deep pools evident. Fish aggregations present on hot days.	Multiple cooler pockets or deeper pools moderating temperature extremes.	++
+Thermal Refugia	One small spring-fed side channel with limited extent.	One to two minor or limited refuges.	+
+Thermal Refugia	Scattered weak cool spots with little depth refuge.	Rare or minimal cooler zones. Partial stress.	-
+Thermal Refugia	No detectable cool pockets in a reach that historically had springs or deep pools.	No refuges where historically expected. High thermal risk.	--
+CPOM Retention	Stable leaf packs lodged behind wood and in low-velocity pockets along most of the reach	Abundant CPOM retention and multiple debris accumulations typical for forested systems	++
+CPOM Retention	Leaf packs present but many flush out after moderate storms	Some retention with partial flushing	+
+CPOM Retention	Only scattered leaves on bars or in eddies. Bed often scoured clean	Sparse organic matter and limited retention	-
+CPOM Retention	Bed largely bare with thin organic film or black, anoxic conditions	No effective retention or severe overload causing anoxia	--
+Detritus Decomposition Rate, Shredder/ Detritivore Presence	Leaf packs break down quickly with softening and visible fungal growth. Kick sample includes several shredder taxa	Fast breakdown with strong biological processing and multiple shredder groups present	++
+Detritus Decomposition Rate, Shredder/ Detritivore Presence	Moderate softening of leaves with some fungal growth. One or two shredder groups present at low abundance	Intermediate breakdown with partial shredder presence	+
+Detritus Decomposition Rate, Shredder/ Detritivore Presence	Little change to leaf material after several weeks. Packs often coated in silt. Assemblage mostly tolerant collectors and grazers	Slow breakdown with few or no active shredders	-
+Detritus Decomposition Rate, Shredder/ Detritivore Presence	No noticeable mass loss. Strong odor or anoxic conditions. No shredders in a reach where they are expected	Very slow breakdown and absence of shredder taxa in suitable habitat	--
+Riparian Corridor Width and Quality	Continuous native trees and shrubs on both banks at about 30 m or more	Approximately >= 30 m native buffer. Diverse structure	++
+Riparian Corridor Width and Quality	Mostly vegetated but interrupted by lawns or crossings. About 15-30 m	15-30 m with partial native cover	+
+Riparian Corridor Width and Quality	Narrow grass strip or mowed edges. About 5-15 m	5-15 m and limited native diversity	-
+Riparian Corridor Width and Quality	Cropland, pavement, or fill to the top of bank. Less than 5 m	< 5 m or essentially no corridor	--
+Algal and Primary Production	Thin biofilm with visible gravel and cobble. No mats	Balanced growth and no nuisance bloom	++
+Algal and Primary Production	Slight periphyton increase. Occasional filament clusters	Slightly elevated algae	+
+Algal and Primary Production	Frequent moderate mats in glides and pools	Moderate nuisance mats that partially impair habitat	-
+Algal and Primary Production	Thick mats or scums widespread. Substrate obscured	Dense blooms overshadowing habitat	--
+Visible Algal Indications (N/P)	Cobble substrate mostly clean. Thin biofilm only.	< 10% benthic algal cover	++
+Visible Algal Indications (N/P)	Thin green filaments on stones in patches.	~10-30% cover	+
+Visible Algal Indications (N/P)	Mats cover about one third to one half of riffles.	~30-50% cover	-
+Visible Algal Indications (N/P)	Thick mats and surface scum on most substrate.	> 50% cover or nuisance mats	--
+N/P Concentrations	TN ~0.5 mg/L and TP ~0.03 mg/L.	Near low to moderate trophic benchmarks	++
+N/P Concentrations	TN ~0.7-1.0 mg/L or TP ~0.05-0.075 mg/L.	Slightly elevated nutrients	+
+N/P Concentrations	TN ~1.0-1.5 mg/L or TP ~0.075-0.10 mg/L.	Marked elevation	-
+N/P Concentrations	TN > 1.5 mg/L or TP > 0.10 mg/L.	Strong enrichment	--
+Vegetated Riparian Corridor Width	Continuous native forest buffer on both banks.	>= ~30 m width per bank	++
+Vegetated Riparian Corridor Width	Mostly vegetated buffer with gaps.	~15-30 m	+
+Vegetated Riparian Corridor Width	Narrow buffer with frequent breaks.	~5-15 m	-
+Vegetated Riparian Corridor Width	Cropped or paved to bank edge.	< ~5 m	--
+Denitrification Potential	Connected floodplain wetlands with hydric soils and backwater pockets.	Strong potential with frequent seasonal saturation	++
+Denitrification Potential	Some wet pockets. Channel partly disconnected from floodplain.	Moderate potential	+
+Denitrification Potential	Limited wetland area. Bankfull rarely overtops.	Low potential	-
+Denitrification Potential	No wetlands. Floodplain ditched or tile drained.	Negligible potential	--
+Water Clarity / Turbidity	Water is clear at baseflow and similar to a local reference reach. Bottom is visible at knee depth.	Mostly clear or only slightly cloudy at baseflow.	++
+Water Clarity / Turbidity	Slight yellow-brown tint after storms that clears within a day.	Slight turbidity or color that is short-lived.	+
+Water Clarity / Turbidity	Cloudy water persists during baseflow. Fine sediment coats substrate.	Persistent cloudiness at baseflow.	-
+Water Clarity / Turbidity	Chronically muddy water. Visible oily sheen or scum in slack water.	Persistently muddy or sheen present.	--
+Dissolved Oxygen (rapid)	DO readings consistently above 6 mg/L. No recorded night-time dips.	> 6 mg/L consistently.	++
+Dissolved Oxygen (rapid)	DO commonly 5-6 mg/L in late summer.	5-6 mg/L borderline.	+
+Dissolved Oxygen (rapid)	Night minima 3-5 mg/L during warm periods.	3-5 mg/L frequent stress.	-
+Dissolved Oxygen (rapid)	DO dips below 3 mg/L and fish stress observed.	< 3 mg/L dangerously low.	--
+Pollutants	No oily sheen, staining, or chemical odor. Soils appear natural and intact. No impairment listings.	No visible contamination indicators or known exceedances.	++
+Pollutants	Occasional faint odor near a storm outfall or small dump pile on the floodplain.	Minor localized inputs or mild odor only.	+
+Pollutants	Stained soils, debris, or chemical odor near developed or industrial areas. Located downstream of a listed contaminated site.	Recognized contamination risk or known moderate contamination.	-
+Pollutants	Strong odor, visible seepage, or listed hazardous site on the floodplain. Fish kill reports on record.	Severe or chronic contamination.	--
+pH & Specific Conductivity (rapid)	pH 7.4. Specific conductance 250 uS/cm.	pH ~6.5-8.5 and cond. < 500 uS/cm typical.	++
+pH & Specific Conductivity (rapid)	pH 6.3 or 8.7 with otherwise stable chemistry.	Slightly off-range or mild elevation.	+
+pH & Specific Conductivity (rapid)	pH 5.8 or 9.2. Conductivity ~1000 uS/cm.	Marked deviation or 800-1500 uS/cm.	-
+pH & Specific Conductivity (rapid)	pH 4.8 or 10.2. Conductivity > 2000 uS/cm.	Extreme pH or very high conductance.	--
+Bank & Floodplain Soil Condition	Intact native soils and vegetation. No odors or staining.	Natural soils. No contamination indicators.	++
+Bank & Floodplain Soil Condition	Small dump pile or localized manure near a crossing.	Minor dumping or localized inputs.	+
+Bank & Floodplain Soil Condition	Stained soils and debris on banks near former industrial area.	Known moderate contamination.	-
+Bank & Floodplain Soil Condition	Strong petroleum odor, visible seepage, or listed hazardous site on the floodplain.	Highly contaminated soils.	--
+In-Stream Habitat Complexity	Riffles, runs, pools, and large wood recur across the reach.	Multiple habitat types well represented.	++
+In-Stream Habitat Complexity	Riffle and run common. Pools intermittent. Sparse cover.	Some variety but missing key elements.	+
+In-Stream Habitat Complexity	Long uniform glide or sand bed with occasional shallow run.	Mostly uniform. Only 1-2 distinct features.	-
+In-Stream Habitat Complexity	Straight, entrenched, uniform channel with little cover.	Very uniform channel. Limited structural diversity.	--
+Undercut Banks and Overhanging Vegetation	Thick root mats and overhanging shrubs along outside bends.	About 50% or more of banks provide undercut or overhanging cover.	++
+Undercut Banks and Overhanging Vegetation	Intermittent undercuts and low branches in meanders.	About 25-50% cover.	+
+Undercut Banks and Overhanging Vegetation	Short isolated undercut pockets. Many bare or armored banks.	About 10-25% cover.	-
+Undercut Banks and Overhanging Vegetation	Banks straight and hardened. Little to no overhanging vegetation.	<10% cover.	--
+Aquatic Invertebrate Habitat	Stable cobble riffles with gravel pockets, root wads, leaf packs, and scattered wood.	Multiple stable substrates and organic cover supporting diverse invertebrates.	++
+Aquatic Invertebrate Habitat	Cobble and gravel with some roots or wood. Fines cover parts of the bed.	Some substrate variety but partly limited by fines.	+
+Aquatic Invertebrate Habitat	Mostly mobile sand or silt with little wood or leaf packs.	Limited stable substrate and few microhabitats.	-
+Aquatic Invertebrate Habitat	Uniform sand, silt, or bedrock. No wood, leaf packs, or root structure.	Very poor substrate variety and minimal invertebrate habitat.	--
+Lateral and Off-Channel Habitats	Side channels and backwaters connect during seasonal highs. Fish and amphibian use observed.	Well connected off-channel areas offering refuge and spawning.	++
+Lateral and Off-Channel Habitats	One or two backwaters with partial seasonal connection.	Some partial connection.	+
+Lateral and Off-Channel Habitats	Small depressions connect only during rare floods.	Rare or only ephemeral off-channel usage.	-
+Lateral and Off-Channel Habitats	Levees or berms isolate the channel from the floodplain.	No side channels or backwaters remain.	--
+Fish habitat	Clean gravels with open spaces and many shallow pockets, wood, and vegetation.	Embeddedness 0-25 percent; over 40 percent shallow, low-velocity cover.	++
+Fish habitat	Light sand on riffles; scattered wood and bank cover.	Embeddedness 25-50 percent; about 20-40 percent shallow, low-velocity cover.	+
+Fish habitat	Gravels embedded with silt; few bank pockets or calm margins.	Embeddedness 50-75 percent; about 5-20 percent shallow, low-velocity cover.	-
+Fish habitat	Bed mostly sand or silt; no pockets or structural cover.	Embeddedness >=75 percent; less than 5 percent shallow, low-velocity cover.	--
+Aquatic Invertebrate Community	Mayflies, stoneflies, and caddisflies found in kick sample.	All three EPT orders present with multiple taxa.	++
+Aquatic Invertebrate Community	Two of three EPT orders present.	Two EPT orders present.	+
+Aquatic Invertebrate Community	Only one EPT order present.	One EPT order present.	-
+Aquatic Invertebrate Community	No EPT. Mostly tolerant midges and worms.	Zero EPT orders present.	--
+Fish Presence	Several native species across many sizes.	Multiple native species with broad size classes.	++
+Fish Presence	Two to three natives; sizes limited.	Few natives with partial size classes.	+
+Fish Presence	Only tolerant species present in low numbers.	One to two tolerant species dominate.	-
+Fish Presence	No fish detected where expected.	Absent or only non-native species present.	--
+Amphibian and Crayfish Presence	Multiple frogs, salamanders, and crayfish observed.	Presence aligns with reference expectations.	++
+Amphibian and Crayfish Presence	A few individuals observed.	Limited presence.	+
+Amphibian and Crayfish Presence	One or two sightings only.	Rare occurrence.	-
+Amphibian and Crayfish Presence	None detected during suitable season.	Absent where historically expected.	--
+Native and non-native species	Native fish and invertebrates common. Very few non natives seen.	Native community matches reference. Non natives rare and low abundance.	++
+Native and non-native species	Most natives present. Some sensitive species missing.	Minor native loss. Non natives present but natives still dominant.	+
+Native and non-native species	Many sensitive natives gone. Non natives frequent.	Noticeable native decline. Non natives common or co-dominant.	-
+Native and non-native species	Only tolerant or non native species observed.	Natives rare or absent. Community dominated by tolerant or invasive taxa.	--
+Species richness, composition and abundance	Many species across several feeding groups.	High richness. Balanced feeding groups. Good index score.	++
+Species richness, composition and abundance	Several species present. Some groups missing.	Moderate richness. Some imbalance in feeding groups.	+
+Species richness, composition and abundance	Few species. One or two groups dominate.	Low richness. Dominance by tolerant taxa or single group.	-
+Species richness, composition and abundance	Very few species. Mostly tolerant taxa.	Extremely low richness and diversity. Poor index score.	--
+Riparian communities	Continuous native trees, shrubs, and groundcover.	Wide, intact native corridor with minimal invasives.	++
+Riparian communities	Mostly vegetated corridor with some gaps.	Moderate width and structure. Some invasive patches present.	+
+Riparian communities	Thin or patchy vegetation along banks.	Narrow corridor. Fragmented native cover with common invasives.	-
+Riparian communities	Little native vegetation. Banks mostly lawn or invasives.	Corridor very narrow or absent. Native plants largely missing.	--
+Keystone species	Beaver, mussels, or crayfish common where expected.	Expected keystone taxa widespread. No invasive dominance.	++
+Keystone species	Some keystone species present but patchy.	At least one keystone taxon present but limited distribution.	+
+Keystone species	Keystone species observed only in small numbers.	Keystone taxa rare compared to reference or historical levels.	-
+Keystone species	Expected keystone species absent. Invasives common.	No keystone taxa present. Strong invasive dominance.	--
+Upstream and Downstream Barriers	No dams or weirs within the connected corridor. Only small natural steps that fish pass at typical flows.	80-100% of habitat accessible. No major barriers.	++
+Upstream and Downstream Barriers	One small low-head structure downstream with partial passage at moderate flows.	About 50-80% accessible.	+
+Upstream and Downstream Barriers	Several small barriers in series restrict movement across subreaches.	About 20-50% accessible.	-
+Upstream and Downstream Barriers	Large regulating dam close to the reach with multiple downstream grade controls.	<20% accessible due to big dams or multiple blockages.	--
+Culvert and Road-Crossing Passability	Crossings are embedded and aligned with natural bed. No outlet drops.	80-100% stream continuity at crossings.	++
+Culvert and Road-Crossing Passability	Most crossings passable. A few show minor outlet drops or smooth barrels.	About 50-80% passable.	+
+Culvert and Road-Crossing Passability	Several perched culverts and steep barrels concentrate flow and block passage.	About 20-50% passable.	-
+Culvert and Road-Crossing Passability	Many perched pipes and long smooth boxes with no bed material.	<20% passable. Multiple perched culverts hamper movement.	--
+Lateral Connectivity for Riparian Fauna	Banks are free of continuous levees or walls. Side channels and backwaters are accessible.	No major levees or walls. Free lateral movement for semiaquatic fauna.	++
+Lateral Connectivity for Riparian Fauna	Short levee segments occur, but frequent gaps allow movement to wetlands.	Some partial barriers but still some access.	+
+Lateral Connectivity for Riparian Fauna	Long levees or ripraped banks on one side limit access to the floodplain in many places.	Large levees hamper movement in many areas.	-
+Lateral Connectivity for Riparian Fauna	Both banks armored or walled for long distances. Few or no access points.	Heavily walled or leveed corridor. Minimal lateral connectivity.	--
+Dewatered or Intermittent Segments	Continuous wetted channel during the expected season. No artificial withdrawals noted.	No artificial dryness. Natural connectivity is maintained.	++
+Dewatered or Intermittent Segments	Short dry patches appear during late season but reconnect after small rains.	Minor dryness in small segments.	+
+Dewatered or Intermittent Segments	Long dry segments form in critical habitat areas during the growing season.	Notable dryness or disconnection in key reaches.	-
+Dewatered or Intermittent Segments	Reaches are chronically dewatered or disconnected for long periods due to withdrawals or diversions.	Chronic or large-scale dewatering. Major fragmentation.	--

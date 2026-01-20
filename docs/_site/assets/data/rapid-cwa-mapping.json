@@ -1,0 +1,22 @@
+[
+  {"function": "Catchment Hydrology", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Surface Water Storage", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Reach Inflow", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Streamflow Regime", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Low Flow and Baseflow Dynamics", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "High Flow Dynamics", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Floodplain Connectivity", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Hyporheic Connectivity", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Channel Evolution", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Channel and Floodplain Dynamics", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Sediment Continuity", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Bed Composition and Large Wood", "physical": "D", "chemical": "i", "biological": "i"},
+  {"function": "Light and Thermal Regime", "physical": "-", "chemical": "D", "biological": "i"},
+  {"function": "Carbon Processing", "physical": "-", "chemical": "D", "biological": "i"},
+  {"function": "Nutrient Cycling", "physical": "i", "chemical": "D", "biological": "i"},
+  {"function": "Water and Soil Quality", "physical": "i", "chemical": "D", "biological": "i"},
+  {"function": "Habitat Provision", "physical": "-", "chemical": "-", "biological": "D"},
+  {"function": "Population Support", "physical": "i", "chemical": "i", "biological": "D"},
+  {"function": "Community Dynamics", "physical": "i", "chemical": "i", "biological": "D"},
+  {"function": "Watershed Connectivity", "physical": "i", "chemical": "-", "biological": "D"}
+]

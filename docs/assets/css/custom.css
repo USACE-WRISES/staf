@@ -526,7 +526,8 @@ h3,
   background: #e6e6e6;
 }
 
-.screening-assessment .btn:hover {
+.screening-assessment .btn:hover,
+.rapid-assessment .btn:hover {
   background: #e8eef9;
   border-color: #3c6ec3;
   box-shadow: 0 0 0 2px rgba(60, 110, 195, 0.2);
@@ -534,7 +535,9 @@ h3,
 }
 
 .screening-assessment .btn:focus,
-.screening-assessment .btn:focus-visible {
+.screening-assessment .btn:focus-visible,
+.rapid-assessment .btn:focus,
+.rapid-assessment .btn:focus-visible {
   outline: none;
   border-color: #2f5fa6;
   box-shadow: 0 0 0 3px rgba(60, 110, 195, 0.35);
@@ -544,7 +547,11 @@ h3,
 .screening-assessment .btn:disabled,
 .screening-assessment .btn:disabled:hover,
 .screening-assessment .btn:disabled:focus,
-.screening-assessment .btn:disabled:focus-visible {
+.screening-assessment .btn:disabled:focus-visible,
+.rapid-assessment .btn:disabled,
+.rapid-assessment .btn:disabled:hover,
+.rapid-assessment .btn:disabled:focus,
+.rapid-assessment .btn:disabled:focus-visible {
   background: #f0f0f0;
   border-color: #cfcfcf;
   box-shadow: none;
@@ -589,6 +596,10 @@ h3,
   width: 140px;
 }
 
+.rapid-table .function-score-inline {
+  margin-top: 0.15rem;
+}
+
 .score-value {
   min-width: 2.25rem;
   text-align: right;
@@ -603,6 +614,14 @@ h3,
   position: relative;
   width: fit-content;
   max-width: 95vw;
+  margin: 0 auto;
+  transform: none;
+}
+
+.rapid-assessment.widget {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
   transform: none;
 }
@@ -928,6 +947,10 @@ h3,
   font-variant-numeric: tabular-nums;
 }
 
+.screening-table .function-score-inline {
+  margin-top: 0.25rem;
+}
+
 .criteria-row td {
   background: #f9f9f9;
   max-width: none;
@@ -980,6 +1003,42 @@ h3,
   min-width: 0;
 }
 
+.rapid-table {
+  width: 100%;
+  min-width: 100%;
+  font-size: 0.88rem;
+  line-height: 1.1;
+}
+
+.rapid-table th,
+.rapid-table td {
+  padding: 0.12rem 0.25rem;
+  vertical-align: top;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.1;
+}
+
+.rapid-table th {
+  font-size: 0.85rem;
+}
+
+.rapid-table td.col-indicator-score {
+  padding: 0;
+}
+
+.rapid-table td.col-indicator-score select {
+  width: 100%;
+  height: 100%;
+  min-height: 1rem;
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
+  padding: 0.02rem 0.18rem;
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
 .screening-table th,
 .screening-table td {
   word-break: break-word;
@@ -1000,7 +1059,7 @@ h3,
 
 .screening-table th.col-metric-score,
 .screening-table th.col-function-score,
-.screening-table th.col-actions,
+.screening-table th.col-indicator-score,
 .screening-table th.col-physical,
 .screening-table th.col-chemical,
 .screening-table th.col-biological {
@@ -1012,7 +1071,7 @@ h3,
 
 .screening-table td.col-metric-score,
 .screening-table td.col-function-score,
-.screening-table td.col-actions,
+.screening-table td.col-indicator-score,
 .screening-table td.col-physical,
 .screening-table td.col-chemical,
 .screening-table td.col-biological {
@@ -1049,14 +1108,148 @@ h3,
   max-width: 11ch;
 }
 
+.screening-table .col-indicator-score {
+  width: 10ch;
+  max-width: 10ch;
+}
+
 .screening-table .col-function-score {
   width: 9ch;
   max-width: 9ch;
 }
 
-.screening-table .col-actions {
-  width: 12ch;
-  max-width: 12ch;
+.rapid-table .indicator-cell {
+  white-space: normal;
+  line-height: 1.1;
+}
+
+.rapid-table .function-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.rapid-table .function-statement {
+  margin-top: 0.1rem;
+  color: #444444;
+}
+
+.screening-table .function-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.screening-table .function-statement {
+  margin-top: 0.25rem;
+  color: #444444;
+}
+
+.scoring-table .function-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.scoring-table .function-statement {
+  margin-top: 0.15rem;
+  color: #444444;
+}
+
+.scoring-table .function-score-inline {
+  margin-top: 0.2rem;
+}
+
+.scoring-table {
+  width: 100%;
+  table-layout: fixed;
+  font-size: 0.9rem;
+  line-height: 1.2;
+}
+
+.scoring-table th,
+.scoring-table td {
+  padding: 0.25rem 0.4rem;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.scoring-table th {
+  font-size: 0.85rem;
+}
+
+.scoring-table th:nth-child(1),
+.scoring-table td:nth-child(1) {
+  width: 16%;
+}
+
+.scoring-table th:nth-child(2),
+.scoring-table td:nth-child(2) {
+  width: 44%;
+}
+
+.scoring-table th:nth-child(3),
+.scoring-table td:nth-child(3),
+.scoring-table th:nth-child(4),
+.scoring-table td:nth-child(4),
+.scoring-table th:nth-child(5),
+.scoring-table td:nth-child(5) {
+  width: 13%;
+}
+
+.criteria-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #333333;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.criteria-toggle:hover {
+  background: #e8eef9;
+  border-color: #3c6ec3;
+  color: #1f4f9c;
+}
+
+.criteria-toggle:focus,
+.criteria-toggle:focus-visible {
+  outline: none;
+  border-color: #2f5fa6;
+  box-shadow: 0 0 0 2px rgba(60, 110, 195, 0.3);
+  color: #1f4f9c;
+}
+
+.criteria-toggle:disabled,
+.criteria-toggle:disabled:hover,
+.criteria-toggle:disabled:focus,
+.criteria-toggle:disabled:focus-visible {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #9a9a9a;
+  cursor: default;
+}
+
+.rapid-table .indicator-cell .criteria-toggle {
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.25rem;
+  font-size: 0.75rem;
+}
+
+.screening-table .metric-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.35rem;
+  vertical-align: middle;
 }
 
 .screening-table .col-physical,
@@ -1092,6 +1285,11 @@ h3,
   .screening-assessment.widget {
     width: fit-content;
     max-width: 95vw;
+  }
+
+  .rapid-assessment.widget {
+    width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -1143,6 +1341,13 @@ h3,
   border: 1px solid #b5b5b5;
   padding: 0.35rem 0.5rem;
   vertical-align: top;
+}
+
+.scoring-table th,
+.scoring-table td {
+  padding: 0.25rem 0.4rem;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .functions-table {

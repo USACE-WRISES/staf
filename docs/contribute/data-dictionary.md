@@ -16,6 +16,7 @@ This page defines the fields used by JSON files in `docs/assets/data/`.
 - `id`: stable function identifier (string)
 - `category`: Hydrology, Hydraulics, Geomorphology, Physicochemistry, Biology
 - `name`: display name
+- `function_statement`: short function statement used in assessment widgets
 - `short_description`: one-line description
 - `long_description`: longer description used in the explorer details panel
 - `example_metrics`: object with arrays per tier

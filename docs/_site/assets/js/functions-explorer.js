@@ -20,40 +20,7 @@
     const desc = document.createElement('p');
     desc.textContent = fn.long_description;
 
-    const metrics = document.createElement('div');
-    metrics.className = 'details-metrics';
-
-    const metricsTitle = document.createElement('strong');
-    metricsTitle.textContent = 'Example metrics by tier';
-
-    const lists = document.createElement('div');
-    lists.className = 'metrics-lists';
-
-    const buildList = (title, items) => {
-      const block = document.createElement('div');
-      const heading = document.createElement('div');
-      heading.className = 'metrics-heading';
-      heading.textContent = title;
-      const list = document.createElement('ul');
-      items.forEach((item) => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        list.appendChild(li);
-      });
-      block.appendChild(heading);
-      block.appendChild(list);
-      return block;
-    };
-
-    lists.appendChild(buildList('Screening', fn.example_metrics.screening || []));
-    lists.appendChild(buildList('Rapid', fn.example_metrics.rapid || []));
-    lists.appendChild(buildList('Detailed', fn.example_metrics.detailed || []));
-
-    metrics.appendChild(metricsTitle);
-    metrics.appendChild(lists);
-
     wrap.appendChild(desc);
-    wrap.appendChild(metrics);
 
     return wrap;
   };
@@ -140,15 +107,22 @@
       detailsRow.hidden = true;
 
       const detailsCell = document.createElement('td');
-      detailsCell.colSpan = 2;
+      detailsCell.colSpan = 1;
       detailsCell.appendChild(buildDetails(fn));
       detailsRow.appendChild(detailsCell);
+
+      const updateFunctionRowSpan = (expanded) => {
+        nameCell.rowSpan = expanded ? 2 : 1;
+      };
+
+      updateFunctionRowSpan(false);
 
       toggleBtn.addEventListener('click', () => {
         const isOpen = !detailsRow.hidden;
         detailsRow.hidden = isOpen;
         toggleBtn.setAttribute('aria-expanded', String(!isOpen));
         toggleBtn.textContent = isOpen ? '▾' : '▴';
+        updateFunctionRowSpan(!isOpen);
         updateCategoryRowSpans(tableBody);
       });
 

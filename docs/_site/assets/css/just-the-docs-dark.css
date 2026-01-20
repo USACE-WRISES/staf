@@ -2622,12 +2622,12 @@ code.language-mermaid { padding: 0; background-color: inherit; border: 0; }
   .py-xl-10 { padding-top: 4rem !important; padding-bottom: 4rem !important; } }
 @media print { .site-footer, .site-button, #edit-this-page, #back-to-top, .site-nav, .main-header { display: none !important; }
   hr { margin-top: 1rem; margin-bottom: 1rem; }
-  .side-bar { width: 100%; height: auto; border-right: 0 !important; }
+  .side-bar { width: 100%; height: auto; border-right: 0 !important; /* Disable display: flex and position: fixed from non-print styles */ position: static; display: block; }
   .site-header { border-bottom: 1px solid #44434d; }
   .site-title { font-size: 1rem !important; font-weight: 700 !important; }
   .text-small { font-size: 8pt !important; }
   pre.highlight { border: 1px solid #44434d; }
-  .main { max-width: none; margin-left: 0; } }
+  .main { max-width: none; margin-left: 0 !important; /* Necessary to override .side-bar + .main specificity */ } }
 a.skip-to-main { left: -999px; position: absolute; top: auto; width: 1px; height: 1px; overflow: hidden; z-index: -999; }
 
 a.skip-to-main:focus, a.skip-to-main:active { color: #5ea1fb; background-color: #27262b; left: auto; top: auto; width: 30%; height: auto; overflow: auto; margin: 10px 35%; padding: 5px; border-radius: 15px; border: 4px solid #264caf; text-align: center; font-size: 1.2em; z-index: 999; }

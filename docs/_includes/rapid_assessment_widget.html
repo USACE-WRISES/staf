@@ -1,0 +1,41 @@
+<div class="rapid-assessment widget" data-baseurl="{{ site.baseurl }}">
+  <div class="rapid-assessment-fallback">
+    <p>This rapid assessment widget needs JavaScript. Use the SFARI field materials if you prefer manual calculations.</p>
+  </div>
+  <div class="rapid-assessment-ui" hidden>
+    <div class="screening-assessment-layout">
+      <div class="screening-assessment-main">
+        <div class="screening-tabs-bar">
+          <div class="screening-tabs rapid-tabs" role="tablist" aria-label="Rapid assessments"></div>
+        </div>
+        <section class="screening-settings-panel">
+          <div class="settings-header settings-header-row">
+            <h3>Settings</h3>
+            <div class="assessment-inline-actions">
+              <button class="btn btn-small rapid-duplicate" type="button" disabled>Duplicate</button>
+              <button class="btn btn-small rapid-delete" type="button" disabled>Delete</button>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <label class="settings-field">
+              <span>Name</span>
+              <input class="settings-name" type="text" readonly />
+            </label>
+            <label class="settings-field">
+              <span>Applicability</span>
+              <input class="settings-applicability" type="text" readonly />
+            </label>
+            <label class="settings-field settings-notes">
+              <span>Notes</span>
+              <textarea class="settings-notes-input" rows="2"></textarea>
+            </label>
+          </div>
+        </section>
+        <section class="rapid-assessment-content">
+          <div class="screening-controls-host rapid-controls-host"></div>
+          <div class="screening-table-wrap rapid-table-wrap"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
