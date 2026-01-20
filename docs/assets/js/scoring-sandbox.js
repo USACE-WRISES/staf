@@ -63,7 +63,7 @@
       const table = document.createElement('table');
       table.className = 'scoring-table';
       const thead = document.createElement('thead');
-      thead.innerHTML = '<tr><th>Discipline</th><th>Function</th><th>Score (0-15)</th><th>Physical</th><th>Chemical</th><th>Biological</th></tr>';
+      thead.innerHTML = '<tr><th>Discipline</th><th>Function</th><th>Physical</th><th>Chemical</th><th>Biological</th></tr>';
       const tbody = document.createElement('tbody');
       const tfoot = document.createElement('tfoot');
       table.appendChild(thead);
@@ -103,11 +103,29 @@
         }
 
         const nameCell = document.createElement('td');
-        nameCell.textContent = fn.name;
+        nameCell.className = 'function-cell';
+        const nameLine = document.createElement('div');
+        nameLine.className = 'function-title';
+        const nameText = document.createElement('span');
+        nameText.textContent = fn.name;
+        nameLine.appendChild(nameText);
+        const functionToggle = document.createElement('button');
+        functionToggle.type = 'button';
+        functionToggle.className = 'criteria-toggle function-toggle';
+        functionToggle.innerHTML = '&#9662;';
+        functionToggle.setAttribute('aria-expanded', 'false');
+        functionToggle.setAttribute('aria-label', 'Toggle function statement');
+        nameLine.appendChild(functionToggle);
+        nameCell.appendChild(nameLine);
 
-        const scoreCell = document.createElement('td');
+        const statementLine = document.createElement('div');
+        statementLine.className = 'function-statement';
+        statementLine.textContent = fn.function_statement || fn.functionStatement || '';
+        statementLine.hidden = true;
+        nameCell.appendChild(statementLine);
+
         const scoreWrap = document.createElement('div');
-        scoreWrap.className = 'score-input';
+        scoreWrap.className = 'score-input function-score-inline';
         const input = document.createElement('input');
         input.type = 'range';
         input.min = '0';
@@ -121,7 +139,15 @@
         value.textContent = input.value;
         scoreWrap.appendChild(input);
         scoreWrap.appendChild(value);
-        scoreCell.appendChild(scoreWrap);
+        nameCell.appendChild(scoreWrap);
+        functionToggle.addEventListener('click', () => {
+          if (!statementLine.textContent) {
+            return;
+          }
+          const isOpen = !statementLine.hidden;
+          statementLine.hidden = isOpen;
+          functionToggle.setAttribute('aria-expanded', String(!isOpen));
+        });
 
         const physicalCell = document.createElement('td');
         const chemicalCell = document.createElement('td');
@@ -139,7 +165,6 @@
         biologicalCell.textContent = weightLabelFromCode(mapping.biological);
 
         row.appendChild(nameCell);
-        row.appendChild(scoreCell);
         row.appendChild(physicalCell);
         row.appendChild(chemicalCell);
         row.appendChild(biologicalCell);
@@ -172,7 +197,7 @@
       for (let i = 0; i < labelItems.length; i += 1) {
         const row = document.createElement('tr');
         const labelCell = document.createElement('td');
-        labelCell.colSpan = 3;
+        labelCell.colSpan = 2;
         labelCell.className = 'summary-labels';
         labelCell.textContent = labelItems[i];
         row.appendChild(labelCell);

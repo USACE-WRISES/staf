@@ -116,6 +116,8 @@
           id: `metric-${index + 1}`,
           discipline: row.Discipline || row.discipline || '',
           functionName: row.Function || row.function || '',
+          functionStatement:
+            row['Function statement'] || row.function_statement || row.functionStatement || '',
           functionId: functionMatch ? functionMatch.id : null,
           metric: row.Metric || row.metric || '',
           isPredefined: isPredefinedFlag(row['Predefined SCS'] || row.predefined_scs || ''),
@@ -306,8 +308,6 @@
         '<th class="col-function">Function</th>' +
         '<th class="col-metric">Metric</th>' +
         '<th class="col-metric-score">Metric<br>score</th>' +
-        '<th class="col-function-score">Function score<br>(0-15)</th>' +
-        '<th class="col-actions">Actions</th>' +
         '<th class="col-physical">Physical</th>' +
         '<th class="col-chemical">Chemical</th>' +
         '<th class="col-biological">Biological</th>' +
@@ -353,7 +353,7 @@
         labelItems.forEach((label) => {
           const row = document.createElement('tr');
           const labelCell = document.createElement('td');
-          labelCell.colSpan = 6;
+          labelCell.colSpan = 4;
           labelCell.className = 'summary-labels';
           labelCell.textContent = label;
           row.appendChild(labelCell);
@@ -425,10 +425,14 @@
           functionScores.set(functionId, average);
         });
 
-        metricRows.forEach(({ metric, functionScoreCell }) => {
+        metricRows.forEach(({ metric, functionScoreValue, functionScoreRange }) => {
           const score = metric.functionId ? functionScores.get(metric.functionId) : null;
-          functionScoreCell.textContent =
-            score === null || score === undefined ? '-' : score.toFixed(0);
+          const nextScore =
+            score === null || score === undefined ? null : Math.round(score);
+          functionScoreValue.textContent = nextScore === null ? '-' : String(nextScore);
+          if (functionScoreRange) {
+            functionScoreRange.value = nextScore === null ? '0' : String(nextScore);
+          }
         });
 
         const outcomeTotals = {
@@ -529,7 +533,7 @@
         if (visibleMetrics.length === 0) {
           const emptyRow = document.createElement('tr');
           const emptyCell = document.createElement('td');
-          emptyCell.colSpan = 9;
+          emptyCell.colSpan = 7;
           emptyCell.className = 'empty-cell';
           emptyCell.textContent = 'No metrics selected for this assessment.';
           emptyRow.appendChild(emptyCell);
@@ -575,10 +579,51 @@
           }
           const functionCell = document.createElement('td');
           functionCell.className = 'col-function';
-          functionCell.textContent = metric.functionName;
+          const functionNameLine = document.createElement('div');
+          functionNameLine.className = 'function-title';
+          const functionNameText = document.createElement('span');
+          functionNameText.textContent = metric.functionName;
+          functionNameLine.appendChild(functionNameText);
+          const functionToggle = document.createElement('button');
+          functionToggle.type = 'button';
+          functionToggle.className = 'criteria-toggle function-toggle';
+          functionToggle.innerHTML = '&#9662;';
+          functionToggle.setAttribute('aria-expanded', 'false');
+          functionToggle.setAttribute('aria-label', 'Toggle function statement');
+          functionNameLine.appendChild(functionToggle);
+          functionCell.appendChild(functionNameLine);
+          const statementLine = document.createElement('div');
+          statementLine.className = 'function-statement';
+          statementLine.textContent = metric.functionStatement || '';
+          statementLine.hidden = true;
+          functionCell.appendChild(statementLine);
+          const functionScoreLine = document.createElement('div');
+          functionScoreLine.className = 'score-input function-score-inline';
+          const functionScoreRange = document.createElement('input');
+          functionScoreRange.type = 'range';
+          functionScoreRange.min = '0';
+          functionScoreRange.max = '15';
+          functionScoreRange.step = '1';
+          functionScoreRange.disabled = true;
+          const functionScoreValue = document.createElement('span');
+          functionScoreValue.className = 'score-value';
+          functionScoreValue.textContent = '-';
+          functionScoreLine.appendChild(functionScoreRange);
+          functionScoreLine.appendChild(functionScoreValue);
+          functionCell.appendChild(functionScoreLine);
+          functionToggle.addEventListener('click', () => {
+            if (!statementLine.textContent) {
+              return;
+            }
+            const isOpen = !statementLine.hidden;
+            statementLine.hidden = isOpen;
+            functionToggle.setAttribute('aria-expanded', String(!isOpen));
+          });
           const metricCell = document.createElement('td');
-          metricCell.className = 'col-metric';
-          metricCell.textContent = metric.metric;
+          metricCell.className = 'col-metric metric-cell';
+          const metricText = document.createElement('span');
+          metricText.textContent = metric.metric;
+          metricCell.appendChild(metricText);
 
           const scoreCell = document.createElement('td');
           scoreCell.className = 'col-metric-score';
@@ -593,31 +638,27 @@
           scoreSelect.value = metricRatings.get(metric.id) || defaultRating;
           scoreCell.appendChild(scoreSelect);
 
-          const functionScoreCell = document.createElement('td');
-          functionScoreCell.className = 'function-score-cell col-function-score';
-          functionScoreCell.textContent = '-';
-
           const criteriaBtn = document.createElement('button');
           criteriaBtn.type = 'button';
-          criteriaBtn.className = 'btn btn-small';
-          criteriaBtn.textContent = 'Criteria';
+          criteriaBtn.className = 'criteria-toggle';
+          criteriaBtn.innerHTML = '&#9662;';
           const detailsId = `criteria-${metric.id}`;
           criteriaBtn.setAttribute('aria-expanded', 'false');
           criteriaBtn.setAttribute('aria-controls', detailsId);
-          const actionsCell = document.createElement('td');
-          actionsCell.className = 'col-actions';
-          const actionsWrap = document.createElement('div');
-          actionsWrap.className = 'action-buttons';
-          actionsWrap.appendChild(criteriaBtn);
+          criteriaBtn.setAttribute('aria-label', 'Toggle criteria details');
 
           const removeBtn = document.createElement('button');
           removeBtn.type = 'button';
-          removeBtn.className = 'btn btn-small action-remove';
+          removeBtn.className = 'criteria-toggle criteria-remove';
           removeBtn.textContent = 'X';
           removeBtn.setAttribute('aria-label', 'Remove metric');
-          removeBtn.disabled = isPredefined;
-          actionsWrap.appendChild(removeBtn);
-          actionsCell.appendChild(actionsWrap);
+          const metricActions = document.createElement('span');
+          metricActions.className = 'metric-actions';
+          metricActions.appendChild(criteriaBtn);
+          if (!isPredefined) {
+            metricActions.appendChild(removeBtn);
+          }
+          metricCell.appendChild(metricActions);
 
           const mapping = metric.functionId ? mappingById[metric.functionId] : null;
           const physicalCell = document.createElement('td');
@@ -633,8 +674,6 @@
           row.appendChild(functionCell);
           row.appendChild(metricCell);
           row.appendChild(scoreCell);
-          row.appendChild(functionScoreCell);
-          row.appendChild(actionsCell);
           row.appendChild(physicalCell);
           row.appendChild(chemicalCell);
           row.appendChild(biologicalCell);
@@ -644,7 +683,7 @@
           detailsRow.className = 'criteria-row';
           detailsRow.hidden = true;
           const detailsCell = document.createElement('td');
-          detailsCell.colSpan = 8;
+          detailsCell.colSpan = 5;
           const details = document.createElement('div');
           details.className = 'criteria-details';
           details.innerHTML =
@@ -660,10 +699,18 @@
           detailsCell.appendChild(details);
           detailsRow.appendChild(detailsCell);
 
+          const updateMetricRowSpan = (expanded) => {
+            const span = expanded ? 2 : 1;
+            functionCell.rowSpan = span;
+          };
+
+          updateMetricRowSpan(false);
+
           criteriaBtn.addEventListener('click', () => {
             const isOpen = !detailsRow.hidden;
             detailsRow.hidden = isOpen;
             criteriaBtn.setAttribute('aria-expanded', String(!isOpen));
+            updateMetricRowSpan(!isOpen);
             updateDisciplineRowSpans();
           });
 
@@ -691,7 +738,7 @@
 
           tbody.appendChild(row);
           tbody.appendChild(detailsRow);
-          metricRows.push({ metric, functionScoreCell });
+          metricRows.push({ metric, functionScoreValue, functionScoreRange });
         });
 
         updateScores(metricRows);

@@ -12,6 +12,11 @@ description: "Field-based rapid assessment for comparing sites and alternatives.
   <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
 </div>
 
+## Rapid Assessment Widget (SFARI)
+Use the widget to review indicators, set function scores, and see how scores roll up into outcome sub-indices and the overall ecosystem condition index.
+
+{% include rapid_assessment_widget.html %}
+
 ## When to use
 - Comparing multiple candidate sites
 - Alternatives evaluation or conceptual design support
