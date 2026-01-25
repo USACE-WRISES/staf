@@ -64,7 +64,7 @@
   },"9": {
     "doc": "Data Dictionary",
     "title": "functions.json",
-    "content": ". | id: stable function identifier (string) | category: Hydrology, Hydraulics, Geomorphology, Physicochemistry, Biology | name: display name | function_statement: short function statement used in assessment widgets | short_description: one-line description | long_description: longer description used in the explorer details panel | example_metrics: object with arrays per tier . | screening: list of starter metrics | rapid: list of starter metrics | detailed: list of starter metrics | . | . ",
+    "content": ". | id: stable function identifier (string) | category: Hydrology, Hydraulics, Geomorphology, Physicochemistry, Biology | name: display name | impact_statement: one-line impact statement shown by default in the Stream Functions widget | function_statement: function statement used in assessment widgets and detail views | assessment_context: longer assessment context shown in the Stream Functions widget when expanded | short_description: legacy one-line description (kept for backward compatibility) | long_description: legacy longer description (kept for backward compatibility) | example_metrics: object with arrays per tier . | screening: list of starter metrics | rapid: list of starter metrics | detailed: list of starter metrics | . | . ",
     "url": "/stream-tiered-assessment-framework/contribute/data-dictionary/#functionsjson",
     
     "relUrl": "/contribute/data-dictionary/#functionsjson"
@@ -470,7 +470,7 @@
   },"67": {
     "doc": "Screening Tier",
     "title": "Screening-Level Assessment Development",
-    "content": "Use the widget to try the default screening assessment or build your own. You can score metrics, and then scores are automatically rolled up into function scores, outcome sub-indices, and an overall ecosystem condition index. This screening assessment widget needs JavaScript. Use the criteria table and scoring guidance if you prefer manual calculations. + Settings . Duplicate Delete Name Applicability Notes ",
+    "content": "Use the widget to try the default screening assessment or build your own. You can score metrics, and then scores are automatically rolled up into function scores, outcome sub-indices, and an overall ecosystem condition index. This screening assessment widget needs JavaScript. Use the criteria table and scoring guidance if you prefer manual calculations. + Settings . Duplicate Delete Name Applicability Notes Screening Metric Toolbox . Close ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#screening-level-assessment-development",
     
     "relUrl": "/tiers/screening/#screening-level-assessment-development"
