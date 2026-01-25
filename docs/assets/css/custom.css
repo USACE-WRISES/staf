@@ -339,12 +339,12 @@ h3,
 .link-chip {
   display: inline-flex;
   align-items: center;
-  padding: 0.35rem 0.8rem;
+  padding: 0.45rem 1rem;
   border-radius: 999px;
-  border: 1px solid #c8c8c8;
+  border: 1px solid #5a5a5a;
   color: #111111;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 1rem;
   background: #f4f4f4;
 }
 
@@ -616,6 +616,210 @@ h3,
   max-width: 95vw;
   margin: 0 auto;
   transform: none;
+}
+
+.screening-library-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screening-library-modal[hidden] {
+  display: none;
+}
+
+.screening-library-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.screening-library-dialog {
+  position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #cfcfcf;
+  width: 90vw;
+  max-width: 90vw;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.screening-library-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.screening-library-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.screening-library-table-wrap {
+  padding: 0.75rem 1rem 1rem;
+  overflow: auto;
+}
+
+.screening-library-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.screening-library-controls input[type='search'] {
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.screening-library-controls select {
+  min-width: 200px;
+}
+
+.screening-library-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  table-layout: fixed;
+}
+
+.screening-library-table th,
+.screening-library-table td {
+  border: 1px solid #b5b5b5;
+  padding: 0.35rem 0.5rem;
+  vertical-align: top;
+}
+
+.screening-library-table th {
+  background: #f3f3f3;
+}
+
+.screening-library-table col.col-discipline { width: 5%; }
+.screening-library-table col.col-function { width: 4%; }
+.screening-library-table col.col-metric { width: 4%; }
+.screening-library-table col.col-context { width: 6%; }
+.screening-library-table col.col-how { width: 15%; }
+.screening-library-table col.col-optimal { width: 6%; }
+.screening-library-table col.col-suboptimal { width: 6%; }
+.screening-library-table col.col-marginal { width: 6%; }
+.screening-library-table col.col-poor { width: 6%; }
+.screening-library-table col.col-references { width: 12%; }
+.screening-library-table col.col-include { width: 3%; }
+
+.screening-library-table .col-include {
+  text-align: center;
+}
+
+.screening-library-table th.col-include,
+.screening-library-table td.col-include {
+  min-width: 60px;
+  white-space: nowrap;
+}
+
+.screening-library-table th.col-discipline,
+.screening-library-table td.col-discipline {
+  min-width: 72px;
+  white-space: nowrap;
+}
+
+.screening-library-table th.col-function,
+.screening-library-table td.col-function {
+  white-space: normal;
+}
+
+.screening-library-table td {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.screening-library-table .metric-summary {
+  color: #555555;
+  font-size: 0.85rem;
+}
+
+.screening-library-table .library-toggle {
+  margin-left: 0.3rem;
+  padding: 0.05rem 0.25rem;
+  font-size: 0.75rem;
+}
+
+.screening-library-table tr.category-hydrology td {
+  background: #d9e2f3;
+}
+
+.screening-library-table tr.category-hydraulics td {
+  background: #b9cbe6;
+}
+
+.screening-library-table tr.category-geomorphology td {
+  background: #f7e1d1;
+}
+
+.screening-library-table tr.category-physicochemistry td {
+  background: #f3e9c4;
+}
+
+.screening-library-table tr.category-biology td {
+  background: #dbead2;
+}
+
+.screening-library-table tr.inactive-row td {
+  background: #f0f0f0 !important;
+}
+
+.screening-library-table td.library-group-active.category-hydrology {
+  background: #d9e2f3 !important;
+}
+
+.screening-library-table td.library-group-active.category-hydraulics {
+  background: #b9cbe6 !important;
+}
+
+.screening-library-table td.library-group-active.category-geomorphology {
+  background: #f7e1d1 !important;
+}
+
+.screening-library-table td.library-group-active.category-physicochemistry {
+  background: #f3e9c4 !important;
+}
+
+.screening-library-table td.library-group-active.category-biology {
+  background: #dbead2 !important;
+}
+
+.screening-table td.screening-group-active.category-hydrology {
+  background: #d9e2f3 !important;
+}
+
+.screening-table td.screening-group-active.category-hydraulics {
+  background: #b9cbe6 !important;
+}
+
+.screening-table td.screening-group-active.category-geomorphology {
+  background: #f7e1d1 !important;
+}
+
+.screening-table td.screening-group-active.category-physicochemistry {
+  background: #f3e9c4 !important;
+}
+
+.screening-table td.screening-group-active.category-biology {
+  background: #dbead2 !important;
+}
+
+body.modal-open {
+  overflow: hidden;
 }
 
 .rapid-assessment.widget {
@@ -914,7 +1118,23 @@ h3,
   flex: 1 1 auto;
   width: 100%;
   max-width: none;
-  min-width: 240px;
+  min-width: 200px;
+}
+
+.screening-controls .library-open-btn {
+  height: 34px;
+  padding: 0 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  width: auto;
+}
+
+.library-open-btn svg {
+  width: 18px;
+  height: 18px;
 }
 
 .screening-table .metric-score-select {
@@ -955,6 +1175,36 @@ h3,
   background: #f9f9f9;
   max-width: none;
   white-space: normal;
+}
+
+.rapid-table .criteria-row td {
+  background: #f9f9f9;
+  border-left-color: transparent;
+  border-right-color: transparent;
+}
+
+.rapid-table tr.criteria-row td {
+  background: #f9f9f9 !important;
+}
+
+.rapid-table tr.category-hydrology td {
+  background: #d9e2f3;
+}
+
+.rapid-table tr.category-hydraulics td {
+  background: #b9cbe6;
+}
+
+.rapid-table tr.category-geomorphology td {
+  background: #f7e1d1;
+}
+
+.rapid-table tr.category-physicochemistry td {
+  background: #f3e9c4;
+}
+
+.rapid-table tr.category-biology td {
+  background: #dbead2;
 }
 
 .criteria-details {
@@ -1407,6 +1657,43 @@ h3,
   margin-right: 0.3rem;
 }
 
+.functions-table .description-details {
+  margin-top: 0.35rem;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.functions-table .description-details[hidden] {
+  display: none;
+}
+
+.functions-table .description-detail {
+  color: #111111;
+}
+
+.functions-table .description-label {
+  font-weight: 400;
+  color: #333333;
+  margin-right: 0.35rem;
+}
+
+.functions-table .description-impact {
+  display: inline;
+}
+
+.functions-table .description-impact .description-text {
+  display: inline;
+}
+
+.functions-table .description-impact .criteria-toggle {
+  margin-left: 0.25rem;
+  vertical-align: baseline;
+}
+
+.functions-table .criteria-toggle {
+  margin-left: 0.35rem;
+}
+
 .functions-table tr.category-hydrology td {
   background: #d9e2f3;
 }
@@ -1465,6 +1752,10 @@ h3,
 
 .screening-table tr.category-biology td {
   background: #dbead2;
+}
+
+.screening-table tr.inactive-row td {
+  background: #f0f0f0;
 }
 
 .details-caret {

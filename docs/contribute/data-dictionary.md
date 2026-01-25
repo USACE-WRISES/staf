@@ -16,9 +16,11 @@ This page defines the fields used by JSON files in `docs/assets/data/`.
 - `id`: stable function identifier (string)
 - `category`: Hydrology, Hydraulics, Geomorphology, Physicochemistry, Biology
 - `name`: display name
-- `function_statement`: short function statement used in assessment widgets
-- `short_description`: one-line description
-- `long_description`: longer description used in the explorer details panel
+- `impact_statement`: one-line impact statement shown by default in the Stream Functions widget
+- `function_statement`: function statement used in assessment widgets and detail views
+- `assessment_context`: longer assessment context shown in the Stream Functions widget when expanded
+- `short_description`: legacy one-line description (kept for backward compatibility)
+- `long_description`: legacy longer description (kept for backward compatibility)
 - `example_metrics`: object with arrays per tier
   - `screening`: list of starter metrics
   - `rapid`: list of starter metrics

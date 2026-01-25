@@ -334,35 +334,115 @@
         }
       };
 
-      const updateRowSpans = () => {
+      const updateDisciplineRowSpans = () => {
         const rows = Array.from(tbody.querySelectorAll('tr'));
-        const updateSpan = (selector) => {
-          const anchors = [];
-          rows.forEach((row, rowIndex) => {
-            const cell = row.querySelector(selector);
-            if (cell) {
-              anchors.push({ cell, rowIndex });
+        const anchors = [];
+        rows.forEach((row, rowIndex) => {
+          const cell = row.querySelector('td.discipline-cell');
+          if (cell) {
+            anchors.push({ cell, rowIndex });
+          }
+        });
+        anchors.forEach((anchor, idx) => {
+          const start = anchor.rowIndex;
+          const end = idx + 1 < anchors.length ? anchors[idx + 1].rowIndex : rows.length;
+          let count = 0;
+          for (let i = start; i < end; i += 1) {
+            if (rows[i].hidden || rows[i].style.display === 'none') {
+              continue;
             }
-          });
-          anchors.forEach((anchor, idx) => {
-            const start = anchor.rowIndex;
-            const end = idx + 1 < anchors.length ? anchors[idx + 1].rowIndex : rows.length;
-            let count = 0;
-            for (let i = start; i < end; i += 1) {
-              if (rows[i].hidden || rows[i].style.display === 'none') {
-                continue;
-              }
-              count += 1;
-            }
-            anchor.cell.rowSpan = Math.max(count, 1);
-          });
-        };
+            count += 1;
+          }
+          anchor.cell.rowSpan = Math.max(count, 1);
+        });
+      };
 
-        updateSpan('td.discipline-cell');
-        updateSpan('td.function-cell');
-        updateSpan('td.physical-cell');
-        updateSpan('td.chemical-cell');
-        updateSpan('td.biological-cell');
+      const updateFunctionRowSpans = () => {
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        let i = 0;
+        while (i < rows.length) {
+          const row = rows[i];
+          const rowType = row.dataset.rowType;
+          if (rowType === 'criteria') {
+            i += 1;
+            continue;
+          }
+          const functionId = row.dataset.functionId || '';
+          if (!functionId) {
+            i += 1;
+            continue;
+          }
+
+          const groupRows = [];
+          let expandedCriteria = 0;
+          let k = i;
+          while (k < rows.length) {
+            const current = rows[k];
+            const currentType = current.dataset.rowType;
+            if (currentType === 'criteria') {
+              if (current.dataset.functionId === functionId && !current.hidden) {
+                expandedCriteria += 1;
+              }
+              k += 1;
+              continue;
+            }
+            if (currentType === 'indicator' && current.dataset.functionId === functionId) {
+              groupRows.push(current);
+              k += 1;
+              continue;
+            }
+            break;
+          }
+
+          if (groupRows.length === 0) {
+            i = k;
+            continue;
+          }
+
+          const functionSpan = groupRows.length + expandedCriteria;
+          const functionCell = groupRows[0].querySelector('.function-cell');
+          if (functionCell) {
+            functionCell.style.display = '';
+            functionCell.rowSpan = Math.max(functionSpan, 1);
+          }
+          groupRows.slice(1).forEach((r) => {
+            const cell = r.querySelector('.function-cell');
+            if (cell) {
+              cell.style.display = 'none';
+              cell.rowSpan = 1;
+            }
+          });
+
+          const mergeWeights = expandedCriteria === 0 && groupRows.length > 1;
+          const weightSelectors = ['.col-physical', '.col-chemical', '.col-biological'];
+          weightSelectors.forEach((sel) => {
+            const firstCell = groupRows[0].querySelector(sel);
+            if (!firstCell) {
+              return;
+            }
+            if (mergeWeights) {
+              firstCell.style.display = '';
+              firstCell.rowSpan = groupRows.length;
+              groupRows.slice(1).forEach((r) => {
+                const cell = r.querySelector(sel);
+                if (cell) {
+                  cell.style.display = 'none';
+                  cell.rowSpan = 1;
+                }
+              });
+            } else {
+              groupRows.forEach((r) => {
+                const cell = r.querySelector(sel);
+                if (cell) {
+                  cell.style.display = '';
+                  cell.rowSpan = 1;
+                }
+              });
+            }
+          });
+
+          i = k;
+        }
       };
 
       const buildCriteriaBlock = (criteria) => {
@@ -456,6 +536,8 @@
         visibleIndicators.forEach((item, index) => {
           const row = document.createElement('tr');
           row.classList.add(slugCategory(item.discipline));
+          row.dataset.rowType = 'indicator';
+          row.dataset.functionId = item.functionKey;
 
           const disciplineSpan = disciplineStarts.get(index);
           if (disciplineSpan) {
@@ -570,30 +652,28 @@
               chemical: '-',
               biological: '-',
             };
-          if (functionSpan) {
-            const physicalCell = document.createElement('td');
-            const chemicalCell = document.createElement('td');
-            const biologicalCell = document.createElement('td');
-            physicalCell.className = 'weight-cell col-physical physical-cell';
-            chemicalCell.className = 'weight-cell col-chemical chemical-cell';
-            biologicalCell.className = 'weight-cell col-biological biological-cell';
-            physicalCell.textContent = mapping.physical || '-';
-            chemicalCell.textContent = mapping.chemical || '-';
-            biologicalCell.textContent = mapping.biological || '-';
-            physicalCell.rowSpan = functionSpan;
-            chemicalCell.rowSpan = functionSpan;
-            biologicalCell.rowSpan = functionSpan;
-            row.appendChild(physicalCell);
-            row.appendChild(chemicalCell);
-            row.appendChild(biologicalCell);
-          }
+          const physicalCell = document.createElement('td');
+          const chemicalCell = document.createElement('td');
+          const biologicalCell = document.createElement('td');
+          physicalCell.className = 'weight-cell col-physical physical-cell';
+          chemicalCell.className = 'weight-cell col-chemical chemical-cell';
+          biologicalCell.className = 'weight-cell col-biological biological-cell';
+          physicalCell.textContent = mapping.physical || '-';
+          chemicalCell.textContent = mapping.chemical || '-';
+          biologicalCell.textContent = mapping.biological || '-';
+          row.appendChild(physicalCell);
+          row.appendChild(chemicalCell);
+          row.appendChild(biologicalCell);
 
           const detailsRow = document.createElement('tr');
           detailsRow.id = detailsId;
           detailsRow.className = 'criteria-row';
+          detailsRow.dataset.rowType = 'criteria';
+          detailsRow.dataset.functionId = item.functionKey;
+          detailsRow.classList.add(slugCategory(item.discipline));
           detailsRow.hidden = true;
           const detailsCell = document.createElement('td');
-          detailsCell.colSpan = 2;
+          detailsCell.colSpan = 5;
           const details = document.createElement('div');
           details.className = 'criteria-details';
           const criteriaSet = criteriaMap[item.criteriaKey] || {};
@@ -635,7 +715,8 @@
             const isOpen = !detailsRow.hidden;
             detailsRow.hidden = isOpen;
             criteriaBtn.setAttribute('aria-expanded', String(!isOpen));
-            updateRowSpans();
+            updateDisciplineRowSpans();
+            updateFunctionRowSpans();
           });
 
           tbody.appendChild(row);
@@ -643,7 +724,8 @@
         });
 
         updateScores();
-        updateRowSpans();
+        updateDisciplineRowSpans();
+        updateFunctionRowSpans();
       };
 
       search.addEventListener('input', renderTable);

@@ -15,12 +15,23 @@
 
   const buildDetails = (fn) => {
     const wrap = document.createElement('div');
-    wrap.className = 'details-panel';
+    wrap.className = 'description-details';
 
-    const desc = document.createElement('p');
-    desc.textContent = fn.long_description;
+    const statement = fn.function_statement || fn.functionStatement || '';
+    if (statement) {
+      const statementLine = document.createElement('div');
+      statementLine.className = 'description-detail';
+      statementLine.textContent = `Function Statement: ${statement}`;
+      wrap.appendChild(statementLine);
+    }
 
-    wrap.appendChild(desc);
+    const context = fn.assessment_context || fn.assessmentContext || fn.long_description || '';
+    if (context) {
+      const contextLine = document.createElement('div');
+      contextLine.className = 'description-detail';
+      contextLine.textContent = `Context: ${context}`;
+      wrap.appendChild(contextLine);
+    }
 
     return wrap;
   };
@@ -80,54 +91,43 @@
       nameCell.textContent = fn.name;
 
       const shortCell = document.createElement('td');
+      const impact = fn.impact_statement || fn.impactStatement || fn.short_description || '';
+      const impactLine = document.createElement('div');
+      impactLine.className = 'description-impact';
       const shortText = document.createElement('span');
       shortText.className = 'description-text';
-      shortText.textContent = fn.short_description;
+      shortText.textContent = impact;
 
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
-      toggleBtn.className = 'details-caret';
-      toggleBtn.textContent = '▾';
+      toggleBtn.className = 'criteria-toggle';
+      toggleBtn.innerHTML = '&#9662;';
       const detailId = `details-${fn.id}`;
       toggleBtn.setAttribute('aria-expanded', 'false');
       toggleBtn.setAttribute('aria-controls', detailId);
-      toggleBtn.setAttribute('aria-label', 'Toggle details');
-      toggleBtn.setAttribute('title', 'Toggle details');
+      toggleBtn.setAttribute('aria-label', 'Toggle description details');
+      toggleBtn.setAttribute('title', 'Toggle description details');
 
-      shortCell.appendChild(shortText);
-      shortCell.appendChild(toggleBtn);
+      const detailsPanel = buildDetails(fn);
+      detailsPanel.id = detailId;
+      detailsPanel.hidden = true;
+
+      impactLine.appendChild(shortText);
+      impactLine.appendChild(toggleBtn);
+      shortCell.appendChild(impactLine);
+      shortCell.appendChild(detailsPanel);
 
       row.appendChild(nameCell);
       row.appendChild(shortCell);
 
-      const detailsRow = document.createElement('tr');
-      detailsRow.id = detailId;
-      detailsRow.className = 'details-row';
-      detailsRow.classList.add(categoryClass);
-      detailsRow.hidden = true;
-
-      const detailsCell = document.createElement('td');
-      detailsCell.colSpan = 1;
-      detailsCell.appendChild(buildDetails(fn));
-      detailsRow.appendChild(detailsCell);
-
-      const updateFunctionRowSpan = (expanded) => {
-        nameCell.rowSpan = expanded ? 2 : 1;
-      };
-
-      updateFunctionRowSpan(false);
-
       toggleBtn.addEventListener('click', () => {
-        const isOpen = !detailsRow.hidden;
-        detailsRow.hidden = isOpen;
+        const isOpen = !detailsPanel.hidden;
+        detailsPanel.hidden = isOpen;
         toggleBtn.setAttribute('aria-expanded', String(!isOpen));
-        toggleBtn.textContent = isOpen ? '▾' : '▴';
-        updateFunctionRowSpan(!isOpen);
-        updateCategoryRowSpans(tableBody);
+        toggleBtn.innerHTML = isOpen ? '&#9662;' : '&#9652;';
       });
 
       tableBody.appendChild(row);
-      tableBody.appendChild(detailsRow);
     });
 
     updateCategoryRowSpans(tableBody);
@@ -181,10 +181,14 @@
         const term = search.value.trim().toLowerCase();
         const cat = category.value;
         const filtered = functionsList.filter((fn) => {
+          const impactText = fn.impact_statement || fn.impactStatement || fn.short_description || '';
+          const contextText = fn.assessment_context || fn.assessmentContext || fn.long_description || '';
+          const statementText = fn.function_statement || fn.functionStatement || '';
           const matchesText =
             fn.name.toLowerCase().includes(term) ||
-            fn.short_description.toLowerCase().includes(term) ||
-            fn.long_description.toLowerCase().includes(term);
+            impactText.toLowerCase().includes(term) ||
+            statementText.toLowerCase().includes(term) ||
+            contextText.toLowerCase().includes(term);
           const matchesCategory = cat === 'all' || fn.category === cat;
           return matchesText && matchesCategory;
         });
