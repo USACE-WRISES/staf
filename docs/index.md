@@ -16,7 +16,7 @@ description: "Landing page for the Stream Tiered Assessment Framework."
         </p>
         <div class="hero-actions button-row reveal">
           <a class="btn btn-primary" href="{{ site.baseurl }}/tier-selector/">Start the tier selector</a>
-          <a class="btn" href="{{ site.baseurl }}/tiered-approach/">Read the full guide</a>
+          <a class="btn" href="{{ site.baseurl }}/quick-overview/">Quick Overview</a>
         </div>
 
       </div>
@@ -29,7 +29,7 @@ description: "Landing page for the Stream Tiered Assessment Framework."
             {% assign normalized_source = site.source | replace: '\\', '/' %}
             {% for file in sorted_files %}
               {% assign normalized_path = file.path | replace: '\\', '/' %}
-              {% if normalized_path contains '/assets/images/' %}
+              {% if normalized_path contains '/assets/images/image_viewer/' %}
                 {% assign ext = file.extname | downcase %}
                 {% if ext == '.jpg' or ext == '.jpeg' or ext == '.png' or ext == '.webp' %}
                   {% if file.name != 'large-image.jpg' and file.name != 'small-image.jpg' %}
@@ -41,9 +41,11 @@ description: "Landing page for the Stream Tiered Assessment Framework."
               {% endif %}
             {% endfor %}
             {% if carousel_count == 0 %}
-              <div class="carousel-empty">No images found in assets/images.</div>
+              <div class="carousel-empty">No images found in assets/images/image_viewer.</div>
             {% endif %}
           </div>
+          <button class="carousel-nav prev" type="button" aria-label="Previous image">&#10094;</button>
+          <button class="carousel-nav next" type="button" aria-label="Next image">&#10095;</button>
         </div>
       </div>
 

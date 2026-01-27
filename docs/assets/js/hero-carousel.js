@@ -6,6 +6,8 @@
 
   const track = carousel.querySelector('.hero-carousel-track');
   const images = Array.from(carousel.querySelectorAll('.carousel-image'));
+  const prevButton = carousel.querySelector('.carousel-nav.prev');
+  const nextButton = carousel.querySelector('.carousel-nav.next');
   if (!track || images.length === 0) {
     return;
   }
@@ -13,6 +15,7 @@
   const DEBUG = false;
   const interval = parseInt(carousel.dataset.interval, 10) || 10000;
   let index = 0;
+  let timerId = null;
 
   const clampScore = (value) => {
     if (!Number.isFinite(value)) {
@@ -181,11 +184,48 @@
 
   showImage(0);
 
-  if (images.length > 1) {
-    setInterval(() => {
+  const startAuto = () => {
+    if (images.length <= 1) {
+      return;
+    }
+    if (timerId) {
+      clearInterval(timerId);
+    }
+    timerId = setInterval(() => {
       const nextIndex = (index + 1) % images.length;
       showImage(nextIndex);
     }, interval);
+  };
+
+  startAuto();
+
+  if (images.length <= 1) {
+    if (prevButton) {
+      prevButton.hidden = true;
+    }
+    if (nextButton) {
+      nextButton.hidden = true;
+    }
+  }
+
+  const goTo = (nextIndex) => {
+    if (images.length <= 1) {
+      return;
+    }
+    showImage((nextIndex + images.length) % images.length);
+    startAuto();
+  };
+
+  if (prevButton) {
+    prevButton.addEventListener('click', () => {
+      goTo(index - 1);
+    });
+  }
+
+  if (nextButton) {
+    nextButton.addEventListener('click', () => {
+      goTo(index + 1);
+    });
   }
 
   if (DEBUG) {
