@@ -321,356 +321,377 @@
     
     "relUrl": "/functions/"
   },"46": {
-    "doc": "Contribute",
-    "title": "Contribute",
-    "content": "Back to Home This repository is designed to be simple, modular, and transparent. Content is written in Markdown, data tables live in JSON, and widgets use vanilla JavaScript. ",
-    "url": "/stream-tiered-assessment-framework/contribute/",
-    
-    "relUrl": "/contribute/"
-  },"47": {
-    "doc": "Contribute",
-    "title": "How to contribute",
-    "content": ". | Start with the page you want to update. | If you need new data, edit the JSON files in docs/assets/data/. | Keep changes small and well documented. | . ",
-    "url": "/stream-tiered-assessment-framework/contribute/#how-to-contribute",
-    
-    "relUrl": "/contribute/#how-to-contribute"
-  },"48": {
-    "doc": "Contribute",
-    "title": "Adding content",
-    "content": ". | New pages belong under docs/ with clear titles and front matter. | Use existing sections and patterns to keep navigation consistent. | Link to external references instead of duplicating long technical text. | . ",
-    "url": "/stream-tiered-assessment-framework/contribute/#adding-content",
-    
-    "relUrl": "/contribute/#adding-content"
-  },"49": {
-    "doc": "Contribute",
-    "title": "CHANGELOG guidance",
-    "content": "When you update core data files or scoring logic: . | Record the change in your pull request description. | Summarize changes to functions.json, cwa-mapping.json, or scoring-sandbox.js here in this section. | Include the date, a short reason, and any downstream impacts. | . ",
-    "url": "/stream-tiered-assessment-framework/contribute/#changelog-guidance",
-    
-    "relUrl": "/contribute/#changelog-guidance"
-  },"50": {
-    "doc": "Contribute",
-    "title": "Start here",
-    "content": ". | Editing guide | Content style guide | Data dictionary | . ",
-    "url": "/stream-tiered-assessment-framework/contribute/#start-here",
-    
-    "relUrl": "/contribute/#start-here"
-  },"51": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Assess stream function at the right level of effort.",
-    "content": "A functions-based framework to evaluate stream condition across Screening, Rapid, and Detailed tiers. Use it to compare sites, guide restoration planning, and report outcomes with consistent scoring. Start the tier selector Read the full guide Stream Functions Scoring and Condition Tier 1 Screening . Desktop snapshot for early planning and prioritization. Tier 2 Rapid . Field-based assessment for alternatives and design support. Tier 3 Detailed . Intensive methods for compliance, crediting, and monitoring. ",
+    "content": "A functions-based framework to evaluate stream condition across Screening, Rapid, and Detailed tiers. Use it to compare sites, guide restoration planning, and report outcomes with consistent scoring. Start the tier selector Quick Overview &#10094; &#10095; Stream Functions Scoring and Condition Tier 1 Screening . Desktop snapshot for early planning and prioritization. Tier 2 Rapid . Field-based assessment for alternatives and design support. Tier 3 Detailed . Intensive methods for compliance, crediting, and monitoring. ",
     "url": "/stream-tiered-assessment-framework/",
     
     "relUrl": "/"
-  },"52": {
+  },"47": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Not sure where to start?",
     "content": "Use the Tier Selector to match your decision context to the right level of effort. Use this quick guide to choose a tier based on effort and decision risk: . | Screening: many sites, low risk, desktop data. | Rapid: moderate risk, field day per site. | Detailed: high risk, intensive data and calibration. | . Screening tier | Rapid tier | Detailed tier . ",
     "url": "/stream-tiered-assessment-framework/",
     
     "relUrl": "/"
-  },"53": {
+  },"48": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Stream Tiered Assessment Framework",
     "content": "Stream Tiered Assessment Framework . ",
     "url": "/stream-tiered-assessment-framework/",
     
     "relUrl": "/"
+  },"49": {
+    "doc": "Contribute",
+    "title": "Contribute",
+    "content": "Back to Home This repository is designed to be simple, modular, and transparent. Content is written in Markdown, data tables live in JSON, and widgets use vanilla JavaScript. ",
+    "url": "/stream-tiered-assessment-framework/contribute/",
+    
+    "relUrl": "/contribute/"
+  },"50": {
+    "doc": "Contribute",
+    "title": "How to contribute",
+    "content": ". | Start with the page you want to update. | If you need new data, edit the JSON files in docs/assets/data/. | Keep changes small and well documented. | . ",
+    "url": "/stream-tiered-assessment-framework/contribute/#how-to-contribute",
+    
+    "relUrl": "/contribute/#how-to-contribute"
+  },"51": {
+    "doc": "Contribute",
+    "title": "Adding content",
+    "content": ". | New pages belong under docs/ with clear titles and front matter. | Use existing sections and patterns to keep navigation consistent. | Link to external references instead of duplicating long technical text. | . ",
+    "url": "/stream-tiered-assessment-framework/contribute/#adding-content",
+    
+    "relUrl": "/contribute/#adding-content"
+  },"52": {
+    "doc": "Contribute",
+    "title": "CHANGELOG guidance",
+    "content": "When you update core data files or scoring logic: . | Record the change in your pull request description. | Summarize changes to functions.json, cwa-mapping.json, or scoring-sandbox.js here in this section. | Include the date, a short reason, and any downstream impacts. | . ",
+    "url": "/stream-tiered-assessment-framework/contribute/#changelog-guidance",
+    
+    "relUrl": "/contribute/#changelog-guidance"
+  },"53": {
+    "doc": "Contribute",
+    "title": "Start here",
+    "content": ". | Editing guide | Content style guide | Data dictionary | . ",
+    "url": "/stream-tiered-assessment-framework/contribute/#start-here",
+    
+    "relUrl": "/contribute/#start-here"
   },"54": {
+    "doc": "Quick Overview",
+    "title": "Quick Overview",
+    "content": "Back to Home A brief overview of the Stream Tiered Assessment Framework (STAF) and the factsheet content. ",
+    "url": "/stream-tiered-assessment-framework/quick-overview/#quick-overview",
+    
+    "relUrl": "/quick-overview/#quick-overview"
+  },"55": {
+    "doc": "Quick Overview",
+    "title": "Fact Sheet",
+    "content": "Stream Tiered Assessment Framework (STAF): Fact sheet . The Stream Tiered Assessment Framework (STAF) is a structured, repeatable way to assess stream condition and communicate results. It uses three tiers so the level of effort matches the project need. This supports consistent evaluation across sites while allowing teams to choose the depth of analysis that fits their timeline, budget, and decision needs. Components . STAF includes three tiers that increase in effort, data needs, and confidence. | Screening Tier: This tier provides a broad overview using existing information. It is suited for early planning, scoping, and prioritization across many sites. It typically relies on available datasets, mapping, and professional judgement guided by the STAF functions. | Rapid Tier: This tier adds field data to verify conditions and refine findings at the reach scale. It is suited for conceptual design and alternatives development. This tier is designed to be efficient while producing site-relevant results that are defensible and easy to communicate. | Detailed Tier: This tier provides the highest resolution and confidence. It can include intensive field data collection, laboratory data, modeling, and specialized methods tailored to project goals. It is suited for final design support, impact evaluation, and monitoring where decisions require higher certainty. | . All tiers assess the same set of stream functions. The tiers differ in how each function is evaluated and documented. This foundation improves consistency across projects and makes it easier to compare results across sites, the tiers, and study phases. STAF uses a scoring approach that summarizes functional results into condition outcomes. | Each stream function is evaluated using tier-appropriate evidence. | Function results are summarized to show overall performance and key limitations. | Results are aligned to physical, chemical, and biological condition to support interpretation and decision-making. | Scoring detail and confidence increase as projects move from Screening to Rapid to Detailed. | . Typical uses . STAF is designed to support decisions that occur throughout project planning and implementation. | Ecosystem restoration planning and feasibility studies. STAF helps identify limiting functions, compare reaches, and support development of alternatives. | Project prioritization. The Screening and Rapid tiers support ranking and selection across multiple candidate sites. | Regulatory and planning documentation. STAF provides a consistent structure for reporting and communicating findings. | Design support and monitoring. The Detailed tier supports design decisions and performance evaluation when higher certainty is required. | . Key takeaway . STAF provides a clear tiered pathway, a consistent set of stream functions, and a scoring concept that links functions to physical, chemical, and biological condition. It helps teams scale effort to need, keep evaluations comparable, and communicate results clearly. Download STAF Factsheet (PDF) ",
+    "url": "/stream-tiered-assessment-framework/quick-overview/#fact-sheet",
+    
+    "relUrl": "/quick-overview/#fact-sheet"
+  },"56": {
+    "doc": "Quick Overview",
+    "title": "Quick Overview",
+    "content": "Stream Tiered Assessment Framework . ",
+    "url": "/stream-tiered-assessment-framework/quick-overview/",
+    
+    "relUrl": "/quick-overview/"
+  },"57": {
     "doc": "Rapid Tier",
     "title": "Rapid Tier",
     "content": "Back to Home ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#rapid-tier",
     
     "relUrl": "/tiers/rapid/#rapid-tier"
-  },"55": {
+  },"58": {
     "doc": "Rapid Tier",
     "title": "Rapid Assessment Widget (SFARI)",
     "content": "Use the widget to review indicators, set function scores, and see how scores roll up into outcome sub-indices and the overall ecosystem condition index. This rapid assessment widget needs JavaScript. Use the SFARI field materials if you prefer manual calculations. Settings . Duplicate Delete Name Applicability Notes ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#rapid-assessment-widget-sfari",
     
     "relUrl": "/tiers/rapid/#rapid-assessment-widget-sfari"
-  },"56": {
+  },"59": {
     "doc": "Rapid Tier",
     "title": "When to use",
     "content": ". | Comparing multiple candidate sites | Alternatives evaluation or conceptual design support | Validating Screening-tier results with field evidence | . ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#when-to-use",
     
     "relUrl": "/tiers/rapid/#when-to-use"
-  },"57": {
+  },"60": {
     "doc": "Rapid Tier",
     "title": "What you get (outputs)",
     "content": ". | Semi-quantitative function and outcome scores | Structured field observations with photo documentation | Clear comparison across reaches and alternatives | . ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#what-you-get-outputs",
     
     "relUrl": "/tiers/rapid/#what-you-get-outputs"
-  },"58": {
+  },"61": {
     "doc": "Rapid Tier",
     "title": "What it costs (effort/resources)",
     "content": ". | Hours to one day per reach | Trained field staff and standard field kit | Limited lab analysis | . ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#what-it-costs-effortresources",
     
     "relUrl": "/tiers/rapid/#what-it-costs-effortresources"
-  },"59": {
+  },"62": {
     "doc": "Rapid Tier",
     "title": "Typical data inputs",
     "content": ". | Structured field forms and checklists | Simple channel and habitat measurements | Screening-tier metrics for context | . ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#typical-data-inputs",
     
     "relUrl": "/tiers/rapid/#typical-data-inputs"
-  },"60": {
+  },"63": {
     "doc": "Rapid Tier",
     "title": "Workflow steps",
     "content": ". | Review Screening results to target field effort. | Apply the rapid field protocol and record observations. | Compute function scores using a scoring workbook. | Compare alternatives and document constraints. | . ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#workflow-steps",
     
     "relUrl": "/tiers/rapid/#workflow-steps"
-  },"61": {
+  },"64": {
     "doc": "Rapid Tier",
     "title": "How scoring works at this tier",
     "content": "Combine multiple rapid field metrics per function as needed. Screening metrics can be retained for context but should not overwhelm field-based indicators. ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#how-scoring-works-at-this-tier",
     
     "relUrl": "/tiers/rapid/#how-scoring-works-at-this-tier"
-  },"62": {
+  },"65": {
     "doc": "Rapid Tier",
     "title": "SAFARI method resources",
     "content": ". | SAFARI technical report (placeholder) | SAFARI field form (PDF placeholder) | SAFARI scoring workbook (Excel placeholder) | . ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#safari-method-resources",
     
     "relUrl": "/tiers/rapid/#safari-method-resources"
-  },"63": {
+  },"66": {
     "doc": "Rapid Tier",
     "title": "Downloads / resources",
     "content": ". | Rapid tier scoring workbook (placeholder) | Field photo guide (placeholder) | . ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#downloads--resources",
     
     "relUrl": "/tiers/rapid/#downloads--resources"
-  },"64": {
+  },"67": {
     "doc": "Rapid Tier",
     "title": "Related methods",
     "content": ". | Method C (placeholder) | Method D (placeholder) | . ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/#related-methods",
     
     "relUrl": "/tiers/rapid/#related-methods"
-  },"65": {
+  },"68": {
     "doc": "Rapid Tier",
     "title": "Rapid Tier",
     "content": "Stream Tiered Assessment Framework . ",
     "url": "/stream-tiered-assessment-framework/tiers/rapid/",
     
     "relUrl": "/tiers/rapid/"
-  },"66": {
+  },"69": {
     "doc": "Screening Tier",
     "title": "Screening Tier",
     "content": "Back to Home ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#screening-tier",
     
     "relUrl": "/tiers/screening/#screening-tier"
-  },"67": {
+  },"70": {
     "doc": "Screening Tier",
     "title": "Screening-Level Assessment Development",
     "content": "Use the widget to try the default screening assessment or build your own. You can score metrics, and then scores are automatically rolled up into function scores, outcome sub-indices, and an overall ecosystem condition index. This screening assessment widget needs JavaScript. Use the criteria table and scoring guidance if you prefer manual calculations. + Settings . Duplicate Delete Name Applicability Notes Screening Metric Toolbox . Close ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#screening-level-assessment-development",
     
     "relUrl": "/tiers/screening/#screening-level-assessment-development"
-  },"68": {
+  },"71": {
     "doc": "Screening Tier",
     "title": "When to use",
     "content": ". | Watershed screening and prioritization | Early project planning across many sites | Low-risk decisions where higher uncertainty is acceptable | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#when-to-use",
     
     "relUrl": "/tiers/screening/#when-to-use"
-  },"69": {
+  },"72": {
     "doc": "Screening Tier",
     "title": "What you get (outputs)",
     "content": ". | Function scores with clear uncertainty notes | Outcome indices (physical, chemical, biological) | Ranked list of candidate reaches for follow-on tiers | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#what-you-get-outputs",
     
     "relUrl": "/tiers/screening/#what-you-get-outputs"
-  },"70": {
+  },"73": {
     "doc": "Screening Tier",
     "title": "What it costs (effort/resources)",
     "content": ". | Minutes to hours per site | Primarily desktop time with optional field verification | Minimal specialized equipment or lab analysis | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#what-it-costs-effortresources",
     
     "relUrl": "/tiers/screening/#what-it-costs-effortresources"
-  },"71": {
+  },"74": {
     "doc": "Screening Tier",
     "title": "Typical data inputs",
     "content": ". | GIS land cover and impervious surface | Remote sensing and imagery | National datasets and existing reports | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#typical-data-inputs",
     
     "relUrl": "/tiers/screening/#typical-data-inputs"
-  },"72": {
+  },"75": {
     "doc": "Screening Tier",
     "title": "Workflow steps",
     "content": ". | Delineate reaches and catchments. | Compute a small set of desktop metrics. | Convert raw values to standardized scores. | Roll up to outcomes and overall condition. | Flag high-potential sites for Rapid tier work. | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#workflow-steps",
     
     "relUrl": "/tiers/screening/#workflow-steps"
-  },"73": {
+  },"76": {
     "doc": "Screening Tier",
     "title": "How scoring works at this tier",
     "content": "Use a single proxy metric per function when possible. Document scoring thresholds and note uncertainty. Weighting and roll-up logic should mirror the standard scoring pipeline described in the scoring page. ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#how-scoring-works-at-this-tier",
     
     "relUrl": "/tiers/screening/#how-scoring-works-at-this-tier"
-  },"74": {
+  },"77": {
     "doc": "Screening Tier",
     "title": "Downloads / resources",
     "content": ". | Screening metrics worksheet (placeholder) | Desktop scoring workbook (placeholder) | GIS scripts (placeholder) | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#downloads--resources",
     
     "relUrl": "/tiers/screening/#downloads--resources"
-  },"75": {
+  },"78": {
     "doc": "Screening Tier",
     "title": "Related methods",
     "content": ". | Method A (placeholder) | Method B (placeholder) | . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/#related-methods",
     
     "relUrl": "/tiers/screening/#related-methods"
-  },"76": {
+  },"79": {
     "doc": "Screening Tier",
     "title": "Screening Tier",
     "content": "Stream Tiered Assessment Framework . ",
     "url": "/stream-tiered-assessment-framework/tiers/screening/",
     
     "relUrl": "/tiers/screening/"
-  },"77": {
+  },"80": {
     "doc": "Tier Selector",
     "title": "Tier Selector",
     "content": "Back to Home Use the questions below to pick a tier that matches your decision context. The goal is to align level of effort with risk, number of sites, and the type of decision you need to support. Use this quick guide to choose a tier based on effort and decision risk: . | Screening: many sites, low risk, desktop data. | Rapid: moderate risk, field day per site. | Detailed: high risk, intensive data and calibration. | . Screening tier | Rapid tier | Detailed tier . ",
     "url": "/stream-tiered-assessment-framework/tier-selector/#tier-selector",
     
     "relUrl": "/tier-selector/#tier-selector"
-  },"78": {
+  },"81": {
     "doc": "Tier Selector",
     "title": "What to do next",
     "content": "Choose a tier page to see workflows, outputs, and example resources. Screening Tier Rapid Tier Detailed Tier ",
     "url": "/stream-tiered-assessment-framework/tier-selector/#what-to-do-next",
     
     "relUrl": "/tier-selector/#what-to-do-next"
-  },"79": {
+  },"82": {
     "doc": "Tier Selector",
     "title": "Tier Selector",
     "content": "Stream Tiered Assessment Framework . ",
     "url": "/stream-tiered-assessment-framework/tier-selector/",
     
     "relUrl": "/tier-selector/"
-  },"80": {
+  },"83": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Stream Tiered Assessment Framework",
     "content": "Back to Home Working draft (for website use). This guide explains the Stream Tiered Assessment Framework: what it is, why it’s useful, what functions it uses, what the tiers are, how scoring works, and how to perform assessments in practice. ## Contents . | Stream Tiered Assessment Framework . | Purpose and intended users | Why a tiered approach is needed | Big idea in one sentence | Core concepts and definitions | The stream functions framework . | Why functions (instead of only metrics) | Functional categories used in this approach | The 20 core stream functions . | Hydrology (4) | Hydraulics (4) | Geomorphology (4) | Physicochemistry (4) | Biology (4) | . | . | Linking functions to outcomes (Clean Water Act framing) . | Default mapping logic (direct vs indirect) | Outcome mapping table (starter / national default) | . | The three tiers . | What the tiers do (and do not do) | Tier overview . | Tier 1 ï¿½ Screening | Tier 2 ï¿½ Rapid | Tier 3 ï¿½ Detailed | . | . | Selecting a tier . | Practical tier selection table (starter) | . | Workflow for building and applying a tiered assessment . | Step 1 ï¿½ Define decision context | Step 2 ï¿½ Select tier(s) | Step 3 ï¿½ Define relevant stream functions | Step 4 ï¿½ Select metrics and methods (tier-appropriate) | Step 5 ï¿½ Establish reference framework and scoring standards | Step 6 ï¿½ Collect data and compute metric values | Step 7 ï¿½ Score metrics ? functions ? outcomes ? overall condition | Step 8 ï¿½ Report results and document decisions | . | Scoring framework (recommended standard structure) . | Recommended scoring scale | Metric ? function scoring | Function ? outcome (physical/chemical/biological) scoring | Overall condition score | . | Worked scoring example (simple) . | Physical outcome | Chemical outcome | Biological outcome | Overall condition | . | How to perform assessments by tier (practical guidance) . | Screening-tier assessment (desktop-first) | Rapid-tier assessment (field-based, standardized) | Detailed-tier assessment (regional calibration + intensive data) | . | Maintaining comparability across tiers | What to publish and keep updated (recommended artifacts) | Suggested appendices (optional) . | Appendix A ï¿½ Tier Selection Worksheet (template) | Appendix B ï¿½ Metrics-to-Functions Table (template columns) | Appendix C ï¿½ Scoring workbook core columns (recommended) | . | . | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#stream-tiered-assessment-framework",
     
     "relUrl": "/tiered-approach/#stream-tiered-assessment-framework"
-  },"81": {
+  },"84": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Purpose and intended users",
     "content": "This resource is designed for practitioners who need to assess stream condition to support: . | regulatory decision-making (e.g., impact assessment, mitigation, compliance, program reporting), | restoration planning and design (e.g., site screening, alternatives comparison, final design), | post-construction monitoring and adaptive management, | watershed-scale prioritization and investment decisions. | . The approach is meant to be nationally applicable in concept, while allowing regional tailoring in metrics and scoring standards. ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#purpose-and-intended-users",
     
     "relUrl": "/tiered-approach/#purpose-and-intended-users"
-  },"82": {
+  },"85": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Why a tiered approach is needed",
     "content": "Stream assessment practice faces recurring challenges: . | Too many methods, scattered across sources. Hundreds of assessment methods exist (many in ï¿½grey literatureï¿½), so locating and comparing approaches is inefficient. | Inconsistent metric choices and terminology. Different tools measure different things, often without a shared structure that makes gaps and overlaps visible. | Wide variation in resources required. Some assessments take minutes; others require weeks of field sampling and analysis. Level of effort is often not clearly tracked or used in selection. | Limited comparability of results across methods and regions. Different function coverage, different scoring structures, and different output formats make it hard to compare ï¿½like with like.ï¿½ | . The Tiered Approach addresses these issues by: . | using a shared functions framework (common vocabulary + comprehensive coverage), | defining explicit levels of effort (Screening, Rapid, Detailed), | mapping functions to Clean Water Act outcome framing (physical, chemical, biological integrity), | providing repeatable scoring and aggregation so results remain comparable across tiers and over time. | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#why-a-tiered-approach-is-needed",
     
     "relUrl": "/tiered-approach/#why-a-tiered-approach-is-needed"
-  },"83": {
+  },"86": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Big idea in one sentence",
     "content": "Assess the same set of stream functions across all tiers, but scale the metrics and methods (and therefore cost/effort and uncertainty) to match the decision context. ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#big-idea-in-one-sentence",
     
     "relUrl": "/tiered-approach/#big-idea-in-one-sentence"
-  },"84": {
+  },"87": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Core concepts and definitions",
     "content": "These terms are used throughout this guide: . | Structure: The relatively static physical template observed at a moment in time (e.g., channel geometry, substrate, riparian cover). | Process: Fundamental actions (physical/chemical/biological) that drive change (e.g., runoff generation, erosion, denitrification). | Function: A discrete ecosystem result that emerges when processes interact at ecologically relevant scales (e.g., flood attenuation, nutrient processing). | Metric / indicator / variable: A measurable proxy (field, desktop, modeled) representing a function (e.g., percent impervious cover as a proxy for catchment hydrology stress). | Assessment method / tool: The procedure used to quantify metrics (from checklists to lab sampling to numerical models). | Level of effort (LoE): The time, cost, expertise, and logistics required to apply an assessment. | Tier: A standardized LoE class (Screening, Rapid, Detailed) used to match effort to decisions. | Outcome framing: A roll-up structure aligned with the Clean Water Act: physical, chemical, and biological integrity. | Condition score: A composite score summarizing outcomes for comparison across sites or over time. | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#core-concepts-and-definitions",
     
     "relUrl": "/tiered-approach/#core-concepts-and-definitions"
-  },"85": {
+  },"88": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "The stream functions framework",
     "content": "Why functions (instead of only metrics) . Metrics differ by region, program, and available data. Functions provide the stable ï¿½spineï¿½ of assessment because they: . | keep assessment focused on ecological processes that matter (not only what is easy to measure), | reveal gaps and overlaps among tools, | create a shared vocabulary for communication, | support comparability across projects and tiers. | . Functional categories used in this approach . This framework groups functions into five categories aligned with a widely used disciplinary structure: . | Hydrology (watershed-scale water generation, storage, and delivery) | Hydraulics (reach-scale movement of water in channel/floodplain/subsurface pathways) | Geomorphology (sediment/wood transport and channel form dynamics) | Physicochemistry (light/heat/carbon/nutrients/contaminants that shape chemical template) | Biology (habitat, populations, communities, and connectivity) | . The 20 core stream functions . These 20 functions are intended as a comprehensive starting point. Regional tools may consolidate or tailor the list, but changes should be documented and traceable back to these functions to preserve comparability. Hydrology (4) . | Catchment hydrology ï¿½ Land uses alter water quantity and quality delivered to the stream. | Surface water storage ï¿½ Natural/artificial storage attenuates flows and increases residence time. | Reach inflow ï¿½ Localized inputs (tributaries, ditches, pipes) alter magnitude/timing/quality. | Streamflow regime ï¿½ The characteristic flow pattern that shapes habitat, transport, and water quality. | . Hydraulics (4) . | Low flow and baseflow dynamics ï¿½ Maintains wetted habitat and modulates temperature/chemistry during low water. | High flow dynamics ï¿½ Drives erosion and channel maintenance during storms and peaks. | Floodplain connectivity ï¿½ Lateral exchange supports nutrient cycling, habitat, and hydraulic relief. | Hyporheic connectivity ï¿½ Surfaceï¿½subsurface exchange supports temperature regulation, nutrients, and habitat. | . Geomorphology (4) . | Channel evolution ï¿½ Changes in channel dimension/slope reflecting legacy and ongoing adjustment. | Channel and floodplain dynamics ï¿½ Bank processes, planform dynamics, and curvature that affect complexity. | Sediment continuity ï¿½ Balanced sediment supply and transport that maintains form and habitat. | Bed composition and bedform dynamics ï¿½ Substrate and bedforms (and wood effects) supporting habitat and exchange. | . Physicochemistry (4) . | Light &amp; thermal regime ï¿½ Regulates temperature and energy inputs shaping chemistry and niches. | Carbon processing ï¿½ Organic matter dynamics supporting food webs and system metabolism. | Nutrient cycling ï¿½ N and P transformations controlling productivity and water quality. | Water &amp; soil quality ï¿½ Contaminants/constituents influencing chemical condition and biotic health. | . Biology (4) . | Habitat provision ï¿½ Physical habitat diversity supporting life stages and taxa. | Population support ï¿½ Survival, reproduction, and movement of key taxa. | Community dynamics ï¿½ Balanced assemblages of native taxa; invasive pressure; resilience. | Watershed connectivity ï¿½ Longitudinal/lateral connectivity enabling colonization and recovery. | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#the-stream-functions-framework",
     
     "relUrl": "/tiered-approach/#the-stream-functions-framework"
-  },"86": {
+  },"89": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Linking functions to outcomes (Clean Water Act framing)",
     "content": "The Clean Water Act emphasizes physical, chemical, and biological integrity. The Tiered Approach uses this framing because it: . | aligns assessment reporting with common regulatory language, | makes interdependencies explicit (many functions influence multiple outcomes), | supports roll-up scoring for clear communication and comparability. | . Default mapping logic (direct vs indirect) . | Direct (D): the function is fundamentally associated with that outcome (primary pathway). | Indirect (i): the function influences that outcome through intermediate processes or context. | None (ï¿½): no meaningful linkage assumed for the generic national framework. | . This mapping is a starting point. Regional context may justify adjustments (document changes). Outcome mapping table (starter / national default) . | Function | Physical | Chemical | Biological | . | Catchment hydrology | D | i | i | . | Surface water storage | D | i | i | . | Reach inflow | D | i | ï¿½ | . | Streamflow regime | D | i | i | . | Low flow &amp; baseflow dynamics | D | i | i | . | High flow dynamics | D | i | i | . | Floodplain connectivity | i | i | i | . | Hyporheic connectivity | i | i | i | . | Channel evolution | D | i | i | . | Channel &amp; floodplain dynamics | D | i | i | . | Sediment continuity | D | i | i | . | Bed composition &amp; bedform dynamics | D | i | i | . | Light &amp; thermal regime | ï¿½ | D | i | . | Carbon processing | ï¿½ | i | i | . | Nutrient cycling | i | D | i | . | Water &amp; soil quality | i | D | i | . | Habitat provision | ï¿½ | ï¿½ | D | . | Population support | i | i | D | . | Community dynamics | i | i | D | . | Watershed connectivity | i | ï¿½ | D | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#linking-functions-to-outcomes-clean-water-act-framing",
     
     "relUrl": "/tiered-approach/#linking-functions-to-outcomes-clean-water-act-framing"
-  },"87": {
+  },"90": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "The three tiers",
     "content": "What the tiers do (and do not do) . Tiers do not change what you care about (functions). Tiers do change what you measure (metrics/methods), how long it takes, and how much confidence you can expect. Tier overview . Tier 1 ï¿½ Screening . Goal: rapid, low-cost, desktop-oriented snapshot for early planning and broad prioritization. Typical effort: minutes to hours per site; minimal field time (optional verification). Primary data: GIS / remotely sensed / existing datasets; imagery; basic reconnaissance. Output: function scores with higher uncertainty, useful for screening and prioritizing. Tier 2 ï¿½ Rapid . Goal: moderate-effort field-based assessment for reach comparison and alternatives evaluation. Typical effort: hours to ~1 day per reach. Primary data: structured field observations + simple measurements; can incorporate Screening metrics. Output: more confident function scores supporting site ranking and design direction. Tier 3 ï¿½ Detailed . Goal: high-effort assessment for final design, compliance, crediting, and monitoring. Typical effort: multiple days to weeks (sometimes longer across seasons). Primary data: intensive field measurements; lab sampling; monitoring; modeling; development/calibration of reference curves. Output: defensible, lower-uncertainty function scores and outcomes suitable for high-stakes decisions. ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#the-three-tiers",
     
     "relUrl": "/tiered-approach/#the-three-tiers"
-  },"88": {
+  },"91": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Selecting a tier",
     "content": "Tier selection should be explicit and documented. Use criteria like: . | project phase (screening vs alternatives vs design vs monitoring), | number of sites, | decision risk (consequence of being wrong), | acceptable uncertainty, | budget/schedule constraints, | availability of staff expertise and equipment, | regulatory triggers requiring defensible evidence. | . Practical tier selection table (starter) . | Criterion | Screening | Rapid | Detailed | . | Typical use | watershed scoping, site screening | alternatives comparison, conceptual design support | final design, compliance, post-construction monitoring | . | Decision risk &amp; tolerance for uncertainty | low risk; higher uncertainty acceptable | moderate risk; moderate uncertainty | high risk; low uncertainty required | . | Data sources | desktop/GIS | field + desktop | field + lab + models + reference calibration | . | Primary output | qualitative/semi-quantitative scores | semi-quantitative scores | quantitative, defensible scores + standards | . | Sites per phase | many (often &gt;20) | some (ï¿½5ï¿½20) | few (=5) | . | Field time per site | none to &lt;1 hr | 1 hrï¿½1 day | 1 dayï¿½1+ weeks | . | Reference curves | usually adopt published / coarse | adopt and possibly adapt | often develop/calibrate regionally | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#selecting-a-tier",
     
     "relUrl": "/tiered-approach/#selecting-a-tier"
-  },"89": {
+  },"92": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Workflow for building and applying a tiered assessment",
     "content": "This workflow is designed to be repeatable and transparent. It is compatible with structured assessment development guidance: select tier ? define functions ? select metrics ? define reference/scoring ? compute and report. Step 1 ï¿½ Define decision context . Inputs: objectives, stakeholders, regulatory context, project phase, risk tolerance, schedule/budget, stream types. Outputs: a clear problem statement and how assessment results will be used. Deliverable: 1ï¿½2 page ï¿½Assessment Purpose &amp; Decision Contextï¿½ memo. Step 2 ï¿½ Select tier(s) . Inputs: decision context + tier criteria table. Decision: pick Screening, Rapid, Detailed ï¿½ or a phased plan (e.g., Screening ? Rapid on top candidates ? Detailed on finalists). Outputs: tier selection rationale, resource needs, list of uncertainties. Deliverable: completed Tier Selection Worksheet (short form) + assumptions list. Step 3 ï¿½ Define relevant stream functions . Start from the 20-function list. If tailoring, do so by merging functions (not deleting without justification), and document traceability. Deliverable: Functions list for the project/region + short definitions + notes on any merges. Step 4 ï¿½ Select metrics and methods (tier-appropriate) . For each function, select 1+ feasible metrics at the chosen tier. Rules of thumb . | Screening: usually 1 metric per function (proxies from national datasets). | Rapid: 1ï¿½several rapid field metrics per function, plus Screening metrics as needed. | Detailed: direct measures where possible; may include Rapid/Screening metrics for context. | . Deliverable: ï¿½Metrics-to-Functions Tableï¿½ with: . | function name | metric(s) | method/data source | minimum tier | units | sampling window | QA/QC notes | scoring standard availability (adopt / adapt / develop) | . Step 5 ï¿½ Establish reference framework and scoring standards . You need a way to convert raw metric values to comparable scores. Each metric should specify: . | reference condition definition (least disturbed / best available), | performance standard or scoring curve, | stratification (stream type, region, drainage area, etc.), | whether thresholds are adopted, adapted, or developed. | . Deliverable: ï¿½Reference &amp; Scoring Appendixï¿½ (even if short for Screening). Step 6 ï¿½ Collect data and compute metric values . Implement the tierï¿½s field/desktop plan. Ensure you capture metadata (date, reach ID, coordinates, method version, assessor). Deliverable: complete dataset + metadata + QA/QC checklist. Step 7 ï¿½ Score metrics ? functions ? outcomes ? overall condition . This is the core scoring pipeline: . | Metric scores (standardized scale) | Function scores (combine metric scores for each function) | Outcome scores (physical/chemical/biological roll-up) | Overall condition score (optional single score) | . Deliverable: scoring workbook (or scripted calculation) + exported results table. Step 8 ï¿½ Report results and document decisions . Reporting should keep both: . | roll-up scores (easy to compare), and | component scores (so you can see tradeoffs). | . Deliverable: report template with: . | tier selection rationale | functions evaluated | metric list and data sources | scoring rules | results tables/figures | uncertainties and limitations | recommendations (e.g., whether to move up a tier) | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#workflow-for-building-and-applying-a-tiered-assessment",
     
     "relUrl": "/tiered-approach/#workflow-for-building-and-applying-a-tiered-assessment"
-  },"90": {
+  },"93": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Scoring framework (recommended standard structure)",
     "content": "The goal is a scoring method that is: . | transparent, | repeatable, | comparable across tiers and sites, | flexible enough for regional tailoring. | . Recommended scoring scale . Pick a consistent scale for function scores, such as: . | 0ï¿½1 (normalized), or | 0ï¿½10 (more intuitive for many users). | . Once selected, keep it consistent across tiers. Metric ? function scoring . A function may have multiple metrics. Common combination options include: . | Arithmetic mean (default): use when metrics represent similar importance and quality. | Weighted mean: use when metrics have different reliability or relevance. | Minimum / limiting factor: use when the weakest component controls function (use sparingly; document justification). | . Recommendation: Start with mean or weighted mean; use limiting-factor logic only with strong justification. Function ? outcome (physical/chemical/biological) scoring . Define weights based on direct vs indirect mapping: . | weight = 1.0 for Direct (D) | weight = 0.25 for Indirect (i) (starter default; adjust via sensitivity analysis) | weight = 0 for None (ï¿½) | . Compute outcome scores as weighted averages: . Outcome score = S(FunctionScore ï¿½ Weight) / S(Weight) . Do this separately for: . | Physical outcome index | Chemical outcome index | Biological outcome index | . Overall condition score . Compute overall condition score as an average of the three outcomes: . Overall condition = (Physical + Chemical + Biological) / 3 . Report outcome indices even if you report an overall score. The sub-indices show why a site scored the way it did. ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#scoring-framework-recommended-standard-structure",
     
     "relUrl": "/tiered-approach/#scoring-framework-recommended-standard-structure"
-  },"91": {
+  },"94": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Worked scoring example (simple)",
     "content": "Assume function scores on a 0ï¿½10 scale. Assume the default mapping weights (Direct = 1.0; Indirect = 0.25; None = 0). Example function scores (subset for illustration): . | Catchment hydrology = 6 | Streamflow regime = 7 | Water &amp; soil quality = 4 | Nutrient cycling = 5 | Habitat provision = 8 | Community dynamics = 6 | . Physical outcome . Catchment hydrology (D ? 1.0), Streamflow regime (D ? 1.0), Water &amp; soil quality (i ? 0.25), Nutrient cycling (i ? 0.25), Habitat provision (ï¿½ ? 0) . Physical = (6ï¿½1 + 7ï¿½1 + 4ï¿½0.25 + 5ï¿½0.25) / (1 + 1 + 0.25 + 0.25) Physical = (6 + 7 + 1 + 1.25) / 2.5 = 15.25 / 2.5 = 6.1 . Chemical outcome . Water &amp; soil quality (D ? 1.0), Nutrient cycling (D ? 1.0), Catchment hydrology (i ? 0.25), Streamflow regime (i ? 0.25), Community dynamics (i ? 0.25) . Chemical = (4ï¿½1 + 5ï¿½1 + 6ï¿½0.25 + 7ï¿½0.25 + 6ï¿½0.25) / (1 + 1 + 0.25 + 0.25 + 0.25) Chemical = (4 + 5 + 1.5 + 1.75 + 1.5) / 2.75 = 13.75 / 2.75 = 5.0 . Biological outcome . Habitat provision (D ? 1.0), Community dynamics (D ? 1.0), Catchment hydrology (i ? 0.25), Streamflow regime (i ? 0.25), Nutrient cycling (i ? 0.25), Water &amp; soil quality (i ? 0.25) . Biological = (8ï¿½1 + 6ï¿½1 + 6ï¿½0.25 + 7ï¿½0.25 + 5ï¿½0.25 + 4ï¿½0.25) / (1 + 1 + 0.25 + 0.25 + 0.25 + 0.25) Biological = (8 + 6 + 1.5 + 1.75 + 1.25 + 1.0) / 3.0 = 19.5 / 3 = 6.5 . Overall condition . Overall = (6.1 + 5.0 + 6.5) / 3 = 5.9 . This example shows how: . | indirect weights allow cross-domain influence without dominating the outcome, | reporting outcome sub-indices preserves interpretability, | a single overall score can still be computed for summary comparison. | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#worked-scoring-example-simple",
     
     "relUrl": "/tiered-approach/#worked-scoring-example-simple"
-  },"92": {
+  },"95": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "How to perform assessments by tier (practical guidance)",
     "content": "Screening-tier assessment (desktop-first) . When to use . | watershed screening and prioritization | early project planning where you may evaluate many sites | low-risk decisions where higher uncertainty is acceptable | . Typical workflow . | Define reaches and watershed context. | Compute a small set of national, repeatable desktop metrics for each function. | Convert metric values to standardized scores using published thresholds or relative scoring (e.g., percentiles within a region/stratum). | Roll up to outcomes and an optional condition score. | Identify ï¿½high potential / low constraintï¿½ candidate reaches for Rapid tier. | . Recommended outputs . | map of candidate reaches and scores | table of function scores + outcome scores | ranked list with notes on uncertainty and next steps | . Best practice goal . | make this tier repeatable and automatable (scripted geoprocessing) so the main user burden is interpretation, not manual calculation. | . Rapid-tier assessment (field-based, standardized) . When to use . | comparing several candidate sites | alternatives evaluation / conceptual design support | validating Screening-tier findings with field evidence | . Typical workflow . | Use Screening results to focus the field effort. | Apply a structured rapid field protocol (standard form + clear scoring rules). | Use a scoring workbook/calculator to compute function/outcome/condition scores. | Compare sites and alternatives; decide whether any site requires Detailed tier for defensibility. | . Recommended outputs . | completed field forms | workbook outputs (function + outcomes) | notes on constraints/opportunities observed in field | . Detailed-tier assessment (regional calibration + intensive data) . When to use . | high-risk decisions, compliance/permitting, mitigation crediting/debiting | final design requiring precise understanding of processes | post-construction monitoring and performance verification | region-specific studies requiring tailored reference curves or models | . Typical workflow . | Define detailed questions and performance standards. | Build or adopt a reference network and stratification scheme. | Collect intensive field and lab data (e.g., water samples, biological sampling, sensors). | Develop or calibrate reference curves and thresholds. | Compute function and outcome scores with documented uncertainty. | Produce defensible documentation for review. | . Recommended outputs . | dataset + QA/QC documentation | calibrated scoring curves/standards | results + uncertainty/sensitivity analysis | recommendations for management actions and monitoring plan | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#how-to-perform-assessments-by-tier-practical-guidance",
     
     "relUrl": "/tiered-approach/#how-to-perform-assessments-by-tier-practical-guidance"
-  },"93": {
+  },"96": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Maintaining comparability across tiers",
     "content": "Comparability does not require identical metrics across tiers. It requires: . | Consistent function definitions (same functions, same meaning). | Common score scale (same scoring range). | Transparent methods and versioning (document which metrics, thresholds, and weights were used). | Traceable substitutions (if a function uses different metrics at different tiers, document the substitution and expected uncertainty). | Reporting of sub-scores (functions + outcomes, not only one final number). | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#maintaining-comparability-across-tiers",
     
     "relUrl": "/tiered-approach/#maintaining-comparability-across-tiers"
-  },"94": {
+  },"97": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "What to publish and keep updated (recommended artifacts)",
     "content": "To make this approach usable in practice, publish and maintain these ï¿½livingï¿½ artifacts: . | Functions list (the 20 functions + definitions + mapping to outcomes) | Tier selection worksheet (short decision support tool) | Metric toolbox (metrics that can represent each function at each tier) | Scoring workbook templates (Screening, Rapid, Detailed variants if needed) | Reference framework documentation (especially for Detailed tier) | Change log (what changed, when, why) | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#what-to-publish-and-keep-updated-recommended-artifacts",
     
     "relUrl": "/tiered-approach/#what-to-publish-and-keep-updated-recommended-artifacts"
-  },"95": {
+  },"98": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Suggested appendices (optional)",
     "content": "Appendix A ï¿½ Tier Selection Worksheet (template) . | Project phase: | Number of sites: | Decision risk: | Acceptable uncertainty: | Budget/schedule constraints: | Regulatory context: | Selected tier and rationale: | Functions emphasized: | Data availability constraints: | Next milestone to revisit tier decision: | . Appendix B ï¿½ Metrics-to-Functions Table (template columns) . | Function ID | Function name | Metric name | Metric description | Method/data source | Tier | Units | Sampling window | Scoring standard (adopt/adapt/develop) | Notes/uncertainty | . Appendix C ï¿½ Scoring workbook core columns (recommended) . | Reach ID | Date | Function scores (20 columns) | Physical outcome index | Chemical outcome index | Biological outcome index | Overall condition score | Notes / flags / assessor ID | Version of scoring rules | . ",
     "url": "/stream-tiered-assessment-framework/tiered-approach/#suggested-appendices-optional",
     
     "relUrl": "/tiered-approach/#suggested-appendices-optional"
-  },"96": {
+  },"99": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Stream Tiered Assessment Framework",
     "content": "Stream Tiered Assessment Framework . ",
