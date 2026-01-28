@@ -48,5 +48,58 @@
         <div class="screening-library-table-wrap"></div>
       </div>
     </div>
+    <div class="detailed-curve-modal screening-curve-modal" hidden>
+      <div class="detailed-curve-backdrop" data-close="true"></div>
+      <div class="detailed-curve-dialog" role="dialog" aria-modal="true" aria-label="Reference curve builder">
+        <div class="curve-header">
+          <div>
+            <h3>Reference Curve Builder</h3>
+            <p class="curve-subtitle">Build stratification layers and define how field values map to metric index scores.</p>
+          </div>
+          <button class="btn btn-small detailed-curve-close" type="button">Close</button>
+        </div>
+        <div class="curve-body">
+          <div class="curve-meta">
+            <label class="curve-field">
+              <span>Metric</span>
+              <input class="curve-metric-name" type="text" readonly />
+            </label>
+            <label class="curve-field">
+              <span>Field value units</span>
+              <input class="curve-units" type="text" placeholder="e.g., %, mg/L, m/s" />
+            </label>
+            <label class="curve-field">
+              <span>X value type</span>
+              <select class="curve-x-type">
+                <option value="quantitative">Quantitative</option>
+                <option value="qualitative">Qualitative</option>
+              </select>
+            </label>
+          </div>
+          <div class="curve-layer-bar">
+            <div class="curve-layer-title">Stratification Layers</div>
+            <select class="curve-layer-select"></select>
+            <button class="btn btn-small curve-layer-add" type="button">Add layer</button>
+            <button class="btn btn-small curve-layer-remove" type="button">Remove layer</button>
+          </div>
+          <div class="curve-layer-name-row">
+            <label class="curve-field">
+              <span>Stratification layer name</span>
+              <input class="curve-layer-name" type="text" />
+            </label>
+            <button class="btn btn-small curve-reset" type="button">Reset index values</button>
+          </div>
+          <div class="curve-grid">
+            <div class="curve-table-wrap"></div>
+            <div class="curve-chart-wrap">
+              <canvas class="curve-chart" width="520" height="320"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="curve-footer">
+          <p class="curve-note">Index values follow standard thresholds: not functioning (0.00-0.29), functioning-at-risk (0.30-0.69), functioning (0.70-1.00).</p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>

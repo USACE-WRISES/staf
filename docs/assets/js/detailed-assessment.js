@@ -68,13 +68,15 @@
   const defaultIndexValues = [0, 0.3, 0.7, 1];
 
   const buildDefaultCurve = () => ({
+    name: 'Default',
+    xType: 'quantitative',
     units: '',
     activeLayerId: null,
     layers: [
       {
         id: generateId(),
         name: 'Default',
-        points: defaultIndexValues.map((value) => ({ x: '', y: value })),
+        points: defaultIndexValues.map((value) => ({ x: '', y: value, description: '' })),
       },
     ],
   });
@@ -95,6 +97,9 @@
 
   const computeIndexScore = (curve, fieldValue) => {
     if (!Number.isFinite(fieldValue) || !curve || !curve.layers?.length) {
+      return null;
+    }
+    if (curve.xType === 'qualitative') {
       return null;
     }
     const layer = getCurveLayer(curve);
@@ -187,6 +192,7 @@
       const curveClose = container.querySelector('.detailed-curve-close');
       const curveMetricName = container.querySelector('.curve-metric-name');
       const curveUnitsInput = container.querySelector('.curve-units');
+      const curveXType = container.querySelector('.curve-x-type');
       const curveLayerSelect = container.querySelector('.curve-layer-select');
       const curveLayerAdd = container.querySelector('.curve-layer-add');
       const curveLayerRemove = container.querySelector('.curve-layer-remove');
@@ -232,6 +238,9 @@
         }
         if (curveUnitsInput) {
           curveUnitsInput.value = curve.units || '';
+        }
+        if (curveXType) {
+          curveXType.value = curve.xType || 'quantitative';
         }
         renderCurveLayerControls(curve);
         renderCurveTable();
@@ -624,15 +633,19 @@
         const table = document.createElement('table');
         table.className = 'curve-table';
         const thead = document.createElement('thead');
+        const isQualitative = curve.xType === 'qualitative';
         thead.innerHTML =
-          '<tr><th>Field value (X)</th><th>Index value (Y)</th><th>Insert</th><th>X</th></tr>';
+          '<tr><th>Field value (X)</th><th>Index value (Y)</th>' +
+          (isQualitative ? '<th>Description</th>' : '') +
+          '<th>Insert</th><th>X</th></tr>';
         const tbody = document.createElement('tbody');
 
         layer.points.forEach((point, index) => {
           const row = document.createElement('tr');
           const xCell = document.createElement('td');
           const xInput = document.createElement('input');
-          xInput.type = 'text';
+          xInput.type = isQualitative ? 'text' : 'number';
+          xInput.step = isQualitative ? undefined : 'any';
           xInput.value = point.x ?? '';
           xInput.addEventListener('input', () => {
             point.x = xInput.value;
@@ -653,13 +666,25 @@
           });
           yCell.appendChild(yInput);
 
+          let descCell = null;
+          if (isQualitative) {
+            descCell = document.createElement('td');
+            const descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.value = point.description ?? '';
+            descInput.addEventListener('input', () => {
+              point.description = descInput.value;
+            });
+            descCell.appendChild(descInput);
+          }
+
           const insertCell = document.createElement('td');
           const insertBtn = document.createElement('button');
           insertBtn.type = 'button';
           insertBtn.className = 'btn btn-small';
           insertBtn.textContent = 'Insert';
           insertBtn.addEventListener('click', () => {
-            layer.points.splice(index, 0, { x: '', y: '' });
+            layer.points.splice(index, 0, { x: '', y: '', description: '' });
             renderCurveTable();
             renderCurveChart();
           });
@@ -682,6 +707,9 @@
 
           row.appendChild(xCell);
           row.appendChild(yCell);
+          if (descCell) {
+            row.appendChild(descCell);
+          }
           row.appendChild(insertCell);
           row.appendChild(removeCell);
           tbody.appendChild(row);
@@ -720,13 +748,22 @@
         if (!layer) {
           return;
         }
-        const points = layer.points
-          .map((point) => ({
-            x: Number.parseFloat(point.x),
-            y: Number.parseFloat(point.y),
-          }))
-          .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y))
-          .sort((a, b) => a.x - b.x);
+        const isQualitative = curve.xType === 'qualitative';
+        const points = isQualitative
+          ? layer.points
+              .map((point, index) => ({
+                x: index,
+                y: Number.parseFloat(point.y),
+                label: point.x ?? '',
+              }))
+              .filter((point) => Number.isFinite(point.y))
+          : layer.points
+              .map((point) => ({
+                x: Number.parseFloat(point.x),
+                y: Number.parseFloat(point.y),
+              }))
+              .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y))
+              .sort((a, b) => a.x - b.x);
 
         const minX = points.length ? points[0].x : 0;
         const maxX = points.length ? points[points.length - 1].x : 1;
@@ -759,7 +796,9 @@
           });
         }
 
-        const xTicks = points.length
+        const xTicks = isQualitative
+          ? points.map((point) => point.x)
+          : points.length
           ? [minX, (minX + maxX) / 2, maxX]
           : [0, 0.5, 1];
         const yTicks = [0, 0.5, 1];
@@ -785,7 +824,12 @@
           ctx.moveTo(x, padding.top + height);
           ctx.lineTo(x, padding.top + height + 4);
           ctx.stroke();
-          ctx.fillText(tick.toFixed(2), x, padding.top + height + 8);
+          if (isQualitative) {
+            const label = points.find((point) => point.x === tick)?.label || '';
+            ctx.fillText(label, x, padding.top + height + 8);
+          } else {
+            ctx.fillText(tick.toFixed(2), x, padding.top + height + 8);
+          }
         });
 
         const metricName = curveMetricName ? curveMetricName.value : 'Metric';
@@ -817,6 +861,18 @@
         });
       }
 
+      if (curveXType) {
+        curveXType.addEventListener('change', () => {
+          const curve = getActiveCurve();
+          if (!curve) {
+            return;
+          }
+          curve.xType = curveXType.value;
+          renderCurveTable();
+          renderCurveChart();
+        });
+      }
+
       if (curveLayerSelect) {
         curveLayerSelect.addEventListener('change', () => {
           const curve = getActiveCurve();
@@ -839,7 +895,11 @@
           const newLayer = {
             id: generateId(),
             name: `Stratification layer ${curve.layers.length + 1}`,
-            points: defaultIndexValues.map((value) => ({ x: '', y: value })),
+            points: defaultIndexValues.map((value) => ({
+              x: '',
+              y: value,
+              description: '',
+            })),
           };
           curve.layers.push(newLayer);
           curve.activeLayerId = newLayer.id;
@@ -891,6 +951,7 @@
           activeLayer.points = defaultIndexValues.map((value) => ({
             x: '',
             y: value,
+            description: '',
           }));
           renderCurveTable();
           renderCurveChart();

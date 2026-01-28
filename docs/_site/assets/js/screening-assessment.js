@@ -5,9 +5,10 @@
   }
 
   const baseUrl = container.dataset.baseurl || '';
-  const dataUrl = `${baseUrl}/assets/data/screening-metrics.tsv`;
-  const functionsUrl = `${baseUrl}/assets/data/functions.json`;
-  const mappingUrl = `${baseUrl}/assets/data/cwa-mapping.json`;
+  const assetPath = (path) => `${baseUrl}${path}`;
+  const dataUrl = assetPath('/assets/data/screening-metrics.tsv');
+  const functionsUrl = assetPath('/assets/data/functions.json');
+  const mappingUrl = assetPath('/assets/data/cwa-mapping.json');
   const fallback = container.querySelector('.screening-assessment-fallback');
   const ui = container.querySelector('.screening-assessment-ui');
 
@@ -85,29 +86,52 @@
     return ratings;
   };
 
-  const fetchText = async (url) => {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to load ${url} (${response.status})`);
+  const stripBaseUrl = (url) =>
+    baseUrl && url.startsWith(baseUrl) ? url.slice(baseUrl.length) || '/' : url;
+
+  const fetchWithFallback = async (url, parser) => {
+    const fallbackUrl = stripBaseUrl(url);
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        return parser(response);
+      }
+    } catch (error) {
+      // fall through to fallback
     }
-    return response.text();
+    if (fallbackUrl && fallbackUrl !== url) {
+      const response = await fetch(fallbackUrl);
+      if (response.ok) {
+        return parser(response);
+      }
+    }
+    const response = await fetch(url);
+    throw new Error(`Failed to load ${url} (${response.status})`);
   };
 
-  const fetchJson = async (url) => {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to load ${url} (${response.status})`);
-    }
-    return response.json();
-  };
+  const fetchText = (url) => fetchWithFallback(url, (response) => response.text());
+  const fetchJson = (url) => fetchWithFallback(url, (response) => response.json());
 
   const init = async () => {
     try {
-      const [metricsText, functionsList, mappingList] = await Promise.all([
+      const [metricsResult, functionsResult, mappingResult] = await Promise.allSettled([
         fetchText(dataUrl),
         fetchJson(functionsUrl),
         fetchJson(mappingUrl),
       ]);
+
+      if (metricsResult.status !== 'fulfilled') {
+        throw new Error('Failed to load screening metrics.');
+      }
+      const metricsText = metricsResult.value;
+      const functionsList =
+        functionsResult.status === 'fulfilled' && Array.isArray(functionsResult.value)
+          ? functionsResult.value
+          : [];
+      const mappingList =
+        mappingResult.status === 'fulfilled' && Array.isArray(mappingResult.value)
+          ? mappingResult.value
+          : [];
 
       if (fallback) {
         fallback.hidden = true;
@@ -137,6 +161,12 @@
             row['Function statement'] || row.function_statement || row.functionStatement || '',
           functionId: functionMatch ? functionMatch.id : null,
           metric: row.Metric || row.metric || '',
+          metricStatement:
+            row['Metric statement'] ||
+            row['Metric statements'] ||
+            row.metric_statement ||
+            row.metricStatement ||
+            '',
           isPredefined: isPredefinedFlag(row['Predefined SCS'] || row.predefined_scs || ''),
           context: row.Context || row.context || '',
           method: row.Method || row.method || '',
@@ -151,6 +181,7 @@
         };
       });
 
+      const metricById = new Map(metrics.map((metric) => [metric.id, metric]));
       const metricIdSet = new Set(metrics.map((metric) => metric.id));
 
       const starMetricIdsByFunction = new Map();
@@ -167,6 +198,76 @@
       });
       const predefinedMetricIds = Array.from(starMetricIdsByFunction.values());
 
+      const defaultCurveIndexValues = [0, 0.3, 0.7, 1];
+
+      const buildDefaultCurve = (metric) => {
+        const points = [
+          {
+            x: 'Optimal',
+            y: 1,
+            description: metric?.criteria?.optimal || '',
+          },
+          {
+            x: 'Suboptimal',
+            y: 0.7,
+            description: metric?.criteria?.suboptimal || '',
+          },
+          {
+            x: 'Marginal',
+            y: 0.3,
+            description: metric?.criteria?.marginal || '',
+          },
+          {
+            x: 'Poor',
+            y: 0,
+            description: metric?.criteria?.poor || '',
+          },
+        ];
+        const layerId = generateId();
+        return {
+          name: 'Default',
+          xType: 'qualitative',
+          units: '',
+          layers: [
+            {
+              id: layerId,
+              name: 'Default',
+              points,
+            },
+          ],
+          activeLayerId: layerId,
+        };
+      };
+
+      const cloneCurve = (curve) => JSON.parse(JSON.stringify(curve));
+
+      const buildCurveMap = (metricIds) => {
+        const curves = {};
+        metricIds.forEach((id) => {
+          const metric = metricById.get(id);
+          if (metric) {
+            curves[id] = buildDefaultCurve(metric);
+          }
+        });
+        return curves;
+      };
+
+      const ensureCurve = (scenario, metricId) => {
+        if (!scenario) {
+          return null;
+        }
+        if (!scenario.curves) {
+          scenario.curves = {};
+        }
+        if (!scenario.curves[metricId]) {
+          const metric = metricById.get(metricId);
+          if (metric) {
+            scenario.curves[metricId] = buildDefaultCurve(metric);
+          }
+        }
+        return scenario.curves[metricId] || null;
+      };
+
       const createScenario = (type, name, metricIds) => {
         const ids = Array.from(new Set(metricIds || []));
         return {
@@ -178,6 +279,7 @@
           notes: '',
           metricIds: ids,
           ratings: buildRatings(ids),
+          curves: buildCurveMap(ids),
         };
       };
 
@@ -197,6 +299,7 @@
           notes: source.notes || '',
           metricIds: Array.from(metricIds),
           ratings: buildRatings(metricIds, source.ratings),
+          curves: source.curves ? cloneCurve(source.curves) : buildCurveMap(metricIds),
         };
         store.scenarios.push(newScenario);
         store.activeId = newScenario.id;
@@ -230,6 +333,7 @@
           notes: scenario.notes || '',
           metricIds: ids,
           ratings: buildRatings(ids, scenario.ratings),
+          curves: scenario.curves ? cloneCurve(scenario.curves) : buildCurveMap(ids),
         };
       };
 
@@ -268,6 +372,19 @@
       const libraryCloseBtn = ui.querySelector('.screening-library-close');
       const libraryBackdrop = ui.querySelector('.screening-library-backdrop');
       const libraryTableWrap = ui.querySelector('.screening-library-table-wrap');
+      const curveModal = ui.querySelector('.detailed-curve-modal');
+      const curveBackdrop = ui.querySelector('.detailed-curve-backdrop');
+      const curveClose = ui.querySelector('.detailed-curve-close');
+      const curveMetricName = ui.querySelector('.curve-metric-name');
+      const curveUnitsInput = ui.querySelector('.curve-units');
+      const curveXType = ui.querySelector('.curve-x-type');
+      const curveLayerSelect = ui.querySelector('.curve-layer-select');
+      const curveLayerAdd = ui.querySelector('.curve-layer-add');
+      const curveLayerRemove = ui.querySelector('.curve-layer-remove');
+      const curveLayerName = ui.querySelector('.curve-layer-name');
+      const curveReset = ui.querySelector('.curve-reset');
+      const curveTableWrap = ui.querySelector('.curve-table-wrap');
+      const curveChart = ui.querySelector('.curve-chart');
 
       let selectedMetricIds = new Set();
       let metricRatings = new Map();
@@ -278,6 +395,533 @@
         disciplines: new Map(),
         functions: new Map(),
       };
+      let activeCurveMetricId = null;
+      let curveReadOnly = false;
+
+      const getCurveLayer = (curve) => {
+        if (!curve || !curve.layers?.length) {
+          return null;
+        }
+        if (curve.activeLayerId) {
+          const activeLayer = curve.layers.find((layer) => layer.id === curve.activeLayerId);
+          if (activeLayer) {
+            return activeLayer;
+          }
+        }
+        curve.activeLayerId = curve.layers[0].id;
+        return curve.layers[0];
+      };
+
+      const getActiveCurve = () => {
+        if (!activeScenario || !activeCurveMetricId) {
+          return null;
+        }
+        return ensureCurve(activeScenario, activeCurveMetricId);
+      };
+
+      const renderCurveLayerControls = (curve) => {
+        if (!curveLayerSelect || !curve) {
+          return;
+        }
+        curveLayerSelect.innerHTML = '';
+        curve.layers.forEach((layer) => {
+          const option = document.createElement('option');
+          option.value = layer.id;
+          option.textContent = layer.name;
+          curveLayerSelect.appendChild(option);
+        });
+        const activeLayer = getCurveLayer(curve);
+        if (activeLayer) {
+          curveLayerSelect.value = activeLayer.id;
+          if (curveLayerName) {
+            curveLayerName.value = activeLayer.name || '';
+          }
+        }
+      };
+
+      const renderCurveTable = () => {
+        if (!curveTableWrap) {
+          return;
+        }
+        const curve = getActiveCurve();
+        if (!curve) {
+          curveTableWrap.innerHTML = '';
+          return;
+        }
+        const layer = getCurveLayer(curve);
+        if (!layer) {
+          curveTableWrap.innerHTML = '';
+          return;
+        }
+        const isQualitative = curve.xType === 'qualitative';
+        const table = document.createElement('table');
+        table.className = 'curve-table';
+        const thead = document.createElement('thead');
+        thead.innerHTML =
+          '<tr><th>Field value (X)</th><th>Index value (Y)</th>' +
+          (isQualitative ? '<th>Description</th>' : '') +
+          '<th>Insert</th><th>X</th></tr>';
+        const tbody = document.createElement('tbody');
+
+        layer.points.forEach((point, index) => {
+          const row = document.createElement('tr');
+          const xCell = document.createElement('td');
+          const xInput = document.createElement('input');
+          xInput.type = isQualitative ? 'text' : 'number';
+          xInput.step = isQualitative ? undefined : 'any';
+          xInput.value = point.x ?? '';
+          xInput.disabled = curveReadOnly;
+          xInput.addEventListener('input', () => {
+            if (curveReadOnly) {
+              return;
+            }
+            point.x = xInput.value;
+            renderCurveChart();
+          });
+          xCell.appendChild(xInput);
+
+          const yCell = document.createElement('td');
+          const yInput = document.createElement('input');
+          yInput.type = 'number';
+          yInput.step = '0.01';
+          yInput.min = '0';
+          yInput.max = '1';
+          yInput.value = point.y ?? '';
+          yInput.disabled = curveReadOnly;
+          yInput.addEventListener('input', () => {
+            if (curveReadOnly) {
+              return;
+            }
+            point.y = yInput.value;
+            renderCurveChart();
+          });
+          yCell.appendChild(yInput);
+
+          let descCell = null;
+          if (isQualitative) {
+            descCell = document.createElement('td');
+            const descInput = document.createElement('input');
+            descInput.type = 'text';
+            descInput.value = point.description ?? '';
+            descInput.disabled = curveReadOnly;
+            descInput.addEventListener('input', () => {
+              if (curveReadOnly) {
+                return;
+              }
+              point.description = descInput.value;
+            });
+            descCell.appendChild(descInput);
+          }
+
+          const insertCell = document.createElement('td');
+          const insertBtn = document.createElement('button');
+          insertBtn.type = 'button';
+          insertBtn.className = 'btn btn-small';
+          insertBtn.textContent = 'Insert';
+          insertBtn.disabled = curveReadOnly;
+          insertBtn.addEventListener('click', () => {
+            if (curveReadOnly) {
+              return;
+            }
+            layer.points.splice(index, 0, { x: '', y: '', description: '' });
+            renderCurveTable();
+            renderCurveChart();
+          });
+          insertCell.appendChild(insertBtn);
+
+          const removeCell = document.createElement('td');
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'criteria-toggle criteria-remove';
+          removeBtn.textContent = 'X';
+          removeBtn.disabled = curveReadOnly;
+          removeBtn.addEventListener('click', () => {
+            if (curveReadOnly || layer.points.length <= 2) {
+              return;
+            }
+            layer.points.splice(index, 1);
+            renderCurveTable();
+            renderCurveChart();
+          });
+          removeCell.appendChild(removeBtn);
+
+          row.appendChild(xCell);
+          row.appendChild(yCell);
+          if (descCell) {
+            row.appendChild(descCell);
+          }
+          row.appendChild(insertCell);
+          row.appendChild(removeCell);
+          tbody.appendChild(row);
+        });
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        curveTableWrap.innerHTML = '';
+        curveTableWrap.appendChild(table);
+      };
+
+      const renderCurveChart = () => {
+        if (!curveChart) {
+          return;
+        }
+        const curve = getActiveCurve();
+        const ctx = curveChart.getContext('2d');
+        if (!ctx || !curve) {
+          return;
+        }
+        ctx.clearRect(0, 0, curveChart.width, curveChart.height);
+
+        const padding = { top: 30, right: 30, bottom: 50, left: 50 };
+        const width = curveChart.width - padding.left - padding.right;
+        const height = curveChart.height - padding.top - padding.bottom;
+
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding.left, padding.top);
+        ctx.lineTo(padding.left, padding.top + height);
+        ctx.lineTo(padding.left + width, padding.top + height);
+        ctx.stroke();
+
+        const layer = getCurveLayer(curve);
+        if (!layer) {
+          return;
+        }
+        const isQualitative = curve.xType === 'qualitative';
+        const points = isQualitative
+          ? layer.points
+              .map((point, index) => ({
+                x: index,
+                y: Number.parseFloat(point.y),
+                label: point.x ?? '',
+              }))
+              .filter((point) => Number.isFinite(point.y))
+          : layer.points
+              .map((point) => ({
+                x: Number.parseFloat(point.x),
+                y: Number.parseFloat(point.y),
+              }))
+              .filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y))
+              .sort((a, b) => a.x - b.x);
+
+        const minX = points.length ? points[0].x : 0;
+        const maxX = points.length ? points[points.length - 1].x : 1;
+        const domainX = maxX - minX || 1;
+        const scaleX = (value) => padding.left + ((value - minX) / domainX) * width;
+        const scaleY = (value) => padding.top + (1 - Math.min(1, Math.max(0, value))) * height;
+
+        if (points.length > 1) {
+          ctx.strokeStyle = '#3b82f6';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          points.forEach((point, index) => {
+            const x = scaleX(point.x);
+            const y = scaleY(point.y);
+            if (index === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          });
+          ctx.stroke();
+
+          ctx.fillStyle = '#1d4ed8';
+          points.forEach((point) => {
+            const x = scaleX(point.x);
+            const y = scaleY(point.y);
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+
+        const xTicks = isQualitative
+          ? points.map((point) => point.x)
+          : points.length
+          ? [minX, (minX + maxX) / 2, maxX]
+          : [0, 0.5, 1];
+        const yTicks = [0, 0.5, 1];
+
+        ctx.fillStyle = '#111';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        yTicks.forEach((tick) => {
+          const y = scaleY(tick);
+          ctx.beginPath();
+          ctx.moveTo(padding.left - 4, y);
+          ctx.lineTo(padding.left, y);
+          ctx.stroke();
+          ctx.fillText(tick.toFixed(2), padding.left - 6, y);
+        });
+
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        xTicks.forEach((tick) => {
+          const x = scaleX(tick);
+          ctx.beginPath();
+          ctx.moveTo(x, padding.top + height);
+          ctx.lineTo(x, padding.top + height + 4);
+          ctx.stroke();
+          if (isQualitative) {
+            const label = points.find((point) => point.x === tick)?.label || '';
+            ctx.fillText(label, x, padding.top + height + 8);
+          } else {
+            ctx.fillText(tick.toFixed(2), x, padding.top + height + 8);
+          }
+        });
+
+        const metricName = curveMetricName ? curveMetricName.value : 'Metric';
+        const units = curve.units ? ` (${curve.units})` : '';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(
+          `${metricName}${units}`,
+          padding.left + width / 2,
+          padding.top + height + 28
+        );
+        ctx.save();
+        ctx.translate(16, padding.top + height / 2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('Metric index score (0-1)', 0, 0);
+        ctx.restore();
+      };
+
+      const buildCurveSummaryTable = (curve) => {
+        const table = document.createElement('table');
+        table.className = 'curve-summary-table';
+        const layer = getCurveLayer(curve);
+        if (!layer || !layer.points.length) {
+          const empty = document.createElement('caption');
+          empty.textContent = 'No reference curve points defined.';
+          table.appendChild(empty);
+          return table;
+        }
+        const valueRow = document.createElement('tr');
+        const valueLabel = document.createElement('th');
+        valueLabel.textContent = 'Value';
+        valueRow.appendChild(valueLabel);
+        layer.points.forEach((point) => {
+          const cell = document.createElement('td');
+          const value = document.createElement('div');
+          value.className = 'curve-point-value';
+          value.textContent = point.x ?? '-';
+          cell.appendChild(value);
+          if (point.description) {
+            const desc = document.createElement('div');
+            desc.className = 'curve-point-desc';
+            desc.textContent = point.description;
+            cell.appendChild(desc);
+          }
+          valueRow.appendChild(cell);
+        });
+
+        const indexRow = document.createElement('tr');
+        const indexLabel = document.createElement('th');
+        indexLabel.textContent = 'Index';
+        indexRow.appendChild(indexLabel);
+        layer.points.forEach((point) => {
+          const cell = document.createElement('td');
+          const value = Number.parseFloat(point.y);
+          cell.textContent = Number.isFinite(value) ? value.toFixed(2) : '-';
+          indexRow.appendChild(cell);
+        });
+
+        table.appendChild(valueRow);
+        table.appendChild(indexRow);
+        return table;
+      };
+
+      const openCurveModal = (metricId) => {
+        if (!curveModal) {
+          return;
+        }
+        const metric = metricById.get(metricId);
+        activeCurveMetricId = metricId;
+        curveReadOnly = activeScenario?.type === 'predefined';
+        const curve = ensureCurve(activeScenario, metricId);
+        if (curveMetricName && metric) {
+          curveMetricName.value = metric.metric;
+        }
+        if (curveUnitsInput) {
+          curveUnitsInput.value = curve.units || '';
+          curveUnitsInput.disabled = curveReadOnly;
+        }
+        if (curveXType) {
+          curveXType.value = curve.xType || 'qualitative';
+          curveXType.disabled = curveReadOnly;
+        }
+        if (curveLayerAdd) {
+          curveLayerAdd.disabled = curveReadOnly;
+        }
+        if (curveLayerRemove) {
+          curveLayerRemove.disabled = curveReadOnly;
+        }
+        if (curveLayerName) {
+          curveLayerName.disabled = curveReadOnly;
+        }
+        if (curveReset) {
+          curveReset.disabled = curveReadOnly;
+        }
+        renderCurveLayerControls(curve);
+        renderCurveTable();
+        renderCurveChart();
+        curveModal.hidden = false;
+      };
+
+      const closeCurveModal = () => {
+        if (!curveModal) {
+          return;
+        }
+        curveModal.hidden = true;
+        activeCurveMetricId = null;
+        curveReadOnly = false;
+        renderTable();
+      };
+
+      if (curveBackdrop) {
+        curveBackdrop.addEventListener('click', closeCurveModal);
+      }
+      if (curveClose) {
+        curveClose.addEventListener('click', closeCurveModal);
+      }
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeCurveModal();
+        }
+      });
+
+      if (curveUnitsInput) {
+        curveUnitsInput.addEventListener('input', () => {
+          if (curveReadOnly) {
+            return;
+          }
+          const curve = getActiveCurve();
+          if (!curve) {
+            return;
+          }
+          curve.units = curveUnitsInput.value;
+          renderCurveChart();
+        });
+      }
+
+      if (curveXType) {
+        curveXType.addEventListener('change', () => {
+          if (curveReadOnly) {
+            return;
+          }
+          const curve = getActiveCurve();
+          if (!curve) {
+            return;
+          }
+          curve.xType = curveXType.value;
+          renderCurveTable();
+          renderCurveChart();
+        });
+      }
+
+      if (curveLayerSelect) {
+        curveLayerSelect.addEventListener('change', () => {
+          if (curveReadOnly) {
+            return;
+          }
+          const curve = getActiveCurve();
+          if (!curve) {
+            return;
+          }
+          curve.activeLayerId = curveLayerSelect.value;
+          renderCurveLayerControls(curve);
+          renderCurveTable();
+          renderCurveChart();
+        });
+      }
+
+      if (curveLayerAdd) {
+        curveLayerAdd.addEventListener('click', () => {
+          if (curveReadOnly) {
+            return;
+          }
+          const curve = getActiveCurve();
+          if (!curve) {
+            return;
+          }
+          const newLayer = {
+            id: generateId(),
+            name: `Stratification layer ${curve.layers.length + 1}`,
+            points: defaultCurveIndexValues.map((value) => ({
+              x: '',
+              y: value,
+              description: '',
+            })),
+          };
+          curve.layers.push(newLayer);
+          curve.activeLayerId = newLayer.id;
+          renderCurveLayerControls(curve);
+          renderCurveTable();
+          renderCurveChart();
+        });
+      }
+
+      if (curveLayerRemove) {
+        curveLayerRemove.addEventListener('click', () => {
+          if (curveReadOnly) {
+            return;
+          }
+          const curve = getActiveCurve();
+          if (!curve || curve.layers.length <= 1) {
+            return;
+          }
+          const activeLayer = getCurveLayer(curve);
+          const removeIndex = activeLayer
+            ? curve.layers.findIndex((layer) => layer.id === activeLayer.id)
+            : -1;
+          if (removeIndex >= 0) {
+            curve.layers.splice(removeIndex, 1);
+            curve.activeLayerId = curve.layers[0].id;
+            renderCurveLayerControls(curve);
+            renderCurveTable();
+            renderCurveChart();
+          }
+        });
+      }
+
+      if (curveLayerName) {
+        curveLayerName.addEventListener('input', () => {
+          if (curveReadOnly) {
+            return;
+          }
+          const curve = getActiveCurve();
+          const activeLayer = getCurveLayer(curve);
+          if (!curve || !activeLayer) {
+            return;
+          }
+          activeLayer.name = curveLayerName.value;
+          renderCurveLayerControls(curve);
+        });
+      }
+
+      if (curveReset) {
+        curveReset.addEventListener('click', () => {
+          if (curveReadOnly) {
+            return;
+          }
+          const curve = getActiveCurve();
+          const activeLayer = getCurveLayer(curve);
+          if (!curve || !activeLayer) {
+            return;
+          }
+          activeLayer.points = defaultCurveIndexValues.map((value) => ({
+            x: '',
+            y: value,
+            description: '',
+          }));
+          renderCurveTable();
+          renderCurveChart();
+        });
+      }
 
       const renderLibraryTable = () => {
         if (!libraryTableWrap) {
@@ -612,7 +1256,9 @@
         if (!libraryModal) {
           return;
         }
-        renderLibraryTable();
+        if (libraryModal && !libraryModal.hidden) {
+          renderLibraryTable();
+        }
         libraryModal.hidden = false;
         document.body.classList.add('modal-open');
       };
@@ -1333,16 +1979,31 @@
             detailsCell.colSpan = 5;
             const details = document.createElement('div');
             details.className = 'criteria-details';
-            details.innerHTML =
-              `<div class=\"criteria-block\"><strong>Context/Method</strong><div>Context: ${metric.context || '-'}</div><div>Method: ${metric.method || '-'}</div></div>` +
-              `<div class=\"criteria-block\"><strong>How to measure</strong><div>${metric.howToMeasure}</div></div>` +
-              `<div class=\"criteria-grid\">` +
-              `<div><strong>Optimal</strong><div>${metric.criteria.optimal}</div></div>` +
-              `<div><strong>Suboptimal</strong><div>${metric.criteria.suboptimal}</div></div>` +
-              `<div><strong>Marginal</strong><div>${metric.criteria.marginal}</div></div>` +
-              `<div><strong>Poor</strong><div>${metric.criteria.poor}</div></div>` +
-              `</div>` +
-              `<div class=\"criteria-block\"><strong>References</strong><div>${metric.references}</div></div>`;
+            const statementBlock = document.createElement('div');
+            statementBlock.className = 'criteria-block';
+            statementBlock.innerHTML = `<strong>Metric statement</strong><div>${
+              metric.metricStatement || '-'
+            }</div>`;
+            details.appendChild(statementBlock);
+
+            const curve = ensureCurve(activeScenario, metric.id);
+            const curveRow = document.createElement('div');
+            curveRow.className = 'reference-curve-row';
+            const curveLabel = document.createElement('span');
+            curveLabel.textContent = `Reference curve: ${curve?.name || 'Default'}`;
+            const curveButton = document.createElement('button');
+            curveButton.type = 'button';
+            curveButton.className = 'btn btn-small';
+            curveButton.textContent = 'View/Edit Curve';
+            curveButton.addEventListener('click', () => openCurveModal(metric.id));
+            curveRow.appendChild(curveLabel);
+            curveRow.appendChild(curveButton);
+            details.appendChild(curveRow);
+
+            if (curve) {
+              const summaryTable = buildCurveSummaryTable(curve);
+              details.appendChild(summaryTable);
+            }
             detailsCell.appendChild(details);
             detailsRow.appendChild(detailsCell);
 
@@ -1372,6 +2033,9 @@
             metricRatings.delete(metric.id);
             activeScenario.metricIds = Array.from(selectedMetricIds);
             delete activeScenario.ratings[metric.id];
+            if (activeScenario.curves) {
+              delete activeScenario.curves[metric.id];
+            }
             store.save();
             buildAddOptions();
             renderTable();
@@ -1434,6 +2098,10 @@
 
         scenario.metricIds = Array.from(selectedMetricIds);
         scenario.ratings = buildRatings(scenario.metricIds, scenario.ratings);
+        if (!scenario.curves) {
+          scenario.curves = {};
+        }
+        scenario.metricIds.forEach((id) => ensureCurve(scenario, id));
         store.save();
 
         if (nameInput) {
@@ -1519,6 +2187,7 @@
         metricRatings.set(metricId, metricRatings.get(metricId) || defaultRating);
         activeScenario.metricIds = Array.from(selectedMetricIds);
         activeScenario.ratings[metricId] = metricRatings.get(metricId);
+        ensureCurve(activeScenario, metricId);
         store.save();
         buildAddOptions();
         renderTable();
@@ -1533,6 +2202,7 @@
         metricRatings = new Map();
         activeScenario.metricIds = [];
         activeScenario.ratings = {};
+        activeScenario.curves = {};
         store.save();
         buildAddOptions();
         renderTable();
@@ -1574,8 +2244,10 @@
         });
       }
 
-      renderTabs();
-      applyScenario(store.active());
+      requestAnimationFrame(() => {
+        renderTabs();
+        applyScenario(store.active());
+      });
     } catch (error) {
       console.error('Screening assessment widget failed to load.', error);
       if (ui) {
