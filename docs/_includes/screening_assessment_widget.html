@@ -1,6 +1,12 @@
-<div class="screening-assessment widget" data-baseurl="{{ site.baseurl }}">
-  <div class="screening-assessment-fallback">
-    <p>This screening assessment widget needs JavaScript. Use the criteria table and scoring guidance if you prefer manual calculations.</p>
+<div
+  class="screening-assessment widget"
+  data-baseurl="{{ site.baseurl }}"
+  data-metrics-url="{{ '/assets/data/screening-metrics.tsv' | relative_url }}"
+  data-functions-url="{{ '/assets/data/functions.json' | relative_url }}"
+  data-mapping-url="{{ '/assets/data/cwa-mapping.json' | relative_url }}"
+>
+  <div class="screening-assessment-loading">
+    Loading screening assessment...
   </div>
   <div class="screening-assessment-ui" hidden>
     <div class="screening-assessment-layout">
