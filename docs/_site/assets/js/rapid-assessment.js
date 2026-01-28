@@ -99,7 +99,7 @@
 
       const criteriaMap = {};
       criteriaRaw.forEach((row) => {
-        const key = normalize(row.Indicator || row.Metric || '');
+        const key = normalize(row.Metric || row.Indicators || row.Indicator || '');
         if (!key) {
           return;
         }
@@ -125,12 +125,19 @@
           functionName,
           functionKey,
           functionStatement: row['Function statement'] || '',
-          indicator: row.Indicators || row.Indicator || '',
-          indicatorStatement: row['Indicator statements'] || row['Indicator statement'] || '',
+          indicator: row.Metric || row.Indicators || row.Indicator || '',
+          indicatorStatement:
+            row['Metric statements'] ||
+            row['Metric statement'] ||
+            row['Indicator statements'] ||
+            row['Indicator statement'] ||
+            '',
           context: row.Context || '',
           method: row.Method || '',
           howToMeasure: row['How to measure'] || '',
-          criteriaKey: normalize(row['Criteria key'] || row.CriteriaKey || row.Indicators || ''),
+          criteriaKey: normalize(
+            row['Criteria key'] || row.CriteriaKey || row.Metric || row.Indicators || ''
+          ),
         };
       });
 
@@ -206,8 +213,8 @@
         '<tr>' +
         '<th class="col-discipline">Discipline</th>' +
         '<th class="col-function">Function</th>' +
-        '<th class="col-indicator">Indicator</th>' +
-        '<th class="col-indicator-score">Indicator<br>score</th>' +
+        '<th class="col-indicator">Metric</th>' +
+        '<th class="col-indicator-score">Metric<br>score</th>' +
         '<th class="col-physical">Physical</th>' +
         '<th class="col-chemical">Chemical</th>' +
         '<th class="col-biological">Biological</th>' +
@@ -681,7 +688,7 @@
             (() => {
               const block = document.createElement('div');
               block.className = 'criteria-block';
-              block.innerHTML = `<strong>Indicator statement</strong><div>${
+              block.innerHTML = `<strong>Metric statement</strong><div>${
                 item.indicatorStatement || '-'
               }</div>`;
               return block;
