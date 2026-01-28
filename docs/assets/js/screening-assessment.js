@@ -6,10 +6,14 @@
 
   const baseUrl = container.dataset.baseurl || '';
   const assetPath = (path) => `${baseUrl}${path}`;
-  const dataUrl = assetPath('/assets/data/screening-metrics.tsv');
-  const functionsUrl = assetPath('/assets/data/functions.json');
-  const mappingUrl = assetPath('/assets/data/cwa-mapping.json');
+  const dataUrl =
+    container.dataset.metricsUrl || assetPath('/assets/data/screening-metrics.tsv');
+  const functionsUrl =
+    container.dataset.functionsUrl || assetPath('/assets/data/functions.json');
+  const mappingUrl =
+    container.dataset.mappingUrl || assetPath('/assets/data/cwa-mapping.json');
   const fallback = container.querySelector('.screening-assessment-fallback');
+  const loading = container.querySelector('.screening-assessment-loading');
   const ui = container.querySelector('.screening-assessment-ui');
 
   const ratingOptions = [
@@ -114,6 +118,15 @@
 
   const init = async () => {
     try {
+      if (fallback) {
+        fallback.hidden = true;
+      }
+      if (loading) {
+        loading.remove();
+      }
+      if (ui) {
+        ui.hidden = false;
+      }
       const [metricsResult, functionsResult, mappingResult] = await Promise.allSettled([
         fetchText(dataUrl),
         fetchJson(functionsUrl),
@@ -388,6 +401,7 @@
 
       let selectedMetricIds = new Set();
       let metricRatings = new Map();
+      const expandedMetrics = new Set();
       let activeScenario = null;
       let librarySearchTerm = '';
       let libraryDiscipline = 'all';
@@ -924,7 +938,7 @@
       }
 
       const renderLibraryTable = () => {
-        if (!libraryTableWrap) {
+        if (!libraryTableWrap || !libraryModal || libraryModal.hidden) {
           return;
         }
         libraryTableWrap.innerHTML = '';
@@ -1256,11 +1270,9 @@
         if (!libraryModal) {
           return;
         }
-        if (libraryModal && !libraryModal.hidden) {
-          renderLibraryTable();
-        }
         libraryModal.hidden = false;
         document.body.classList.add('modal-open');
+        renderLibraryTable();
       };
 
       const closeLibrary = () => {
@@ -1655,18 +1667,21 @@
           }));
         }
 
-        const metricRows = [];
-
-        const groupStarts = new Map();
-        for (let i = 0; i < rowsToRender.length; ) {
-          const discipline = rowsToRender[i].discipline;
-          let j = i;
-          while (j < rowsToRender.length && rowsToRender[j].discipline === discipline) {
-            j += 1;
+        const renderRows = [];
+        rowsToRender.forEach((rowItem) => {
+          renderRows.push(rowItem);
+          if (rowItem.type === 'metric' && expandedMetrics.has(rowItem.metric.id)) {
+            renderRows.push({
+              type: 'criteria',
+              discipline: rowItem.discipline,
+              metric: rowItem.metric,
+              functionId: rowItem.functionId,
+              functionMeta: rowItem.functionMeta,
+            });
           }
-          groupStarts.set(i, j - i);
-          i = j;
-        }
+        });
+
+        const metricRows = [];
 
         const disciplineActive = new Map();
         const functionActive = new Map();
@@ -1680,7 +1695,7 @@
           }
         });
 
-        if (rowsToRender.length === 0) {
+        if (renderRows.length === 0) {
           const emptyRow = document.createElement('tr');
           const emptyCell = document.createElement('td');
           emptyCell.colSpan = 7;
@@ -1692,130 +1707,55 @@
           return;
         }
 
-        const updateDisciplineRowSpans = () => {
-          const rows = Array.from(tbody.querySelectorAll('tr'));
-          const anchors = [];
-          rows.forEach((row, rowIndex) => {
-            const cell = row.querySelector('td.discipline-cell');
-            if (cell) {
-              anchors.push({ cell, rowIndex });
-            }
-          });
-          anchors.forEach((anchor, idx) => {
-            const start = anchor.rowIndex;
-            const end = idx + 1 < anchors.length ? anchors[idx + 1].rowIndex : rows.length;
-            let count = 0;
-            for (let i = start; i < end; i += 1) {
-              if (rows[i].hidden || rows[i].style.display === 'none') {
-                continue;
-              }
-              count += 1;
-            }
-            anchor.cell.rowSpan = Math.max(count, 1);
-          });
-        };
-
-        const updateFunctionRowSpans = () => {
-          const rows = Array.from(tbody.querySelectorAll('tr'));
-          let i = 0;
-          while (i < rows.length) {
-            const row = rows[i];
-            const rowType = row.dataset.rowType;
-            if (rowType === 'criteria') {
-              i += 1;
-              continue;
-            }
-            if (rowType === 'placeholder') {
-              const functionCell = row.querySelector('.col-function');
-              if (functionCell) {
-                functionCell.style.display = '';
-                functionCell.rowSpan = 1;
-              }
-              ['.col-physical', '.col-chemical', '.col-biological'].forEach((sel) => {
-                const cell = row.querySelector(sel);
-                if (cell) {
-                  cell.style.display = '';
-                  cell.rowSpan = 1;
-                }
-              });
-              i += 1;
-              continue;
-            }
-
-            const functionId = row.dataset.functionId || '';
-            const groupRows = [];
-            let expandedCriteria = 0;
-            let k = i;
-            while (k < rows.length) {
-              const current = rows[k];
-              const currentType = current.dataset.rowType;
-              if (currentType === 'criteria') {
-                if (current.dataset.functionId === functionId && !current.hidden) {
-                  expandedCriteria += 1;
-                }
-                k += 1;
-                continue;
-              }
-              if (currentType === 'metric' && current.dataset.functionId === functionId) {
-                groupRows.push(current);
-                k += 1;
-                continue;
-              }
+        for (let i = 0; i < renderRows.length; i += 1) {
+          const rowItem = renderRows[i];
+          if (rowItem._disciplineSkip) {
+            continue;
+          }
+          let span = 1;
+          for (let j = i + 1; j < renderRows.length; j += 1) {
+            if (renderRows[j].discipline !== rowItem.discipline) {
               break;
             }
-
-            if (groupRows.length === 0) {
-              i = k;
-              continue;
-            }
-
-            const functionSpan = groupRows.length + expandedCriteria;
-            const functionCell = groupRows[0].querySelector('.col-function');
-            if (functionCell) {
-              functionCell.style.display = '';
-              functionCell.rowSpan = Math.max(functionSpan, 1);
-            }
-            groupRows.slice(1).forEach((r) => {
-              const cell = r.querySelector('.col-function');
-              if (cell) {
-                cell.style.display = 'none';
-                cell.rowSpan = 1;
-              }
-            });
-
-            const mergeWeights = expandedCriteria === 0 && groupRows.length > 1;
-            const weightSelectors = ['.col-physical', '.col-chemical', '.col-biological'];
-            weightSelectors.forEach((sel) => {
-              const firstCell = groupRows[0].querySelector(sel);
-              if (!firstCell) {
-                return;
-              }
-              if (mergeWeights) {
-                firstCell.style.display = '';
-                firstCell.rowSpan = groupRows.length;
-                groupRows.slice(1).forEach((r) => {
-                  const cell = r.querySelector(sel);
-                  if (cell) {
-                    cell.style.display = 'none';
-                    cell.rowSpan = 1;
-                  }
-                });
-              } else {
-                groupRows.forEach((r) => {
-                  const cell = r.querySelector(sel);
-                  if (cell) {
-                    cell.style.display = '';
-                    cell.rowSpan = 1;
-                  }
-                });
-              }
-            });
-
-            i = k;
+            span += 1;
+            renderRows[j]._disciplineSkip = true;
           }
-        };
+          rowItem._disciplineSpan = span;
+        }
 
-        rowsToRender.forEach((rowItem, index) => {
+        for (let i = 0; i < renderRows.length; i += 1) {
+          const rowItem = renderRows[i];
+          if (rowItem._functionSkip || rowItem.type === 'criteria') {
+            continue;
+          }
+          let metricCount = 0;
+          let criteriaCount = 0;
+          let j = i;
+          while (j < renderRows.length && renderRows[j].functionId === rowItem.functionId) {
+            if (renderRows[j].type === 'criteria') {
+              criteriaCount += 1;
+            } else {
+              metricCount += 1;
+            }
+            if (j > i) {
+              renderRows[j]._functionSkip = true;
+            }
+            j += 1;
+          }
+          rowItem._functionSpan = metricCount + criteriaCount;
+          const mergeWeights = criteriaCount === 0 && metricCount > 1;
+          rowItem._weightSpan = mergeWeights ? metricCount : 1;
+          if (mergeWeights) {
+            for (let k = i + 1; k < j; k += 1) {
+              if (renderRows[k].type === 'metric') {
+                renderRows[k]._weightSkip = true;
+              }
+            }
+          }
+          i = j - 1;
+        }
+
+        renderRows.forEach((rowItem, index) => {
           const metric = rowItem.type === 'metric' ? rowItem.metric : null;
           const functionMeta = rowItem.functionMeta || (rowItem.functionId ? functionById.get(rowItem.functionId) : null);
           const functionName = metric ? metric.functionName : functionMeta ? functionMeta.name : '';
@@ -1826,18 +1766,21 @@
           const row = document.createElement('tr');
           row.classList.add(slugCategory(rowItem.discipline));
           row.dataset.rowType = rowItem.type;
+          row.dataset.discipline = rowItem.discipline;
           const rowFunctionId = rowItem.functionId || `row-${index}`;
           row.dataset.functionId = rowFunctionId;
           if (rowItem.type === 'placeholder') {
             row.classList.add('inactive-row');
           }
+          if (rowItem.type === 'criteria') {
+            row.classList.add('criteria-row');
+          }
 
-          const groupSize = groupStarts.get(index);
-          if (groupSize) {
+          if (!rowItem._disciplineSkip) {
             const disciplineCell = document.createElement('td');
             disciplineCell.textContent = rowItem.discipline;
             disciplineCell.className = 'discipline-cell col-discipline';
-            disciplineCell.rowSpan = groupSize;
+            disciplineCell.rowSpan = rowItem._disciplineSpan || 1;
             if (disciplineActive.get(rowItem.discipline)) {
               disciplineCell.classList.add(
                 'screening-group-active',
@@ -1846,54 +1789,103 @@
             }
             row.appendChild(disciplineCell);
           }
-          const functionCell = document.createElement('td');
-          functionCell.className = 'col-function';
-          if (functionActive.get(rowFunctionId)) {
-            functionCell.classList.add(
-              'screening-group-active',
-              slugCategory(rowItem.discipline)
-            );
+          let functionScoreValue = null;
+          let functionScoreRange = null;
+          if (!rowItem._functionSkip) {
+            const functionCell = document.createElement('td');
+            functionCell.className = 'col-function';
+            functionCell.rowSpan = rowItem._functionSpan || 1;
+            if (functionActive.get(rowFunctionId)) {
+              functionCell.classList.add(
+                'screening-group-active',
+                slugCategory(rowItem.discipline)
+              );
+            }
+            const functionNameLine = document.createElement('div');
+            functionNameLine.className = 'function-title';
+            const functionNameText = document.createElement('span');
+            functionNameText.textContent = functionName;
+            functionNameLine.appendChild(functionNameText);
+            const functionToggle = document.createElement('button');
+            functionToggle.type = 'button';
+            functionToggle.className = 'criteria-toggle function-toggle';
+            functionToggle.innerHTML = '&#9662;';
+            functionToggle.setAttribute('aria-expanded', 'false');
+            functionToggle.setAttribute('aria-label', 'Toggle function statement');
+            functionNameLine.appendChild(functionToggle);
+            functionCell.appendChild(functionNameLine);
+            const statementLine = document.createElement('div');
+            statementLine.className = 'function-statement';
+            statementLine.textContent = functionStatement;
+            statementLine.hidden = true;
+            functionCell.appendChild(statementLine);
+            const functionScoreLine = document.createElement('div');
+            functionScoreLine.className = 'score-input function-score-inline';
+            functionScoreRange = document.createElement('input');
+            functionScoreRange.type = 'range';
+            functionScoreRange.min = '0';
+            functionScoreRange.max = '15';
+            functionScoreRange.step = '1';
+            functionScoreRange.disabled = true;
+            functionScoreValue = document.createElement('span');
+            functionScoreValue.className = 'score-value';
+            functionScoreValue.textContent = '-';
+            functionScoreLine.appendChild(functionScoreRange);
+            functionScoreLine.appendChild(functionScoreValue);
+            functionCell.appendChild(functionScoreLine);
+            functionToggle.addEventListener('click', () => {
+              if (!statementLine.textContent) {
+                return;
+              }
+              const isOpen = !statementLine.hidden;
+              statementLine.hidden = isOpen;
+              functionToggle.setAttribute('aria-expanded', String(!isOpen));
+            });
+            row.appendChild(functionCell);
           }
-          const functionNameLine = document.createElement('div');
-          functionNameLine.className = 'function-title';
-          const functionNameText = document.createElement('span');
-          functionNameText.textContent = functionName;
-          functionNameLine.appendChild(functionNameText);
-          const functionToggle = document.createElement('button');
-          functionToggle.type = 'button';
-          functionToggle.className = 'criteria-toggle function-toggle';
-          functionToggle.innerHTML = '&#9662;';
-          functionToggle.setAttribute('aria-expanded', 'false');
-          functionToggle.setAttribute('aria-label', 'Toggle function statement');
-          functionNameLine.appendChild(functionToggle);
-          functionCell.appendChild(functionNameLine);
-          const statementLine = document.createElement('div');
-          statementLine.className = 'function-statement';
-          statementLine.textContent = functionStatement;
-          statementLine.hidden = true;
-          functionCell.appendChild(statementLine);
-          const functionScoreLine = document.createElement('div');
-          functionScoreLine.className = 'score-input function-score-inline';
-          const functionScoreRange = document.createElement('input');
-          functionScoreRange.type = 'range';
-          functionScoreRange.min = '0';
-          functionScoreRange.max = '15';
-          functionScoreRange.step = '1';
-          functionScoreRange.disabled = true;
-          const functionScoreValue = document.createElement('span');
-          functionScoreValue.className = 'score-value';
-          functionScoreValue.textContent = '-';
-          functionScoreLine.appendChild(functionScoreRange);
-          functionScoreLine.appendChild(functionScoreValue);
-          functionCell.appendChild(functionScoreLine);
-          functionToggle.addEventListener('click', () => {
-            if (!statementLine.textContent) {
+          if (rowItem.type === 'criteria') {
+            const detailsCell = document.createElement('td');
+            detailsCell.colSpan = 5;
+            const details = document.createElement('div');
+            details.className = 'criteria-details';
+            const detailsMetric = rowItem.metric || metric;
+            if (!detailsMetric) {
+              detailsCell.textContent = 'Details unavailable.';
+              row.appendChild(detailsCell);
+              tbody.appendChild(row);
               return;
             }
-            const isOpen = !statementLine.hidden;
-            statementLine.hidden = isOpen;
-            functionToggle.setAttribute('aria-expanded', String(!isOpen));
-          });
+            const statementBlock = document.createElement('div');
+            statementBlock.className = 'criteria-block';
+            statementBlock.innerHTML = `<strong>Metric statement</strong><div>${
+              detailsMetric.metricStatement || '-'
+            }</div>`;
+            details.appendChild(statementBlock);
+
+            const curve = ensureCurve(activeScenario, detailsMetric.id);
+            const curveRow = document.createElement('div');
+            curveRow.className = 'reference-curve-row';
+            const curveLabel = document.createElement('span');
+            curveLabel.textContent = `Reference curve: ${curve?.name || 'Default'}`;
+            const curveButton = document.createElement('button');
+            curveButton.type = 'button';
+            curveButton.className = 'btn btn-small';
+            curveButton.textContent = 'View/Edit Curve';
+            curveButton.addEventListener('click', () => openCurveModal(detailsMetric.id));
+            curveRow.appendChild(curveLabel);
+            curveRow.appendChild(curveButton);
+            details.appendChild(curveRow);
+
+            if (curve) {
+              const summaryTable = buildCurveSummaryTable(curve);
+              details.appendChild(summaryTable);
+            }
+            detailsCell.appendChild(details);
+            row.appendChild(detailsCell);
+            tbody.appendChild(row);
+            return;
+          }
+
           const metricCell = document.createElement('td');
           metricCell.className = 'col-metric metric-cell';
           const metricText = document.createElement('span');
@@ -1906,6 +1898,7 @@
           const scoreCell = document.createElement('td');
           scoreCell.className = 'col-metric-score';
           let scoreSelect = null;
+          let criteriaBtn = null;
           if (rowItem.type === 'metric') {
             scoreSelect = document.createElement('select');
             scoreSelect.className = 'metric-score-select';
@@ -1917,21 +1910,18 @@
             });
             scoreSelect.value = metricRatings.get(metric.id) || defaultRating;
             scoreCell.appendChild(scoreSelect);
-          } else {
-            scoreCell.textContent = '-';
-          }
 
-          let criteriaBtn = null;
-          let detailsId = null;
-          if (rowItem.type === 'metric') {
             criteriaBtn = document.createElement('button');
             criteriaBtn.type = 'button';
             criteriaBtn.className = 'criteria-toggle';
             criteriaBtn.innerHTML = '&#9662;';
-            detailsId = `criteria-${metric.id}`;
-            criteriaBtn.setAttribute('aria-expanded', 'false');
-            criteriaBtn.setAttribute('aria-controls', detailsId);
+            criteriaBtn.setAttribute(
+              'aria-expanded',
+              expandedMetrics.has(metric.id) ? 'true' : 'false'
+            );
             criteriaBtn.setAttribute('aria-label', 'Toggle criteria details');
+          } else {
+            scoreCell.textContent = '-';
           }
 
           const removeBtn = document.createElement('button');
@@ -1950,69 +1940,35 @@
           metricCell.appendChild(metricActions);
 
           const mapping = rowItem.functionId ? mappingById[rowItem.functionId] : null;
-          const physicalCell = document.createElement('td');
-          const chemicalCell = document.createElement('td');
-          const biologicalCell = document.createElement('td');
-          physicalCell.className = 'weight-cell col-physical';
-          chemicalCell.className = 'weight-cell col-chemical';
-          biologicalCell.className = 'weight-cell col-biological';
-          physicalCell.textContent = mapping ? weightLabelFromCode(mapping.physical) : '-';
-          chemicalCell.textContent = mapping ? weightLabelFromCode(mapping.chemical) : '-';
-          biologicalCell.textContent = mapping ? weightLabelFromCode(mapping.biological) : '-';
-
-          row.appendChild(functionCell);
           row.appendChild(metricCell);
           row.appendChild(scoreCell);
-          row.appendChild(physicalCell);
-          row.appendChild(chemicalCell);
-          row.appendChild(biologicalCell);
+          if (!rowItem._weightSkip && rowItem.type !== 'criteria') {
+            const physicalCell = document.createElement('td');
+            const chemicalCell = document.createElement('td');
+            const biologicalCell = document.createElement('td');
+            physicalCell.className = 'weight-cell col-physical';
+            chemicalCell.className = 'weight-cell col-chemical';
+            biologicalCell.className = 'weight-cell col-biological';
+            physicalCell.textContent = mapping ? weightLabelFromCode(mapping.physical) : '-';
+            chemicalCell.textContent = mapping ? weightLabelFromCode(mapping.chemical) : '-';
+            biologicalCell.textContent = mapping ? weightLabelFromCode(mapping.biological) : '-';
+            const weightSpan = rowItem._weightSpan || 1;
+            physicalCell.rowSpan = weightSpan;
+            chemicalCell.rowSpan = weightSpan;
+            biologicalCell.rowSpan = weightSpan;
+            row.appendChild(physicalCell);
+            row.appendChild(chemicalCell);
+            row.appendChild(biologicalCell);
+          }
 
-          let detailsRow = null;
           if (rowItem.type === 'metric') {
-            detailsRow = document.createElement('tr');
-            detailsRow.id = detailsId;
-            detailsRow.className = 'criteria-row';
-            detailsRow.hidden = true;
-            detailsRow.dataset.rowType = 'criteria';
-            detailsRow.dataset.functionId = rowFunctionId;
-            const detailsCell = document.createElement('td');
-            detailsCell.colSpan = 5;
-            const details = document.createElement('div');
-            details.className = 'criteria-details';
-            const statementBlock = document.createElement('div');
-            statementBlock.className = 'criteria-block';
-            statementBlock.innerHTML = `<strong>Metric statement</strong><div>${
-              metric.metricStatement || '-'
-            }</div>`;
-            details.appendChild(statementBlock);
-
-            const curve = ensureCurve(activeScenario, metric.id);
-            const curveRow = document.createElement('div');
-            curveRow.className = 'reference-curve-row';
-            const curveLabel = document.createElement('span');
-            curveLabel.textContent = `Reference curve: ${curve?.name || 'Default'}`;
-            const curveButton = document.createElement('button');
-            curveButton.type = 'button';
-            curveButton.className = 'btn btn-small';
-            curveButton.textContent = 'View/Edit Curve';
-            curveButton.addEventListener('click', () => openCurveModal(metric.id));
-            curveRow.appendChild(curveLabel);
-            curveRow.appendChild(curveButton);
-            details.appendChild(curveRow);
-
-            if (curve) {
-              const summaryTable = buildCurveSummaryTable(curve);
-              details.appendChild(summaryTable);
-            }
-            detailsCell.appendChild(details);
-            detailsRow.appendChild(detailsCell);
-
             criteriaBtn.addEventListener('click', () => {
-              const isOpen = !detailsRow.hidden;
-              detailsRow.hidden = isOpen;
-              criteriaBtn.setAttribute('aria-expanded', String(!isOpen));
-              updateDisciplineRowSpans();
-              updateFunctionRowSpans();
+              if (expandedMetrics.has(metric.id)) {
+                expandedMetrics.delete(metric.id);
+              } else {
+                expandedMetrics.add(metric.id);
+              }
+              renderTable();
             });
 
             scoreSelect.addEventListener('change', () => {
@@ -2042,20 +1998,16 @@
           });
 
           tbody.appendChild(row);
-          if (detailsRow) {
-            tbody.appendChild(detailsRow);
+          if (functionScoreValue && functionScoreRange) {
+            metricRows.push({
+              metric: metric || { functionId: rowItem.functionId },
+              functionScoreValue,
+              functionScoreRange,
+            });
           }
-          metricRows.push({
-            metric: metric || { functionId: rowItem.functionId },
-            functionScoreValue,
-            functionScoreRange,
-          });
         });
 
         updateScores(metricRows);
-        updateDisciplineRowSpans();
-        updateFunctionRowSpans();
-        renderLibraryTable();
       };
 
       const renderTabs = () => {
@@ -2246,16 +2198,21 @@
 
       requestAnimationFrame(() => {
         renderTabs();
-        applyScenario(store.active());
+        setTimeout(() => {
+          applyScenario(store.active());
+        }, 0);
       });
     } catch (error) {
       console.error('Screening assessment widget failed to load.', error);
+      if (loading) {
+        loading.remove();
+      }
       if (ui) {
         const message =
           error && error.message
             ? `Screening assessment widget failed to load. ${error.message}`
             : 'Screening assessment widget failed to load.';
-        ui.textContent = message;
+        ui.innerHTML = `<div class="widget-error">${message}</div>`;
         ui.hidden = false;
       }
     }

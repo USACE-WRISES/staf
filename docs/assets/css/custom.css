@@ -1718,6 +1718,15 @@ body.modal-open {
   white-space: normal;
 }
 
+.screening-table tr.criteria-row td {
+  background: #f9f9f9 !important;
+}
+
+.screening-table .criteria-details table th,
+.screening-table .criteria-details table td {
+  background: #f9f9f9;
+}
+
 .screening-table th.col-metric-score,
 .screening-table th.col-function-score,
 .screening-table th.col-indicator-score,
