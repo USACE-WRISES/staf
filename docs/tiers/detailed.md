@@ -12,6 +12,11 @@ description: "Intensive assessment for compliance, crediting, and monitoring."
   <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
 </div>
 
+## Detailed Assessment Development
+Use the widget to build detailed assessments, enter field values, and translate them into metric index scores using reference curves. Function scores and outcome sub-indices roll up automatically.
+
+{% include detailed_assessment_widget.html %}
+
 ## When to use
 - High-risk decisions and regulatory compliance
 - Mitigation crediting or debiting

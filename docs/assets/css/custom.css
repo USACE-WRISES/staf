@@ -569,7 +569,8 @@ h3,
 }
 
 .screening-assessment .btn:hover,
-.rapid-assessment .btn:hover {
+.rapid-assessment .btn:hover,
+.detailed-assessment .btn:hover {
   background: #e8eef9;
   border-color: #3c6ec3;
   box-shadow: 0 0 0 2px rgba(60, 110, 195, 0.2);
@@ -579,7 +580,9 @@ h3,
 .screening-assessment .btn:focus,
 .screening-assessment .btn:focus-visible,
 .rapid-assessment .btn:focus,
-.rapid-assessment .btn:focus-visible {
+.rapid-assessment .btn:focus-visible,
+.detailed-assessment .btn:focus,
+.detailed-assessment .btn:focus-visible {
   outline: none;
   border-color: #2f5fa6;
   box-shadow: 0 0 0 3px rgba(60, 110, 195, 0.35);
@@ -593,7 +596,11 @@ h3,
 .rapid-assessment .btn:disabled,
 .rapid-assessment .btn:disabled:hover,
 .rapid-assessment .btn:disabled:focus,
-.rapid-assessment .btn:disabled:focus-visible {
+.rapid-assessment .btn:disabled:focus-visible,
+.detailed-assessment .btn:disabled,
+.detailed-assessment .btn:disabled:hover,
+.detailed-assessment .btn:disabled:focus,
+.detailed-assessment .btn:disabled:focus-visible {
   background: #f0f0f0;
   border-color: #cfcfcf;
   box-shadow: none;
@@ -870,6 +877,363 @@ body.modal-open {
   max-width: 100%;
   margin: 0 auto;
   transform: none;
+}
+
+.detailed-assessment.widget {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.detailed-tabs-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  border-bottom: 1px solid #d0d0d0;
+  padding-bottom: 0.35rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.detailed-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.detailed-tab-add {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #cfcfcf;
+  background: #ffffff;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detailed-settings-panel {
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.detailed-controls {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 12px;
+  padding: 0.6rem;
+  overflow-x: auto;
+}
+
+.detailed-controls input[type="search"] {
+  flex: 0 1 160px;
+  min-width: 140px;
+  max-width: 200px;
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #cfcfcf;
+}
+
+.detailed-controls select {
+  flex: 0 1 220px;
+  max-width: 240px;
+  min-width: 140px;
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #cfcfcf;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detailed-controls .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.detailed-controls .metric-add-select {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: none;
+  min-width: 220px;
+}
+
+.detailed-table-wrap {
+  overflow-x: auto;
+  border: 1px solid #d0d0d0;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.detailed-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.detailed-table th,
+.detailed-table td {
+  border: 1px solid #b5b5b5;
+  padding: 0.3rem 0.45rem;
+  vertical-align: top;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.detailed-table th {
+  background: #f3f3f3;
+  font-size: 0.85rem;
+}
+
+.detailed-table .col-discipline {
+  width: 14ch;
+  max-width: 14ch;
+  white-space: nowrap;
+}
+
+.detailed-table .col-function {
+  width: 22ch;
+  max-width: 22ch;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+.detailed-table .col-metric {
+  width: 26ch;
+  max-width: 26ch;
+}
+
+.detailed-table .col-field {
+  width: 12ch;
+  max-width: 12ch;
+}
+
+.detailed-table .col-index,
+.detailed-table .col-physical,
+.detailed-table .col-chemical,
+.detailed-table .col-biological {
+  width: 9ch;
+  max-width: 9ch;
+  text-align: center;
+}
+
+.detailed-table .metric-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.detailed-table .field-cell input {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #cfcfcf;
+  padding: 0.2rem 0.35rem;
+  font: inherit;
+}
+
+.detailed-table .function-score-wrap {
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.detailed-table .function-score-wrap input[type="range"] {
+  width: 120px;
+}
+
+.detailed-table .criteria-row td {
+  background: #f9f9f9 !important;
+}
+
+.criteria-details-cell {
+  padding: 0.5rem 0.6rem;
+}
+
+.reference-curve-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.reference-curve-row span {
+  font-weight: 600;
+}
+
+.detailed-curve-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detailed-curve-modal[hidden] {
+  display: none;
+}
+
+.detailed-curve-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.detailed-curve-dialog {
+  position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #cfcfcf;
+  width: min(1100px, 92vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.curve-header,
+.curve-footer {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.curve-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.curve-subtitle {
+  margin: 0.25rem 0 0;
+  color: #555555;
+  font-size: 0.9rem;
+}
+
+.curve-footer {
+  border-top: 1px solid #d0d0d0;
+  border-bottom: none;
+}
+
+.curve-body {
+  padding: 0.75rem 1rem 1rem;
+  overflow: auto;
+}
+
+.curve-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.curve-field {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: #444444;
+}
+
+.curve-field input,
+.curve-field select {
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #cfcfcf;
+}
+
+.curve-layer-bar,
+.curve-layer-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+.curve-layer-title {
+  font-weight: 600;
+}
+
+.curve-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(260px, 1fr) minmax(240px, 0.9fr);
+  align-items: start;
+}
+
+.curve-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.9rem;
+}
+
+.curve-table th,
+.curve-table td {
+  border: 1px solid #cfcfcf;
+  padding: 0.25rem 0.35rem;
+}
+
+.curve-table th {
+  background: #f3f3f3;
+  text-align: left;
+}
+
+.curve-table input {
+  width: 100%;
+  padding: 0.2rem 0.3rem;
+  border-radius: 6px;
+  border: 1px solid #cfcfcf;
+  font: inherit;
+  background: #ffffff;
+}
+
+.curve-table .btn {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.8rem;
+}
+
+.curve-table td:nth-child(3),
+.curve-table td:nth-child(4) {
+  text-align: center;
+}
+
+.detailed-table .empty-row td {
+  text-align: center;
+  font-style: italic;
+  color: #666666;
+  background: #f9f9f9;
+}
+
+@media (max-width: 960px) {
+  .curve-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.curve-chart {
+  width: 100%;
+  height: auto;
+  border: 1px solid #d0d0d0;
+  border-radius: 10px;
+  background: #fafafa;
 }
 
 .screening-assessment-sidebar {
@@ -1535,6 +1899,10 @@ body.modal-open {
   cursor: default;
 }
 
+.criteria-remove {
+  font-weight: 600;
+}
+
 .rapid-table .indicator-cell .criteria-toggle {
   margin-left: 0.35rem;
   padding: 0.05rem 0.25rem;
@@ -1748,6 +2116,10 @@ body.modal-open {
   background: #d9e2f3;
 }
 
+.detailed-table tr.category-hydrology td {
+  background: #d9e2f3;
+}
+
 .functions-table tr.category-hydraulics td {
   background: #b9cbe6;
 }
@@ -1757,6 +2129,10 @@ body.modal-open {
 }
 
 .screening-table tr.category-hydraulics td {
+  background: #b9cbe6;
+}
+
+.detailed-table tr.category-hydraulics td {
   background: #b9cbe6;
 }
 
@@ -1772,6 +2148,10 @@ body.modal-open {
   background: #f7e1d1;
 }
 
+.detailed-table tr.category-geomorphology td {
+  background: #f7e1d1;
+}
+
 .functions-table tr.category-physicochemistry td {
   background: #f3e9c4;
 }
@@ -1784,6 +2164,10 @@ body.modal-open {
   background: #f3e9c4;
 }
 
+.detailed-table tr.category-physicochemistry td {
+  background: #f3e9c4;
+}
+
 .functions-table tr.category-biology td {
   background: #dbead2;
 }
@@ -1793,6 +2177,10 @@ body.modal-open {
 }
 
 .screening-table tr.category-biology td {
+  background: #dbead2;
+}
+
+.detailed-table tr.category-biology td {
   background: #dbead2;
 }
 
