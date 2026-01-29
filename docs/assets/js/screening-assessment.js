@@ -8,6 +8,8 @@
   const assetPath = (path) => `${baseUrl}${path}`;
   const dataUrl =
     container.dataset.metricsUrl || assetPath('/assets/data/screening-metrics.tsv');
+  const curvesUrl =
+    container.dataset.curvesUrl || assetPath('/assets/data/screening-reference-curves.json');
   const functionsUrl =
     container.dataset.functionsUrl || assetPath('/assets/data/functions.json');
   const mappingUrl =
@@ -127,11 +129,13 @@
       if (ui) {
         ui.hidden = false;
       }
-      const [metricsResult, functionsResult, mappingResult] = await Promise.allSettled([
-        fetchText(dataUrl),
-        fetchJson(functionsUrl),
-        fetchJson(mappingUrl),
-      ]);
+      const [metricsResult, functionsResult, mappingResult, curvesResult] =
+        await Promise.allSettled([
+          fetchText(dataUrl),
+          fetchJson(functionsUrl),
+          fetchJson(mappingUrl),
+          curvesUrl ? fetchJson(curvesUrl) : Promise.resolve(null),
+        ]);
 
       if (metricsResult.status !== 'fulfilled') {
         throw new Error('Failed to load screening metrics.');
@@ -162,6 +166,10 @@
         acc[item.id] = item;
         return acc;
       }, {});
+      const curveOverrides =
+        curvesResult && curvesResult.status === 'fulfilled' && curvesResult.value
+          ? curvesResult.value.curves || {}
+          : {};
 
       const metrics = metricsRaw.map((row, index) => {
         const functionKey = normalizeText(row.Function || row.function || '');
@@ -254,12 +262,43 @@
 
       const cloneCurve = (curve) => JSON.parse(JSON.stringify(curve));
 
+      const normalizeCurve = (curve, metric) => {
+        if (!curve) {
+          return buildDefaultCurve(metric);
+        }
+        const xType = curve.xType || curve.x_type || 'qualitative';
+        const units = curve.units || '';
+        const name = curve.name || 'Default';
+        const layers = Array.isArray(curve.layers) && curve.layers.length > 0 ? curve.layers : [];
+        if (!layers.length) {
+          return buildDefaultCurve(metric);
+        }
+        const normalizedLayers = layers.map((layer) => ({
+          id: layer.id || generateId(),
+          name: layer.name || 'Default',
+          points: Array.isArray(layer.points)
+            ? layer.points.map((point) => ({
+                x: point.x ?? '',
+                y: point.y ?? '',
+                description: point.description ?? '',
+              }))
+            : [],
+        }));
+        return {
+          name,
+          xType,
+          units,
+          layers: normalizedLayers,
+          activeLayerId: curve.activeLayerId || normalizedLayers[0].id,
+        };
+      };
+
       const buildCurveMap = (metricIds) => {
         const curves = {};
         metricIds.forEach((id) => {
           const metric = metricById.get(id);
           if (metric) {
-            curves[id] = buildDefaultCurve(metric);
+            curves[id] = normalizeCurve(curveOverrides[id], metric);
           }
         });
         return curves;
@@ -275,7 +314,7 @@
         if (!scenario.curves[metricId]) {
           const metric = metricById.get(metricId);
           if (metric) {
-            scenario.curves[metricId] = buildDefaultCurve(metric);
+            scenario.curves[metricId] = normalizeCurve(curveOverrides[metricId], metric);
           }
         }
         return scenario.curves[metricId] || null;
@@ -850,6 +889,7 @@
           renderCurveLayerControls(curve);
           renderCurveTable();
           renderCurveChart();
+          renderTable();
         });
       }
 
@@ -914,6 +954,7 @@
           }
           activeLayer.name = curveLayerName.value;
           renderCurveLayerControls(curve);
+          renderTable();
         });
       }
 
@@ -1863,10 +1904,12 @@
             details.appendChild(statementBlock);
 
             const curve = ensureCurve(activeScenario, detailsMetric.id);
-            const curveRow = document.createElement('div');
-            curveRow.className = 'reference-curve-row';
-            const curveLabel = document.createElement('span');
-            curveLabel.textContent = `Reference curve: ${curve?.name || 'Default'}`;
+        const curveRow = document.createElement('div');
+        curveRow.className = 'reference-curve-row';
+        const curveLabel = document.createElement('span');
+        const activeLayer = curve ? getCurveLayer(curve) : null;
+        const curveLabelText = activeLayer?.name || curve?.name || 'Default';
+        curveLabel.textContent = `Reference curve: ${curveLabelText}`;
             const curveButton = document.createElement('button');
             curveButton.type = 'button';
             curveButton.className = 'btn btn-small';
