@@ -345,6 +345,7 @@
           criteriaOverrides: {},
           showAdvancedScoring: false,
           showRollupComputations: false,
+          showCondensedView: false,
         };
       };
 
@@ -377,6 +378,7 @@
             : {},
           showAdvancedScoring: Boolean(source.showAdvancedScoring),
           showRollupComputations: Boolean(source.showRollupComputations),
+          showCondensedView: Boolean(source.showCondensedView),
         };
         store.scenarios.push(newScenario);
         store.activeId = newScenario.id;
@@ -428,6 +430,7 @@
           criteriaOverrides: scenario.criteriaOverrides ? { ...scenario.criteriaOverrides } : {},
           showAdvancedScoring: Boolean(scenario.showAdvancedScoring),
           showRollupComputations: Boolean(scenario.showRollupComputations),
+          showCondensedView: Boolean(scenario.showCondensedView),
         };
       };
 
@@ -1527,8 +1530,19 @@
       rollupToggleLabel.appendChild(rollupToggle);
       rollupToggleLabel.appendChild(rollupToggleText);
 
+      const condensedToggleLabel = document.createElement('label');
+      condensedToggleLabel.className = 'screening-advanced-toggle';
+      const condensedToggle = document.createElement('input');
+      condensedToggle.type = 'checkbox';
+      condensedToggle.className = 'screening-condensed-toggle-input';
+      const condensedToggleText = document.createElement('span');
+      condensedToggleText.textContent = 'Condensed view';
+      condensedToggleLabel.appendChild(condensedToggle);
+      condensedToggleLabel.appendChild(condensedToggleText);
+
       scoringControls.appendChild(advancedToggleLabel);
       scoringControls.appendChild(rollupToggleLabel);
+      scoringControls.appendChild(condensedToggleLabel);
 
       const controls = document.createElement('div');
       controls.className = 'screening-controls';
@@ -1624,6 +1638,15 @@
         renderTable();
       });
 
+      condensedToggle.addEventListener('change', () => {
+        if (!activeScenario) {
+          return;
+        }
+        activeScenario.showCondensedView = condensedToggle.checked;
+        store.save();
+        renderTable();
+      });
+
       const table = document.createElement('table');
       table.className = 'screening-table';
       const thead = document.createElement('thead');
@@ -1635,6 +1658,7 @@
         '<th class="col-metric-score">Metric<br>value</th>' +
         '<th class="col-scoring-criteria">Scoring<br>criteria</th>' +
         '<th class="col-index-score">Metric<br>Index</th>' +
+        '<th class="col-function-score">Function<br>Score</th>' +
         '<th class="col-physical">Physical</th>' +
         '<th class="col-chemical">Chemical</th>' +
         '<th class="col-biological">Biological</th>' +
@@ -1662,7 +1686,7 @@
         ecosystem: null,
       };
 
-      const buildSummary = (showAdvanced) => {
+      const buildSummary = (showAdvanced, showCondensed) => {
         const labelItems = [
           { label: 'Direct Effect', rollup: true },
           { label: 'Indirect Effect', rollup: true },
@@ -1671,6 +1695,7 @@
           { label: 'Condition Sub-Index', rollup: false },
           { label: 'Ecosystem Condition Index', rollup: false },
         ];
+        const labelSpan = (showAdvanced ? 6 : 4) + (showCondensed ? 1 : 0);
 
         tfoot.innerHTML = '';
         summaryCells.physical = [];
@@ -1684,7 +1709,7 @@
             row.hidden = true;
           }
           const labelCell = document.createElement('td');
-          labelCell.colSpan = showAdvanced ? 6 : 4;
+          labelCell.colSpan = labelSpan;
           labelCell.className = 'summary-labels';
           labelCell.textContent = item.label;
           row.appendChild(labelCell);
@@ -1716,6 +1741,7 @@
       const getShowAdvancedScoring = () => Boolean(activeScenario?.showAdvancedScoring);
       const getShowRollupComputations = () =>
         Boolean(activeScenario?.showRollupComputations);
+      const getShowCondensedView = () => Boolean(activeScenario?.showCondensedView);
 
       const renderDefaultCriteriaControls = () => {
         if (!activeScenario) {
@@ -1731,6 +1757,9 @@
         }
         if (rollupToggle) {
           rollupToggle.checked = getShowRollupComputations();
+        }
+        if (condensedToggle) {
+          condensedToggle.checked = getShowCondensedView();
         }
       };
 
@@ -1751,7 +1780,7 @@
           });
       };
 
-      const updateScores = (metricRows, indexRows) => {
+      const updateScores = (metricRows, indexRows, functionScoreCells) => {
         const functionBuckets = new Map();
         metrics.forEach((metric) => {
           if (!selectedMetricIds.has(metric.id)) {
@@ -1777,15 +1806,36 @@
           functionScores.set(functionId, average);
         });
 
-        metricRows.forEach(({ metric, functionScoreValue, functionScoreRange }) => {
+        metricRows.forEach(({ metric, functionScoreTargets, functionScoreRange }) => {
           const score = metric.functionId ? functionScores.get(metric.functionId) : null;
           const nextScore =
             score === null || score === undefined ? null : Math.round(score);
-          functionScoreValue.textContent = nextScore === null ? '-' : String(nextScore);
+          if (Array.isArray(functionScoreTargets)) {
+            functionScoreTargets.forEach((target) => {
+              if (target) {
+                target.textContent = nextScore === null ? '-' : String(nextScore);
+              }
+            });
+          }
           if (functionScoreRange) {
             functionScoreRange.value = nextScore === null ? '0' : String(nextScore);
           }
         });
+
+        if (Array.isArray(functionScoreCells)) {
+          functionScoreCells.forEach(({ functionId, cell }) => {
+            if (!cell) {
+              return;
+            }
+            const score =
+              functionId && functionScores.has(functionId)
+                ? functionScores.get(functionId)
+                : null;
+            const nextScore =
+              score === null || score === undefined ? null : Math.round(score);
+            cell.textContent = nextScore === null ? '-' : String(nextScore);
+          });
+        }
 
         if (Array.isArray(indexRows)) {
           indexRows.forEach(({ metricId, indexCell }) => {
@@ -1861,10 +1911,12 @@
       const renderTable = () => {
         tbody.innerHTML = '';
         const showAdvanced = getShowAdvancedScoring();
+        const showCondensed = getShowCondensedView();
         if (table) {
           table.classList.toggle('show-advanced-scoring', showAdvanced);
+          table.classList.toggle('show-condensed-view', showCondensed);
         }
-        buildSummary(showAdvanced);
+        buildSummary(showAdvanced, showCondensed);
         renderDefaultCriteriaControls();
 
         const term = search.value.trim().toLowerCase();
@@ -1994,6 +2046,7 @@
 
         const metricRows = [];
         const indexRows = [];
+        const functionScoreCells = [];
 
         const disciplineActive = new Map();
         const functionActive = new Map();
@@ -2010,12 +2063,13 @@
         if (renderRows.length === 0) {
           const emptyRow = document.createElement('tr');
           const emptyCell = document.createElement('td');
-          emptyCell.colSpan = showAdvanced ? 9 : 7;
+          const totalColumns = 7 + (showAdvanced ? 2 : 0) + (showCondensed ? 1 : 0);
+          emptyCell.colSpan = totalColumns;
           emptyCell.className = 'empty-cell';
           emptyCell.textContent = 'No metrics selected for this assessment.';
           emptyRow.appendChild(emptyCell);
           tbody.appendChild(emptyRow);
-          updateScores(metricRows, indexRows);
+          updateScores(metricRows, indexRows, functionScoreCells);
           return;
         }
 
@@ -2075,6 +2129,7 @@
             (metric && metric.functionStatement) ||
             (functionMeta && (functionMeta.function_statement || functionMeta.functionStatement)) ||
             '';
+          const hasFunctionStatement = Boolean(functionStatement && functionStatement.trim());
           const row = document.createElement('tr');
           row.classList.add(slugCategory(rowItem.discipline));
           row.dataset.rowType = rowItem.type;
@@ -2106,6 +2161,7 @@
           }
           let functionScoreValue = null;
           let functionScoreRange = null;
+          let functionScoreColumnValue = null;
           if (!rowItem._functionSkip) {
             const functionCell = document.createElement('td');
             functionCell.className = 'col-function';
@@ -2138,7 +2194,7 @@
             const statementLine = document.createElement('div');
             statementLine.className = 'function-statement';
             statementLine.textContent = functionStatement;
-            statementLine.hidden = !isFunctionExpanded;
+            statementLine.hidden = !hasFunctionStatement || !isFunctionExpanded;
             functionCell.appendChild(statementLine);
             const functionScoreLine = document.createElement('div');
             functionScoreLine.className = 'score-input function-score-inline';
@@ -2153,9 +2209,17 @@
             functionScoreValue.textContent = '-';
             functionScoreLine.appendChild(functionScoreRange);
             functionScoreLine.appendChild(functionScoreValue);
+            const setFunctionScoreVisibility = (isOpen) => {
+              if (showCondensed) {
+                functionScoreLine.classList.toggle('is-hidden', !isOpen);
+              } else {
+                functionScoreLine.classList.remove('is-hidden');
+              }
+            };
+            setFunctionScoreVisibility(isFunctionExpanded);
             functionCell.appendChild(functionScoreLine);
             functionToggle.addEventListener('click', (event) => {
-              if (!statementLine.textContent) {
+              if (!hasFunctionStatement && !showCondensed) {
                 return;
               }
               if (expandedFunctions.has(rowFunctionId)) {
@@ -2164,7 +2228,10 @@
                 expandedFunctions.add(rowFunctionId);
               }
               const nowOpen = expandedFunctions.has(rowFunctionId);
-              statementLine.hidden = !nowOpen;
+              if (hasFunctionStatement) {
+                statementLine.hidden = !nowOpen;
+              }
+              setFunctionScoreVisibility(nowOpen);
               functionToggle.setAttribute('aria-expanded', String(nowOpen));
               functionToggle.innerHTML = nowOpen ? expandedGlyph : collapsedGlyph;
               if (event.detail > 0) {
@@ -2175,7 +2242,8 @@
           }
           if (rowItem.type === 'criteria') {
             const detailsCell = document.createElement('td');
-            detailsCell.colSpan = showAdvanced ? 7 : 5;
+            detailsCell.colSpan =
+              (showAdvanced ? 7 : 5) + (showCondensed ? 1 : 0);
             const details = document.createElement('div');
             details.className = 'criteria-details';
             const detailsMetric = rowItem.metric || metric;
@@ -2415,6 +2483,15 @@
           }
           row.appendChild(criteriaCell);
           row.appendChild(indexCell);
+          if (showCondensed && !rowItem._weightSkip && rowItem.type !== 'criteria') {
+            const functionScoreCell = document.createElement('td');
+            functionScoreCell.className = 'col-function-score function-score-cell';
+            functionScoreCell.rowSpan = rowItem._weightSpan || 1;
+            functionScoreColumnValue = document.createElement('span');
+            functionScoreColumnValue.textContent = '-';
+            functionScoreCell.appendChild(functionScoreColumnValue);
+            row.appendChild(functionScoreCell);
+          }
           if (!rowItem._weightSkip && rowItem.type !== 'criteria') {
             const physicalCell = document.createElement('td');
             const chemicalCell = document.createElement('td');
@@ -2453,7 +2530,7 @@
                 activeScenario.ratings[metric.id] = scoreSelect.value;
                 store.save();
               }
-              updateScores(metricRows, indexRows);
+              updateScores(metricRows, indexRows, functionScoreCells);
             });
           }
 
@@ -2478,15 +2555,22 @@
 
           tbody.appendChild(row);
           if (functionScoreValue && functionScoreRange) {
+            const functionScoreTargets = [functionScoreValue];
             metricRows.push({
               metric: metric || { functionId: rowItem.functionId },
-              functionScoreValue,
+              functionScoreTargets,
               functionScoreRange,
+            });
+          }
+          if (functionScoreColumnValue) {
+            functionScoreCells.push({
+              functionId: rowItem.functionId,
+              cell: functionScoreColumnValue,
             });
           }
         });
 
-        updateScores(metricRows, indexRows);
+        updateScores(metricRows, indexRows, functionScoreCells);
       };
 
       const renderTabs = () => {
@@ -2549,6 +2633,9 @@
         }
         if (typeof scenario.showRollupComputations !== 'boolean') {
           scenario.showRollupComputations = false;
+        }
+        if (typeof scenario.showCondensedView !== 'boolean') {
+          scenario.showCondensedView = false;
         }
         store.save();
 
