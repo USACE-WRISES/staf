@@ -12,31 +12,6 @@ description: "Intensive assessment for compliance, crediting, and monitoring."
   <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
 </div>
 
-## Detailed Assessment Development
-Use the widget to build detailed assessments, enter field values, and translate them into metric index scores using reference curves. Function scores and outcome sub-indices roll up automatically.
-
-{% include detailed_assessment_widget.html %}
-
-## When to use
-- High-risk decisions and regulatory compliance
-- Mitigation crediting or debiting
-- Post-construction monitoring and performance verification
-
-## What you get (outputs)
-- Defensible, lower-uncertainty function scores
-- Calibrated reference curves and thresholds
-- Full documentation suitable for review
-
-## What it costs (effort/resources)
-- Multiple days to weeks per site
-- Specialized equipment, lab analysis, and modeling
-- Higher staffing and QA/QC requirements
-
-## Typical data inputs
-- Intensive field surveys and monitoring
-- Water quality and biological sampling
-- Regional reference datasets and models
-
 ## Workflow steps
 1. Define detailed questions and performance standards.
 2. Build or adopt a regional reference network.
@@ -46,6 +21,14 @@ Use the widget to build detailed assessments, enter field values, and translate 
 
 ## How scoring works at this tier
 Use direct measurements where feasible and calibrate scoring curves to regional reference conditions. Document uncertainty and perform sensitivity checks.
+
+<div class="factsheet-card">
+  <p class="factsheet-card-text">Use the widget to build detailed assessments, enter field values, and translate them into metric index scores using reference curves. Function scores and outcome sub-indices roll up automatically.</p>
+</div>
+
+{% include detailed_assessment_widget.html %}
+
+{% include tier_comparison_table.html %}
 
 ## Regional Models Library
 - Model Alpha (placeholder) - add region, version, and documentation link.

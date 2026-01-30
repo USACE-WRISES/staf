@@ -34,6 +34,8 @@
 
   const slugCategory = (category) =>
     `category-${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  const collapsedGlyph = '&#9656;';
+  const expandedGlyph = '&#9662;';
 
   const init = async () => {
     try {
@@ -112,9 +114,14 @@
         const functionToggle = document.createElement('button');
         functionToggle.type = 'button';
         functionToggle.className = 'criteria-toggle function-toggle';
-        functionToggle.innerHTML = '&#9662;';
+        functionToggle.innerHTML = collapsedGlyph;
         functionToggle.setAttribute('aria-expanded', 'false');
         functionToggle.setAttribute('aria-label', 'Toggle function statement');
+        functionToggle.addEventListener('mousedown', (event) => {
+          if (event.detail > 0) {
+            event.preventDefault();
+          }
+        });
         nameLine.appendChild(functionToggle);
         nameCell.appendChild(nameLine);
 
@@ -140,13 +147,17 @@
         scoreWrap.appendChild(input);
         scoreWrap.appendChild(value);
         nameCell.appendChild(scoreWrap);
-        functionToggle.addEventListener('click', () => {
+        functionToggle.addEventListener('click', (event) => {
           if (!statementLine.textContent) {
             return;
           }
           const isOpen = !statementLine.hidden;
           statementLine.hidden = isOpen;
           functionToggle.setAttribute('aria-expanded', String(!isOpen));
+          functionToggle.innerHTML = statementLine.hidden ? collapsedGlyph : expandedGlyph;
+          if (event.detail > 0) {
+            setTimeout(() => functionToggle.blur(), 0);
+          }
         });
 
         const physicalCell = document.createElement('td');
