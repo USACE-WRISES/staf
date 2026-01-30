@@ -12,6 +12,8 @@
 
   const slugCategory = (category) =>
     `category-${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+  const collapsedGlyph = '&#9656;';
+  const expandedGlyph = '&#9662;';
 
   const buildDetails = (fn) => {
     const wrap = document.createElement('div');
@@ -101,12 +103,17 @@
       const toggleBtn = document.createElement('button');
       toggleBtn.type = 'button';
       toggleBtn.className = 'criteria-toggle';
-      toggleBtn.innerHTML = '&#9662;';
+      toggleBtn.innerHTML = collapsedGlyph;
       const detailId = `details-${fn.id}`;
       toggleBtn.setAttribute('aria-expanded', 'false');
       toggleBtn.setAttribute('aria-controls', detailId);
       toggleBtn.setAttribute('aria-label', 'Toggle description details');
       toggleBtn.setAttribute('title', 'Toggle description details');
+      toggleBtn.addEventListener('mousedown', (event) => {
+        if (event.detail > 0) {
+          event.preventDefault();
+        }
+      });
 
       const detailsPanel = buildDetails(fn);
       detailsPanel.id = detailId;
@@ -120,11 +127,14 @@
       row.appendChild(nameCell);
       row.appendChild(shortCell);
 
-      toggleBtn.addEventListener('click', () => {
+      toggleBtn.addEventListener('click', (event) => {
         const isOpen = !detailsPanel.hidden;
         detailsPanel.hidden = isOpen;
         toggleBtn.setAttribute('aria-expanded', String(!isOpen));
-        toggleBtn.innerHTML = isOpen ? '&#9662;' : '&#9652;';
+        toggleBtn.innerHTML = detailsPanel.hidden ? collapsedGlyph : expandedGlyph;
+        if (event.detail > 0) {
+          setTimeout(() => toggleBtn.blur(), 0);
+        }
       });
 
       tableBody.appendChild(row);
