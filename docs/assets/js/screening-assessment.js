@@ -25,6 +25,9 @@
     { label: 'Poor', score: 0 },
   ];
   const defaultRating = 'Optimal';
+  const fallbackCriteriaName = 'Screening';
+  const collapsedGlyph = '&#9656;';
+  const expandedGlyph = '&#9662;';
   const storageKey = 'staf_screening_assessments_v1';
   const predefinedName = 'Stream Condition Screening (SCS)';
   const legacyPredefinedName = 'Predefined Screening Assessment';
@@ -219,7 +222,7 @@
       });
       const predefinedMetricIds = Array.from(starMetricIdsByFunction.values());
 
-      const defaultCurveIndexValues = [0, 0.3, 0.7, 1];
+      const defaultCurveIndexValues = [0, 0.3, 0.69, 1];
 
       const buildDefaultCurve = (metric) => {
         const points = [
@@ -230,7 +233,7 @@
           },
           {
             x: 'Suboptimal',
-            y: 0.7,
+            y: 0.69,
             description: metric?.criteria?.suboptimal || '',
           },
           {
@@ -246,13 +249,13 @@
         ];
         const layerId = generateId();
         return {
-          name: 'Default',
+          name: fallbackCriteriaName,
           xType: 'qualitative',
           units: '',
           layers: [
             {
               id: layerId,
-              name: 'Default',
+              name: fallbackCriteriaName,
               points,
             },
           ],
@@ -268,14 +271,20 @@
         }
         const xType = curve.xType || curve.x_type || 'qualitative';
         const units = curve.units || '';
-        const name = curve.name || 'Default';
+        const legacyDefault = normalizeText('Default');
+        const nameValue = curve.name || fallbackCriteriaName;
+        const name =
+          normalizeText(nameValue) === legacyDefault ? fallbackCriteriaName : nameValue;
         const layers = Array.isArray(curve.layers) && curve.layers.length > 0 ? curve.layers : [];
         if (!layers.length) {
           return buildDefaultCurve(metric);
         }
         const normalizedLayers = layers.map((layer) => ({
           id: layer.id || generateId(),
-          name: layer.name || 'Default',
+          name: (() => {
+            const rawName = layer.name || fallbackCriteriaName;
+            return normalizeText(rawName) === legacyDefault ? fallbackCriteriaName : rawName;
+          })(),
           points: Array.isArray(layer.points)
             ? layer.points.map((point) => ({
                 x: point.x ?? '',
@@ -332,6 +341,10 @@
           metricIds: ids,
           ratings: buildRatings(ids),
           curves: buildCurveMap(ids),
+          defaultCriteriaName: fallbackCriteriaName,
+          criteriaOverrides: {},
+          showAdvancedScoring: false,
+          showRollupComputations: false,
         };
       };
 
@@ -343,6 +356,12 @@
           source.name ||
           (source.type === 'predefined' ? predefinedName : 'Custom Assessment');
         const metricIds = Array.isArray(source.metricIds) ? source.metricIds : [];
+        const legacyDefault = normalizeText('Default');
+        const normalizedDefaultCriteriaName =
+          source.defaultCriteriaName &&
+          normalizeText(source.defaultCriteriaName) === legacyDefault
+            ? fallbackCriteriaName
+            : source.defaultCriteriaName || fallbackCriteriaName;
         const newScenario = {
           id: generateId(),
           type: 'custom',
@@ -352,6 +371,12 @@
           metricIds: Array.from(metricIds),
           ratings: buildRatings(metricIds, source.ratings),
           curves: source.curves ? cloneCurve(source.curves) : buildCurveMap(metricIds),
+          defaultCriteriaName: normalizedDefaultCriteriaName,
+          criteriaOverrides: source.criteriaOverrides
+            ? { ...source.criteriaOverrides }
+            : {},
+          showAdvancedScoring: Boolean(source.showAdvancedScoring),
+          showRollupComputations: Boolean(source.showRollupComputations),
         };
         store.scenarios.push(newScenario);
         store.activeId = newScenario.id;
@@ -369,6 +394,19 @@
             ? scenario.metricIds.filter((id) => metricIdSet.has(id))
             : predefinedMetricIds;
         const ids = Array.from(new Set(metricIds));
+        const legacyDefault = normalizeText('Default');
+        const rawDefaultCriteriaName =
+          scenario.defaultCriteriaName || fallbackCriteriaName;
+        const normalizedDefaultCriteriaName =
+          normalizeText(rawDefaultCriteriaName) === legacyDefault
+            ? fallbackCriteriaName
+            : rawDefaultCriteriaName;
+        const curves = scenario.curves ? cloneCurve(scenario.curves) : buildCurveMap(ids);
+        ids.forEach((id) => {
+          if (curves[id]) {
+            curves[id] = normalizeCurve(curves[id], metricById.get(id));
+          }
+        });
         return {
           id: scenario.id || generateId(),
           type,
@@ -385,7 +423,11 @@
           notes: scenario.notes || '',
           metricIds: ids,
           ratings: buildRatings(ids, scenario.ratings),
-          curves: scenario.curves ? cloneCurve(scenario.curves) : buildCurveMap(ids),
+          curves,
+          defaultCriteriaName: normalizedDefaultCriteriaName,
+          criteriaOverrides: scenario.criteriaOverrides ? { ...scenario.criteriaOverrides } : {},
+          showAdvancedScoring: Boolean(scenario.showAdvancedScoring),
+          showRollupComputations: Boolean(scenario.showRollupComputations),
         };
       };
 
@@ -441,6 +483,7 @@
       let selectedMetricIds = new Set();
       let metricRatings = new Map();
       const expandedMetrics = new Set();
+      const expandedFunctions = new Set();
       let activeScenario = null;
       let librarySearchTerm = '';
       let libraryDiscipline = 'all';
@@ -463,6 +506,122 @@
         }
         curve.activeLayerId = curve.layers[0].id;
         return curve.layers[0];
+      };
+
+      const getCurveLayerByName = (curve, name) => {
+        if (!curve || !name) {
+          return null;
+        }
+        const target = normalizeText(name);
+        return (
+          curve.layers.find((layer) => normalizeText(layer.name || '') === target) || null
+        );
+      };
+
+      const getCriteriaOverrides = () => {
+        if (!activeScenario) {
+          return {};
+        }
+        if (!activeScenario.criteriaOverrides) {
+          activeScenario.criteriaOverrides = {};
+        }
+        return activeScenario.criteriaOverrides;
+      };
+
+      const getAvailableCriteriaNames = () => {
+        if (!activeScenario) {
+          return [fallbackCriteriaName];
+        }
+        const names = new Set();
+        (activeScenario.metricIds || []).forEach((metricId) => {
+          const curve = ensureCurve(activeScenario, metricId);
+          if (!curve || !Array.isArray(curve.layers)) {
+            return;
+          }
+          curve.layers.forEach((layer) => {
+            const name = (layer.name || '').trim();
+            if (name) {
+              names.add(name);
+            }
+          });
+        });
+        const list = Array.from(names);
+        if (list.length === 0) {
+          return [fallbackCriteriaName];
+        }
+        list.sort((a, b) => a.localeCompare(b));
+        const fallbackIndex = list.findIndex(
+          (name) => normalizeText(name) === normalizeText(fallbackCriteriaName)
+        );
+        if (fallbackIndex > 0) {
+          const [fallbackName] = list.splice(fallbackIndex, 1);
+          list.unshift(fallbackName);
+        }
+        return list;
+      };
+
+      const resolveDefaultCriteriaName = () => {
+        const available = getAvailableCriteriaNames();
+        if (!available.length) {
+          return fallbackCriteriaName;
+        }
+        if (activeScenario?.defaultCriteriaName) {
+          const match = available.find(
+            (name) =>
+              normalizeText(name) === normalizeText(activeScenario.defaultCriteriaName)
+          );
+          if (match) {
+            return match;
+          }
+        }
+        const fallbackMatch = available.find(
+          (name) => normalizeText(name) === normalizeText(fallbackCriteriaName)
+        );
+        return fallbackMatch || available[0];
+      };
+
+      const getCriteriaLayerForMetric = (metricId) => {
+        if (!activeScenario || !metricId) {
+          return null;
+        }
+        const curve = ensureCurve(activeScenario, metricId);
+        if (!curve) {
+          return null;
+        }
+        const overrides = getCriteriaOverrides();
+        const overrideId = overrides[metricId];
+        if (overrideId) {
+          const overrideLayer = curve.layers.find((layer) => layer.id === overrideId);
+          if (overrideLayer) {
+            return overrideLayer;
+          }
+        }
+        const defaultName = resolveDefaultCriteriaName();
+        return getCurveLayerByName(curve, defaultName) || getCurveLayer(curve);
+      };
+
+      const getMetricIndexScore = (metricId) => {
+        if (!metricId || !activeScenario) {
+          return null;
+        }
+        const curve = ensureCurve(activeScenario, metricId);
+        const layer = getCriteriaLayerForMetric(metricId);
+        if (!curve || !layer) {
+          return null;
+        }
+        if (curve.xType !== 'qualitative') {
+          return null;
+        }
+        const rating = metricRatings.get(metricId) || defaultRating;
+        const target = normalizeText(rating);
+        const point = layer.points.find(
+          (entry) => normalizeText(String(entry.x ?? '')) === target
+        );
+        if (!point) {
+          return null;
+        }
+        const value = Number.parseFloat(point.y);
+        return Number.isFinite(value) ? value : null;
       };
 
       const getActiveCurve = () => {
@@ -743,10 +902,10 @@
         ctx.restore();
       };
 
-      const buildCurveSummaryTable = (curve) => {
+      const buildCurveSummaryTable = (curve, layerOverride) => {
         const table = document.createElement('table');
         table.className = 'curve-summary-table';
-        const layer = getCurveLayer(curve);
+        const layer = layerOverride || getCurveLayer(curve);
         if (!layer || !layer.points.length) {
           const empty = document.createElement('caption');
           empty.textContent = 'No reference curve points defined.';
@@ -783,12 +942,25 @@
           indexRow.appendChild(cell);
         });
 
+        const functionScoreRow = document.createElement('tr');
+        const functionScoreLabel = document.createElement('th');
+        functionScoreLabel.textContent = 'Function Score';
+        functionScoreRow.appendChild(functionScoreLabel);
+        layer.points.forEach((point) => {
+          const cell = document.createElement('td');
+          const value = Number.parseFloat(point.y);
+          const score = Number.isFinite(value) ? Math.round(value * 15) : null;
+          cell.textContent = score === null ? '-' : String(score);
+          functionScoreRow.appendChild(cell);
+        });
+
         table.appendChild(valueRow);
         table.appendChild(indexRow);
+        table.appendChild(functionScoreRow);
         return table;
       };
 
-      const openCurveModal = (metricId) => {
+      const openCurveModal = (metricId, preferredLayerId) => {
         if (!curveModal) {
           return;
         }
@@ -796,6 +968,12 @@
         activeCurveMetricId = metricId;
         curveReadOnly = activeScenario?.type === 'predefined';
         const curve = ensureCurve(activeScenario, metricId);
+        if (curve && preferredLayerId) {
+          const hasLayer = curve.layers.find((layer) => layer.id === preferredLayerId);
+          if (hasLayer) {
+            curve.activeLayerId = preferredLayerId;
+          }
+        }
         if (curveMetricName && metric) {
           curveMetricName.value = metric.metric;
         }
@@ -1326,6 +1504,32 @@
         libraryCollapse.functions = new Map();
       };
 
+      const scoringControls = document.createElement('div');
+      scoringControls.className = 'screening-scoring-controls';
+
+      const advancedToggleLabel = document.createElement('label');
+      advancedToggleLabel.className = 'screening-advanced-toggle';
+      const advancedToggle = document.createElement('input');
+      advancedToggle.type = 'checkbox';
+      advancedToggle.className = 'screening-advanced-toggle-input';
+      const advancedToggleText = document.createElement('span');
+      advancedToggleText.textContent = 'Show advanced scoring columns';
+      advancedToggleLabel.appendChild(advancedToggle);
+      advancedToggleLabel.appendChild(advancedToggleText);
+
+      const rollupToggleLabel = document.createElement('label');
+      rollupToggleLabel.className = 'screening-advanced-toggle';
+      const rollupToggle = document.createElement('input');
+      rollupToggle.type = 'checkbox';
+      rollupToggle.className = 'screening-rollup-toggle-input';
+      const rollupToggleText = document.createElement('span');
+      rollupToggleText.textContent = 'Show roll-up at bottom';
+      rollupToggleLabel.appendChild(rollupToggle);
+      rollupToggleLabel.appendChild(rollupToggleText);
+
+      scoringControls.appendChild(advancedToggleLabel);
+      scoringControls.appendChild(rollupToggleLabel);
+
       const controls = document.createElement('div');
       controls.className = 'screening-controls';
 
@@ -1402,6 +1606,24 @@
         }
       });
 
+      advancedToggle.addEventListener('change', () => {
+        if (!activeScenario) {
+          return;
+        }
+        activeScenario.showAdvancedScoring = advancedToggle.checked;
+        store.save();
+        renderTable();
+      });
+
+      rollupToggle.addEventListener('change', () => {
+        if (!activeScenario) {
+          return;
+        }
+        activeScenario.showRollupComputations = rollupToggle.checked;
+        store.save();
+        renderTable();
+      });
+
       const table = document.createElement('table');
       table.className = 'screening-table';
       const thead = document.createElement('thead');
@@ -1410,7 +1632,9 @@
         '<th class="col-discipline">Discipline</th>' +
         '<th class="col-function">Function</th>' +
         '<th class="col-metric">Metric</th>' +
-        '<th class="col-metric-score">Metric<br>score</th>' +
+        '<th class="col-metric-score">Metric<br>value</th>' +
+        '<th class="col-scoring-criteria">Scoring<br>criteria</th>' +
+        '<th class="col-index-score">Metric<br>Index</th>' +
         '<th class="col-physical">Physical</th>' +
         '<th class="col-chemical">Chemical</th>' +
         '<th class="col-biological">Biological</th>' +
@@ -1423,6 +1647,7 @@
 
       if (controlsHost) {
         controlsHost.innerHTML = '';
+        controlsHost.appendChild(scoringControls);
         controlsHost.appendChild(controls);
       }
       if (tableHost) {
@@ -1437,14 +1662,14 @@
         ecosystem: null,
       };
 
-      const buildSummary = () => {
+      const buildSummary = (showAdvanced) => {
         const labelItems = [
-          'Direct Effect',
-          'Indirect Effect',
-          'Weighted Score Total',
-          'Max Weighted Score Total',
-          'Condition Sub-Index',
-          'Ecosystem Condition Index',
+          { label: 'Direct Effect', rollup: true },
+          { label: 'Indirect Effect', rollup: true },
+          { label: 'Weighted Score Total', rollup: true },
+          { label: 'Max Weighted Score Total', rollup: true },
+          { label: 'Condition Sub-Index', rollup: false },
+          { label: 'Ecosystem Condition Index', rollup: false },
         ];
 
         tfoot.innerHTML = '';
@@ -1453,15 +1678,18 @@
         summaryCells.biological = [];
         summaryCells.ecosystem = null;
 
-        labelItems.forEach((label) => {
+        labelItems.forEach((item) => {
           const row = document.createElement('tr');
+          if (item.rollup && !getShowRollupComputations()) {
+            row.hidden = true;
+          }
           const labelCell = document.createElement('td');
-          labelCell.colSpan = 4;
+          labelCell.colSpan = showAdvanced ? 6 : 4;
           labelCell.className = 'summary-labels';
-          labelCell.textContent = label;
+          labelCell.textContent = item.label;
           row.appendChild(labelCell);
 
-          if (label === 'Ecosystem Condition Index') {
+          if (item.label === 'Ecosystem Condition Index') {
             const merged = document.createElement('td');
             merged.colSpan = 3;
             merged.className = 'summary-values summary-merged';
@@ -1485,6 +1713,27 @@
         });
       };
 
+      const getShowAdvancedScoring = () => Boolean(activeScenario?.showAdvancedScoring);
+      const getShowRollupComputations = () =>
+        Boolean(activeScenario?.showRollupComputations);
+
+      const renderDefaultCriteriaControls = () => {
+        if (!activeScenario) {
+          return;
+        }
+        const resolved = resolveDefaultCriteriaName();
+        if (activeScenario.defaultCriteriaName !== resolved) {
+          activeScenario.defaultCriteriaName = resolved;
+          store.save();
+        }
+        if (advancedToggle) {
+          advancedToggle.checked = getShowAdvancedScoring();
+        }
+        if (rollupToggle) {
+          rollupToggle.checked = getShowRollupComputations();
+        }
+      };
+
       const buildAddOptions = () => {
         addSelect.innerHTML = '';
         addSelect.appendChild(addPlaceholder);
@@ -1502,7 +1751,7 @@
           });
       };
 
-      const updateScores = (metricRows) => {
+      const updateScores = (metricRows, indexRows) => {
         const functionBuckets = new Map();
         metrics.forEach((metric) => {
           if (!selectedMetricIds.has(metric.id)) {
@@ -1537,6 +1786,22 @@
             functionScoreRange.value = nextScore === null ? '0' : String(nextScore);
           }
         });
+
+        if (Array.isArray(indexRows)) {
+          indexRows.forEach(({ metricId, indexCell }) => {
+            if (!indexCell) {
+              return;
+            }
+            const value = getMetricIndexScore(metricId);
+            indexCell.textContent = value === null ? '-' : value.toFixed(2);
+            const layer = getCriteriaLayerForMetric(metricId);
+            if (layer && layer.name) {
+              indexCell.title = `Criteria: ${layer.name}`;
+            } else {
+              indexCell.removeAttribute('title');
+            }
+          });
+        }
 
         const outcomeTotals = {
           physical: { weighted: 0, max: 0, direct: 0, indirect: 0 },
@@ -1595,7 +1860,12 @@
 
       const renderTable = () => {
         tbody.innerHTML = '';
-        buildSummary();
+        const showAdvanced = getShowAdvancedScoring();
+        if (table) {
+          table.classList.toggle('show-advanced-scoring', showAdvanced);
+        }
+        buildSummary(showAdvanced);
+        renderDefaultCriteriaControls();
 
         const term = search.value.trim().toLowerCase();
         const disciplineValue = disciplineFilter.value;
@@ -1723,6 +1993,7 @@
         });
 
         const metricRows = [];
+        const indexRows = [];
 
         const disciplineActive = new Map();
         const functionActive = new Map();
@@ -1739,12 +2010,12 @@
         if (renderRows.length === 0) {
           const emptyRow = document.createElement('tr');
           const emptyCell = document.createElement('td');
-          emptyCell.colSpan = 7;
+          emptyCell.colSpan = showAdvanced ? 9 : 7;
           emptyCell.className = 'empty-cell';
           emptyCell.textContent = 'No metrics selected for this assessment.';
           emptyRow.appendChild(emptyCell);
           tbody.appendChild(emptyRow);
-          updateScores(metricRows);
+          updateScores(metricRows, indexRows);
           return;
         }
 
@@ -1816,6 +2087,9 @@
           if (rowItem.type === 'criteria') {
             row.classList.add('criteria-row');
           }
+          if (rowItem.type === 'metric' && expandedMetrics.has(rowItem.metric.id)) {
+            row.classList.add('metric-expanded');
+          }
 
           if (!rowItem._disciplineSkip) {
             const disciplineCell = document.createElement('td');
@@ -1850,15 +2124,21 @@
             const functionToggle = document.createElement('button');
             functionToggle.type = 'button';
             functionToggle.className = 'criteria-toggle function-toggle';
-            functionToggle.innerHTML = '&#9662;';
-            functionToggle.setAttribute('aria-expanded', 'false');
+            const isFunctionExpanded = expandedFunctions.has(rowFunctionId);
+            functionToggle.innerHTML = isFunctionExpanded ? expandedGlyph : collapsedGlyph;
+            functionToggle.setAttribute('aria-expanded', String(isFunctionExpanded));
             functionToggle.setAttribute('aria-label', 'Toggle function statement');
+            functionToggle.addEventListener('mousedown', (event) => {
+              if (event.detail > 0) {
+                event.preventDefault();
+              }
+            });
             functionNameLine.appendChild(functionToggle);
             functionCell.appendChild(functionNameLine);
             const statementLine = document.createElement('div');
             statementLine.className = 'function-statement';
             statementLine.textContent = functionStatement;
-            statementLine.hidden = true;
+            statementLine.hidden = !isFunctionExpanded;
             functionCell.appendChild(statementLine);
             const functionScoreLine = document.createElement('div');
             functionScoreLine.className = 'score-input function-score-inline';
@@ -1874,19 +2154,28 @@
             functionScoreLine.appendChild(functionScoreRange);
             functionScoreLine.appendChild(functionScoreValue);
             functionCell.appendChild(functionScoreLine);
-            functionToggle.addEventListener('click', () => {
+            functionToggle.addEventListener('click', (event) => {
               if (!statementLine.textContent) {
                 return;
               }
-              const isOpen = !statementLine.hidden;
-              statementLine.hidden = isOpen;
-              functionToggle.setAttribute('aria-expanded', String(!isOpen));
+              if (expandedFunctions.has(rowFunctionId)) {
+                expandedFunctions.delete(rowFunctionId);
+              } else {
+                expandedFunctions.add(rowFunctionId);
+              }
+              const nowOpen = expandedFunctions.has(rowFunctionId);
+              statementLine.hidden = !nowOpen;
+              functionToggle.setAttribute('aria-expanded', String(nowOpen));
+              functionToggle.innerHTML = nowOpen ? expandedGlyph : collapsedGlyph;
+              if (event.detail > 0) {
+                setTimeout(() => functionToggle.blur(), 0);
+              }
             });
             row.appendChild(functionCell);
           }
           if (rowItem.type === 'criteria') {
             const detailsCell = document.createElement('td');
-            detailsCell.colSpan = 5;
+            detailsCell.colSpan = showAdvanced ? 7 : 5;
             const details = document.createElement('div');
             details.className = 'criteria-details';
             const detailsMetric = rowItem.metric || metric;
@@ -1896,31 +2185,44 @@
               tbody.appendChild(row);
               return;
             }
-            const statementBlock = document.createElement('div');
-            statementBlock.className = 'criteria-block';
-            statementBlock.innerHTML = `<strong>Metric statement</strong><div>${
-              detailsMetric.metricStatement || '-'
-            }</div>`;
-            details.appendChild(statementBlock);
-
             const curve = ensureCurve(activeScenario, detailsMetric.id);
-        const curveRow = document.createElement('div');
-        curveRow.className = 'reference-curve-row';
-        const curveLabel = document.createElement('span');
-        const activeLayer = curve ? getCurveLayer(curve) : null;
-        const curveLabelText = activeLayer?.name || curve?.name || 'Default';
-        curveLabel.textContent = `Reference curve: ${curveLabelText}`;
-            const curveButton = document.createElement('button');
-            curveButton.type = 'button';
-            curveButton.className = 'btn btn-small';
-            curveButton.textContent = 'View/Edit Curve';
-            curveButton.addEventListener('click', () => openCurveModal(detailsMetric.id));
-            curveRow.appendChild(curveLabel);
-            curveRow.appendChild(curveButton);
-            details.appendChild(curveRow);
-
+            const criteriaLayer = getCriteriaLayerForMetric(detailsMetric.id);
             if (curve) {
-              const summaryTable = buildCurveSummaryTable(curve);
+              const headerRow = document.createElement('div');
+              headerRow.className = 'criteria-summary-header';
+              const headerLabel = document.createElement('span');
+              headerLabel.textContent = 'Scoring Criteria';
+              const editBtn = document.createElement('button');
+              editBtn.type = 'button';
+              editBtn.className = 'btn btn-small btn-flat criteria-edit';
+              editBtn.setAttribute('aria-label', 'Edit reference curve');
+              editBtn.innerHTML =
+                '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+                '<path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>' +
+                '<path d="M14.06 4.94l3.75 3.75 1.44-1.44a1.5 1.5 0 0 0 0-2.12l-1.63-1.63a1.5 1.5 0 0 0-2.12 0l-1.44 1.44z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>' +
+                '</svg>';
+              editBtn.addEventListener('click', () => {
+                if (!curve) {
+                  return;
+                }
+                if (criteriaLayer) {
+                  curve.activeLayerId = criteriaLayer.id;
+                  openCurveModal(detailsMetric.id, criteriaLayer.id);
+                  return;
+                }
+                const defaultName = resolveDefaultCriteriaName();
+                const defaultLayer =
+                  getCurveLayerByName(curve, defaultName) || getCurveLayer(curve);
+                if (defaultLayer) {
+                  curve.activeLayerId = defaultLayer.id;
+                  openCurveModal(detailsMetric.id, defaultLayer.id);
+                }
+              });
+              headerRow.appendChild(headerLabel);
+              headerRow.appendChild(editBtn);
+              details.appendChild(headerRow);
+
+              const summaryTable = buildCurveSummaryTable(curve, criteriaLayer);
               details.appendChild(summaryTable);
             }
             detailsCell.appendChild(details);
@@ -1937,11 +2239,40 @@
               ? 'No metrics selected for this function'
               : metric.metric;
           metricCell.appendChild(metricText);
+          let criteriaBtn = null;
+          if (rowItem.type === 'metric') {
+            criteriaBtn = document.createElement('button');
+            criteriaBtn.type = 'button';
+            criteriaBtn.className = 'criteria-toggle';
+            const criteriaExpanded = expandedMetrics.has(metric.id);
+            criteriaBtn.innerHTML = criteriaExpanded ? expandedGlyph : collapsedGlyph;
+            criteriaBtn.setAttribute(
+              'aria-expanded',
+              criteriaExpanded ? 'true' : 'false'
+            );
+            criteriaBtn.setAttribute('aria-label', 'Toggle criteria details');
+            criteriaBtn.addEventListener('mousedown', (event) => {
+              if (event.detail > 0) {
+                event.preventDefault();
+              }
+            });
+            metricCell.appendChild(criteriaBtn);
+          }
+          if (
+            rowItem.type === 'metric' &&
+            metric.metricStatement &&
+            metric.metricStatement.trim() &&
+            expandedMetrics.has(metric.id)
+          ) {
+            const metricStatement = document.createElement('div');
+            metricStatement.className = 'metric-statement';
+            metricStatement.textContent = metric.metricStatement;
+            metricCell.appendChild(metricStatement);
+          }
 
           const scoreCell = document.createElement('td');
           scoreCell.className = 'col-metric-score';
           let scoreSelect = null;
-          let criteriaBtn = null;
           if (rowItem.type === 'metric') {
             scoreSelect = document.createElement('select');
             scoreSelect.className = 'metric-score-select';
@@ -1954,15 +2285,6 @@
             scoreSelect.value = metricRatings.get(metric.id) || defaultRating;
             scoreCell.appendChild(scoreSelect);
 
-            criteriaBtn = document.createElement('button');
-            criteriaBtn.type = 'button';
-            criteriaBtn.className = 'criteria-toggle';
-            criteriaBtn.innerHTML = '&#9662;';
-            criteriaBtn.setAttribute(
-              'aria-expanded',
-              expandedMetrics.has(metric.id) ? 'true' : 'false'
-            );
-            criteriaBtn.setAttribute('aria-label', 'Toggle criteria details');
           } else {
             scoreCell.textContent = '-';
           }
@@ -1974,9 +2296,6 @@
           removeBtn.setAttribute('aria-label', 'Remove metric');
           const metricActions = document.createElement('span');
           metricActions.className = 'metric-actions';
-          if (criteriaBtn) {
-            metricActions.appendChild(criteriaBtn);
-          }
           if (!isPredefined && rowItem.type === 'metric') {
             metricActions.appendChild(removeBtn);
           }
@@ -1985,6 +2304,117 @@
           const mapping = rowItem.functionId ? mappingById[rowItem.functionId] : null;
           row.appendChild(metricCell);
           row.appendChild(scoreCell);
+
+          const criteriaCell = document.createElement('td');
+          criteriaCell.className = 'col-scoring-criteria';
+          const indexCell = document.createElement('td');
+          indexCell.className = 'col-index-score';
+          if (rowItem.type === 'metric') {
+            const overrides = getCriteriaOverrides();
+            const overrideId = overrides[metric.id];
+            const curve = ensureCurve(activeScenario, metric.id);
+            const criteriaLayer = getCriteriaLayerForMetric(metric.id);
+            const showAdvanced = getShowAdvancedScoring();
+            const overrideLayer =
+              overrideId && curve ? curve.layers.find((layer) => layer.id === overrideId) : null;
+            const isDefaultOverride =
+              overrideLayer &&
+              normalizeText(overrideLayer.name || '') ===
+                normalizeText(fallbackCriteriaName);
+            const overrideLayerExists = Boolean(overrideLayer) && !isDefaultOverride;
+            if (overrideId && (!overrideLayer || isDefaultOverride)) {
+              delete overrides[metric.id];
+              if (activeScenario) {
+                activeScenario.criteriaOverrides = overrides;
+                store.save();
+              }
+            }
+            if (showAdvanced && curve) {
+              const criteriaWrap = document.createElement('div');
+              criteriaWrap.className = 'criteria-override';
+              const criteriaSelect = document.createElement('select');
+              criteriaSelect.className = 'criteria-select';
+              criteriaSelect.setAttribute('aria-label', 'Scoring criteria');
+              const defaultOption = document.createElement('option');
+              defaultOption.value = '';
+              defaultOption.textContent = fallbackCriteriaName;
+              criteriaSelect.appendChild(defaultOption);
+              curve.layers.forEach((layer) => {
+                if (
+                  normalizeText(layer.name || '') ===
+                  normalizeText(fallbackCriteriaName)
+                ) {
+                  return;
+                }
+                const option = document.createElement('option');
+                option.value = layer.id;
+                option.textContent = layer.name || 'Untitled';
+                criteriaSelect.appendChild(option);
+              });
+              criteriaSelect.value = overrideLayerExists ? overrideId : '';
+              criteriaSelect.addEventListener('change', () => {
+                if (!activeScenario) {
+                  return;
+                }
+                if (!criteriaSelect.value) {
+                  delete overrides[metric.id];
+                } else {
+                  overrides[metric.id] = criteriaSelect.value;
+                }
+                activeScenario.criteriaOverrides = overrides;
+                store.save();
+                renderTable();
+              });
+              const editBtn = document.createElement('button');
+              editBtn.type = 'button';
+              editBtn.className = 'btn btn-small btn-flat criteria-edit';
+              editBtn.setAttribute('aria-label', 'Edit reference curve');
+              editBtn.innerHTML =
+                '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+                '<path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>' +
+                '<path d="M14.06 4.94l3.75 3.75 1.44-1.44a1.5 1.5 0 0 0 0-2.12l-1.63-1.63a1.5 1.5 0 0 0-2.12 0l-1.44 1.44z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>' +
+                '</svg>';
+              editBtn.addEventListener('click', () => {
+                const selectedId = criteriaSelect.value;
+                if (curve && selectedId) {
+                  curve.activeLayerId = selectedId;
+                  openCurveModal(metric.id, selectedId);
+                  return;
+                }
+                if (!curve) {
+                  return;
+                }
+                const defaultName = resolveDefaultCriteriaName();
+                const defaultLayer =
+                  getCurveLayerByName(curve, defaultName) || getCurveLayer(curve);
+                if (defaultLayer) {
+                  curve.activeLayerId = defaultLayer.id;
+                  openCurveModal(metric.id, defaultLayer.id);
+                }
+              });
+              criteriaWrap.appendChild(criteriaSelect);
+              criteriaWrap.appendChild(editBtn);
+              criteriaCell.appendChild(criteriaWrap);
+            } else {
+              const defaultPill = document.createElement('button');
+              defaultPill.type = 'button';
+              defaultPill.className = 'criteria-pill';
+              defaultPill.textContent = fallbackCriteriaName;
+              const defaultCriteriaName = resolveDefaultCriteriaName();
+              defaultPill.title = `Default criteria: ${defaultCriteriaName}`;
+              defaultPill.setAttribute(
+                'aria-label',
+                'Default scoring criteria. Toggle advanced settings to override.'
+              );
+              criteriaCell.appendChild(defaultPill);
+            }
+            indexRows.push({ metricId: metric.id, indexCell });
+          } else {
+            criteriaCell.textContent = '-';
+            indexCell.textContent = '-';
+          }
+          row.appendChild(criteriaCell);
+          row.appendChild(indexCell);
           if (!rowItem._weightSkip && rowItem.type !== 'criteria') {
             const physicalCell = document.createElement('td');
             const chemicalCell = document.createElement('td');
@@ -2005,13 +2435,16 @@
           }
 
           if (rowItem.type === 'metric') {
-            criteriaBtn.addEventListener('click', () => {
+            criteriaBtn.addEventListener('click', (event) => {
               if (expandedMetrics.has(metric.id)) {
                 expandedMetrics.delete(metric.id);
               } else {
                 expandedMetrics.add(metric.id);
               }
               renderTable();
+              if (event.detail > 0) {
+                setTimeout(() => criteriaBtn.blur(), 0);
+              }
             });
 
             scoreSelect.addEventListener('change', () => {
@@ -2020,7 +2453,7 @@
                 activeScenario.ratings[metric.id] = scoreSelect.value;
                 store.save();
               }
-              updateScores(metricRows);
+              updateScores(metricRows, indexRows);
             });
           }
 
@@ -2034,6 +2467,9 @@
             delete activeScenario.ratings[metric.id];
             if (activeScenario.curves) {
               delete activeScenario.curves[metric.id];
+            }
+            if (activeScenario.criteriaOverrides) {
+              delete activeScenario.criteriaOverrides[metric.id];
             }
             store.save();
             buildAddOptions();
@@ -2050,7 +2486,7 @@
           }
         });
 
-        updateScores(metricRows);
+        updateScores(metricRows, indexRows);
       };
 
       const renderTabs = () => {
@@ -2097,6 +2533,23 @@
           scenario.curves = {};
         }
         scenario.metricIds.forEach((id) => ensureCurve(scenario, id));
+        if (!scenario.criteriaOverrides) {
+          scenario.criteriaOverrides = {};
+        }
+        Object.keys(scenario.criteriaOverrides).forEach((metricId) => {
+          if (!selectedMetricIds.has(metricId)) {
+            delete scenario.criteriaOverrides[metricId];
+          }
+        });
+        if (!scenario.defaultCriteriaName) {
+          scenario.defaultCriteriaName = fallbackCriteriaName;
+        }
+        if (typeof scenario.showAdvancedScoring !== 'boolean') {
+          scenario.showAdvancedScoring = false;
+        }
+        if (typeof scenario.showRollupComputations !== 'boolean') {
+          scenario.showRollupComputations = false;
+        }
         store.save();
 
         if (nameInput) {
@@ -2198,6 +2651,7 @@
         activeScenario.metricIds = [];
         activeScenario.ratings = {};
         activeScenario.curves = {};
+        activeScenario.criteriaOverrides = {};
         store.save();
         buildAddOptions();
         renderTable();
