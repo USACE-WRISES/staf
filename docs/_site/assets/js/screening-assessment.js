@@ -1669,6 +1669,53 @@
       table.appendChild(tbody);
       table.appendChild(tfoot);
 
+      const chartsShell = document.createElement('div');
+      chartsShell.className = 'screening-settings-panel screening-charts-panel';
+      const chartsHeader = document.createElement('div');
+      chartsHeader.className = 'settings-header';
+      const chartsTitle = document.createElement('h3');
+      chartsTitle.textContent = 'Summary Plots';
+      chartsHeader.appendChild(chartsTitle);
+      const chartsWrap = document.createElement('div');
+      chartsWrap.className = 'screening-charts';
+      const functionChartSection = document.createElement('div');
+      functionChartSection.className = 'screening-chart-section';
+      const functionChartTitle = document.createElement('div');
+      functionChartTitle.className = 'screening-chart-title';
+      functionChartTitle.textContent = 'Function Scores';
+      const functionChartBody = document.createElement('div');
+      functionChartBody.className = 'screening-chart-body';
+      functionChartSection.appendChild(functionChartTitle);
+      functionChartSection.appendChild(functionChartBody);
+
+      const summaryChartSection = document.createElement('div');
+      summaryChartSection.className = 'screening-chart-section';
+      const summaryChartTitle = document.createElement('div');
+      summaryChartTitle.className = 'screening-chart-title';
+      summaryChartTitle.textContent = 'Condition Indices';
+      const summaryChartBody = document.createElement('div');
+      summaryChartBody.className = 'screening-chart-body';
+      const summaryLegend = document.createElement('div');
+      summaryLegend.className = 'screening-chart-legend';
+      summaryLegend.innerHTML =
+        '<div class="legend-bar" aria-hidden="true"></div>' +
+        '<div class="legend-labels">' +
+        '<div>0.70 - 1.00</div>' +
+        '<div>0.30 - 0.69</div>' +
+        '<div>0.00 - 0.29</div>' +
+        '</div>';
+      summaryChartSection.appendChild(summaryChartTitle);
+      summaryChartSection.appendChild(summaryChartBody);
+      summaryChartSection.appendChild(summaryLegend);
+
+      chartsWrap.appendChild(functionChartSection);
+      const chartsSpacer = document.createElement('div');
+      chartsSpacer.className = 'screening-chart-spacer';
+      chartsWrap.appendChild(chartsSpacer);
+      chartsWrap.appendChild(summaryChartSection);
+      chartsShell.appendChild(chartsHeader);
+      chartsShell.appendChild(chartsWrap);
+
       if (controlsHost) {
         controlsHost.innerHTML = '';
         controlsHost.appendChild(scoringControls);
@@ -1677,6 +1724,14 @@
       if (tableHost) {
         tableHost.innerHTML = '';
         tableHost.appendChild(table);
+        const parent = tableHost.parentElement;
+        if (parent) {
+          const existing = parent.querySelector('.screening-charts-panel');
+          if (existing && existing !== chartsShell) {
+            existing.remove();
+          }
+          parent.appendChild(chartsShell);
+        }
       }
 
       const summaryCells = {
@@ -1780,7 +1835,112 @@
           });
       };
 
-      const updateScores = (metricRows, indexRows, functionScoreCells) => {
+      const disciplineColors = {
+        hydrology: '#d9e2f3',
+        hydraulics: '#b9cbe6',
+        geomorphology: '#f7e1d1',
+        physicochemistry: '#f3e9c4',
+        biology: '#dbead2',
+      };
+
+      const summaryColorForValue = (value) => {
+        if (value <= 0.29) {
+          return '#f5b5b5';
+        }
+        if (value <= 0.69) {
+          return '#f5e7a6';
+        }
+        return '#c8d9f2';
+      };
+
+      const buildBarRow = ({ label, value, maxValue, color, valueText }) => {
+        const row = document.createElement('div');
+        row.className = 'screening-bar-row';
+        const labelCell = document.createElement('div');
+        labelCell.className = 'screening-bar-label';
+        labelCell.textContent = label;
+        const barCell = document.createElement('div');
+        barCell.className = 'screening-bar-track';
+        const fill = document.createElement('div');
+        fill.className = 'screening-bar-fill';
+        const width = maxValue > 0 ? Math.max(0, Math.min(1, value / maxValue)) : 0;
+        fill.style.width = `${(width * 100).toFixed(1)}%`;
+        fill.style.background = color;
+        barCell.appendChild(fill);
+        const valueCell = document.createElement('div');
+        valueCell.className = 'screening-bar-value';
+        valueCell.textContent = valueText ?? value.toFixed(2);
+        row.appendChild(labelCell);
+        row.appendChild(barCell);
+        row.appendChild(valueCell);
+        return row;
+      };
+
+      const renderCharts = (functionOrder, functionScores, summaryValues) => {
+        if (!functionChartBody || !summaryChartBody) {
+          return;
+        }
+        functionChartBody.innerHTML = '';
+        summaryChartBody.innerHTML = '';
+
+        const functionsToShow = Array.isArray(functionOrder) ? functionOrder : [];
+        if (!functionsToShow.length) {
+          const empty = document.createElement('div');
+          empty.className = 'screening-chart-empty';
+          empty.textContent = 'No function scores available.';
+          functionChartBody.appendChild(empty);
+        } else {
+          let lastDiscipline = null;
+          functionsToShow.forEach((fn, index) => {
+            const disciplineKey = (fn.discipline || '').toLowerCase();
+            if (index > 0 && lastDiscipline !== null && disciplineKey !== lastDiscipline) {
+              const divider = document.createElement('div');
+              divider.className = 'screening-bar-divider';
+              functionChartBody.appendChild(divider);
+            }
+            const score = functionScores.get(fn.functionId);
+            if (score === undefined || score === null) {
+              return;
+            }
+            const rounded = Math.round(score);
+            const barColor =
+              disciplineColors[disciplineKey] || disciplineColors.hydrology || '#d9e2f3';
+            functionChartBody.appendChild(
+              buildBarRow({
+                label: fn.name,
+                value: rounded,
+                maxValue: 15,
+                color: barColor,
+                valueText: String(rounded),
+              })
+            );
+            lastDiscipline = disciplineKey;
+          });
+        }
+
+        const summaryItems = [
+          { label: 'Physical', value: summaryValues.physical },
+          { label: 'Chemical', value: summaryValues.chemical },
+          { label: 'Biological', value: summaryValues.biological },
+          { label: 'Ecosystem Condition Index', value: summaryValues.ecosystem },
+        ];
+        summaryItems.forEach((item) => {
+          if (item.value === null || item.value === undefined) {
+            return;
+          }
+          summaryChartBody.appendChild(
+            buildBarRow({
+              label: item.label,
+              value: item.value,
+              maxValue: 1,
+              color: summaryColorForValue(item.value),
+              valueText: item.value.toFixed(2),
+            })
+          );
+        });
+      };
+
+      const updateScores = (metricRows, indexRows, functionScoreCells, functionOrder) => {
         const functionBuckets = new Map();
         metrics.forEach((metric) => {
           if (!selectedMetricIds.has(metric.id)) {
@@ -1906,6 +2066,13 @@
         if (summaryCells.ecosystem) {
           summaryCells.ecosystem.textContent = formatNumber(ecosystemIndex);
         }
+
+        renderCharts(functionOrder, functionScores, {
+          physical: physicalIndex,
+          chemical: chemicalIndex,
+          biological: biologicalIndex,
+          ecosystem: ecosystemIndex,
+        });
       };
 
       const renderTable = () => {
@@ -2030,6 +2197,23 @@
           }));
         }
 
+        const functionOrder = [];
+        const seenFunctions = new Set();
+        rowsToRender.forEach((rowItem) => {
+          const functionId = rowItem.functionId;
+          if (!functionId || seenFunctions.has(functionId)) {
+            return;
+          }
+          seenFunctions.add(functionId);
+          const name =
+            rowItem.functionMeta?.name || rowItem.metric?.functionName || 'Function';
+          functionOrder.push({
+            functionId,
+            name,
+            discipline: rowItem.discipline,
+          });
+        });
+
         const renderRows = [];
         rowsToRender.forEach((rowItem) => {
           renderRows.push(rowItem);
@@ -2069,7 +2253,7 @@
           emptyCell.textContent = 'No metrics selected for this assessment.';
           emptyRow.appendChild(emptyCell);
           tbody.appendChild(emptyRow);
-          updateScores(metricRows, indexRows, functionScoreCells);
+          updateScores(metricRows, indexRows, functionScoreCells, functionOrder);
           return;
         }
 
@@ -2530,7 +2714,7 @@
                 activeScenario.ratings[metric.id] = scoreSelect.value;
                 store.save();
               }
-              updateScores(metricRows, indexRows, functionScoreCells);
+              updateScores(metricRows, indexRows, functionScoreCells, functionOrder);
             });
           }
 
@@ -2570,7 +2754,7 @@
           }
         });
 
-        updateScores(metricRows, indexRows, functionScoreCells);
+        updateScores(metricRows, indexRows, functionScoreCells, functionOrder);
       };
 
       const renderTabs = () => {

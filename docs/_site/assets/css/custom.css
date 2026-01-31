@@ -1453,6 +1453,10 @@ body.modal-open {
   font-size: 1rem;
 }
 
+.screening-charts-panel .settings-header h3 {
+  text-align: center;
+}
+
 .settings-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(160px, 1fr));
@@ -1722,6 +1726,122 @@ body.modal-open {
 
 .screening-table .function-score-inline.is-hidden {
   display: none;
+}
+
+.screening-charts-panel {
+  margin-top: 0.85rem;
+}
+
+.screening-charts {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 0.6rem minmax(0, 1fr);
+  gap: 0.9rem;
+}
+
+.screening-chart-spacer {
+  width: 1px;
+  background: #d0d0d0;
+  justify-self: center;
+  align-self: stretch;
+}
+
+.screening-chart-section {
+  background: #ffffff;
+}
+
+.screening-chart-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: #333333;
+}
+
+.screening-chart-body {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.screening-bar-divider {
+  height: 0.4rem;
+  border-top: 1px solid #d3d3d3;
+  margin: 0.1rem 0 0.2rem;
+}
+
+.screening-bar-row {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.6fr) minmax(120px, 2.25fr) 3.5ch;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.screening-bar-label {
+  white-space: nowrap;
+}
+
+.screening-bar-label {
+  font-size: 0.85rem;
+  color: #333333;
+}
+
+.screening-bar-track {
+  position: relative;
+  height: 0.85rem;
+  background: transparent;
+  border: 1px solid #c7c7c7;
+  border-radius: 0;
+  overflow: hidden;
+  width: 100%;
+}
+
+.screening-bar-fill {
+  height: 100%;
+  border-radius: 0;
+  transition: width 0.2s ease;
+}
+
+.screening-bar-value {
+  font-size: 0.85rem;
+  text-align: right;
+  color: #333333;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .screening-charts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .screening-chart-spacer {
+    display: none;
+  }
+}
+
+.screening-chart-empty {
+  font-size: 0.75rem;
+  color: #666666;
+}
+
+.screening-chart-legend {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  color: #333333;
+}
+
+.screening-chart-legend .legend-bar {
+  width: 1.3rem;
+  height: 3.6rem;
+  border: 1px solid #c7c7c7;
+  background: linear-gradient(to bottom, #c8d9f2 0%, #c8d9f2 33.33%, #f5e7a6 33.33%, #f5e7a6 66.66%, #f5b5b5 66.66%, #f5b5b5 100%);
+}
+
+.screening-chart-legend .legend-labels {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  align-items: center;
+  height: 3.6rem;
+  line-height: 1.1;
 }
 
 .criteria-row td {
