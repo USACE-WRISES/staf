@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-sediment-continuity-channel-degradation",
+  "metricId": "sediment-continuity-channel-degradation",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-sediment-continuity-channel-degradation-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-channel-degradation-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "No active downcutting. Bed elevation is stable."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Minor localized incision."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Noticeable incision or one or two moderate headcuts that reduce floodplain access."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Severe channel-wide incision with multiple major headcuts."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-channel-degradation-layer"
+    }
+  ]
+}

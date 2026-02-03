@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-tributary-condition-and-impact",
+  "name": "Tributary condition and impact",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Reach inflow",
+  "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+  "descriptionMarkdown": "Tributaries stable, matching reference (flow, quality, form), with no major flash/pollution surges.",
+  "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "At confluences, visually assess flow stability and turbidity. Supplement with available impairment lists and local monitoring data.",
+  "inputs": [
+    {
+      "label": "Tributary condition and impact",
+      "type": "field",
+      "source": "Watershed and Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "1-2 tributaries are moderately altered or somewhat polluted."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Multiple tributaries are significantly altered and deliver high sediment or pollutants."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Widespread severe tributary impacts that overwhelm the mainstem."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-tributary-condition-and-impact"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field observations with turbidity tube or meter",
+    "available local monitoring datasets",
+    "state assessment listings (where available)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Reach inflow"
+  ]
+}

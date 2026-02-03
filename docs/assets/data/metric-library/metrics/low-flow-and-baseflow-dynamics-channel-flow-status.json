@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-channel-flow-status",
+  "name": "Channel flow status",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Low flow and baseflow dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Evaluates whether the reach maintains adequate wetted depth and continuity during low flow by integrating pool depth, wetted length, exposed bed, and Q90/Q10 differences.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Estimate percent of channel length wetted at typical low-flow conditions and document with photos where feasible.",
+  "inputs": [
+    {
+      "label": "Channel flow status",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": ">75% of channel wetted at normal low flow (or dryness is normal if ephemeral)."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "50-75% wetted."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "25-50% wetted."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "<25% wetted, or mostly disconnected pools in a historically perennial reach."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-channel-flow-status"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field observation and photos",
+    "NAIP imagery",
+    "NHDPlus HR flowline codes",
+    "USGS NWIS zero-flow days (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Low flow and baseflow dynamics"
+  ]
+}

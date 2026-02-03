@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-streamflow-regime-regional-sdam-rapid-metrics",
+  "metricId": "streamflow-regime-regional-sdam-rapid-metrics",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-regional-sdam-rapid-metrics-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-regional-sdam-rapid-metrics-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "SDAM classification matches expected conditions."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Slight discrepancy or uncertainty."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Major mismatch but some evidence of intended flow remains."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Flow category is severely altered from reference."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-regional-sdam-rapid-metrics-layer"
+    }
+  ]
+}

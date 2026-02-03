@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-cpom-retention",
+  "metricId": "carbon-processing-cpom-retention",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-cpom-retention-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-carbon-processing-cpom-retention-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Abundant CPOM retention with stable leaf packs typical for the system."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some retention but partially flushed out."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Sparse organic matter and limited retention."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Essentially no retained organic matter, or severe overload causing anoxia risk."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-cpom-retention-layer"
+    }
+  ]
+}

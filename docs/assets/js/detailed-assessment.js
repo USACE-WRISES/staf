@@ -66,6 +66,7 @@
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const defaultIndexValues = [0, 0.3, 0.7, 1];
+  const defaultProfileId = 'detailed-default';
 
   const buildDefaultCurve = () => ({
     name: 'Default',
@@ -177,6 +178,39 @@
         };
       });
 
+      const metricById = new Map(metrics.map((metric) => [metric.id, metric]));
+      const metricIdSet = new Set(metrics.map((metric) => metric.id));
+
+      const ensureLibraryMetric = (detail) => {
+        if (!detail) {
+          return null;
+        }
+        const existing = metricById.get(detail.metricId);
+        if (existing) {
+          return existing;
+        }
+        const functionName = detail.function || '';
+        const functionKey = normalizeText(functionName);
+        const functionMatch = functionByName.get(functionKey);
+        const metric = {
+          id: detail.metricId,
+          discipline: detail.discipline || functionMatch?.category || 'Other',
+          functionName,
+          functionId: functionMatch ? functionMatch.id : null,
+          metric: detail.name || detail.metricId,
+          context: detail.methodContextMarkdown || '',
+          method: detail.methodContextMarkdown || '',
+          howToMeasure: detail.howToMeasureMarkdown || '',
+          references: Array.isArray(detail.references)
+            ? detail.references.join('; ')
+            : '',
+        };
+        metrics.push(metric);
+        metricById.set(metric.id, metric);
+        metricIdSet.add(metric.id);
+        return metric;
+      };
+
       const tabsHost = container.querySelector('.detailed-tabs');
       const addTabButton = container.querySelector('.detailed-tab-add');
       const nameInput = container.querySelector('.settings-name');
@@ -213,6 +247,7 @@
         metricIds: [],
         fieldValues: {},
         curves: {},
+        metricProfiles: {},
       });
 
       const getActiveScenario = () =>
@@ -226,6 +261,22 @@
       };
 
       const openCurveModal = (metricId) => {
+        if (window.dispatchEvent) {
+          const scenario = getActiveScenario();
+          const profileId =
+            scenario?.metricProfiles?.[metricId] || defaultProfileId;
+          window.dispatchEvent(
+            new CustomEvent('staf:open-inspector', {
+              detail: {
+                tier: 'detailed',
+                metricId,
+                profileId,
+                tab: 'curves',
+              },
+            })
+          );
+          return;
+        }
         const scenario = getActiveScenario();
         if (!scenario || !curveModal) {
           return;
@@ -412,6 +463,12 @@
       addButton.className = 'btn btn-small';
       addButton.textContent = 'Add';
 
+      const libraryButton = document.createElement('button');
+      libraryButton.type = 'button';
+      libraryButton.className = 'btn btn-small library-open-btn';
+      libraryButton.setAttribute('data-open-metric-library', 'true');
+      libraryButton.textContent = 'Metric Library';
+
       const resetButton = document.createElement('button');
       resetButton.type = 'button';
       resetButton.className = 'btn btn-small';
@@ -421,6 +478,7 @@
       controls.appendChild(disciplineFilter);
       controls.appendChild(addSelect);
       controls.appendChild(addButton);
+      controls.appendChild(libraryButton);
       controls.appendChild(resetButton);
 
       if (controlsHost) {
@@ -1318,6 +1376,11 @@
         if (!scenario.metricIds.includes(value)) {
           scenario.metricIds.push(value);
         }
+        if (!scenario.metricProfiles) {
+          scenario.metricProfiles = {};
+        }
+        scenario.metricProfiles[value] = defaultProfileId;
+        ensureCurve(scenario, value);
         addSelect.value = '';
         renderTable();
       });
@@ -1329,17 +1392,109 @@
         }
         scenario.metricIds = [];
         scenario.fieldValues = {};
+        scenario.metricProfiles = {};
         renderTable();
       });
 
       search.addEventListener('input', renderTable);
       disciplineFilter.addEventListener('change', renderTable);
 
+      const addMetricFromLibrary = ({ metricId, profileId, detail }) => {
+        const scenario = getActiveScenario();
+        if (!scenario) {
+          return;
+        }
+        const metric =
+          detail && detail.metricId ? ensureLibraryMetric(detail) : metricById.get(metricId);
+        if (!metric) {
+          return;
+        }
+        if (!scenario.metricIds.includes(metric.id)) {
+          scenario.metricIds.push(metric.id);
+        }
+        if (!scenario.metricProfiles) {
+          scenario.metricProfiles = {};
+        }
+        scenario.metricProfiles[metric.id] = profileId || defaultProfileId;
+        ensureCurve(scenario, metric.id);
+        if (disciplineFilter && metric.discipline) {
+          const exists = Array.from(disciplineFilter.options).some(
+            (option) => option.value === metric.discipline
+          );
+          if (!exists) {
+            const option = document.createElement('option');
+            option.value = metric.discipline;
+            option.textContent = metric.discipline;
+            disciplineFilter.appendChild(option);
+          }
+        }
+        renderTable();
+      };
+
+      const removeMetricFromLibrary = ({ metricId }) => {
+        const scenario = getActiveScenario();
+        if (!scenario || !metricId) {
+          return;
+        }
+        scenario.metricIds = scenario.metricIds.filter((id) => id !== metricId);
+        delete scenario.fieldValues[metricId];
+        if (scenario.curves) {
+          delete scenario.curves[metricId];
+        }
+        if (scenario.metricProfiles) {
+          delete scenario.metricProfiles[metricId];
+        }
+        renderTable();
+      };
+
+      const isMetricAdded = (metricId, profileId) => {
+        const scenario = getActiveScenario();
+        if (!scenario || !metricId) {
+          return false;
+        }
+        if (!scenario.metricIds.includes(metricId)) {
+          return false;
+        }
+        if (!profileId) {
+          return true;
+        }
+        return scenario.metricProfiles && scenario.metricProfiles[metricId] === profileId;
+      };
+
       const renderAll = () => {
         renderTabs();
         renderSettings();
         renderTable();
       };
+
+      if (window.STAFAssessmentRegistry) {
+        window.STAFAssessmentRegistry.register('detailed', {
+          addMetric: addMetricFromLibrary,
+          removeMetric: removeMetricFromLibrary,
+          isMetricAdded,
+          getCurve(metricId) {
+            const scenario = getActiveScenario();
+            if (!scenario) {
+              return null;
+            }
+            return ensureCurve(scenario, metricId);
+          },
+          setCurve(metricId, curve) {
+            const scenario = getActiveScenario();
+            if (!scenario) {
+              return;
+            }
+            if (!scenario.curves) {
+              scenario.curves = {};
+            }
+            scenario.curves[metricId] = curve;
+            renderTable();
+          },
+          refresh() {
+            renderTable();
+          },
+        });
+      }
 
       renderAll();
     } catch (error) {

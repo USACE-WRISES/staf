@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-nutrient-listing-status",
+  "name": "Nutrient listing status",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient cycling",
+  "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+  "descriptionMarkdown": "Nutrients near natural/guidelines unless higher levels are normal (e.g., blackwater).",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Check available impairment listings and monitoring summaries for nutrient-related causes or indicators (for example nitrogen, phosphorus, chlorophyll, nuisance algae).",
+  "inputs": [
+    {
+      "label": "Nutrient listing status",
+      "type": "desktop",
+      "source": "Watershed",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "No known nutrient impairment and monitoring does not indicate persistent issues."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Not listed, but limited data or occasional elevated indicators."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Nutrient impairment is documented or listed for part of the reach or assessment unit."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Nutrient impairment is documented or listed with persistent symptoms such as frequent blooms."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-nutrient-listing-status"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA ATTAINS",
+    "MN MPCA (2022)",
+    "WY DEQ (2021)",
+    "CO SQT 2019."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Nutrient cycling"
+  ]
+}

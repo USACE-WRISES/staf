@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-channel-realignment",
+  "metricId": "channel-and-floodplain-dynamics-channel-realignment",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-channel-realignment-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-channel-realignment-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "0-10% of reach is artificially realigned, or only minor evidence of channelization."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "10-25% of reach shows signs of straightening or dredging."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "25-50% of reach is artificially realigned with major loss of natural planform."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">50% of reach is straightened or ditch-like."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-channel-realignment-layer"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-and-floodplain-dynamics-side-channels",
+  "name": "Side channels",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Channel and floodplain dynamics",
+  "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
+  "descriptionMarkdown": "Assesses whether planform and number of active threads match the natural setting, considering straightening, braiding, and side-channel connectivity.",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map connected side channels and verify likely connection thresholds at about bankfull stage using field checks or elevation profiles.",
+  "inputs": [
+    {
+      "label": "Side channels",
+      "type": "field",
+      "source": "Floodplain",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Multiple side channels remain connected at bankfull or moderate high flows."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some off-channel areas exist but are partially disconnected."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Few mostly inactive channels with connectivity only during large floods."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "No meaningful side-channel function remains despite appropriate valley setting."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-side-channels"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NAIP or orthophotos",
+    "LiDAR profiles for connection sills (where available)",
+    "optional HEC-RAS 2D at bankfull (screening)."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel and floodplain dynamics"
+  ]
+}

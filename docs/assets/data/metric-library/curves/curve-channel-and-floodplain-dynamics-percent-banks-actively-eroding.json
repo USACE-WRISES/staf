@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-percent-banks-actively-eroding",
+  "metricId": "channel-and-floodplain-dynamics-percent-banks-actively-eroding",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-percent-banks-actively-eroding-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-percent-banks-actively-eroding-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "<=10% actively eroding."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "10-25% actively eroding."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "25-50% actively eroding."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">50% actively eroding."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-percent-banks-actively-eroding-layer"
+    }
+  ]
+}

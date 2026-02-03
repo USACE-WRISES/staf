@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-invasive-or-non-native-check",
+  "name": "Invasive or non-native check",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Community dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "Invasives don't dominate if historically native-dominated, unless naturalized species cause minimal impact.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Query available invasive species databases and summarize presence within the watershed or reach. Confirm key species during a field visit where feasible.",
+  "inputs": [
+    {
+      "label": "Invasive or non-native check",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "<5% invasive presence."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "5-20% invasive presence."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "20-50% invasive presence."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">50% invasive presence or one invasive dominates."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-invasive-or-non-native-check"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS Nonindigenous Aquatic Species (NAS)",
+    "EDDMapS",
+    "state invasive species lists."
+  ],
+  "tags": [
+    "Biology",
+    "Community dynamics"
+  ]
+}

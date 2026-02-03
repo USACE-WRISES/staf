@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "bed-composition-and-large-wood-embeddedness-or-fines",
+  "name": "Embeddedness or fines",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Bed composition and large wood",
+  "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+  "descriptionMarkdown": "Presence and clarity of expected bedform sequence (riffle-run-pool or step-pool) indicate organized transport and habitat variety.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Estimate percent of coarse grains buried by fines during a field visit.",
+  "inputs": [
+    {
+      "label": "Embeddedness or fines",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "<25% embedded. Coarse substrate remains open."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "25-50% embedded."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "50-75% embedded."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">75% embedded. Voids are largely filled."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-bed-composition-and-large-wood-embeddedness-or-fines"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field embeddedness estimate",
+    "EPA Water Quality Portal (turbidity/TSS)",
+    "assessment listings for sediment (where available)."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Bed composition and large wood"
+  ]
+}

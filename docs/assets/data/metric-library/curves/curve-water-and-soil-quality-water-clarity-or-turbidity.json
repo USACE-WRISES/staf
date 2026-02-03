@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-water-clarity-or-turbidity",
+  "metricId": "water-and-soil-quality-water-clarity-or-turbidity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-water-clarity-or-turbidity-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-water-clarity-or-turbidity-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Mostly clear and consistent with reference. No obvious pollution."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Slight turbidity or discoloration."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Persistent cloudiness with habitat impacts."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Persistently muddy water or visible sheen indicating severe pollution."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-water-clarity-or-turbidity-layer"
+    }
+  ]
+}

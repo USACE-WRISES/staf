@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-and-floodplain-dynamics-sinuosity",
+  "name": "Sinuosity",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Channel and floodplain dynamics",
+  "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
+  "descriptionMarkdown": "Ratio of channel length to valley length; higher sinuosity indicates greater curvature and habitat variety.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Compute channel centerline length divided by valley length in GIS.",
+  "inputs": [
+    {
+      "label": "Sinuosity",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "About 1.2-1.5, or consistent with local reference for the stream type."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "1.1-1.2."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "1.05-1.1."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "<1.05 where meanders are expected."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-sinuosity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Rosgen (2006)."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel and floodplain dynamics"
+  ]
+}

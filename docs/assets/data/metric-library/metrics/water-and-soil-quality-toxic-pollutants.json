@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-toxic-pollutants",
+  "name": "Toxic pollutants",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Water and soil quality",
+  "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+  "descriptionMarkdown": "No visible sheen or strong odor, consistent with an unpolluted stream.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Note visible sheen or odor and check available contamination or discharge records. Collect samples only when warranted.",
+  "inputs": [
+    {
+      "label": "Toxic pollutants",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "No known exceedances and no visible indicators."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Occasional minor issues or mild odor."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Recognized contamination risk with moderate stress indicators."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Chronic or severe toxin indicators, fish kills, or persistent sheen."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-toxic-pollutants"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Assessment listings (where available)",
+    "EPA TRI and EPA ECHO as supporting context."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Water and soil quality"
+  ]
+}

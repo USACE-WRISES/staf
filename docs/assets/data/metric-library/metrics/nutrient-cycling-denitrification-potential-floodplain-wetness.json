@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-denitrification-potential-floodplain-wetness",
+  "name": "Denitrification potential (floodplain wetness)",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient cycling",
+  "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+  "descriptionMarkdown": "Adequate floodplain/wetland pockets for denitrification, consistent with local reference.",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "howToMeasureMarkdown": "Assess presence of wet pockets and redox indicators. Use hydric soils and wetlands mapping as a screening proxy.",
+  "inputs": [
+    {
+      "label": "Denitrification potential (floodplain wetness)",
+      "type": "field",
+      "source": "Floodplain",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Strong potential with connected wet areas and soils."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some wet zones but partially disconnected."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Limited wetland area and moderate export risk."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "No wetlands or heavily drained soils with low denitrification potential."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-denitrification-potential-floodplain-wetness"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NRCS SSURGO hydric soils",
+    "USFWS National Wetlands Inventory (NWI)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Nutrient cycling"
+  ]
+}

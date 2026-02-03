@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-bank-or-floodplain-soil-condition",
+  "metricId": "water-and-soil-quality-bank-or-floodplain-soil-condition",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-bank-or-floodplain-soil-condition-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-bank-or-floodplain-soil-condition-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Natural soils with no contamination indicators."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Minor dumping or moderate manure presence."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Known moderate contamination risk."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Highly contaminated soils with strong odor or toxicity indicators."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-bank-or-floodplain-soil-condition-layer"
+    }
+  ]
+}

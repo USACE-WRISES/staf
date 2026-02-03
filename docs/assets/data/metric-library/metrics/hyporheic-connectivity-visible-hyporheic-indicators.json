@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-visible-hyporheic-indicators",
+  "name": "Visible hyporheic indicators",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Springs/seeps/subsurface flow show active hyporheic exchange, matching local reference.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Count active upwelling spots, springs, seeps, or other infiltration indicators during a field visit.",
+  "inputs": [
+    {
+      "label": "Visible hyporheic indicators",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Clear presence of subsurface flow pathways."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Occasional or minor seeps."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Rare or uncertain infiltration pathways."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "No evidence of hyporheic exchange. Bed is sealed or compacted."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-visible-hyporheic-indicators"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field observation",
+    "mapped springs/seeps",
+    "thermal IR imagery (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity"
+  ]
+}

@@ -26,17 +26,33 @@
   ];
   const defaultRating = 'Optimal';
   const fallbackCriteriaName = 'Screening';
+  const defaultProfileId = 'screening-default';
   const collapsedGlyph = '&#9656;';
   const expandedGlyph = '&#9662;';
   const storageKey = 'staf_screening_assessments_v1';
   const predefinedName = 'Stream Condition Screening (SCS)';
   const legacyPredefinedName = 'Predefined Screening Assessment';
+  const notifyAssessmentUpdate = () => {
+    if (window.dispatchEvent) {
+      window.dispatchEvent(
+        new CustomEvent('staf:assessment-updated', { detail: { tier: 'screening' } })
+      );
+    }
+  };
 
   const normalizeText = (value) =>
     value
       .toLowerCase()
       .replace(/&/g, 'and')
       .replace(/[^a-z0-9]+/g, '');
+
+  const slugify = (value) =>
+    value
+      .toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80);
 
   const isPredefinedFlag = (value) => {
     if (!value) {
@@ -174,11 +190,22 @@
           ? curvesResult.value.curves || {}
           : {};
 
+      const libraryIdCounts = new Map();
+      const buildLibraryId = (functionName, metricName) => {
+        const baseId =
+          slugify(`${functionName}-${metricName}`) || slugify(metricName) || 'metric';
+        const count = libraryIdCounts.get(baseId) || 0;
+        libraryIdCounts.set(baseId, count + 1);
+        return count ? `${baseId}-${count + 1}` : baseId;
+      };
+
       const metrics = metricsRaw.map((row, index) => {
         const functionKey = normalizeText(row.Function || row.function || '');
         const functionMatch = functionByName.get(functionKey);
+        const libraryId = buildLibraryId(row.Function || row.function || '', row.Metric || row.metric || '');
         return {
           id: `metric-${index + 1}`,
+          libraryId,
           discipline: row.Discipline || row.discipline || '',
           functionName: row.Function || row.function || '',
           functionStatement:
@@ -207,6 +234,89 @@
 
       const metricById = new Map(metrics.map((metric) => [metric.id, metric]));
       const metricIdSet = new Set(metrics.map((metric) => metric.id));
+      const libraryIdToMetricId = new Map(
+        metrics
+          .filter((metric) => metric.libraryId)
+          .map((metric) => [metric.libraryId, metric.id])
+      );
+
+      const resolveMetricId = (metricId) =>
+        libraryIdToMetricId.get(metricId) || metricId;
+
+      const resolveLibraryId = (metricId) =>
+        metricById.get(metricId)?.libraryId || metricId;
+
+      const buildCriteriaFromProfile = (profile) => {
+        if (!profile || !profile.scoring) {
+          return {
+            optimal: '',
+            suboptimal: '',
+            marginal: '',
+            poor: '',
+          };
+        }
+        if (profile.scoring.type !== 'categorical') {
+          return {
+            optimal: '',
+            suboptimal: '',
+            marginal: '',
+            poor: '',
+          };
+        }
+        const levels = profile.scoring.rubric?.levels || [];
+        const findLevel = (label) =>
+          levels.find(
+            (level) =>
+              normalizeText(level.label || '') === normalizeText(label) ||
+              normalizeText(level.ratingId || '') === normalizeText(label)
+          );
+        return {
+          optimal: findLevel('optimal')?.criteriaMarkdown || '',
+          suboptimal: findLevel('suboptimal')?.criteriaMarkdown || '',
+          marginal: findLevel('marginal')?.criteriaMarkdown || '',
+          poor: findLevel('poor')?.criteriaMarkdown || '',
+        };
+      };
+
+      const ensureLibraryMetric = (detail, profileId) => {
+        if (!detail) {
+          return null;
+        }
+        const existing =
+          metricById.get(detail.metricId) || metricById.get(resolveMetricId(detail.metricId));
+        if (existing) {
+          return existing;
+        }
+        const functionKey = normalizeText(detail.function || '');
+        const functionMatch = functionByName.get(functionKey);
+        const profile =
+          detail.profiles?.find((p) => p.profileId === profileId) ||
+          detail.profiles?.[0];
+        const criteria = buildCriteriaFromProfile(profile);
+        const metric = {
+          id: detail.metricId,
+          libraryId: detail.metricId,
+          discipline: detail.discipline || functionMatch?.category || 'Other',
+          functionName: detail.function || '',
+          functionStatement: detail.functionStatement || '',
+          functionId: functionMatch ? functionMatch.id : null,
+          metric: detail.name || detail.metricId,
+          metricStatement: detail.descriptionMarkdown || '',
+          isPredefined: false,
+          context: detail.methodContextMarkdown || '',
+          method: detail.methodContextMarkdown || '',
+          howToMeasure: detail.howToMeasureMarkdown || '',
+          criteria,
+          references: Array.isArray(detail.references)
+            ? detail.references.join('; ')
+            : '',
+        };
+        metrics.push(metric);
+        metricById.set(metric.id, metric);
+        metricIdSet.add(metric.id);
+        libraryIdToMetricId.set(metric.libraryId, metric.id);
+        return metric;
+      };
 
       const starMetricIdsByFunction = new Map();
       metrics.forEach((metric) => {
@@ -341,11 +451,15 @@
           metricIds: ids,
           ratings: buildRatings(ids),
           curves: buildCurveMap(ids),
+          metricProfiles: ids.reduce((acc, id) => {
+            acc[id] = defaultProfileId;
+            return acc;
+          }, {}),
           defaultCriteriaName: fallbackCriteriaName,
           criteriaOverrides: {},
           showAdvancedScoring: false,
           showRollupComputations: false,
-          showCondensedView: false,
+          showCondensedView: true,
         };
       };
 
@@ -372,13 +486,22 @@
           metricIds: Array.from(metricIds),
           ratings: buildRatings(metricIds, source.ratings),
           curves: source.curves ? cloneCurve(source.curves) : buildCurveMap(metricIds),
+          metricProfiles: source.metricProfiles
+            ? { ...source.metricProfiles }
+            : Array.from(metricIds).reduce((acc, id) => {
+                acc[id] = defaultProfileId;
+                return acc;
+              }, {}),
           defaultCriteriaName: normalizedDefaultCriteriaName,
           criteriaOverrides: source.criteriaOverrides
             ? { ...source.criteriaOverrides }
             : {},
           showAdvancedScoring: Boolean(source.showAdvancedScoring),
           showRollupComputations: Boolean(source.showRollupComputations),
-          showCondensedView: Boolean(source.showCondensedView),
+          showCondensedView:
+            typeof source.showCondensedView === 'boolean'
+              ? source.showCondensedView
+              : true,
         };
         store.scenarios.push(newScenario);
         store.activeId = newScenario.id;
@@ -409,6 +532,11 @@
             curves[id] = normalizeCurve(curves[id], metricById.get(id));
           }
         });
+        const metricProfiles = ids.reduce((acc, id) => {
+          const profileId = scenario.metricProfiles ? scenario.metricProfiles[id] : null;
+          acc[id] = profileId || defaultProfileId;
+          return acc;
+        }, {});
         return {
           id: scenario.id || generateId(),
           type,
@@ -426,11 +554,15 @@
           metricIds: ids,
           ratings: buildRatings(ids, scenario.ratings),
           curves,
+          metricProfiles,
           defaultCriteriaName: normalizedDefaultCriteriaName,
           criteriaOverrides: scenario.criteriaOverrides ? { ...scenario.criteriaOverrides } : {},
           showAdvancedScoring: Boolean(scenario.showAdvancedScoring),
           showRollupComputations: Boolean(scenario.showRollupComputations),
-          showCondensedView: Boolean(scenario.showCondensedView),
+          showCondensedView:
+            typeof scenario.showCondensedView === 'boolean'
+              ? scenario.showCondensedView
+              : true,
         };
       };
 
@@ -964,6 +1096,21 @@
       };
 
       const openCurveModal = (metricId, preferredLayerId) => {
+        if (window.dispatchEvent) {
+          const profileId =
+            activeScenario?.metricProfiles?.[metricId] || defaultProfileId;
+          window.dispatchEvent(
+            new CustomEvent('staf:open-inspector', {
+              detail: {
+                tier: 'screening',
+                metricId: resolveLibraryId(metricId),
+                profileId,
+                tab: 'curves',
+              },
+            })
+          );
+          return;
+        }
         if (!curveModal) {
           return;
         }
@@ -1472,7 +1619,6 @@
                   }
                   activeScenario.metricIds = Array.from(selectedMetricIds);
                   store.save();
-                  buildAddOptions();
                   renderTable();
                   renderLibraryTable();
                 });
@@ -1571,7 +1717,8 @@
       const libraryButton = document.createElement('button');
       libraryButton.type = 'button';
       libraryButton.className = 'btn btn-small library-open-btn';
-      libraryButton.setAttribute('aria-label', 'View Screening Metric Toolbox');
+      libraryButton.setAttribute('aria-label', 'View Metric Library');
+      libraryButton.setAttribute('data-open-metric-library', 'true');
       libraryButton.innerHTML =
         '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
         '<path d="M3 5.5h7.5c1.7 0 3 1.1 3 2.5v11H6c-1.7 0-3-1.1-3-2.5V5.5z" fill="none" stroke="currentColor" stroke-width="1.5"></path>' +
@@ -1580,20 +1727,8 @@
         '<path d="M6 11h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>' +
         '</svg>';
       const libraryText = document.createElement('span');
-      libraryText.textContent = 'Metric Toolbox';
+      libraryText.textContent = 'Metric Library';
       libraryButton.appendChild(libraryText);
-
-      const addSelect = document.createElement('select');
-      addSelect.className = 'metric-add-select';
-      const addPlaceholder = document.createElement('option');
-      addPlaceholder.value = '';
-      addPlaceholder.textContent = 'Quick Add metric...';
-      addSelect.appendChild(addPlaceholder);
-
-      const addButton = document.createElement('button');
-      addButton.type = 'button';
-      addButton.className = 'btn btn-small';
-      addButton.textContent = 'Add';
 
       const resetButton = document.createElement('button');
       resetButton.type = 'button';
@@ -1603,8 +1738,6 @@
       controls.appendChild(search);
       controls.appendChild(disciplineFilter);
       controls.appendChild(libraryButton);
-      controls.appendChild(addSelect);
-      controls.appendChild(addButton);
       controls.appendChild(resetButton);
 
       libraryButton.addEventListener('click', openLibrary);
@@ -1619,6 +1752,52 @@
           closeLibrary();
         }
       });
+
+      const setMetricLibraryFilters = (discipline, functionName) => {
+        const workbench = container.querySelector('.assessment-workbench');
+        if (!workbench) {
+          return;
+        }
+        const disciplineSelect = workbench.querySelector('.metric-library-discipline');
+        const functionSelect = workbench.querySelector('.metric-library-function');
+        const setSelectValue = (select, value) => {
+          if (!select) {
+            return;
+          }
+          const normalizedValue = normalizeText(value || '');
+          const match = Array.from(select.options).find(
+            (option) => normalizeText(option.value || '') === normalizedValue
+          );
+          select.value = match ? match.value : 'all';
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+        if (disciplineSelect) {
+          setSelectValue(disciplineSelect, discipline);
+        }
+        if (functionSelect) {
+          setSelectValue(functionSelect, functionName);
+        }
+      };
+
+      const openMetricLibraryWithFilters = (discipline, functionName) => {
+        if (window.dispatchEvent) {
+          window.dispatchEvent(
+            new CustomEvent('staf:set-library-filters', {
+              detail: { tier: 'screening', discipline, functionName },
+            })
+          );
+          return;
+        }
+        const workbench = container.querySelector('.assessment-workbench');
+        const leftSidebar = workbench?.querySelector('.metric-library-sidebar');
+        if (leftSidebar) {
+          leftSidebar.classList.remove('is-collapsed');
+          workbench.classList.remove('is-left-collapsed');
+        } else if (libraryButton) {
+          libraryButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+        }
+        setMetricLibraryFilters(discipline, functionName);
+      };
 
       advancedToggle.addEventListener('change', () => {
         if (!activeScenario) {
@@ -1816,23 +1995,6 @@
         if (condensedToggle) {
           condensedToggle.checked = getShowCondensedView();
         }
-      };
-
-      const buildAddOptions = () => {
-        addSelect.innerHTML = '';
-        addSelect.appendChild(addPlaceholder);
-        const disciplineValue = disciplineFilter.value;
-        metrics
-          .filter((metric) => !selectedMetricIds.has(metric.id))
-          .filter(
-            (metric) => disciplineValue === 'all' || metric.discipline === disciplineValue
-          )
-          .forEach((metric) => {
-            const option = document.createElement('option');
-            option.value = metric.id;
-            option.textContent = `${metric.functionName}: ${metric.metric}`;
-            addSelect.appendChild(option);
-          });
       };
 
       const disciplineColors = {
@@ -2332,7 +2494,14 @@
 
           if (!rowItem._disciplineSkip) {
             const disciplineCell = document.createElement('td');
-            disciplineCell.textContent = rowItem.discipline;
+            const disciplineLink = document.createElement('button');
+            disciplineLink.type = 'button';
+            disciplineLink.className = 'metric-curve-link';
+            disciplineLink.textContent = rowItem.discipline;
+            disciplineLink.addEventListener('click', () => {
+              openMetricLibraryWithFilters(rowItem.discipline, 'all');
+            });
+            disciplineCell.appendChild(disciplineLink);
             disciplineCell.className = 'discipline-cell col-discipline';
             disciplineCell.rowSpan = rowItem._disciplineSpan || 1;
             if (disciplineActive.get(rowItem.discipline)) {
@@ -2358,8 +2527,13 @@
             }
             const functionNameLine = document.createElement('div');
             functionNameLine.className = 'function-title';
-            const functionNameText = document.createElement('span');
+            const functionNameText = document.createElement('button');
+            functionNameText.type = 'button';
+            functionNameText.className = 'metric-curve-link';
             functionNameText.textContent = functionName;
+            functionNameText.addEventListener('click', () => {
+              openMetricLibraryWithFilters(rowItem.discipline, functionName);
+            });
             functionNameLine.appendChild(functionNameText);
             const functionToggle = document.createElement('button');
             functionToggle.type = 'button';
@@ -2444,34 +2618,7 @@
               headerRow.className = 'criteria-summary-header';
               const headerLabel = document.createElement('span');
               headerLabel.textContent = 'Scoring Criteria';
-              const editBtn = document.createElement('button');
-              editBtn.type = 'button';
-              editBtn.className = 'btn btn-small btn-flat criteria-edit';
-              editBtn.setAttribute('aria-label', 'Edit reference curve');
-              editBtn.innerHTML =
-                '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-                '<path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>' +
-                '<path d="M14.06 4.94l3.75 3.75 1.44-1.44a1.5 1.5 0 0 0 0-2.12l-1.63-1.63a1.5 1.5 0 0 0-2.12 0l-1.44 1.44z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>' +
-                '</svg>';
-              editBtn.addEventListener('click', () => {
-                if (!curve) {
-                  return;
-                }
-                if (criteriaLayer) {
-                  curve.activeLayerId = criteriaLayer.id;
-                  openCurveModal(detailsMetric.id, criteriaLayer.id);
-                  return;
-                }
-                const defaultName = resolveDefaultCriteriaName();
-                const defaultLayer =
-                  getCurveLayerByName(curve, defaultName) || getCurveLayer(curve);
-                if (defaultLayer) {
-                  curve.activeLayerId = defaultLayer.id;
-                  openCurveModal(detailsMetric.id, defaultLayer.id);
-                }
-              });
               headerRow.appendChild(headerLabel);
-              headerRow.appendChild(editBtn);
               details.appendChild(headerRow);
 
               const summaryTable = buildCurveSummaryTable(curve, criteriaLayer);
@@ -2484,12 +2631,35 @@
           }
 
           const metricCell = document.createElement('td');
-          metricCell.className = 'col-metric metric-cell';
-          const metricText = document.createElement('span');
+          metricCell.className = 'col-metric';
+          const metricText =
+            rowItem.type === 'placeholder'
+              ? document.createElement('span')
+              : document.createElement('button');
           metricText.textContent =
             rowItem.type === 'placeholder'
               ? 'No metrics selected for this function'
               : metric.metric;
+          if (rowItem.type === 'metric') {
+            metricText.type = 'button';
+            metricText.className = 'metric-curve-link';
+            metricText.addEventListener('click', () => {
+              if (window.dispatchEvent) {
+                const profileId =
+                  activeScenario?.metricProfiles?.[metric.id] || defaultProfileId;
+                window.dispatchEvent(
+                  new CustomEvent('staf:open-inspector', {
+                    detail: {
+                      tier: 'screening',
+                      metricId: resolveLibraryId(metric.id),
+                      profileId,
+                      tab: 'details',
+                    },
+                  })
+                );
+              }
+            });
+          }
           metricCell.appendChild(metricText);
           let criteriaBtn = null;
           if (rowItem.type === 'metric') {
@@ -2510,17 +2680,7 @@
             });
             metricCell.appendChild(criteriaBtn);
           }
-          if (
-            rowItem.type === 'metric' &&
-            metric.metricStatement &&
-            metric.metricStatement.trim() &&
-            expandedMetrics.has(metric.id)
-          ) {
-            const metricStatement = document.createElement('div');
-            metricStatement.className = 'metric-statement';
-            metricStatement.textContent = metric.metricStatement;
-            metricCell.appendChild(metricStatement);
-          }
+
 
           const scoreCell = document.createElement('td');
           scoreCell.className = 'col-metric-score';
@@ -2617,35 +2777,7 @@
                 store.save();
                 renderTable();
               });
-              const editBtn = document.createElement('button');
-              editBtn.type = 'button';
-              editBtn.className = 'btn btn-small btn-flat criteria-edit';
-              editBtn.setAttribute('aria-label', 'Edit reference curve');
-              editBtn.innerHTML =
-                '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-                '<path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>' +
-                '<path d="M14.06 4.94l3.75 3.75 1.44-1.44a1.5 1.5 0 0 0 0-2.12l-1.63-1.63a1.5 1.5 0 0 0-2.12 0l-1.44 1.44z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>' +
-                '</svg>';
-              editBtn.addEventListener('click', () => {
-                const selectedId = criteriaSelect.value;
-                if (curve && selectedId) {
-                  curve.activeLayerId = selectedId;
-                  openCurveModal(metric.id, selectedId);
-                  return;
-                }
-                if (!curve) {
-                  return;
-                }
-                const defaultName = resolveDefaultCriteriaName();
-                const defaultLayer =
-                  getCurveLayerByName(curve, defaultName) || getCurveLayer(curve);
-                if (defaultLayer) {
-                  curve.activeLayerId = defaultLayer.id;
-                  openCurveModal(metric.id, defaultLayer.id);
-                }
-              });
               criteriaWrap.appendChild(criteriaSelect);
-              criteriaWrap.appendChild(editBtn);
               criteriaCell.appendChild(criteriaWrap);
             } else {
               const defaultPill = document.createElement('button');
@@ -2732,8 +2864,10 @@
             if (activeScenario.criteriaOverrides) {
               delete activeScenario.criteriaOverrides[metric.id];
             }
+            if (activeScenario.metricProfiles) {
+              delete activeScenario.metricProfiles[metric.id];
+            }
             store.save();
-            buildAddOptions();
             renderTable();
           });
 
@@ -2809,6 +2943,19 @@
             delete scenario.criteriaOverrides[metricId];
           }
         });
+        if (!scenario.metricProfiles) {
+          scenario.metricProfiles = {};
+        }
+        scenario.metricIds.forEach((id) => {
+          if (!scenario.metricProfiles[id]) {
+            scenario.metricProfiles[id] = defaultProfileId;
+          }
+        });
+        Object.keys(scenario.metricProfiles).forEach((metricId) => {
+          if (!selectedMetricIds.has(metricId)) {
+            delete scenario.metricProfiles[metricId];
+          }
+        });
         if (!scenario.defaultCriteriaName) {
           scenario.defaultCriteriaName = fallbackCriteriaName;
         }
@@ -2819,7 +2966,7 @@
           scenario.showRollupComputations = false;
         }
         if (typeof scenario.showCondensedView !== 'boolean') {
-          scenario.showCondensedView = false;
+          scenario.showCondensedView = true;
         }
         store.save();
 
@@ -2834,8 +2981,6 @@
         }
 
         const isPredefined = scenario.type === 'predefined';
-        addSelect.disabled = isPredefined;
-        addButton.disabled = isPredefined;
         resetButton.disabled = isPredefined;
         if (duplicateBtn) {
           duplicateBtn.disabled = false;
@@ -2853,8 +2998,8 @@
           notesInput.readOnly = isPredefined;
         }
 
-        buildAddOptions();
         renderTable();
+        notifyAssessmentUpdate();
       };
 
       if (nameInput) {
@@ -2891,26 +3036,6 @@
       search.addEventListener('input', renderTable);
       disciplineFilter.addEventListener('change', () => {
         renderTable();
-        buildAddOptions();
-      });
-
-      addButton.addEventListener('click', () => {
-        if (!activeScenario || activeScenario.type === 'predefined') {
-          return;
-        }
-        const metricId = addSelect.value;
-        if (!metricId) {
-          return;
-        }
-        selectedMetricIds.add(metricId);
-        metricRatings.set(metricId, metricRatings.get(metricId) || defaultRating);
-        activeScenario.metricIds = Array.from(selectedMetricIds);
-        activeScenario.ratings[metricId] = metricRatings.get(metricId);
-        ensureCurve(activeScenario, metricId);
-        store.save();
-        buildAddOptions();
-        renderTable();
-        addSelect.value = '';
       });
 
       resetButton.addEventListener('click', () => {
@@ -2923,8 +3048,8 @@
         activeScenario.ratings = {};
         activeScenario.curves = {};
         activeScenario.criteriaOverrides = {};
+        activeScenario.metricProfiles = {};
         store.save();
-        buildAddOptions();
         renderTable();
       });
 
@@ -2961,6 +3086,135 @@
           store.save();
           applyScenario(store.active());
           renderTabs();
+        });
+      }
+
+      const addMetricFromLibrary = ({ metricId, profileId, detail }) => {
+        if (!activeScenario) {
+          return;
+        }
+        if (activeScenario.type === 'predefined') {
+          duplicateScenario(activeScenario);
+          activeScenario = store.active();
+        }
+        if (!activeScenario || activeScenario.type === 'predefined') {
+          return;
+        }
+        const metricDetail = detail || null;
+        const metric =
+          metricDetail && metricDetail.metricId
+            ? ensureLibraryMetric(metricDetail, profileId)
+            : metricById.get(resolveMetricId(metricId));
+        if (!metric) {
+          return;
+        }
+        selectedMetricIds.add(metric.id);
+        metricRatings.set(metric.id, metricRatings.get(metric.id) || defaultRating);
+        activeScenario.metricIds = Array.from(selectedMetricIds);
+        activeScenario.ratings[metric.id] = metricRatings.get(metric.id);
+        if (!activeScenario.metricProfiles) {
+          activeScenario.metricProfiles = {};
+        }
+        activeScenario.metricProfiles[metric.id] = profileId || defaultProfileId;
+        if (disciplineFilter && metric.discipline) {
+          const exists = Array.from(disciplineFilter.options).some(
+            (option) => option.value === metric.discipline
+          );
+          if (!exists) {
+            const option = document.createElement('option');
+            option.value = metric.discipline;
+            option.textContent = metric.discipline;
+            disciplineFilter.appendChild(option);
+          }
+        }
+        ensureCurve(activeScenario, metric.id);
+        store.save();
+        renderTable();
+        notifyAssessmentUpdate();
+      };
+
+      const removeMetricFromLibrary = ({ metricId }) => {
+        if (!activeScenario || activeScenario.type === 'predefined') {
+          return;
+        }
+        if (!metricId) {
+          return;
+        }
+        const resolvedId = resolveMetricId(metricId);
+        selectedMetricIds.delete(resolvedId);
+        metricRatings.delete(resolvedId);
+        activeScenario.metricIds = Array.from(selectedMetricIds);
+        delete activeScenario.ratings[resolvedId];
+        if (activeScenario.curves) {
+          delete activeScenario.curves[resolvedId];
+        }
+        if (activeScenario.criteriaOverrides) {
+          delete activeScenario.criteriaOverrides[resolvedId];
+        }
+        if (activeScenario.metricProfiles) {
+          delete activeScenario.metricProfiles[resolvedId];
+        }
+        store.save();
+        renderTable();
+        notifyAssessmentUpdate();
+      };
+
+      const isMetricAdded = (metricId, profileId) => {
+        if (!metricId || !activeScenario) {
+          return false;
+        }
+        const resolvedId = resolveMetricId(metricId);
+        if (!selectedMetricIds.has(resolvedId)) {
+          return false;
+        }
+        if (!profileId) {
+          return true;
+        }
+        return (
+          activeScenario.metricProfiles &&
+          activeScenario.metricProfiles[resolvedId] === profileId
+        );
+      };
+
+      if (window.STAFAssessmentRegistry) {
+        window.STAFAssessmentRegistry.register('screening', {
+          addMetric: addMetricFromLibrary,
+          removeMetric: removeMetricFromLibrary,
+          isMetricAdded,
+          getProfile(metricId) {
+            if (!activeScenario) {
+              return null;
+            }
+            const resolvedId = resolveMetricId(metricId);
+            return activeScenario.metricProfiles
+              ? activeScenario.metricProfiles[resolvedId]
+              : null;
+          },
+          isReadOnly() {
+            return Boolean(activeScenario && activeScenario.type === 'predefined');
+          },
+          getCurve(metricId) {
+            if (!activeScenario) {
+              return null;
+            }
+            const resolvedId = resolveMetricId(metricId);
+            return ensureCurve(activeScenario, resolvedId);
+          },
+          setCurve(metricId, curve) {
+            if (!activeScenario) {
+              return;
+            }
+            if (!activeScenario.curves) {
+              activeScenario.curves = {};
+            }
+            const resolvedId = resolveMetricId(metricId);
+            activeScenario.curves[resolvedId] = curve;
+            store.save();
+            renderTable();
+          },
+          refresh() {
+            renderTable();
+          },
         });
       }
 

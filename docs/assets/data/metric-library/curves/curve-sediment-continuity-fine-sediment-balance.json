@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-sediment-continuity-fine-sediment-balance",
+  "metricId": "sediment-continuity-fine-sediment-balance",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-sediment-continuity-fine-sediment-balance-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-fine-sediment-balance-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Low chronic turbidity and minimal fines, or regionally normal conditions."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Minor silt layers or partial turbidity."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "High turbidity or moderate silt coverage."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Severe siltation or turbidity that smothers substrate."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-fine-sediment-balance-layer"
+    }
+  ]
+}

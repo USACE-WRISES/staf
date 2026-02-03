@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-community-dynamics-macroinvertebrate-taxa-richness",
+  "metricId": "community-dynamics-macroinvertebrate-taxa-richness",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-macroinvertebrate-taxa-richness-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-macroinvertebrate-taxa-richness-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Four to five or more distinct major groups."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Two to four distinct major groups."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "One to two distinct major groups."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Zero, or only one extremely tolerant group."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-macroinvertebrate-taxa-richness-layer"
+    }
+  ]
+}

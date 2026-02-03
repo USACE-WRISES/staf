@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-in-stream-habitat-complexity",
+  "metricId": "habitat-provision-in-stream-habitat-complexity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-in-stream-habitat-complexity-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-habitat-provision-in-stream-habitat-complexity-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Multiple habitat types well represented."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some variety but key elements are missing."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Mostly uniform with only 1-2 distinct features."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Very uniform channel with limited structural diversity."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-in-stream-habitat-complexity-layer"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-native-species-presence",
+  "name": "Native species presence",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Community dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "Most historically native fish/inverts remain, unless naturally low-diversity (headwaters, ephemeral).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Compare observed fish and invertebrate lists to available historical records or reference expectations.",
+  "inputs": [
+    {
+      "label": "Native species presence",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Most native taxa expected for the stream type are present."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "A few sensitive native taxa are missing."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Several native taxa are absent and tolerant taxa dominate."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Widespread loss of native taxa with invasive or tolerant taxa dominating."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-native-species-presence"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NatureServe Explorer",
+    "state Natural Heritage Program lists and records."
+  ],
+  "tags": [
+    "Biology",
+    "Community dynamics"
+  ]
+}

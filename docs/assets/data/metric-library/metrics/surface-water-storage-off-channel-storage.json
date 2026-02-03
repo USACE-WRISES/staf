@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-off-channel-storage",
+  "name": "Off-channel storage",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Side channels/beaver ponds/oxbows connect during moderate floods, providing off-channel storage and habitat.",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map side channels and oxbows and verify whether they connect at about bankfull stage. Use simple inundation mapping if needed.",
+  "inputs": [
+    {
+      "label": "Off-channel storage",
+      "type": "field",
+      "source": "Floodplain",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Multiple off-channel features connect in moderate floods."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Partial connection or fewer off-channel areas."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Only large floods access these areas, or off-channel areas are minimal."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Off-channel features are mostly gone or permanently cut off."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-off-channel-storage"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "LiDAR/DEM and aerial imagery",
+    "optional HEC-RAS 2D bankfull inundation (screening)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage"
+  ]
+}

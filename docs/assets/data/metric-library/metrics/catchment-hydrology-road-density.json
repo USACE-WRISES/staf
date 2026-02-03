@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "catchment-hydrology-road-density",
+  "name": "Road density",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Catchment hydrology",
+  "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+  "descriptionMarkdown": "Road density is low enough to avoid significant runoff or sediment inputs, consistent with minimal watershed impact.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Sum total road length inside the watershed boundary and divide by watershed area (km roads per km2) using a roads layer.",
+  "inputs": [
+    {
+      "label": "Road density",
+      "type": "desktop",
+      "source": "Watershed",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "<0.5 km roads per km2. Few crossings."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "0.5-1.0 km per km2."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "1-2 km per km2. Noticeable effect on runoff and sediment."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">2 km per km2, or frequent crossings delivering heavy pollution."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-catchment-hydrology-road-density"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "TIGER/Line roads or OpenStreetMap roads",
+    "EPA EnviroAtlas (where available)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Catchment hydrology"
+  ]
+}

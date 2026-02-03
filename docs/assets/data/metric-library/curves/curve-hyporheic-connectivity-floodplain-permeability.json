@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-hyporheic-connectivity-floodplain-permeability",
+  "metricId": "hyporheic-connectivity-floodplain-permeability",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-floodplain-permeability-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-floodplain-permeability-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Permeable floodplain soils that support subsurface flow."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Partially permeable soils or some clogging."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Mostly fine fill or bedrock that limits infiltration."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Heavily compacted or lined soils with minimal subsurface exchange."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-floodplain-permeability-layer"
+    }
+  ]
+}

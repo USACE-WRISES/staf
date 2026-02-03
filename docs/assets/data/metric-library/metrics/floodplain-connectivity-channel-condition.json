@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "floodplain-connectivity-channel-condition",
+  "name": "Channel condition",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Floodplain connectivity",
+  "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
+  "descriptionMarkdown": "Stable, not heavily dredged/incised, allowing normal overbank flows/meanders unless dredging is historical.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Identify incision, dredging, levees, and spoil banks from imagery and confirm in the field or with historical sources where feasible.",
+  "inputs": [
+    {
+      "label": "Channel condition",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Stable channel that is not incised or dredged with frequent floodplain access."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Slight channelization or partial dredging."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Heavily modified or incised channel with limited floodplain access."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Deeply dredged or channelized reach with little functional floodplain."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-floodplain-connectivity-channel-condition"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NAIP imagery and historical aerials/topos",
+    "National Levee Database (NLD) and FEMA floodplain layers (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Floodplain connectivity"
+  ]
+}

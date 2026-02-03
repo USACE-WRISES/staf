@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-percent-forested-land-cover-in-watershed",
+  "name": "Percent forested land cover in watershed",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Light and thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Shade is sufficient for this stream type, matching historical conditions unless naturally open.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Quantify percent forest cover and canopy cover using land cover or tree canopy layers. Where possible, summarize within a riparian buffer to better represent shading.",
+  "inputs": [
+    {
+      "label": "Percent forested land cover in watershed",
+      "type": "desktop",
+      "source": "Watershed",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "High canopy cover, often 75-100% shade in shaded systems, or consistent with reference for the region."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Moderate canopy cover, often 50-75% shade."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Low canopy cover, often 25-50% shade."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Very low canopy cover, often <25% shade where shading is expected."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-percent-forested-land-cover-in-watershed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MN SQT 2020",
+    "SC SQT 2021",
+    "WI SQT 2022",
+    "NLCD Land Cover and/or NLCD Tree Canopy Cover."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light and thermal regime"
+  ]
+}

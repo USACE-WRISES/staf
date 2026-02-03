@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-meander-cutoffs-or-avulsions",
+  "metricId": "channel-and-floodplain-dynamics-meander-cutoffs-or-avulsions",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-meander-cutoffs-or-avulsions-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-meander-cutoffs-or-avulsions-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Rare or slow cutoffs consistent with long-term references."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Occasional cutoffs but not drastically more frequent than normal."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Multiple cutoffs over recent decades suggesting partial instability."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Frequent or large-scale avulsions or cutoffs indicating severe instability or artificial triggers."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-meander-cutoffs-or-avulsions-layer"
+    }
+  ]
+}

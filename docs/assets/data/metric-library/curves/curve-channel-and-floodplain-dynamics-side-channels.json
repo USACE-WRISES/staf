@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-side-channels",
+  "metricId": "channel-and-floodplain-dynamics-side-channels",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-side-channels-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-side-channels-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Multiple side channels remain connected at bankfull or moderate high flows."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some off-channel areas exist but are partially disconnected."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Few mostly inactive channels with connectivity only during large floods."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "No meaningful side-channel function remains despite appropriate valley setting."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-side-channels-layer"
+    }
+  ]
+}

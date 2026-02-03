@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-large-wood-bed-surface-grain-size-pebble-count",
+  "metricId": "bed-composition-and-large-wood-bed-surface-grain-size-pebble-count",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-bed-surface-grain-size-pebble-count-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-bed-surface-grain-size-pebble-count-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Open interstitial coarse bed with minimal fines."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Mild embedding or partial fine coverage."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Strong embedding or siltation limiting infiltration."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Predominantly fine or consolidated bed with little interstitial space."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-bed-surface-grain-size-pebble-count-layer"
+    }
+  ]
+}

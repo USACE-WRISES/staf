@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-substrate-exposure-during-low-flow",
+  "metricId": "low-flow-and-baseflow-dynamics-substrate-exposure-during-low-flow",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-low-flow-and-baseflow-dynamics-substrate-exposure-during-low-flow-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-substrate-exposure-during-low-flow-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Minimal bed exposure (<25%), or dryness is normal for the stream type."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "25-50% exposure."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "50-75% exposure."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">75% exposed, or dryness in a historically perennial reach."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-substrate-exposure-during-low-flow-layer"
+    }
+  ]
+}

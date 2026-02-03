@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-flow-permanence-stats",
+  "name": "Flow permanence stats",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Streamflow regime",
+  "functionStatement": "\"Integrates the range of \"\"typical\"\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).\"",
+  "descriptionMarkdown": "Flow permanence describes whether overall flow duration (ephemeral, intermittent, or perennial) and baseflow conditions match the expected natural regime, using SDAM class, streambed vegetation indicators, mean annual flow statistics, and where available, flowing-days data.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "From gage records, compute zero-flow days and cessation periods. Where ungauged, compile spot-flow or logger observations where available.",
+  "inputs": [
+    {
+      "label": "Flow permanence stats",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Flow permanence is stable and near the historical pattern for the stream type."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Minor changes in dry or wet intervals."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Significant changes in flow permanence (for example a formerly perennial reach goes dry for extended periods)."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Major departure from reference flow permanence. Flow regime category is effectively changed."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-flow-permanence-stats"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS NWIS daily flow (where available)",
+    "The Nature Conservancy IHA or USGS EflowStats",
+    "local spot-flow or logger datasets."
+  ],
+  "tags": [
+    "Hydrology",
+    "Streamflow regime"
+  ]
+}

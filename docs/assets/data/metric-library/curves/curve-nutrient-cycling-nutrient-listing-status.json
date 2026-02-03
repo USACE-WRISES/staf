@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-nutrient-listing-status",
+  "metricId": "nutrient-cycling-nutrient-listing-status",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-nutrient-listing-status-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-nutrient-listing-status-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "No known nutrient impairment and monitoring does not indicate persistent issues."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Not listed, but limited data or occasional elevated indicators."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Nutrient impairment is documented or listed for part of the reach or assessment unit."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Nutrient impairment is documented or listed with persistent symptoms such as frequent blooms."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-nutrient-listing-status-layer"
+    }
+  ]
+}

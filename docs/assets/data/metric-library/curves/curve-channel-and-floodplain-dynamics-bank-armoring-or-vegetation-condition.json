@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-bank-armoring-or-vegetation-condition",
+  "metricId": "channel-and-floodplain-dynamics-bank-armoring-or-vegetation-condition",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-bank-armoring-or-vegetation-condition-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-armoring-or-vegetation-condition-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Predominantly natural banks with deeply rooted cover."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some armoring or partial vegetation coverage."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Large portion of banks is armored or vegetation is sparse."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Failing armoring or widespread bare banks with severe instability."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-bank-armoring-or-vegetation-condition-layer"
+    }
+  ]
+}

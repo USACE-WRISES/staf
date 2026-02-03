@@ -3,38 +3,97 @@
     <p>This rapid assessment widget needs JavaScript. Use the SFARI field materials if you prefer manual calculations.</p>
   </div>
   <div class="rapid-assessment-ui" hidden>
-    <div class="screening-assessment-layout">
-      <div class="screening-assessment-main">
-        <div class="screening-tabs-bar">
-          <div class="screening-tabs rapid-tabs" role="tablist" aria-label="Rapid assessments"></div>
+    <div class="assessment-workbench" data-assessment-tier="rapid">
+      <aside class="metric-library-sidebar" aria-label="Metric Library">
+        <div class="metric-library-header">
+          <div class="metric-library-title-row">
+            <h3>Metric Library</h3>
+            <button class="btn btn-small metric-library-close" type="button" aria-label="Close metric library">X</button>
+          </div>
+          <input class="metric-library-search" type="search" placeholder="Search metrics" aria-label="Search metrics" />
+          <div class="metric-tier-chips" role="tablist" aria-label="Filter metrics by tier">
+            <button class="metric-tier-chip" type="button" data-tier="all">All</button>
+            <button class="metric-tier-chip" type="button" data-tier="screening">Screening</button>
+            <button class="metric-tier-chip is-active" type="button" data-tier="rapid">Rapid</button>
+            <button class="metric-tier-chip" type="button" data-tier="detailed">Detailed</button>
+          </div>
         </div>
-        <section class="screening-settings-panel">
-          <div class="settings-header settings-header-row">
-            <h3>Settings</h3>
-            <div class="assessment-inline-actions">
-              <button class="btn btn-small rapid-duplicate" type="button" disabled>Duplicate</button>
-              <button class="btn btn-small rapid-delete" type="button" disabled>Delete</button>
+        <div class="metric-library-column-header">
+          <span>Metric</span>
+          <span>Minimum Tier</span>
+        </div>
+        <div class="metric-library-list" role="list"></div>
+      </aside>
+      <div class="assessment-workspace">
+        <div class="screening-assessment-layout">
+          <div class="screening-assessment-main">
+            <div class="screening-tabs-bar">
+              <div class="screening-tabs rapid-tabs" role="tablist" aria-label="Rapid assessments"></div>
             </div>
+            <section class="screening-settings-panel">
+              <div class="settings-header settings-header-row">
+                <h3>Settings</h3>
+                <div class="assessment-inline-actions">
+                  <button class="btn btn-small rapid-duplicate" type="button" disabled>Duplicate</button>
+                  <button class="btn btn-small rapid-delete" type="button" disabled>Delete</button>
+                </div>
+              </div>
+              <div class="settings-grid">
+                <label class="settings-field">
+                  <span>Name</span>
+                  <input class="settings-name" type="text" readonly />
+                </label>
+                <label class="settings-field">
+                  <span>Applicability</span>
+                  <input class="settings-applicability" type="text" readonly />
+                </label>
+                <label class="settings-field settings-notes">
+                  <span>Notes</span>
+                  <textarea class="settings-notes-input" rows="2"></textarea>
+                </label>
+              </div>
+            </section>
+            <section class="rapid-assessment-content">
+              <div class="screening-controls-host rapid-controls-host"></div>
+              <div class="screening-table-wrap rapid-table-wrap"></div>
+            </section>
           </div>
-          <div class="settings-grid">
-            <label class="settings-field">
-              <span>Name</span>
-              <input class="settings-name" type="text" readonly />
-            </label>
-            <label class="settings-field">
-              <span>Applicability</span>
-              <input class="settings-applicability" type="text" readonly />
-            </label>
-            <label class="settings-field settings-notes">
-              <span>Notes</span>
-              <textarea class="settings-notes-input" rows="2"></textarea>
-            </label>
+        </div>
+      </div>
+      <aside class="metric-inspector-sidebar is-collapsed" aria-label="Metric Inspector">
+        <div class="metric-inspector-empty">Select a metric to view details.</div>
+        <div class="metric-inspector-content" hidden>
+        <div class="metric-inspector-header">
+          <div class="metric-inspector-header-main">
+            <h3 class="metric-inspector-title"></h3>
+            <p class="metric-inspector-subtitle"></p>
+            <button class="metric-add-btn metric-inspector-toggle" type="button" aria-label="Add metric">+</button>
           </div>
-        </section>
-        <section class="rapid-assessment-content">
-          <div class="screening-controls-host rapid-controls-host"></div>
-          <div class="screening-table-wrap rapid-table-wrap"></div>
-        </section>
+          <div class="metric-inspector-actions">
+            <button class="btn btn-small metric-inspector-close" type="button" aria-label="Close metric inspector">X</button>
+          </div>
+        </div>
+          <div class="metric-profile-selector"></div>
+          <div class="metric-profile-summary"></div>
+          <div class="metric-inspector-tabs">
+            <button class="metric-inspector-tab is-active" type="button" data-tab="details">Details</button>
+            <button class="metric-inspector-tab" type="button" data-tab="scoring">Scoring</button>
+            <button class="metric-inspector-tab" type="button" data-tab="curves">Curves</button>
+          </div>
+          <div class="metric-tab-panel is-active" data-tab="details"></div>
+          <div class="metric-tab-panel" data-tab="scoring"></div>
+          <div class="metric-tab-panel" data-tab="curves"></div>
+        </div>
+      </aside>
+      <div class="metric-profile-modal" hidden>
+        <div class="metric-profile-dialog" role="dialog" aria-modal="true" aria-label="Select profile">
+          <h3>Select scoring profile</h3>
+          <div class="metric-profile-options"></div>
+          <div class="metric-profile-actions">
+            <button class="btn btn-small metric-profile-cancel" type="button">Cancel</button>
+            <button class="btn btn-small metric-profile-confirm" type="button">Add metric</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

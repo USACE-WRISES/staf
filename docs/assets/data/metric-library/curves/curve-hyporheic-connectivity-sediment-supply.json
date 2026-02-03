@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-hyporheic-connectivity-sediment-supply",
+  "metricId": "hyporheic-connectivity-sediment-supply",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-sediment-supply-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-sediment-supply-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Low predicted sediment delivery risk, and coarse bed conditions are likely to remain open."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Low to moderate delivery risk."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Moderate to high delivery risk, likely increasing fines and clogging."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Very high delivery risk, likely driving chronic fine sediment deposition and reduced exchange."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-sediment-supply-layer"
+    }
+  ]
+}

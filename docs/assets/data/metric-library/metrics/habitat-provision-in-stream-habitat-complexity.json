@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-in-stream-habitat-complexity",
+  "name": "In-stream habitat complexity",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "Multiple habitat types (riffles/pools/woody debris) exist if historically expected, not unnaturally uniform.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Count distinct habitat types (riffle, run, pool, cover) along the reach. Use imagery as a screening aid where needed.",
+  "inputs": [
+    {
+      "label": "In-stream habitat complexity",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Multiple habitat types well represented."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some variety but key elements are missing."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Mostly uniform with only 1-2 distinct features."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Very uniform channel with limited structural diversity."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-in-stream-habitat-complexity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA Rapid Bioassessment Protocols (RBP)",
+    "NAIP imagery",
+    "USGS 3DEP LiDAR (where available)."
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision"
+  ]
+}

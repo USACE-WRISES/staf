@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-vegetated-riparian-corridor-width",
+  "name": "Vegetated riparian corridor width",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient cycling",
+  "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+  "descriptionMarkdown": "Sufficient buffer filters nutrients, matching local references.",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Measure riparian buffer width in GIS along the reach. Verify vegetation in the field where needed.",
+  "inputs": [
+    {
+      "label": "Vegetated riparian corridor width",
+      "type": "desktop",
+      "source": "Floodplain",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "About 30 m buffer or regionally appropriate dense vegetation."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "15-30 m buffer."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "5-15 m buffer."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "<5 m buffer or no meaningful buffer."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-vegetated-riparian-corridor-width"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA EnviroAtlas riparian metrics",
+    "USGS StreamCat",
+    "NLCD land cover."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Nutrient cycling"
+  ]
+}

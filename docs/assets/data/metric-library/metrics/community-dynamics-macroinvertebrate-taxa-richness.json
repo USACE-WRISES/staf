@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-macroinvertebrate-taxa-richness",
+  "name": "Macroinvertebrate taxa richness",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Community dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "Quick sample shows multiple families (incl. EPT) unless dryness/high-altitude limits diversity.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Compute major group richness from a kick-net sample or use existing biological records where available.",
+  "inputs": [
+    {
+      "label": "Macroinvertebrate taxa richness",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Four to five or more distinct major groups."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Two to four distinct major groups."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "One to two distinct major groups."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Zero, or only one extremely tolerant group."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-macroinvertebrate-taxa-richness"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS BioData and/or state biomonitoring datasets",
+    "EPA Water Quality Portal biological results (where available)."
+  ],
+  "tags": [
+    "Biology",
+    "Community dynamics"
+  ]
+}

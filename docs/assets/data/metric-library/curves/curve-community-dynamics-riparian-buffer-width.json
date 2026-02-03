@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-community-dynamics-riparian-buffer-width",
+  "metricId": "community-dynamics-riparian-buffer-width",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-riparian-buffer-width-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-riparian-buffer-width-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "About 30 m wide corridor with multi-layer vegetation, or local reference corridor."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "15-30 m or partial coverage."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "5-15 m with minimal corridor."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<5 m or nearly absent."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-riparian-buffer-width-layer"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-sediment-deposition-patterns",
+  "name": "Sediment deposition patterns",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Sediment continuity",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+  "descriptionMarkdown": "Deposition matches natural form, no severe bar formation beyond typical references.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Delineate bar types (point, mid-channel, lateral) and compare to expected morphology for the channel type.",
+  "inputs": [
+    {
+      "label": "Sediment deposition patterns",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Deposition pattern fits reference condition with stable point bars."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some mid-channel or side bars forming but not severely altering flow."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Extensive mid-channel bars with partial obstruction."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Widespread choking deposits that strongly affect channel form and habitat."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-sediment-deposition-patterns"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NAIP or orthophotos",
+    "LiDAR bare-earth DEM (where available)."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity"
+  ]
+}

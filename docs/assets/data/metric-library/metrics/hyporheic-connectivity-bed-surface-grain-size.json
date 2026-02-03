@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-bed-surface-grain-size",
+  "name": "Bed surface grain size",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Substrate has coarse particles with minimal fines, enabling interstitial flow per local references.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Perform a pebble count to estimate percent gravel and cobble versus fines and note evidence of embedding.",
+  "inputs": [
+    {
+      "label": "Bed surface grain size",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Open interstitial coarse bed with minimal fines."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Mild embedding or partial fine coverage."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Strong embedding or siltation limiting infiltration."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Predominantly fine or consolidated bed with little interstitial space."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-bed-surface-grain-size"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field pebble count",
+    "USGS or state surficial geology",
+    "high-resolution imagery for bar texture classes (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity"
+  ]
+}

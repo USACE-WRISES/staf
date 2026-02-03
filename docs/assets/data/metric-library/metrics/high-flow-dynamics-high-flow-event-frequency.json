@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-high-flow-event-frequency",
+  "name": "High-flow event frequency",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Moderate floods (~1-2 yr) overtop banks unless valley is naturally confined.",
+  "methodContextMarkdown": "Context: Floodplain and Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Relate bankfull stage to flood-frequency analysis to estimate recurrence of floodplain engagement. Use gage analysis where available or regional regressions as a screening proxy.",
+  "inputs": [
+    {
+      "label": "High-flow event frequency",
+      "type": "desktop",
+      "source": "Floodplain and Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "About 1-2 yr floods engage the floodplain."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "About 3-5 yr floods are needed."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "About 5-10 yr floods are needed."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Floodplain is rarely inundated except during extreme events."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-high-flow-event-frequency"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NRCS TR-55 (1986)",
+    "USGS StreamStats",
+    "USGS PeakFQ (where available)",
+    "state SQT manuals."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics"
+  ]
+}

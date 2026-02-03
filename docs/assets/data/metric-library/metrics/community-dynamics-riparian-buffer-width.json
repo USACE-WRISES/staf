@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-riparian-buffer-width",
+  "name": "Riparian buffer width",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Community dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "~30 m or appropriate for shade/leaf input if historically expected, unless narrower is normal (prairie).",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Measure riparian buffer width and vegetation structure in GIS along the reach.",
+  "inputs": [
+    {
+      "label": "Riparian buffer width",
+      "type": "desktop",
+      "source": "Floodplain",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "About 30 m wide corridor with multi-layer vegetation, or local reference corridor."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "15-30 m or partial coverage."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "5-15 m with minimal corridor."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "<5 m or nearly absent."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-riparian-buffer-width"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA EnviroAtlas riparian metrics",
+    "USGS StreamCat",
+    "NLCD land cover."
+  ],
+  "tags": [
+    "Biology",
+    "Community dynamics"
+  ]
+}

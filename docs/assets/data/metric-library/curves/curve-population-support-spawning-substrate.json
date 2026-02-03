@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-spawning-substrate",
+  "metricId": "population-support-spawning-substrate",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-spawning-substrate-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-spawning-substrate-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Clean or appropriate substrate with minimal silt."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some silt but still feasible for spawning."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Heavily silted with limited spawning success expected."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "No suitable substrate. High embeddedness, bedrock, or other limiting condition."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-spawning-substrate-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-community-dynamics-invasive-or-non-native-check",
+  "metricId": "community-dynamics-invasive-or-non-native-check",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-invasive-or-non-native-check-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-invasive-or-non-native-check-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "<5% invasive presence."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "5-20% invasive presence."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "20-50% invasive presence."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">50% invasive presence or one invasive dominates."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-invasive-or-non-native-check-layer"
+    }
+  ]
+}

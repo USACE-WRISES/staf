@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-channel-complexity-for-exchange",
+  "name": "Channel complexity for exchange",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Diverse bedforms enhance surface-subsurface exchange, matching reference morphology.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Count riffle-pool or other bedform features per 100 m using imagery and a field check.",
+  "inputs": [
+    {
+      "label": "Channel complexity for exchange",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Well developed bedforms and strong potential for exchange."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some bedform variety but partially uniform."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Mostly uniform run with limited exchange."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Featureless or silted bed with negligible exchange."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-channel-complexity-for-exchange"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "High-resolution imagery and LiDAR hillshade (where available)",
+    "longitudinal profile in GIS",
+    "field confirmation."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity"
+  ]
+}

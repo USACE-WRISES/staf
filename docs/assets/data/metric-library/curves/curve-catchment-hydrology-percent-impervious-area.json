@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-percent-impervious-area",
+  "metricId": "catchment-hydrology-percent-impervious-area",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-percent-impervious-area-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-percent-impervious-area-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "<5% impervious. Near natural infiltration and minimal flashiness."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "5-10% impervious. Mild runoff changes."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "10-20% impervious. Partial flashiness and infiltration loss."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">20% impervious. Severe runoff alteration and frequent flashy peaks."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-percent-impervious-area-layer"
+    }
+  ]
+}

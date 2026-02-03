@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-in-channel-ponding-or-beaver-dams",
+  "name": "In-channel ponding or beaver dams",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Small beaver-type impoundments aid baseflow/habitat; no major fragmentation unless historically normal.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Count beaver dams or ponded sections per 100 m of channel. Use recent aerial imagery to pre-screen and compare to expected capacity for the setting.",
+  "inputs": [
+    {
+      "label": "In-channel ponding or beaver dams",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Beaver dams or small ponds enhance baseflow and habitat with negligible fragmentation."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "1-2 small obstructions with minor impacts."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Multiple ponds moderately disrupt connectivity."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Widespread channel fragmentation or overabundant ponding."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-in-channel-ponding-or-beaver-dams"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field count",
+    "NAIP imagery",
+    "Beaver Restoration Assessment Tool (BRAT) for capacity context."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage"
+  ]
+}

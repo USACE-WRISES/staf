@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-visible-algal-indications",
+  "metricId": "nutrient-cycling-visible-algal-indications",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-visible-algal-indications-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-visible-algal-indications-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "No nuisance algae and <10% cover, or normal for region."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "10-30% cover or mild filaments."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "30-50% cover with partial blooms."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">50% cover or thick scums."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-visible-algal-indications-layer"
+    }
+  ]
+}

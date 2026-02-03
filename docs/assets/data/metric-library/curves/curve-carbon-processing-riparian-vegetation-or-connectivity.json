@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-riparian-vegetation-or-connectivity",
+  "metricId": "carbon-processing-riparian-vegetation-or-connectivity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-riparian-vegetation-or-connectivity-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-carbon-processing-riparian-vegetation-or-connectivity-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "About 30 m of diverse native riparian vegetation, or consistent with reference corridor for the region."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "15-30 m corridor or partial coverage."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "5-15 m corridor with limited buffer."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<5 m corridor or little to no riparian vegetation."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-riparian-vegetation-or-connectivity-layer"
+    }
+  ]
+}

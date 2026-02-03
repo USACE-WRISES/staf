@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-amphibian-or-crayfish-presence",
+  "name": "Amphibian or crayfish presence",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+  "descriptionMarkdown": "Healthy numbers if historically supported, unless ephemeral dryness naturally excludes them.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Conduct a brief visual or dipnet survey and record presence where expected.",
+  "inputs": [
+    {
+      "label": "Amphibian or crayfish presence",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Multiple observations where historically expected."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some presence but limited."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Rare or single individuals."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Absent where historically expected."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-amphibian-or-crayfish-presence"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "State Natural Heritage Program records",
+    "Herp Atlas or similar",
+    "BISON and/or iNaturalist as supporting context."
+  ],
+  "tags": [
+    "Biology",
+    "Population support"
+  ]
+}

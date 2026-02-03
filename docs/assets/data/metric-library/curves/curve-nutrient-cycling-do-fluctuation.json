@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-do-fluctuation",
+  "metricId": "nutrient-cycling-do-fluctuation",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-do-fluctuation-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-do-fluctuation-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "<2 mg/L diurnal swing and no frequent hypoxia."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "2-4 mg/L swing with occasional stress."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "4-6 mg/L swing and borderline low DO at night."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">6 mg/L swing or frequent dips below 3 mg/L."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-do-fluctuation-layer"
+    }
+  ]
+}

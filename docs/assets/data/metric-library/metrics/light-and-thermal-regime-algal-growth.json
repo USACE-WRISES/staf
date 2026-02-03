@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-algal-growth",
+  "name": "Algal growth",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Light and thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Moderate growth matches local light regime, unless historically high/low (e.g., blackwater).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Estimate percent algal cover or use chlorophyll or periphyton data where available and interpret with nutrients and shade context.",
+  "inputs": [
+    {
+      "label": "Algal growth",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Minimal algae and no nuisance mats."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Slightly elevated algal coverage."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Large mats that partially impair habitat."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Dense bloom or scum that covers substrate."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-algal-growth"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA Water Quality Portal (chlorophyll-a, periphyton where available)",
+    "TN/TP datasets",
+    "riparian canopy or shade metrics."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light and thermal regime"
+  ]
+}

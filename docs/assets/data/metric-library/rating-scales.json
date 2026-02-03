@@ -1,0 +1,16 @@
+﻿{
+  "schemaVersion": 1,
+  "ratingScales": [
+    {
+      "ratingScaleId": "fourBand",
+      "name": "Four-band qualitative",
+      "levels": [
+        { "id": "poor", "label": "Poor", "order": 1, "score": 0 },
+        { "id": "marginal", "label": "Marginal", "order": 2, "score": 0.3 },
+        { "id": "suboptimal", "label": "Suboptimal", "order": 3, "score": 0.69 },
+        { "id": "optimal", "label": "Optimal", "order": 4, "score": 1 }
+      ]
+    }
+  ]
+}
+

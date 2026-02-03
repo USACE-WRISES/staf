@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-evolution-recovery-indicators",
+  "metricId": "channel-evolution-recovery-indicators",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-evolution-recovery-indicators-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-evolution-recovery-indicators-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Broadly established benches or inset floodplains indicate strong recovery."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Noticeable but incomplete bench or bar formation."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Sparse new floodplain surfaces with ongoing erosion."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "No meaningful recovery indicators and continued instability."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-evolution-recovery-indicators-layer"
+    }
+  ]
+}

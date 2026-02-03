@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-hyporheic-connectivity-channel-complexity-for-exchange",
+  "metricId": "hyporheic-connectivity-channel-complexity-for-exchange",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-channel-complexity-for-exchange-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-channel-complexity-for-exchange-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Well developed bedforms and strong potential for exchange."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some bedform variety but partially uniform."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Mostly uniform run with limited exchange."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Featureless or silted bed with negligible exchange."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-channel-complexity-for-exchange-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-floodplain-connectivity-entrenchment-ratio",
+  "metricId": "floodplain-connectivity-entrenchment-ratio",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-entrenchment-ratio-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Entrenchment ratio >2.2, or consistent with reference type, indicating frequent floodplain access."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "About 1.4-2.2, indicating mild entrenchment."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "<1.4, indicating significant entrenchment."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Severely entrenched or walled channel with little or no moderate flood access."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-entrenchment-ratio-layer"
+    }
+  ]
+}

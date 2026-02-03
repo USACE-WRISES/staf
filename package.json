@@ -1,0 +1,18 @@
+﻿{
+  "name": "stream-tiered-assessment-framework",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:metric-index": "ts-node scripts/buildMetricIndex.ts",
+    "migrate:screening-metrics": "ts-node scripts/migrateScreeningMetrics.ts",
+    "test": "ts-node scripts/runMetricLibraryTests.ts"
+  },
+  "dependencies": {
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
+

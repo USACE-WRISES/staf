@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-land-use-change",
+  "metricId": "catchment-hydrology-land-use-change",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-land-use-change-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-land-use-change-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "<5% new development or clearing, or only minor land cover shifts."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "5-15% converted from one major land use to another."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "15-30% converted with likely effects on infiltration or flow patterns."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">30% converted. Drastic alteration in runoff, infiltration, and habitat."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-land-use-change-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-streamflow-regime-artificial-structures-affecting-flow",
+  "metricId": "streamflow-regime-artificial-structures-affecting-flow",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-artificial-structures-affecting-flow-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-artificial-structures-affecting-flow-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "No major regulating structures restricting flows."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Minor structure or structures with limited effect."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Moderate structures that alter flood or baseflow patterns."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Multiple or large structures that strongly flatten, block, or regulate flows."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-artificial-structures-affecting-flow-layer"
+    }
+  ]
+}

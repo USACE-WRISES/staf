@@ -3,91 +3,97 @@
     <p>This detailed assessment widget needs JavaScript. Use the reference curve guidance if you prefer manual calculations.</p>
   </div>
   <div class="detailed-assessment-ui" hidden>
-    <div class="detailed-assessment-layout">
-      <div class="detailed-assessment-main">
-        <div class="detailed-tabs-bar">
-          <div class="detailed-tabs" role="tablist" aria-label="Detailed assessments"></div>
-          <button class="detailed-tab-add" type="button" aria-label="Add assessment">+</button>
+    <div class="assessment-workbench" data-assessment-tier="detailed">
+      <aside class="metric-library-sidebar" aria-label="Metric Library">
+        <div class="metric-library-header">
+          <div class="metric-library-title-row">
+            <h3>Metric Library</h3>
+            <button class="btn btn-small metric-library-close" type="button" aria-label="Close metric library">X</button>
+          </div>
+          <input class="metric-library-search" type="search" placeholder="Search metrics" aria-label="Search metrics" />
+          <div class="metric-tier-chips" role="tablist" aria-label="Filter metrics by tier">
+            <button class="metric-tier-chip" type="button" data-tier="all">All</button>
+            <button class="metric-tier-chip" type="button" data-tier="screening">Screening</button>
+            <button class="metric-tier-chip" type="button" data-tier="rapid">Rapid</button>
+            <button class="metric-tier-chip is-active" type="button" data-tier="detailed">Detailed</button>
+          </div>
         </div>
-        <section class="detailed-settings-panel">
-          <div class="settings-header settings-header-row">
-            <h3>Settings</h3>
-            <div class="assessment-inline-actions">
-              <button class="btn btn-small detailed-duplicate" type="button">Duplicate</button>
-              <button class="btn btn-small detailed-delete" type="button">Delete</button>
+        <div class="metric-library-column-header">
+          <span>Metric</span>
+          <span>Minimum Tier</span>
+        </div>
+        <div class="metric-library-list" role="list"></div>
+      </aside>
+      <div class="assessment-workspace">
+        <div class="detailed-assessment-layout">
+          <div class="detailed-assessment-main">
+            <div class="detailed-tabs-bar">
+              <div class="detailed-tabs" role="tablist" aria-label="Detailed assessments"></div>
+              <button class="detailed-tab-add" type="button" aria-label="Add assessment">+</button>
             </div>
+            <section class="detailed-settings-panel">
+              <div class="settings-header settings-header-row">
+                <h3>Settings</h3>
+                <div class="assessment-inline-actions">
+                  <button class="btn btn-small detailed-duplicate" type="button">Duplicate</button>
+                  <button class="btn btn-small detailed-delete" type="button">Delete</button>
+                </div>
+              </div>
+              <div class="settings-grid">
+                <label class="settings-field">
+                  <span>Name</span>
+                  <input class="settings-name" type="text" />
+                </label>
+                <label class="settings-field">
+                  <span>Applicability</span>
+                  <input class="settings-applicability" type="text" />
+                </label>
+                <label class="settings-field settings-notes">
+                  <span>Notes</span>
+                  <textarea class="settings-notes-input" rows="2"></textarea>
+                </label>
+              </div>
+            </section>
+            <section class="detailed-assessment-content">
+              <div class="detailed-controls-host"></div>
+              <div class="detailed-table-wrap"></div>
+            </section>
           </div>
-          <div class="settings-grid">
-            <label class="settings-field">
-              <span>Name</span>
-              <input class="settings-name" type="text" />
-            </label>
-            <label class="settings-field">
-              <span>Applicability</span>
-              <input class="settings-applicability" type="text" />
-            </label>
-            <label class="settings-field settings-notes">
-              <span>Notes</span>
-              <textarea class="settings-notes-input" rows="2"></textarea>
-            </label>
-          </div>
-        </section>
-        <section class="detailed-assessment-content">
-          <div class="detailed-controls-host"></div>
-          <div class="detailed-table-wrap"></div>
-        </section>
+        </div>
       </div>
-    </div>
-    <div class="detailed-curve-modal" hidden>
-      <div class="detailed-curve-backdrop" data-close="true"></div>
-      <div class="detailed-curve-dialog" role="dialog" aria-modal="true" aria-label="Reference curve builder">
-        <div class="curve-header">
-          <div>
-            <h3>Reference Curve Builder</h3>
-            <p class="curve-subtitle">Build stratification layers and define how field values map to metric index scores.</p>
+      <aside class="metric-inspector-sidebar is-collapsed" aria-label="Metric Inspector">
+        <div class="metric-inspector-empty">Select a metric to view details.</div>
+        <div class="metric-inspector-content" hidden>
+        <div class="metric-inspector-header">
+          <div class="metric-inspector-header-main">
+            <h3 class="metric-inspector-title"></h3>
+            <p class="metric-inspector-subtitle"></p>
+            <button class="metric-add-btn metric-inspector-toggle" type="button" aria-label="Add metric">+</button>
           </div>
-          <button class="btn btn-small detailed-curve-close" type="button">Close</button>
-        </div>
-        <div class="curve-body">
-          <div class="curve-meta">
-            <label class="curve-field">
-              <span>Metric</span>
-              <input class="curve-metric-name" type="text" readonly />
-            </label>
-            <label class="curve-field">
-              <span>Field value units</span>
-              <input class="curve-units" type="text" placeholder="e.g., %, mg/L, m/s" />
-            </label>
-            <label class="curve-field">
-              <span>X value type</span>
-              <select class="curve-x-type">
-                <option value="quantitative">Quantitative</option>
-                <option value="qualitative">Qualitative</option>
-              </select>
-            </label>
-          </div>
-          <div class="curve-layer-bar">
-            <div class="curve-layer-title">Stratification Layers</div>
-            <select class="curve-layer-select"></select>
-            <button class="btn btn-small curve-layer-add" type="button">Add layer</button>
-            <button class="btn btn-small curve-layer-remove" type="button">Remove layer</button>
-          </div>
-          <div class="curve-layer-name-row">
-            <label class="curve-field">
-              <span>Stratification layer name</span>
-              <input class="curve-layer-name" type="text" />
-            </label>
-            <button class="btn btn-small curve-reset" type="button">Reset index values</button>
-          </div>
-          <div class="curve-grid">
-            <div class="curve-table-wrap"></div>
-            <div class="curve-chart-wrap">
-              <canvas class="curve-chart" width="520" height="320"></canvas>
-            </div>
+          <div class="metric-inspector-actions">
+            <button class="btn btn-small metric-inspector-close" type="button" aria-label="Close metric inspector">X</button>
           </div>
         </div>
-        <div class="curve-footer">
-          <p class="curve-note">Index values follow standard thresholds: not functioning (0.00-0.29), functioning-at-risk (0.30-0.69), functioning (0.70-1.00).</p>
+          <div class="metric-profile-selector"></div>
+          <div class="metric-profile-summary"></div>
+          <div class="metric-inspector-tabs">
+            <button class="metric-inspector-tab is-active" type="button" data-tab="details">Details</button>
+            <button class="metric-inspector-tab" type="button" data-tab="scoring">Scoring</button>
+            <button class="metric-inspector-tab" type="button" data-tab="curves">Curves</button>
+          </div>
+          <div class="metric-tab-panel is-active" data-tab="details"></div>
+          <div class="metric-tab-panel" data-tab="scoring"></div>
+          <div class="metric-tab-panel" data-tab="curves"></div>
+        </div>
+      </aside>
+      <div class="metric-profile-modal" hidden>
+        <div class="metric-profile-dialog" role="dialog" aria-modal="true" aria-label="Select profile">
+          <h3>Select scoring profile</h3>
+          <div class="metric-profile-options"></div>
+          <div class="metric-profile-actions">
+            <button class="btn btn-small metric-profile-cancel" type="button">Cancel</button>
+            <button class="btn btn-small metric-profile-confirm" type="button">Add metric</button>
+          </div>
         </div>
       </div>
     </div>

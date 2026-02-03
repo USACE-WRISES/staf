@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-vegetated-riparian-corridor-width",
+  "metricId": "nutrient-cycling-vegetated-riparian-corridor-width",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-vegetated-riparian-corridor-width-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-vegetated-riparian-corridor-width-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "About 30 m buffer or regionally appropriate dense vegetation."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "15-30 m buffer."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "5-15 m buffer."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<5 m buffer or no meaningful buffer."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-vegetated-riparian-corridor-width-layer"
+    }
+  ]
+}

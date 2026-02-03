@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-peak-flow-capacity",
+  "metricId": "high-flow-dynamics-peak-flow-capacity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-peak-flow-capacity-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-peak-flow-capacity-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Channel dimensions align with regional curves and are stable through moderate floods."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Slight mismatch with occasional instability."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Significant mismatch with frequent instability."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Severe mismatch with repeated destructive floods or bank failures."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-peak-flow-capacity-layer"
+    }
+  ]
+}

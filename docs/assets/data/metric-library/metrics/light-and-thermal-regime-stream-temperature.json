@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-stream-temperature",
+  "name": "Stream temperature",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Light and thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Stays within acceptable bounds for local aquatic life, rarely exceeding stress thresholds.",
+  "methodContextMarkdown": "Context: Field\n\nMethod: Use continuous or spot water-temperature records to assess maxima and diel range. Use modeled products where monitoring data are absent.",
+  "howToMeasureMarkdown": "Rarely surpasses local standard or typical seasonal maxima for the stream type.",
+  "inputs": [
+    {
+      "label": "Stream temperature",
+      "type": "use continuous or spot water-temperature records to assess maxima and diel range. use modeled products where monitoring data are absent.",
+      "source": "Field",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Slightly exceeds thresholds occasionally."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Frequently near or above thresholds."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Consistently high or potentially lethal temperatures."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled temperatures (where available)."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-stream-temperature"
+        ]
+      }
+    }
+  ],
+  "references": [],
+  "tags": [
+    "Physicochemistry",
+    "Light and thermal regime"
+  ]
+}

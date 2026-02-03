@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-channel-flow-status",
+  "metricId": "low-flow-and-baseflow-dynamics-channel-flow-status",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-low-flow-and-baseflow-dynamics-channel-flow-status-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-channel-flow-status-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": ">75% of channel wetted at normal low flow (or dryness is normal if ephemeral)."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "50-75% wetted."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "25-50% wetted."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<25% wetted, or mostly disconnected pools in a historically perennial reach."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-channel-flow-status-layer"
+    }
+  ]
+}

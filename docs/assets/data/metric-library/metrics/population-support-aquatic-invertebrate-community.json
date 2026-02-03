@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-aquatic-invertebrate-community",
+  "name": "Aquatic invertebrate community",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+  "descriptionMarkdown": "Diverse macroinvertebrates (incl. EPT) if historically expected, unless ephemeral dryness limits.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Collect a rapid kick sample and summarize EPT richness or other screening indicators.",
+  "inputs": [
+    {
+      "label": "Aquatic invertebrate community",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Multiple sensitive groups present."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Moderate diversity with some tolerant forms."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Mostly tolerant forms and limited EPT presence."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Very few invertebrates or only extremely tolerant forms."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-aquatic-invertebrate-community"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "State biomonitoring protocols",
+    "USGS BioData and/or EPA Water Quality Portal biological results (where available)."
+  ],
+  "tags": [
+    "Biology",
+    "Population support"
+  ]
+}

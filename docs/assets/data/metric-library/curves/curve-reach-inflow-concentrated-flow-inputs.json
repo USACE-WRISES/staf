@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-concentrated-flow-inputs",
+  "metricId": "reach-inflow-concentrated-flow-inputs",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-concentrated-flow-inputs-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-concentrated-flow-inputs-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "0-1 outfalls or ditches per 100 m."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "2-3 per 100 m."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "4-5 per 100 m."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">5 per 100 m, or large storm drains."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-concentrated-flow-inputs-layer"
+    }
+  ]
+}
