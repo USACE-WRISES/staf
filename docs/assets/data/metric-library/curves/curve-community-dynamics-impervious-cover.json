@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-community-dynamics-impervious-cover",
+  "metricId": "community-dynamics-impervious-cover",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-impervious-cover-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-impervious-cover-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "<5% impervious. Low watershed stress."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "5-10% impervious."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "10-20% impervious."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">20% impervious. High watershed stress."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-impervious-cover-layer"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-percent-wetlands-in-watershed",
+  "name": "Percent wetlands in watershed",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Sufficient wetlands/ponds for flood attenuation/baseflow support, unless minimal wetlands are historically normal.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Calculate the percent area classified as wetlands using a land cover or wetlands layer. Where possible, compute within the mapped floodplain or valley bottom to better reflect storage.",
+  "inputs": [
+    {
+      "label": "Percent wetlands in watershed",
+      "type": "desktop",
+      "source": "Watershed",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": ">5% wetland coverage, or consistent with historical norm."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "2-5% wetland coverage."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "1-2% wetland coverage."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "<1% wetland coverage, or heavily drained wetlands."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-percent-wetlands-in-watershed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MN SQT 2020",
+    "WI SQT 2022",
+    "SC SQT 2021",
+    "NLCD Land Cover and/or USFWS National Wetlands Inventory (NWI)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage"
+  ]
+}

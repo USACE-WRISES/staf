@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-sediment-supply",
+  "name": "Sediment supply",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Sediment continuity",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+  "descriptionMarkdown": "Fine input aligns with transport, unless higher turbidity/fines are historically normal (e.g., blackwater).",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Combine slope, soils, land cover, and roads in GIS to estimate relative sediment supply and delivery risk to the channel network.",
+  "inputs": [
+    {
+      "label": "Sediment supply",
+      "type": "desktop",
+      "source": "Watershed",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Low predicted sediment supply and delivery risk relative to similar watersheds in the region."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Low to moderate predicted sediment supply and delivery risk."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Moderate to high predicted sediment supply and delivery risk."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Very high predicted sediment supply and delivery risk with likely chronic instability."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-sediment-supply"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MN SQT 2020",
+    "WY SQT 2019",
+    "CO SQT 2019",
+    "SC SQT 2021",
+    "WI SQT 2022",
+    "DEM slope, SSURGO soils, and roads/land cover layers."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity"
+  ]
+}

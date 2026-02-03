@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-off-channel-storage",
+  "metricId": "surface-water-storage-off-channel-storage",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-off-channel-storage-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-off-channel-storage-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Multiple off-channel features connect in moderate floods."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Partial connection or fewer off-channel areas."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Only large floods access these areas, or off-channel areas are minimal."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Off-channel features are mostly gone or permanently cut off."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-off-channel-storage-layer"
+    }
+  ]
+}

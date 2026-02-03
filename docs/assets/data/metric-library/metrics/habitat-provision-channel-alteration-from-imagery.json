@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-channel-alteration-from-imagery",
+  "name": "Channel alteration from imagery",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "Backwater areas are accessible as nursery/refuge if historically present, unless naturally confined.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Compare current imagery to historical imagery or maps to estimate percent of reach straightened, ditched, or hardened. Map hardened bank length where visible.",
+  "inputs": [
+    {
+      "label": "Channel alteration from imagery",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "0-10% of reach altered, and banks are predominantly natural."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "10-25% altered, or some hardened banks."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "25-50% altered, with major loss of natural planform or extensive hardening."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">50% altered, or reach is ditch-like or heavily hardened."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-channel-alteration-from-imagery"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MN SQT 2020",
+    "WY SQT 2019",
+    "CO SQT 2019",
+    "SC SQT 2021",
+    "WI SQT 2022",
+    "NAIP imagery and historic aerials/maps."
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision"
+  ]
+}

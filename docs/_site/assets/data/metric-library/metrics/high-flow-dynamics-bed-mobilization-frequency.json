@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-bed-mobilization-frequency",
+  "name": "Bed mobilization frequency",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Bed sediments mobilize near bankfull (~1-2 yr), maintaining a stable but dynamic channel.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Estimate critical discharge from Shields using D50 and compare to flood recurrence estimates. Use qualitative checks where data are limited.",
+  "inputs": [
+    {
+      "label": "Bed mobilization frequency",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Bed mobilizes at appropriate flows for the channel type, often near bankfull."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Slight mismatch. Bed moves below or above expected flows."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Marked mismatch. Bed is often locked or frequently scoured."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Extreme mismatch. Bed rarely moves or is reworked by small floods."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-bed-mobilization-frequency"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Shields criterion using D50",
+    "USGS PeakFQ or flow-frequency statistics (where available)",
+    "Pfankuch stability checks (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics"
+  ]
+}

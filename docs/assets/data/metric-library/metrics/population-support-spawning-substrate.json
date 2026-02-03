@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-spawning-substrate",
+  "name": "Spawning substrate",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+  "descriptionMarkdown": "Clean gravel/vegetation is present if historically expected, unless alternative spawning is normal.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Assess percent of clean gravel or other suitable spawning substrate for target species and note fine sediment cover.",
+  "inputs": [
+    {
+      "label": "Spawning substrate",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Clean or appropriate substrate with minimal silt."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some silt but still feasible for spawning."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Heavily silted with limited spawning success expected."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "No suitable substrate. High embeddedness, bedrock, or other limiting condition."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-spawning-substrate"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field substrate assessment",
+    "EPA Water Quality Portal (turbidity/TSS where available)",
+    "geology and slope context."
+  ],
+  "tags": [
+    "Biology",
+    "Population support"
+  ]
+}

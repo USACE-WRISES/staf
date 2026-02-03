@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-evolution-widening-trend",
+  "name": "Widening trend",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Channel evolution",
+  "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
+  "descriptionMarkdown": "Bank erosion/migration rates match natural reference; no excessive widening unless historically typical.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map active channel edges across years and compute width change using imagery and field indicators where feasible.",
+  "inputs": [
+    {
+      "label": "Widening trend",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Lateral changes are in line with natural or historical reference."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Slightly more or less migration than expected."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Significantly above or below reference with frequent failures or constrained banks."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Highly accelerated or highly suppressed lateral change far outside expected ranges."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-evolution-widening-trend"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NAIP or Google Earth historical imagery",
+    "RivWidthCloud or RivMAP (where available)."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel evolution"
+  ]
+}

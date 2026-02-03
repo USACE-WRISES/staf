@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-in-channel-ponding-or-beaver-dams",
+  "metricId": "surface-water-storage-in-channel-ponding-or-beaver-dams",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-in-channel-ponding-or-beaver-dams-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-in-channel-ponding-or-beaver-dams-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Beaver dams or small ponds enhance baseflow and habitat with negligible fragmentation."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "1-2 small obstructions with minor impacts."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Multiple ponds moderately disrupt connectivity."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Widespread channel fragmentation or overabundant ponding."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-in-channel-ponding-or-beaver-dams-layer"
+    }
+  ]
+}

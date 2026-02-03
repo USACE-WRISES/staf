@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-road-density",
+  "metricId": "catchment-hydrology-road-density",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-road-density-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-road-density-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "<0.5 km roads per km2. Few crossings."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "0.5-1.0 km per km2."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "1-2 km per km2. Noticeable effect on runoff and sediment."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">2 km per km2, or frequent crossings delivering heavy pollution."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-road-density-layer"
+    }
+  ]
+}

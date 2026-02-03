@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-culvert-or-road-crossing-passability",
+  "metricId": "watershed-connectivity-culvert-or-road-crossing-passability",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-watershed-connectivity-culvert-or-road-crossing-passability-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-culvert-or-road-crossing-passability-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "80-100% passable."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "50-80% passable."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "20-50% passable."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<20% passable. Multiple barriers."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-culvert-or-road-crossing-passability-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-impoundments-and-regulated-reaches",
+  "metricId": "catchment-hydrology-impoundments-and-regulated-reaches",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-impoundments-and-regulated-reaches-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-impoundments-and-regulated-reaches-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "No major dams, or only small and distant impoundments with negligible impact."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "1-2 small dams partially moderating flow."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Multiple moderate dams reducing flood peaks or baseflow."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Heavily regulated system or hydropeaking from major impoundments."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-impoundments-and-regulated-reaches-layer"
+    }
+  ]
+}

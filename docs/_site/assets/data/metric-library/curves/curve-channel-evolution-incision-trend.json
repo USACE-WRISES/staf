@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-evolution-incision-trend",
+  "metricId": "channel-evolution-incision-trend",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-evolution-incision-trend-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-evolution-incision-trend-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "No active headcuts. Any legacy headcuts are stable."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Small local headcuts with limited progression potential."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "One or two active headcuts with noticeable vertical instability."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Multiple or large active headcuts rapidly advancing and driving incision and failures."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-evolution-incision-trend-layer"
+    }
+  ]
+}

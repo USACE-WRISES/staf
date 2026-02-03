@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-high-flow-event-frequency",
+  "metricId": "high-flow-dynamics-high-flow-event-frequency",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-high-flow-event-frequency-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-high-flow-event-frequency-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "About 1-2 yr floods engage the floodplain."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "About 3-5 yr floods are needed."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "About 5-10 yr floods are needed."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Floodplain is rarely inundated except during extreme events."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-high-flow-event-frequency-layer"
+    }
+  ]
+}

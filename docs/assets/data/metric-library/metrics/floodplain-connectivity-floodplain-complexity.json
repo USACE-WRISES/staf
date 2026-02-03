@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "floodplain-connectivity-floodplain-complexity",
+  "name": "Floodplain complexity",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Floodplain connectivity",
+  "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
+  "descriptionMarkdown": "Floodplain/off-channel features stay diverse/connected at moderate floods, reflecting minimal loss.",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "howToMeasureMarkdown": "Delineate side channels, oxbows, and wetlands and assess connectivity during moderate floods using field checks and available mapping.",
+  "inputs": [
+    {
+      "label": "Floodplain complexity",
+      "type": "field",
+      "source": "Floodplain",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Multiple active features connected during moderate floods and consistent with historical complexity."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Partial complexity remains with some features truncated or partially isolated."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Most off-channel features are lost or only minimally connected."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Floodplain is simplified or leveed with little or no off-channel function remaining."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-floodplain-connectivity-floodplain-complexity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USFWS National Wetlands Inventory (NWI)",
+    "NAIP imagery",
+    "USGS 3DEP DEM/hillshade",
+    "NHDPlus HR flowlines/waterbodies."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Floodplain connectivity"
+  ]
+}

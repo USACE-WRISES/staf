@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-large-wood-bedform-diversity",
+  "metricId": "bed-composition-and-large-wood-bedform-diversity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-bedform-diversity-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-bedform-diversity-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Clear riffle-pool or step-pool sequence with robust variety."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some diversity but partially uniform."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Mostly homogeneous bed with faint or missing sequences."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Flattened or artificially uniform bed."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-bedform-diversity-layer"
+    }
+  ]
+}

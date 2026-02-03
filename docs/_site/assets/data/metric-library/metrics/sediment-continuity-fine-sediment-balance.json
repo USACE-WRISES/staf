@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-fine-sediment-balance",
+  "name": "Fine sediment balance",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Sediment continuity",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+  "descriptionMarkdown": "Fine input aligns with transport, unless higher turbidity/fines are historically normal (e.g., blackwater).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Review available turbidity or TSS data and visually assess bed fines. Where data are absent, infer risk from land use and soils.",
+  "inputs": [
+    {
+      "label": "Fine sediment balance",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Low chronic turbidity and minimal fines, or regionally normal conditions."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Minor silt layers or partial turbidity."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "High turbidity or moderate silt coverage."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Severe siltation or turbidity that smothers substrate."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-fine-sediment-balance"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA Water Quality Portal (turbidity/TSS)",
+    "USGS NWIS (where available)",
+    "NLCD land cover",
+    "SSURGO K-factor (erodibility)."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity"
+  ]
+}

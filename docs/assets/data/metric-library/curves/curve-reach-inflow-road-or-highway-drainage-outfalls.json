@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-road-or-highway-drainage-outfalls",
+  "metricId": "reach-inflow-road-or-highway-drainage-outfalls",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-road-or-highway-drainage-outfalls-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-road-or-highway-drainage-outfalls-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "0-1 outfall per 100 m, and no noticeable discharge effects."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "4-5 outfalls per 100 m, with noticeable sediment or pollutant inputs."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "More than 5 outfalls per 100 m, or major highway drains with concentrated discharge."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-road-or-highway-drainage-outfalls-layer"
+    }
+  ]
+}

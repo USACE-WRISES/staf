@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-sediment-continuity-sediment-supply",
+  "metricId": "sediment-continuity-sediment-supply",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-sediment-continuity-sediment-supply-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-sediment-supply-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Low predicted sediment supply and delivery risk relative to similar watersheds in the region."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Low to moderate predicted sediment supply and delivery risk."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Moderate to high predicted sediment supply and delivery risk."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Very high predicted sediment supply and delivery risk with likely chronic instability."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-sediment-supply-layer"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-streambed-vegetation-indicators",
+  "name": "Streambed vegetation indicators",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Streamflow regime",
+  "functionStatement": "\"Integrates the range of \"\"typical\"\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).\"",
+  "descriptionMarkdown": "Zero-flow days and dry periods quantify how often a stream is dry and for how long. Stable statistics indicate consistent flow duration; increases in zero-flow days in a historically perennial reach indicate alteration.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Estimate percent channel-bed vegetation and identify plant types relative to expected flow class for the region.",
+  "inputs": [
+    {
+      "label": "Streambed vegetation indicators",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Bed vegetation matches reference expectations for dryness or wetness."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Minor mismatch in vegetation extent or type."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Significant mismatch, such as dense stands in a historically scoured bed."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Extreme overgrowth or vegetation type strongly contradicts expected scour or dryness regime."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-streambed-vegetation-indicators"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SDAM regional guide and field forms",
+    "vegetation indicators described in regional SDAM guidance."
+  ],
+  "tags": [
+    "Hydrology",
+    "Streamflow regime"
+  ]
+}

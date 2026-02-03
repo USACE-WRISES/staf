@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-lateral-or-off-channel-habitats",
+  "metricId": "habitat-provision-lateral-or-off-channel-habitats",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-lateral-or-off-channel-habitats-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-habitat-provision-lateral-or-off-channel-habitats-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Well connected off-channel areas provide refuge or spawning habitat."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some partial connection."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Rare or only episodic off-channel use."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "No side or backwaters remain despite suitable valley setting."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-lateral-or-off-channel-habitats-layer"
+    }
+  ]
+}

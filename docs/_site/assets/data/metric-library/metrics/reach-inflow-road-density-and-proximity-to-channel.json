@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-road-density-and-proximity-to-channel",
+  "name": "Road density and proximity to channel",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Reach inflow",
+  "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+  "descriptionMarkdown": "Tributaries stable, matching reference (flow, quality, form), with no major flash/pollution surges.",
+  "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Compute road density within the watershed and, where possible, compute road length within a riparian buffer along the reach to capture proximity.",
+  "inputs": [
+    {
+      "label": "Road density and proximity to channel",
+      "type": "desktop",
+      "source": "Watershed and Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "<0.5 km roads per km2, with few roads close to the channel."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "0.5-1.0 km per km2, or limited road proximity to the channel."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "1-2 km per km2, or roads commonly adjacent to the channel."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">2 km per km2, or frequent road proximity with clear runoff and sediment delivery risk."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-road-density-and-proximity-to-channel"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MN SQT 2020",
+    "WI SQT 2022",
+    "TIGER/Line roads or OpenStreetMap roads."
+  ],
+  "tags": [
+    "Hydrology",
+    "Reach inflow"
+  ]
+}

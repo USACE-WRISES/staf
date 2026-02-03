@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-local-runoff-diversions-or-withdrawals",
+  "metricId": "reach-inflow-local-runoff-diversions-or-withdrawals",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-local-runoff-diversions-or-withdrawals-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-local-runoff-diversions-or-withdrawals-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "No significant withdrawals or returns. Flows remain near natural."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Minor ditches or returns with limited effect."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Moderate diversions or returns causing seasonal stress."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Large or chronic diversions or returns that drastically alter the flow regime."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-local-runoff-diversions-or-withdrawals-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-algal-growth",
+  "metricId": "light-and-thermal-regime-algal-growth",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-algal-growth-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-algal-growth-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Minimal algae and no nuisance mats."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Slightly elevated algal coverage."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Large mats that partially impair habitat."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Dense bloom or scum that covers substrate."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-algal-growth-layer"
+    }
+  ]
+}

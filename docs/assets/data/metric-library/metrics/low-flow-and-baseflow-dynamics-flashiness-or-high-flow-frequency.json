@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency",
+  "name": "Flashiness or high-flow frequency",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Low flow and baseflow dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Low flow velocity describes movement through the thalweg during typical low flow; measurable movement supports dissolved oxygen and limits stagnation, while shifts indicate altered baseflow timing.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Calculate a flashiness index from daily flows. Where ungauged, use qualitative storm-response observations as a screening proxy.",
+  "inputs": [
+    {
+      "label": "Flashiness or high-flow frequency",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Low-flow and storm response align with local norms for the stream type."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Slight increase in flash surges or modestly longer dry periods than expected."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Clearly more frequent flash events or much longer dry periods than normal."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Extreme flashiness or extended dry periods indicating severe low-flow alteration."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MN SQT 2020",
+    "WI SQT 2022",
+    "NRCS TR-55 (1986)",
+    "Richards-Baker Flashiness Index",
+    "USGS NWIS daily flow (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Low flow and baseflow dynamics"
+  ]
+}

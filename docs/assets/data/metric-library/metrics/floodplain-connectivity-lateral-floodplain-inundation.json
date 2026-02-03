@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "floodplain-connectivity-lateral-floodplain-inundation",
+  "name": "Lateral floodplain inundation",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Floodplain connectivity",
+  "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
+  "descriptionMarkdown": "1-2 yr floods routinely access the floodplain, matching reference inundation patterns.",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Map bankfull inundation extent using a DEM and bankfull flow estimate and compare to mapped floodplain layers as a proxy for moderate-flood access.",
+  "inputs": [
+    {
+      "label": "Lateral floodplain inundation",
+      "type": "desktop",
+      "source": "Floodplain",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Moderate floods inundate side and backwaters."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "About 3-5 yr floods are required."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "About 10 yr or larger events are required."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "No functional inundation except during extreme floods."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-floodplain-connectivity-lateral-floodplain-inundation"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "HEC-RAS 2D with USGS 3DEP DEM",
+    "bankfull flow estimate",
+    "FEMA floodplain layers (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Floodplain connectivity"
+  ]
+}

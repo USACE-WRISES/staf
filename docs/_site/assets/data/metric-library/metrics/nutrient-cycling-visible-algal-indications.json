@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-visible-algal-indications",
+  "name": "Visible algal indications",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient cycling",
+  "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+  "descriptionMarkdown": "Algae suggests no excessive nutrients vs reference, unless historically moderate (open canopy).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Estimate periphyton or algal cover during a field visit and interpret with light and nutrients.",
+  "inputs": [
+    {
+      "label": "Visible algal indications",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "No nuisance algae and <10% cover, or normal for region."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "10-30% cover or mild filaments."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "30-50% cover with partial blooms."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">50% cover or thick scums."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-visible-algal-indications"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA Water Quality Portal (nutrients and chlorophyll where available)",
+    "field observations",
+    "watershed land cover context (NLCD)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Nutrient cycling"
+  ]
+}

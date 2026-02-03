@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-streamflow-regime-streambed-vegetation-indicators",
+  "metricId": "streamflow-regime-streambed-vegetation-indicators",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-streambed-vegetation-indicators-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-streambed-vegetation-indicators-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Bed vegetation matches reference expectations for dryness or wetness."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Minor mismatch in vegetation extent or type."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Significant mismatch, such as dense stands in a historically scoured bed."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Extreme overgrowth or vegetation type strongly contradicts expected scour or dryness regime."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-streambed-vegetation-indicators-layer"
+    }
+  ]
+}

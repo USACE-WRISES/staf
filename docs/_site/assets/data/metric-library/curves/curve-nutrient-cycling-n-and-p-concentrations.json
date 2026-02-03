@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-n-and-p-concentrations",
+  "metricId": "nutrient-cycling-n-and-p-concentrations",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-n-and-p-concentrations-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-n-and-p-concentrations-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Near background or guideline values."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Slightly elevated N or P."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Marked elevation with likely ecological effects."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Significantly above guidelines indicating strong nutrient pollution."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-n-and-p-concentrations-layer"
+    }
+  ]
+}

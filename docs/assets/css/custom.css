@@ -666,9 +666,9 @@ h3,
 
 .screening-assessment.widget {
   position: relative;
-  width: fit-content;
-  max-width: 95vw;
-  margin: 0 auto;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
   transform: none;
 }
 
@@ -2086,8 +2086,8 @@ body.modal-open {
 }
 
 .screening-table .col-scoring-criteria {
-  width: 136px;
-  max-width: 136px;
+  width: 124px;
+  max-width: 124px;
 }
 
 .screening-table .col-index-score {
@@ -2300,8 +2300,8 @@ body.modal-open {
 
 @media (max-width: 960px) {
   .screening-assessment.widget {
-    width: fit-content;
-    max-width: 95vw;
+    width: 100%;
+    max-width: 100%;
   }
 
   .rapid-assessment.widget {
@@ -2803,4 +2803,886 @@ body.modal-open {
   color: #555555;
   font-size: 0.8rem;
   line-height: 1.2;
+}
+
+/* Metric library workbench layout */
+.assessment-workbench {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 3.2fr) minmax(280px, 1.2fr);
+  gap: 1rem;
+  align-items: start;
+  width: 100%;
+}
+
+/* Screening tier: dock metric library to far-left of the page */
+.assessment-workbench[data-assessment-tier="screening"] {
+  --library-sidebar-width: 340px;
+  --inspector-sidebar-width: 360px;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.assessment-workbench[data-assessment-tier="screening"].is-left-collapsed {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.assessment-workbench[data-assessment-tier="screening"].is-right-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.assessment-workbench[data-assessment-tier="screening"].is-left-collapsed.is-right-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.assessment-workbench.is-left-collapsed {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 1.2fr);
+}
+
+.assessment-workbench.is-right-collapsed {
+  grid-template-columns: minmax(240px, 1fr) minmax(0, 1fr);
+}
+
+.assessment-workbench.is-left-collapsed.is-right-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.assessment-workspace {
+  min-width: 0;
+}
+
+.assessment-workbench .screening-assessment.widget,
+.assessment-workbench .rapid-assessment.widget,
+.assessment-workbench .detailed-assessment.widget {
+  width: 100%;
+  max-width: 100%;
+}
+
+.metric-library-sidebar,
+.metric-inspector-sidebar {
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 12px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow: hidden;
+}
+
+.assessment-workbench[data-assessment-tier="screening"] .metric-library-sidebar {
+  position: fixed;
+  left: 0;
+  top: 1rem;
+  width: var(--library-sidebar-width);
+  height: calc(100vh - 2rem);
+  max-height: calc(100vh - 2rem);
+  z-index: 50;
+}
+
+.assessment-workbench[data-assessment-tier="screening"] .metric-inspector-sidebar {
+  position: fixed;
+  right: 0;
+  top: 1rem;
+  width: var(--inspector-sidebar-width);
+  height: calc(100vh - 2rem);
+  max-height: calc(100vh - 2rem);
+  z-index: 50;
+}
+
+.assessment-workbench[data-assessment-tier="screening"] .metric-library-resizer {
+  position: absolute;
+  top: 0;
+  right: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  touch-action: none;
+}
+
+.assessment-workbench[data-assessment-tier="screening"] .metric-library-resizer::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 5px;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.assessment-workbench[data-assessment-tier="screening"] .metric-inspector-resizer {
+  position: absolute;
+  top: 0;
+  left: -6px;
+  width: 12px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  touch-action: none;
+}
+
+.assessment-workbench[data-assessment-tier="screening"] .metric-inspector-resizer::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 5px;
+  width: 2px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.metric-library-sidebar.is-collapsed,
+.metric-inspector-sidebar.is-collapsed {
+  display: none;
+}
+
+.metric-library-header {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.metric-library-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.metric-library-title-row h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.metric-library-search {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid #cfcfcf;
+  font: inherit;
+}
+
+.metric-tier-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.metric-tier-chip {
+  border: 1px solid #cfcfcf;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  background: #f7f7f7;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.metric-tier-chip.is-active {
+  background: #e9f0ff;
+  border-color: #8fb0e6;
+  color: #1f4f9c;
+  font-weight: 600;
+}
+
+.metric-library-column-header,
+.metric-library-row {
+  display: grid;
+  grid-template-columns:
+    minmax(210px, 2.6fr)
+    minmax(90px, 0.8fr);
+  gap: 0.5rem;
+  align-items: start;
+}
+
+.metric-library-column-header {
+  display: none;
+}
+
+.metric-library-list {
+  overflow: auto;
+  padding-right: 0.25rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.2rem;
+  overflow-x: hidden;
+}
+
+.metric-library-row {
+  padding: 0.35rem 0.35rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+}
+
+.metric-library-row.is-clickable {
+  cursor: pointer;
+}
+
+.metric-library-row.is-clickable:focus-visible {
+  outline: 2px solid #8fb0e6;
+  outline-offset: 2px;
+}
+
+.metric-library-row:hover {
+  border-color: #d5d9e0;
+  background: #f7f8fa;
+}
+
+.metric-library-row.is-selected {
+  border-color: #c8ccd4;
+  background: #f0f1f3;
+}
+
+.metric-library-close,
+.metric-inspector-close {
+  border: none;
+  background: none;
+  box-shadow: none;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #333333;
+}
+
+.metric-inspector-header-main {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.metric-inspector-toggle {
+  align-self: flex-start;
+  width: 1.4rem;
+  height: 1.4rem;
+  padding: 0;
+  min-width: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.metric-cell .metric-name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.metric-name-text {
+  color: #1d1d1d;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.metric-add-btn {
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid #cfcfcf;
+  background: #ffffff;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.metric-add-btn.is-added {
+  background: #e6f4ea;
+  border-color: #9dc7a6;
+  color: #2c6b3f;
+}
+
+.metric-add-btn.is-remove {
+  background: #fbe9e9;
+  border-color: #d99b9b;
+  color: #8a1d1d;
+  font-weight: 700;
+}
+
+.metric-add-btn.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.metric-add-btn.is-remove.is-disabled {
+  background: #f2f2f2;
+  border-color: #cfcfcf;
+  color: #8f8f8f;
+}
+
+.metric-short-name {
+  font-size: 0.78rem;
+  color: #666666;
+}
+
+.metric-library-group {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  background: #eef1f7;
+  border: 1px solid #d3d9e6;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #24324a;
+}
+
+.metric-library-group.category-hydrology {
+  background: #d9e2f3;
+}
+
+.metric-library-group.category-hydraulics {
+  background: #b9cbe6;
+}
+
+.metric-library-group.category-geomorphology {
+  background: #f7e1d1;
+}
+
+.metric-library-group.category-physicochemistry {
+  background: #f3e9c4;
+}
+
+.metric-library-group.category-biology {
+  background: #dbead2;
+}
+
+.metric-library-group-discipline {
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid #c3c9d6;
+  background: #ffffff;
+  font-size: 0.7rem;
+  text-transform: capitalize;
+}
+
+.metric-library-group-function {
+  font-size: 0.82rem;
+}
+
+.metric-library-filters {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.metric-library-filter {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid #cfcfcf;
+  font: inherit;
+  background: #ffffff;
+}
+
+.metric-min-tier {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 1.35rem;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  border: 1px solid #d0d0d0;
+  background: #f5f5f5;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+.metric-scoring-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.metric-curves-text {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: #1f4f9c;
+  text-decoration: underline;
+}
+
+.metric-curves-toggle {
+  border: 1px solid #cfcfcf;
+  border-radius: 999px;
+  padding: 0.05rem 0.3rem;
+  background: #ffffff;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.metric-curves-list {
+  margin-top: 0.25rem;
+  padding-left: 0.15rem;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.metric-curve-group {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #666666;
+  margin-top: 0.2rem;
+}
+
+.metric-curve-link {
+  border: none;
+  background: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: #1f4f9c;
+  cursor: pointer;
+}
+
+.screening-table .metric-curve-link {
+  color: #1d1d1d;
+  text-decoration: none;
+  padding: 0.1rem 0.2rem;
+  border-radius: 6px;
+}
+
+.screening-table .metric-curve-link:hover,
+.screening-table .metric-curve-link:focus-visible {
+  background: #eef2fb;
+  text-decoration: none;
+}
+
+.metric-details-btn {
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  padding: 0.2rem 0.4rem;
+  background: #ffffff;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.metric-inspector-empty {
+  color: #666666;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.2rem;
+}
+
+.metric-inspector-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.metric-inspector-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+}
+
+.metric-inspector-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.metric-inspector-subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: #666666;
+}
+
+.metric-profile-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.metric-profile-chip {
+  border: 1px solid #cfcfcf;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  background: #f7f7f7;
+  cursor: pointer;
+  text-transform: capitalize;
+}
+
+.metric-profile-chip.is-active {
+  background: #e9f0ff;
+  border-color: #8fb0e6;
+  color: #1f4f9c;
+  font-weight: 600;
+}
+
+.metric-profile-summary {
+  font-size: 0.85rem;
+  color: #555555;
+}
+
+.metric-add-warning {
+  font-size: 0.8rem;
+  color: #8a3f2c;
+  background: #f8e9e4;
+  border: 1px solid #e2c2b8;
+  border-radius: 8px;
+  padding: 0.35rem 0.45rem;
+}
+
+.metric-inspector-tabs {
+  display: flex;
+  gap: 0.4rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.4rem;
+}
+
+.metric-inspector-tab {
+  border: none;
+  background: none;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.metric-inspector-tab.is-active {
+  border-bottom: 2px solid #1f4f9c;
+  color: #1f4f9c;
+  font-weight: 600;
+}
+
+.metric-tab-panel {
+  display: none;
+  font-size: 0.88rem;
+  color: #333333;
+}
+
+.metric-tab-panel.is-active {
+  display: block;
+}
+
+.metric-inspector-content {
+  display: grid;
+  gap: 0.6rem;
+  overflow: auto;
+}
+
+.metric-detail-section {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.metric-detail-section + .metric-detail-section {
+  margin-top: 0.85rem;
+}
+
+.metric-detail-section h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #444444;
+}
+
+.metric-detail-section p,
+.metric-detail-section ul {
+  margin: 0;
+}
+
+.metric-detail-section ul {
+  padding-left: 1.1rem;
+}
+
+.metric-detail-section li {
+  margin: 0;
+}
+
+.metric-rubric-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.metric-rubric-table th,
+.metric-rubric-table td {
+  border: 1px solid #d0d0d0;
+  padding: 0.3rem 0.4rem;
+  vertical-align: top;
+}
+
+.metric-rubric-table th {
+  background: #f3f3f3;
+  text-align: left;
+}
+
+.metric-curve-builder {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.metric-curve-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.metric-curve-chart-wrap {
+  position: relative;
+}
+
+.metric-curve-chart-expand {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  border: 1px solid #cfcfcf;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.metric-curve-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.metric-curve-modal.is-open {
+  display: flex;
+}
+
+.metric-curve-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.metric-curve-modal-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 0.75rem;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  z-index: 1;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.metric-curve-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.metric-curve-modal-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.metric-curve-modal-canvas {
+  display: block;
+}
+
+.metric-curve-name-input {
+  flex: 1 1 180px;
+  min-width: 140px;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid #cfcfcf;
+  font: inherit;
+}
+
+.metric-curve-table {
+  width: 100%;
+  table-layout: fixed;
+  --curve-col-value: 120px;
+  --curve-col-index: 70px;
+}
+
+.metric-curve-table th,
+.metric-curve-table td {
+  padding: 0.3rem 0.35rem;
+}
+
+.metric-curve-col-value {
+  width: var(--curve-col-value);
+}
+
+.metric-curve-col-index {
+  width: var(--curve-col-index);
+}
+
+.metric-curve-col-desc {
+  width: auto;
+}
+
+.metric-curve-value-cell {
+  width: 12ch;
+  vertical-align: top;
+}
+
+.metric-curve-index-cell {
+  width: var(--curve-col-index);
+  min-width: 4ch;
+  vertical-align: top;
+}
+
+.metric-curve-desc-cell {
+  width: auto;
+  vertical-align: top;
+}
+
+.metric-curve-value-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.metric-curve-index-input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.metric-curve-table th {
+  position: relative;
+}
+
+.metric-curve-col-resizer {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+}
+
+.metric-curve-desc {
+  width: 100%;
+  resize: vertical;
+  min-height: 2.2rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: 6px;
+  border: 1px solid #cfcfcf;
+  font: inherit;
+}
+
+.metric-curve-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.metric-curve-table th,
+.metric-curve-table td {
+  border: 1px solid #d0d0d0;
+  padding: 0.25rem 0.35rem;
+}
+
+.metric-curve-table th {
+  background: #f3f3f3;
+  text-align: left;
+}
+
+.metric-curve-chart-wrap {
+  margin-top: 0.4rem;
+}
+
+.metric-curve-table input,
+.metric-curve-table textarea,
+.metric-curve-controls input,
+.metric-curve-controls select {
+  font: inherit;
+  padding: 0.2rem 0.35rem;
+  border-radius: 6px;
+  border: 1px solid #cfcfcf;
+}
+
+.metric-profile-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 1000;
+}
+
+.metric-profile-modal[hidden] {
+  display: none;
+}
+
+.metric-profile-dialog {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #cfcfcf;
+  padding: 1rem;
+  width: min(420px, 92vw);
+  display: grid;
+  gap: 0.6rem;
+}
+
+.metric-profile-options {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.metric-profile-option {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+}
+
+.metric-profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 1100px) {
+  .assessment-workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-library-sidebar,
+  .metric-inspector-sidebar {
+    position: relative;
+    max-height: none;
+  }
+
+  .assessment-workbench[data-assessment-tier="screening"] .metric-library-sidebar {
+    width: auto;
+    height: auto;
+    top: auto;
+  }
+
+  .assessment-workbench[data-assessment-tier="screening"] .metric-inspector-sidebar {
+    width: auto;
+    height: auto;
+    top: auto;
+    right: auto;
+  }
 }

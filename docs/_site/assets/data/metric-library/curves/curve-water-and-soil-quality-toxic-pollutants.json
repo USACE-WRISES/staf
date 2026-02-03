@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-toxic-pollutants",
+  "metricId": "water-and-soil-quality-toxic-pollutants",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-toxic-pollutants-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-toxic-pollutants-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "No known exceedances and no visible indicators."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Occasional minor issues or mild odor."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Recognized contamination risk with moderate stress indicators."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Chronic or severe toxin indicators, fish kills, or persistent sheen."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-toxic-pollutants-layer"
+    }
+  ]
+}

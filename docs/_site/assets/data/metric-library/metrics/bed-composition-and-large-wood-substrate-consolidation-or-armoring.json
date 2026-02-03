@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "bed-composition-and-large-wood-substrate-consolidation-or-armoring",
+  "name": "Substrate consolidation or armoring",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Bed composition and large wood",
+  "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+  "descriptionMarkdown": "Combines substrate size distribution, embeddedness, and consolidation or armoring to assess pore space and habitat quality.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Use a pick test or visual checks to identify surface crusting, cementing, or heavy armoring.",
+  "inputs": [
+    {
+      "label": "Substrate consolidation or armoring",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Little to no cementing. Substrate can be individually moved."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some consolidation but still breakable."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Strong bonding with interstitial spaces mostly filled."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Severe crusting or heavy armor with minimal infiltration or habitat."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-bed-composition-and-large-wood-substrate-consolidation-or-armoring"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field pick test or visual checks",
+    "document as data gap where field access is limited."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Bed composition and large wood"
+  ]
+}

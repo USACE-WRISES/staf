@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "bed-composition-and-large-wood-bedform-diversity",
+  "name": "Bedform diversity",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Bed composition and large wood",
+  "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+  "descriptionMarkdown": "Presence and clarity of expected bedform sequence (riffle-run-pool or step-pool) indicate organized transport and habitat variety.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Count presence of riffle, run, pool, or step-pool units and note whether sequences are intact.",
+  "inputs": [
+    {
+      "label": "Bedform diversity",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Clear riffle-pool or step-pool sequence with robust variety."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some diversity but partially uniform."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Mostly homogeneous bed with faint or missing sequences."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Flattened or artificially uniform bed."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-bed-composition-and-large-wood-bedform-diversity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field habitat mapping",
+    "high-resolution imagery",
+    "planform metrics (for example sinuosity) as supporting context."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Bed composition and large wood"
+  ]
+}

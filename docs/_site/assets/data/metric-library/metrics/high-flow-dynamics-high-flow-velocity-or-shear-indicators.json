@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-high-flow-velocity-or-shear-indicators",
+  "name": "High flow velocity or shear indicators",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Bankfull floods do not cause excessive scour/fill; channel handles transport without frequent failures.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Use imagery change detection to identify fresh bars or scour after moderate floods and confirm in the field where possible.",
+  "inputs": [
+    {
+      "label": "High flow velocity or shear indicators",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Scour and deposition patterns are well matched to substrate and channel type."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Mild signs of bed or bank stress."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Frequent instability at moderate floods with noticeable scour or bar expansion."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Severe mismatch with repeated blowouts or heavy aggradation at moderate flows."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Multi-date NAIP or other aerial imagery for change detection",
+    "multi-epoch LiDAR (where available)",
+    "historic aerials."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics"
+  ]
+}

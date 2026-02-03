@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators",
+  "metricId": "high-flow-dynamics-high-flow-velocity-or-shear-indicators",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Scour and deposition patterns are well matched to substrate and channel type."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Mild signs of bed or bank stress."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Frequent instability at moderate floods with noticeable scour or bar expansion."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Severe mismatch with repeated blowouts or heavy aggradation at moderate flows."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators-layer"
+    }
+  ]
+}

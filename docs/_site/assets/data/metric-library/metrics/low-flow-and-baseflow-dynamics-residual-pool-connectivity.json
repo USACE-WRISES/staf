@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-residual-pool-connectivity",
+  "name": "Residual pool connectivity",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Low flow and baseflow dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Extent to which water remains in contact with both banks and low benches during low flow, sustaining edge habitat and exchange.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Count pools that remain connected versus isolated at low flow and note dominant disconnection causes.",
+  "inputs": [
+    {
+      "label": "Residual pool connectivity",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Pools remain connected at low flow, or dryness is normal and not beyond reference."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some partial isolation but at least half of pools still have a flow path."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Most pools are isolated and surface flow is minimal."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Complete isolation or stagnant pools across most of the reach."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-residual-pool-connectivity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field verification",
+    "NAIP dry-season imagery",
+    "optional HEC-RAS 2D at low flow",
+    "LiDAR longitudinal profile (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Low flow and baseflow dynamics"
+  ]
+}

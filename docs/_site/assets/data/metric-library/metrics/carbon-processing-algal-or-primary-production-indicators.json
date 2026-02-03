@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-algal-or-primary-production-indicators",
+  "name": "Algal or primary production indicators",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Balanced algae/macrophyte growth, no nuisance blooms, unless moderate coverage is historically normal.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Use chlorophyll or periphyton data where available. If absent, infer risk from nutrients and light conditions.",
+  "inputs": [
+    {
+      "label": "Algal or primary production indicators",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Balanced growth with no nuisance blooms."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Slightly elevated algae."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Frequent moderate nuisance mats."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Thick blooms or scums that cover substrate."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-algal-or-primary-production-indicators"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA Water Quality Portal (chlorophyll-a/periphyton where available)",
+    "nutrient datasets (TN/TP) and shade context."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing"
+  ]
+}

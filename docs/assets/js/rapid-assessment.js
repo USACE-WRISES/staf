@@ -141,6 +141,38 @@
         };
       });
 
+      const indicatorById = new Map(indicators.map((item) => [item.id, item]));
+      const indicatorIdSet = new Set(indicators.map((item) => item.id));
+
+      const ensureLibraryIndicator = (detail) => {
+        if (!detail) {
+          return null;
+        }
+        const existing = indicatorById.get(detail.metricId);
+        if (existing) {
+          return existing;
+        }
+        const functionName = detail.function || '';
+        const functionKey = normalize(functionName);
+        const indicator = {
+          id: detail.metricId,
+          discipline: detail.discipline || disciplineMap[functionKey] || 'Hydrology',
+          functionName,
+          functionKey,
+          functionStatement: detail.functionStatement || '',
+          indicator: detail.name || detail.metricId,
+          indicatorStatement: detail.descriptionMarkdown || '',
+          context: detail.methodContextMarkdown || '',
+          method: detail.methodContextMarkdown || '',
+          howToMeasure: detail.howToMeasureMarkdown || '',
+          criteriaKey: normalize(detail.name || detail.metricId),
+        };
+        indicators.push(indicator);
+        indicatorById.set(indicator.id, indicator);
+        indicatorIdSet.add(indicator.id);
+        return indicator;
+      };
+
       const tabsHost = ui.querySelector('.rapid-tabs');
       const nameInput = ui.querySelector('.settings-name');
       const applicabilityInput = ui.querySelector('.settings-applicability');
@@ -198,8 +230,15 @@
         disciplineFilter.appendChild(option);
       });
 
+      const libraryButton = document.createElement('button');
+      libraryButton.type = 'button';
+      libraryButton.className = 'btn btn-small library-open-btn';
+      libraryButton.setAttribute('data-open-metric-library', 'true');
+      libraryButton.textContent = 'Metric Library';
+
       controls.appendChild(search);
       controls.appendChild(disciplineFilter);
+      controls.appendChild(libraryButton);
 
       if (controlsHost) {
         controlsHost.innerHTML = '';
@@ -735,8 +774,56 @@
         updateFunctionRowSpans();
       };
 
+      const addMetricFromLibrary = ({ detail }) => {
+        const indicator = ensureLibraryIndicator(detail);
+        if (!indicator) {
+          return;
+        }
+        indicatorScores.set(indicator.id, defaultIndicatorScore);
+        if (!functionScores.has(indicator.functionName)) {
+          functionScores.set(indicator.functionName, defaultFunctionScore);
+        }
+        if (disciplineFilter && indicator.discipline) {
+          const exists = Array.from(disciplineFilter.options).some(
+            (option) => option.value === indicator.discipline
+          );
+          if (!exists) {
+            const option = document.createElement('option');
+            option.value = indicator.discipline;
+            option.textContent = indicator.discipline;
+            disciplineFilter.appendChild(option);
+          }
+        }
+        renderTable();
+      };
+
+      const removeMetricFromLibrary = ({ metricId }) => {
+        if (!metricId || !indicatorIdSet.has(metricId)) {
+          return;
+        }
+        const index = indicators.findIndex((item) => item.id === metricId);
+        if (index >= 0) {
+          indicators.splice(index, 1);
+        }
+        indicatorById.delete(metricId);
+        indicatorIdSet.delete(metricId);
+        indicatorScores.delete(metricId);
+        renderTable();
+      };
+
+      const isMetricAdded = (metricId) => indicatorIdSet.has(metricId);
+
       search.addEventListener('input', renderTable);
       disciplineFilter.addEventListener('change', renderTable);
+
+      if (window.STAFAssessmentRegistry) {
+        window.STAFAssessmentRegistry.register('rapid', {
+          addMetric: addMetricFromLibrary,
+          removeMetric: removeMetricFromLibrary,
+          isMetricAdded,
+          refresh: renderTable,
+        });
+      }
 
       renderTable();
     } catch (error) {

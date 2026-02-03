@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-cpom-retention",
+  "name": "CPOM retention",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Leaf litter/coarse organic matter are visibly retained, supporting detrital processes per local references.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Count leaf packs and small debris dams, or infer retention from wood presence and low-velocity habitat during a field visit.",
+  "inputs": [
+    {
+      "label": "CPOM retention",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Abundant CPOM retention with stable leaf packs typical for the system."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Some retention but partially flushed out."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Sparse organic matter and limited retention."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Essentially no retained organic matter, or severe overload causing anoxia risk."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-cpom-retention"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field observation",
+    "wood and habitat assessments",
+    "planform complexity from imagery as supporting context."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing"
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-large-wood-substrate-consolidation-or-armoring",
+  "metricId": "bed-composition-and-large-wood-substrate-consolidation-or-armoring",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-substrate-consolidation-or-armoring-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-substrate-consolidation-or-armoring-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Little to no cementing. Substrate can be individually moved."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some consolidation but still breakable."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Strong bonding with interstitial spaces mostly filled."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Severe crusting or heavy armor with minimal infiltration or habitat."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-substrate-consolidation-or-armoring-layer"
+    }
+  ]
+}

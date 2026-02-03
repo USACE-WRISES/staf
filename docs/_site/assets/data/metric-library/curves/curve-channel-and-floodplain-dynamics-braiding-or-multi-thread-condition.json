@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-braiding-or-multi-thread-condition",
+  "metricId": "channel-and-floodplain-dynamics-braiding-or-multi-thread-condition",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-braiding-or-multi-thread-condition-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-braiding-or-multi-thread-condition-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Condition aligns with local reference for the stream type."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Slight departure from reference condition."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Moderate braiding where not typical, or loss of braiding where it is typical."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Heavily braided from instability, or forced single-thread where braiding is expected."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-braiding-or-multi-thread-condition-layer"
+    }
+  ]
+}

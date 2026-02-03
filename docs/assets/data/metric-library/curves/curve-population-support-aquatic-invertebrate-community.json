@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-aquatic-invertebrate-community",
+  "metricId": "population-support-aquatic-invertebrate-community",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-aquatic-invertebrate-community-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-aquatic-invertebrate-community-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Multiple sensitive groups present."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Moderate diversity with some tolerant forms."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Mostly tolerant forms and limited EPT presence."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Very few invertebrates or only extremely tolerant forms."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-aquatic-invertebrate-community-layer"
+    }
+  ]
+}

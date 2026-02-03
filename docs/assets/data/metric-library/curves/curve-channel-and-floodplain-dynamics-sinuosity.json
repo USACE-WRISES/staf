@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-sinuosity",
+  "metricId": "channel-and-floodplain-dynamics-sinuosity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-sinuosity-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-sinuosity-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "About 1.2-1.5, or consistent with local reference for the stream type."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "1.1-1.2."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "1.05-1.1."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<1.05 where meanders are expected."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-sinuosity-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-dissolved-oxygen",
+  "metricId": "water-and-soil-quality-dissolved-oxygen",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-dissolved-oxygen-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-dissolved-oxygen-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": ">6 mg/L and no hypoxia."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "5-6 mg/L. Borderline."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "3-5 mg/L. Frequent stress."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<3 mg/L. High risk of acute impacts."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-dissolved-oxygen-layer"
+    }
+  ]
+}

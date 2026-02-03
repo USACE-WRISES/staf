@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-do-fluctuation",
+  "name": "DO fluctuation",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient cycling",
+  "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+  "descriptionMarkdown": "Daily O2 changes are moderate (<2 mg/L), unless larger swings are normal (warm swamp streams).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Analyze dissolved oxygen for diurnal swings where continuous data exist. If not, use spot checks and nutrient context as a screening proxy.",
+  "inputs": [
+    {
+      "label": "DO fluctuation",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "<2 mg/L diurnal swing and no frequent hypoxia."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "2-4 mg/L swing with occasional stress."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "4-6 mg/L swing and borderline low DO at night."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">6 mg/L swing or frequent dips below 3 mg/L."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-do-fluctuation"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS NWIS continuous dissolved oxygen (where available)",
+    "state continuous monitoring networks (where available)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Nutrient cycling"
+  ]
+}

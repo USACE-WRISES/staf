@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-thermal-refugia",
+  "name": "Thermal refugia",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Light and thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Springs or deeper pools temper extremes, unless large daily swings are historically normal (arid ephemeral).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Locate cooler pockets or deeper pools using a field temperature check or loggers where available.",
+  "inputs": [
+    {
+      "label": "Thermal refugia",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Multiple cooler pockets or deeper pools provide refugia during warm periods."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "One or two minor refuges."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Rare or minimal cooler zones."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "No refugia where expected. High thermal stress risk."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-thermal-refugia"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field IR gun or loggers",
+    "mapped springs/seeps and baseflow indices (where available)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light and thermal regime"
+  ]
+}

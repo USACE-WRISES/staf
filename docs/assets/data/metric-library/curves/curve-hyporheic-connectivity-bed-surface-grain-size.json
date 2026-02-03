@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-hyporheic-connectivity-bed-surface-grain-size",
+  "metricId": "hyporheic-connectivity-bed-surface-grain-size",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-bed-surface-grain-size-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-bed-surface-grain-size-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Open interstitial coarse bed with minimal fines."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Mild embedding or partial fine coverage."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Strong embedding or siltation limiting infiltration."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Predominantly fine or consolidated bed with little interstitial space."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-bed-surface-grain-size-layer"
+    }
+  ]
+}

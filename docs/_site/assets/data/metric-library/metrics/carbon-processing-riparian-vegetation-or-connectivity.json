@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-riparian-vegetation-or-connectivity",
+  "name": "Riparian vegetation or connectivity",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Sufficient native vegetation width unless historically narrow (e.g., prairie streams).",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Measure riparian corridor width and percent natural vegetation along the banks using land cover or riparian metrics. Field checks can be used to confirm major gaps.",
+  "inputs": [
+    {
+      "label": "Riparian vegetation or connectivity",
+      "type": "desktop",
+      "source": "Floodplain",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "About 30 m of diverse native riparian vegetation, or consistent with reference corridor for the region."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "15-30 m corridor or partial coverage."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "5-15 m corridor with limited buffer."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "<5 m corridor or little to no riparian vegetation."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-riparian-vegetation-or-connectivity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MN SQT 2020",
+    "WY SQT 2019",
+    "CO SQT 2019",
+    "SC SQT 2021",
+    "WI SQT 2022",
+    "EPA EnviroAtlas riparian metrics and/or NLCD."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing"
+  ]
+}

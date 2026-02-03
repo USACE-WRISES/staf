@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-community-dynamics-native-species-presence",
+  "metricId": "community-dynamics-native-species-presence",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-native-species-presence-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-native-species-presence-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Most native taxa expected for the stream type are present."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "A few sensitive native taxa are missing."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Several native taxa are absent and tolerant taxa dominate."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Widespread loss of native taxa with invasive or tolerant taxa dominating."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-native-species-presence-layer"
+    }
+  ]
+}

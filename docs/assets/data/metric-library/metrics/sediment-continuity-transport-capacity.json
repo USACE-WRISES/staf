@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-transport-capacity",
+  "name": "Transport capacity",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Sediment continuity",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+  "descriptionMarkdown": "Flow/slope balance incoming sediment, avoiding major bars or deep scour, unless imbalance is historically normal.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Screen stream power using discharge and slope and compare with observed bars or scour. Detailed transport modeling is beyond screening.",
+  "inputs": [
+    {
+      "label": "Transport capacity",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "No major bar buildup or scour. Sediment load appears balanced for channel type."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Slight mismatch with minor deposition or scour."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Noticeable over or under capacity in channel sections."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Widespread bar formation or deep scouring indicating severe imbalance."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-transport-capacity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS StreamStats flow statistics (where available)",
+    "NHDPlus HR slope",
+    "NAIP imagery for bar validation."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity"
+  ]
+}

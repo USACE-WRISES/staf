@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-juvenile-refuge",
+  "metricId": "population-support-juvenile-refuge",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-juvenile-refuge-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-juvenile-refuge-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "More than 40% of reach has adequate juvenile cover."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "20-40% cover."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "5-20% cover."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<5% cover or none."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-juvenile-refuge-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-amphibian-or-crayfish-presence",
+  "metricId": "population-support-amphibian-or-crayfish-presence",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-amphibian-or-crayfish-presence-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-amphibian-or-crayfish-presence-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Multiple observations where historically expected."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some presence but limited."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Rare or single individuals."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Absent where historically expected."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-amphibian-or-crayfish-presence-layer"
+    }
+  ]
+}

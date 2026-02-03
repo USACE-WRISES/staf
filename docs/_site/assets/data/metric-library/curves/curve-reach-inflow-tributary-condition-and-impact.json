@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-tributary-condition-and-impact",
+  "metricId": "reach-inflow-tributary-condition-and-impact",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-tributary-condition-and-impact-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-tributary-condition-and-impact-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "1-2 tributaries are moderately altered or somewhat polluted."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Multiple tributaries are significantly altered and deliver high sediment or pollutants."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Widespread severe tributary impacts that overwhelm the mainstem."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-tributary-condition-and-impact-layer"
+    }
+  ]
+}

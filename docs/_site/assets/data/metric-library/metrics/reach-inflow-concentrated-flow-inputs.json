@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-concentrated-flow-inputs",
+  "name": "Concentrated flow inputs",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Reach inflow",
+  "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+  "descriptionMarkdown": "Storm/tile drains, ditches are minimal or absent, preserving near-natural infiltration/runoff timing.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Count stormwater outfalls or ditches per 100 m using municipal layers or imagery and verify in the field where feasible.",
+  "inputs": [
+    {
+      "label": "Concentrated flow inputs",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "0-1 outfalls or ditches per 100 m."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "2-3 per 100 m."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "4-5 per 100 m."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">5 per 100 m, or large storm drains."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-concentrated-flow-inputs"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Municipal MS4 outfall GIS layers (where available)",
+    "NPDES/MS4 permit information",
+    "Unified Stream Assessment protocols."
+  ],
+  "tags": [
+    "Hydrology",
+    "Reach inflow"
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-mean-annual-flow-difference-from-baseline",
+  "name": "Mean annual flow difference from baseline",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Streamflow regime",
+  "functionStatement": "\"Integrates the range of \"\"typical\"\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).\"",
+  "descriptionMarkdown": "Compares current daily-flow pattern to the natural regime, combining IHA metrics with the Richards-Baker flashiness index to screen for alteration from dams, withdrawals, or urbanization.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Compare current mean annual flow to a natural or historical baseline and report percent difference.",
+  "inputs": [
+    {
+      "label": "Mean annual flow difference from baseline",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "<10% difference from baseline."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "10-20% difference."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "20-50% difference."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">50% difference. Near dewatering or strong hydropeaking."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-mean-annual-flow-difference-from-baseline"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS NWIS (current)",
+    "USGS StreamStats (natural baseline where available)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Streamflow regime"
+  ]
+}

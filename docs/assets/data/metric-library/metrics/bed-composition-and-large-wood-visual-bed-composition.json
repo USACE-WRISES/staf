@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "bed-composition-and-large-wood-visual-bed-composition",
+  "name": "Visual bed composition",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Bed composition and large wood",
+  "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+  "descriptionMarkdown": "Combines substrate size distribution, embeddedness, and consolidation or armoring to assess pore space and habitat quality.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Visually classify dominant substrate along the reach (bedrock, boulder, cobble, gravel, sand, silt or clay) and note the relative amount of fines and embedding.",
+  "inputs": [
+    {
+      "label": "Visual bed composition",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Bed composition matches expectations for the stream type with open interstitial space where coarse substrate is expected."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Minor departure from expected composition or mild fine cover."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Strong departure from expected composition, or widespread fine cover and embedding in coarse-bed settings."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Bed is dominated by fines or is heavily embedded or sealed, indicating poor habitat and limited exchange."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-bed-composition-and-large-wood-visual-bed-composition"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Barbour et al. (1999)",
+    "SVAP v2 (2018)."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Bed composition and large wood"
+  ]
+}

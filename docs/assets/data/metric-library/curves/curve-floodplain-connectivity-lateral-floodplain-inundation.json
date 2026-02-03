@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-floodplain-connectivity-lateral-floodplain-inundation",
+  "metricId": "floodplain-connectivity-lateral-floodplain-inundation",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-lateral-floodplain-inundation-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-lateral-floodplain-inundation-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Moderate floods inundate side and backwaters."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "About 3-5 yr floods are required."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "About 10 yr or larger events are required."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "No functional inundation except during extreme floods."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-lateral-floodplain-inundation-layer"
+    }
+  ]
+}

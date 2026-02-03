@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-road-density-and-proximity-to-channel",
+  "metricId": "reach-inflow-road-density-and-proximity-to-channel",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-road-density-and-proximity-to-channel-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-road-density-and-proximity-to-channel-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "<0.5 km roads per km2, with few roads close to the channel."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "0.5-1.0 km per km2, or limited road proximity to the channel."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "1-2 km per km2, or roads commonly adjacent to the channel."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">2 km per km2, or frequent road proximity with clear runoff and sediment delivery risk."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-road-density-and-proximity-to-channel-layer"
+    }
+  ]
+}

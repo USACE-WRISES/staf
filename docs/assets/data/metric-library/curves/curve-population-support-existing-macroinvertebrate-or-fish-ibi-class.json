@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-existing-macroinvertebrate-or-fish-ibi-class",
+  "metricId": "population-support-existing-macroinvertebrate-or-fish-ibi-class",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-existing-macroinvertebrate-or-fish-ibi-class-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-existing-macroinvertebrate-or-fish-ibi-class-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "IBI class is Excellent or Good, or equivalent high condition category."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "IBI class is Good-Fair or slightly below reference."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "IBI class is Fair or impaired."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "IBI class is Poor or severely impaired."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-existing-macroinvertebrate-or-fish-ibi-class-layer"
+    }
+  ]
+}

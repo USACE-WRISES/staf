@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-dissolved-oxygen",
+  "name": "Dissolved oxygen",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Water and soil quality",
+  "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+  "descriptionMarkdown": "DO is high enough (>5-6 mg/L) for aquatic life, unless naturally lower in warm/boggy streams.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Collect spot DO readings and compile minima from time series where available.",
+  "inputs": [
+    {
+      "label": "Dissolved oxygen",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": ">6 mg/L and no hypoxia."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "5-6 mg/L. Borderline."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "3-5 mg/L. Frequent stress."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "<3 mg/L. High risk of acute impacts."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-dissolved-oxygen"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field DO meter",
+    "USGS NWIS and/or EPA Water Quality Portal (DO where available)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Water and soil quality"
+  ]
+}

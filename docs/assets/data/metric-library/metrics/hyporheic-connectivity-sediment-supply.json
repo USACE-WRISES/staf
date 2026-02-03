@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-sediment-supply",
+  "name": "Sediment supply",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Springs/seeps/subsurface flow show active hyporheic exchange, matching local reference.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Overlay slope (DEM), soils (for example SSURGO erodibility and texture), land cover, and roads to estimate relative sediment delivery risk to the reach.",
+  "inputs": [
+    {
+      "label": "Sediment supply",
+      "type": "desktop",
+      "source": "Watershed",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Low predicted sediment delivery risk, and coarse bed conditions are likely to remain open."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Low to moderate delivery risk."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Moderate to high delivery risk, likely increasing fines and clogging."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Very high delivery risk, likely driving chronic fine sediment deposition and reduced exchange."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-sediment-supply"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MN SQT 2020",
+    "WY SQT 2019",
+    "CO SQT 2019",
+    "DEM slope, SSURGO soils, and roads/land cover layers."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity"
+  ]
+}

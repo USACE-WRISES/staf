@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-peak-flow-capacity",
+  "name": "Peak flow capacity",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Bankfull shear stress fits substrate/banks, indicating stable capacity.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Compare bankfull width and depth to regional curves for drainage area and slope and flag large departures.",
+  "inputs": [
+    {
+      "label": "Peak flow capacity",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Channel dimensions align with regional curves and are stable through moderate floods."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Slight mismatch with occasional instability."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Significant mismatch with frequent instability."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Severe mismatch with repeated destructive floods or bank failures."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-peak-flow-capacity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS/NRCS regional bankfull geometry reports (where available)",
+    "StreamStats inputs",
+    "NAIP and USGS 3DEP for measurements."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics"
+  ]
+}

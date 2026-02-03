@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-undercut-banks-or-overhanging-vegetation",
+  "metricId": "habitat-provision-undercut-banks-or-overhanging-vegetation",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-undercut-banks-or-overhanging-vegetation-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-habitat-provision-undercut-banks-or-overhanging-vegetation-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": ">=50% of banks have undercut or overhanging cover."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "25-50%."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "10-25%."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<10% or nearly none."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-undercut-banks-or-overhanging-vegetation-layer"
+    }
+  ]
+}

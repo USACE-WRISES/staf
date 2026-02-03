@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-dewatered-or-intermittent-segments",
+  "metricId": "watershed-connectivity-dewatered-or-intermittent-segments",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-watershed-connectivity-dewatered-or-intermittent-segments-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-dewatered-or-intermittent-segments-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "No artificial dryness and natural connectivity is maintained."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Minor dryness in small segments."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Notable dryness or disconnection in key reaches."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Chronic or large-scale dewatering causing major fragmentation."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-dewatered-or-intermittent-segments-layer"
+    }
+  ]
+}

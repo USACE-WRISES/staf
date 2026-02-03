@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-substrate-exposure-during-low-flow",
+  "name": "Substrate exposure during low flow",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Low flow and baseflow dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Evaluates whether the reach maintains adequate wetted depth and continuity during low flow by integrating pool depth, wetted length, exposed bed, and Q90/Q10 differences.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Estimate percent of bed exposed during low flow using field photos or dry-season imagery where available.",
+  "inputs": [
+    {
+      "label": "Substrate exposure during low flow",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Minimal bed exposure (<25%), or dryness is normal for the stream type."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "25-50% exposure."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "50-75% exposure."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">75% exposed, or dryness in a historically perennial reach."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-substrate-exposure-during-low-flow"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field photos",
+    "NAIP dry-season imagery",
+    "LiDAR with estimated low-flow water surface (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Low flow and baseflow dynamics"
+  ]
+}

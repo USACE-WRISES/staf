@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-thermal-refugia",
+  "metricId": "light-and-thermal-regime-thermal-refugia",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-thermal-refugia-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-thermal-refugia-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Multiple cooler pockets or deeper pools provide refugia during warm periods."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "One or two minor refuges."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Rare or minimal cooler zones."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "No refugia where expected. High thermal stress risk."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-thermal-refugia-layer"
+    }
+  ]
+}

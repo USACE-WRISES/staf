@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-floodplain-water-retention",
+  "name": "Floodplain water retention",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Moderate floods (~1-5 yr) reach the floodplain, providing water retention/infiltration per regional norms.",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "howToMeasureMarkdown": "Identify bankfull indicators and recent high-water marks and compare to bankfull elevation. Corroborate with a nearby gage bankfull or recurrence estimate where available.",
+  "inputs": [
+    {
+      "label": "Floodplain water retention",
+      "type": "field",
+      "source": "Floodplain",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Floodplain is actively engaged at the local moderate-flood standard (often about 1-2 yr or 2-5 yr)."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Overbanking requires flows slightly larger than typical bankfull, but still not rare."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Overbanking requires 5-10 yr floods. Partial disconnection."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-floodplain-water-retention"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USFS and NRCS bankfull field guides",
+    "USGS gage recurrence/rating data (where available)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage"
+  ]
+}

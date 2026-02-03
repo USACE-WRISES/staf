@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-ph-and-conductivity",
+  "metricId": "water-and-soil-quality-ph-and-conductivity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-ph-and-conductivity-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-ph-and-conductivity-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "pH about 6.5-8.5 and conductance within typical range."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Slightly off-range or mild conductance elevation."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Marked deviation from typical range."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Extreme pH or very high conductance indicating major stress."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-ph-and-conductivity-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-aquatic-connectivity-or-fish-passage",
+  "metricId": "watershed-connectivity-aquatic-connectivity-or-fish-passage",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-watershed-connectivity-aquatic-connectivity-or-fish-passage-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-aquatic-connectivity-or-fish-passage-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "80-100% of habitat accessible. No major barriers."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "50-80% accessible."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "20-50% accessible."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "<20% accessible due to major dams or multiple blockages."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-aquatic-connectivity-or-fish-passage-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-large-wood-visual-bed-composition",
+  "metricId": "bed-composition-and-large-wood-visual-bed-composition",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-visual-bed-composition-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-visual-bed-composition-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Bed composition matches expectations for the stream type with open interstitial space where coarse substrate is expected."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Minor departure from expected composition or mild fine cover."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Strong departure from expected composition, or widespread fine cover and embedding in coarse-bed settings."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Bed is dominated by fines or is heavily embedded or sealed, indicating poor habitat and limited exchange."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-visual-bed-composition-layer"
+    }
+  ]
+}

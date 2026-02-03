@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency",
+  "metricId": "low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Low-flow and storm response align with local norms for the stream type."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Slight increase in flash surges or modestly longer dry periods than expected."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Clearly more frequent flash events or much longer dry periods than normal."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Extreme flashiness or extended dry periods indicating severe low-flow alteration."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency-layer"
+    }
+  ]
+}

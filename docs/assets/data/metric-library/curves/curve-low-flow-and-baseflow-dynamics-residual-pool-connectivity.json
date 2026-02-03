@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-residual-pool-connectivity",
+  "metricId": "low-flow-and-baseflow-dynamics-residual-pool-connectivity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-low-flow-and-baseflow-dynamics-residual-pool-connectivity-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-residual-pool-connectivity-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Pools remain connected at low flow, or dryness is normal and not beyond reference."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some partial isolation but at least half of pools still have a flow path."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Most pools are isolated and surface flow is minimal."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Complete isolation or stagnant pools across most of the reach."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-residual-pool-connectivity-layer"
+    }
+  ]
+}

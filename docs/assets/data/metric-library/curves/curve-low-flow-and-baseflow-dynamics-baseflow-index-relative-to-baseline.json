@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-baseflow-index-relative-to-baseline",
+  "metricId": "low-flow-and-baseflow-dynamics-baseflow-index-relative-to-baseline",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-low-flow-and-baseflow-dynamics-baseflow-index-relative-to-baseline-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-baseflow-index-relative-to-baseline-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "BFI closely matches the region's baseline."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "About 10-20% difference from baseline."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "About 20-40% difference from baseline."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "More than 40% difference from baseline, indicating extreme baseflow alteration."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-baseflow-index-relative-to-baseline-layer"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-streamflow-regime-flow-permanence-stats",
+  "metricId": "streamflow-regime-flow-permanence-stats",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-flow-permanence-stats-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flow-permanence-stats-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Flow permanence is stable and near the historical pattern for the stream type."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Minor changes in dry or wet intervals."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Significant changes in flow permanence (for example a formerly perennial reach goes dry for extended periods)."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Major departure from reference flow permanence. Flow regime category is effectively changed."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flow-permanence-stats-layer"
+    }
+  ]
+}

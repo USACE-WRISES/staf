@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-hyporheic-connectivity-visible-hyporheic-indicators",
+  "metricId": "hyporheic-connectivity-visible-hyporheic-indicators",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-visible-hyporheic-indicators-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-visible-hyporheic-indicators-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Clear presence of subsurface flow pathways."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Occasional or minor seeps."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Rare or uncertain infiltration pathways."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "No evidence of hyporheic exchange. Bed is sealed or compacted."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-visible-hyporheic-indicators-layer"
+    }
+  ]
+}

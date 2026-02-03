@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-floodplain-connectivity-floodplain-complexity",
+  "metricId": "floodplain-connectivity-floodplain-complexity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-floodplain-complexity-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-floodplain-complexity-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Multiple active features connected during moderate floods and consistent with historical complexity."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Partial complexity remains with some features truncated or partially isolated."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Most off-channel features are lost or only minimally connected."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Floodplain is simplified or leveed with little or no off-channel function remaining."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-floodplain-complexity-layer"
+    }
+  ]
+}

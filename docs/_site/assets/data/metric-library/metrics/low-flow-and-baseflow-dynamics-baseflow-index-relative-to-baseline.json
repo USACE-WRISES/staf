@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-baseflow-index-relative-to-baseline",
+  "name": "Baseflow Index relative to baseline",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Low flow and baseflow dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Degree to which residual pools and riffle segments remain linked by continuous surface flow along the thalweg at normal low flow.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Compute Baseflow Index from daily flow records and compare to a regional or historical baseline where available.",
+  "inputs": [
+    {
+      "label": "Baseflow Index relative to baseline",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "BFI closely matches the region's baseline."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "About 10-20% difference from baseline."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "About 20-40% difference from baseline."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "More than 40% difference from baseline, indicating extreme baseflow alteration."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-baseflow-index-relative-to-baseline"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS Groundwater Toolbox (BFI+, PART/WHAT/BASEFLOW) and/or USGS EflowStats",
+    "Wolock (2003) BFI grids (where used)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Low flow and baseflow dynamics"
+  ]
+}

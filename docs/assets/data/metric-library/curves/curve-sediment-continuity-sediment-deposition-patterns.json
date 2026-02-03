@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-sediment-continuity-sediment-deposition-patterns",
+  "metricId": "sediment-continuity-sediment-deposition-patterns",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-sediment-continuity-sediment-deposition-patterns-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-sediment-deposition-patterns-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Deposition pattern fits reference condition with stable point bars."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Some mid-channel or side bars forming but not severely altering flow."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Extensive mid-channel bars with partial obstruction."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Widespread choking deposits that strongly affect channel form and habitat."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-sediment-deposition-patterns-layer"
+    }
+  ]
+}

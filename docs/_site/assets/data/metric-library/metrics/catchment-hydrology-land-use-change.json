@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "catchment-hydrology-land-use-change",
+  "name": "Land use change",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Catchment hydrology",
+  "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+  "descriptionMarkdown": "<5% land cover shift in ~15-20 years, indicating stable infiltration/runoff consistent with historical conditions.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Compare land cover between two time periods (for example NLCD 2001 vs 2019) and compute percent area converted to a different major class.",
+  "inputs": [
+    {
+      "label": "Land use change",
+      "type": "desktop",
+      "source": "Watershed",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "<5% new development or clearing, or only minor land cover shifts."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "5-15% converted from one major land use to another."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "15-30% converted with likely effects on infiltration or flow patterns."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">30% converted. Drastic alteration in runoff, infiltration, and habitat."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-catchment-hydrology-land-use-change"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NLCD Land Cover (MRLC), for example 2001 vs 2019",
+    "NLCD Land Cover Change Index",
+    "NOAA C-CAP (coastal)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Catchment hydrology"
+  ]
+}

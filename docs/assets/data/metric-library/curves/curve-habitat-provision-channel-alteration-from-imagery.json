@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-channel-alteration-from-imagery",
+  "metricId": "habitat-provision-channel-alteration-from-imagery",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-channel-alteration-from-imagery-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-habitat-provision-channel-alteration-from-imagery-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "0-10% of reach altered, and banks are predominantly natural."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "10-25% altered, or some hardened banks."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "25-50% altered, with major loss of natural planform or extensive hardening."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": ">50% altered, or reach is ditch-like or heavily hardened."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-channel-alteration-from-imagery-layer"
+    }
+  ]
+}

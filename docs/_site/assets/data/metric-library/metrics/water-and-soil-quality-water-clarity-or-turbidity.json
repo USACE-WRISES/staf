@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-water-clarity-or-turbidity",
+  "name": "Water clarity or turbidity",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Water and soil quality",
+  "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+  "descriptionMarkdown": "Appears acceptable, minimal turbidity matching local reference conditions.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Measure turbidity using a tube or meter and compare to reference expectations. Supplement with available datasets where present.",
+  "inputs": [
+    {
+      "label": "Water clarity or turbidity",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Mostly clear and consistent with reference. No obvious pollution."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Slight turbidity or discoloration."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Persistent cloudiness with habitat impacts."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Persistently muddy water or visible sheen indicating severe pollution."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-water-clarity-or-turbidity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field turbidity tube or meter",
+    "EPA Water Quality Portal (turbidity/TSS where available)",
+    "assessment listings (where available)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Water and soil quality"
+  ]
+}

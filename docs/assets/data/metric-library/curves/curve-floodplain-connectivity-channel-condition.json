@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-floodplain-connectivity-channel-condition",
+  "metricId": "floodplain-connectivity-channel-condition",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-channel-condition-default",
+      "name": "Screening",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-channel-condition-layer",
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "y": 1,
+              "description": "Stable channel that is not incised or dredged with frequent floodplain access."
+            },
+            {
+              "x": "Suboptimal",
+              "y": 0.69,
+              "description": "Slight channelization or partial dredging."
+            },
+            {
+              "x": "Marginal",
+              "y": 0.3,
+              "description": "Heavily modified or incised channel with limited floodplain access."
+            },
+            {
+              "x": "Poor",
+              "y": 0,
+              "description": "Deeply dredged or channelized reach with little functional floodplain."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-channel-condition-layer"
+    }
+  ]
+}

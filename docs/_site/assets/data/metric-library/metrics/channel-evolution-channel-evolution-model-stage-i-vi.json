@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-evolution-channel-evolution-model-stage-i-vi",
+  "name": "Channel evolution model stage (I-VI)",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Channel evolution",
+  "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
+  "descriptionMarkdown": "Channel is stable/recovered (Stage I/VI or 0,1,6,8), not actively degrading, unless partial evolution is normal.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Assess channel evolution stage using field indicators or recent geomorphic reports. Use desktop review only for coarse screening.",
+  "inputs": [
+    {
+      "label": "Channel evolution model stage (I-VI)",
+      "type": "field",
+      "source": "Channel",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Stable or re-stabilized channel (Stage I or VI)."
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Partially recovered channel (often Stage V)."
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Actively widening or incising (often Stage III-IV)."
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Severe incision or destructive phases (often Stage II or severe III-IV)."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-evolution-channel-evolution-model-stage-i-vi"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Barbour et al. (1999)",
+    "SVAP v2 (2018)."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel evolution"
+  ]
+}
