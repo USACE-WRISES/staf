@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Multiple active features connected during moderate floods and consistent with historical complexity."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Both banks are leveed or the reach is straightened and dredged. No off-channel areas remain despite historical evidence.<br>Criteria: Drastically simplified or leveed. No functional off-channel areas."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Partial complexity remains with some features truncated or partially isolated."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Only a small backwater remains. Most historic features are isolated or filled.<br>Criteria: Most side channels lost or isolated. Minimal diversity of floodplain features."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Most off-channel features are lost or only minimally connected."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Floodplain is simplified or leveed with little or no off-channel function remaining."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Some side channels remain but several are truncated by berms or levees. Connectivity occurs only in parts of the reach.<br>Criteria: Partial complexity. Some features are disconnected at moderate floods."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Multiple active side channels, backwaters, and oxbows exchange flow during moderate floods. Field photos confirm inundation paths.<br>Criteria: Several off-channel features connected at ~1-2 year stage; pattern resembles historical complexity."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-floodplain-connectivity-floodplain-complexity"
+          "curve-floodplain-connectivity-floodplain-complexity-rapid"
         ]
       }
     }
@@ -70,7 +75,10 @@
     "NHDPlus HR flowlines/waterbodies."
   ],
   "tags": [
+    "Floodplain connectivity",
     "Hydraulics",
-    "Floodplain connectivity"
+    "hydraulics",
+    "sfari",
+    "rapid"
   ]
 }

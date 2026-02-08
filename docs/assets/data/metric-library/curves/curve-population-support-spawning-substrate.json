@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-population-support-spawning-substrate",
-  "metricId": "population-support-spawning-substrate",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-population-support-spawning-substrate-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-population-support-spawning-substrate-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Clean or appropriate substrate with minimal silt."
+              "description": "Clean or appropriate substrate with minimal silt.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Some silt but still feasible for spawning."
+              "description": "Some silt but still feasible for spawning.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Heavily silted with limited spawning success expected."
+              "description": "Heavily silted with limited spawning success expected.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "No suitable substrate. High embeddedness, bedrock, or other limiting condition."
+              "description": "No suitable substrate. High embeddedness, bedrock, or other limiting condition.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-population-support-spawning-substrate-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-population-support-spawning-substrate-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-population-support-spawning-substrate-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-population-support-spawning-substrate",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "population-support-spawning-substrate"
 }

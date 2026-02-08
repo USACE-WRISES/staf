@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Multiple cooler pockets or deeper pools provide refugia during warm periods."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: No detectable cool pockets in a reach that historically had springs or deep pools.<br>Criteria: No refuges where historically expected. High thermal risk."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "One or two minor refuges."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Scattered weak cool spots with little depth refuge.<br>Criteria: Rare or minimal cooler zones. Partial stress."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Rare or minimal cooler zones."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "No refugia where expected. High thermal stress risk."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One small spring-fed side channel with limited extent.<br>Criteria: One to two minor or limited refuges."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Multiple cold seeps and deep pools evident. Fish aggregations present on hot days.<br>Criteria: Multiple cooler pockets or deeper pools moderating temperature extremes."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-light-and-thermal-regime-thermal-refugia"
+          "curve-light-and-thermal-regime-thermal-refugia-rapid"
         ]
       }
     }
@@ -68,7 +73,10 @@
     "mapped springs/seeps and baseflow indices (where available)."
   ],
   "tags": [
+    "Light and thermal regime",
     "Physicochemistry",
-    "Light and thermal regime"
+    "physicochemistry",
+    "sfari",
+    "rapid"
   ]
 }

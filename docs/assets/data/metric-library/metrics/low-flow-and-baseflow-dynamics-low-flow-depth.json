@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-low-flow-depth",
+  "name": "Low flow depth",
+  "discipline": "Hydraulics",
+  "function": "Low Flow and Baseflow Dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Evaluates whether the reach maintains adequate wetted depth and continuity during low flow by integrating pool depth, wetted length, exposed bed, and Q90/Q10 differences.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Use available indicators (pool depth, wetted length, exposed bed, Q90/Q10 vs reference) and rate condition based on combined evidence.",
+  "inputs": [
+    {
+      "label": "Low flow depth",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Disconnected, very shallow pools; bed mostly exposed.<br>Criteria: Wetted length <25% or exposed bed >75%, or Q90/Q10 differ >50%."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Mostly isolated pools with narrow trickles; shallow depths.<br>Criteria: Wetted length about 25-50% or exposed bed 50-75%, or Q90/Q10 differ ~30-50%."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Several dry riffles but pools connected; moderate depth.<br>Criteria: Wetted length about 50-75% or exposed bed 25-50%, or Q90/Q10 within ~20-30% of reference."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Continuous wetted thread with short dry patches; pools hold water.<br>Criteria: Wetted length >75% or exposed bed <25%, or Q90/Q10 within ~20% of reference."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-low-flow-depth-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydraulics"
+  ],
+  "status": "active"
+}

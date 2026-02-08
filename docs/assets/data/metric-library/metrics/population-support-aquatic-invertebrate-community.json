@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Multiple sensitive groups present."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: No EPT. Mostly tolerant midges and worms.<br>Criteria: Zero EPT orders present."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Moderate diversity with some tolerant forms."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Only one EPT order present.<br>Criteria: One EPT order present."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Mostly tolerant forms and limited EPT presence."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Very few invertebrates or only extremely tolerant forms."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Two of three EPT orders present.<br>Criteria: Two EPT orders present."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Mayflies, stoneflies, and caddisflies found in kick sample.<br>Criteria: All three EPT orders present with multiple taxa."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-population-support-aquatic-invertebrate-community"
+          "curve-population-support-aquatic-invertebrate-community-rapid"
         ]
       }
     }
@@ -69,6 +74,9 @@
   ],
   "tags": [
     "Biology",
-    "Population support"
+    "Population support",
+    "biology",
+    "sfari",
+    "rapid"
   ]
 }

@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Continuous wetted channel during the expected season. No artificial withdrawals noted. Criteria: No artificial dryness. Natural connectivity is maintained.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Short dry patches appear during late season but reconnect after small rains. Criteria: Minor dryness in small segments.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Long dry segments form in critical habitat areas during the growing season. Criteria: Notable dryness or disconnection in key reaches.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Reaches are chronically dewatered or disconnected for long periods due to withdrawals or diversions. Criteria: Chronic or large-scale dewatering. Major fragmentation.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-watershed-connectivity-dewatered-intermittent-segments-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-watershed-connectivity-dewatered-intermittent-segments-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-watershed-connectivity-dewatered-intermittent-segments-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-watershed-connectivity-dewatered-intermittent-segments-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "watershed-connectivity-dewatered-intermittent-segments"
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-beaver-presence",
+  "name": "Beaver Presence",
+  "discipline": "Biology",
+  "function": "Community Dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "Beaver enhance wetland/channel complexity if historically present, unless naturally absent (arid deserts).",
+  "methodContextMarkdown": "Context: F/C\n\nMethod: F",
+  "howToMeasureMarkdown": "Count active lodges/dams signs",
+  "inputs": [
+    {
+      "label": "Beaver Presence",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Expected keystone species absent. Invasives common.<br>Criteria: No keystone taxa present. Strong invasive dominance."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Keystone species observed only in small numbers.<br>Criteria: Keystone taxa rare compared to reference or historical levels."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Some keystone species present but patchy.<br>Criteria: At least one keystone taxon present but limited distribution."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Beaver, mussels, or crayfish common where expected.<br>Criteria: Expected keystone taxa widespread. No invasive dominance."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-beaver-presence-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

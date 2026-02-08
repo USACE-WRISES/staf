@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-lateral-off-channel-habitats",
+  "name": "Lateral/Off-Channel Habitats",
+  "discipline": "Biology",
+  "function": "Habitat Provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "Backwater areas are accessible as nursery/refuge if historically present, unless naturally confined.",
+  "methodContextMarkdown": "Context: F\n\nMethod: F",
+  "howToMeasureMarkdown": "Count/size backwaters connected",
+  "inputs": [
+    {
+      "label": "Lateral/Off-Channel Habitats",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Levees or berms isolate the channel from the floodplain.<br>Criteria: No side channels or backwaters remain."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Small depressions connect only during rare floods.<br>Criteria: Rare or only ephemeral off-channel usage."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One or two backwaters with partial seasonal connection.<br>Criteria: Some partial connection."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Side channels and backwaters connect during seasonal highs. Fish and amphibian use observed.<br>Criteria: Well connected off-channel areas offering refuge and spawning."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-lateral-off-channel-habitats-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

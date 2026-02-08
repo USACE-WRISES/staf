@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-functional-trophic-groups",
+  "name": "Functional/Trophic Groups",
+  "discipline": "Biology",
+  "function": "Community Dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "Balanced feeding guilds (herbivores, detritivores, predators) if historically expected, unless skewed.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Fish stomach / functional group tally",
+  "inputs": [
+    {
+      "label": "Functional/Trophic Groups",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Very few species. Mostly tolerant taxa.<br>Criteria: Extremely low richness and diversity. Poor index score."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Few species. One or two groups dominate.<br>Criteria: Low richness. Dominance by tolerant taxa or single group."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Several species present. Some groups missing.<br>Criteria: Moderate richness. Some imbalance in feeding groups."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Many species across several feeding groups.<br>Criteria: High richness. Balanced feeding groups. Good index score."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-functional-trophic-groups-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

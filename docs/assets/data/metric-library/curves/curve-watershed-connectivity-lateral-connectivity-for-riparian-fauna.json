@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna",
-  "metricId": "watershed-connectivity-lateral-connectivity-for-riparian-fauna",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "No major levees or walls and free lateral movement."
+              "description": "No major levees or walls and free lateral movement.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Some partial barriers with remaining access."
+              "description": "Some partial barriers with remaining access.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Large levees hamper movement in many areas."
+              "description": "Large levees hamper movement in many areas.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Heavily walled or leveed corridor with minimal lateral connectivity."
+              "description": "Heavily walled or leveed corridor with minimal lateral connectivity.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "watershed-connectivity-lateral-connectivity-for-riparian-fauna"
 }

@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-community-dynamics-invasive-or-non-native-check",
-  "metricId": "community-dynamics-invasive-or-non-native-check",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-community-dynamics-invasive-or-non-native-check-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-community-dynamics-invasive-or-non-native-check-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "<5% invasive presence."
+              "description": "<5% invasive presence.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "5-20% invasive presence."
+              "description": "5-20% invasive presence.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "20-50% invasive presence."
+              "description": "20-50% invasive presence.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": ">50% invasive presence or one invasive dominates."
+              "description": ">50% invasive presence or one invasive dominates.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-community-dynamics-invasive-or-non-native-check-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-community-dynamics-invasive-or-non-native-check-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-community-dynamics-invasive-or-non-native-check-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-community-dynamics-invasive-or-non-native-check",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "community-dynamics-invasive-or-non-native-check"
 }

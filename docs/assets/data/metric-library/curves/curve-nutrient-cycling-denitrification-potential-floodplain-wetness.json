@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-nutrient-cycling-denitrification-potential-floodplain-wetness",
-  "metricId": "nutrient-cycling-denitrification-potential-floodplain-wetness",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-nutrient-cycling-denitrification-potential-floodplain-wetness-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-nutrient-cycling-denitrification-potential-floodplain-wetness-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Strong potential with connected wet areas and soils."
+              "description": "Strong potential with connected wet areas and soils.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Some wet zones but partially disconnected."
+              "description": "Some wet zones but partially disconnected.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Limited wetland area and moderate export risk."
+              "description": "Limited wetland area and moderate export risk.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "No wetlands or heavily drained soils with low denitrification potential."
+              "description": "No wetlands or heavily drained soils with low denitrification potential.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-nutrient-cycling-denitrification-potential-floodplain-wetness-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-nutrient-cycling-denitrification-potential-floodplain-wetness-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-nutrient-cycling-denitrification-potential-floodplain-wetness-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-nutrient-cycling-denitrification-potential-floodplain-wetness",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "nutrient-cycling-denitrification-potential-floodplain-wetness"
 }

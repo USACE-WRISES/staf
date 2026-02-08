@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "<0.5 km roads per km2. Few crossings."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Highways and frontage roads crisscross basin. Frequent crossings to channel.<br>Criteria: >2 km/km2"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "0.5-1.0 km per km2."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Grid network near town center. Several culvert crossings.<br>Criteria: 1-2 km/km2"
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "1-2 km per km2. Noticeable effect on runoff and sediment."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": ">2 km per km2, or frequent crossings delivering heavy pollution."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Collector roads present. Some drainage ditches.<br>Criteria: ~0.5-1.0 km/km2"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Few local roads. Rare stream crossings.<br>Criteria: <0.5 km roads/km2"
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-catchment-hydrology-road-density"
+          "curve-catchment-hydrology-road-density-rapid"
         ]
       }
     }
@@ -68,7 +73,10 @@
     "EPA EnviroAtlas (where available)."
   ],
   "tags": [
+    "Catchment hydrology",
     "Hydrology",
-    "Catchment hydrology"
+    "hydrology",
+    "sfari",
+    "rapid"
   ]
 }

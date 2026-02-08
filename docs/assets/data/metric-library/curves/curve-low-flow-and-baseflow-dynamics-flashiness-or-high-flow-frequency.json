@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency",
-  "metricId": "low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Low-flow and storm response align with local norms for the stream type."
+              "description": "Low-flow and storm response align with local norms for the stream type.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Slight increase in flash surges or modestly longer dry periods than expected."
+              "description": "Slight increase in flash surges or modestly longer dry periods than expected.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Clearly more frequent flash events or much longer dry periods than normal."
+              "description": "Clearly more frequent flash events or much longer dry periods than normal.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Extreme flashiness or extended dry periods indicating severe low-flow alteration."
+              "description": "Extreme flashiness or extended dry periods indicating severe low-flow alteration.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency"
 }

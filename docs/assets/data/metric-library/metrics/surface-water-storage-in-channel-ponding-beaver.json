@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-in-channel-ponding-beaver",
+  "name": "In-channel ponding/beaver",
+  "discipline": "Hydrology",
+  "function": "Surface Water Storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Small beaver-type impoundments aid baseflow/habitat; no major fragmentation unless historically normal.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Tally beaver dams/ponds per 100 m reach",
+  "inputs": [
+    {
+      "label": "In-channel ponding/beaver",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Widespread channel fragmentation or overabundant ponding<br>Criteria: Widespread channel fragmentation or overabundant ponding"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Multiple ponds that moderately disrupt connectivity<br>Criteria: Multiple ponds that moderately disrupt connectivity"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One to two small obstructions. Minor impacts<br>Criteria: One to two small obstructions. Minor impacts"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Beaver dams or small ponds relative to natural capacity<br>Criteria: Present where expected. Enhance baseflow and habitat. Minimal fragmentation"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-in-channel-ponding-beaver-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

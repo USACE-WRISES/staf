@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Multiple off-channel features connect in moderate floods."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Off-channel features mostly gone or permanently cut off<br>Criteria: Off-channel features mostly gone or permanently cut off"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Partial connection or fewer off-channel areas."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Only large floods (>5-10 yr) access these areas<br>Criteria: Only large floods (>5-10 yr) access these areas"
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Only large floods access these areas, or off-channel areas are minimal."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Off-channel features are mostly gone or permanently cut off."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Partial connection or few off-channel areas<br>Criteria: Partial connection or few off-channel areas"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Side channels, oxbows, and beaver wetlands connected near bankfull<br>Criteria: Multiple features connect during moderate (bankfull) floods"
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-surface-water-storage-off-channel-storage"
+          "curve-surface-water-storage-off-channel-storage-rapid"
         ]
       }
     }
@@ -69,6 +74,9 @@
   ],
   "tags": [
     "Hydrology",
-    "Surface water storage"
+    "Surface water storage",
+    "hydrology",
+    "sfari",
+    "rapid"
   ]
 }

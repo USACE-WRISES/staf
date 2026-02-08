@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "catchment-hydrology-impoundments",
+  "name": "Impoundments",
+  "discipline": "Hydrology",
+  "function": "Catchment Hydrology",
+  "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+  "descriptionMarkdown": "Flow is near-natural, with no major dams or only negligible small ones, unless larger dams are historically normal.",
+  "methodContextMarkdown": "Context: W\n\nMethod: D",
+  "howToMeasureMarkdown": "Desktop dam inventory and NHD flow regs",
+  "inputs": [
+    {
+      "label": "Impoundments",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Large reservoir close upstream with hydropeaking or strict seasonal rule curves.<br>Criteria: Heavily regulated system"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Several moderate impoundments in series.<br>Criteria: Multiple moderate dams affecting peaks/baseflow"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One small off-channel dam upstream. Limited storage.<br>Criteria: 1-2 small dams, partial influence"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: No major dams. Only small farm ponds far upstream.<br>Criteria: None or negligible influence"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-catchment-hydrology-impoundments-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

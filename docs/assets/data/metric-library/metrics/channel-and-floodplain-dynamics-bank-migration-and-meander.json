@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-and-floodplain-dynamics-bank-migration-and-meander",
+  "name": "Bank Migration and Meander",
+  "discipline": "Geomorphology",
+  "function": "Channel and Floodplain Dynamics",
+  "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
+  "descriptionMarkdown": "Compares meander migration rates and cutoff frequency to reference behavior; excessive migration or avulsions indicate instability.",
+  "methodContextMarkdown": "Context: C\n\nMethod: D",
+  "howToMeasureMarkdown": "Compare historic aerials; digitize centerlines or bank edges when possible to measure lateral movement; otherwise use qualitative evidence of bend migration, cutoffs, and oxbows; compare to reference reaches.",
+  "inputs": [
+    {
+      "label": "Bank Migration and Meander",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Very rapid migration, avulsions, or channel jumps.<br>Criteria: Frequent or large cutoffs; path strongly out of character for setting."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Noticeably accelerated migration or several cutoffs in recent decades.<br>Criteria: Migration about 2-3x reference or chute cutoffs common."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Slightly faster or constrained migration; occasional cutoffs.<br>Criteria: Minor departure from reference behavior."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Slow, natural bend movement matches nearby reference.<br>Criteria: Cutoffs rare; migration rate near reference."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-bank-migration-and-meander-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "geomorphology"
+  ],
+  "status": "active"
+}

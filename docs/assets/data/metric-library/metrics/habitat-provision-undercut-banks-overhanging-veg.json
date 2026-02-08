@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-undercut-banks-overhanging-veg",
+  "name": "Undercut Banks/Overhanging Veg",
+  "discipline": "Biology",
+  "function": "Habitat Provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "Provides shelter unless historically minimal in certain ecoregions.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Percent bank length with overhang cover",
+  "inputs": [
+    {
+      "label": "Undercut Banks/Overhanging Veg",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Banks straight and hardened. Little to no overhanging vegetation.<br>Criteria: <10% cover."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Short isolated undercut pockets. Many bare or armored banks.<br>Criteria: About 10-25% cover."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Intermittent undercuts and low branches in meanders.<br>Criteria: About 25-50% cover."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Thick root mats and overhanging shrubs along outside bends.<br>Criteria: About 50% or more of banks provide undercut or overhanging cover."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-undercut-banks-overhanging-veg-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

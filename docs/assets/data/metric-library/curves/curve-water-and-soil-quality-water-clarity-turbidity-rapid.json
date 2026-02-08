@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Water is clear at baseflow and similar to a local reference reach. Bottom is visible at knee depth. Criteria: Mostly clear or only slightly cloudy at baseflow.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Slight yellow-brown tint after storms that clears within a day. Criteria: Slight turbidity or color that is short-lived.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Cloudy water persists during baseflow. Fine sediment coats substrate. Criteria: Persistent cloudiness at baseflow.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Chronically muddy water. Visible oily sheen or scum in slack water. Criteria: Persistently muddy or sheen present.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-water-and-soil-quality-water-clarity-turbidity-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-water-and-soil-quality-water-clarity-turbidity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-water-and-soil-quality-water-clarity-turbidity-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-water-and-soil-quality-water-clarity-turbidity-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "water-and-soil-quality-water-clarity-turbidity"
+}

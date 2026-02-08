@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "bed-composition-and-large-wood-substrate-composition",
+  "name": "Substrate Composition",
+  "discipline": "Geomorphology",
+  "function": "Bed Composition and Large Wood",
+  "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+  "descriptionMarkdown": "Combines substrate size distribution, embeddedness, and consolidation or armoring to assess pore space and habitat quality.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Use a Wolman pebble count when feasible; estimate embeddedness; note consolidation or armor with a grab test. If needed, use qualitative bins for dominant substrate and embeddedness.",
+  "inputs": [
+    {
+      "label": "Substrate Composition",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Fine-dominated bed or heavily locked armor.<br>Criteria: Embeddedness >75% or severe armoring; minimal pore space."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Fines blanket bed or strong armor limits pore space.<br>Criteria: Embeddedness about 50-75% or surface locked."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Slight fines or coarsening; moderate embeddedness.<br>Criteria: Embeddedness about 25-50%; light crusting/armoring."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Gravel-cobble mix with low fines and open pore space.<br>Criteria: <25% embeddedness; little/no crusting or armor."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-bed-composition-and-large-wood-substrate-composition-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "geomorphology"
+  ],
+  "status": "active"
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-n-p-concentrations-surrogates",
+  "name": "N/P Concentrations (surrogates)",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient Cycling",
+  "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+  "descriptionMarkdown": "Nutrients near natural/guidelines unless higher levels are normal (e.g., blackwater).",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Grab sample lab TN/TP or colorimetric",
+  "inputs": [
+    {
+      "label": "N/P Concentrations (surrogates)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: TN > 1.5 mg/L or TP > 0.10 mg/L.<br>Criteria: Strong enrichment"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: TN ~1.0-1.5 mg/L or TP ~0.075-0.10 mg/L.<br>Criteria: Marked elevation"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: TN ~0.7-1.0 mg/L or TP ~0.05-0.075 mg/L.<br>Criteria: Slightly elevated nutrients"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: TN ~0.5 mg/L and TP ~0.03 mg/L.<br>Criteria: Near low to moderate trophic benchmarks"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

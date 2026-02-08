@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "catchment-hydrology-impervious-surface-area",
+  "name": "Impervious surface area",
+  "discipline": "Hydrology",
+  "function": "Catchment Hydrology",
+  "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+  "descriptionMarkdown": "Coverage is minimal, preserving near-natural infiltration/runoff timing, consistent with reference levels.",
+  "methodContextMarkdown": "Context: W\n\nMethod: D",
+  "howToMeasureMarkdown": "GIS: percent impervious from NLCD/land-use raster",
+  "inputs": [
+    {
+      "label": "Impervious surface area",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Urban core and arterial corridors dominate lower basin.<br>Criteria: >20% impervious"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Mixed suburban and commercial corridors.<br>Criteria: 10-20% impervious"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Suburban neighborhoods with scattered commercial areas.<br>Criteria: ~5-10% impervious"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Largely forest and pasture. Small town footprint.<br>Criteria: <5% impervious"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-catchment-hydrology-impervious-surface-area-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

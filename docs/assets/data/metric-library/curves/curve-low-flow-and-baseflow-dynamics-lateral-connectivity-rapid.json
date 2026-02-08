@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Water contacts both banks along most of the reach; lateral pockets connected. Criteria: Most margins wetted with few dry shelves; small pockets remain connected.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Banks wetted in many places but intermittent dry shelves. Criteria: Some benches/backwaters connected while others are dry.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Long dry shelves common; only scattered wetted edges. Criteria: Most lateral pockets disconnected except during storms.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Banks largely dry; narrow central thread only. Criteria: Lateral pockets and benches mostly dry or isolated.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-low-flow-and-baseflow-dynamics-lateral-connectivity-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-low-flow-and-baseflow-dynamics-lateral-connectivity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-lateral-connectivity-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-lateral-connectivity-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "low-flow-and-baseflow-dynamics-lateral-connectivity"
+}

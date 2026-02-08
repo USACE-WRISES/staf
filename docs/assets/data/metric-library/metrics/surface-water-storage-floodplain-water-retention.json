@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Floodplain is actively engaged at the local moderate-flood standard (often about 1-2 yr or 2-5 yr)."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Rarely or never overbanking below ~10-yr events. Incision or levees present<br>Criteria: Rarely or never overbanking below ~10-yr events. Incision or levees present"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Overbanking requires flows slightly larger than typical bankfull, but still not rare."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Overbanking mainly at ~5-10 yr events. Partial disconnection<br>Criteria: Overbanking mainly at ~5-10 yr events. Partial disconnection"
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Overbanking requires 5-10 yr floods. Partial disconnection."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Overbanking requires slightly larger than bankfull but not rare<br>Criteria: Overbanking requires slightly larger than bankfull but not rare"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Overbanking frequency based on field indicators and gage context<br>Criteria: Floodplain engages at ~1-2 yr or 2-5 yr events"
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-surface-water-storage-floodplain-water-retention"
+          "curve-surface-water-storage-floodplain-water-retention-rapid"
         ]
       }
     }
@@ -69,6 +74,9 @@
   ],
   "tags": [
     "Hydrology",
-    "Surface water storage"
+    "Surface water storage",
+    "hydrology",
+    "sfari",
+    "rapid"
   ]
 }

@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-channel-evolution-widening-trend",
-  "metricId": "channel-evolution-widening-trend",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-channel-evolution-widening-trend-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-channel-evolution-widening-trend-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Lateral changes are in line with natural or historical reference."
+              "description": "Lateral changes are in line with natural or historical reference.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Slightly more or less migration than expected."
+              "description": "Slightly more or less migration than expected.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Significantly above or below reference with frequent failures or constrained banks."
+              "description": "Significantly above or below reference with frequent failures or constrained banks.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Highly accelerated or highly suppressed lateral change far outside expected ranges."
+              "description": "Highly accelerated or highly suppressed lateral change far outside expected ranges.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-channel-evolution-widening-trend-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-channel-evolution-widening-trend-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-channel-evolution-widening-trend-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-channel-evolution-widening-trend",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "channel-evolution-widening-trend"
 }

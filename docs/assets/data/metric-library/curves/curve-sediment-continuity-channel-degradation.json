@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-sediment-continuity-channel-degradation",
-  "metricId": "sediment-continuity-channel-degradation",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-sediment-continuity-channel-degradation-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-sediment-continuity-channel-degradation-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "No active downcutting. Bed elevation is stable."
+              "description": "No active downcutting. Bed elevation is stable.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Minor localized incision."
+              "description": "Minor localized incision.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Noticeable incision or one or two moderate headcuts that reduce floodplain access."
+              "description": "Noticeable incision or one or two moderate headcuts that reduce floodplain access.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Severe channel-wide incision with multiple major headcuts."
+              "description": "Severe channel-wide incision with multiple major headcuts.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-sediment-continuity-channel-degradation-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-sediment-continuity-channel-degradation-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-sediment-continuity-channel-degradation-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-sediment-continuity-channel-degradation",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "sediment-continuity-channel-degradation"
 }

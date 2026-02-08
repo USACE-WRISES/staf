@@ -3,14 +3,69 @@
   "ratingScales": [
     {
       "ratingScaleId": "fourBand",
-      "name": "Four-band qualitative",
+      "name": "Four-band categorical",
       "levels": [
-        { "id": "poor", "label": "Poor", "order": 1, "score": 0 },
-        { "id": "marginal", "label": "Marginal", "order": 2, "score": 0.3 },
-        { "id": "suboptimal", "label": "Suboptimal", "order": 3, "score": 0.69 },
-        { "id": "optimal", "label": "Optimal", "order": 4, "score": 1 }
+        {
+          "id": "poor",
+          "label": "Poor",
+          "order": 1,
+          "score": 0
+        },
+        {
+          "id": "marginal",
+          "label": "Marginal",
+          "order": 2,
+          "score": 0.3
+        },
+        {
+          "id": "suboptimal",
+          "label": "Suboptimal",
+          "order": 3,
+          "score": 0.69
+        },
+        {
+          "id": "optimal",
+          "label": "Optimal",
+          "order": 4,
+          "score": 1
+        }
+      ]
+    },
+    {
+      "ratingScaleId": "sfariLikert",
+      "name": "SFARI Likert",
+      "levels": [
+        {
+          "id": "sd",
+          "label": "Strongly Disagree",
+          "order": 1,
+          "score": 0.13
+        },
+        {
+          "id": "d",
+          "label": "Disagree",
+          "order": 2,
+          "score": 0.33
+        },
+        {
+          "id": "n",
+          "label": "Neutral",
+          "order": 3,
+          "score": 0.53
+        },
+        {
+          "id": "a",
+          "label": "Agree",
+          "order": 4,
+          "score": 0.73
+        },
+        {
+          "id": "sa",
+          "label": "Strongly Agree",
+          "order": 5,
+          "score": 0.93
+        }
       ]
     }
   ]
 }
-

@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Widespread severely altered tributaries or severe pollution at many confluences<br>Criteria: Widespread severely altered tributaries or severe pollution at many confluences"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "1-2 tributaries are moderately altered or somewhat polluted."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Multiple significantly altered tributaries with frequent sediment plumes<br>Criteria: Multiple significantly altered tributaries with frequent sediment plumes"
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Multiple tributaries are significantly altered and deliver high sediment or pollutants."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Widespread severe tributary impacts that overwhelm the mainstem."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One or two moderately altered tributaries with occasional elevated turbidity<br>Criteria: One or two moderately altered tributaries with occasional elevated turbidity"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Stability and turbidity at confluences during storms<br>Criteria: Mostly natural tributaries with stable flows and typical sediment loads"
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-reach-inflow-tributary-condition-and-impact"
+          "curve-reach-inflow-tributary-condition-and-impact-rapid"
         ]
       }
     }
@@ -70,6 +75,9 @@
   ],
   "tags": [
     "Hydrology",
-    "Reach inflow"
+    "Reach inflow",
+    "hydrology",
+    "sfari",
+    "rapid"
   ]
 }

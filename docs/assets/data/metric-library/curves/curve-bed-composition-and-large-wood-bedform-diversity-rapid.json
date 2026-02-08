@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Clear riffle-run-pool or step-pool sequence at expected spacing. Criteria: Robust bedform variety for stream type.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Some diversity but units less distinct or irregular spacing. Criteria: Partially uniform bed with intermittent units.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Mostly homogeneous bed; sequences faint or discontinuous. Criteria: Minimal expression of expected units.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Flattened or artificially uniform bed. Criteria: No meaningful bedform sequence.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-bed-composition-and-large-wood-bedform-diversity-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-bed-composition-and-large-wood-bedform-diversity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-bed-composition-and-large-wood-bedform-diversity-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-bed-composition-and-large-wood-bedform-diversity-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "bed-composition-and-large-wood-bedform-diversity"
+}

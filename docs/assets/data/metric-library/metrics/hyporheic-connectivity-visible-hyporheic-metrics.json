@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-visible-hyporheic-metrics",
+  "name": "Visible Hyporheic Metrics",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic Connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Springs/seeps/subsurface flow show active hyporheic exchange, matching local reference.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Tally active upwelling spots",
+  "inputs": [
+    {
+      "label": "Visible Hyporheic Metrics",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: No seeps or infiltration zones observed at baseflow or falling limb.<br>Criteria: No evidence. Bed appears sealed or compacted."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Questionable features. Staining but no active upwelling observed.<br>Criteria: Rare or uncertain indicators."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One or two seeps noted. Weak infiltration on riffle crests.<br>Criteria: Occasional indicators."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Multiple small upwelling boils at pool tails. Cold seeps along margins during summer.<br>Criteria: Clear, frequent indicators of sub-surface flow."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-visible-hyporheic-metrics-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydraulics"
+  ],
+  "status": "active"
+}

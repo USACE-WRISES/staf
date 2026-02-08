@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: No dams or weirs within the connected corridor. Only small natural steps that fish pass at typical flows. Criteria: 80-100% of habitat accessible. No major barriers.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: One small low-head structure downstream with partial passage at moderate flows. Criteria: About 50-80% accessible.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Several small barriers in series restrict movement across subreaches. Criteria: About 20-50% accessible.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Large regulating dam close to the reach with multiple downstream grade controls. Criteria: <20% accessible due to big dams or multiple blockages.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-watershed-connectivity-upstream-downstream-barriers-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-watershed-connectivity-upstream-downstream-barriers-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-watershed-connectivity-upstream-downstream-barriers-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-watershed-connectivity-upstream-downstream-barriers-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "watershed-connectivity-upstream-downstream-barriers"
+}

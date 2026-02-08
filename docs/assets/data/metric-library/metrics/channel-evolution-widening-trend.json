@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Lateral changes are in line with natural or historical reference."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Rapid over-widening after storms, or planform fully locked by hardening that suppresses natural change.<br>Criteria: Highly accelerated or heavily suppressed outside stable norms."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Slightly more or less migration than expected."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Width increased well beyond reference. Frequent mass failures or pronounced confinement in places.<br>Criteria: Significantly above or below reference with instability or constraints."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Significantly above or below reference with frequent failures or constrained banks."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Highly accelerated or highly suppressed lateral change far outside expected ranges."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Mild net widening over 10 years with occasional raw banks and quick revegetation.<br>Criteria: Slightly above reference change."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Digitized edges show minor width change over a decade. Bars and banks behave like nearby reference reaches.<br>Criteria: Near-reference lateral change."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-channel-evolution-widening-trend"
+          "curve-channel-evolution-widening-trend-rapid"
         ]
       }
     }
@@ -68,7 +73,10 @@
     "RivWidthCloud or RivMAP (where available)."
   ],
   "tags": [
+    "Channel evolution",
     "Geomorphology",
-    "Channel evolution"
+    "geomorphology",
+    "sfari",
+    "rapid"
   ]
 }

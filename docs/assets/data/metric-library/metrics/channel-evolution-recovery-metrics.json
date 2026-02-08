@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-evolution-recovery-metrics",
+  "name": "Recovery Metrics",
+  "discipline": "Geomorphology",
+  "function": "Channel Evolution",
+  "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
+  "descriptionMarkdown": "Channel shows vegetated benches/floodplain formation, indicating recovery from incision/widening.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Presence of vegetated benches/inset floodplain",
+  "inputs": [
+    {
+      "label": "Recovery Metrics",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: No benches or inset floodplains. Vertical raw banks dominate.<br>Criteria: No meaningful signs of recovery."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Narrow, mostly bare bars. Few inset surfaces. Fresh erosion visible.<br>Criteria: Sparse new floodplain surfaces and limited vegetation."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Patchy vegetated bars and short bench segments. Vegetation is establishing.<br>Criteria: Noticeable but incomplete bench and bar formation."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Continuous inset benches on both banks with established woody and herbaceous cover.<br>Criteria: Broad, established vegetated benches or inset floodplains."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-evolution-recovery-metrics-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "geomorphology"
+  ],
+  "status": "active"
+}

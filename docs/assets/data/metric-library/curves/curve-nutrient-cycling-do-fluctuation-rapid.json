@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: DO readings consistently above 6 mg/L. No recorded night-time dips. Criteria: > 6 mg/L consistently.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: DO commonly 5-6 mg/L in late summer. Criteria: 5-6 mg/L borderline.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Night minima 3-5 mg/L during warm periods. Criteria: 3-5 mg/L frequent stress.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: DO dips below 3 mg/L and fish stress observed. Criteria: < 3 mg/L dangerously low.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-nutrient-cycling-do-fluctuation-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-nutrient-cycling-do-fluctuation-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-nutrient-cycling-do-fluctuation-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-nutrient-cycling-do-fluctuation-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "nutrient-cycling-do-fluctuation"
+}

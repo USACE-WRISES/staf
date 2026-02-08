@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-bed-composition-and-large-wood-visual-bed-composition",
-  "metricId": "bed-composition-and-large-wood-visual-bed-composition",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-bed-composition-and-large-wood-visual-bed-composition-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-bed-composition-and-large-wood-visual-bed-composition-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Bed composition matches expectations for the stream type with open interstitial space where coarse substrate is expected."
+              "description": "Bed composition matches expectations for the stream type with open interstitial space where coarse substrate is expected.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Minor departure from expected composition or mild fine cover."
+              "description": "Minor departure from expected composition or mild fine cover.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Strong departure from expected composition, or widespread fine cover and embedding in coarse-bed settings."
+              "description": "Strong departure from expected composition, or widespread fine cover and embedding in coarse-bed settings.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Bed is dominated by fines or is heavily embedded or sealed, indicating poor habitat and limited exchange."
+              "description": "Bed is dominated by fines or is heavily embedded or sealed, indicating poor habitat and limited exchange.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-bed-composition-and-large-wood-visual-bed-composition-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-bed-composition-and-large-wood-visual-bed-composition-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-bed-composition-and-large-wood-visual-bed-composition-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-bed-composition-and-large-wood-visual-bed-composition",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "bed-composition-and-large-wood-visual-bed-composition"
 }

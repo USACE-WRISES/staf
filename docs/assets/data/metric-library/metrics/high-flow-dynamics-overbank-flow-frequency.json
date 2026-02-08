@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-overbank-flow-frequency",
+  "name": "Overbank Flow Frequency",
+  "discipline": "Hydraulics",
+  "function": "High Flow Dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Moderate floods (~1-2 yr) overtop banks unless valley is naturally confined.",
+  "methodContextMarkdown": "Context: F/C\n\nMethod: D",
+  "howToMeasureMarkdown": "Gauge record vs bankfull stage",
+  "inputs": [
+    {
+      "label": "Overbank Flow Frequency",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Benches rarely or never wet. Levees or incision isolate the floodplain except during extremes.<br>Criteria: Activation rare except large floods"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Only larger, less frequent events reach benches. Benches are dusty or vegetated with upland species.<br>Criteria: Activation ~5-10 yr"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Benches inundated in a few recent years but not consistently.<br>Criteria: Activation ~3-5 yr"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Recent moderate events inundate low benches and side bars. Field stakes at bankfull are inundated about every other year.<br>Criteria: Floodplain activation ~1-2 yr"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-overbank-flow-frequency-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydraulics"
+  ],
+  "status": "active"
+}

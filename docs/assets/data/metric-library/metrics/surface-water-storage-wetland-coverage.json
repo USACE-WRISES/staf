@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-wetland-coverage",
+  "name": "Wetland coverage",
+  "discipline": "Hydrology",
+  "function": "Surface Water Storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Sufficient wetlands/ponds for flood attenuation/baseflow support, unless minimal wetlands are historically normal.",
+  "methodContextMarkdown": "Context: F\n\nMethod: D",
+  "howToMeasureMarkdown": "NWI wetland percent in floodplain polygon",
+  "inputs": [
+    {
+      "label": "Wetland coverage",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Very low (<1%)<br>Criteria: Very low (<1%)"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Low (~1-2%)<br>Criteria: Low (~1-2%)"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Moderate (~2-5%)<br>Criteria: Moderate (~2-5%)"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Wetlands within mapped floodplain or valley bottom<br>Criteria: High (>5% of floodplain area)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-wetland-coverage-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

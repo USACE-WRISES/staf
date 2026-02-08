@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Closed canopy of mature hardwoods and conifers. Continuous overchannel foliage. Criteria: 75-100% shade where forested reference conditions are expected.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Mixed canopy with gaps near crossings and meadows. Criteria: 50-75% shade.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Fragmented tree line with long open reaches beside pasture. Criteria: 25-50% shade.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Cleared banks and open valley floor in a historically forested setting. Criteria: <25% shade. Note that excessive shade would be flagged only in historically open systems.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-light-and-thermal-regime-riparian-canopy-cover-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-light-and-thermal-regime-riparian-canopy-cover-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-light-and-thermal-regime-riparian-canopy-cover-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-light-and-thermal-regime-riparian-canopy-cover-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "light-and-thermal-regime-riparian-canopy-cover"
+}

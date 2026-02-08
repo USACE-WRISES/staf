@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-sediment-continuity-sediment-deposition-patterns",
-  "metricId": "sediment-continuity-sediment-deposition-patterns",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-sediment-continuity-sediment-deposition-patterns-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-sediment-continuity-sediment-deposition-patterns-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Deposition pattern fits reference condition with stable point bars."
+              "description": "Deposition pattern fits reference condition with stable point bars.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Some mid-channel or side bars forming but not severely altering flow."
+              "description": "Some mid-channel or side bars forming but not severely altering flow.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Extensive mid-channel bars with partial obstruction."
+              "description": "Extensive mid-channel bars with partial obstruction.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Widespread choking deposits that strongly affect channel form and habitat."
+              "description": "Widespread choking deposits that strongly affect channel form and habitat.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-sediment-continuity-sediment-deposition-patterns-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-sediment-continuity-sediment-deposition-patterns-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-sediment-continuity-sediment-deposition-patterns-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-sediment-continuity-sediment-deposition-patterns",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "sediment-continuity-sediment-deposition-patterns"
 }

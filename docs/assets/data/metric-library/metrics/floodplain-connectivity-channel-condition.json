@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Stable channel that is not incised or dredged with frequent floodplain access."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Recently dredged trapezoidal channel with levees along both banks.<br>Criteria: Deeply dredged or fully channelized. No functional floodplain."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Slight channelization or partial dredging."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Reach is incised by about 1-2 m with continuous spoil banks on one or both banks.<br>Criteria: Heavily modified or incised with limited floodplain access."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Heavily modified or incised channel with limited floodplain access."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Deeply dredged or channelized reach with little functional floodplain."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Short straightened segment and intermittent spoil berm on one bank.<br>Criteria: Slight channelization or partial dredging."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: No levees or spoil banks. Sinuous planform. No signs of dredging.<br>Criteria: Stable channel. Not incised or dredged. Frequent floodplain access."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-floodplain-connectivity-channel-condition"
+          "curve-floodplain-connectivity-channel-condition-rapid"
         ]
       }
     }
@@ -68,7 +73,10 @@
     "National Levee Database (NLD) and FEMA floodplain layers (where available)."
   ],
   "tags": [
+    "Floodplain connectivity",
     "Hydraulics",
-    "Floodplain connectivity"
+    "hydraulics",
+    "sfari",
+    "rapid"
   ]
 }

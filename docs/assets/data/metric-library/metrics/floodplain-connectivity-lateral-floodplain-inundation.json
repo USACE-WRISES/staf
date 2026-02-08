@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Moderate floods inundate side and backwaters."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: No inundation until very large floods because of levees and incision.<br>Criteria: Only extreme events produce inundation."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "About 3-5 yr floods are required."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Little inundation until ~Q10. Backwaters remain dry in moderate events.<br>Criteria: ~10 year event needed for access."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "About 10 yr or larger events are required."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "No functional inundation except during extreme floods."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Inundation begins near ~Q3-Q5 with patchy coverage.<br>Criteria: 3-5 year floods required for broad access."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: HEC-RAS 2D shows the floodplain and backwaters inundate at ~Q2 with 0.3-0.6 m depths.<br>Criteria: 1-2 year floods inundate side and backwaters."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-floodplain-connectivity-lateral-floodplain-inundation"
+          "curve-floodplain-connectivity-lateral-floodplain-inundation-rapid"
         ]
       }
     }
@@ -69,7 +74,10 @@
     "FEMA floodplain layers (where available)."
   ],
   "tags": [
+    "Floodplain connectivity",
     "Hydraulics",
-    "Floodplain connectivity"
+    "hydraulics",
+    "sfari",
+    "rapid"
   ]
 }

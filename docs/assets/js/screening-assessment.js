@@ -75,6 +75,51 @@
   const slugCategory = (category) =>
     `category-${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
+  const normalizeCurveType = (value) => {
+    const raw = (value || '').toString().toLowerCase();
+    if (raw === 'qualitative') {
+      return 'categorical';
+    }
+    if (raw === 'categorical' || raw === 'quantitative') {
+      return raw;
+    }
+    return raw || 'categorical';
+  };
+
+  const isCategoricalCurve = (curve) =>
+    normalizeCurveType(curve?.xType) === 'categorical';
+
+  const parseScore = (value) => {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const clampScore = (value, min = 0, max = 1) => Math.min(max, Math.max(min, value));
+
+  const roundScore = (value, places = 2) => {
+    const factor = 10 ** places;
+    return Math.round(value * factor) / factor;
+  };
+
+  const applyIndexRanges = (points) => {
+    const scored = points
+      .map((point) => ({ point, y: parseScore(point.y) }))
+      .filter((entry) => entry.y !== null);
+    if (scored.length === 0) {
+      return;
+    }
+    const sorted = [...scored].sort((a, b) => b.y - a.y);
+    const boundaries = sorted.slice(0, -1).map((entry, index) =>
+      (entry.y + sorted[index + 1].y) / 2
+    );
+    sorted.forEach((entry, index) => {
+      const max = index === 0 ? 1 : boundaries[index - 1];
+      const min = index === sorted.length - 1 ? 0 : boundaries[index];
+      entry.point.yMax = roundScore(clampScore(max));
+      entry.point.yMin = roundScore(clampScore(min));
+    });
+  };
+
   const generateId = () => {
     if (window.crypto && window.crypto.randomUUID) {
       return window.crypto.randomUUID();
@@ -101,12 +146,20 @@
     });
   };
 
-  const buildRatings = (metricIds, existingRatings) => {
+  const buildRatings = (metricIds, existingRatings, optionsForMetric, scenario) => {
     const ratings = {};
+    const fallbackLabels = ratingOptions.map((opt) => opt.label);
     metricIds.forEach((id) => {
       const current = existingRatings ? existingRatings[id] : null;
-      const isValid = ratingOptions.some((opt) => opt.label === current);
-      ratings[id] = isValid ? current : defaultRating;
+      const options =
+        typeof optionsForMetric === 'function' ? optionsForMetric(id, scenario) : fallbackLabels;
+      const labels = Array.isArray(options) && options.length ? options : fallbackLabels;
+      const isValid = labels.includes(current);
+      let next = isValid ? current : null;
+      if (!next) {
+        next = labels.includes(defaultRating) ? defaultRating : labels[0] || defaultRating;
+      }
+      ratings[id] = next;
     });
     return ratings;
   };
@@ -333,6 +386,32 @@
       const predefinedMetricIds = Array.from(starMetricIdsByFunction.values());
 
       const defaultCurveIndexValues = [0, 0.3, 0.69, 1];
+  const defaultCurveRanges = new Map([
+    ['optimal', { min: 0.76, max: 1 }],
+    ['suboptimal', { min: 0.5, max: 0.75 }],
+    ['marginal', { min: 0.25, max: 0.49 }],
+    ['poor', { min: 0, max: 0.24 }],
+  ]);
+
+  const applyDefaultRanges = (points) => {
+    if (!Array.isArray(points) || points.length === 0) {
+      return false;
+    }
+    const allMatch = points.every((point) =>
+      defaultCurveRanges.has(normalizeText(point.x))
+    );
+    if (!allMatch) {
+      return false;
+    }
+    points.forEach((point) => {
+      const range = defaultCurveRanges.get(normalizeText(point.x));
+      if (range) {
+        point.yMin = range.min;
+        point.yMax = range.max;
+      }
+    });
+    return true;
+  };
 
       const buildDefaultCurve = (metric) => {
         const points = [
@@ -358,9 +437,18 @@
           },
         ];
         const layerId = generateId();
+        points.forEach((point) => {
+          const key = normalizeText(point.x);
+          const range = defaultCurveRanges.get(key);
+          if (range) {
+            point.yMin = range.min;
+            point.yMax = range.max;
+          }
+        });
         return {
           name: fallbackCriteriaName,
-          xType: 'qualitative',
+          xType: 'categorical',
+          indexRange: true,
           units: '',
           layers: [
             {
@@ -379,7 +467,14 @@
         if (!curve) {
           return buildDefaultCurve(metric);
         }
-        const xType = curve.xType || curve.x_type || 'qualitative';
+        const rawXType = curve.xType || curve.x_type || 'categorical';
+        const xType = normalizeCurveType(rawXType);
+        const indexRange =
+          typeof curve.indexRange === 'boolean'
+            ? curve.indexRange
+            : typeof curve.index_range === 'boolean'
+            ? curve.index_range
+            : xType === 'categorical';
         const units = curve.units || '';
         const legacyDefault = normalizeText('Default');
         const nameValue = curve.name || fallbackCriteriaName;
@@ -399,13 +494,29 @@
             ? layer.points.map((point) => ({
                 x: point.x ?? '',
                 y: point.y ?? '',
+                yMin: point.yMin ?? point.y_min ?? '',
+                yMax: point.yMax ?? point.y_max ?? '',
                 description: point.description ?? '',
               }))
             : [],
         }));
+        if (indexRange) {
+          normalizedLayers.forEach((layer) => {
+            const usedDefaults =
+              xType === 'categorical' && applyDefaultRanges(layer.points);
+            const missingRange = layer.points.some(
+              (point) =>
+                parseScore(point.yMin) === null || parseScore(point.yMax) === null
+            );
+            if (!usedDefaults && missingRange) {
+              applyIndexRanges(layer.points);
+            }
+          });
+        }
         return {
           name,
           xType,
+          indexRange,
           units,
           layers: normalizedLayers,
           activeLayerId: curve.activeLayerId || normalizedLayers[0].id,
@@ -459,6 +570,9 @@
           criteriaOverrides: {},
           showAdvancedScoring: false,
           showRollupComputations: false,
+          showFunctionMappings: false,
+          showSuggestedFunctionScoresCue: false,
+          showFunctionScoreCueLabels: false,
           showCondensedView: true,
         };
       };
@@ -486,6 +600,7 @@
           metricIds: Array.from(metricIds),
           ratings: buildRatings(metricIds, source.ratings),
           curves: source.curves ? cloneCurve(source.curves) : buildCurveMap(metricIds),
+          functionScores: source.functionScores ? { ...source.functionScores } : {},
           metricProfiles: source.metricProfiles
             ? { ...source.metricProfiles }
             : Array.from(metricIds).reduce((acc, id) => {
@@ -498,6 +613,9 @@
             : {},
           showAdvancedScoring: Boolean(source.showAdvancedScoring),
           showRollupComputations: Boolean(source.showRollupComputations),
+          showFunctionMappings: Boolean(source.showFunctionMappings),
+          showSuggestedFunctionScoresCue: Boolean(source.showSuggestedFunctionScoresCue),
+          showFunctionScoreCueLabels: Boolean(source.showFunctionScoreCueLabels),
           showCondensedView:
             typeof source.showCondensedView === 'boolean'
               ? source.showCondensedView
@@ -557,8 +675,14 @@
           metricProfiles,
           defaultCriteriaName: normalizedDefaultCriteriaName,
           criteriaOverrides: scenario.criteriaOverrides ? { ...scenario.criteriaOverrides } : {},
+          functionScores: scenario.functionScores ? { ...scenario.functionScores } : {},
           showAdvancedScoring: Boolean(scenario.showAdvancedScoring),
           showRollupComputations: Boolean(scenario.showRollupComputations),
+          showFunctionMappings: Boolean(scenario.showFunctionMappings),
+          showSuggestedFunctionScoresCue: Boolean(
+            scenario.showSuggestedFunctionScoresCue
+          ),
+          showFunctionScoreCueLabels: Boolean(scenario.showFunctionScoreCueLabels),
           showCondensedView:
             typeof scenario.showCondensedView === 'boolean'
               ? scenario.showCondensedView
@@ -715,15 +839,16 @@
         return fallbackMatch || available[0];
       };
 
-      const getCriteriaLayerForMetric = (metricId) => {
-        if (!activeScenario || !metricId) {
+      const getCriteriaLayerForMetric = (metricId, scenario = activeScenario) => {
+        if (!scenario || !metricId) {
           return null;
         }
-        const curve = ensureCurve(activeScenario, metricId);
+        const curve = ensureCurve(scenario, metricId);
         if (!curve) {
           return null;
         }
-        const overrides = getCriteriaOverrides();
+        const overrides =
+          scenario === activeScenario ? getCriteriaOverrides() : scenario.criteriaOverrides || {};
         const overrideId = overrides[metricId];
         if (overrideId) {
           const overrideLayer = curve.layers.find((layer) => layer.id === overrideId);
@@ -731,20 +856,85 @@
             return overrideLayer;
           }
         }
-        const defaultName = resolveDefaultCriteriaName();
+        const defaultName =
+          scenario === activeScenario
+            ? resolveDefaultCriteriaName()
+            : scenario.defaultCriteriaName || fallbackCriteriaName;
         return getCurveLayerByName(curve, defaultName) || getCurveLayer(curve);
       };
 
-      const getMetricIndexScore = (metricId) => {
+      const fallbackRatingLabels = ratingOptions.map((opt) => opt.label);
+
+      const getRatingOptionsFromCurve = (curve, layerOverride) => {
+        if (!curve || !Array.isArray(curve.layers) || !curve.layers.length) {
+          return fallbackRatingLabels;
+        }
+        const layer = layerOverride || getCurveLayer(curve);
+        if (!layer || !Array.isArray(layer.points)) {
+          return fallbackRatingLabels;
+        }
+        const labels = [];
+        const seen = new Set();
+        layer.points.forEach((point) => {
+          const label = point && point.x != null ? String(point.x).trim() : '';
+          const key = normalizeText(label);
+          if (!key || seen.has(key)) {
+            return;
+          }
+          seen.add(key);
+          labels.push(label);
+        });
+        return labels.length ? labels : fallbackRatingLabels;
+      };
+
+      const getMetricRatingOptions = (metricId, scenario) => {
+        if (!metricId) {
+          return fallbackRatingLabels;
+        }
+        let curve = null;
+        let layer = null;
+        if (scenario) {
+          curve = ensureCurve(scenario, metricId);
+          layer = getCriteriaLayerForMetric(metricId, scenario);
+        }
+        if (!curve) {
+          const metric = metricById.get(metricId);
+          if (metric) {
+            curve = normalizeCurve(curveOverrides[metricId], metric);
+          }
+        }
+        return getRatingOptionsFromCurve(curve, layer);
+      };
+
+      const resolveMetricRating = (metricId, options) => {
+        const labels = Array.isArray(options) && options.length ? options : fallbackRatingLabels;
+        const current = metricRatings.get(metricId);
+        const isValid = labels.includes(current);
+        const next = isValid
+          ? current
+          : labels.includes(defaultRating)
+          ? defaultRating
+          : labels[0] || defaultRating;
+        const changed = next !== current;
+        if (changed) {
+          metricRatings.set(metricId, next);
+          if (activeScenario) {
+            if (!activeScenario.ratings) {
+              activeScenario.ratings = {};
+            }
+            activeScenario.ratings[metricId] = next;
+          }
+        }
+        return { value: next, changed };
+      };
+
+      const getMetricIndexRange = (metricId) => {
         if (!metricId || !activeScenario) {
           return null;
         }
         const curve = ensureCurve(activeScenario, metricId);
         const layer = getCriteriaLayerForMetric(metricId);
-        if (!curve || !layer) {
-          return null;
-        }
-        if (curve.xType !== 'qualitative') {
+        if (!curve || !layer || !isCategoricalCurve(curve)) {
           return null;
         }
         const rating = metricRatings.get(metricId) || defaultRating;
@@ -755,8 +945,25 @@
         if (!point) {
           return null;
         }
-        const value = Number.parseFloat(point.y);
-        return Number.isFinite(value) ? value : null;
+        const yMin = parseScore(point.yMin);
+        const yMax = parseScore(point.yMax);
+        const yValue = parseScore(point.y);
+        if (
+          curve.indexRange &&
+          yMin !== null &&
+          yMax !== null
+        ) {
+          return { min: yMin, max: yMax, avg: (yMin + yMax) / 2, hasRange: true };
+        }
+        if (yValue !== null) {
+          return { min: yValue, max: yValue, avg: yValue, hasRange: false };
+        }
+        return null;
+      };
+
+      const getMetricIndexScore = (metricId) => {
+        const range = getMetricIndexRange(metricId);
+        return range ? range.avg : null;
       };
 
       const getActiveCurve = () => {
@@ -800,13 +1007,14 @@
           curveTableWrap.innerHTML = '';
           return;
         }
-        const isQualitative = curve.xType === 'qualitative';
+        const isCategorical = isCategoricalCurve(curve);
+        const useIndexRange = Boolean(curve.indexRange);
         const table = document.createElement('table');
         table.className = 'curve-table';
         const thead = document.createElement('thead');
         thead.innerHTML =
           '<tr><th>Field value (X)</th><th>Index value (Y)</th>' +
-          (isQualitative ? '<th>Description</th>' : '') +
+          (isCategorical ? '<th>Description</th>' : '') +
           '<th>Insert</th><th>X</th></tr>';
         const tbody = document.createElement('tbody');
 
@@ -814,8 +1022,8 @@
           const row = document.createElement('tr');
           const xCell = document.createElement('td');
           const xInput = document.createElement('input');
-          xInput.type = isQualitative ? 'text' : 'number';
-          xInput.step = isQualitative ? undefined : 'any';
+          xInput.type = isCategorical ? 'text' : 'number';
+          xInput.step = isCategorical ? undefined : 'any';
           xInput.value = point.x ?? '';
           xInput.disabled = curveReadOnly;
           xInput.addEventListener('input', () => {
@@ -828,24 +1036,63 @@
           xCell.appendChild(xInput);
 
           const yCell = document.createElement('td');
-          const yInput = document.createElement('input');
-          yInput.type = 'number';
-          yInput.step = '0.01';
-          yInput.min = '0';
-          yInput.max = '1';
-          yInput.value = point.y ?? '';
-          yInput.disabled = curveReadOnly;
-          yInput.addEventListener('input', () => {
-            if (curveReadOnly) {
-              return;
-            }
-            point.y = yInput.value;
-            renderCurveChart();
-          });
-          yCell.appendChild(yInput);
+          if (useIndexRange) {
+            const rangeWrap = document.createElement('div');
+            rangeWrap.className = 'curve-index-range-inputs';
+            const yMaxInput = document.createElement('input');
+            yMaxInput.type = 'number';
+            yMaxInput.step = '0.01';
+            yMaxInput.min = '0';
+            yMaxInput.max = '1';
+            yMaxInput.placeholder = 'Max';
+            yMaxInput.value = point.yMax ?? '';
+            yMaxInput.disabled = curveReadOnly;
+            const yMinInput = document.createElement('input');
+            yMinInput.type = 'number';
+            yMinInput.step = '0.01';
+            yMinInput.min = '0';
+            yMinInput.max = '1';
+            yMinInput.placeholder = 'Min';
+            yMinInput.value = point.yMin ?? '';
+            yMinInput.disabled = curveReadOnly;
+            const updateRange = () => {
+              if (curveReadOnly) {
+                return;
+              }
+              point.yMax = yMaxInput.value;
+              point.yMin = yMinInput.value;
+              const min = parseScore(point.yMin);
+              const max = parseScore(point.yMax);
+              if (min !== null && max !== null) {
+                point.y = roundScore((min + max) / 2);
+              }
+              renderCurveChart();
+            };
+            yMaxInput.addEventListener('input', updateRange);
+            yMinInput.addEventListener('input', updateRange);
+            rangeWrap.appendChild(yMaxInput);
+            rangeWrap.appendChild(yMinInput);
+            yCell.appendChild(rangeWrap);
+          } else {
+            const yInput = document.createElement('input');
+            yInput.type = 'number';
+            yInput.step = '0.01';
+            yInput.min = '0';
+            yInput.max = '1';
+            yInput.value = point.y ?? '';
+            yInput.disabled = curveReadOnly;
+            yInput.addEventListener('input', () => {
+              if (curveReadOnly) {
+                return;
+              }
+              point.y = yInput.value;
+              renderCurveChart();
+            });
+            yCell.appendChild(yInput);
+          }
 
           let descCell = null;
-          if (isQualitative) {
+          if (isCategorical) {
             descCell = document.createElement('td');
             const descInput = document.createElement('input');
             descInput.type = 'text';
@@ -870,7 +1117,13 @@
             if (curveReadOnly) {
               return;
             }
-            layer.points.splice(index, 0, { x: '', y: '', description: '' });
+            layer.points.splice(index, 0, {
+              x: '',
+              y: '',
+              yMin: useIndexRange ? '' : undefined,
+              yMax: useIndexRange ? '' : undefined,
+              description: '',
+            });
             renderCurveTable();
             renderCurveChart();
           });
@@ -935,15 +1188,28 @@
         if (!layer) {
           return;
         }
-        const isQualitative = curve.xType === 'qualitative';
-        const points = isQualitative
+        const isCategorical = isCategoricalCurve(curve);
+        const points = isCategorical
           ? layer.points
-              .map((point, index) => ({
-                x: index,
-                y: Number.parseFloat(point.y),
-                label: point.x ?? '',
-              }))
-              .filter((point) => Number.isFinite(point.y))
+              .map((point, index) => {
+                const yMin = parseScore(point.yMin);
+                const yMax = parseScore(point.yMax);
+                const y = parseScore(point.y);
+                const avg =
+                  y !== null
+                    ? y
+                    : yMin !== null && yMax !== null
+                    ? (yMin + yMax) / 2
+                    : null;
+                return {
+                  x: index,
+                  y: avg,
+                  yMin,
+                  yMax,
+                  label: point.x ?? '',
+                };
+              })
+              .filter((point) => point.y !== null || (point.yMin !== null && point.yMax !== null))
           : layer.points
               .map((point) => ({
                 x: Number.parseFloat(point.x),
@@ -956,9 +1222,34 @@
         const maxX = points.length ? points[points.length - 1].x : 1;
         const domainX = maxX - minX || 1;
         const scaleX = (value) => padding.left + ((value - minX) / domainX) * width;
-        const scaleY = (value) => padding.top + (1 - Math.min(1, Math.max(0, value))) * height;
+        const scaleY = (value) => padding.top + (1 - clampScore(value)) * height;
 
-        if (points.length > 1) {
+        if (isCategorical) {
+          const step = points.length > 1 ? width / (points.length - 1) : width;
+          const boxWidth = Math.min(28, step * 0.6);
+          points.forEach((point) => {
+            const x = scaleX(point.x);
+            const min = point.yMin !== null ? point.yMin : point.y ?? 0;
+            const max = point.yMax !== null ? point.yMax : point.y ?? 0;
+            const top = scaleY(Math.max(min, max));
+            const bottom = scaleY(Math.min(min, max));
+            const boxHeight = Math.max(2, bottom - top);
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.18)';
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 1.5;
+            ctx.fillRect(x - boxWidth / 2, top, boxWidth, boxHeight);
+            ctx.strokeRect(x - boxWidth / 2, top, boxWidth, boxHeight);
+            if (point.y !== null) {
+              const midY = scaleY(point.y);
+              ctx.strokeStyle = '#111111';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(x - boxWidth / 2, midY);
+              ctx.lineTo(x + boxWidth / 2, midY);
+              ctx.stroke();
+            }
+          });
+        } else if (points.length > 1) {
           ctx.strokeStyle = '#3b82f6';
           ctx.lineWidth = 2;
           ctx.beginPath();
@@ -983,7 +1274,7 @@
           });
         }
 
-        const xTicks = isQualitative
+        const xTicks = isCategorical
           ? points.map((point) => point.x)
           : points.length
           ? [minX, (minX + maxX) / 2, maxX]
@@ -1011,7 +1302,7 @@
           ctx.moveTo(x, padding.top + height);
           ctx.lineTo(x, padding.top + height + 4);
           ctx.stroke();
-          if (isQualitative) {
+          if (isCategorical) {
             const label = points.find((point) => point.x === tick)?.label || '';
             ctx.fillText(label, x, padding.top + height + 8);
           } else {
@@ -1072,8 +1363,14 @@
         indexRow.appendChild(indexLabel);
         layer.points.forEach((point) => {
           const cell = document.createElement('td');
-          const value = Number.parseFloat(point.y);
-          cell.textContent = Number.isFinite(value) ? value.toFixed(2) : '-';
+          const min = parseScore(point.yMin);
+          const max = parseScore(point.yMax);
+          if (curve.indexRange && min !== null && max !== null) {
+            cell.textContent = `${min.toFixed(2)}-${max.toFixed(2)}`;
+          } else {
+            const value = parseScore(point.y);
+            cell.textContent = value !== null ? value.toFixed(2) : '-';
+          }
           indexRow.appendChild(cell);
         });
 
@@ -1083,9 +1380,17 @@
         functionScoreRow.appendChild(functionScoreLabel);
         layer.points.forEach((point) => {
           const cell = document.createElement('td');
-          const value = Number.parseFloat(point.y);
-          const score = Number.isFinite(value) ? Math.round(value * 15) : null;
-          cell.textContent = score === null ? '-' : String(score);
+          const min = parseScore(point.yMin);
+          const max = parseScore(point.yMax);
+          if (curve.indexRange && min !== null && max !== null) {
+            const minScore = Math.floor(min * 15);
+            const maxScore = Math.ceil(max * 15);
+            cell.textContent = `${minScore}-${maxScore}`;
+          } else {
+            const value = parseScore(point.y);
+            const score = value !== null ? Math.round(value * 15) : null;
+            cell.textContent = score === null ? '-' : String(score);
+          }
           functionScoreRow.appendChild(cell);
         });
 
@@ -1132,7 +1437,7 @@
           curveUnitsInput.disabled = curveReadOnly;
         }
         if (curveXType) {
-          curveXType.value = curve.xType || 'qualitative';
+          curveXType.value = normalizeCurveType(curve.xType) || 'categorical';
           curveXType.disabled = curveReadOnly;
         }
         if (curveLayerAdd) {
@@ -1198,7 +1503,7 @@
           if (!curve) {
             return;
           }
-          curve.xType = curveXType.value;
+          curve.xType = normalizeCurveType(curveXType.value);
           renderCurveTable();
           renderCurveChart();
         });
@@ -1676,19 +1981,42 @@
       rollupToggleLabel.appendChild(rollupToggle);
       rollupToggleLabel.appendChild(rollupToggleText);
 
-      const condensedToggleLabel = document.createElement('label');
-      condensedToggleLabel.className = 'screening-advanced-toggle';
-      const condensedToggle = document.createElement('input');
-      condensedToggle.type = 'checkbox';
-      condensedToggle.className = 'screening-condensed-toggle-input';
-      const condensedToggleText = document.createElement('span');
-      condensedToggleText.textContent = 'Condensed view';
-      condensedToggleLabel.appendChild(condensedToggle);
-      condensedToggleLabel.appendChild(condensedToggleText);
+      const suggestedCueToggleLabel = document.createElement('label');
+      suggestedCueToggleLabel.className = 'screening-advanced-toggle';
+      const suggestedCueToggle = document.createElement('input');
+      suggestedCueToggle.type = 'checkbox';
+      suggestedCueToggle.className = 'screening-suggested-cue-toggle-input';
+      const suggestedCueToggleText = document.createElement('span');
+      suggestedCueToggleText.textContent = 'Show Suggested Function Scores';
+      suggestedCueToggleLabel.appendChild(suggestedCueToggle);
+      suggestedCueToggleLabel.appendChild(suggestedCueToggleText);
+
+      const sliderLabelsToggleLabel = document.createElement('label');
+      sliderLabelsToggleLabel.className = 'screening-advanced-toggle';
+      const sliderLabelsToggle = document.createElement('input');
+      sliderLabelsToggle.type = 'checkbox';
+      sliderLabelsToggle.className = 'screening-slider-labels-toggle-input';
+      const sliderLabelsToggleText = document.createElement('span');
+      sliderLabelsToggleText.textContent = 'Show F/AR/NF labels';
+      sliderLabelsToggleLabel.appendChild(sliderLabelsToggle);
+      sliderLabelsToggleLabel.appendChild(sliderLabelsToggleText);
+
+      const mappingToggleLabel = document.createElement('label');
+      mappingToggleLabel.className = 'screening-advanced-toggle';
+      const mappingToggle = document.createElement('input');
+      mappingToggle.type = 'checkbox';
+      mappingToggle.className = 'screening-mapping-toggle-input';
+      const mappingToggleText = document.createElement('span');
+      mappingToggleText.textContent = 'Show Function Mappings';
+      mappingToggleLabel.appendChild(mappingToggle);
+      mappingToggleLabel.appendChild(mappingToggleText);
 
       scoringControls.appendChild(advancedToggleLabel);
+      scoringControls.appendChild(mappingToggleLabel);
       scoringControls.appendChild(rollupToggleLabel);
-      scoringControls.appendChild(condensedToggleLabel);
+      scoringControls.appendChild(suggestedCueToggleLabel);
+      scoringControls.appendChild(sliderLabelsToggleLabel);
+      // Always show condensed view (function score column).
 
       const controls = document.createElement('div');
       controls.className = 'screening-controls';
@@ -1730,15 +2058,9 @@
       libraryText.textContent = 'Metric Library';
       libraryButton.appendChild(libraryText);
 
-      const resetButton = document.createElement('button');
-      resetButton.type = 'button';
-      resetButton.className = 'btn btn-small';
-      resetButton.textContent = 'Reset metrics';
-
       controls.appendChild(search);
       controls.appendChild(disciplineFilter);
       controls.appendChild(libraryButton);
-      controls.appendChild(resetButton);
 
       libraryButton.addEventListener('click', openLibrary);
       if (libraryCloseBtn) {
@@ -1817,11 +2139,29 @@
         renderTable();
       });
 
-      condensedToggle.addEventListener('change', () => {
+      mappingToggle.addEventListener('change', () => {
         if (!activeScenario) {
           return;
         }
-        activeScenario.showCondensedView = condensedToggle.checked;
+        activeScenario.showFunctionMappings = mappingToggle.checked;
+        store.save();
+        renderTable();
+      });
+
+      suggestedCueToggle.addEventListener('change', () => {
+        if (!activeScenario) {
+          return;
+        }
+        activeScenario.showSuggestedFunctionScoresCue = suggestedCueToggle.checked;
+        store.save();
+        renderTable();
+      });
+
+      sliderLabelsToggle.addEventListener('change', () => {
+        if (!activeScenario) {
+          return;
+        }
+        activeScenario.showFunctionScoreCueLabels = sliderLabelsToggle.checked;
         store.save();
         renderTable();
       });
@@ -1829,32 +2169,57 @@
       const table = document.createElement('table');
       table.className = 'screening-table';
       const thead = document.createElement('thead');
-      thead.innerHTML =
-        '<tr>' +
-        '<th class="col-discipline">Discipline</th>' +
-        '<th class="col-function">Function</th>' +
-        '<th class="col-metric">Metric</th>' +
-        '<th class="col-metric-score">Metric<br>value</th>' +
-        '<th class="col-scoring-criteria">Scoring<br>criteria</th>' +
-        '<th class="col-index-score">Metric<br>Index</th>' +
-        '<th class="col-function-score">Function<br>Score</th>' +
-        '<th class="col-physical">Physical</th>' +
-        '<th class="col-chemical">Chemical</th>' +
-        '<th class="col-biological">Biological</th>' +
-        '</tr>';
       const tbody = document.createElement('tbody');
       const tfoot = document.createElement('tfoot');
       table.appendChild(thead);
       table.appendChild(tbody);
       table.appendChild(tfoot);
 
+      const summaryTable = document.createElement('table');
+      summaryTable.className = 'screening-table screening-summary-table';
+      const summaryColGroup = document.createElement('colgroup');
+      summaryTable.appendChild(summaryColGroup);
+      const summaryBody = document.createElement('tbody');
+      summaryTable.appendChild(summaryBody);
+
       const chartsShell = document.createElement('div');
       chartsShell.className = 'screening-settings-panel screening-charts-panel';
       const chartsHeader = document.createElement('div');
-      chartsHeader.className = 'settings-header';
+      chartsHeader.className = 'settings-header screening-charts-header';
       const chartsTitle = document.createElement('h3');
       chartsTitle.textContent = 'Summary Plots';
       chartsHeader.appendChild(chartsTitle);
+      const chartsLegend = document.createElement('div');
+      chartsLegend.className = 'screening-chart-legend';
+      chartsLegend.innerHTML =
+        '<div class="legend-group" aria-label="Function score ranges">' +
+        '<div class="legend-labels legend-labels-left">' +
+        '<div>Functioning</div>' +
+        '<div>At-Risk</div>' +
+        '<div>Non-Functioning</div>' +
+        '</div>' +
+        '<div class="legend-bar" aria-hidden="true"></div>' +
+        '<div class="legend-labels legend-labels-right">' +
+        '<div>11 - 15</div>' +
+        '<div>6 - 10</div>' +
+        '<div>0 - 5</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="legend-spacer" aria-hidden="true"></div>' +
+        '<div class="legend-group" aria-label="Condition index ranges">' +
+        '<div class="legend-labels legend-labels-left">' +
+        '<div>Functioning</div>' +
+        '<div>At-Risk</div>' +
+        '<div>Non-Functioning</div>' +
+        '</div>' +
+        '<div class="legend-bar" aria-hidden="true"></div>' +
+        '<div class="legend-labels legend-labels-right">' +
+        '<div>0.70 - 1.00</div>' +
+        '<div>0.30 - 0.69</div>' +
+        '<div>0.00 - 0.29</div>' +
+        '</div>' +
+        '</div>';
+      chartsHeader.appendChild(chartsLegend);
       const chartsWrap = document.createElement('div');
       chartsWrap.className = 'screening-charts';
       const functionChartSection = document.createElement('div');
@@ -1874,18 +2239,8 @@
       summaryChartTitle.textContent = 'Condition Indices';
       const summaryChartBody = document.createElement('div');
       summaryChartBody.className = 'screening-chart-body';
-      const summaryLegend = document.createElement('div');
-      summaryLegend.className = 'screening-chart-legend';
-      summaryLegend.innerHTML =
-        '<div class="legend-bar" aria-hidden="true"></div>' +
-        '<div class="legend-labels">' +
-        '<div>0.70 - 1.00</div>' +
-        '<div>0.30 - 0.69</div>' +
-        '<div>0.00 - 0.29</div>' +
-        '</div>';
       summaryChartSection.appendChild(summaryChartTitle);
       summaryChartSection.appendChild(summaryChartBody);
-      summaryChartSection.appendChild(summaryLegend);
 
       chartsWrap.appendChild(functionChartSection);
       const chartsSpacer = document.createElement('div');
@@ -1903,6 +2258,7 @@
       if (tableHost) {
         tableHost.innerHTML = '';
         tableHost.appendChild(table);
+        tableHost.appendChild(summaryTable);
         const parent = tableHost.parentElement;
         if (parent) {
           const existing = parent.querySelector('.screening-charts-panel');
@@ -1920,7 +2276,34 @@
         ecosystem: null,
       };
 
-      const buildSummary = (showAdvanced, showCondensed) => {
+      const renderHeader = (showMappings, showAdvanced) => {
+        const useAbbrev = showMappings && showAdvanced;
+        const mappingHeaders = showMappings
+          ? `<th class="col-physical"${useAbbrev ? ' title="Physical"' : ''}>${
+              useAbbrev ? 'Phy' : 'Physical'
+            }</th>` +
+            `<th class="col-chemical"${useAbbrev ? ' title="Chemical"' : ''}>${
+              useAbbrev ? 'Chem' : 'Chemical'
+            }</th>` +
+            `<th class="col-biological"${useAbbrev ? ' title="Biological"' : ''}>${
+              useAbbrev ? 'Bio' : 'Biological'
+            }</th>`
+          : '';
+        thead.innerHTML =
+          '<tr>' +
+          '<th class="col-discipline">Discipline</th>' +
+          '<th class="col-function">Function</th>' +
+          '<th class="col-metric">Metric</th>' +
+          '<th class="col-metric-score">Metric<br>value</th>' +
+          '<th class="col-scoring-criteria">Scoring<br>criteria</th>' +
+          '<th class="col-index-score">Metric<br>Index</th>' +
+          '<th class="col-function-estimate">Function<br>Estimate</th>' +
+          '<th class="col-function-score">Function<br>Score</th>' +
+          mappingHeaders +
+          '</tr>';
+      };
+
+      const buildSummary = (showAdvanced, showCondensed, showMappings) => {
         const labelItems = [
           { label: 'Direct Effect', rollup: true },
           { label: 'Indirect Effect', rollup: true },
@@ -1929,13 +2312,56 @@
           { label: 'Condition Sub-Index', rollup: false },
           { label: 'Ecosystem Condition Index', rollup: false },
         ];
-        const labelSpan = (showAdvanced ? 6 : 4) + (showCondensed ? 1 : 0);
+        const baseLabelSpan = (showAdvanced ? 7 : 4) + (showCondensed ? 1 : 0);
+        const labelSpan = showMappings ? baseLabelSpan : Math.max(1, baseLabelSpan - 3);
+        const totalSpan = labelSpan + 3;
+
+        if (summaryColGroup) {
+          summaryColGroup.innerHTML = '';
+          const labelCol = document.createElement('col');
+          labelCol.span = labelSpan;
+          labelCol.className = 'summary-label-col';
+          summaryColGroup.appendChild(labelCol);
+          ['physical', 'chemical', 'biological'].forEach((key) => {
+            const col = document.createElement('col');
+            col.className = `col-${key}`;
+            summaryColGroup.appendChild(col);
+          });
+        }
 
         tfoot.innerHTML = '';
+        summaryBody.innerHTML = '';
         summaryCells.physical = [];
         summaryCells.chemical = [];
         summaryCells.biological = [];
         summaryCells.ecosystem = null;
+        const summaryTarget = showMappings ? tfoot : summaryBody;
+
+        if (!showMappings) {
+          const gapRow = document.createElement('tr');
+          gapRow.className = 'summary-gap-row';
+          const gapCell = document.createElement('td');
+          gapCell.colSpan = totalSpan;
+          gapRow.appendChild(gapCell);
+          summaryTarget.appendChild(gapRow);
+
+          const headerRow = document.createElement('tr');
+          const spacer = document.createElement('td');
+          spacer.colSpan = labelSpan;
+          spacer.className = 'summary-labels summary-spacer';
+          headerRow.appendChild(spacer);
+          [
+            { label: 'Physical', className: 'col-physical' },
+            { label: 'Chemical', className: 'col-chemical' },
+            { label: 'Biological', className: 'col-biological' },
+          ].forEach(({ label, className }) => {
+            const cell = document.createElement('td');
+            cell.className = `summary-mapping-header ${className}`;
+            cell.textContent = label;
+            headerRow.appendChild(cell);
+          });
+          summaryTarget.appendChild(headerRow);
+        }
 
         labelItems.forEach((item) => {
           const row = document.createElement('tr');
@@ -1960,7 +2386,7 @@
           } else {
             ['physical', 'chemical', 'biological'].forEach((key) => {
               const cell = document.createElement('td');
-              cell.className = 'summary-values';
+              cell.className = `summary-values col-${key}`;
               const value = document.createElement('div');
               value.textContent = '-';
               summaryCells[key].push(value);
@@ -1968,14 +2394,20 @@
               row.appendChild(cell);
             });
           }
-          tfoot.appendChild(row);
+          summaryTarget.appendChild(row);
         });
       };
 
       const getShowAdvancedScoring = () => Boolean(activeScenario?.showAdvancedScoring);
       const getShowRollupComputations = () =>
         Boolean(activeScenario?.showRollupComputations);
-      const getShowCondensedView = () => Boolean(activeScenario?.showCondensedView);
+      const getShowFunctionMappings = () =>
+        Boolean(activeScenario?.showFunctionMappings);
+      const getShowSuggestedFunctionScoresCue = () =>
+        Boolean(activeScenario?.showSuggestedFunctionScoresCue);
+      const getShowFunctionScoreCueLabels = () =>
+        Boolean(activeScenario?.showFunctionScoreCueLabels);
+      const getShowCondensedView = () => true;
 
       const renderDefaultCriteriaControls = () => {
         if (!activeScenario) {
@@ -1992,17 +2424,16 @@
         if (rollupToggle) {
           rollupToggle.checked = getShowRollupComputations();
         }
-        if (condensedToggle) {
-          condensedToggle.checked = getShowCondensedView();
+        if (mappingToggle) {
+          mappingToggle.checked = getShowFunctionMappings();
         }
-      };
-
-      const disciplineColors = {
-        hydrology: '#d9e2f3',
-        hydraulics: '#b9cbe6',
-        geomorphology: '#f7e1d1',
-        physicochemistry: '#f3e9c4',
-        biology: '#dbead2',
+        if (suggestedCueToggle) {
+          suggestedCueToggle.checked = getShowSuggestedFunctionScoresCue();
+        }
+        if (sliderLabelsToggle) {
+          sliderLabelsToggle.checked = getShowFunctionScoreCueLabels();
+        }
+      // Condensed view is always enabled.
       };
 
       const summaryColorForValue = (value) => {
@@ -2013,6 +2444,70 @@
           return '#f5e7a6';
         }
         return '#c8d9f2';
+      };
+
+      const functionScoreColorForValue = (value) => {
+        if (value <= 5) {
+          return '#f5b5b5';
+        }
+        if (value <= 10) {
+          return '#f5e7a6';
+        }
+        return '#c8d9f2';
+      };
+
+      const getScreeningSliderPalette = (score) => {
+        if (score >= 11) {
+          return { base: '#a7c7f2', active: '#7faee9' };
+        }
+        if (score >= 6) {
+          return { base: '#f7e088', active: '#f0cd52' };
+        }
+        return { base: '#ef9a9a', active: '#e07070' };
+      };
+
+      const updateScreeningSliderVisual = (rangeInput, scoreValue) => {
+        if (!rangeInput) {
+          return;
+        }
+        const min = Number(rangeInput.min) || 0;
+        const max = Number(rangeInput.max) || 15;
+        const safeValue = Number.isFinite(scoreValue) ? scoreValue : min;
+        const clamped = Math.min(max, Math.max(min, safeValue));
+        const percent = max > min ? ((clamped - min) / (max - min)) * 100 : 0;
+        const palette = getScreeningSliderPalette(clamped);
+        rangeInput.style.setProperty('--screening-score-pct', `${percent}%`);
+        rangeInput.style.setProperty('--screening-score-color', palette.base);
+        rangeInput.style.setProperty(
+          '--screening-score-color-active',
+          palette.active
+        );
+      };
+
+      const updateScreeningSuggestedBracket = (
+        bracketEl,
+        minValue,
+        maxValue,
+        hasSuggestedRange
+      ) => {
+        if (!bracketEl) {
+          return;
+        }
+        if (!hasSuggestedRange || !Number.isFinite(minValue) || !Number.isFinite(maxValue)) {
+          bracketEl.hidden = true;
+          return;
+        }
+        const sliderMin = 0;
+        const sliderMax = 15;
+        const safeMin = Math.min(sliderMax, Math.max(sliderMin, minValue));
+        const safeMax = Math.min(sliderMax, Math.max(sliderMin, maxValue));
+        const low = Math.min(safeMin, safeMax);
+        const high = Math.max(safeMin, safeMax);
+        const leftPct = ((low - sliderMin) / (sliderMax - sliderMin)) * 100;
+        const rightPct = ((high - sliderMin) / (sliderMax - sliderMin)) * 100;
+        bracketEl.style.left = `${leftPct}%`;
+        bracketEl.style.width = `${Math.max(0, rightPct - leftPct)}%`;
+        bracketEl.hidden = false;
       };
 
       const buildBarRow = ({ label, value, maxValue, color, valueText }) => {
@@ -2065,8 +2560,7 @@
               return;
             }
             const rounded = Math.round(score);
-            const barColor =
-              disciplineColors[disciplineKey] || disciplineColors.hydrology || '#d9e2f3';
+            const barColor = functionScoreColorForValue(rounded);
             functionChartBody.appendChild(
               buildBarRow({
                 label: fn.name,
@@ -2084,7 +2578,7 @@
           { label: 'Physical', value: summaryValues.physical },
           { label: 'Chemical', value: summaryValues.chemical },
           { label: 'Biological', value: summaryValues.biological },
-          { label: 'Ecosystem Condition Index', value: summaryValues.ecosystem },
+          { label: 'Overall Ecosystem', value: summaryValues.ecosystem },
         ];
         summaryItems.forEach((item) => {
           if (item.value === null || item.value === undefined) {
@@ -2102,8 +2596,46 @@
         });
       };
 
-      const updateScores = (metricRows, indexRows, functionScoreCells, functionOrder) => {
+      const updateScores = (
+        indexRows,
+        estimateRows,
+        functionScoreControls,
+        functionOrder
+      ) => {
         const functionBuckets = new Map();
+        const functionRangeBuckets = new Map();
+        const metricScoreRanges = new Map();
+
+        const resolveMetricScoreRange = (metricId) => {
+          const indexRange = getMetricIndexRange(metricId);
+          if (indexRange) {
+            const minScore = Math.floor(indexRange.min * 15);
+            const maxScore = Math.ceil(indexRange.max * 15);
+            const avgScore = Math.round(indexRange.avg * 15);
+            return {
+              indexRange,
+              scoreRange: {
+                minScore,
+                maxScore,
+                avgScore,
+                hasRange: indexRange.hasRange,
+              },
+            };
+          }
+          const rating = metricRatings.get(metricId) || defaultRating;
+          const ratingMatch = ratingOptions.find((opt) => opt.label === rating);
+          const score = ratingMatch ? ratingMatch.score : 0;
+          return {
+            indexRange: null,
+            scoreRange: {
+              minScore: score,
+              maxScore: score,
+              avgScore: score,
+              hasRange: false,
+            },
+          };
+        };
+
         metrics.forEach((metric) => {
           if (!selectedMetricIds.has(metric.id)) {
             return;
@@ -2113,50 +2645,136 @@
           }
           if (!functionBuckets.has(metric.functionId)) {
             functionBuckets.set(metric.functionId, []);
+            functionRangeBuckets.set(metric.functionId, []);
           }
-          const rating = metricRatings.get(metric.id) || defaultRating;
-          const ratingMatch = ratingOptions.find((opt) => opt.label === rating);
-          functionBuckets.get(metric.functionId).push(ratingMatch ? ratingMatch.score : 0);
+          const rangeMeta = resolveMetricScoreRange(metric.id);
+          metricScoreRanges.set(metric.id, rangeMeta);
+          functionBuckets.get(metric.functionId).push(rangeMeta.scoreRange.avgScore);
+          functionRangeBuckets.get(metric.functionId).push(rangeMeta.scoreRange);
         });
 
-        const functionScores = new Map();
+        const functionSuggestions = new Map();
         functionBuckets.forEach((scores, functionId) => {
           const average =
             scores.length > 0
               ? scores.reduce((sum, value) => sum + value, 0) / scores.length
               : 0;
-          functionScores.set(functionId, average);
+          functionSuggestions.set(functionId, average);
         });
 
-        metricRows.forEach(({ metric, functionScoreTargets, functionScoreRange }) => {
-          const score = metric.functionId ? functionScores.get(metric.functionId) : null;
-          const nextScore =
-            score === null || score === undefined ? null : Math.round(score);
-          if (Array.isArray(functionScoreTargets)) {
-            functionScoreTargets.forEach((target) => {
-              if (target) {
-                target.textContent = nextScore === null ? '-' : String(nextScore);
-              }
-            });
+        const functionRanges = new Map();
+        functionRangeBuckets.forEach((ranges, functionId) => {
+          if (!ranges.length) {
+            return;
           }
-          if (functionScoreRange) {
-            functionScoreRange.value = nextScore === null ? '0' : String(nextScore);
-          }
+          const min = Math.min(...ranges.map((range) => range.minScore));
+          const max = Math.max(...ranges.map((range) => range.maxScore));
+          const avg =
+            ranges.reduce((sum, range) => sum + range.avgScore, 0) / ranges.length;
+          const hasSuggestedRange = ranges.some((range) => range.hasRange);
+          functionRanges.set(functionId, { min, max, avg, hasSuggestedRange });
         });
 
-        if (Array.isArray(functionScoreCells)) {
-          functionScoreCells.forEach(({ functionId, cell }) => {
-            if (!cell) {
+        const functionScores = new Map();
+        const functionMeta = new Map();
+        const functionIds = new Set(
+          (Array.isArray(functionOrder) ? functionOrder : [])
+            .map((entry) => entry.functionId)
+            .filter(Boolean)
+        );
+        functionBuckets.forEach((_, functionId) => {
+          functionIds.add(functionId);
+        });
+
+        functionIds.forEach((functionId) => {
+          const suggestion = functionSuggestions.get(functionId) ?? 0;
+          const range = functionRanges.get(functionId);
+          const minLimit = range ? Math.floor(range.min) : 0;
+          const maxLimit = range ? Math.ceil(range.max) : 15;
+          const hasSuggestedRange = Boolean(range?.hasSuggestedRange);
+          const hasStored = Number.isFinite(activeScenario?.functionScores?.[functionId]);
+          let value = hasStored ? activeScenario.functionScores[functionId] : Math.round(suggestion);
+          if (!hasStored && activeScenario) {
+            if (!activeScenario.functionScores) {
+              activeScenario.functionScores = {};
+            }
+            activeScenario.functionScores[functionId] = value;
+            store.save();
+          }
+          value = Math.min(15, Math.max(0, value));
+          if (hasStored && activeScenario && activeScenario.functionScores[functionId] !== value) {
+            activeScenario.functionScores[functionId] = value;
+            store.save();
+          }
+          if (activeScenario) {
+            if (!activeScenario.functionScoreLimits) {
+              activeScenario.functionScoreLimits = {};
+            }
+            activeScenario.functionScoreLimits[functionId] = { minLimit, maxLimit };
+          }
+          const isOutsideSuggestedRange =
+            hasSuggestedRange && (value < minLimit || value > maxLimit);
+          functionScores.set(functionId, value);
+          functionMeta.set(functionId, {
+            value,
+            minLimit,
+            maxLimit,
+            hasSuggestedRange,
+            isOutsideSuggestedRange,
+          });
+        });
+
+        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
+
+        if (Array.isArray(functionScoreControls)) {
+          functionScoreControls.forEach(
+            ({
+              functionId,
+              rangeInput,
+              valueEl,
+              suggestedBracketEl,
+              interactionState,
+            }) => {
+            if (!rangeInput || !functionId) {
               return;
             }
-            const score =
-              functionId && functionScores.has(functionId)
-                ? functionScores.get(functionId)
-                : null;
-            const nextScore =
-              score === null || score === undefined ? null : Math.round(score);
-            cell.textContent = nextScore === null ? '-' : String(nextScore);
-          });
+            const meta = functionMeta.get(functionId) || {
+              value: 0,
+              minLimit: 0,
+              maxLimit: 15,
+              hasSuggestedRange: false,
+              isOutsideSuggestedRange: false,
+            };
+            rangeInput.min = '0';
+            rangeInput.max = '15';
+            rangeInput.value = String(meta.value);
+            if (valueEl) {
+              valueEl.textContent = String(meta.value);
+            }
+            updateScreeningSliderVisual(rangeInput, meta.value);
+            updateScreeningSuggestedBracket(
+              suggestedBracketEl,
+              meta.minLimit,
+              meta.maxLimit,
+              meta.hasSuggestedRange
+            );
+            const interactionActive = Boolean(
+              interactionState && interactionState.active
+            );
+            const showOutOfRangeCue = Boolean(
+              meta.isOutsideSuggestedRange &&
+                (showSuggestedCue || interactionActive)
+            );
+            if (valueEl) {
+              valueEl.classList.toggle('is-outside-suggested', showOutOfRangeCue);
+              if (showOutOfRangeCue) {
+                valueEl.title = 'Score is outside suggested range';
+              } else {
+                valueEl.removeAttribute('title');
+              }
+            }
+          }
+          );
         }
 
         if (Array.isArray(indexRows)) {
@@ -2171,6 +2789,22 @@
               indexCell.title = `Criteria: ${layer.name}`;
             } else {
               indexCell.removeAttribute('title');
+            }
+          });
+        }
+
+        if (Array.isArray(estimateRows)) {
+          estimateRows.forEach(({ metricId, estimateCell }) => {
+            if (!estimateCell) {
+              return;
+            }
+            const meta = metricScoreRanges.get(metricId);
+            const indexRange = meta?.indexRange;
+            if (indexRange && indexRange.hasRange) {
+              const range = meta.scoreRange;
+              estimateCell.textContent = `${range.avgScore} (${range.minScore}-${range.maxScore})`;
+            } else {
+              estimateCell.textContent = '-';
             }
           });
         }
@@ -2239,13 +2873,27 @@
 
       const renderTable = () => {
         tbody.innerHTML = '';
+        let ratingsDirty = false;
         const showAdvanced = getShowAdvancedScoring();
         const showCondensed = getShowCondensedView();
+        const showMappings = getShowFunctionMappings();
+        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
+        const showSliderLabels = getShowFunctionScoreCueLabels();
         if (table) {
           table.classList.toggle('show-advanced-scoring', showAdvanced);
           table.classList.toggle('show-condensed-view', showCondensed);
+          table.classList.toggle('show-function-mappings', showMappings);
+          table.classList.toggle('show-suggested-function-cues', showSuggestedCue);
+          table.classList.toggle('show-function-score-cue-labels', showSliderLabels);
         }
-        buildSummary(showAdvanced, showCondensed);
+        if (summaryTable) {
+          summaryTable.classList.toggle('show-advanced-scoring', showAdvanced);
+          summaryTable.classList.toggle('show-condensed-view', showCondensed);
+          summaryTable.classList.toggle('show-function-mappings', showMappings);
+          summaryTable.hidden = showMappings;
+        }
+        renderHeader(showMappings, showAdvanced);
+        buildSummary(showAdvanced, showCondensed, showMappings);
         renderDefaultCriteriaControls();
 
         const term = search.value.trim().toLowerCase();
@@ -2390,9 +3038,9 @@
           }
         });
 
-        const metricRows = [];
         const indexRows = [];
-        const functionScoreCells = [];
+        const estimateRows = [];
+        const functionScoreControls = [];
 
         const disciplineActive = new Map();
         const functionActive = new Map();
@@ -2409,13 +3057,14 @@
         if (renderRows.length === 0) {
           const emptyRow = document.createElement('tr');
           const emptyCell = document.createElement('td');
-          const totalColumns = 7 + (showAdvanced ? 2 : 0) + (showCondensed ? 1 : 0);
+          const baseColumns = 7 + (showAdvanced ? 3 : 0) + (showCondensed ? 1 : 0);
+          const totalColumns = showMappings ? baseColumns : Math.max(1, baseColumns - 3);
           emptyCell.colSpan = totalColumns;
           emptyCell.className = 'empty-cell';
           emptyCell.textContent = 'No metrics selected for this assessment.';
           emptyRow.appendChild(emptyCell);
           tbody.appendChild(emptyRow);
-          updateScores(metricRows, indexRows, functionScoreCells, functionOrder);
+          updateScores(indexRows, estimateRows, functionScoreControls, functionOrder);
           return;
         }
 
@@ -2442,12 +3091,23 @@
           }
           let metricCount = 0;
           let criteriaCount = 0;
+          let firstMetricIndex = -1;
+          let firstExpandedMetricIndex = -1;
           let j = i;
           while (j < renderRows.length && renderRows[j].functionId === rowItem.functionId) {
             if (renderRows[j].type === 'criteria') {
               criteriaCount += 1;
             } else {
               metricCount += 1;
+              if (firstMetricIndex === -1) {
+                firstMetricIndex = j;
+              }
+              if (
+                firstExpandedMetricIndex === -1 &&
+                expandedMetrics.has(renderRows[j].metric?.id)
+              ) {
+                firstExpandedMetricIndex = j;
+              }
             }
             if (j > i) {
               renderRows[j]._functionSkip = true;
@@ -2461,6 +3121,32 @@
             for (let k = i + 1; k < j; k += 1) {
               if (renderRows[k].type === 'metric') {
                 renderRows[k]._weightSkip = true;
+              }
+            }
+          }
+          const functionScoreOwnerIndex =
+            firstExpandedMetricIndex !== -1
+              ? firstExpandedMetricIndex
+              : firstMetricIndex;
+          const hasExpandedMetricOwner = firstExpandedMetricIndex !== -1;
+          const functionScoreSpan = hasExpandedMetricOwner
+            ? 1
+            : Math.max(1, metricCount);
+          if (functionScoreOwnerIndex !== -1) {
+            for (let k = i; k < j; k += 1) {
+              if (renderRows[k].type !== 'metric') {
+                continue;
+              }
+              if (hasExpandedMetricOwner) {
+                renderRows[k]._functionScoreSkip = false;
+                renderRows[k]._functionScorePlaceholder = k !== functionScoreOwnerIndex;
+                renderRows[k]._functionScoreSpan = 1;
+              } else {
+                renderRows[k]._functionScoreSkip = k !== functionScoreOwnerIndex;
+                renderRows[k]._functionScorePlaceholder = false;
+                if (k === functionScoreOwnerIndex) {
+                  renderRows[k]._functionScoreSpan = functionScoreSpan;
+                }
               }
             }
           }
@@ -2514,7 +3200,9 @@
           }
           let functionScoreValue = null;
           let functionScoreRange = null;
-          let functionScoreColumnValue = null;
+          let functionScoreSuggestedBracket = null;
+          let functionScoreCell = null;
+          let functionScoreInteractionState = null;
           if (!rowItem._functionSkip) {
             const functionCell = document.createElement('td');
             functionCell.className = 'col-function';
@@ -2527,14 +3215,21 @@
             }
             const functionNameLine = document.createElement('div');
             functionNameLine.className = 'function-title';
-            const functionNameText = document.createElement('button');
-            functionNameText.type = 'button';
+            const functionNameText = document.createElement('span');
             functionNameText.className = 'metric-curve-link';
-            functionNameText.textContent = functionName;
-            functionNameText.addEventListener('click', () => {
+            functionNameText.setAttribute('role', 'button');
+            functionNameText.tabIndex = 0;
+            functionNameText.appendChild(document.createTextNode(functionName));
+            const openFunctionLibrary = () => {
               openMetricLibraryWithFilters(rowItem.discipline, functionName);
+            };
+            functionNameText.addEventListener('click', openFunctionLibrary);
+            functionNameText.addEventListener('keydown', (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openFunctionLibrary();
+              }
             });
-            functionNameLine.appendChild(functionNameText);
             const functionToggle = document.createElement('button');
             functionToggle.type = 'button';
             functionToggle.className = 'criteria-toggle function-toggle';
@@ -2547,37 +3242,18 @@
                 event.preventDefault();
               }
             });
-            functionNameLine.appendChild(functionToggle);
+            functionNameText.appendChild(document.createTextNode('\u00A0'));
+            functionNameText.appendChild(functionToggle);
+            functionNameLine.appendChild(functionNameText);
             functionCell.appendChild(functionNameLine);
             const statementLine = document.createElement('div');
             statementLine.className = 'function-statement';
             statementLine.textContent = functionStatement;
             statementLine.hidden = !hasFunctionStatement || !isFunctionExpanded;
             functionCell.appendChild(statementLine);
-            const functionScoreLine = document.createElement('div');
-            functionScoreLine.className = 'score-input function-score-inline';
-            functionScoreRange = document.createElement('input');
-            functionScoreRange.type = 'range';
-            functionScoreRange.min = '0';
-            functionScoreRange.max = '15';
-            functionScoreRange.step = '1';
-            functionScoreRange.disabled = true;
-            functionScoreValue = document.createElement('span');
-            functionScoreValue.className = 'score-value';
-            functionScoreValue.textContent = '-';
-            functionScoreLine.appendChild(functionScoreRange);
-            functionScoreLine.appendChild(functionScoreValue);
-            const setFunctionScoreVisibility = (isOpen) => {
-              if (showCondensed) {
-                functionScoreLine.classList.toggle('is-hidden', !isOpen);
-              } else {
-                functionScoreLine.classList.remove('is-hidden');
-              }
-            };
-            setFunctionScoreVisibility(isFunctionExpanded);
-            functionCell.appendChild(functionScoreLine);
             functionToggle.addEventListener('click', (event) => {
-              if (!hasFunctionStatement && !showCondensed) {
+              event.stopPropagation();
+              if (!hasFunctionStatement) {
                 return;
               }
               if (expandedFunctions.has(rowFunctionId)) {
@@ -2589,7 +3265,6 @@
               if (hasFunctionStatement) {
                 statementLine.hidden = !nowOpen;
               }
-              setFunctionScoreVisibility(nowOpen);
               functionToggle.setAttribute('aria-expanded', String(nowOpen));
               functionToggle.innerHTML = nowOpen ? expandedGlyph : collapsedGlyph;
               if (event.detail > 0) {
@@ -2600,8 +3275,8 @@
           }
           if (rowItem.type === 'criteria') {
             const detailsCell = document.createElement('td');
-            detailsCell.colSpan =
-              (showAdvanced ? 7 : 5) + (showCondensed ? 1 : 0);
+            const baseSpan = (showAdvanced ? 8 : 5) + (showCondensed ? 1 : 0);
+            detailsCell.colSpan = showMappings ? baseSpan : Math.max(1, baseSpan - 3);
             const details = document.createElement('div');
             details.className = 'criteria-details';
             const detailsMetric = rowItem.metric || metric;
@@ -2632,18 +3307,19 @@
 
           const metricCell = document.createElement('td');
           metricCell.className = 'col-metric';
-          const metricText =
-            rowItem.type === 'placeholder'
-              ? document.createElement('span')
-              : document.createElement('button');
-          metricText.textContent =
+          const metricTitle = document.createElement('span');
+          metricTitle.className = 'metric-title';
+          const metricNameText = document.createElement('span');
+          metricNameText.className = 'metric-curve-link';
+          const metricLabel =
             rowItem.type === 'placeholder'
               ? 'No metrics selected for this function'
               : metric.metric;
+          metricNameText.appendChild(document.createTextNode(metricLabel));
           if (rowItem.type === 'metric') {
-            metricText.type = 'button';
-            metricText.className = 'metric-curve-link';
-            metricText.addEventListener('click', () => {
+            metricNameText.setAttribute('role', 'button');
+            metricNameText.tabIndex = 0;
+            const openMetricInspector = () => {
               if (window.dispatchEvent) {
                 const profileId =
                   activeScenario?.metricProfiles?.[metric.id] || defaultProfileId;
@@ -2658,9 +3334,17 @@
                   })
                 );
               }
+            };
+            metricNameText.addEventListener('click', openMetricInspector);
+            metricNameText.addEventListener('keydown', (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openMetricInspector();
+              }
             });
           }
-          metricCell.appendChild(metricText);
+          metricTitle.appendChild(metricNameText);
+          metricCell.appendChild(metricTitle);
           let criteriaBtn = null;
           if (rowItem.type === 'metric') {
             criteriaBtn = document.createElement('button');
@@ -2678,7 +3362,8 @@
                 event.preventDefault();
               }
             });
-            metricCell.appendChild(criteriaBtn);
+            metricNameText.appendChild(document.createTextNode('\u00A0'));
+            metricNameText.appendChild(criteriaBtn);
           }
 
 
@@ -2688,13 +3373,18 @@
           if (rowItem.type === 'metric') {
             scoreSelect = document.createElement('select');
             scoreSelect.className = 'metric-score-select';
-            ratingOptions.forEach((option) => {
+            const ratingLabels = getMetricRatingOptions(metric.id, activeScenario);
+            ratingLabels.forEach((label) => {
               const opt = document.createElement('option');
-              opt.value = option.label;
-              opt.textContent = option.label;
+              opt.value = label;
+              opt.textContent = label;
               scoreSelect.appendChild(opt);
             });
-            scoreSelect.value = metricRatings.get(metric.id) || defaultRating;
+            const ratingState = resolveMetricRating(metric.id, ratingLabels);
+            if (ratingState.changed) {
+              ratingsDirty = true;
+            }
+            scoreSelect.value = ratingState.value;
             scoreCell.appendChild(scoreSelect);
 
           } else {
@@ -2721,6 +3411,8 @@
           criteriaCell.className = 'col-scoring-criteria';
           const indexCell = document.createElement('td');
           indexCell.className = 'col-index-score';
+          const estimateCell = document.createElement('td');
+          estimateCell.className = 'col-function-estimate';
           if (rowItem.type === 'metric') {
             const overrides = getCriteriaOverrides();
             const overrideId = overrides[metric.id];
@@ -2793,22 +3485,159 @@
               criteriaCell.appendChild(defaultPill);
             }
             indexRows.push({ metricId: metric.id, indexCell });
+            estimateRows.push({ metricId: metric.id, estimateCell });
           } else {
             criteriaCell.textContent = '-';
             indexCell.textContent = '-';
+            estimateCell.textContent = '-';
           }
           row.appendChild(criteriaCell);
           row.appendChild(indexCell);
-          if (showCondensed && !rowItem._weightSkip && rowItem.type !== 'criteria') {
-            const functionScoreCell = document.createElement('td');
+          row.appendChild(estimateCell);
+          if (showCondensed && rowItem.type === 'metric' && !rowItem._functionScoreSkip) {
+            functionScoreCell = document.createElement('td');
             functionScoreCell.className = 'col-function-score function-score-cell';
-            functionScoreCell.rowSpan = rowItem._weightSpan || 1;
-            functionScoreColumnValue = document.createElement('span');
-            functionScoreColumnValue.textContent = '-';
-            functionScoreCell.appendChild(functionScoreColumnValue);
+            functionScoreCell.rowSpan = rowItem._functionScoreSpan || 1;
+            if (rowItem._functionScorePlaceholder) {
+              functionScoreCell.classList.add('function-score-cell-empty');
+            } else {
+              const functionScoreLine = document.createElement('div');
+              functionScoreLine.className = 'score-input function-score-inline';
+              const sliderWrap = document.createElement('div');
+              sliderWrap.className = 'function-score-slider';
+              const cueLabels = document.createElement('div');
+              cueLabels.className = 'function-score-cue-labels';
+              [
+                { text: 'F', left: '16.67%' },
+                { text: 'AR', left: '50%' },
+                { text: 'NF', left: '83.33%' },
+              ].forEach(({ text, left }) => {
+                const label = document.createElement('span');
+                label.className = 'function-score-cue-label';
+                label.textContent = text;
+                label.style.left = left;
+                cueLabels.appendChild(label);
+              });
+              const cueBar = document.createElement('button');
+              cueBar.type = 'button';
+              cueBar.className = 'function-score-cue-bar';
+              cueBar.setAttribute('aria-label', 'Set function score by range');
+              [0, 33.33, 66.67, 100].forEach((percent) => {
+                const tick = document.createElement('span');
+                tick.className = 'function-score-cue-tick';
+                tick.style.left = `${percent}%`;
+                cueBar.appendChild(tick);
+              });
+              const suggestedBracketLayer = document.createElement('div');
+              suggestedBracketLayer.className = 'function-score-suggested-layer';
+              functionScoreSuggestedBracket = document.createElement('div');
+              functionScoreSuggestedBracket.className = 'function-score-suggested-bracket';
+              functionScoreSuggestedBracket.hidden = true;
+              suggestedBracketLayer.appendChild(functionScoreSuggestedBracket);
+              functionScoreRange = document.createElement('input');
+              functionScoreRange.type = 'range';
+              functionScoreRange.min = '0';
+              functionScoreRange.max = '15';
+              functionScoreRange.step = '1';
+              functionScoreRange.disabled = false;
+              const currentFunctionScore = Number.isFinite(
+                activeScenario?.functionScores?.[rowFunctionId]
+              )
+                ? activeScenario.functionScores[rowFunctionId]
+                : 0;
+              functionScoreRange.value = String(currentFunctionScore);
+              updateScreeningSliderVisual(functionScoreRange, currentFunctionScore);
+              sliderWrap.appendChild(cueLabels);
+              sliderWrap.appendChild(cueBar);
+              sliderWrap.appendChild(suggestedBracketLayer);
+              sliderWrap.appendChild(functionScoreRange);
+              functionScoreValue = document.createElement('span');
+              functionScoreValue.className = 'score-value';
+              functionScoreValue.textContent = String(currentFunctionScore);
+              functionScoreLine.appendChild(sliderWrap);
+              functionScoreLine.appendChild(functionScoreValue);
+              functionScoreInteractionState = { active: false };
+              const interactionState = functionScoreInteractionState;
+              const setInteractionState = (isActive) => {
+                interactionState.active = Boolean(isActive);
+                sliderWrap.classList.toggle('is-dragging', interactionState.active);
+              };
+              let cueHighlightTimer = null;
+              const setScoreFromCueBar = (event) => {
+                if (!functionScoreRange || functionScoreRange.disabled) {
+                  return;
+                }
+                const rect = cueBar.getBoundingClientRect();
+                if (!rect.width) {
+                  return;
+                }
+                const min = Number(functionScoreRange.min) || 0;
+                const max = Number(functionScoreRange.max) || 15;
+                const relativeX = Math.max(
+                  0,
+                  Math.min(rect.width, event.clientX - rect.left)
+                );
+                const nextValue = Math.round(min + (relativeX / rect.width) * (max - min));
+                setInteractionState(true);
+                functionScoreRange.value = String(nextValue);
+                functionScoreRange.dispatchEvent(
+                  new Event('input', { bubbles: true })
+                );
+                if (cueHighlightTimer) {
+                  clearTimeout(cueHighlightTimer);
+                }
+                cueHighlightTimer = setTimeout(() => {
+                  setInteractionState(false);
+                  updateScores(indexRows, estimateRows, functionScoreControls, functionOrder);
+                  cueHighlightTimer = null;
+                }, 180);
+              };
+              functionScoreRange.addEventListener('input', () => {
+                const nextValue = Number(functionScoreRange.value);
+                if (activeScenario && rowFunctionId) {
+                  if (!activeScenario.functionScores) {
+                    activeScenario.functionScores = {};
+                  }
+                  activeScenario.functionScores[rowFunctionId] = nextValue;
+                  store.save();
+                }
+                if (functionScoreValue) {
+                  functionScoreValue.textContent = Number.isFinite(nextValue)
+                    ? String(nextValue)
+                    : '-';
+                }
+                updateScreeningSliderVisual(functionScoreRange, nextValue);
+                updateScores(indexRows, estimateRows, functionScoreControls, functionOrder);
+              });
+              const endSliderInteraction = () => {
+                setInteractionState(false);
+                updateScores(indexRows, estimateRows, functionScoreControls, functionOrder);
+              };
+              functionScoreRange.addEventListener('pointerdown', () => {
+                if (cueHighlightTimer) {
+                  clearTimeout(cueHighlightTimer);
+                  cueHighlightTimer = null;
+                }
+                setInteractionState(true);
+              });
+              functionScoreRange.addEventListener('pointerup', () => {
+                endSliderInteraction();
+              });
+              functionScoreRange.addEventListener('pointercancel', () => {
+                endSliderInteraction();
+              });
+              functionScoreRange.addEventListener('blur', () => {
+                endSliderInteraction();
+              });
+              cueBar.addEventListener('pointerdown', (event) => {
+                event.preventDefault();
+                setScoreFromCueBar(event);
+              });
+              functionScoreCell.appendChild(functionScoreLine);
+            }
             row.appendChild(functionScoreCell);
           }
-          if (!rowItem._weightSkip && rowItem.type !== 'criteria') {
+          if (showMappings && !rowItem._weightSkip && rowItem.type !== 'criteria') {
             const physicalCell = document.createElement('td');
             const chemicalCell = document.createElement('td');
             const biologicalCell = document.createElement('td');
@@ -2829,6 +3658,7 @@
 
           if (rowItem.type === 'metric') {
             criteriaBtn.addEventListener('click', (event) => {
+              event.stopPropagation();
               if (expandedMetrics.has(metric.id)) {
                 expandedMetrics.delete(metric.id);
               } else {
@@ -2846,7 +3676,7 @@
                 activeScenario.ratings[metric.id] = scoreSelect.value;
                 store.save();
               }
-              updateScores(metricRows, indexRows, functionScoreCells, functionOrder);
+              updateScores(indexRows, estimateRows, functionScoreControls, functionOrder);
             });
           }
 
@@ -2873,22 +3703,20 @@
 
           tbody.appendChild(row);
           if (functionScoreValue && functionScoreRange) {
-            const functionScoreTargets = [functionScoreValue];
-            metricRows.push({
-              metric: metric || { functionId: rowItem.functionId },
-              functionScoreTargets,
-              functionScoreRange,
-            });
-          }
-          if (functionScoreColumnValue) {
-            functionScoreCells.push({
+            functionScoreControls.push({
               functionId: rowItem.functionId,
-              cell: functionScoreColumnValue,
+              rangeInput: functionScoreRange,
+              valueEl: functionScoreValue,
+              suggestedBracketEl: functionScoreSuggestedBracket,
+              interactionState: functionScoreInteractionState,
             });
           }
         });
 
-        updateScores(metricRows, indexRows, functionScoreCells, functionOrder);
+        updateScores(indexRows, estimateRows, functionScoreControls, functionOrder);
+        if (ratingsDirty && activeScenario) {
+          store.save();
+        }
       };
 
       const renderTabs = () => {
@@ -2927,10 +3755,17 @@
         const metricIds =
           scenario.type === 'predefined' ? predefinedMetricIds : scenario.metricIds;
         selectedMetricIds = new Set(metricIds);
-        metricRatings = new Map(Object.entries(buildRatings(metricIds, scenario.ratings)));
+        metricRatings = new Map(
+          Object.entries(buildRatings(metricIds, scenario.ratings, getMetricRatingOptions, scenario))
+        );
 
         scenario.metricIds = Array.from(selectedMetricIds);
-        scenario.ratings = buildRatings(scenario.metricIds, scenario.ratings);
+        scenario.ratings = buildRatings(
+          scenario.metricIds,
+          scenario.ratings,
+          getMetricRatingOptions,
+          scenario
+        );
         if (!scenario.curves) {
           scenario.curves = {};
         }
@@ -2959,11 +3794,23 @@
         if (!scenario.defaultCriteriaName) {
           scenario.defaultCriteriaName = fallbackCriteriaName;
         }
+        if (!scenario.functionScores) {
+          scenario.functionScores = {};
+        }
         if (typeof scenario.showAdvancedScoring !== 'boolean') {
           scenario.showAdvancedScoring = false;
         }
         if (typeof scenario.showRollupComputations !== 'boolean') {
           scenario.showRollupComputations = false;
+        }
+        if (typeof scenario.showFunctionMappings !== 'boolean') {
+          scenario.showFunctionMappings = false;
+        }
+        if (typeof scenario.showSuggestedFunctionScoresCue !== 'boolean') {
+          scenario.showSuggestedFunctionScoresCue = false;
+        }
+        if (typeof scenario.showFunctionScoreCueLabels !== 'boolean') {
+          scenario.showFunctionScoreCueLabels = false;
         }
         if (typeof scenario.showCondensedView !== 'boolean') {
           scenario.showCondensedView = true;
@@ -2981,7 +3828,6 @@
         }
 
         const isPredefined = scenario.type === 'predefined';
-        resetButton.disabled = isPredefined;
         if (duplicateBtn) {
           duplicateBtn.disabled = false;
         }
@@ -3035,21 +3881,6 @@
 
       search.addEventListener('input', renderTable);
       disciplineFilter.addEventListener('change', () => {
-        renderTable();
-      });
-
-      resetButton.addEventListener('click', () => {
-        if (!activeScenario || activeScenario.type === 'predefined') {
-          return;
-        }
-        selectedMetricIds = new Set();
-        metricRatings = new Map();
-        activeScenario.metricIds = [];
-        activeScenario.ratings = {};
-        activeScenario.curves = {};
-        activeScenario.criteriaOverrides = {};
-        activeScenario.metricProfiles = {};
-        store.save();
         renderTable();
       });
 

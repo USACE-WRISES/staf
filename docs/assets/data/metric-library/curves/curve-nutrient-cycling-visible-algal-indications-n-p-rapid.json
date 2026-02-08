@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Cobble substrate mostly clean. Thin biofilm only. Criteria: < 10% benthic algal cover",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Thin green filaments on stones in patches. Criteria: ~10-30% cover",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Mats cover about one third to one half of riffles. Criteria: ~30-50% cover",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Thick mats and surface scum on most substrate. Criteria: > 50% cover or nuisance mats",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-nutrient-cycling-visible-algal-indications-n-p-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-nutrient-cycling-visible-algal-indications-n-p-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-nutrient-cycling-visible-algal-indications-n-p-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-nutrient-cycling-visible-algal-indications-n-p-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "nutrient-cycling-visible-algal-indications-n-p"
+}

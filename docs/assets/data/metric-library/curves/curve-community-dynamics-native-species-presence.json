@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-community-dynamics-native-species-presence",
-  "metricId": "community-dynamics-native-species-presence",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-community-dynamics-native-species-presence-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-community-dynamics-native-species-presence-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Most native taxa expected for the stream type are present."
+              "description": "Most native taxa expected for the stream type are present.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "A few sensitive native taxa are missing."
+              "description": "A few sensitive native taxa are missing.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Several native taxa are absent and tolerant taxa dominate."
+              "description": "Several native taxa are absent and tolerant taxa dominate.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Widespread loss of native taxa with invasive or tolerant taxa dominating."
+              "description": "Widespread loss of native taxa with invasive or tolerant taxa dominating.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-community-dynamics-native-species-presence-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-community-dynamics-native-species-presence-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-community-dynamics-native-species-presence-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-community-dynamics-native-species-presence",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "community-dynamics-native-species-presence"
 }

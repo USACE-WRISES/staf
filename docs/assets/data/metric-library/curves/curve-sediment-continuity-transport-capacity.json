@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-sediment-continuity-transport-capacity",
-  "metricId": "sediment-continuity-transport-capacity",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-sediment-continuity-transport-capacity-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-sediment-continuity-transport-capacity-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "No major bar buildup or scour. Sediment load appears balanced for channel type."
+              "description": "No major bar buildup or scour. Sediment load appears balanced for channel type.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Slight mismatch with minor deposition or scour."
+              "description": "Slight mismatch with minor deposition or scour.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Noticeable over or under capacity in channel sections."
+              "description": "Noticeable over or under capacity in channel sections.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Widespread bar formation or deep scouring indicating severe imbalance."
+              "description": "Widespread bar formation or deep scouring indicating severe imbalance.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-sediment-continuity-transport-capacity-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-sediment-continuity-transport-capacity-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-sediment-continuity-transport-capacity-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-sediment-continuity-transport-capacity",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "sediment-continuity-transport-capacity"
 }

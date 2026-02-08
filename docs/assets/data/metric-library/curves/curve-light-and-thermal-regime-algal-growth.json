@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-light-and-thermal-regime-algal-growth",
-  "metricId": "light-and-thermal-regime-algal-growth",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-light-and-thermal-regime-algal-growth-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-light-and-thermal-regime-algal-growth-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Minimal algae and no nuisance mats."
+              "description": "Minimal algae and no nuisance mats.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Slightly elevated algal coverage."
+              "description": "Slightly elevated algal coverage.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Large mats that partially impair habitat."
+              "description": "Large mats that partially impair habitat.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Dense bloom or scum that covers substrate."
+              "description": "Dense bloom or scum that covers substrate.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-light-and-thermal-regime-algal-growth-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-light-and-thermal-regime-algal-growth-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-light-and-thermal-regime-algal-growth-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-light-and-thermal-regime-algal-growth",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "light-and-thermal-regime-algal-growth"
 }

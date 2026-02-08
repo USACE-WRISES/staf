@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Multiple small upwelling boils at pool tails. Cold seeps along margins during summer. Criteria: Clear, frequent indicators of sub-surface flow.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: One or two seeps noted. Weak infiltration on riffle crests. Criteria: Occasional indicators.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Questionable features. Staining but no active upwelling observed. Criteria: Rare or uncertain indicators.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: No seeps or infiltration zones observed at baseflow or falling limb. Criteria: No evidence. Bed appears sealed or compacted.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-hyporheic-connectivity-visible-hyporheic-metrics-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-hyporheic-connectivity-visible-hyporheic-metrics-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-hyporheic-connectivity-visible-hyporheic-metrics-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-hyporheic-connectivity-visible-hyporheic-metrics-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "hyporheic-connectivity-visible-hyporheic-metrics"
+}

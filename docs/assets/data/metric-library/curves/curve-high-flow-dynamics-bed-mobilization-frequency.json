@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-high-flow-dynamics-bed-mobilization-frequency",
-  "metricId": "high-flow-dynamics-bed-mobilization-frequency",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-high-flow-dynamics-bed-mobilization-frequency-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-high-flow-dynamics-bed-mobilization-frequency-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Bed mobilizes at appropriate flows for the channel type, often near bankfull."
+              "description": "Bed mobilizes at appropriate flows for the channel type, often near bankfull.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Slight mismatch. Bed moves below or above expected flows."
+              "description": "Slight mismatch. Bed moves below or above expected flows.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Marked mismatch. Bed is often locked or frequently scoured."
+              "description": "Marked mismatch. Bed is often locked or frequently scoured.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Extreme mismatch. Bed rarely moves or is reworked by small floods."
+              "description": "Extreme mismatch. Bed rarely moves or is reworked by small floods.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-high-flow-dynamics-bed-mobilization-frequency-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-high-flow-dynamics-bed-mobilization-frequency-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-high-flow-dynamics-bed-mobilization-frequency-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-high-flow-dynamics-bed-mobilization-frequency",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "high-flow-dynamics-bed-mobilization-frequency"
 }

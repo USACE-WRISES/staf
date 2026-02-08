@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-channel-evolution-channel-evolution-model-stage-i-vi",
-  "metricId": "channel-evolution-channel-evolution-model-stage-i-vi",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-channel-evolution-channel-evolution-model-stage-i-vi-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-channel-evolution-channel-evolution-model-stage-i-vi-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Stable or re-stabilized channel (Stage I or VI)."
+              "description": "Stable or re-stabilized channel (Stage I or VI).",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Partially recovered channel (often Stage V)."
+              "description": "Partially recovered channel (often Stage V).",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Actively widening or incising (often Stage III-IV)."
+              "description": "Actively widening or incising (often Stage III-IV).",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Severe incision or destructive phases (often Stage II or severe III-IV)."
+              "description": "Severe incision or destructive phases (often Stage II or severe III-IV).",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-channel-evolution-channel-evolution-model-stage-i-vi-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-channel-evolution-channel-evolution-model-stage-i-vi-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-channel-evolution-channel-evolution-model-stage-i-vi-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-channel-evolution-channel-evolution-model-stage-i-vi",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "channel-evolution-channel-evolution-model-stage-i-vi"
 }

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-detritus-decomposition-rate",
+  "name": "Detritus Decomposition Rate",
+  "discipline": "Physicochemistry",
+  "function": "Carbon Processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Visible fungal colonization/shredding indicates a healthy detrital cycle.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Leaf-pack decay bags (mass loss percent)",
+  "inputs": [
+    {
+      "label": "Detritus Decomposition Rate",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: No noticeable mass loss. Strong odor or anoxic conditions. No shredders in a reach where they are expected<br>Criteria: Very slow breakdown and absence of shredder taxa in suitable habitat"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Little change to leaf material after several weeks. Packs often coated in silt. Assemblage mostly tolerant collectors and grazers<br>Criteria: Slow breakdown with few or no active shredders"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Moderate softening of leaves with some fungal growth. One or two shredder groups present at low abundance<br>Criteria: Intermediate breakdown with partial shredder presence"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Leaf packs break down quickly with softening and visible fungal growth. Kick sample includes several shredder taxa<br>Criteria: Fast breakdown with strong biological processing and multiple shredder groups present"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-detritus-decomposition-rate-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

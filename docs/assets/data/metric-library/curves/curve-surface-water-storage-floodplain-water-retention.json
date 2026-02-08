@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-surface-water-storage-floodplain-water-retention",
-  "metricId": "surface-water-storage-floodplain-water-retention",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-surface-water-storage-floodplain-water-retention-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-surface-water-storage-floodplain-water-retention-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Floodplain is actively engaged at the local moderate-flood standard (often about 1-2 yr or 2-5 yr)."
+              "description": "Floodplain is actively engaged at the local moderate-flood standard (often about 1-2 yr or 2-5 yr).",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Overbanking requires flows slightly larger than typical bankfull, but still not rare."
+              "description": "Overbanking requires flows slightly larger than typical bankfull, but still not rare.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Overbanking requires 5-10 yr floods. Partial disconnection."
+              "description": "Overbanking requires 5-10 yr floods. Partial disconnection.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods."
+              "description": "Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-surface-water-storage-floodplain-water-retention-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-surface-water-storage-floodplain-water-retention-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-surface-water-storage-floodplain-water-retention-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-surface-water-storage-floodplain-water-retention",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "surface-water-storage-floodplain-water-retention"
 }

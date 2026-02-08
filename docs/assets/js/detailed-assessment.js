@@ -68,9 +68,46 @@
   const defaultIndexValues = [0, 0.3, 0.7, 1];
   const defaultProfileId = 'detailed-default';
 
+  const normalizeCurveType = (value) => {
+    if (!value) {
+      return 'quantitative';
+    }
+    return value === 'qualitative' ? 'categorical' : value;
+  };
+
+  const parseScore = (value) => {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const roundScore = (value, places = 2) => {
+    const factor = 10 ** places;
+    return Math.round(value * factor) / factor;
+  };
+
+  const applyIndexRanges = (points) => {
+    const scored = points
+      .map((point) => ({ point, y: parseScore(point.y) }))
+      .filter((entry) => entry.y !== null);
+    if (!scored.length) {
+      return;
+    }
+    const sorted = [...scored].sort((a, b) => b.y - a.y);
+    const boundaries = sorted.slice(0, -1).map((entry, index) =>
+      (entry.y + sorted[index + 1].y) / 2
+    );
+    sorted.forEach((entry, index) => {
+      const max = index === 0 ? 1 : boundaries[index - 1];
+      const min = index === sorted.length - 1 ? 0 : boundaries[index];
+      entry.point.yMax = roundScore(clamp(max, 0, 1));
+      entry.point.yMin = roundScore(clamp(min, 0, 1));
+    });
+  };
+
   const buildDefaultCurve = () => ({
     name: 'Default',
     xType: 'quantitative',
+    indexRange: false,
     units: '',
     activeLayerId: null,
     layers: [
@@ -100,7 +137,7 @@
     if (!Number.isFinite(fieldValue) || !curve || !curve.layers?.length) {
       return null;
     }
-    if (curve.xType === 'qualitative') {
+    if (normalizeCurveType(curve.xType) === 'categorical') {
       return null;
     }
     const layer = getCurveLayer(curve);
@@ -291,7 +328,7 @@
           curveUnitsInput.value = curve.units || '';
         }
         if (curveXType) {
-          curveXType.value = curve.xType || 'quantitative';
+          curveXType.value = normalizeCurveType(curve.xType || 'quantitative');
         }
         renderCurveLayerControls(curve);
         renderCurveTable();
@@ -469,17 +506,11 @@
       libraryButton.setAttribute('data-open-metric-library', 'true');
       libraryButton.textContent = 'Metric Library';
 
-      const resetButton = document.createElement('button');
-      resetButton.type = 'button';
-      resetButton.className = 'btn btn-small';
-      resetButton.textContent = 'Reset metrics';
-
       controls.appendChild(search);
       controls.appendChild(disciplineFilter);
       controls.appendChild(addSelect);
       controls.appendChild(addButton);
       controls.appendChild(libraryButton);
-      controls.appendChild(resetButton);
 
       if (controlsHost) {
         controlsHost.innerHTML = '';
@@ -691,10 +722,26 @@
         const table = document.createElement('table');
         table.className = 'curve-table';
         const thead = document.createElement('thead');
-        const isQualitative = curve.xType === 'qualitative';
+        const curveType = normalizeCurveType(curve.xType);
+        const isCategorical = curveType === 'categorical';
+        if (isCategorical && curve.indexRange == null) {
+          curve.indexRange = true;
+        }
+        if (!isCategorical) {
+          curve.indexRange = false;
+        }
+        const useRange = isCategorical && !!curve.indexRange;
+        if (useRange) {
+          const needsRanges = layer.points.some(
+            (point) => parseScore(point.yMin) === null || parseScore(point.yMax) === null
+          );
+          if (needsRanges) {
+            applyIndexRanges(layer.points);
+          }
+        }
         thead.innerHTML =
           '<tr><th>Field value (X)</th><th>Index value (Y)</th>' +
-          (isQualitative ? '<th>Description</th>' : '') +
+          (isCategorical ? '<th>Description</th>' : '') +
           '<th>Insert</th><th>X</th></tr>';
         const tbody = document.createElement('tbody');
 
@@ -702,8 +749,8 @@
           const row = document.createElement('tr');
           const xCell = document.createElement('td');
           const xInput = document.createElement('input');
-          xInput.type = isQualitative ? 'text' : 'number';
-          xInput.step = isQualitative ? undefined : 'any';
+          xInput.type = isCategorical ? 'text' : 'number';
+          xInput.step = isCategorical ? undefined : 'any';
           xInput.value = point.x ?? '';
           xInput.addEventListener('input', () => {
             point.x = xInput.value;
@@ -712,20 +759,58 @@
           xCell.appendChild(xInput);
 
           const yCell = document.createElement('td');
-          const yInput = document.createElement('input');
-          yInput.type = 'number';
-          yInput.step = '0.01';
-          yInput.min = '0';
-          yInput.max = '1';
-          yInput.value = point.y ?? '';
-          yInput.addEventListener('input', () => {
-            point.y = yInput.value;
-            renderCurveChart();
-          });
-          yCell.appendChild(yInput);
+          if (useRange) {
+            const rangeWrap = document.createElement('div');
+            rangeWrap.className = 'curve-index-range';
+            const maxInput = document.createElement('input');
+            maxInput.type = 'number';
+            maxInput.step = '0.01';
+            maxInput.min = '0';
+            maxInput.max = '1';
+            maxInput.placeholder = 'Max';
+            maxInput.value = point.yMax ?? point.y ?? '';
+            const minInput = document.createElement('input');
+            minInput.type = 'number';
+            minInput.step = '0.01';
+            minInput.min = '0';
+            minInput.max = '1';
+            minInput.placeholder = 'Min';
+            minInput.value = point.yMin ?? point.y ?? '';
+            const syncRange = () => {
+              const nextMin = parseScore(minInput.value);
+              const nextMax = parseScore(maxInput.value);
+              if (nextMin !== null) {
+                point.yMin = roundScore(clamp(nextMin, 0, 1));
+              }
+              if (nextMax !== null) {
+                point.yMax = roundScore(clamp(nextMax, 0, 1));
+              }
+              if (nextMin !== null && nextMax !== null) {
+                point.y = roundScore((nextMin + nextMax) / 2);
+              }
+              renderCurveChart();
+            };
+            maxInput.addEventListener('input', syncRange);
+            minInput.addEventListener('input', syncRange);
+            rangeWrap.appendChild(maxInput);
+            rangeWrap.appendChild(minInput);
+            yCell.appendChild(rangeWrap);
+          } else {
+            const yInput = document.createElement('input');
+            yInput.type = 'number';
+            yInput.step = '0.01';
+            yInput.min = '0';
+            yInput.max = '1';
+            yInput.value = point.y ?? '';
+            yInput.addEventListener('input', () => {
+              point.y = yInput.value;
+              renderCurveChart();
+            });
+            yCell.appendChild(yInput);
+          }
 
           let descCell = null;
-          if (isQualitative) {
+          if (isCategorical) {
             descCell = document.createElement('td');
             const descInput = document.createElement('input');
             descInput.type = 'text';
@@ -806,14 +891,34 @@
         if (!layer) {
           return;
         }
-        const isQualitative = curve.xType === 'qualitative';
-        const points = isQualitative
+        const curveType = normalizeCurveType(curve.xType);
+        const isCategorical = curveType === 'categorical';
+        const useRange = isCategorical && !!curve.indexRange;
+        if (useRange) {
+          const needsRanges = layer.points.some(
+            (point) => parseScore(point.yMin) === null || parseScore(point.yMax) === null
+          );
+          if (needsRanges) {
+            applyIndexRanges(layer.points);
+          }
+        }
+        const points = isCategorical
           ? layer.points
-              .map((point, index) => ({
-                x: index,
-                y: Number.parseFloat(point.y),
-                label: point.x ?? '',
-              }))
+              .map((point, index) => {
+                const y = parseScore(point.y);
+                const yMin = useRange ? parseScore(point.yMin) : y;
+                const yMax = useRange ? parseScore(point.yMax) : y;
+                const min = yMin ?? y ?? 0;
+                const max = yMax ?? y ?? min;
+                const mid = y ?? (min + max) / 2;
+                return {
+                  x: index,
+                  y: mid,
+                  yMin: min,
+                  yMax: max,
+                  label: point.x ?? '',
+                };
+              })
               .filter((point) => Number.isFinite(point.y))
           : layer.points
               .map((point) => ({
@@ -829,7 +934,27 @@
         const scaleX = (value) => padding.left + ((value - minX) / domainX) * width;
         const scaleY = (value) => padding.top + (1 - clamp(value, 0, 1)) * height;
 
-        if (points.length > 1) {
+        if (isCategorical) {
+          const bandWidth = points.length ? width / points.length : width;
+          const boxWidth = Math.min(40, bandWidth * 0.6);
+          points.forEach((point) => {
+            const x = scaleX(point.x);
+            const top = scaleY(point.yMax);
+            const bottom = scaleY(point.yMin);
+            const boxHeight = Math.max(2, bottom - top);
+            ctx.fillStyle = '#bfdbfe';
+            ctx.strokeStyle = '#2563eb';
+            ctx.lineWidth = 1;
+            ctx.fillRect(x - boxWidth / 2, top, boxWidth, boxHeight);
+            ctx.strokeRect(x - boxWidth / 2, top, boxWidth, boxHeight);
+            ctx.strokeStyle = '#111111';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x - boxWidth / 2, scaleY(point.y));
+            ctx.lineTo(x + boxWidth / 2, scaleY(point.y));
+            ctx.stroke();
+          });
+        } else if (points.length > 1) {
           ctx.strokeStyle = '#3b82f6';
           ctx.lineWidth = 2;
           ctx.beginPath();
@@ -854,7 +979,7 @@
           });
         }
 
-        const xTicks = isQualitative
+        const xTicks = isCategorical
           ? points.map((point) => point.x)
           : points.length
           ? [minX, (minX + maxX) / 2, maxX]
@@ -882,7 +1007,7 @@
           ctx.moveTo(x, padding.top + height);
           ctx.lineTo(x, padding.top + height + 4);
           ctx.stroke();
-          if (isQualitative) {
+          if (isCategorical) {
             const label = points.find((point) => point.x === tick)?.label || '';
             ctx.fillText(label, x, padding.top + height + 8);
           } else {
@@ -925,7 +1050,14 @@
           if (!curve) {
             return;
           }
-          curve.xType = curveXType.value;
+          curve.xType = normalizeCurveType(curveXType.value);
+          const isCategorical = curve.xType === 'categorical';
+          if (isCategorical && curve.indexRange == null) {
+            curve.indexRange = true;
+          }
+          if (!isCategorical) {
+            curve.indexRange = false;
+          }
           renderCurveTable();
           renderCurveChart();
         });
@@ -1033,9 +1165,6 @@
           if (addButton) {
             addButton.disabled = true;
           }
-          if (resetButton) {
-            resetButton.disabled = true;
-          }
           const emptyRow = document.createElement('tr');
           emptyRow.className = 'empty-row';
           const emptyCell = document.createElement('td');
@@ -1056,9 +1185,6 @@
         }
         if (addButton) {
           addButton.disabled = false;
-        }
-        if (resetButton) {
-          resetButton.disabled = false;
         }
 
         buildSummary();
@@ -1382,17 +1508,6 @@
         scenario.metricProfiles[value] = defaultProfileId;
         ensureCurve(scenario, value);
         addSelect.value = '';
-        renderTable();
-      });
-
-      resetButton.addEventListener('click', () => {
-        const scenario = getActiveScenario();
-        if (!scenario) {
-          return;
-        }
-        scenario.metricIds = [];
-        scenario.fieldValues = {};
-        scenario.metricProfiles = {};
         renderTable();
       });
 

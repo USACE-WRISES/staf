@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Slow, natural bend movement matches nearby reference. Criteria: Cutoffs rare; migration rate near reference.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Slightly faster or constrained migration; occasional cutoffs. Criteria: Minor departure from reference behavior.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Noticeably accelerated migration or several cutoffs in recent decades. Criteria: Migration about 2-3x reference or chute cutoffs common.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Very rapid migration, avulsions, or channel jumps. Criteria: Frequent or large cutoffs; path strongly out of character for setting.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-channel-and-floodplain-dynamics-bank-migration-and-meander-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-channel-and-floodplain-dynamics-bank-migration-and-meander-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-bank-migration-and-meander-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-channel-and-floodplain-dynamics-bank-migration-and-meander-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "channel-and-floodplain-dynamics-bank-migration-and-meander"
+}

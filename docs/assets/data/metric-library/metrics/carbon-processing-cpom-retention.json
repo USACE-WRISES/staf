@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Abundant CPOM retention with stable leaf packs typical for the system."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Bed largely bare with thin organic film or black, anoxic conditions<br>Criteria: No effective retention or severe overload causing anoxia"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Some retention but partially flushed out."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Only scattered leaves on bars or in eddies. Bed often scoured clean<br>Criteria: Sparse organic matter and limited retention"
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Sparse organic matter and limited retention."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Essentially no retained organic matter, or severe overload causing anoxia risk."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Leaf packs present but many flush out after moderate storms<br>Criteria: Some retention with partial flushing"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Stable leaf packs lodged behind wood and in low-velocity pockets along most of the reach<br>Criteria: Abundant CPOM retention and multiple debris accumulations typical for forested systems"
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-carbon-processing-cpom-retention"
+          "curve-carbon-processing-cpom-retention-rapid"
         ]
       }
     }
@@ -69,7 +74,10 @@
     "planform complexity from imagery as supporting context."
   ],
   "tags": [
+    "Carbon processing",
     "Physicochemistry",
-    "Carbon processing"
+    "physicochemistry",
+    "sfari",
+    "rapid"
   ]
 }

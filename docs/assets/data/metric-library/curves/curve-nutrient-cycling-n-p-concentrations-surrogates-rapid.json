@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: TN ~0.5 mg/L and TP ~0.03 mg/L. Criteria: Near low to moderate trophic benchmarks",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: TN ~0.7-1.0 mg/L or TP ~0.05-0.075 mg/L. Criteria: Slightly elevated nutrients",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: TN ~1.0-1.5 mg/L or TP ~0.075-0.10 mg/L. Criteria: Marked elevation",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: TN > 1.5 mg/L or TP > 0.10 mg/L. Criteria: Strong enrichment",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "nutrient-cycling-n-p-concentrations-surrogates"
+}

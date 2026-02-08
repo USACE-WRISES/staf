@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-channel-degradation-incision",
+  "name": "Channel Degradation (Incision)",
+  "discipline": "Geomorphology",
+  "function": "Sediment Continuity",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+  "descriptionMarkdown": "Bed is stable, with no active incision disconnecting floodplain unless minor incision is normal.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Cross-section repeat survey or visual headcut",
+  "inputs": [
+    {
+      "label": "Channel Degradation (Incision)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Multiple large active headcuts. Floodplain largely disconnected.<br>Criteria: ER < 1.4 reach-wide. Widespread incision (Schumm et al., 1984; Rosgen 2006)."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: High banks and lowered bed. One to two moderate headcuts migrating.<br>Criteria: ER < 1.4. Observable upstream migration of headcuts (Simon & Rinaldi 2006)."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Localized bed lowering. One small headcut with vegetation establishing.<br>Criteria: ER ~1.4-2.2. Limited headcut activity (Rosgen 1996, 2006)."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Low banks with inset benches. No active headcuts observed.<br>Criteria: ER > 2.2. No active headcuts (Rosgen 1996, 2006)."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-channel-degradation-incision-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "geomorphology"
+  ],
+  "status": "active"
+}

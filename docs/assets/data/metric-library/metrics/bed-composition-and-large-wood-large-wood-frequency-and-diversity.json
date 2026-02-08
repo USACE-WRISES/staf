@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "bed-composition-and-large-wood-large-wood-frequency-and-diversity",
+  "name": "Large Wood Frequency and Diversity",
+  "discipline": "Geomorphology",
+  "function": "Bed Composition and Large Wood",
+  "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+  "descriptionMarkdown": "Large wood abundance and the presence of key pieces support pools, bars, and habitat diversity; expectations vary by stream size and region.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Walk a representative reach and rate wood abundance in broad bins; note key pieces/rootwads/jams; use aerial imagery for visible jams and compare to reference conditions.",
+  "inputs": [
+    {
+      "label": "Large Wood Frequency and Diversity",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Almost no large wood where expected.<br>Criteria: No key pieces or jams; far below reference unless naturally low wood."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Very little wood; mostly small/decayed pieces.<br>Criteria: Few or no key pieces; limited hydraulic influence."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Moderate wood; some larger pieces but patchy.<br>Criteria: Slightly below reference; habitat added but less consistent."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Abundant large wood with key pieces/rootwads or small jams.<br>Criteria: Meets upper-range reference for density and variety."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-bed-composition-and-large-wood-large-wood-frequency-and-diversity-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "geomorphology"
+  ],
+  "status": "active"
+}

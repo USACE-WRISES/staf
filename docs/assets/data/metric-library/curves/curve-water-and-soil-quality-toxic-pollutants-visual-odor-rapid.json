@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: No oily sheen, staining, or chemical odor. Soils appear natural and intact. No impairment listings. Criteria: No visible contamination indicators or known exceedances.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Occasional faint odor near a storm outfall or small dump pile on the floodplain. Criteria: Minor localized inputs or mild odor only.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Stained soils, debris, or chemical odor near developed or industrial areas. Located downstream of a listed contaminated site. Criteria: Recognized contamination risk or known moderate contamination.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Strong odor, visible seepage, or listed hazardous site on the floodplain. Fish kill reports on record. Criteria: Severe or chronic contamination.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-water-and-soil-quality-toxic-pollutants-visual-odor-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-water-and-soil-quality-toxic-pollutants-visual-odor-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-water-and-soil-quality-toxic-pollutants-visual-odor-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-water-and-soil-quality-toxic-pollutants-visual-odor-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "water-and-soil-quality-toxic-pollutants-visual-odor"
+}

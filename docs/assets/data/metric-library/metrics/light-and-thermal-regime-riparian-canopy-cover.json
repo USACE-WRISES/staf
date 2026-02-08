@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-riparian-canopy-cover",
+  "name": "Riparian Canopy Cover",
+  "discipline": "Physicochemistry",
+  "function": "Light and Thermal Regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Shade is sufficient for this stream type, matching historical conditions unless naturally open.",
+  "methodContextMarkdown": "Context: F\n\nMethod: D",
+  "howToMeasureMarkdown": "LiDAR or hemispherical photo shade percent",
+  "inputs": [
+    {
+      "label": "Riparian Canopy Cover",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Cleared banks and open valley floor in a historically forested setting.<br>Criteria: <25% shade. Note that excessive shade would be flagged only in historically open systems."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Fragmented tree line with long open reaches beside pasture.<br>Criteria: 25-50% shade."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Mixed canopy with gaps near crossings and meadows.<br>Criteria: 50-75% shade."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Closed canopy of mature hardwoods and conifers. Continuous overchannel foliage.<br>Criteria: 75-100% shade where forested reference conditions are expected."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-riparian-canopy-cover-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

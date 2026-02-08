@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: No headcuts mapped in imagery or field. Old steps fully vegetated. Criteria: No active headcuts.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: One small local knickpoint at a tributary junction with little change between dates. Criteria: Localized feature with limited progression.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Headcut with fresh plunge pool and exposed strata observed in two locations. Upstream migration evident between image years. Criteria: One to two moderate, actively migrating headcuts.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Several large headcuts marching upstream across the reach with widespread bank failures above cuts. Criteria: Multiple or large active headcuts with rapid advance.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-channel-evolution-incision-trend-headcuts-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-channel-evolution-incision-trend-headcuts-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-channel-evolution-incision-trend-headcuts-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-channel-evolution-incision-trend-headcuts-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "channel-evolution-incision-trend-headcuts"
+}

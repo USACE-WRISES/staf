@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "<2 mg/L diurnal swing and no frequent hypoxia."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: DO dips below 3 mg/L and fish stress observed.<br>Criteria: < 3 mg/L dangerously low."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "2-4 mg/L swing with occasional stress."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Night minima 3-5 mg/L during warm periods.<br>Criteria: 3-5 mg/L frequent stress."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "4-6 mg/L swing and borderline low DO at night."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": ">6 mg/L swing or frequent dips below 3 mg/L."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: DO commonly 5-6 mg/L in late summer.<br>Criteria: 5-6 mg/L borderline."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: DO readings consistently above 6 mg/L. No recorded night-time dips.<br>Criteria: > 6 mg/L consistently."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-nutrient-cycling-do-fluctuation"
+          "curve-nutrient-cycling-do-fluctuation-rapid"
         ]
       }
     }
@@ -68,7 +73,10 @@
     "state continuous monitoring networks (where available)."
   ],
   "tags": [
+    "Nutrient cycling",
     "Physicochemistry",
-    "Nutrient cycling"
+    "physicochemistry",
+    "sfari",
+    "rapid"
   ]
 }

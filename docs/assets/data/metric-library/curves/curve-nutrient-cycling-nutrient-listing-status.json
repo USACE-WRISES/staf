@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-nutrient-cycling-nutrient-listing-status",
-  "metricId": "nutrient-cycling-nutrient-listing-status",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-nutrient-cycling-nutrient-listing-status-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-nutrient-cycling-nutrient-listing-status-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "No known nutrient impairment and monitoring does not indicate persistent issues."
+              "description": "No known nutrient impairment and monitoring does not indicate persistent issues.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Not listed, but limited data or occasional elevated indicators."
+              "description": "Not listed, but limited data or occasional elevated indicators.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Nutrient impairment is documented or listed for part of the reach or assessment unit."
+              "description": "Nutrient impairment is documented or listed for part of the reach or assessment unit.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Nutrient impairment is documented or listed with persistent symptoms such as frequent blooms."
+              "description": "Nutrient impairment is documented or listed with persistent symptoms such as frequent blooms.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-nutrient-cycling-nutrient-listing-status-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-nutrient-cycling-nutrient-listing-status-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-nutrient-cycling-nutrient-listing-status-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-nutrient-cycling-nutrient-listing-status",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "nutrient-cycling-nutrient-listing-status"
 }

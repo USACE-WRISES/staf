@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: HEC-RAS 2D shows the floodplain and backwaters inundate at ~Q2 with 0.3-0.6 m depths. Criteria: 1-2 year floods inundate side and backwaters.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Inundation begins near ~Q3-Q5 with patchy coverage. Criteria: 3-5 year floods required for broad access.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Little inundation until ~Q10. Backwaters remain dry in moderate events. Criteria: ~10 year event needed for access.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: No inundation until very large floods because of levees and incision. Criteria: Only extreme events produce inundation.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-floodplain-connectivity-lateral-floodplain-inundation-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-floodplain-connectivity-lateral-floodplain-inundation-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-floodplain-connectivity-lateral-floodplain-inundation-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-floodplain-connectivity-lateral-floodplain-inundation-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "floodplain-connectivity-lateral-floodplain-inundation"
+}

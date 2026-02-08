@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Bed mobilizes at appropriate flows for the channel type, often near bankfull."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Bed rarely moves even in large events, or reworks dramatically during modest events.<br>Criteria: Extreme mismatch"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Slight mismatch. Bed moves below or above expected flows."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Bed stays locked through multiple moderate floods, or mobilizes during sub-bankfull flows every season.<br>Criteria: Often locked or often scoured"
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Marked mismatch. Bed is often locked or frequently scoured."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Extreme mismatch. Bed rarely moves or is reworked by small floods."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Motion occurs somewhat below or above bankfull. Habitat still diverse but trending.<br>Criteria: Slightly off"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Painted tracers or pebble counts indicate surface mobility near bankfull. Historic records show similar behavior.<br>Criteria: Motion near bankfull (~1-2 yr)"
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-high-flow-dynamics-bed-mobilization-frequency"
+          "curve-high-flow-dynamics-bed-mobilization-frequency-rapid"
         ]
       }
     }
@@ -69,7 +74,10 @@
     "Pfankuch stability checks (where available)."
   ],
   "tags": [
+    "High flow dynamics",
     "Hydraulics",
-    "High flow dynamics"
+    "hydraulics",
+    "sfari",
+    "rapid"
   ]
 }

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-flow-permanence",
+  "name": "Flow permanence",
+  "discipline": "Hydrology",
+  "function": "Streamflow Regime",
+  "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+  "descriptionMarkdown": "Flow permanence describes whether overall flow duration (ephemeral, intermittent, or perennial) and baseflow conditions match the expected natural regime, using SDAM class, streambed vegetation indicators, mean annual flow statistics, and where available, flowing-days data.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Use weight-of-evidence: (1) apply regional SDAM to classify flow duration; (2) estimate streambed rooted-vegetation cover/type and compare to expected class; (3) compare current vs baseline mean annual flow (percent difference); (4) where available, compute annual flowing days from loggers or gages and compare to reference. Score based on consistency across lines of evidence.",
+  "inputs": [
+    {
+      "label": "Flow permanence",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Major regime shift across lines of evidence.<br>Criteria: Historically perennial reach now intermittent/ephemeral, >50% change in mean annual flow or flowing days, and vegetation contradicts expected scour/inundation."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Substantial sustained shift in dryness or baseflow.<br>Criteria: SDAM class trending away from reference or 20-50% change in mean annual flow/flowing days; vegetation suggests longer wet or dry intervals."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Minor but consistent departures across indicators.<br>Criteria: About 10-20% change in mean annual flow or flowing days, or slightly more/less bed vegetation than expected."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: SDAM class, bed vegetation, mean annual flow, and flowing-days data (if available) match reference.<br>Criteria: Flow duration class matches expected; mean annual flow and flowing days within ~10% of baseline."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-flow-permanence-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

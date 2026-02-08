@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-and-floodplain-dynamics-bank-erosion-potential",
+  "name": "Bank Erosion Potential",
+  "discipline": "Geomorphology",
+  "function": "Channel and Floodplain Dynamics",
+  "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
+  "descriptionMarkdown": "Integrates bank geometry, rooting, surface protection, raw or failing banks, and hardening to summarize erosion risk and sediment delivery.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Score BEHI metrics (bank height ratio, rooting depth/density, angle, protection); map raw/slumping/undercut sections and percent eroding bank length; classify protection types; support with imagery.",
+  "inputs": [
+    {
+      "label": "Bank Erosion Potential",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Very high BEHI; >50% bankline eroding or failing; failing armor.<br>Criteria: Extensive bare/slumped banks and deteriorating protection."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Many long raw sections; high BEHI; widespread erosion.<br>Criteria: Large portions of bankline actively eroding or failing."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Patchy vegetation and moderate BEHI; some raw or slumping sections.<br>Criteria: Noticeable but limited eroding length."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Well-vegetated banks with low BEHI; few raw spots.<br>Criteria: Only small, scattered eroding segments that recover quickly."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-bank-erosion-potential-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "geomorphology"
+  ],
+  "status": "active"
+}

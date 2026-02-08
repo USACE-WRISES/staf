@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-local-runoff-diversions",
+  "name": "Local runoff diversions",
+  "discipline": "Hydrology",
+  "function": "Reach Inflow",
+  "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+  "descriptionMarkdown": "Diversions/returns are minimal, flow remains near natural regime without artificial additions/withdrawals.",
+  "methodContextMarkdown": "Context: W\n\nMethod: D",
+  "howToMeasureMarkdown": "Review water-rights / ditch shapefiles",
+  "inputs": [
+    {
+      "label": "Local runoff diversions",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Large or chronic diversions or major returns that alter the flow regime<br>Criteria: Large or chronic diversions or major returns that alter the flow regime"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Moderate diversions or large returns that cause seasonal stress<br>Criteria: Moderate diversions or large returns that cause seasonal stress"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Minor ditches or returns with limited effect<br>Criteria: Minor ditches or returns with limited effect"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Withdrawals and return flows near the reach<br>Criteria: No significant withdrawals or returns"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-local-runoff-diversions-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-culvert-road-crossing-passability",
+  "name": "Culvert/Road Crossing Passability",
+  "discipline": "Biology",
+  "function": "Watershed Connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "Crossings allow aquatic organism passage, unless perched/undersized culverts are normal.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Culvert slope, outlet drop, embed check",
+  "inputs": [
+    {
+      "label": "Culvert/Road Crossing Passability",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Many perched pipes and long smooth boxes with no bed material.<br>Criteria: <20% passable. Multiple perched culverts hamper movement."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Several perched culverts and steep barrels concentrate flow and block passage.<br>Criteria: About 20-50% passable."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Most crossings passable. A few show minor outlet drops or smooth barrels.<br>Criteria: About 50-80% passable."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Crossings are embedded and aligned with natural bed. No outlet drops.<br>Criteria: 80-100% stream continuity at crossings."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-culvert-road-crossing-passability-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}
