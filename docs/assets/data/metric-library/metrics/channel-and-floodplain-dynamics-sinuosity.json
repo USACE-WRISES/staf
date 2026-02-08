@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "About 1.2-1.5, or consistent with local reference for the stream type."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Channelized or straight through a meander belt.<br>Criteria: Sinuosity <1.05 where meanders are expected."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "1.1-1.2."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Mostly straight with infrequent bends.<br>Criteria: Sinuosity ~1.05-1.1."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "1.05-1.1."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "<1.05 where meanders are expected."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Gentle bends with long straight runs.<br>Criteria: Sinuosity ~1.1-1.2."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Meanders occupy valley floor; bars well developed.<br>Criteria: Sinuosity ~1.2-1.5 or matches local reference."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-channel-and-floodplain-dynamics-sinuosity"
+          "curve-channel-and-floodplain-dynamics-sinuosity-rapid"
         ]
       }
     }
@@ -67,7 +72,10 @@
     "Rosgen (2006)."
   ],
   "tags": [
+    "Channel and floodplain dynamics",
     "Geomorphology",
-    "Channel and floodplain dynamics"
+    "geomorphology",
+    "sfari",
+    "rapid"
   ]
 }

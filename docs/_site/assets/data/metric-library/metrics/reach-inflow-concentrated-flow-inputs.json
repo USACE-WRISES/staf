@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "0-1 outfalls or ditches per 100 m."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Outfalls or ditches per 100 m<br>Criteria: >5"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "2-3 per 100 m."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Outfalls or ditches per 100 m<br>Criteria: 4-5"
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "4-5 per 100 m."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": ">5 per 100 m, or large storm drains."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Outfalls or ditches per 100 m<br>Criteria: 2-3"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Outfalls or ditches per 100 m<br>Criteria: 0-1"
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-reach-inflow-concentrated-flow-inputs"
+          "curve-reach-inflow-concentrated-flow-inputs-rapid"
         ]
       }
     }
@@ -70,6 +75,9 @@
   ],
   "tags": [
     "Hydrology",
-    "Reach inflow"
+    "Reach inflow",
+    "hydrology",
+    "sfari",
+    "rapid"
   ]
 }

@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Stable leaf packs lodged behind wood and in low-velocity pockets along most of the reach Criteria: Abundant CPOM retention and multiple debris accumulations typical for forested systems",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Leaf packs present but many flush out after moderate storms Criteria: Some retention with partial flushing",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Only scattered leaves on bars or in eddies. Bed often scoured clean Criteria: Sparse organic matter and limited retention",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Bed largely bare with thin organic film or black, anoxic conditions Criteria: No effective retention or severe overload causing anoxia",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-carbon-processing-cpom-retention-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-carbon-processing-cpom-retention-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-carbon-processing-cpom-retention-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-carbon-processing-cpom-retention-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "carbon-processing-cpom-retention"
+}

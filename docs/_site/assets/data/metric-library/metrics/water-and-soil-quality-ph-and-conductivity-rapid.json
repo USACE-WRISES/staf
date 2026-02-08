@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-ph-and-conductivity-rapid",
+  "name": "pH and Conductivity (rapid)",
+  "discipline": "Physicochemistry",
+  "function": "Water and Soil Quality",
+  "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+  "descriptionMarkdown": "Values near ~6.5-8.5/local norms, no extreme shift unless naturally acidic (bog) or alkaline (arid).",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Handheld meter spot readings",
+  "inputs": [
+    {
+      "label": "pH and Conductivity (rapid)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: pH 4.8 or 10.2. Conductivity > 2000 uS/cm.<br>Criteria: Extreme pH or very high conductance."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: pH 5.8 or 9.2. Conductivity ~1000 uS/cm.<br>Criteria: Marked deviation or 800-1500 uS/cm."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: pH 6.3 or 8.7 with otherwise stable chemistry.<br>Criteria: Slightly off-range or mild elevation."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: pH 7.4. Specific conductance 250 uS/cm.<br>Criteria: pH ~6.5-8.5 and cond. < 500 uS/cm typical."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-ph-and-conductivity-rapid-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

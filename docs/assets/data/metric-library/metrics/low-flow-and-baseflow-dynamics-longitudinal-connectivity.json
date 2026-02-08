@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-longitudinal-connectivity",
+  "name": "Longitudinal connectivity",
+  "discipline": "Hydraulics",
+  "function": "Low Flow and Baseflow Dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Degree to which residual pools and riffle segments remain linked by continuous surface flow along the thalweg at normal low flow.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Walk the reach at low flow; count pools and note whether each connects to the next by surface flow. Map continuous wetted thalweg and dry gaps; confirm with late-season imagery and shallow-sill checks.",
+  "inputs": [
+    {
+      "label": "Longitudinal connectivity",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Long dry segments; pools isolated.<br>Criteria: <25% connected; no continuous surface flow."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Several dry gaps; many pools isolated.<br>Criteria: About 25-50% connected; riffles mostly dry."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Some dry gaps but many pools still linked.<br>Criteria: About 50-75% of pools connected with short dry gaps."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Most residual pools connected with continuous wetted thalweg.<br>Criteria: >75% of pools connected; few or no dry gaps."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-longitudinal-connectivity-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydraulics"
+  ],
+  "status": "active"
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-algal-growth-light-limited",
+  "name": "Algal Growth (light-limited)",
+  "discipline": "Physicochemistry",
+  "function": "Light and Thermal Regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Moderate growth matches local light regime, unless historically high/low (e.g., blackwater).",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Visual percent cover or periphyton biomass",
+  "inputs": [
+    {
+      "label": "Algal Growth (light-limited)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Thick blooms and scums that blanket the bed and trap fine sediment.<br>Criteria: Dense bloom or scum overshadowing substrate."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Broad patches of filamentous algae covering riffles.<br>Criteria: Large mats partially impair habitat."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Light filaments on sunlit margins.<br>Criteria: Slightly elevated algae coverage."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Thin periphyton film on stable cobbles. No mats.<br>Criteria: Minimal algae. No nuisance mats."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-algal-growth-light-limited-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Continuous wetted thread with short dry patches; pools hold water. Criteria: Wetted length >75% or exposed bed <25%, or Q90/Q10 within ~20% of reference.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Several dry riffles but pools connected; moderate depth. Criteria: Wetted length about 50-75% or exposed bed 25-50%, or Q90/Q10 within ~20-30% of reference.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Mostly isolated pools with narrow trickles; shallow depths. Criteria: Wetted length about 25-50% or exposed bed 50-75%, or Q90/Q10 differ ~30-50%.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Disconnected, very shallow pools; bed mostly exposed. Criteria: Wetted length 75%, or Q90/Q10 differ >50%.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-low-flow-and-baseflow-dynamics-low-flow-depth-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-low-flow-and-baseflow-dynamics-low-flow-depth-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-low-flow-depth-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-low-flow-depth-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "low-flow-and-baseflow-dynamics-low-flow-depth"
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-substrate-microhabitat-diversity",
+  "name": "Substrate/Microhabitat Diversity",
+  "discipline": "Biology",
+  "function": "Habitat Provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "Varied substrates (gravel, cobble, wood) provide multiple habitats, unless uniform is normal.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Substrate class tally and wood/leaf packs",
+  "inputs": [
+    {
+      "label": "Substrate/Microhabitat Diversity",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Straight, entrenched, uniform channel with little cover.<br>Criteria: Very uniform channel. Limited structural diversity."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Long uniform glide or sand bed with occasional shallow run.<br>Criteria: Mostly uniform. Only 1-2 distinct features."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Riffle and run common. Pools intermittent. Sparse cover.<br>Criteria: Some variety but missing key elements."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Riffles, runs, pools, and large wood recur across the reach.<br>Criteria: Multiple habitat types well represented."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-substrate-microhabitat-diversity-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

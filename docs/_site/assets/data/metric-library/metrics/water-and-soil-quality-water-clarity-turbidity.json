@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-water-clarity-turbidity",
+  "name": "Water Clarity/Turbidity",
+  "discipline": "Physicochemistry",
+  "function": "Water and Soil Quality",
+  "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+  "descriptionMarkdown": "Appears acceptable, minimal turbidity matching local reference conditions.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Tube / meter NTU vs reference",
+  "inputs": [
+    {
+      "label": "Water Clarity/Turbidity",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Chronically muddy water. Visible oily sheen or scum in slack water.<br>Criteria: Persistently muddy or sheen present."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Cloudy water persists during baseflow. Fine sediment coats substrate.<br>Criteria: Persistent cloudiness at baseflow."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Slight yellow-brown tint after storms that clears within a day.<br>Criteria: Slight turbidity or color that is short-lived."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Water is clear at baseflow and similar to a local reference reach. Bottom is visible at knee depth.<br>Criteria: Mostly clear or only slightly cloudy at baseflow."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-water-clarity-turbidity-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

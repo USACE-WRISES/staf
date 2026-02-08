@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-aquatic-invertebrate-community",
+  "name": "Aquatic Invertebrate Community",
+  "discipline": "Biology",
+  "function": "Community Dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "IBI/multi-metric shows high integrity if historically expected, unless ephemeral dryness limits it.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Standard IBI score from sampling",
+  "inputs": [
+    {
+      "label": "Aquatic Invertebrate Community",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: No EPT. Mostly tolerant midges and worms.<br>Criteria: Zero EPT orders present."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Only one EPT order present.<br>Criteria: One EPT order present."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Two of three EPT orders present.<br>Criteria: Two EPT orders present."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Mayflies, stoneflies, and caddisflies found in kick sample.<br>Criteria: All three EPT orders present with multiple taxa."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-aquatic-invertebrate-community-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

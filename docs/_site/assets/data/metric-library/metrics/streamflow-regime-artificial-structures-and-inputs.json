@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-artificial-structures-and-inputs",
+  "name": "Artificial structures and inputs",
+  "discipline": "Hydrology",
+  "function": "Streamflow Regime",
+  "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+  "descriptionMarkdown": "Documents dams, weirs, levees, diversions, pumps, and returns that alter hydrograph timing, peaks, baseflow, or floodplain access.",
+  "methodContextMarkdown": "Context: C\n\nMethod: D",
+  "howToMeasureMarkdown": "Map regulating structures and inputs in the reach and upstream area; record type, size, proximity, and operations; note large wastewater returns. Use NID, NLD, FERC, state dam lists, and local agencies; where flow data exist, review IHA departures.",
+  "inputs": [
+    {
+      "label": "Artificial structures and inputs",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Multiple or large structures strongly regulate or dewater.<br>Criteria: Flattened peaks, daily stage swings, or widespread IHA departures."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: One or two moderate structures or diversions noticeably alter flows.<br>Criteria: Reduced floodplain access, altered baseflow, or shifted seasonal timing."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One small structure or minor diversion with limited local effects.<br>Criteria: Localized regulation or slight departures in IHA components."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: No major regulating structures or inputs affecting the reach.<br>Criteria: No dams, levees, or diversions; IHA components generally within reference."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-artificial-structures-and-inputs-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

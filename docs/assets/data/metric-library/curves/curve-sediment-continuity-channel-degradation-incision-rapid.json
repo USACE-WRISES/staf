@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Low banks with inset benches. No active headcuts observed. Criteria: ER > 2.2. No active headcuts (Rosgen 1996, 2006).",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Localized bed lowering. One small headcut with vegetation establishing. Criteria: ER ~1.4-2.2. Limited headcut activity (Rosgen 1996, 2006).",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: High banks and lowered bed. One to two moderate headcuts migrating. Criteria: ER < 1.4. Observable upstream migration of headcuts (Simon & Rinaldi 2006).",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Multiple large active headcuts. Floodplain largely disconnected. Criteria: ER < 1.4 reach-wide. Widespread incision (Schumm et al., 1984; Rosgen 2006).",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-sediment-continuity-channel-degradation-incision-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-sediment-continuity-channel-degradation-incision-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-sediment-continuity-channel-degradation-incision-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-sediment-continuity-channel-degradation-incision-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "sediment-continuity-channel-degradation-incision"
+}

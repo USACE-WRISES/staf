@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-light-and-thermal-regime-stream-temperature",
-  "metricId": "light-and-thermal-regime-stream-temperature",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-light-and-thermal-regime-stream-temperature-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-light-and-thermal-regime-stream-temperature-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Slightly exceeds thresholds occasionally."
+              "description": "Slightly exceeds thresholds occasionally.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Frequently near or above thresholds."
+              "description": "Frequently near or above thresholds.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Consistently high or potentially lethal temperatures."
+              "description": "Consistently high or potentially lethal temperatures.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled temperatures (where available)."
+              "description": "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled temperatures (where available).",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-light-and-thermal-regime-stream-temperature-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-light-and-thermal-regime-stream-temperature-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-light-and-thermal-regime-stream-temperature-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-light-and-thermal-regime-stream-temperature",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "light-and-thermal-regime-stream-temperature"
 }

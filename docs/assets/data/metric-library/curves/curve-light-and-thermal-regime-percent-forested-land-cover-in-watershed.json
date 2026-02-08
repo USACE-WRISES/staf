@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-light-and-thermal-regime-percent-forested-land-cover-in-watershed",
-  "metricId": "light-and-thermal-regime-percent-forested-land-cover-in-watershed",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-light-and-thermal-regime-percent-forested-land-cover-in-watershed-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-light-and-thermal-regime-percent-forested-land-cover-in-watershed-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "High canopy cover, often 75-100% shade in shaded systems, or consistent with reference for the region."
+              "description": "High canopy cover, often 75-100% shade in shaded systems, or consistent with reference for the region.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Moderate canopy cover, often 50-75% shade."
+              "description": "Moderate canopy cover, often 50-75% shade.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Low canopy cover, often 25-50% shade."
+              "description": "Low canopy cover, often 25-50% shade.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Very low canopy cover, often <25% shade where shading is expected."
+              "description": "Very low canopy cover, often <25% shade where shading is expected.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-light-and-thermal-regime-percent-forested-land-cover-in-watershed-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-light-and-thermal-regime-percent-forested-land-cover-in-watershed-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-light-and-thermal-regime-percent-forested-land-cover-in-watershed-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-light-and-thermal-regime-percent-forested-land-cover-in-watershed",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "light-and-thermal-regime-percent-forested-land-cover-in-watershed"
 }

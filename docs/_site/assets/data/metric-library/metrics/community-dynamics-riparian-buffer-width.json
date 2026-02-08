@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "About 30 m wide corridor with multi-layer vegetation, or local reference corridor."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Little native vegetation. Banks mostly lawn or invasives.<br>Criteria: Corridor very narrow or absent. Native plants largely missing."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "15-30 m or partial coverage."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Thin or patchy vegetation along banks.<br>Criteria: Narrow corridor. Fragmented native cover with common invasives."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "5-15 m with minimal corridor."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "<5 m or nearly absent."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Mostly vegetated corridor with some gaps.<br>Criteria: Moderate width and structure. Some invasive patches present."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Continuous native trees, shrubs, and groundcover.<br>Criteria: Wide, intact native corridor with minimal invasives."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-community-dynamics-riparian-buffer-width"
+          "curve-community-dynamics-riparian-buffer-width-rapid"
         ]
       }
     }
@@ -70,6 +75,9 @@
   ],
   "tags": [
     "Biology",
-    "Community dynamics"
+    "Community dynamics",
+    "biology",
+    "sfari",
+    "rapid"
   ]
 }

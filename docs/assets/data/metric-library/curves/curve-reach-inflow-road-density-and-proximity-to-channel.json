@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-reach-inflow-road-density-and-proximity-to-channel",
-  "metricId": "reach-inflow-road-density-and-proximity-to-channel",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-reach-inflow-road-density-and-proximity-to-channel-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-reach-inflow-road-density-and-proximity-to-channel-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "<0.5 km roads per km2, with few roads close to the channel."
+              "description": "<0.5 km roads per km2, with few roads close to the channel.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "0.5-1.0 km per km2, or limited road proximity to the channel."
+              "description": "0.5-1.0 km per km2, or limited road proximity to the channel.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "1-2 km per km2, or roads commonly adjacent to the channel."
+              "description": "1-2 km per km2, or roads commonly adjacent to the channel.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": ">2 km per km2, or frequent road proximity with clear runoff and sediment delivery risk."
+              "description": ">2 km per km2, or frequent road proximity with clear runoff and sediment delivery risk.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-reach-inflow-road-density-and-proximity-to-channel-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-reach-inflow-road-density-and-proximity-to-channel-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-reach-inflow-road-density-and-proximity-to-channel-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-reach-inflow-road-density-and-proximity-to-channel",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "reach-inflow-road-density-and-proximity-to-channel"
 }

@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Meanders occupy valley floor; bars well developed. Criteria: Sinuosity ~1.2-1.5 or matches local reference.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Gentle bends with long straight runs. Criteria: Sinuosity ~1.1-1.2.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Mostly straight with infrequent bends. Criteria: Sinuosity ~1.05-1.1.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Channelized or straight through a meander belt. Criteria: Sinuosity <1.05 where meanders are expected.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-channel-and-floodplain-dynamics-sinuosity-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-channel-and-floodplain-dynamics-sinuosity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-sinuosity-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-channel-and-floodplain-dynamics-sinuosity-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "channel-and-floodplain-dynamics-sinuosity"
+}

@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": ">6 mg/L and no hypoxia."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: DO dips below 3 mg/L and fish stress observed.<br>Criteria: < 3 mg/L dangerously low."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "5-6 mg/L. Borderline."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Night minima 3-5 mg/L during warm periods.<br>Criteria: 3-5 mg/L frequent stress."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "3-5 mg/L. Frequent stress."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "<3 mg/L. High risk of acute impacts."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: DO commonly 5-6 mg/L in late summer.<br>Criteria: 5-6 mg/L borderline."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: DO readings consistently above 6 mg/L. No recorded night-time dips.<br>Criteria: > 6 mg/L consistently."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-water-and-soil-quality-dissolved-oxygen"
+          "curve-water-and-soil-quality-dissolved-oxygen-rapid"
         ]
       }
     }
@@ -69,6 +74,9 @@
   ],
   "tags": [
     "Physicochemistry",
-    "Water and soil quality"
+    "Water and soil quality",
+    "physicochemistry",
+    "sfari",
+    "rapid"
   ]
 }

@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-habitat-provision-substrate-or-microhabitat-diversity",
-  "metricId": "habitat-provision-substrate-or-microhabitat-diversity",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-habitat-provision-substrate-or-microhabitat-diversity-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-habitat-provision-substrate-or-microhabitat-diversity-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Three or more substrate classes plus organic pockets."
+              "description": "Three or more substrate classes plus organic pockets.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Two distinct substrate types."
+              "description": "Two distinct substrate types.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "One type dominates with few microhabitats."
+              "description": "One type dominates with few microhabitats.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Uniform substrate with minimal microhabitats."
+              "description": "Uniform substrate with minimal microhabitats.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-habitat-provision-substrate-or-microhabitat-diversity-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-habitat-provision-substrate-or-microhabitat-diversity-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-habitat-provision-substrate-or-microhabitat-diversity-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-habitat-provision-substrate-or-microhabitat-diversity",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "habitat-provision-substrate-or-microhabitat-diversity"
 }

@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "No major levees or walls and free lateral movement."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Both banks armored or walled for long distances. Few or no access points.<br>Criteria: Heavily walled or leveed corridor. Minimal lateral connectivity."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Some partial barriers with remaining access."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Long levees or ripraped banks on one side limit access to the floodplain in many places.<br>Criteria: Large levees hamper movement in many areas."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Large levees hamper movement in many areas."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Heavily walled or leveed corridor with minimal lateral connectivity."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Short levee segments occur, but frequent gaps allow movement to wetlands.<br>Criteria: Some partial barriers but still some access."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Banks are free of continuous levees or walls. Side channels and backwaters are accessible.<br>Criteria: No major levees or walls. Free lateral movement for semiaquatic fauna."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna"
+          "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-rapid"
         ]
       }
     }
@@ -71,6 +76,9 @@
   ],
   "tags": [
     "Biology",
-    "Watershed connectivity"
+    "Watershed connectivity",
+    "biology",
+    "sfari",
+    "rapid"
   ]
 }

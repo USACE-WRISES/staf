@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Well developed bedforms and strong potential for exchange."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Featureless, planar bed with silt cover.<br>Criteria: Bed lacks form. Exchange likely negligible."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Some bedform variety but partially uniform."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Mostly long runs. Few weak riffles.<br>Criteria: Mostly uniform habitat with limited exchange features."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Mostly uniform run with limited exchange."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Featureless or silted bed with negligible exchange."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Some riffles and shallow pools but long uniform runs between.<br>Criteria: Bedform variety present but partially uniform."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Alternating riffle-pool sequence. Distinct head drops at riffles. Patchy dunes in sand-bed reaches.<br>Criteria: Well-developed bedforms with obvious upwelling and downwelling zones."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-hyporheic-connectivity-channel-complexity-for-exchange"
+          "curve-hyporheic-connectivity-channel-complexity-for-exchange-rapid"
         ]
       }
     }
@@ -70,6 +75,9 @@
   ],
   "tags": [
     "Hydraulics",
-    "Hyporheic connectivity"
+    "Hyporheic connectivity",
+    "hydraulics",
+    "sfari",
+    "rapid"
   ]
 }

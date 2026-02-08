@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-peak-flow-capacity-morphological-check",
+  "name": "Peak Flow Capacity (Morphological Check)",
+  "discipline": "Hydraulics",
+  "function": "High Flow Dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Bankfull shear stress fits substrate/banks, indicating stable capacity.",
+  "methodContextMarkdown": "Context: C\n\nMethod: D",
+  "howToMeasureMarkdown": "Bankfull width-depth vs regional curves",
+  "inputs": [
+    {
+      "label": "Peak Flow Capacity (Morphological Check)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Highly out of family. Repeated blowouts, chute formation, or bank failures with moderate floods.<br>Criteria: Severe departure; chronic instability"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Noticeable mismatch to curves. Frequent bar growth or cutbank retreat after moderate events.<br>Criteria: Significant departure; frequent instability"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Slightly oversized or undersized relative to curves. Isolated bank slumps after moderate events.<br>Criteria: Mild departure; occasional instability"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Bankfull width and depth closely match regional curves for the drainage area and slope. Bars and banks remain stable through ~1-2 yr flows.<br>Criteria: Near regional curve; stable"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-peak-flow-capacity-morphological-check-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydraulics"
+  ],
+  "status": "active"
+}

@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "No major bar buildup or scour. Sediment load appears balanced for channel type."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Deep scour and exposed armor. Few bars remain.<br>Criteria: Shields well above critical range. Persistent over-capacity (Knighton 1998)."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Slight mismatch with minor deposition or scour."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Large new bars in straight sections. Pools infilling.<br>Criteria: Shields well below critical range. Under-capacity relative to supply."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Noticeable over or under capacity in channel sections."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Widespread bar formation or deep scouring indicating severe imbalance."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Modest bar growth in low-energy sections. Some narrowing.<br>Criteria: Shields slightly below critical range. Minor deposition."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Bars form on inner bends and migrate gradually. Pools maintained.<br>Criteria: Bankfull Shields stress ~0.03-0.06 and consistent with D50. Morphology shows balanced scour/fill (Buffington & Montgomery 1997)."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-sediment-continuity-transport-capacity"
+          "curve-sediment-continuity-transport-capacity-rapid"
         ]
       }
     }
@@ -70,6 +75,9 @@
   ],
   "tags": [
     "Geomorphology",
-    "Sediment continuity"
+    "Sediment continuity",
+    "geomorphology",
+    "sfari",
+    "rapid"
   ]
 }

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-aquatic-invertebrate-habitat",
+  "name": "Aquatic Invertebrate Habitat",
+  "discipline": "Biology",
+  "function": "Habitat Provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "Stable substrates (cobble/wood/leaf packs) exist if historically expected, unless ephemeral conditions differ.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Count stable substrate types",
+  "inputs": [
+    {
+      "label": "Aquatic Invertebrate Habitat",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Uniform sand, silt, or bedrock. No wood, leaf packs, or root structure.<br>Criteria: Very poor substrate variety and minimal invertebrate habitat."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Mostly mobile sand or silt with little wood or leaf packs.<br>Criteria: Limited stable substrate and few microhabitats."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Cobble and gravel with some roots or wood. Fines cover parts of the bed.<br>Criteria: Some substrate variety but partly limited by fines."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Stable cobble riffles with gravel pockets, root wads, leaf packs, and scattered wood.<br>Criteria: Multiple stable substrates and organic cover supporting diverse invertebrates."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-aquatic-invertebrate-habitat-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

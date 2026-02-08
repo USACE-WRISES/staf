@@ -14,7 +14,16 @@
       <aside class="metric-library-sidebar" aria-label="Metric Library">
         <div class="metric-library-header">
           <div class="metric-library-title-row">
-            <h3>Metric Library</h3>
+            <div class="metric-library-title-group">
+              <h3>Metric Library</h3>
+              <button class="metric-library-download" type="button" aria-label="Download metric library">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M12 4v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                  <path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                </svg>
+              </button>
+            </div>
             <button class="btn btn-small metric-library-close" type="button" aria-label="Close metric library">X</button>
           </div>
           <input class="metric-library-search" type="search" placeholder="Search metrics" aria-label="Search metrics" />

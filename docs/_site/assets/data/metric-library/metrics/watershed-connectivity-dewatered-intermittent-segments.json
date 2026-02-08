@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-dewatered-intermittent-segments",
+  "name": "Dewatered/Intermittent Segments",
+  "discipline": "Biology",
+  "function": "Watershed Connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "No artificial dryness in a historically perennial system, unless ephemeral dryness is normal.",
+  "methodContextMarkdown": "Context: C\n\nMethod: D",
+  "howToMeasureMarkdown": "Aerial imagery + gauge zero-flow spans",
+  "inputs": [
+    {
+      "label": "Dewatered/Intermittent Segments",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Reaches are chronically dewatered or disconnected for long periods due to withdrawals or diversions.<br>Criteria: Chronic or large-scale dewatering. Major fragmentation."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Long dry segments form in critical habitat areas during the growing season.<br>Criteria: Notable dryness or disconnection in key reaches."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Short dry patches appear during late season but reconnect after small rains.<br>Criteria: Minor dryness in small segments."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Continuous wetted channel during the expected season. No artificial withdrawals noted.<br>Criteria: No artificial dryness. Natural connectivity is maintained."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-dewatered-intermittent-segments-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

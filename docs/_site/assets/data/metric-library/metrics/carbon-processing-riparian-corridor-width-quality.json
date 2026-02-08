@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-riparian-corridor-width-quality",
+  "name": "Riparian Corridor Width/Quality",
+  "discipline": "Physicochemistry",
+  "function": "Carbon Processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Sufficient native vegetation width unless historically narrow (e.g., prairie streams).",
+  "methodContextMarkdown": "Context: F\n\nMethod: D",
+  "howToMeasureMarkdown": "Buffer width via GIS + veg class field",
+  "inputs": [
+    {
+      "label": "Riparian Corridor Width/Quality",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Cropland, pavement, or fill to the top of bank. Less than 5 m<br>Criteria: < 5 m or essentially no corridor"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Narrow grass strip or mowed edges. About 5-15 m<br>Criteria: 5-15 m and limited native diversity"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Mostly vegetated but interrupted by lawns or crossings. About 15-30 m<br>Criteria: 15-30 m with partial native cover"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Continuous native trees and shrubs on both banks at about 30 m or more<br>Criteria: Approximately >= 30 m native buffer. Diverse structure"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-riparian-corridor-width-quality-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

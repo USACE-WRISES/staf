@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Most native taxa expected for the stream type are present."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Only tolerant or non native species observed.<br>Criteria: Natives rare or absent. Community dominated by tolerant or invasive taxa."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "A few sensitive native taxa are missing."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Many sensitive natives gone. Non natives frequent.<br>Criteria: Noticeable native decline. Non natives common or co-dominant."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Several native taxa are absent and tolerant taxa dominate."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Widespread loss of native taxa with invasive or tolerant taxa dominating."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Most natives present. Some sensitive species missing.<br>Criteria: Minor native loss. Non natives present but natives still dominant."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Native fish and invertebrates common. Very few non natives seen.<br>Criteria: Native community matches reference. Non natives rare and low abundance."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-community-dynamics-native-species-presence"
+          "curve-community-dynamics-native-species-presence-rapid"
         ]
       }
     }
@@ -69,6 +74,9 @@
   ],
   "tags": [
     "Biology",
-    "Community dynamics"
+    "Community dynamics",
+    "biology",
+    "sfari",
+    "rapid"
   ]
 }

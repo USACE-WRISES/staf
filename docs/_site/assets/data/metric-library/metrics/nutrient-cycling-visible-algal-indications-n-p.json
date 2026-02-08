@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-visible-algal-indications-n-p",
+  "name": "Visible Algal Indications (N/P)",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient Cycling",
+  "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+  "descriptionMarkdown": "Algae suggests no excessive nutrients vs reference, unless historically moderate (open canopy).",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Visual algae; lab N/P if needed",
+  "inputs": [
+    {
+      "label": "Visible Algal Indications (N/P)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Thick mats and surface scum on most substrate.<br>Criteria: > 50% cover or nuisance mats"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Mats cover about one third to one half of riffles.<br>Criteria: ~30-50% cover"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Thin green filaments on stones in patches.<br>Criteria: ~10-30% cover"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Cobble substrate mostly clean. Thin biofilm only.<br>Criteria: < 10% benthic algal cover"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-visible-algal-indications-n-p-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

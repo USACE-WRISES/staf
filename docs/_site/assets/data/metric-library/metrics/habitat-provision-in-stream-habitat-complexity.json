@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Multiple habitat types well represented."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Straight, entrenched, uniform channel with little cover.<br>Criteria: Very uniform channel. Limited structural diversity."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Some variety but key elements are missing."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Long uniform glide or sand bed with occasional shallow run.<br>Criteria: Mostly uniform. Only 1-2 distinct features."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Mostly uniform with only 1-2 distinct features."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Very uniform channel with limited structural diversity."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Riffle and run common. Pools intermittent. Sparse cover.<br>Criteria: Some variety but missing key elements."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Riffles, runs, pools, and large wood recur across the reach.<br>Criteria: Multiple habitat types well represented."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-habitat-provision-in-stream-habitat-complexity"
+          "curve-habitat-provision-in-stream-habitat-complexity-rapid"
         ]
       }
     }
@@ -70,6 +75,9 @@
   ],
   "tags": [
     "Biology",
-    "Habitat provision"
+    "Habitat provision",
+    "biology",
+    "sfari",
+    "rapid"
   ]
 }

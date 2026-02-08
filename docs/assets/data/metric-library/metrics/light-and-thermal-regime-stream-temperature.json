@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Slightly exceeds thresholds occasionally."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Daily exceedance and several events approaching lethal levels.<br>Criteria: Consistently high or lethal temperatures."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Frequently near or above thresholds."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Repeated warm afternoons near or over the threshold each week.<br>Criteria: Frequent near or over threshold."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Consistently high or potentially lethal temperatures."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled temperatures (where available)."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Occasional brief exceedances during heat waves.<br>Criteria: Slightly exceeds threshold occasionally."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Logger record shows summer highs below local standard. Small diel range.<br>Criteria: Rarely surpasses local standard. For screening, <20 C in coldwater or <28 C in warmwater."
             }
           ]
         }
@@ -58,14 +63,17 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-light-and-thermal-regime-stream-temperature"
+          "curve-light-and-thermal-regime-stream-temperature-rapid"
         ]
       }
     }
   ],
   "references": [],
   "tags": [
+    "Light and thermal regime",
     "Physicochemistry",
-    "Light and thermal regime"
+    "physicochemistry",
+    "sfari",
+    "rapid"
   ]
 }

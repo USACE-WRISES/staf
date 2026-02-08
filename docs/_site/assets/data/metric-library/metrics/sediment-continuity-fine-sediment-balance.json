@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Low chronic turbidity and minimal fines, or regionally normal conditions."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Substrate largely buried in fines. Chronic turbidity even at low flow.<br>Criteria: Embeddedness > 75% (Class 4) (Sylte & Fischenich 2002)."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Minor silt layers or partial turbidity."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Riffles partly blanketed in silt after storms. Fines persist for weeks.<br>Criteria: Embeddedness 50-75% (Class 3) (Sylte & Fischenich 2002)."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "High turbidity or moderate silt coverage."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Severe siltation or turbidity that smothers substrate."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Some fines in pools and along margins. Riffles mostly clean.<br>Criteria: Embeddedness 25-50% (Class 2) (Sylte & Fischenich 2002)."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Gravel-cobble riffles with open voids. Thin or absent silt film.<br>Criteria: Embeddedness < 25% (Class 1) (Sylte & Fischenich 2002)."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-sediment-continuity-fine-sediment-balance"
+          "curve-sediment-continuity-fine-sediment-balance-rapid"
         ]
       }
     }
@@ -71,6 +76,9 @@
   ],
   "tags": [
     "Geomorphology",
-    "Sediment continuity"
+    "Sediment continuity",
+    "geomorphology",
+    "sfari",
+    "rapid"
   ]
 }

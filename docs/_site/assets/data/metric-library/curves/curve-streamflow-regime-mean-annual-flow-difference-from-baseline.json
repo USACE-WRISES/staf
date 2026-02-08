@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-streamflow-regime-mean-annual-flow-difference-from-baseline",
-  "metricId": "streamflow-regime-mean-annual-flow-difference-from-baseline",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-streamflow-regime-mean-annual-flow-difference-from-baseline-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-streamflow-regime-mean-annual-flow-difference-from-baseline-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "<10% difference from baseline."
+              "description": "<10% difference from baseline.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "10-20% difference."
+              "description": "10-20% difference.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "20-50% difference."
+              "description": "20-50% difference.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": ">50% difference. Near dewatering or strong hydropeaking."
+              "description": ">50% difference. Near dewatering or strong hydropeaking.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-streamflow-regime-mean-annual-flow-difference-from-baseline-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-streamflow-regime-mean-annual-flow-difference-from-baseline-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-streamflow-regime-mean-annual-flow-difference-from-baseline-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-streamflow-regime-mean-annual-flow-difference-from-baseline",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "streamflow-regime-mean-annual-flow-difference-from-baseline"
 }

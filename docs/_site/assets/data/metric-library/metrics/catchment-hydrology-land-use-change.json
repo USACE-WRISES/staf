@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "<5% new development or clearing, or only minor land cover shifts."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Major urban expansion or large agricultural conversion.<br>Criteria: >=30% converted"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "5-15% converted from one major land use to another."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Widespread exurban growth and clearing.<br>Criteria: ~15-30% converted"
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "15-30% converted with likely effects on infiltration or flow patterns."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": ">30% converted. Drastic alteration in runoff, infiltration, and habitat."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: New subdivisions on outskirts.<br>Criteria: 5-15% converted"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Stable land cover since 2001. Minor field rotations only.<br>Criteria: <5% area converted (e.g., 2001-2019)"
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-catchment-hydrology-land-use-change"
+          "curve-catchment-hydrology-land-use-change-rapid"
         ]
       }
     }
@@ -69,7 +74,10 @@
     "NOAA C-CAP (coastal)."
   ],
   "tags": [
+    "Catchment hydrology",
     "Hydrology",
-    "Catchment hydrology"
+    "hydrology",
+    "sfari",
+    "rapid"
   ]
 }

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "floodplain-connectivity-entrenchment-er",
+  "name": "Entrenchment (ER)",
+  "discipline": "Hydraulics",
+  "function": "Floodplain Connectivity",
+  "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
+  "descriptionMarkdown": "Channel is not deeply incised; moderate floods access a broad floodplain, matching reference conditions.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "ER = floodplain width / bankfull depth",
+  "inputs": [
+    {
+      "label": "Entrenchment (ER)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Channel is walled or deeply incised with little widening at flood-prone elevation.<br>Criteria: ER near 1.0 and confinement by levees or walls."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Three cross-sections yield ER ~ 1.2.<br>Criteria: ER < 1.4."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Representative cross-section yields ER ~ 1.7.<br>Criteria: ER ~1.4-2.2."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: LiDAR cross-sections show flood-prone width more than 2.2 times bankfull width.<br>Criteria: ER > 2.2."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-floodplain-connectivity-entrenchment-er-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydraulics"
+  ],
+  "status": "active"
+}

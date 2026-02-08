@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Clear riffle-pool or step-pool sequence with robust variety."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Flattened or artificially uniform bed.<br>Criteria: No meaningful bedform sequence."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Some diversity but partially uniform."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Mostly homogeneous bed; sequences faint or discontinuous.<br>Criteria: Minimal expression of expected units."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Mostly homogeneous bed with faint or missing sequences."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Flattened or artificially uniform bed."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Some diversity but units less distinct or irregular spacing.<br>Criteria: Partially uniform bed with intermittent units."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Clear riffle-run-pool or step-pool sequence at expected spacing.<br>Criteria: Robust bedform variety for stream type."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-bed-composition-and-large-wood-bedform-diversity"
+          "curve-bed-composition-and-large-wood-bedform-diversity-rapid"
         ]
       }
     }
@@ -69,7 +74,10 @@
     "planform metrics (for example sinuosity) as supporting context."
   ],
   "tags": [
+    "Bed composition and large wood",
     "Geomorphology",
-    "Bed composition and large wood"
+    "geomorphology",
+    "sfari",
+    "rapid"
   ]
 }

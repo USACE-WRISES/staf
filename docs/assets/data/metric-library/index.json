@@ -49,6 +49,53 @@
       "detailsRef": "metrics/population-support-amphibian-or-crayfish-presence.json"
     },
     {
+      "metricId": "population-support-amphibian-crayfish-presence",
+      "name": "Amphibian/ Crayfish Presence",
+      "discipline": "Biology",
+      "function": "Population Support",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/population-support-amphibian-crayfish-presence.json"
+    },
+    {
       "metricId": "watershed-connectivity-aquatic-connectivity-or-fish-passage",
       "name": "Aquatic connectivity or fish passage",
       "shortName": "",
@@ -104,17 +151,20 @@
       "category": "Biology",
       "tags": [
         "Biology",
-        "Population support"
+        "Population support",
+        "biology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -123,10 +173,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -135,12 +185,153 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
       "detailsRef": "metrics/population-support-aquatic-invertebrate-community.json"
+    },
+    {
+      "metricId": "community-dynamics-aquatic-invertebrate-community",
+      "name": "Aquatic Invertebrate Community",
+      "discipline": "Biology",
+      "function": "Community Dynamics",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/community-dynamics-aquatic-invertebrate-community.json"
+    },
+    {
+      "metricId": "habitat-provision-aquatic-invertebrate-habitat",
+      "name": "Aquatic Invertebrate Habitat",
+      "discipline": "Biology",
+      "function": "Habitat Provision",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/habitat-provision-aquatic-invertebrate-habitat.json"
+    },
+    {
+      "metricId": "community-dynamics-beaver-presence",
+      "name": "Beaver Presence",
+      "discipline": "Biology",
+      "function": "Community Dynamics",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/community-dynamics-beaver-presence.json"
     },
     {
       "metricId": "habitat-provision-channel-alteration-from-imagery",
@@ -237,6 +428,53 @@
       "detailsRef": "metrics/watershed-connectivity-culvert-or-road-crossing-passability.json"
     },
     {
+      "metricId": "watershed-connectivity-culvert-road-crossing-passability",
+      "name": "Culvert/Road Crossing Passability",
+      "discipline": "Biology",
+      "function": "Watershed Connectivity",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/watershed-connectivity-culvert-road-crossing-passability.json"
+    },
+    {
       "metricId": "watershed-connectivity-dewatered-or-intermittent-segments",
       "name": "Dewatered or intermittent segments",
       "shortName": "",
@@ -284,6 +522,53 @@
       "detailsRef": "metrics/watershed-connectivity-dewatered-or-intermittent-segments.json"
     },
     {
+      "metricId": "watershed-connectivity-dewatered-intermittent-segments",
+      "name": "Dewatered/Intermittent Segments",
+      "discipline": "Biology",
+      "function": "Watershed Connectivity",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/watershed-connectivity-dewatered-intermittent-segments.json"
+    },
+    {
       "metricId": "population-support-existing-macroinvertebrate-or-fish-ibi-class",
       "name": "Existing macroinvertebrate or fish IBI class",
       "shortName": "",
@@ -329,6 +614,100 @@
         }
       },
       "detailsRef": "metrics/population-support-existing-macroinvertebrate-or-fish-ibi-class.json"
+    },
+    {
+      "metricId": "population-support-fish-presence-abundance",
+      "name": "Fish Presence/Abundance",
+      "discipline": "Biology",
+      "function": "Population Support",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/population-support-fish-presence-abundance.json"
+    },
+    {
+      "metricId": "community-dynamics-functional-trophic-groups",
+      "name": "Functional/Trophic Groups",
+      "discipline": "Biology",
+      "function": "Community Dynamics",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/community-dynamics-functional-trophic-groups.json"
     },
     {
       "metricId": "community-dynamics-impervious-cover",
@@ -386,17 +765,20 @@
       "category": "Biology",
       "tags": [
         "Biology",
-        "Habitat provision"
+        "Habitat provision",
+        "biology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -405,10 +787,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -417,8 +799,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -472,6 +854,53 @@
       "detailsRef": "metrics/community-dynamics-invasive-or-non-native-check.json"
     },
     {
+      "metricId": "community-dynamics-invasive-non-native-check",
+      "name": "Invasive/Non-Native Check",
+      "discipline": "Biology",
+      "function": "Community Dynamics",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/community-dynamics-invasive-non-native-check.json"
+    },
+    {
       "metricId": "population-support-juvenile-refuge",
       "name": "Juvenile refuge",
       "shortName": "",
@@ -519,37 +948,37 @@
       "detailsRef": "metrics/population-support-juvenile-refuge.json"
     },
     {
-      "metricId": "watershed-connectivity-lateral-connectivity-for-riparian-fauna",
-      "name": "Lateral connectivity for riparian fauna",
-      "shortName": "",
+      "metricId": "population-support-juvenile-refuge-cover",
+      "name": "Juvenile Refuge (cover)",
       "discipline": "Biology",
-      "function": "Watershed connectivity",
+      "function": "Population Support",
       "category": "Biology",
       "tags": [
-        "Biology",
-        "Watershed connectivity"
+        "rapid",
+        "sfari",
+        "biology"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
-          "Floodplain"
+          "SFARI rapid assessment"
         ],
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -558,8 +987,105 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/population-support-juvenile-refuge-cover.json"
+    },
+    {
+      "metricId": "community-dynamics-keystone-species-presence",
+      "name": "Keystone Species Presence",
+      "discipline": "Biology",
+      "function": "Community Dynamics",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/community-dynamics-keystone-species-presence.json"
+    },
+    {
+      "metricId": "watershed-connectivity-lateral-connectivity-for-riparian-fauna",
+      "name": "Lateral connectivity for riparian fauna",
+      "shortName": "",
+      "discipline": "Biology",
+      "function": "Watershed connectivity",
+      "category": "Biology",
+      "tags": [
+        "Biology",
+        "Watershed connectivity",
+        "biology",
+        "sfari",
+        "rapid"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Floodplain"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -613,37 +1139,37 @@
       "detailsRef": "metrics/habitat-provision-lateral-or-off-channel-habitats.json"
     },
     {
-      "metricId": "community-dynamics-macroinvertebrate-taxa-richness",
-      "name": "Macroinvertebrate taxa richness",
-      "shortName": "",
+      "metricId": "habitat-provision-lateral-off-channel-habitats",
+      "name": "Lateral/Off-Channel Habitats",
       "discipline": "Biology",
-      "function": "Community dynamics",
+      "function": "Habitat Provision",
       "category": "Biology",
       "tags": [
-        "Biology",
-        "Community dynamics"
+        "rapid",
+        "sfari",
+        "biology"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "SFARI rapid assessment"
         ],
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -652,8 +1178,58 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/habitat-provision-lateral-off-channel-habitats.json"
+    },
+    {
+      "metricId": "community-dynamics-macroinvertebrate-taxa-richness",
+      "name": "Macroinvertebrate taxa richness",
+      "shortName": "",
+      "discipline": "Biology",
+      "function": "Community dynamics",
+      "category": "Biology",
+      "tags": [
+        "Biology",
+        "Community dynamics",
+        "biology",
+        "sfari",
+        "rapid"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -668,17 +1244,20 @@
       "category": "Biology",
       "tags": [
         "Biology",
-        "Community dynamics"
+        "Community dynamics",
+        "biology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -687,10 +1266,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -699,12 +1278,59 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
       "detailsRef": "metrics/community-dynamics-native-species-presence.json"
+    },
+    {
+      "metricId": "population-support-recruitment-success-young-of-year",
+      "name": "Recruitment Success (Young-of-year)",
+      "discipline": "Biology",
+      "function": "Population Support",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/population-support-recruitment-success-young-of-year.json"
     },
     {
       "metricId": "community-dynamics-riparian-buffer-width",
@@ -715,17 +1341,20 @@
       "category": "Biology",
       "tags": [
         "Biology",
-        "Community dynamics"
+        "Community dynamics",
+        "biology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -734,10 +1363,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -746,8 +1375,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -762,17 +1391,20 @@
       "category": "Biology",
       "tags": [
         "Biology",
-        "Population support"
+        "Population support",
+        "biology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -781,10 +1413,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -793,8 +1425,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -848,6 +1480,53 @@
       "detailsRef": "metrics/habitat-provision-substrate-or-microhabitat-diversity.json"
     },
     {
+      "metricId": "habitat-provision-substrate-microhabitat-diversity",
+      "name": "Substrate/Microhabitat Diversity",
+      "discipline": "Biology",
+      "function": "Habitat Provision",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/habitat-provision-substrate-microhabitat-diversity.json"
+    },
+    {
       "metricId": "habitat-provision-undercut-banks-or-overhanging-vegetation",
       "name": "Undercut banks or overhanging vegetation",
       "shortName": "",
@@ -895,6 +1574,100 @@
       "detailsRef": "metrics/habitat-provision-undercut-banks-or-overhanging-vegetation.json"
     },
     {
+      "metricId": "habitat-provision-undercut-banks-overhanging-veg",
+      "name": "Undercut Banks/Overhanging Veg",
+      "discipline": "Biology",
+      "function": "Habitat Provision",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/habitat-provision-undercut-banks-overhanging-veg.json"
+    },
+    {
+      "metricId": "watershed-connectivity-upstream-downstream-barriers",
+      "name": "Upstream/Downstream Barriers",
+      "discipline": "Biology",
+      "function": "Watershed Connectivity",
+      "category": "Biology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "biology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/watershed-connectivity-upstream-downstream-barriers.json"
+    },
+    {
       "metricId": "channel-and-floodplain-dynamics-bank-armoring-or-vegetation-condition",
       "name": "Bank armoring or vegetation condition",
       "shortName": "",
@@ -940,6 +1713,100 @@
         }
       },
       "detailsRef": "metrics/channel-and-floodplain-dynamics-bank-armoring-or-vegetation-condition.json"
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-erosion-potential",
+      "name": "Bank Erosion Potential",
+      "discipline": "Geomorphology",
+      "function": "Channel and Floodplain Dynamics",
+      "category": "Geomorphology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "geomorphology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/channel-and-floodplain-dynamics-bank-erosion-potential.json"
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-migration-and-meander",
+      "name": "Bank Migration and Meander",
+      "discipline": "Geomorphology",
+      "function": "Channel and Floodplain Dynamics",
+      "category": "Geomorphology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "geomorphology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/channel-and-floodplain-dynamics-bank-migration-and-meander.json"
     },
     {
       "metricId": "bankfull-width-ratio",
@@ -1045,18 +1912,21 @@
       "function": "Bed composition and large wood",
       "category": "Geomorphology",
       "tags": [
+        "Bed composition and large wood",
         "Geomorphology",
-        "Bed composition and large wood"
+        "geomorphology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -1065,10 +1935,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -1077,8 +1947,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -1179,6 +2049,100 @@
       "detailsRef": "metrics/sediment-continuity-channel-degradation.json"
     },
     {
+      "metricId": "sediment-continuity-channel-degradation-incision",
+      "name": "Channel Degradation (Incision)",
+      "discipline": "Geomorphology",
+      "function": "Sediment Continuity",
+      "category": "Geomorphology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "geomorphology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/sediment-continuity-channel-degradation-incision.json"
+    },
+    {
+      "metricId": "channel-evolution-channel-evolution",
+      "name": "Channel Evolution",
+      "discipline": "Geomorphology",
+      "function": "Channel Evolution",
+      "category": "Geomorphology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "geomorphology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/channel-evolution-channel-evolution.json"
+    },
+    {
       "metricId": "channel-evolution-channel-evolution-model-stage-i-vi",
       "name": "Channel evolution model stage (I-VI)",
       "shortName": "",
@@ -1224,6 +2188,53 @@
         }
       },
       "detailsRef": "metrics/channel-evolution-channel-evolution-model-stage-i-vi.json"
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-channel-pattern",
+      "name": "Channel pattern",
+      "discipline": "Geomorphology",
+      "function": "Channel and Floodplain Dynamics",
+      "category": "Geomorphology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "geomorphology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/channel-and-floodplain-dynamics-channel-pattern.json"
     },
     {
       "metricId": "channel-and-floodplain-dynamics-channel-realignment",
@@ -1328,17 +2339,20 @@
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Sediment continuity"
+        "Sediment continuity",
+        "geomorphology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -1347,10 +2361,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -1359,8 +2373,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -1412,6 +2426,100 @@
         }
       },
       "detailsRef": "metrics/channel-evolution-incision-trend.json"
+    },
+    {
+      "metricId": "channel-evolution-incision-trend-headcuts",
+      "name": "Incision Trend (headcuts)",
+      "discipline": "Geomorphology",
+      "function": "Channel Evolution",
+      "category": "Geomorphology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "geomorphology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/channel-evolution-incision-trend-headcuts.json"
+    },
+    {
+      "metricId": "bed-composition-and-large-wood-large-wood-frequency-and-diversity",
+      "name": "Large Wood Frequency and Diversity",
+      "discipline": "Geomorphology",
+      "function": "Bed Composition and Large Wood",
+      "category": "Geomorphology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "geomorphology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/bed-composition-and-large-wood-large-wood-frequency-and-diversity.json"
     },
     {
       "metricId": "channel-and-floodplain-dynamics-meander-cutoffs-or-avulsions",
@@ -1555,14 +2663,14 @@
       "detailsRef": "metrics/channel-evolution-recovery-indicators.json"
     },
     {
-      "metricId": "riffle-embeddedness",
-      "name": "Riffle embeddedness",
-      "shortName": "Embeddedness",
+      "metricId": "channel-evolution-recovery-metrics",
+      "name": "Recovery Metrics",
       "discipline": "Geomorphology",
-      "function": "Sediment continuity",
+      "function": "Channel Evolution",
       "category": "Geomorphology",
       "tags": [
         "rapid",
+        "sfari",
         "geomorphology"
       ],
       "status": "active",
@@ -1577,30 +2685,76 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Field rapid protocol"
+          "SFARI rapid assessment"
         ],
-        "effort": "field + desktop",
-        "primaryUnit": "%"
+        "effort": "field + desktop"
       },
       "profileSummaries": {
         "rapid": {
-          "profileId": "rapid-qualitative",
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
-          "curveSetCount": 0
+          "curveSetCount": 1
         }
       },
       "curvesSummary": {
-        "totalCurveSetCount": 0,
+        "totalCurveSetCount": 1,
         "byTier": {
           "screening": 0,
-          "rapid": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/riffle-embeddedness.json"
+      "detailsRef": "metrics/channel-evolution-recovery-metrics.json"
+    },
+    {
+      "metricId": "bed-composition-and-large-wood-riparian-wood-recruitment",
+      "name": "Riparian Wood Recruitment",
+      "discipline": "Geomorphology",
+      "function": "Bed Composition and Large Wood",
+      "category": "Geomorphology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "geomorphology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/bed-composition-and-large-wood-riparian-wood-recruitment.json"
     },
     {
       "metricId": "sediment-continuity-sediment-deposition-patterns",
@@ -1611,17 +2765,20 @@
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Sediment continuity"
+        "Sediment continuity",
+        "geomorphology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -1630,10 +2787,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -1642,8 +2799,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -1751,18 +2908,21 @@
       "function": "Channel and floodplain dynamics",
       "category": "Geomorphology",
       "tags": [
+        "Channel and floodplain dynamics",
         "Geomorphology",
-        "Channel and floodplain dynamics"
+        "geomorphology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -1771,10 +2931,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -1783,12 +2943,59 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
       "detailsRef": "metrics/channel-and-floodplain-dynamics-sinuosity.json"
+    },
+    {
+      "metricId": "bed-composition-and-large-wood-substrate-composition",
+      "name": "Substrate Composition",
+      "discipline": "Geomorphology",
+      "function": "Bed Composition and Large Wood",
+      "category": "Geomorphology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "geomorphology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/bed-composition-and-large-wood-substrate-composition.json"
     },
     {
       "metricId": "bed-composition-and-large-wood-substrate-consolidation-or-armoring",
@@ -1846,17 +3053,20 @@
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Sediment continuity"
+        "Sediment continuity",
+        "geomorphology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -1865,10 +3075,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -1877,8 +3087,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -1939,18 +3149,21 @@
       "function": "Channel evolution",
       "category": "Geomorphology",
       "tags": [
+        "Channel evolution",
         "Geomorphology",
-        "Channel evolution"
+        "geomorphology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -1959,10 +3172,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -1971,8 +3184,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -2033,18 +3246,21 @@
       "function": "High flow dynamics",
       "category": "Hydraulics",
       "tags": [
+        "High flow dynamics",
         "Hydraulics",
-        "High flow dynamics"
+        "hydraulics",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -2053,10 +3269,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -2065,8 +3281,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -2081,17 +3297,20 @@
       "category": "Hydraulics",
       "tags": [
         "Hydraulics",
-        "Hyporheic connectivity"
+        "Hyporheic connectivity",
+        "hydraulics",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -2100,10 +3319,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -2112,8 +3331,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -2128,17 +3347,20 @@
       "category": "Hydraulics",
       "tags": [
         "Hydraulics",
-        "Hyporheic connectivity"
+        "Hyporheic connectivity",
+        "hydraulics",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -2147,10 +3369,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -2159,8 +3381,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -2174,18 +3396,21 @@
       "function": "Floodplain connectivity",
       "category": "Hydraulics",
       "tags": [
+        "Floodplain connectivity",
         "Hydraulics",
-        "Floodplain connectivity"
+        "hydraulics",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -2194,10 +3419,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -2206,8 +3431,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -2259,6 +3484,53 @@
         }
       },
       "detailsRef": "metrics/low-flow-and-baseflow-dynamics-channel-flow-status.json"
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-er",
+      "name": "Entrenchment (ER)",
+      "discipline": "Hydraulics",
+      "function": "Floodplain Connectivity",
+      "category": "Hydraulics",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydraulics"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/floodplain-connectivity-entrenchment-er.json"
     },
     {
       "metricId": "floodplain-connectivity-entrenchment-ratio",
@@ -2362,18 +3634,21 @@
       "function": "Floodplain connectivity",
       "category": "Hydraulics",
       "tags": [
+        "Floodplain connectivity",
         "Hydraulics",
-        "Floodplain connectivity"
+        "hydraulics",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -2382,10 +3657,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -2394,8 +3669,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -2410,17 +3685,20 @@
       "category": "Hydraulics",
       "tags": [
         "Hydraulics",
-        "Hyporheic connectivity"
+        "Hyporheic connectivity",
+        "hydraulics",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -2429,10 +3707,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -2441,8 +3719,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -2496,6 +3774,53 @@
       "detailsRef": "metrics/high-flow-dynamics-high-flow-velocity-or-shear-indicators.json"
     },
     {
+      "metricId": "high-flow-dynamics-high-flow-velocity-shear",
+      "name": "High Flow Velocity/Shear",
+      "discipline": "Hydraulics",
+      "function": "High Flow Dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydraulics"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/high-flow-dynamics-high-flow-velocity-shear.json"
+    },
+    {
       "metricId": "high-flow-dynamics-high-flow-event-frequency",
       "name": "High-flow event frequency",
       "shortName": "",
@@ -2543,37 +3868,37 @@
       "detailsRef": "metrics/high-flow-dynamics-high-flow-event-frequency.json"
     },
     {
-      "metricId": "floodplain-connectivity-lateral-floodplain-inundation",
-      "name": "Lateral floodplain inundation",
-      "shortName": "",
+      "metricId": "low-flow-and-baseflow-dynamics-lateral-connectivity",
+      "name": "Lateral connectivity",
       "discipline": "Hydraulics",
-      "function": "Floodplain connectivity",
+      "function": "Low Flow and Baseflow Dynamics",
       "category": "Hydraulics",
       "tags": [
-        "Hydraulics",
-        "Floodplain connectivity"
+        "rapid",
+        "sfari",
+        "hydraulics"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
-          "Floodplain"
+          "SFARI rapid assessment"
         ],
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -2582,12 +3907,250 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-lateral-connectivity.json"
+    },
+    {
+      "metricId": "floodplain-connectivity-lateral-floodplain-inundation",
+      "name": "Lateral floodplain inundation",
+      "shortName": "",
+      "discipline": "Hydraulics",
+      "function": "Floodplain connectivity",
+      "category": "Hydraulics",
+      "tags": [
+        "Floodplain connectivity",
+        "Hydraulics",
+        "hydraulics",
+        "sfari",
+        "rapid"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Floodplain"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
       "detailsRef": "metrics/floodplain-connectivity-lateral-floodplain-inundation.json"
+    },
+    {
+      "metricId": "low-flow-and-baseflow-dynamics-longitudinal-connectivity",
+      "name": "Longitudinal connectivity",
+      "discipline": "Hydraulics",
+      "function": "Low Flow and Baseflow Dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydraulics"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-longitudinal-connectivity.json"
+    },
+    {
+      "metricId": "low-flow-and-baseflow-dynamics-low-flow-depth",
+      "name": "Low flow depth",
+      "discipline": "Hydraulics",
+      "function": "Low Flow and Baseflow Dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydraulics"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-low-flow-depth.json"
+    },
+    {
+      "metricId": "low-flow-and-baseflow-dynamics-low-flow-velocity",
+      "name": "Low flow velocity",
+      "discipline": "Hydraulics",
+      "function": "Low Flow and Baseflow Dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydraulics"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-low-flow-velocity.json"
+    },
+    {
+      "metricId": "high-flow-dynamics-overbank-flow-frequency",
+      "name": "Overbank Flow Frequency",
+      "discipline": "Hydraulics",
+      "function": "High Flow Dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydraulics"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/high-flow-dynamics-overbank-flow-frequency.json"
     },
     {
       "metricId": "high-flow-dynamics-peak-flow-capacity",
@@ -2635,6 +4198,100 @@
         }
       },
       "detailsRef": "metrics/high-flow-dynamics-peak-flow-capacity.json"
+    },
+    {
+      "metricId": "high-flow-dynamics-peak-flow-capacity-morphological-check",
+      "name": "Peak Flow Capacity (Morphological Check)",
+      "discipline": "Hydraulics",
+      "function": "High Flow Dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydraulics"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/high-flow-dynamics-peak-flow-capacity-morphological-check.json"
+    },
+    {
+      "metricId": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+      "name": "Peak Flow Capacity (Velocity/ Shear Stress)",
+      "discipline": "Hydraulics",
+      "function": "High Flow Dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydraulics"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/high-flow-dynamics-peak-flow-capacity-velocity-shear-stress.json"
     },
     {
       "metricId": "low-flow-and-baseflow-dynamics-residual-pool-connectivity",
@@ -2825,6 +4482,53 @@
       "detailsRef": "metrics/hyporheic-connectivity-visible-hyporheic-indicators.json"
     },
     {
+      "metricId": "hyporheic-connectivity-visible-hyporheic-metrics",
+      "name": "Visible Hyporheic Metrics",
+      "discipline": "Hydraulics",
+      "function": "Hyporheic Connectivity",
+      "category": "Hydraulics",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydraulics"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/hyporheic-connectivity-visible-hyporheic-metrics.json"
+    },
+    {
       "metricId": "streamflow-regime-artificial-structures-affecting-flow",
       "name": "Artificial structures affecting flow",
       "shortName": "",
@@ -2872,37 +4576,37 @@
       "detailsRef": "metrics/streamflow-regime-artificial-structures-affecting-flow.json"
     },
     {
-      "metricId": "reach-inflow-concentrated-flow-inputs",
-      "name": "Concentrated flow inputs",
-      "shortName": "",
+      "metricId": "streamflow-regime-artificial-structures-and-inputs",
+      "name": "Artificial structures and inputs",
       "discipline": "Hydrology",
-      "function": "Reach inflow",
+      "function": "Streamflow Regime",
       "category": "Hydrology",
       "tags": [
-        "Hydrology",
-        "Reach inflow"
+        "rapid",
+        "sfari",
+        "hydrology"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "SFARI rapid assessment"
         ],
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -2911,8 +4615,105 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/streamflow-regime-artificial-structures-and-inputs.json"
+    },
+    {
+      "metricId": "streamflow-regime-channel-natural-flow-regime",
+      "name": "Channel natural flow regime",
+      "discipline": "Hydrology",
+      "function": "Streamflow Regime",
+      "category": "Hydrology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydrology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/streamflow-regime-channel-natural-flow-regime.json"
+    },
+    {
+      "metricId": "reach-inflow-concentrated-flow-inputs",
+      "name": "Concentrated flow inputs",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Reach inflow",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Reach inflow",
+        "hydrology",
+        "sfari",
+        "rapid"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -2974,17 +4775,20 @@
       "category": "Hydrology",
       "tags": [
         "Hydrology",
-        "Surface water storage"
+        "Surface water storage",
+        "hydrology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -2993,10 +4797,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -3005,12 +4809,59 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
       "detailsRef": "metrics/surface-water-storage-floodplain-water-retention.json"
+    },
+    {
+      "metricId": "streamflow-regime-flow-permanence",
+      "name": "Flow permanence",
+      "discipline": "Hydrology",
+      "function": "Streamflow Regime",
+      "category": "Hydrology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydrology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/streamflow-regime-flow-permanence.json"
     },
     {
       "metricId": "streamflow-regime-flow-permanence-stats",
@@ -3058,6 +4909,147 @@
         }
       },
       "detailsRef": "metrics/streamflow-regime-flow-permanence-stats.json"
+    },
+    {
+      "metricId": "streamflow-regime-flow-statistics",
+      "name": "Flow statistics",
+      "discipline": "Hydrology",
+      "function": "Streamflow Regime",
+      "category": "Hydrology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydrology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/streamflow-regime-flow-statistics.json"
+    },
+    {
+      "metricId": "catchment-hydrology-impervious-surface-area",
+      "name": "Impervious surface area",
+      "discipline": "Hydrology",
+      "function": "Catchment Hydrology",
+      "category": "Hydrology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydrology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/catchment-hydrology-impervious-surface-area.json"
+    },
+    {
+      "metricId": "catchment-hydrology-impoundments",
+      "name": "Impoundments",
+      "discipline": "Hydrology",
+      "function": "Catchment Hydrology",
+      "category": "Hydrology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydrology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/catchment-hydrology-impoundments.json"
     },
     {
       "metricId": "catchment-hydrology-impoundments-and-regulated-reaches",
@@ -3154,37 +5146,37 @@
       "detailsRef": "metrics/surface-water-storage-in-channel-ponding-or-beaver-dams.json"
     },
     {
-      "metricId": "catchment-hydrology-land-use-change",
-      "name": "Land use change",
-      "shortName": "",
+      "metricId": "surface-water-storage-in-channel-ponding-beaver",
+      "name": "In-channel ponding/beaver",
       "discipline": "Hydrology",
-      "function": "Catchment hydrology",
+      "function": "Surface Water Storage",
       "category": "Hydrology",
       "tags": [
-        "Hydrology",
-        "Catchment hydrology"
+        "rapid",
+        "sfari",
+        "hydrology"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
-          "Watershed"
+          "SFARI rapid assessment"
         ],
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -3193,12 +5185,109 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/surface-water-storage-in-channel-ponding-beaver.json"
+    },
+    {
+      "metricId": "catchment-hydrology-land-use-change",
+      "name": "Land use change",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Catchment hydrology",
+      "category": "Hydrology",
+      "tags": [
+        "Catchment hydrology",
+        "Hydrology",
+        "hydrology",
+        "sfari",
+        "rapid"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
       "detailsRef": "metrics/catchment-hydrology-land-use-change.json"
+    },
+    {
+      "metricId": "reach-inflow-local-runoff-diversions",
+      "name": "Local runoff diversions",
+      "discipline": "Hydrology",
+      "function": "Reach Inflow",
+      "category": "Hydrology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydrology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/reach-inflow-local-runoff-diversions.json"
     },
     {
       "metricId": "reach-inflow-local-runoff-diversions-or-withdrawals",
@@ -3303,17 +5392,20 @@
       "category": "Hydrology",
       "tags": [
         "Hydrology",
-        "Surface water storage"
+        "Surface water storage",
+        "hydrology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -3322,10 +5414,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -3334,8 +5426,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -3490,18 +5582,21 @@
       "function": "Catchment hydrology",
       "category": "Hydrology",
       "tags": [
+        "Catchment hydrology",
         "Hydrology",
-        "Catchment hydrology"
+        "hydrology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -3510,10 +5605,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -3522,8 +5617,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -3624,6 +5719,53 @@
       "detailsRef": "metrics/reach-inflow-road-or-highway-drainage-outfalls.json"
     },
     {
+      "metricId": "reach-inflow-road-highway-drainage",
+      "name": "Road/highway drainage",
+      "discipline": "Hydrology",
+      "function": "Reach Inflow",
+      "category": "Hydrology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydrology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/reach-inflow-road-highway-drainage.json"
+    },
+    {
       "metricId": "streamflow-regime-streambed-vegetation-indicators",
       "name": "Streambed vegetation indicators",
       "shortName": "",
@@ -3679,17 +5821,20 @@
       "category": "Hydrology",
       "tags": [
         "Hydrology",
-        "Reach inflow"
+        "Reach inflow",
+        "hydrology",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -3698,10 +5843,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -3710,12 +5855,59 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
       "detailsRef": "metrics/reach-inflow-tributary-condition-and-impact.json"
+    },
+    {
+      "metricId": "surface-water-storage-wetland-coverage",
+      "name": "Wetland coverage",
+      "discipline": "Hydrology",
+      "function": "Surface Water Storage",
+      "category": "Hydrology",
+      "tags": [
+        "rapid",
+        "sfari",
+        "hydrology"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/surface-water-storage-wetland-coverage.json"
     },
     {
       "metricId": "light-and-thermal-regime-algal-growth",
@@ -3765,6 +5957,53 @@
       "detailsRef": "metrics/light-and-thermal-regime-algal-growth.json"
     },
     {
+      "metricId": "light-and-thermal-regime-algal-growth-light-limited",
+      "name": "Algal Growth (light-limited)",
+      "discipline": "Physicochemistry",
+      "function": "Light and Thermal Regime",
+      "category": "Physicochemistry",
+      "tags": [
+        "rapid",
+        "sfari",
+        "physicochemistry"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/light-and-thermal-regime-algal-growth-light-limited.json"
+    },
+    {
       "metricId": "carbon-processing-algal-or-primary-production-indicators",
       "name": "Algal or primary production indicators",
       "shortName": "",
@@ -3810,6 +6049,53 @@
         }
       },
       "detailsRef": "metrics/carbon-processing-algal-or-primary-production-indicators.json"
+    },
+    {
+      "metricId": "carbon-processing-algal-primary-production",
+      "name": "Algal/Primary Production",
+      "discipline": "Physicochemistry",
+      "function": "Carbon Processing",
+      "category": "Physicochemistry",
+      "tags": [
+        "rapid",
+        "sfari",
+        "physicochemistry"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/carbon-processing-algal-primary-production.json"
     },
     {
       "metricId": "water-and-soil-quality-bank-or-floodplain-soil-condition",
@@ -3859,37 +6145,37 @@
       "detailsRef": "metrics/water-and-soil-quality-bank-or-floodplain-soil-condition.json"
     },
     {
-      "metricId": "carbon-processing-cpom-retention",
-      "name": "CPOM retention",
-      "shortName": "",
+      "metricId": "water-and-soil-quality-bank-floodplain-soil-condition",
+      "name": "Bank/Floodplain Soil Condition",
       "discipline": "Physicochemistry",
-      "function": "Carbon processing",
+      "function": "Water and Soil Quality",
       "category": "Physicochemistry",
       "tags": [
-        "Physicochemistry",
-        "Carbon processing"
+        "rapid",
+        "sfari",
+        "physicochemistry"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "SFARI rapid assessment"
         ],
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -3898,8 +6184,58 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/water-and-soil-quality-bank-floodplain-soil-condition.json"
+    },
+    {
+      "metricId": "carbon-processing-cpom-retention",
+      "name": "CPOM retention",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Carbon processing",
+      "category": "Physicochemistry",
+      "tags": [
+        "Carbon processing",
+        "Physicochemistry",
+        "physicochemistry",
+        "sfari",
+        "rapid"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -3953,37 +6289,37 @@
       "detailsRef": "metrics/nutrient-cycling-denitrification-potential-floodplain-wetness.json"
     },
     {
-      "metricId": "water-and-soil-quality-dissolved-oxygen",
-      "name": "Dissolved oxygen",
-      "shortName": "",
+      "metricId": "nutrient-cycling-denitrification-potential-visual",
+      "name": "Denitrification Potential (visual)",
       "discipline": "Physicochemistry",
-      "function": "Water and soil quality",
+      "function": "Nutrient Cycling",
       "category": "Physicochemistry",
       "tags": [
-        "Physicochemistry",
-        "Water and soil quality"
+        "rapid",
+        "sfari",
+        "physicochemistry"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "SFARI rapid assessment"
         ],
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -3992,8 +6328,105 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/nutrient-cycling-denitrification-potential-visual.json"
+    },
+    {
+      "metricId": "carbon-processing-detritus-decomposition-rate",
+      "name": "Detritus Decomposition Rate",
+      "discipline": "Physicochemistry",
+      "function": "Carbon Processing",
+      "category": "Physicochemistry",
+      "tags": [
+        "rapid",
+        "sfari",
+        "physicochemistry"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/carbon-processing-detritus-decomposition-rate.json"
+    },
+    {
+      "metricId": "water-and-soil-quality-dissolved-oxygen",
+      "name": "Dissolved oxygen",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Water and soil quality",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Water and soil quality",
+        "physicochemistry",
+        "sfari",
+        "rapid"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -4007,18 +6440,21 @@
       "function": "Nutrient cycling",
       "category": "Physicochemistry",
       "tags": [
+        "Nutrient cycling",
         "Physicochemistry",
-        "Nutrient cycling"
+        "physicochemistry",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -4027,10 +6463,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -4039,8 +6475,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -4092,6 +6528,53 @@
         }
       },
       "detailsRef": "metrics/nutrient-cycling-n-and-p-concentrations.json"
+    },
+    {
+      "metricId": "nutrient-cycling-n-p-concentrations-surrogates",
+      "name": "N/P Concentrations (surrogates)",
+      "discipline": "Physicochemistry",
+      "function": "Nutrient Cycling",
+      "category": "Physicochemistry",
+      "tags": [
+        "rapid",
+        "sfari",
+        "physicochemistry"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/nutrient-cycling-n-p-concentrations-surrogates.json"
     },
     {
       "metricId": "nutrient-cycling-nutrient-listing-status",
@@ -4282,6 +6765,147 @@
       "detailsRef": "metrics/water-and-soil-quality-ph-and-conductivity.json"
     },
     {
+      "metricId": "water-and-soil-quality-ph-and-conductivity-rapid",
+      "name": "pH and Conductivity (rapid)",
+      "discipline": "Physicochemistry",
+      "function": "Water and Soil Quality",
+      "category": "Physicochemistry",
+      "tags": [
+        "rapid",
+        "sfari",
+        "physicochemistry"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/water-and-soil-quality-ph-and-conductivity-rapid.json"
+    },
+    {
+      "metricId": "light-and-thermal-regime-riparian-canopy-cover",
+      "name": "Riparian Canopy Cover",
+      "discipline": "Physicochemistry",
+      "function": "Light and Thermal Regime",
+      "category": "Physicochemistry",
+      "tags": [
+        "rapid",
+        "sfari",
+        "physicochemistry"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/light-and-thermal-regime-riparian-canopy-cover.json"
+    },
+    {
+      "metricId": "carbon-processing-riparian-corridor-width-quality",
+      "name": "Riparian Corridor Width/Quality",
+      "discipline": "Physicochemistry",
+      "function": "Carbon Processing",
+      "category": "Physicochemistry",
+      "tags": [
+        "rapid",
+        "sfari",
+        "physicochemistry"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/carbon-processing-riparian-corridor-width-quality.json"
+    },
+    {
       "metricId": "carbon-processing-riparian-vegetation-or-connectivity",
       "name": "Riparian vegetation or connectivity",
       "shortName": "",
@@ -4376,37 +7000,37 @@
       "detailsRef": "metrics/carbon-processing-shredder-or-detritivore-presence.json"
     },
     {
-      "metricId": "light-and-thermal-regime-stream-temperature",
-      "name": "Stream temperature",
-      "shortName": "",
+      "metricId": "carbon-processing-shredder-detritivore-presence",
+      "name": "Shredder/Detritivore Presence",
       "discipline": "Physicochemistry",
-      "function": "Light and thermal regime",
+      "function": "Carbon Processing",
       "category": "Physicochemistry",
       "tags": [
-        "Physicochemistry",
-        "Light and thermal regime"
+        "rapid",
+        "sfari",
+        "physicochemistry"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
-          "Field"
+          "SFARI rapid assessment"
         ],
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -4415,8 +7039,58 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/carbon-processing-shredder-detritivore-presence.json"
+    },
+    {
+      "metricId": "light-and-thermal-regime-stream-temperature",
+      "name": "Stream temperature",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Light and thermal regime",
+      "category": "Physicochemistry",
+      "tags": [
+        "Light and thermal regime",
+        "Physicochemistry",
+        "physicochemistry",
+        "sfari",
+        "rapid"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Field"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -4430,18 +7104,21 @@
       "function": "Light and thermal regime",
       "category": "Physicochemistry",
       "tags": [
+        "Light and thermal regime",
         "Physicochemistry",
-        "Light and thermal regime"
+        "physicochemistry",
+        "sfari",
+        "rapid"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
@@ -4450,10 +7127,10 @@
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -4462,8 +7139,8 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -4517,37 +7194,37 @@
       "detailsRef": "metrics/water-and-soil-quality-toxic-pollutants.json"
     },
     {
-      "metricId": "nutrient-cycling-vegetated-riparian-corridor-width",
-      "name": "Vegetated riparian corridor width",
-      "shortName": "",
+      "metricId": "water-and-soil-quality-toxic-pollutants-visual-odor",
+      "name": "Toxic Pollutants (Visual/Odor)",
       "discipline": "Physicochemistry",
-      "function": "Nutrient cycling",
+      "function": "Water and Soil Quality",
       "category": "Physicochemistry",
       "tags": [
-        "Physicochemistry",
-        "Nutrient cycling"
+        "rapid",
+        "sfari",
+        "physicochemistry"
       ],
       "status": "active",
-      "minimumTier": "screening",
+      "minimumTier": "rapid",
       "profileAvailability": {
-        "screening": true,
-        "rapid": false,
+        "screening": false,
+        "rapid": true,
         "detailed": false
       },
       "recommendedTiers": [
-        "screening"
+        "rapid"
       ],
       "inputsSummary": {
         "sources": [
-          "Floodplain"
+          "SFARI rapid assessment"
         ],
         "effort": "field + desktop"
       },
       "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
           "scoringType": "categorical",
-          "scoringShape": "4 levels",
+          "scoringShape": "5 levels",
           "rawOutput": "rating",
           "normalizedOutput": "rating",
           "curveSetCount": 1
@@ -4556,8 +7233,58 @@
       "curvesSummary": {
         "totalCurveSetCount": 1,
         "byTier": {
-          "screening": 1,
-          "rapid": 0,
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/water-and-soil-quality-toxic-pollutants-visual-odor.json"
+    },
+    {
+      "metricId": "nutrient-cycling-vegetated-riparian-corridor-width",
+      "name": "Vegetated riparian corridor width",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Nutrient cycling",
+      "category": "Physicochemistry",
+      "tags": [
+        "Nutrient cycling",
+        "Physicochemistry",
+        "physicochemistry",
+        "sfari",
+        "rapid"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Floodplain"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
           "detailed": 0
         }
       },
@@ -4611,6 +7338,53 @@
       "detailsRef": "metrics/nutrient-cycling-visible-algal-indications.json"
     },
     {
+      "metricId": "nutrient-cycling-visible-algal-indications-n-p",
+      "name": "Visible Algal Indications (N/P)",
+      "discipline": "Physicochemistry",
+      "function": "Nutrient Cycling",
+      "category": "Physicochemistry",
+      "tags": [
+        "rapid",
+        "sfari",
+        "physicochemistry"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/nutrient-cycling-visible-algal-indications-n-p.json"
+    },
+    {
       "metricId": "water-and-soil-quality-water-clarity-or-turbidity",
       "name": "Water clarity or turbidity",
       "shortName": "",
@@ -4656,6 +7430,53 @@
         }
       },
       "detailsRef": "metrics/water-and-soil-quality-water-clarity-or-turbidity.json"
+    },
+    {
+      "metricId": "water-and-soil-quality-water-clarity-turbidity",
+      "name": "Water Clarity/Turbidity",
+      "discipline": "Physicochemistry",
+      "function": "Water and Soil Quality",
+      "category": "Physicochemistry",
+      "tags": [
+        "rapid",
+        "sfari",
+        "physicochemistry"
+      ],
+      "status": "active",
+      "minimumTier": "rapid",
+      "profileAvailability": {
+        "screening": false,
+        "rapid": true,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "rapid"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "SFARI rapid assessment"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "rapid": {
+          "profileId": "rapid-sfari-likert",
+          "scoringType": "categorical",
+          "scoringShape": "5 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 0,
+          "rapid": 1,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/water-and-soil-quality-water-clarity-turbidity.json"
     }
   ]
 }

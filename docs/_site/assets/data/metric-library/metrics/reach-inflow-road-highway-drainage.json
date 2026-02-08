@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-road-highway-drainage",
+  "name": "Road/highway drainage",
+  "discipline": "Hydrology",
+  "function": "Reach Inflow",
+  "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+  "descriptionMarkdown": "Runoff is minimal or well-managed, causing no significant direct inflows or pollutant pulses.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Count road outfalls and note erosion/plumes",
+  "inputs": [
+    {
+      "label": "Road/highway drainage",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Road or highway outfalls per 100 m<br>Criteria: >=5 or a major highway outfall"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Road or highway outfalls per 100 m<br>Criteria: 4-5"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Road or highway outfalls per 100 m<br>Criteria: 2-3"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Road or highway outfalls per 100 m<br>Criteria: 0-1"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-road-highway-drainage-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

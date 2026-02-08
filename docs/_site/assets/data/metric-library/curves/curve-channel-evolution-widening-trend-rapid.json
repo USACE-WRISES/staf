@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Digitized edges show minor width change over a decade. Bars and banks behave like nearby reference reaches. Criteria: Near-reference lateral change.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Mild net widening over 10 years with occasional raw banks and quick revegetation. Criteria: Slightly above reference change.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Width increased well beyond reference. Frequent mass failures or pronounced confinement in places. Criteria: Significantly above or below reference with instability or constraints.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Rapid over-widening after storms, or planform fully locked by hardening that suppresses natural change. Criteria: Highly accelerated or heavily suppressed outside stable norms.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-channel-evolution-widening-trend-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-channel-evolution-widening-trend-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-channel-evolution-widening-trend-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-channel-evolution-widening-trend-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "channel-evolution-widening-trend"
+}

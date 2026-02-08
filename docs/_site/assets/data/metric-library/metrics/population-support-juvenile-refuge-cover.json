@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-juvenile-refuge-cover",
+  "name": "Juvenile Refuge (cover)",
+  "discipline": "Biology",
+  "function": "Population Support",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+  "descriptionMarkdown": "Sufficient cover (wood, undercuts, veg) for recruitment/survival if historically expected.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Percent shallow low-velocity cover",
+  "inputs": [
+    {
+      "label": "Juvenile Refuge (cover)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Bed mostly sand or silt; no pockets or structural cover.<br>Criteria: Embeddedness >=75 percent; less than 5 percent shallow, low-velocity cover."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Gravels embedded with silt; few bank pockets or calm margins.<br>Criteria: Embeddedness 50-75 percent; about 5-20 percent shallow, low-velocity cover."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Light sand on riffles; scattered wood and bank cover.<br>Criteria: Embeddedness 25-50 percent; about 20-40 percent shallow, low-velocity cover."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Clean gravels with open spaces and many shallow pockets, wood, and vegetation.<br>Criteria: Embeddedness 0-25 percent; over 40 percent shallow, low-velocity cover."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-juvenile-refuge-cover-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

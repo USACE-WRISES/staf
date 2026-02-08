@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Deposition pattern fits reference condition with stable point bars."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Reach clogged with large deposits that force multi-threading where not natural.<br>Criteria: Widespread bar growth inconsistent with reference condition."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Some mid-channel or side bars forming but not severely altering flow."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Multiple mid-channel bars that persist year to year and split flow.<br>Criteria: Pattern suggests imbalance in supply vs transport for expected channel type (Bridge 2003)."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Extensive mid-channel bars with partial obstruction."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Widespread choking deposits that strongly affect channel form and habitat."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Small lateral bars and occasional temporary islands.<br>Criteria: Minor departures from reference pattern."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Point bars present on bends. No persistent mid-channel bars.<br>Criteria: Bar types and locations match expected reference for a single-thread meandering channel (Leopold et al., 1964)."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-sediment-continuity-sediment-deposition-patterns"
+          "curve-sediment-continuity-sediment-deposition-patterns-rapid"
         ]
       }
     }
@@ -69,6 +74,9 @@
   ],
   "tags": [
     "Geomorphology",
-    "Sediment continuity"
+    "Sediment continuity",
+    "geomorphology",
+    "sfari",
+    "rapid"
   ]
 }

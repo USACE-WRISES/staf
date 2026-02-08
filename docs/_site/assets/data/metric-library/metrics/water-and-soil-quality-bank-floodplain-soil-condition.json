@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-bank-floodplain-soil-condition",
+  "name": "Bank/Floodplain Soil Condition",
+  "discipline": "Physicochemistry",
+  "function": "Water and Soil Quality",
+  "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+  "descriptionMarkdown": "No chemical/fecal contamination signs; soils appear natural, no suspicious odors/staining.",
+  "methodContextMarkdown": "Context: F\n\nMethod: F",
+  "howToMeasureMarkdown": "Soil odor/staining, quick test kit",
+  "inputs": [
+    {
+      "label": "Bank/Floodplain Soil Condition",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Strong petroleum odor, visible seepage, or listed hazardous site on the floodplain.<br>Criteria: Highly contaminated soils."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Stained soils and debris on banks near former industrial area.<br>Criteria: Known moderate contamination."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Small dump pile or localized manure near a crossing.<br>Criteria: Minor dumping or localized inputs."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Intact native soils and vegetation. No odors or staining.<br>Criteria: Natural soils. No contamination indicators."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-bank-floodplain-soil-condition-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

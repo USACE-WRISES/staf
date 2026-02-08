@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators",
-  "metricId": "high-flow-dynamics-high-flow-velocity-or-shear-indicators",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "Scour and deposition patterns are well matched to substrate and channel type."
+              "description": "Scour and deposition patterns are well matched to substrate and channel type.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "Mild signs of bed or bank stress."
+              "description": "Mild signs of bed or bank stress.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "Frequent instability at moderate floods with noticeable scour or bar expansion."
+              "description": "Frequent instability at moderate floods with noticeable scour or bar expansion.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "Severe mismatch with repeated blowouts or heavy aggradation at moderate flows."
+              "description": "Severe mismatch with repeated blowouts or heavy aggradation at moderate flows.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-high-flow-dynamics-high-flow-velocity-or-shear-indicators",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "high-flow-dynamics-high-flow-velocity-or-shear-indicators"
 }

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-channel-natural-flow-regime",
+  "name": "Channel natural flow regime",
+  "discipline": "Hydrology",
+  "function": "Streamflow Regime",
+  "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+  "descriptionMarkdown": "Compares current daily-flow pattern to the natural regime, combining IHA metrics with the Richards-Baker flashiness index to screen for alteration from dams, withdrawals, or urbanization.",
+  "methodContextMarkdown": "Context: C\n\nMethod: D",
+  "howToMeasureMarkdown": "With flow data, compute IHA metrics and R-B and compare assessment vs reference periods; interpret departures in timing, magnitude, pulse frequency, and rise/fall rates along with low/zero-flow days. Without a gage, use qualitative indicators of flashiness, dryness, and flow-duration class from field evidence, imagery, and local observations.",
+  "inputs": [
+    {
+      "label": "Channel natural flow regime",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Most IHA metrics outside reference; R-B much higher.<br>Criteria: Seasonal timing lost or shifted; extended low-flow or dry periods change expected flow duration class."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Several IHA components and R-B show clear departure.<br>Criteria: More frequent surges, shorter stable-flow periods, and noticeable increases in low or zero-flow days."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One or two IHA groups show modest departure; R-B slightly higher.<br>Criteria: Small shifts in timing or pulse frequency; low-flow days increase only slightly."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: IHA metrics and R-B flashiness near reference; no increase in low/zero-flow days.<br>Criteria: Timing, magnitude, pulse frequency, and rise/fall rates within reference ranges; stable-flow windows intact."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-channel-natural-flow-regime-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

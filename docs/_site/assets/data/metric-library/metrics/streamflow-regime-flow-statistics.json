@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-flow-statistics",
+  "name": "Flow statistics",
+  "discipline": "Hydrology",
+  "function": "Streamflow Regime",
+  "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+  "descriptionMarkdown": "Zero-flow days and dry periods quantify how often a stream is dry and for how long. Stable statistics indicate consistent flow duration; increases in zero-flow days in a historically perennial reach indicate alteration.",
+  "methodContextMarkdown": "Context: C\n\nMethod: D",
+  "howToMeasureMarkdown": "From daily discharge, count zero-flow days per water year and summarize consecutive dry periods. Use gage records or loggers/spot-flow notes and compare to historical or reference periods.",
+  "inputs": [
+    {
+      "label": "Flow statistics",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Prolonged cessation shifts expected flow category.<br>Criteria: Extended dry periods effectively change flow class (e.g., perennial to intermittent)."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: New or longer dry periods restrict habitat for weeks.<br>Criteria: Noticeable increase in zero-flow days or dry-spell length that reduces habitat availability."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Slight increase in zero-flow days without changing flow class.<br>Criteria: Minor increase in zero-flow days or short new dry periods."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Zero-flow days and dry spells match historical pattern.<br>Criteria: Stable zero-flow counts and dry-period lengths relative to reference."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-flow-statistics-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydrology"
+  ],
+  "status": "active"
+}

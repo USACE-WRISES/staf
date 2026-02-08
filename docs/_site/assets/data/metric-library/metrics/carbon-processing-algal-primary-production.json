@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-algal-primary-production",
+  "name": "Algal/Primary Production",
+  "discipline": "Physicochemistry",
+  "function": "Carbon Processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Balanced algae/macrophyte growth, no nuisance blooms, unless moderate coverage is historically normal.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Chl-a grab sample or algal percent",
+  "inputs": [
+    {
+      "label": "Algal/Primary Production",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Thick mats or scums widespread. Substrate obscured<br>Criteria: Dense blooms overshadowing habitat"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Frequent moderate mats in glides and pools<br>Criteria: Moderate nuisance mats that partially impair habitat"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Slight periphyton increase. Occasional filament clusters<br>Criteria: Slightly elevated algae"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Thin biofilm with visible gravel and cobble. No mats<br>Criteria: Balanced growth and no nuisance bloom"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-algal-primary-production-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "physicochemistry"
+  ],
+  "status": "active"
+}

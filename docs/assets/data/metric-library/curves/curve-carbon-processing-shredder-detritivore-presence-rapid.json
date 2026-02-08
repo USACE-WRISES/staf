@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Leaf packs break down quickly with softening and visible fungal growth. Kick sample includes several shredder taxa Criteria: Fast breakdown with strong biological processing and multiple shredder groups present",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Moderate softening of leaves with some fungal growth. One or two shredder groups present at low abundance Criteria: Intermediate breakdown with partial shredder presence",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Little change to leaf material after several weeks. Packs often coated in silt. Assemblage mostly tolerant collectors and grazers Criteria: Slow breakdown with few or no active shredders",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: No noticeable mass loss. Strong odor or anoxic conditions. No shredders in a reach where they are expected Criteria: Very slow breakdown and absence of shredder taxa in suitable habitat",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-carbon-processing-shredder-detritivore-presence-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-carbon-processing-shredder-detritivore-presence-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-carbon-processing-shredder-detritivore-presence-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-carbon-processing-shredder-detritivore-presence-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "carbon-processing-shredder-detritivore-presence"
+}

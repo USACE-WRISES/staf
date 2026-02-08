@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-upstream-downstream-barriers",
+  "name": "Upstream/Downstream Barriers",
+  "discipline": "Biology",
+  "function": "Watershed Connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "No major barriers impede migration unless natural waterfalls exist.",
+  "methodContextMarkdown": "Context: C/W\n\nMethod: D",
+  "howToMeasureMarkdown": "PAD and dam shapefile + field confirm",
+  "inputs": [
+    {
+      "label": "Upstream/Downstream Barriers",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Large regulating dam close to the reach with multiple downstream grade controls.<br>Criteria: <20% accessible due to big dams or multiple blockages."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Several small barriers in series restrict movement across subreaches.<br>Criteria: About 20-50% accessible."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One small low-head structure downstream with partial passage at moderate flows.<br>Criteria: About 50-80% accessible."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: No dams or weirs within the connected corridor. Only small natural steps that fish pass at typical flows.<br>Criteria: 80-100% of habitat accessible. No major barriers."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-upstream-downstream-barriers-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "biology"
+  ],
+  "status": "active"
+}

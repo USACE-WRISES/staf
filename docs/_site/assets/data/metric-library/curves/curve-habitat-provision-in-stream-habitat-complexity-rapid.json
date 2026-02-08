@@ -1,0 +1,64 @@
+{
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "SFARI rapid scoring",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "description": "Observation: Riffles, runs, pools, and large wood recur across the reach. Criteria: Multiple habitat types well represented.",
+              "yMax": 1,
+              "yMin": 0.84,
+              "y": 0.93
+            },
+            {
+              "x": "Agree",
+              "description": "Observation: Riffle and run common. Pools intermittent. Sparse cover. Criteria: Some variety but missing key elements.",
+              "yMax": 0.83,
+              "yMin": 0.64,
+              "y": 0.73
+            },
+            {
+              "x": "Neutral",
+              "description": "Neutral / mixed evidence.",
+              "yMax": 0.63,
+              "yMin": 0.44,
+              "y": 0.53
+            },
+            {
+              "x": "Disagree",
+              "description": "Observation: Long uniform glide or sand bed with occasional shallow run. Criteria: Mostly uniform. Only 1-2 distinct features.",
+              "yMax": 0.43,
+              "yMin": 0.24,
+              "y": 0.33
+            },
+            {
+              "x": "Strongly Disagree",
+              "description": "Observation: Straight, entrenched, uniform channel with little cover. Criteria: Very uniform channel. Limited structural diversity.",
+              "yMax": 0.23,
+              "yMin": 0,
+              "y": 0.13
+            }
+          ],
+          "id": "curve-habitat-provision-in-stream-habitat-complexity-rapid-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-habitat-provision-in-stream-habitat-complexity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "units": "",
+      "activeLayerId": "curve-habitat-provision-in-stream-habitat-complexity-rapid-layer"
+    }
+  ],
+  "schemaVersion": 1,
+  "name": "SFARI rapid curve set",
+  "curveSetId": "curve-habitat-provision-in-stream-habitat-complexity-rapid",
+  "tier": "rapid",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "habitat-provision-in-stream-habitat-complexity"
+}

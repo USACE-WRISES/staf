@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+  "name": "Peak Flow Capacity (Velocity/ Shear Stress)",
+  "discipline": "Hydraulics",
+  "function": "High Flow Dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Bankfull shear stress fits substrate/banks, indicating stable capacity.",
+  "methodContextMarkdown": "Context: C\n\nMethod: D",
+  "howToMeasureMarkdown": "Manning's tau at Qbf (HEC-RAS/Excel)",
+  "inputs": [
+    {
+      "label": "Peak Flow Capacity (Velocity/ Shear Stress)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Widespread bank retreat, channel shifts, or large sediment deposits after moderate flows.<br>Criteria: Extreme mismatch; chronic instability"
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Velocity and shear noticeably too high or too low. Bars grow, shift, or scour around structures after moderate flows.<br>Criteria: Significant mismatch; frequent instability"
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Small scour spots or minor deposition in a few places.<br>Criteria: Slight mismatch; occasional instability"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Velocity and shear match what the bed can resist. Only small bar tweaks or thin new deposits.<br>Criteria: Near threshold; stable"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-peak-flow-capacity-velocity-shear-stress-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydraulics"
+  ],
+  "status": "active"
+}

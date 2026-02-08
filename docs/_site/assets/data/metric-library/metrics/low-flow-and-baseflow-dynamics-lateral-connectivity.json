@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-lateral-connectivity",
+  "name": "Lateral connectivity",
+  "discipline": "Hydraulics",
+  "function": "Low Flow and Baseflow Dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Extent to which water remains in contact with both banks and low benches during low flow, sustaining edge habitat and exchange.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Measure wetted width at 5-10 cross sections; estimate percent of bankline with a continuous wetted margin; note connected backwaters/benches; support with dry-season imagery and LiDAR.",
+  "inputs": [
+    {
+      "label": "Lateral connectivity",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Banks largely dry; narrow central thread only.<br>Criteria: Lateral pockets and benches mostly dry or isolated."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Long dry shelves common; only scattered wetted edges.<br>Criteria: Most lateral pockets disconnected except during storms."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Banks wetted in many places but intermittent dry shelves.<br>Criteria: Some benches/backwaters connected while others are dry."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Water contacts both banks along most of the reach; lateral pockets connected.<br>Criteria: Most margins wetted with few dry shelves; small pockets remain connected."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-lateral-connectivity-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydraulics"
+  ],
+  "status": "active"
+}

@@ -1,48 +1,57 @@
 {
-  "schemaVersion": 1,
-  "curveSetId": "curve-population-support-juvenile-refuge",
-  "metricId": "population-support-juvenile-refuge",
-  "tier": "screening",
-  "name": "Screening default curve",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
   "curves": [
     {
-      "curveId": "curve-population-support-juvenile-refuge-default",
-      "name": "Screening",
-      "xType": "qualitative",
-      "units": "",
+      "indexRange": true,
       "layers": [
         {
-          "id": "curve-population-support-juvenile-refuge-layer",
           "name": "Screening",
           "points": [
             {
               "x": "Optimal",
-              "y": 1,
-              "description": "More than 40% of reach has adequate juvenile cover."
+              "description": "More than 40% of reach has adequate juvenile cover.",
+              "yMax": 1.0,
+              "yMin": 0.76,
+              "y": 1
             },
             {
               "x": "Suboptimal",
-              "y": 0.69,
-              "description": "20-40% cover."
+              "description": "20-40% cover.",
+              "yMax": 0.75,
+              "yMin": 0.5,
+              "y": 0.69
             },
             {
               "x": "Marginal",
-              "y": 0.3,
-              "description": "5-20% cover."
+              "description": "5-20% cover.",
+              "yMax": 0.49,
+              "yMin": 0.25,
+              "y": 0.3
             },
             {
               "x": "Poor",
-              "y": 0,
-              "description": "<5% cover or none."
+              "description": "<5% cover or none.",
+              "yMax": 0.24,
+              "yMin": 0.0,
+              "y": 0
             }
-          ]
+          ],
+          "id": "curve-population-support-juvenile-refuge-layer"
         }
       ],
+      "xType": "categorical",
+      "curveId": "curve-population-support-juvenile-refuge-default",
+      "name": "Screening",
+      "units": "",
       "activeLayerId": "curve-population-support-juvenile-refuge-layer"
     }
-  ]
+  ],
+  "schemaVersion": 1,
+  "name": "Screening default curve",
+  "curveSetId": "curve-population-support-juvenile-refuge",
+  "tier": "screening",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "metricId": "population-support-juvenile-refuge"
 }

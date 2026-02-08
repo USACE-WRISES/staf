@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "About 30 m buffer or regionally appropriate dense vegetation."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Cropped or paved to bank edge.<br>Criteria: < ~5 m"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "15-30 m buffer."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Narrow buffer with frequent breaks.<br>Criteria: ~5-15 m"
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "5-15 m buffer."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "<5 m buffer or no meaningful buffer."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Mostly vegetated buffer with gaps.<br>Criteria: ~15-30 m"
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Continuous native forest buffer on both banks.<br>Criteria: >= ~30 m width per bank"
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-nutrient-cycling-vegetated-riparian-corridor-width"
+          "curve-nutrient-cycling-vegetated-riparian-corridor-width-rapid"
         ]
       }
     }
@@ -69,7 +74,10 @@
     "NLCD land cover."
   ],
   "tags": [
+    "Nutrient cycling",
     "Physicochemistry",
-    "Nutrient cycling"
+    "physicochemistry",
+    "sfari",
+    "rapid"
   ]
 }

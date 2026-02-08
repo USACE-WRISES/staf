@@ -19,38 +19,43 @@
   ],
   "profiles": [
     {
-      "profileId": "screening-default",
-      "tier": "screening",
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
       "status": "active",
-      "recommended": false,
+      "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "sfariLikert",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "sfariLikert"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
-              "criteriaMarkdown": "Four to five or more distinct major groups."
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Very few species. Mostly tolerant taxa.<br>Criteria: Extremely low richness and diversity. Poor index score."
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Two to four distinct major groups."
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Few species. One or two groups dominate.<br>Criteria: Low richness. Dominance by tolerant taxa or single group."
             },
             {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "One to two distinct major groups."
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
             },
             {
-              "label": "Poor",
-              "ratingId": "poor",
-              "criteriaMarkdown": "Zero, or only one extremely tolerant group."
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Several species present. Some groups missing.<br>Criteria: Moderate richness. Some imbalance in feeding groups."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Many species across several feeding groups.<br>Criteria: High richness. Balanced feeding groups. Good index score."
             }
           ]
         }
@@ -58,7 +63,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-community-dynamics-macroinvertebrate-taxa-richness"
+          "curve-community-dynamics-macroinvertebrate-taxa-richness-rapid"
         ]
       }
     }
@@ -69,6 +74,9 @@
   ],
   "tags": [
     "Biology",
-    "Community dynamics"
+    "Community dynamics",
+    "biology",
+    "sfari",
+    "rapid"
   ]
 }

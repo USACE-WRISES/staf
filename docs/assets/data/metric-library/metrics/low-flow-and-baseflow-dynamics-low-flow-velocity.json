@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-low-flow-velocity",
+  "name": "Low flow velocity",
+  "discipline": "Hydraulics",
+  "function": "Low Flow and Baseflow Dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Low flow velocity describes movement through the thalweg during typical low flow; measurable movement supports dissolved oxygen and limits stagnation, while shifts indicate altered baseflow timing.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "Measure velocity with float or ADV, estimate via Manning with low-flow discharge, slope, and roughness, or use a simple model. Evaluate baseflow patterns and timing with hydrograph separation or IHA/EflowStats and compare to reference or regional low-flow stats.",
+  "inputs": [
+    {
+      "label": "Low flow velocity",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Widespread stagnation or no visible movement.<br>Criteria: Negligible low-flow velocity; scum or odor present."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Very low or near-stagnant velocities in a normally flowing reach.<br>Criteria: Only slight thalweg movement; debris often stalls in pools or runs."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: Slightly reduced velocities with small stagnant pockets.<br>Criteria: Minor reduction in velocity; movement persists through most of reach."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: Measurable low-flow velocity with steady movement; no stagnation.<br>Criteria: Velocity near reference for stream type (e.g., ~0.05-0.10 m/s in higher-gradient streams)."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-low-flow-velocity-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "hydraulics"
+  ],
+  "status": "active"
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-evolution-incision-trend-headcuts",
+  "name": "Incision Trend (headcuts)",
+  "discipline": "Geomorphology",
+  "function": "Channel Evolution",
+  "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
+  "descriptionMarkdown": "No active headcuts or fully stabilized ones; no ongoing incision or bank widening.",
+  "methodContextMarkdown": "Context: C\n\nMethod: F",
+  "howToMeasureMarkdown": "GPS and photo headcut height/advance",
+  "inputs": [
+    {
+      "label": "Incision Trend (headcuts)",
+      "type": "rapid indicator",
+      "source": "SFARI rapid assessment",
+      "required": true
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "rapid-sfari-likert",
+      "tier": "rapid",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "sfariLikert",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "sfariLikert"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Strongly Disagree",
+              "ratingId": "sd",
+              "criteriaMarkdown": "Observation: Several large headcuts marching upstream across the reach with widespread bank failures above cuts.<br>Criteria: Multiple or large active headcuts with rapid advance."
+            },
+            {
+              "label": "Disagree",
+              "ratingId": "d",
+              "criteriaMarkdown": "Observation: Headcut with fresh plunge pool and exposed strata observed in two locations. Upstream migration evident between image years.<br>Criteria: One to two moderate, actively migrating headcuts."
+            },
+            {
+              "label": "Neutral",
+              "ratingId": "n",
+              "criteriaMarkdown": "Neutral / mixed evidence."
+            },
+            {
+              "label": "Agree",
+              "ratingId": "a",
+              "criteriaMarkdown": "Observation: One small local knickpoint at a tributary junction with little change between dates.<br>Criteria: Localized feature with limited progression."
+            },
+            {
+              "label": "Strongly Agree",
+              "ratingId": "sa",
+              "criteriaMarkdown": "Observation: No headcuts mapped in imagery or field. Old steps fully vegetated.<br>Criteria: No active headcuts."
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-evolution-incision-trend-headcuts-rapid"
+        ]
+      }
+    }
+  ],
+  "tags": [
+    "rapid",
+    "sfari",
+    "geomorphology"
+  ],
+  "status": "active"
+}
