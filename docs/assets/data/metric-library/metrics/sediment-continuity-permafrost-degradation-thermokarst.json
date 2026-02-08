@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-permafrost-degradation-thermokarst",
+  "name": "Permafrost Degradation / Thermokarst",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Sediment continuity",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, and habitat quality while supporting riparian succession.",
+  "descriptionMarkdown": "Permafrost condition and evidence of thaw/degradation within the contributing area, which can increase sediment and alter hydrology.",
+  "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Desktop (GIS/imagery) with field verification where feasible",
+  "howToMeasureMarkdown": "Review permafrost maps and recent imagery for evidence of thaw slumps/thermokarst and evaluate per the metric definition; confirm in field where feasible. Assign the condition class using the bin thresholds for this metric.",
+  "inputs": [
+    {
+      "label": "Permafrost Degradation / Thermokarst",
+      "type": "desktop (gis/imagery) with field verification where feasible",
+      "source": "Watershed and Channel",
+      "required": true,
+      "helpMarkdown": "Imagery, Permafrost mapping, & Site data"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: No areas of permafrost degradation in the catchment area have been observed. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Areas of permafrost degradation exist within or upstream of the project reach contributing to hillslope slumping or increased erosion but are not resulting in impacts to water quality. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Areas of permafrost degradation exist within or upstream of the project reach contributing to hillslope slumping or increased erosion but are not resulting in impacts to water quality. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Areas of permafrost degradation exist within or upstream of the project reach, contributing to hillslope slumping, increased erosion, and/or water quality impacts. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-permafrost-degradation-thermokarst"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "scsDefaultOn": false,
+    "metricDataSource": "Imagery, Permafrost mapping, & Site data",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Areas of permafrost degradation exist within or upstream of the project reach, contributing to hillslope slumping, increased erosion, and/or water quality impacts.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Areas of permafrost degradation exist within or upstream of the project reach contributing to hillslope slumping or increased erosion but are not resulting in impacts to water quality.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "No areas of permafrost degradation in the catchment area have been observed.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

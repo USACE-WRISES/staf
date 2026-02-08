@@ -230,9 +230,44 @@
       }
 
       const metricsRaw = parseTSV(metricsText);
-      const functionByName = new Map(
-        functionsList.map((fn) => [normalizeText(fn.name), fn])
-      );
+      const functionAliases = new Map([
+        ['bed composition and bedform dynamics', 'bed composition and large wood'],
+      ]);
+      const functionByName = new Map();
+      const functionOrderById = new Map();
+      const functionOrderByName = new Map();
+      const disciplineOrder = [];
+      const disciplineOrderByName = new Map();
+      functionsList.forEach((fn, index) => {
+        const functionName = fn.name || '';
+        const discipline = fn.category || '';
+        const normalizedFunction = normalizeText(functionName);
+        if (normalizedFunction) {
+          functionByName.set(normalizedFunction, fn);
+          functionOrderByName.set(normalizedFunction, index);
+        }
+        if (fn.id) {
+          functionByName.set(normalizeText(String(fn.id).replace(/-/g, ' ')), fn);
+          functionOrderById.set(fn.id, index);
+        }
+        const normalizedDiscipline = normalizeText(discipline);
+        if (normalizedDiscipline && !disciplineOrderByName.has(normalizedDiscipline)) {
+          disciplineOrderByName.set(normalizedDiscipline, disciplineOrder.length);
+          disciplineOrder.push(discipline);
+        }
+      });
+      functionAliases.forEach((target, alias) => {
+        const match = functionByName.get(normalizeText(target));
+        if (match) {
+          functionByName.set(normalizeText(alias), match);
+        }
+      });
+      const getFunctionMatch = (value) => functionByName.get(normalizeText(value || '')) || null;
+      const resolveFunctionAlias = (value) => {
+        const raw = (value || '').trim();
+        const aliasTarget = functionAliases.get(raw.toLowerCase());
+        return aliasTarget || raw;
+      };
       const functionById = new Map(functionsList.map((fn) => [fn.id, fn]));
       const mappingById = mappingList.reduce((acc, item) => {
         acc[item.id] = item;
@@ -244,7 +279,11 @@
           : {};
 
       const libraryIdCounts = new Map();
-      const buildLibraryId = (functionName, metricName) => {
+      const buildLibraryId = (functionName, metricName, explicitId = '') => {
+        const explicit = (explicitId || '').trim();
+        if (explicit) {
+          return explicit;
+        }
         const baseId =
           slugify(`${functionName}-${metricName}`) || slugify(metricName) || 'metric';
         const count = libraryIdCounts.get(baseId) || 0;
@@ -253,14 +292,19 @@
       };
 
       const metrics = metricsRaw.map((row, index) => {
-        const functionKey = normalizeText(row.Function || row.function || '');
-        const functionMatch = functionByName.get(functionKey);
-        const libraryId = buildLibraryId(row.Function || row.function || '', row.Metric || row.metric || '');
+        const rawFunctionName = row.Function || row.function || '';
+        const rawDiscipline = row.Discipline || row.discipline || '';
+        const functionMatch = getFunctionMatch(resolveFunctionAlias(rawFunctionName));
+        const libraryId = buildLibraryId(
+          rawFunctionName,
+          row.Metric || row.metric || '',
+          row['Metric ID'] || row.metric_id || row.metricId || ''
+        );
         return {
           id: `metric-${index + 1}`,
           libraryId,
-          discipline: row.Discipline || row.discipline || '',
-          functionName: row.Function || row.function || '',
+          discipline: functionMatch?.category || rawDiscipline || '',
+          functionName: functionMatch?.name || rawFunctionName,
           functionStatement:
             row['Function statement'] || row.function_statement || row.functionStatement || '',
           functionId: functionMatch ? functionMatch.id : null,
@@ -282,8 +326,44 @@
             poor: row.Poor || row.poor || '',
           },
           references: row.References || row.references || '',
+          sourceOrder: index,
         };
       });
+      const getDisciplineRank = (discipline) => {
+        const key = normalizeText(discipline || '');
+        const rank = disciplineOrderByName.get(key);
+        return Number.isFinite(rank) ? rank : 9999;
+      };
+      const getFunctionRank = (metric) => {
+        if (metric && metric.functionId && functionOrderById.has(metric.functionId)) {
+          return functionOrderById.get(metric.functionId);
+        }
+        const key = normalizeText(
+          resolveFunctionAlias((metric && metric.functionName) || '')
+        );
+        if (functionOrderByName.has(key)) {
+          return functionOrderByName.get(key);
+        }
+        return 9999;
+      };
+      const sortMetricsForDisplay = (a, b) => {
+        const disciplineRankA = getDisciplineRank(a?.discipline);
+        const disciplineRankB = getDisciplineRank(b?.discipline);
+        if (disciplineRankA !== disciplineRankB) {
+          return disciplineRankA - disciplineRankB;
+        }
+        const functionRankA = getFunctionRank(a);
+        const functionRankB = getFunctionRank(b);
+        if (functionRankA !== functionRankB) {
+          return functionRankA - functionRankB;
+        }
+        const sourceOrderA = Number.isFinite(a?.sourceOrder) ? a.sourceOrder : 9999;
+        const sourceOrderB = Number.isFinite(b?.sourceOrder) ? b.sourceOrder : 9999;
+        if (sourceOrderA !== sourceOrderB) {
+          return sourceOrderA - sourceOrderB;
+        }
+        return (a?.metric || '').localeCompare(b?.metric || '');
+      };
 
       const metricById = new Map(metrics.map((metric) => [metric.id, metric]));
       const metricIdSet = new Set(metrics.map((metric) => metric.id));
@@ -340,8 +420,7 @@
         if (existing) {
           return existing;
         }
-        const functionKey = normalizeText(detail.function || '');
-        const functionMatch = functionByName.get(functionKey);
+        const functionMatch = getFunctionMatch(resolveFunctionAlias(detail.function || ''));
         const profile =
           detail.profiles?.find((p) => p.profileId === profileId) ||
           detail.profiles?.[0];
@@ -363,6 +442,7 @@
           references: Array.isArray(detail.references)
             ? detail.references.join('; ')
             : '',
+          sourceOrder: metrics.length,
         };
         metrics.push(metric);
         metricById.set(metric.id, metric);
@@ -371,19 +451,21 @@
         return metric;
       };
 
-      const starMetricIdsByFunction = new Map();
-      metrics.forEach((metric) => {
-        if (!metric.functionId) {
-          return;
-        }
-        if (!metric.isPredefined) {
-          return;
-        }
-        if (!starMetricIdsByFunction.has(metric.functionId)) {
-          starMetricIdsByFunction.set(metric.functionId, metric.id);
-        }
-      });
-      const predefinedMetricIds = Array.from(starMetricIdsByFunction.values());
+      const predefinedMetricIds = metrics
+        .filter((metric) => metric.isPredefined)
+        .map((metric) => metric.id);
+      if (!predefinedMetricIds.length) {
+        const starMetricIdsByFunction = new Map();
+        metrics.forEach((metric) => {
+          if (!metric.functionId) {
+            return;
+          }
+          if (!starMetricIdsByFunction.has(metric.functionId)) {
+            starMetricIdsByFunction.set(metric.functionId, metric.id);
+          }
+        });
+        predefinedMetricIds.push(...Array.from(starMetricIdsByFunction.values()));
+      }
 
       const defaultCurveIndexValues = [0, 0.3, 0.69, 1];
   const defaultCurveRanges = new Map([
@@ -2028,9 +2110,26 @@
 
       const disciplineFilter = document.createElement('select');
       disciplineFilter.setAttribute('aria-label', 'Filter by discipline');
-      const disciplineValues = Array.from(
-        new Set(metrics.map((metric) => metric.discipline))
-      );
+      const disciplineValues = [];
+      const seenDisciplines = new Set();
+      disciplineOrder.forEach((discipline) => {
+        const key = normalizeText(discipline);
+        if (!key || seenDisciplines.has(key)) {
+          return;
+        }
+        if (metrics.some((metric) => normalizeText(metric.discipline || '') === key)) {
+          disciplineValues.push(discipline);
+          seenDisciplines.add(key);
+        }
+      });
+      metrics.forEach((metric) => {
+        const key = normalizeText(metric.discipline || '');
+        if (!key || seenDisciplines.has(key)) {
+          return;
+        }
+        disciplineValues.push(metric.discipline);
+        seenDisciplines.add(key);
+      });
       const disciplineAll = document.createElement('option');
       disciplineAll.value = 'all';
       disciplineAll.textContent = 'All disciplines';
@@ -2978,25 +3077,57 @@
               });
             }
           });
-        } else {
-          const visibleMetrics = metrics.filter((metric) => {
-            if (!selectedMetricIds.has(metric.id)) {
-              return false;
-            }
-            const matchesDiscipline =
-              disciplineValue === 'all' || metric.discipline === disciplineValue;
-            const haystack = [
-              metric.discipline,
-              metric.functionName,
-              metric.metric,
-              metric.context,
-              metric.method,
-            ]
-              .join(' ')
-              .toLowerCase();
-            const matchesSearch = !term || haystack.includes(term);
-            return matchesDiscipline && matchesSearch;
+
+          const unmatchedFunctionMetrics = metrics
+            .filter((metric) => {
+              if (!selectedMetricIds.has(metric.id) || metric.functionId) {
+                return false;
+              }
+              if (disciplineValue !== 'all' && metric.discipline !== disciplineValue) {
+                return false;
+              }
+              const metricHaystack = [
+                metric.discipline,
+                metric.functionName,
+                metric.metric,
+                metric.context,
+                metric.method,
+              ]
+                .join(' ')
+                .toLowerCase();
+              return !term || metricHaystack.includes(term);
+            })
+            .sort(sortMetricsForDisplay);
+          unmatchedFunctionMetrics.forEach((metric) => {
+            rowsToRender.push({
+              type: 'metric',
+              discipline: metric.discipline,
+              metric,
+              functionId: metric.functionId,
+              functionMeta: null,
+            });
           });
+        } else {
+          const visibleMetrics = metrics
+            .filter((metric) => {
+              if (!selectedMetricIds.has(metric.id)) {
+                return false;
+              }
+              const matchesDiscipline =
+                disciplineValue === 'all' || metric.discipline === disciplineValue;
+              const haystack = [
+                metric.discipline,
+                metric.functionName,
+                metric.metric,
+                metric.context,
+                metric.method,
+              ]
+                .join(' ')
+                .toLowerCase();
+              const matchesSearch = !term || haystack.includes(term);
+              return matchesDiscipline && matchesSearch;
+            })
+            .sort(sortMetricsForDisplay);
 
           rowsToRender = visibleMetrics.map((metric) => ({
             type: 'metric',

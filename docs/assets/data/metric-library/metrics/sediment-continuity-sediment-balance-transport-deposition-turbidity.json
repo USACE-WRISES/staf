@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-sediment-balance-transport-deposition-turbidity",
+  "name": "Sediment Balance (transport/deposition/turbidity)",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Sediment continuity",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+  "descriptionMarkdown": "Fine input aligns with transport, unless higher turbidity/fines are historically normal (e.g., blackwater).\nDeposition matches natural form, no severe bar formation beyond typical references.\nFlow/slope balance incoming sediment, avoiding major bars or deep scour, unless imbalance is historically normal.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field; Desktop",
+  "howToMeasureMarkdown": "Review available turbidity or TSS data and visually assess bed fines. Where data are absent, infer risk from land use and soils.\nDelineate bar types (point, mid-channel, lateral) and compare to expected morphology for the channel type.\nScreen stream power using discharge and slope and compare with observed bars or scour. Detailed transport modeling is beyond screening.",
+  "inputs": [
+    {
+      "label": "Sediment Balance (transport/deposition/turbidity)",
+      "type": "field; desktop",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Low chronic turbidity and minimal fines, or regionally normal conditions. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Minor silt layers or partial turbidity. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: High turbidity or moderate silt coverage. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Severe siltation or turbidity that smothers substrate. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-sediment-balance-transport-deposition-turbidity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA Water Quality Portal (turbidity/TSS)",
+    "USGS NWIS (where available)",
+    "NLCD land cover",
+    "SSURGO K-factor (erodibility).",
+    "NAIP or orthophotos",
+    "LiDAR bare-earth DEM (where available).",
+    "USGS StreamStats flow statistics (where available)",
+    "NHDPlus HR slope",
+    "NAIP imagery for bar validation."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "rapid",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Severe siltation or turbidity that smothers substrate.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Minor silt layers or partial turbidity. / High turbidity or moderate silt coverage.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Low chronic turbidity and minimal fines, or regionally normal conditions.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

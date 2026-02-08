@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "metricId": "surface-water-storage-percent-wetlands-in-watershed",
-  "name": "Percent wetlands in watershed",
+  "name": "Percent Wetlands in Watershed",
   "shortName": "",
   "discipline": "Hydrology",
   "function": "Surface water storage",
@@ -11,10 +11,11 @@
   "howToMeasureMarkdown": "Calculate the percent area classified as wetlands using a land cover or wetlands layer. Where possible, compute within the mapped floodplain or valley bottom to better reflect storage.",
   "inputs": [
     {
-      "label": "Percent wetlands in watershed",
+      "label": "Percent Wetlands in Watershed",
       "type": "desktop",
       "source": "Watershed",
-      "required": true
+      "required": true,
+      "helpMarkdown": "Watershed"
     }
   ],
   "profiles": [
@@ -35,22 +36,22 @@
             {
               "label": "Optimal",
               "ratingId": "optimal",
-              "criteriaMarkdown": ">5% wetland coverage, or consistent with historical norm."
+              "criteriaMarkdown": "Good: >5% wetland coverage, or consistent with historical norm. (Suggested index range 0.70-1.0)"
             },
             {
               "label": "Suboptimal",
               "ratingId": "suboptimal",
-              "criteriaMarkdown": "2-5% wetland coverage."
+              "criteriaMarkdown": "Fair: 1-5% wetland coverage. (Suggested index range 0.50-0.69)"
             },
             {
               "label": "Marginal",
               "ratingId": "marginal",
-              "criteriaMarkdown": "1-2% wetland coverage."
+              "criteriaMarkdown": "Fair: 1-5% wetland coverage. (Suggested index range 0.30-0.49)"
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "<1% wetland coverage, or heavily drained wetlands."
+              "criteriaMarkdown": "Poor: <1% wetland coverage, or heavily drained wetlands. (Suggested index range 0.0-0.29)"
             }
           ]
         }
@@ -71,6 +72,40 @@
   ],
   "tags": [
     "Hydrology",
-    "Surface water storage"
-  ]
+    "Surface water storage",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "Watershed",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "<1% wetland coverage, or heavily drained wetlands.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "1-5% wetland coverage.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": ">5% wetland coverage, or consistent with historical norm.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
 }

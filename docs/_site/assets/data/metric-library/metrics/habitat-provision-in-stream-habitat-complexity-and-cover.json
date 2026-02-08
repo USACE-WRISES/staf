@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
+  "name": "In-stream Habitat Complexity & Cover",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "Multiple habitat types (riffles/pools/woody debris) exist if historically expected, not unnaturally uniform.\nVaried substrates (gravel, cobble, wood) provide multiple habitats, unless uniform is normal.\nProvides shelter unless historically minimal in certain ecoregions.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Count distinct habitat types (riffle, run, pool, cover) along the reach. Use imagery as a screening aid where needed.\nCount substrate classes and note presence of wood, leaf packs, and other cover types.\nEstimate percent of bank length with undercut or overhanging cover during a field visit.",
+  "inputs": [
+    {
+      "label": "In-stream Habitat Complexity & Cover",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Multiple habitat types well represented. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Some variety but key elements are missing. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Mostly uniform with only 1-2 distinct features. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Very uniform channel with limited structural diversity. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-in-stream-habitat-complexity-and-cover"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA Rapid Bioassessment Protocols (RBP)",
+    "NAIP imagery",
+    "USGS 3DEP LiDAR (where available).",
+    "USGS NAWQA pebble-count method",
+    "habitat mapping",
+    "supporting context from imagery and slope.",
+    "Field mapping",
+    "NAIP imagery",
+    "canopy and bank metrics where available."
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "rapid; screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Very uniform channel with limited structural diversity.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Some variety but key elements are missing. / Mostly uniform with only 1-2 distinct features.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Multiple habitat types well represented.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

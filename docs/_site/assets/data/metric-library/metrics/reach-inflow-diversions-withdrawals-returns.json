@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-diversions-withdrawals-returns",
+  "name": "Diversions / Withdrawals / Returns",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Reach inflow",
+  "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+  "descriptionMarkdown": "Diversions/returns are minimal, flow remains near natural regime without artificial additions/withdrawals.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Map withdrawals, returns, and ditches that affect the reach using local diversion layers or mapped canals and ditches.",
+  "inputs": [
+    {
+      "label": "Diversions / Withdrawals / Returns",
+      "type": "desktop",
+      "source": "Watershed",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: No significant withdrawals or returns. Flows remain near natural. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Minor ditches or returns with limited effect. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Moderate diversions or returns causing seasonal stress. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Large or chronic diversions or returns that drastically alter the flow regime. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-diversions-withdrawals-returns"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "State water-rights and diversions GIS",
+    "irrigation district maps",
+    "NHD canals/ditches",
+    "USGS Water Use summaries."
+  ],
+  "tags": [
+    "Hydrology",
+    "Reach inflow",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Large or chronic diversions or returns that drastically alter the flow regime.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Minor ditches or returns with limited effect. / Moderate diversions or returns causing seasonal stress.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "No significant withdrawals or returns. Flows remain near natural.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

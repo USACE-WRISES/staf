@@ -1,4 +1,13 @@
 {
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-percent-wetlands-in-watershed",
+  "metricId": "surface-water-storage-percent-wetlands-in-watershed",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
   "curves": [
     {
       "indexRange": true,
@@ -8,31 +17,31 @@
           "points": [
             {
               "x": "Optimal",
-              "description": ">5% wetland coverage, or consistent with historical norm.",
-              "yMax": 1.0,
-              "yMin": 0.76,
-              "y": 1
+              "description": "Good: >5% wetland coverage, or consistent with historical norm. (Suggested index range 0.70-1.0)",
+              "yMax": 1,
+              "yMin": 0.7,
+              "y": 0.85
             },
             {
               "x": "Suboptimal",
-              "description": "2-5% wetland coverage.",
-              "yMax": 0.75,
+              "description": "Fair: 1-5% wetland coverage. (Suggested index range 0.50-0.69)",
+              "yMax": 0.69,
               "yMin": 0.5,
-              "y": 0.69
+              "y": 0.59
             },
             {
               "x": "Marginal",
-              "description": "1-2% wetland coverage.",
+              "description": "Fair: 1-5% wetland coverage. (Suggested index range 0.30-0.49)",
               "yMax": 0.49,
-              "yMin": 0.25,
-              "y": 0.3
+              "yMin": 0.3,
+              "y": 0.4
             },
             {
               "x": "Poor",
-              "description": "<1% wetland coverage, or heavily drained wetlands.",
-              "yMax": 0.24,
-              "yMin": 0.0,
-              "y": 0
+              "description": "Poor: <1% wetland coverage, or heavily drained wetlands. (Suggested index range 0.0-0.29)",
+              "yMax": 0.29,
+              "yMin": 0,
+              "y": 0.14
             }
           ],
           "id": "curve-surface-water-storage-percent-wetlands-in-watershed-layer"
@@ -44,14 +53,5 @@
       "units": "",
       "activeLayerId": "curve-surface-water-storage-percent-wetlands-in-watershed-layer"
     }
-  ],
-  "schemaVersion": 1,
-  "name": "Screening default curve",
-  "curveSetId": "curve-surface-water-storage-percent-wetlands-in-watershed",
-  "tier": "screening",
-  "axes": {
-    "xLabel": "Metric category",
-    "yLabel": "Index score"
-  },
-  "metricId": "surface-water-storage-percent-wetlands-in-watershed"
+  ]
 }

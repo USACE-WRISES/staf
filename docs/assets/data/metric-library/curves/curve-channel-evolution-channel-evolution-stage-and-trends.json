@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-evolution-channel-evolution-stage-and-trends",
+  "metricId": "channel-evolution-channel-evolution-stage-and-trends",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "description": "Good: Stable or re-stabilized channel (Stage I or VI). (Suggested index range 0.70-1.0)",
+              "yMax": 1,
+              "yMin": 0.7,
+              "y": 0.85
+            },
+            {
+              "x": "Suboptimal",
+              "description": "Fair: Partially recovered channel (often Stage V). (Suggested index range 0.50-0.69)",
+              "yMax": 0.69,
+              "yMin": 0.5,
+              "y": 0.59
+            },
+            {
+              "x": "Marginal",
+              "description": "Fair: Actively widening or incising (often Stage III-IV). (Suggested index range 0.30-0.49)",
+              "yMax": 0.49,
+              "yMin": 0.3,
+              "y": 0.4
+            },
+            {
+              "x": "Poor",
+              "description": "Poor: Severe incision or destructive phases (often Stage II or severe III-IV). (Suggested index range 0.0-0.29)",
+              "yMax": 0.29,
+              "yMin": 0,
+              "y": 0.14
+            }
+          ],
+          "id": "curve-channel-evolution-channel-evolution-stage-and-trends-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-channel-evolution-channel-evolution-stage-and-trends-default",
+      "name": "Screening",
+      "units": "",
+      "activeLayerId": "curve-channel-evolution-channel-evolution-stage-and-trends-layer"
+    }
+  ]
+}

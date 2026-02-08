@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-contaminants-and-soil-pollution-indicators",
+  "name": "Contaminants & Soil Pollution Indicators",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Water & soil quality",
+  "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+  "descriptionMarkdown": "Screening metric used to evaluate Water & soil quality based on the definition and bin thresholds provided for this metric.\nNo chemical/fecal contamination signs; soils appear natural, no suspicious odors/staining.",
+  "methodContextMarkdown": "Context: Watershed and Channel; Floodplain\n\nMethod: Desktop (listings/monitoring) and/or Field screening; Field",
+  "howToMeasureMarkdown": "Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.\nInspect soils for odor or staining and review contaminated-site registries where relevant.",
+  "inputs": [
+    {
+      "label": "Contaminants & Soil Pollution Indicators",
+      "type": "desktop (listings/monitoring) and/or field screening; field",
+      "source": "Watershed and Channel; Floodplain",
+      "required": true,
+      "helpMarkdown": "In-situ sampling or ADEC database\nFloodplain"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Natural soils with no contamination indicators. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Minor dumping or moderate manure presence. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Known moderate contamination risk. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Highly contaminated soils with strong odor or toxicity indicators. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-contaminants-and-soil-pollution-indicators"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "EPA Cleanups in My Community",
+    "state contaminated-sites registries (where available)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Water & soil quality",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "In-situ sampling or ADEC database\nFloodplain",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Highly contaminated soils with strong odor or toxicity indicators.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Minor dumping or moderate manure presence. / Known moderate contamination risk.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Natural soils with no contamination indicators.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

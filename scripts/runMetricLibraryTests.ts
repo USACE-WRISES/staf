@@ -19,10 +19,14 @@ const run = async () => {
   );
 
   // Valid sample metric detail parses
-  const samplePath = path.join(fixturesDir, 'percent-impervious-area.json');
+  const fixtureFiles = (await fs.readdir(fixturesDir))
+    .filter((fileName) => fileName.endsWith('.json'))
+    .sort();
+  assert.ok(fixtureFiles.length > 0, 'Expected at least one metric fixture.');
+  const samplePath = path.join(fixturesDir, fixtureFiles[0]);
   const sample = await loadJson(samplePath);
   const parsed = MetricDetailSchema.parse(sample);
-  assert.equal(parsed.metricId, 'percent-impervious-area');
+  assert.equal(parsed.metricId, sample.metricId);
 
   // Invalid scoring.type fails
   const invalid = { ...sample };

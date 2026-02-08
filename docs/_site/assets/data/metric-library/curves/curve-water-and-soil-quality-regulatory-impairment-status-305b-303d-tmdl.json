@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl",
+  "metricId": "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "description": "Good: In category 1, 2, or 3 or aquatic life uses not evaluated. (Suggested index range 0.70-1.0)",
+              "yMax": 1,
+              "yMin": 0.7,
+              "y": 0.85
+            },
+            {
+              "x": "Suboptimal",
+              "description": "Fair: In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated. (Suggested index range 0.50-0.69)",
+              "yMax": 0.69,
+              "yMin": 0.5,
+              "y": 0.59
+            },
+            {
+              "x": "Marginal",
+              "description": "Fair: In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated. (Suggested index range 0.30-0.49)",
+              "yMax": 0.49,
+              "yMin": 0.3,
+              "y": 0.4
+            },
+            {
+              "x": "Poor",
+              "description": "Poor: In Category 5 due to nonsupport of aquatic life uses OR in Category 4 and aquatic life impairment not actively being mitigated. (Suggested index range 0.0-0.29)",
+              "yMax": 0.29,
+              "yMin": 0,
+              "y": 0.14
+            }
+          ],
+          "id": "curve-water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl-default",
+      "name": "Screening",
+      "units": "",
+      "activeLayerId": "curve-water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl-layer"
+    }
+  ]
+}

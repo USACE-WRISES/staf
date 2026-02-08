@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-concentrated-runoff-stormwater-inputs",
+  "name": "Concentrated Runoff / Stormwater Inputs",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Reach inflow",
+  "functionStatement": "Quantity and quality of inflow (tributaries, ditches, and pipes) do not generate harmful peaks or pollution pulses and instead support diverse habitat conditions and native species.\nQuantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+  "descriptionMarkdown": "Screening metric used to evaluate Reach inflow based on the definition and bin thresholds provided for this metric.\nRunoff is minimal or well-managed, causing no significant direct inflows or pollutant pulses.",
+  "methodContextMarkdown": "Context: Watershed and Channel; Channel\n\nMethod: Desktop (permit/layer review) with field verification where feasible; Field",
+  "howToMeasureMarkdown": "Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.\nCount road or highway drainage outfalls per 100 m and note erosion or sediment plumes. Corroborate with available transportation layers if present.",
+  "inputs": [
+    {
+      "label": "Concentrated Runoff / Stormwater Inputs",
+      "type": "desktop (permit/layer review) with field verification where feasible; field",
+      "source": "Watershed and Channel; Channel",
+      "required": true,
+      "helpMarkdown": "State/agency datasets, GIS/imagery, and field observations (as applicable)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: 0-1 outfall per 100 m, and no noticeable discharge effects. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: 2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: 4-5 outfalls per 100 m, with noticeable sediment or pollutant inputs. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: More than 5 outfalls per 100 m, or major highway drains with concentrated discharge. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-concentrated-runoff-stormwater-inputs"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MI SQT 2019",
+    "NC SQT 2019",
+    "SC SQT 2021",
+    "Field count",
+    "DOT drainage or as-built plans (where available)",
+    "road drainage GIS layers."
+  ],
+  "tags": [
+    "Hydrology",
+    "Reach inflow",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT; North Carolina SQT; South Carolina SQT; ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "State/agency datasets, GIS/imagery, and field observations (as applicable).",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "More than 5 outfalls per 100 m, or major highway drains with concentrated discharge.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering. / 4-5 outfalls per 100 m, with noticeable sediment or pollutant inputs.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "0-1 outfall per 100 m, and no noticeable discharge effects.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

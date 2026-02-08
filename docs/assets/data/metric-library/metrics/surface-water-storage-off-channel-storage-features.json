@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-off-channel-storage-features",
+  "name": "Off-channel Storage Features",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Side channels/beaver ponds/oxbows connect during moderate floods, providing off-channel storage and habitat.",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map side channels and oxbows and verify whether they connect at about bankfull stage. Use simple inundation mapping if needed.",
+  "inputs": [
+    {
+      "label": "Off-channel Storage Features",
+      "type": "field",
+      "source": "Floodplain",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Multiple off-channel features connect in moderate floods. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Partial connection or fewer off-channel areas. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Only large floods access these areas, or off-channel areas are minimal. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Off-channel features are mostly gone or permanently cut off. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-off-channel-storage-features"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "LiDAR/DEM and aerial imagery",
+    "optional HEC-RAS 2D bankfull inundation (screening)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "rapid",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Off-channel features are mostly gone or permanently cut off.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Partial connection or fewer off-channel areas. / Only large floods access these areas, or off-channel areas are minimal.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Multiple off-channel features connect in moderate floods.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

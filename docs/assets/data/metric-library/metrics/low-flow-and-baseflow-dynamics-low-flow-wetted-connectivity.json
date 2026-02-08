@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
+  "name": "Low-flow Wetted Connectivity",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "Low flow and baseflow dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Evaluates whether the reach maintains adequate wetted depth and continuity during low flow by integrating pool depth, wetted length, exposed bed, and Q90/Q10 differences.\nExtent to which water remains in contact with both banks and low benches during low flow, sustaining edge habitat and exchange.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Estimate percent of channel length wetted at typical low-flow conditions and document with photos where feasible.\nCount pools that remain connected versus isolated at low flow and note dominant disconnection causes.\nEstimate percent of bed exposed during low flow using field photos or dry-season imagery where available.",
+  "inputs": [
+    {
+      "label": "Low-flow Wetted Connectivity",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: >75% of channel wetted at normal low flow (or dryness is normal if ephemeral). (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: 25-75% wetted. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: 25-75% wetted. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: <25% wetted, or mostly disconnected pools in a historically perennial reach. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field observation and photos",
+    "NAIP imagery",
+    "NHDPlus HR flowline codes",
+    "USGS NWIS zero-flow days (where available).",
+    "Field verification",
+    "NAIP dry-season imagery",
+    "optional HEC-RAS 2D at low flow",
+    "LiDAR longitudinal profile (where available).",
+    "Field photos",
+    "NAIP dry-season imagery",
+    "LiDAR with estimated low-flow water surface (where available)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Low flow and baseflow dynamics",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "<25% wetted, or mostly disconnected pools in a historically perennial reach.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "25-75% wetted.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": ">75% of channel wetted at normal low flow (or dryness is normal if ephemeral).",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

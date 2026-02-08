@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-flow-permanence-intermittency",
+  "name": "Flow Permanence / Intermittency",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Streamflow regime",
+  "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+  "descriptionMarkdown": "Flow permanence describes whether overall flow duration (ephemeral, intermittent, or perennial) and baseflow conditions match the expected natural regime, using SDAM class, streambed vegetation indicators, mean annual flow statistics, and where available, flowing-days data.\nDocuments dams, weirs, levees, diversions, pumps, and returns that alter hydrograph timing, peaks, baseflow, or floodplain access.\nZero-flow days and dry periods quantify how often a stream is dry and for how long. Stable statistics indicate consistent flow duration; increases in zero-flow days in a historically perennial reach indicate alteration.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop; Field",
+  "howToMeasureMarkdown": "From gage records, compute zero-flow days and cessation periods. Where ungauged, compile spot-flow or logger observations where available.\nApply the regional SDAM rapid checklist to classify ephemeral, intermittent, or perennial conditions.\nEstimate percent channel-bed vegetation and identify plant types relative to expected flow class for the region.",
+  "inputs": [
+    {
+      "label": "Flow Permanence / Intermittency",
+      "type": "desktop; field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Flow permanence is stable and near the historical pattern for the stream type. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Minor changes in dry or wet intervals. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Significant changes in flow permanence (for example a formerly perennial reach goes dry for extended periods). (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Major departure from reference flow permanence. Flow regime category is effectively changed. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-flow-permanence-intermittency"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS NWIS daily flow (where available)",
+    "The Nature Conservancy IHA or USGS EflowStats",
+    "local spot-flow or logger datasets.",
+    "SDAM regional guide and field forms.",
+    "SDAM regional guide and field forms",
+    "vegetation indicators described in regional SDAM guidance."
+  ],
+  "tags": [
+    "Hydrology",
+    "Streamflow regime",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Major departure from reference flow permanence. Flow regime category is effectively changed.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Minor changes in dry or wet intervals. / Significant changes in flow permanence (for example a formerly perennial reach goes dry for extended periods).",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Flow permanence is stable and near the historical pattern for the stream type.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

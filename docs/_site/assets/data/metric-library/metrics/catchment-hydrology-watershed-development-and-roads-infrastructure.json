@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "metricId": "catchment-hydrology-watershed-development-and-roads-infrastructure",
+  "name": "Watershed Development & Roads / Infrastructure",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Catchment hydrology",
+  "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+  "descriptionMarkdown": "Road/trail proximity or density as an indicator of watershed development and potential sediment/pollutant delivery.\nDistance from the project reach to the nearest road and/or planned road expansion. Closer roads can increase stormwater inputs, constrain floodplains, and contribute sediment and pollutants.\nRoad density within the contributing watershed or buffer. Higher road density can increase runoff, fragment riparian areas, and deliver sediment/pollutants.\nDegree of land development/disturbance in the watershed and/or near the project reach (e.g., urban areas, industrial sites, oil/gas, mining, timber harvest). Increased development can alter runoff, sediment delivery, and water quality.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop (GIS/imagery and existing datasets)",
+  "howToMeasureMarkdown": "Use roads/trails GIS and recent imagery to summarize proximity and/or density within the watershed or specified buffer. Assign the condition class using the bin thresholds for this metric.\nMeasure the minimum distance from the project reach (or riparian buffer) to mapped roads using GIS and/or recent imagery. Where specified, incorporate information on proposed road expansion. Assign the condition class using the bin thresholds for this metric.\nUsing a roads GIS layer, calculate total road length divided by watershed area (or within the specified buffer). Assign the condition class using the bin thresholds for this metric.\nReview recent imagery and available land use/permit data to characterize development intensity in the watershed and within the specified distance of the project reach (e.g., 1 mile). Assign the condition class using the bin thresholds for this metric.",
+  "inputs": [
+    {
+      "label": "Watershed Development & Roads / Infrastructure",
+      "type": "desktop (gis/imagery and existing datasets)",
+      "source": "Watershed",
+      "required": true,
+      "helpMarkdown": "Roads/trails GIS (TIGER/Line/OSM/state datasets); recent aerial imagery.\nRoads GIS and DOT planning layers (if applicable); recent aerial imagery.\nUSACE and other Permits\nRoads GIS (e.g., TIGER/Line, state DOT, or OpenStreetMap); watershed boundary.\nImagery & Spatial data\nImagery & NLCD\nRecent aerial imagery (e.g., NAIP); land cover/land use datasets (e.g., NLCD); permit/industry GIS layers (if available)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: No development or no potential for impacts. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Moderate development or moderate potential for impacts, but none within 1 mile of project reach. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Moderate development or moderate potential for impacts, but none within 1 mile of project reach. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: High development or potential for impacts in contributing watershed or within 1 mile of project reach, or high potential of impacts >1 mile away from project reach. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-catchment-hydrology-watershed-development-and-roads-infrastructure"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Roads/trails GIS (if used)",
+    "SC SQT 2021",
+    "Roads/trails GIS (if used)",
+    "CO SQT 2019",
+    "Roads/trails GIS (if used)",
+    "WY SQT 2019",
+    "Roads GIS/DOT plans (if used)",
+    "MI SQT 2019",
+    "Roads GIS/DOT plans (if used)",
+    "NC SQT 2019",
+    "Roads/trails GIS (if used)",
+    "Alaska SQT",
+    "Roads GIS (TIGER/Line/OSM) (if used)",
+    "WI SQT 2022",
+    "Roads GIS (TIGER/Line/OSM) (if used)",
+    "TN SQT",
+    "Roads/trails GIS (if used)",
+    "MN SQT 2020",
+    "NAIP/NLCD/permit datasets (if used)",
+    "Alaska SQT",
+    "NAIP/NLCD/permit datasets (if used)",
+    "CO SQT 2019",
+    "NAIP/NLCD/permit datasets (if used)",
+    "SC SQT 2021",
+    "NAIP/NLCD/permit datasets (if used)",
+    "WI SQT 2022",
+    "NAIP/NLCD/permit datasets (if used)",
+    "WY SQT 2019"
+  ],
+  "tags": [
+    "Hydrology",
+    "Catchment hydrology",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT; Colorado SQT; Wyoming SQT; Michigan SQT; North Carolina SQT; Alaska SQT; Wisconsin SQT; Tennessee SQT; Minnesota SQT",
+    "scsDefaultOn": false,
+    "metricDataSource": "Roads/trails GIS (TIGER/Line/OSM/state datasets); recent aerial imagery.\nRoads GIS and DOT planning layers (if applicable); recent aerial imagery.\nUSACE and other Permits\nRoads GIS (e.g., TIGER/Line, state DOT, or OpenStreetMap); watershed boundary.\nImagery & Spatial data\nImagery & NLCD\nRecent aerial imagery (e.g., NAIP); land cover/land use datasets (e.g., NLCD); permit/industry GIS layers (if available).",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "High development or potential for impacts in contributing watershed or within 1 mile of project reach, or high potential of impacts >1 mile away from project reach.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Moderate development or moderate potential for impacts, but none within 1 mile of project reach.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "No development or no potential for impacts.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

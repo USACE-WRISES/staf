@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
+  "name": "Bank Erosion & Armoring Condition",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Channel and floodplain dynamics",
+  "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
+  "descriptionMarkdown": "Integrates bank geometry, rooting, surface protection, raw or failing banks, and hardening to summarize erosion risk and sediment delivery.\nCompares meander migration rates and cutoff frequency to reference behavior; excessive migration or avulsions indicate instability.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map hardened versus natural or vegetated bank lengths and compute percent by type.\nMeasure raw or eroding bank length and divide by total bank length across both banks.",
+  "inputs": [
+    {
+      "label": "Bank Erosion & Armoring Condition",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Predominantly natural banks with deeply rooted cover. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Some armoring or partial vegetation coverage. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Large portion of banks is armored or vegetation is sparse. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Failing armoring or widespread bare banks with severe instability. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NAIP or orthophotos",
+    "local infrastructure layers (where available).",
+    "Field tape/RTK survey",
+    "GIS digitization of raw bank segments from imagery."
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel and floodplain dynamics",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Failing armoring or widespread bare banks with severe instability.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Some armoring or partial vegetation coverage. / Large portion of banks is armored or vegetation is sparse.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Predominantly natural banks with deeply rooted cover.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

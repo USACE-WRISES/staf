@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-streamflow-regime-flow-permanence-intermittency",
+  "metricId": "streamflow-regime-flow-permanence-intermittency",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "description": "Good: Flow permanence is stable and near the historical pattern for the stream type. (Suggested index range 0.70-1.0)",
+              "yMax": 1,
+              "yMin": 0.7,
+              "y": 0.85
+            },
+            {
+              "x": "Suboptimal",
+              "description": "Fair: Minor changes in dry or wet intervals. (Suggested index range 0.50-0.69)",
+              "yMax": 0.69,
+              "yMin": 0.5,
+              "y": 0.59
+            },
+            {
+              "x": "Marginal",
+              "description": "Fair: Significant changes in flow permanence (for example a formerly perennial reach goes dry for extended periods). (Suggested index range 0.30-0.49)",
+              "yMax": 0.49,
+              "yMin": 0.3,
+              "y": 0.4
+            },
+            {
+              "x": "Poor",
+              "description": "Poor: Major departure from reference flow permanence. Flow regime category is effectively changed. (Suggested index range 0.0-0.29)",
+              "yMax": 0.29,
+              "yMin": 0,
+              "y": 0.14
+            }
+          ],
+          "id": "curve-streamflow-regime-flow-permanence-intermittency-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-streamflow-regime-flow-permanence-intermittency-default",
+      "name": "Screening",
+      "units": "",
+      "activeLayerId": "curve-streamflow-regime-flow-permanence-intermittency-layer"
+    }
+  ]
+}

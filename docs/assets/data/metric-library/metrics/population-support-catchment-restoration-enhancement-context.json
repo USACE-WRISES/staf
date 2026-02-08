@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-catchment-restoration-enhancement-context",
+  "name": "Catchment Restoration/Enhancement Context",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+  "descriptionMarkdown": "Screening metric used to evaluate Population support based on the definition and bin thresholds provided for this metric.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field screening and/or Desktop (biomonitoring databases)",
+  "howToMeasureMarkdown": "Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.",
+  "inputs": [
+    {
+      "label": "Catchment Restoration/Enhancement Context",
+      "type": "field screening and/or desktop (biomonitoring databases)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "State/agency datasets, GIS/imagery, and field observations (as applicable)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Greater than 60% of the total catchment area is draining to the project reach. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: 40 to 60% of the total catchment area is draining to the project reach. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: 40 to 60% of the total catchment area is draining to the project reach. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Less than 40% of the total catchment area is draining to the project reach. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-catchment-restoration-enhancement-context"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NC SQT 2019"
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "scsDefaultOn": false,
+    "metricDataSource": "State/agency datasets, GIS/imagery, and field observations (as applicable).",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Less than 40% of the total catchment area is draining to the project reach.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "40 to 60% of the total catchment area is draining to the project reach.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Greater than 60% of the total catchment area is draining to the project reach.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

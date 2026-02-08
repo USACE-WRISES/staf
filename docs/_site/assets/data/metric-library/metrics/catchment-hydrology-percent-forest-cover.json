@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "metricId": "catchment-hydrology-percent-forest-cover",
+  "name": "Percent Forest Cover",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Catchment hydrology",
+  "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+  "descriptionMarkdown": "Percent forested land cover in the contributing watershed/catchment. Higher forest cover generally supports infiltration, reduces runoff and erosion, and can improve water quality.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop (GIS/imagery and existing datasets)",
+  "howToMeasureMarkdown": "Delineate the contributing watershed and compute percent forest land cover using a land cover dataset (e.g., NLCD). Assign the condition class using the bin thresholds for this metric.",
+  "inputs": [
+    {
+      "label": "Percent Forest Cover",
+      "type": "desktop (gis/imagery and existing datasets)",
+      "source": "Watershed",
+      "required": true,
+      "helpMarkdown": "Land cover GIS (e.g., NLCD Land Cover or local land use/land cover dataset); watershed boundary."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: ≥ 70% (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: >20% and <70% (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: >20% and <70% (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: ≤ 20% (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-catchment-hydrology-percent-forest-cover"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NLCD Land Cover (MRLC) (if used)",
+    "WI SQT 2022",
+    "NLCD Land Cover (MRLC) (if used)",
+    "MI SQT 2019",
+    "SC SQT 2021",
+    "NLCD Land Cover (MRLC) (if used)",
+    "MN SQT 2020",
+    "NLCD Land Cover (MRLC) (if used)",
+    "NC SQT 2019",
+    "NLCD Land Cover (MRLC) (if used)",
+    "TN SQT"
+  ],
+  "tags": [
+    "Hydrology",
+    "Catchment hydrology",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT; Michigan SQT; South Carolina SQT; Minnesota SQT; North Carolina SQT; Tennessee SQT",
+    "scsDefaultOn": false,
+    "metricDataSource": "Land cover GIS (e.g., NLCD Land Cover or local land use/land cover dataset); watershed boundary.",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "≤ 20%",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": ">20% and <70%",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "≥ 70%",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}
