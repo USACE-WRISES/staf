@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity",
+  "name": "Riparian Corridor Vegetation (width/continuity)",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Channel and floodplain dynamics",
+  "functionStatement": "Bank and floodplain processes shape channel planform and habitat complexity; balanced erosion and deposition support stability and ecological function.",
+  "descriptionMarkdown": "Percent forested land cover in the contributing watershed/catchment. Higher forest cover generally supports infiltration, reduces runoff and erosion, and can improve water quality.\nRiparian corridor vegetation and continuity/width along the reach or contributing stream network. Healthy riparian vegetation supports shading, bank stability, and sediment/nutrient filtering.",
+  "methodContextMarkdown": "Context: Channel and Floodplain\n\nMethod: Field screening and/or Desktop (imagery)",
+  "howToMeasureMarkdown": "Delineate the contributing watershed and compute percent forest land cover using a land cover dataset (e.g., NLCD). Assign the condition class using the bin thresholds for this metric.\nUsing recent imagery and/or land cover data, delineate the riparian corridor along the reach (or specified stream length) and quantify corridor width/continuity (e.g., percent of stream length meeting a minimum corridor width). Assign the condition class using the bin thresholds for this metric.",
+  "inputs": [
+    {
+      "label": "Riparian Corridor Vegetation (width/continuity)",
+      "type": "field screening and/or desktop (imagery)",
+      "source": "Channel and Floodplain",
+      "required": true,
+      "helpMarkdown": "Land cover GIS (e.g., NLCD Land Cover or local land use/land cover dataset); watershed boundary.\nImagery\nRecent aerial imagery (e.g., NAIP); land cover datasets (e.g., NLCD); hydrography/stream centerlines."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: >80% of contributing streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: 50-80% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: 50-80% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: <50% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NLCD Land Cover (MRLC) (if used)",
+    "TN SQT",
+    "NAIP/NLCD (if used)",
+    "Alaska SQT",
+    "NAIP/NLCD (if used)",
+    "MN SQT 2020",
+    "NAIP/NLCD (if used)",
+    "CO SQT 2019",
+    "NAIP/NLCD (if used)",
+    "MI SQT 2019",
+    "NAIP/NLCD (if used)",
+    "NC SQT 2019",
+    "NAIP/NLCD (if used)",
+    "SC SQT 2021",
+    "NAIP/NLCD (if used)",
+    "WI SQT 2022",
+    "NAIP/NLCD (if used)",
+    "WY SQT 2019"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel and floodplain dynamics",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Tennessee SQT; Alaska SQT; Minnesota SQT; Colorado SQT; Michigan SQT; North Carolina SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
+    "scsDefaultOn": false,
+    "metricDataSource": "Land cover GIS (e.g., NLCD Land Cover or local land use/land cover dataset); watershed boundary.\nImagery\nRecent aerial imagery (e.g., NAIP); land cover datasets (e.g., NLCD); hydrography/stream centerlines.",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "<50% of streams (including tributaries) within catchment has > 25 feet corridor width.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "50-80% of streams (including tributaries) within catchment has > 25 feet corridor width.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": ">80% of contributing streams (including tributaries) within catchment has > 25 feet corridor width.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

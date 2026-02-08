@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
+  "name": "Sediment Supply Potential (watershed/banks)",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Sediment continuity",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, and habitat quality while supporting riparian succession.",
+  "descriptionMarkdown": "Relative sediment supply from the watershed and near-channel sources. Excessive sediment supply can increase turbidity, embed substrates, and degrade habitat.",
+  "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Desktop (GIS/imagery) with field verification where feasible",
+  "howToMeasureMarkdown": "Use available GIS layers and imagery (land cover, soils, slopes, roads) and local knowledge to rate potential sediment supply per the metric definition. Assign the condition class using the bin thresholds for this metric.",
+  "inputs": [
+    {
+      "label": "Sediment Supply Potential (watershed/banks)",
+      "type": "desktop (gis/imagery) with field verification where feasible",
+      "source": "Watershed and Channel",
+      "required": true,
+      "helpMarkdown": "Imagery & \nSite data\nLand cover and soils (e.g., NLCD, SSURGO), DEM/slope, roads layers, and recent imagery."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-sediment-supply-potential-watershed-banks"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NLCD/SSURGO/DEM (if used)",
+    "Alaska SQT",
+    "NLCD/SSURGO/DEM (if used)",
+    "CO SQT 2019",
+    "WY SQT 2019",
+    "NLCD/SSURGO/DEM (if used)",
+    "MI SQT 2019",
+    "NC SQT 2019",
+    "NLCD/SSURGO/DEM (if used)",
+    "MN SQT 2020",
+    "NLCD/SSURGO/DEM (if used)",
+    "SC SQT 2021"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Wyoming SQT; Michigan SQT; North Carolina SQT; Minnesota SQT; South Carolina SQT",
+    "scsDefaultOn": true,
+    "metricDataSource": "Imagery & \nSite data\nLand cover and soils (e.g., NLCD, SSURGO), DEM/slope, roads layers, and recent imagery.",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

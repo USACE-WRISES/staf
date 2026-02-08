@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedde",
+  "metricId": "watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedde",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "description": "Good: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) has native bed and bank material. (Suggested index range 0.70-1.0)",
+              "yMax": 1,
+              "yMin": 0.7,
+              "y": 0.85
+            },
+            {
+              "x": "Suboptimal",
+              "description": "Fair: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) has native bed and bank material that is highly embedded by fine sediment. (Suggested index range 0.50-0.69)",
+              "yMax": 0.69,
+              "yMin": 0.5,
+              "y": 0.59
+            },
+            {
+              "x": "Marginal",
+              "description": "Fair: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) has native bed and bank material that is highly embedded by fine sediment. (Suggested index range 0.30-0.49)",
+              "yMax": 0.49,
+              "yMin": 0.3,
+              "y": 0.4
+            },
+            {
+              "x": "Poor",
+              "description": "Poor: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) is concrete, piped, or hardened. (Suggested index range 0.0-0.29)",
+              "yMax": 0.29,
+              "yMin": 0,
+              "y": 0.14
+            }
+          ],
+          "id": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedde-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedde-default",
+      "name": "Screening",
+      "units": "",
+      "activeLayerId": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedde-layer"
+    }
+  ]
+}

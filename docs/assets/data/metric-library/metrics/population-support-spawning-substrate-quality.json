@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-spawning-substrate-quality",
+  "name": "Spawning Substrate Quality",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+  "descriptionMarkdown": "Clean gravel/vegetation is present if historically expected, unless alternative spawning is normal.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Assess percent of clean gravel or other suitable spawning substrate for target species and note fine sediment cover.",
+  "inputs": [
+    {
+      "label": "Spawning Substrate Quality",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon;"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Clean or appropriate substrate with minimal silt. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Some silt but still feasible for spawning. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Heavily silted with limited spawning success expected. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: No suitable substrate. High embeddedness, bedrock, or other limiting condition. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-spawning-substrate-quality"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field substrate assessment",
+    "EPA Water Quality Portal (turbidity/TSS where available)",
+    "geology and slope context."
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon;",
+    "recommendedTiersRaw": "rapid",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "No suitable substrate. High embeddedness, bedrock, or other limiting condition.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Some silt but still feasible for spawning. / Heavily silted with limited spawning success expected.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Clean or appropriate substrate with minimal silt.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

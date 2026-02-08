@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-native-biodiversity-and-taxa-richness",
+  "name": "Native Biodiversity & Taxa Richness",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Community dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "Longitudinal connectivity and aquatic organism passage; barriers can limit recolonization, migration, and gene flow.\nQuick sample shows multiple families (incl. EPT) unless dryness/high-altitude limits diversity.\nMost historically native fish/inverts remain, unless naturally low-diversity (headwaters, ephemeral).",
+  "methodContextMarkdown": "Context: Channel and Watershed; Channel\n\nMethod: Field screening and/or Desktop (databases); Field",
+  "howToMeasureMarkdown": "Inventory potential barriers (culverts, dams, grade controls) within the specified upstream/downstream distance using barrier datasets and imagery; confirm passability where feasible. Assign the condition class using the bin thresholds for this metric.\nCompute major group richness from a kick-net sample or use existing biological records where available.\nCompare observed fish and invertebrate lists to available historical records or reference expectations.",
+  "inputs": [
+    {
+      "label": "Native Biodiversity & Taxa Richness",
+      "type": "field screening and/or desktop (databases); field",
+      "source": "Channel and Watershed; Channel",
+      "required": true,
+      "helpMarkdown": "Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Four to five or more distinct major groups. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Two to four distinct major groups. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: One to two distinct major groups. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Zero, or only one extremely tolerant group. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-native-biodiversity-and-taxa-richness"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Barrier inventory (if used)",
+    "MN SQT 2020",
+    "USGS BioData and/or state biomonitoring datasets",
+    "EPA Water Quality Portal biological results (where available).",
+    "NatureServe Explorer",
+    "state Natural Heritage Program lists and records."
+  ],
+  "tags": [
+    "Biology",
+    "Community dynamics",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Minnesota SQT; ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible.",
+    "recommendedTiersRaw": "screening; rapid",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Zero, or only one extremely tolerant group.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Two to four distinct major groups. / One to two distinct major groups.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Four to five or more distinct major groups.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

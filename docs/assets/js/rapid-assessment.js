@@ -448,6 +448,75 @@
       summaryTable.appendChild(summaryHead);
       summaryTable.appendChild(summaryBody);
 
+      const chartsShell = document.createElement('div');
+      chartsShell.className =
+        'screening-settings-panel screening-charts-panel rapid-charts-panel';
+      const chartsHeader = document.createElement('div');
+      chartsHeader.className = 'settings-header screening-charts-header';
+      const chartsTitle = document.createElement('h3');
+      chartsTitle.textContent = 'Summary Plots';
+      chartsHeader.appendChild(chartsTitle);
+      const chartsLegend = document.createElement('div');
+      chartsLegend.className = 'screening-chart-legend';
+      chartsLegend.innerHTML =
+        '<div class="legend-group" aria-label="Function score ranges">' +
+        '<div class="legend-labels legend-labels-left">' +
+        '<div>Functioning</div>' +
+        '<div>At-Risk</div>' +
+        '<div>Non-Functioning</div>' +
+        '</div>' +
+        '<div class="legend-bar" aria-hidden="true"></div>' +
+        '<div class="legend-labels legend-labels-right">' +
+        '<div>11 - 15</div>' +
+        '<div>6 - 10</div>' +
+        '<div>0 - 5</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="legend-spacer" aria-hidden="true"></div>' +
+        '<div class="legend-group" aria-label="Condition index ranges">' +
+        '<div class="legend-labels legend-labels-left">' +
+        '<div>Functioning</div>' +
+        '<div>At-Risk</div>' +
+        '<div>Non-Functioning</div>' +
+        '</div>' +
+        '<div class="legend-bar" aria-hidden="true"></div>' +
+        '<div class="legend-labels legend-labels-right">' +
+        '<div>0.70 - 1.00</div>' +
+        '<div>0.30 - 0.69</div>' +
+        '<div>0.00 - 0.29</div>' +
+        '</div>' +
+        '</div>';
+      chartsHeader.appendChild(chartsLegend);
+      const chartsWrap = document.createElement('div');
+      chartsWrap.className = 'screening-charts';
+      const functionChartSection = document.createElement('div');
+      functionChartSection.className = 'screening-chart-section';
+      const functionChartTitle = document.createElement('div');
+      functionChartTitle.className = 'screening-chart-title';
+      functionChartTitle.textContent = 'Function Scores';
+      const functionChartBody = document.createElement('div');
+      functionChartBody.className = 'screening-chart-body';
+      functionChartSection.appendChild(functionChartTitle);
+      functionChartSection.appendChild(functionChartBody);
+
+      const summaryChartSection = document.createElement('div');
+      summaryChartSection.className = 'screening-chart-section';
+      const summaryChartTitle = document.createElement('div');
+      summaryChartTitle.className = 'screening-chart-title';
+      summaryChartTitle.textContent = 'Condition Indices';
+      const summaryChartBody = document.createElement('div');
+      summaryChartBody.className = 'screening-chart-body';
+      summaryChartSection.appendChild(summaryChartTitle);
+      summaryChartSection.appendChild(summaryChartBody);
+
+      chartsWrap.appendChild(functionChartSection);
+      const chartsSpacer = document.createElement('div');
+      chartsSpacer.className = 'screening-chart-spacer';
+      chartsWrap.appendChild(chartsSpacer);
+      chartsWrap.appendChild(summaryChartSection);
+      chartsShell.appendChild(chartsHeader);
+      chartsShell.appendChild(chartsWrap);
+
       if (controlsHost) {
         controlsHost.innerHTML = '';
         controlsHost.appendChild(scoringControls);
@@ -457,6 +526,14 @@
         tableHost.innerHTML = '';
         tableHost.appendChild(table);
         tableHost.appendChild(summaryTable);
+        const parent = tableHost.parentElement;
+        if (parent) {
+          const existing = parent.querySelector('.rapid-charts-panel');
+          if (existing && existing !== chartsShell) {
+            existing.remove();
+          }
+          parent.appendChild(chartsShell);
+        }
       }
 
       const summaryCells = {
@@ -468,6 +545,7 @@
       let activeIndexRows = [];
       let activeEstimateRows = [];
       let activeFunctionScoreControls = [];
+      let activeFunctionOrder = [];
 
       const getShowAdvancedScoring = () => Boolean(viewOptions.showAdvancedScoring);
       const getShowRollupComputations = () =>
@@ -566,6 +644,111 @@
         bracketEl.style.left = `${leftPct}%`;
         bracketEl.style.width = `${Math.max(0, rightPct - leftPct)}%`;
         bracketEl.hidden = false;
+      };
+
+      const summaryColorForValue = (value) => {
+        if (value <= 0.29) {
+          return '#f5b5b5';
+        }
+        if (value <= 0.69) {
+          return '#f5e7a6';
+        }
+        return '#c8d9f2';
+      };
+
+      const functionScoreColorForValue = (value) => {
+        if (value <= 5) {
+          return '#f5b5b5';
+        }
+        if (value <= 10) {
+          return '#f5e7a6';
+        }
+        return '#c8d9f2';
+      };
+
+      const buildBarRow = ({ label, value, maxValue, color, valueText }) => {
+        const row = document.createElement('div');
+        row.className = 'screening-bar-row';
+        const labelCell = document.createElement('div');
+        labelCell.className = 'screening-bar-label';
+        labelCell.textContent = label;
+        const barCell = document.createElement('div');
+        barCell.className = 'screening-bar-track';
+        const fill = document.createElement('div');
+        fill.className = 'screening-bar-fill';
+        const width = maxValue > 0 ? Math.max(0, Math.min(1, value / maxValue)) : 0;
+        fill.style.width = `${(width * 100).toFixed(1)}%`;
+        fill.style.background = color;
+        barCell.appendChild(fill);
+        const valueCell = document.createElement('div');
+        valueCell.className = 'screening-bar-value';
+        valueCell.textContent = valueText ?? value.toFixed(2);
+        row.appendChild(labelCell);
+        row.appendChild(barCell);
+        row.appendChild(valueCell);
+        return row;
+      };
+
+      const renderCharts = (functionOrder, scoresByFunction, summaryValues) => {
+        if (!functionChartBody || !summaryChartBody) {
+          return;
+        }
+        functionChartBody.innerHTML = '';
+        summaryChartBody.innerHTML = '';
+
+        const functionsToShow = Array.isArray(functionOrder) ? functionOrder : [];
+        if (!functionsToShow.length) {
+          const empty = document.createElement('div');
+          empty.className = 'screening-chart-empty';
+          empty.textContent = 'No function scores available.';
+          functionChartBody.appendChild(empty);
+        } else {
+          let lastDiscipline = null;
+          functionsToShow.forEach((fn, index) => {
+            const disciplineKey = (fn.discipline || '').toLowerCase();
+            if (index > 0 && lastDiscipline !== null && disciplineKey !== lastDiscipline) {
+              const divider = document.createElement('div');
+              divider.className = 'screening-bar-divider';
+              functionChartBody.appendChild(divider);
+            }
+            const score = scoresByFunction.get(fn.functionName);
+            if (score === undefined || score === null) {
+              return;
+            }
+            const rounded = Math.round(score);
+            functionChartBody.appendChild(
+              buildBarRow({
+                label: fn.name,
+                value: rounded,
+                maxValue: 15,
+                color: functionScoreColorForValue(rounded),
+                valueText: String(rounded),
+              })
+            );
+            lastDiscipline = disciplineKey;
+          });
+        }
+
+        const summaryItems = [
+          { label: 'Physical', value: summaryValues.physical },
+          { label: 'Chemical', value: summaryValues.chemical },
+          { label: 'Biological', value: summaryValues.biological },
+          { label: 'Overall Ecosystem', value: summaryValues.ecosystem },
+        ];
+        summaryItems.forEach((item) => {
+          if (item.value === null || item.value === undefined) {
+            return;
+          }
+          summaryChartBody.appendChild(
+            buildBarRow({
+              label: item.label,
+              value: item.value,
+              maxValue: 1,
+              color: summaryColorForValue(item.value),
+              valueText: item.value.toFixed(2),
+            })
+          );
+        });
       };
 
       const renderHeader = (showMappings, showAdvanced) => {
@@ -896,6 +1079,13 @@
         if (summaryCells.ecosystem) {
           summaryCells.ecosystem.textContent = formatNumber(ecosystemIndex);
         }
+
+        renderCharts(activeFunctionOrder, functionScores, {
+          physical: physicalIndex,
+          chemical: chemicalIndex,
+          biological: biologicalIndex,
+          ecosystem: ecosystemIndex,
+        });
       };
 
       const buildRapidCurveSummaryTable = (criteriaSet) => {
@@ -1038,6 +1228,21 @@
           return matchesDiscipline && matchesSearch;
         });
 
+        const seenFunctions = new Set();
+        activeFunctionOrder = [];
+        visibleIndicators.forEach((item) => {
+          const functionName = item.functionName || '';
+          if (!functionName || seenFunctions.has(functionName)) {
+            return;
+          }
+          seenFunctions.add(functionName);
+          activeFunctionOrder.push({
+            functionName,
+            name: functionName,
+            discipline: item.discipline || '',
+          });
+        });
+
         const disciplineRowMeta = new Array(visibleIndicators.length);
         const functionRowMeta = new Array(visibleIndicators.length);
 
@@ -1117,6 +1322,7 @@
           emptyCell.textContent = 'No indicators match the current filters.';
           emptyRow.appendChild(emptyCell);
           tbody.appendChild(emptyRow);
+          activeFunctionOrder = [];
           updateScores();
           return;
         }
@@ -1156,10 +1362,14 @@
           };
           const isFunctionStart = rowFunctionMeta.startIndex === index;
           const functionMetricCount = rowFunctionMeta.metricsCount || 1;
+          const functionExpandedCount = rowFunctionMeta.expandedCount || 0;
           const functionHasExpandedCriteria = Boolean(
             rowFunctionMeta.hasExpandedCriteria
           );
           const functionTotalSpan = rowFunctionMeta.totalSpan || functionMetricCount;
+          const mergeMappingCells =
+            showMappings && functionExpandedCount === 0 && functionMetricCount > 1;
+          const isMappingOwner = rowFunctionMeta.startIndex === index;
           const functionSliderOwnerIndex = functionHasExpandedCriteria
             ? rowFunctionMeta.firstExpandedIndex
             : rowFunctionMeta.startIndex;
@@ -1443,7 +1653,7 @@
               chemical: '-',
               biological: '-',
             };
-          if (showMappings) {
+          if (showMappings && (!mergeMappingCells || isMappingOwner)) {
             const physicalCell = document.createElement('td');
             const chemicalCell = document.createElement('td');
             const biologicalCell = document.createElement('td');
@@ -1453,6 +1663,11 @@
             physicalCell.textContent = mapping.physical || '-';
             chemicalCell.textContent = mapping.chemical || '-';
             biologicalCell.textContent = mapping.biological || '-';
+            if (mergeMappingCells) {
+              physicalCell.rowSpan = functionMetricCount;
+              chemicalCell.rowSpan = functionMetricCount;
+              biologicalCell.rowSpan = functionMetricCount;
+            }
             row.appendChild(physicalCell);
             row.appendChild(chemicalCell);
             row.appendChild(biologicalCell);

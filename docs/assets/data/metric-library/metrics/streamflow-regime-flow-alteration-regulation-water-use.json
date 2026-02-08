@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
+  "name": "Flow Alteration (Regulation / Water Use)",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Streamflow regime",
+  "functionStatement": "Streamflow regime integrates the range of flows experienced by other processes and supports channel form, habitat diversity, and ecological life-cycle cues.\n\"Integrates the range of \"\"typical\"\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).\"",
+  "descriptionMarkdown": "Degree of alteration in flow magnitude, timing, duration, or permanence relative to natural conditions due to regulation, withdrawals/returns, or watershed change.\nCompares current daily-flow pattern to the natural regime, combining IHA metrics with the Richards-Baker flashiness index to screen for alteration from dams, withdrawals, or urbanization.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop (gage/records) with field verification where feasible; Desktop",
+  "howToMeasureMarkdown": "Use available flow records (gage data), modeled natural baseline estimates, and/or water-use/rights information to estimate change from expected natural conditions for the metric definition. Assign the condition class using the bin thresholds for this metric.\nCompare current mean annual flow to a natural or historical baseline and report percent difference.",
+  "inputs": [
+    {
+      "label": "Flow Alteration (Regulation / Water Use)",
+      "type": "desktop (gage/records) with field verification where feasible; desktop",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "ADNR, ADF&G flow regulation & water rights data\nUSGS NWIS (gage data where available); modeled baseline hydrology; water-use/rights datasets; dam regulation information."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: <10% difference from baseline. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: 10-50% difference. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: 10-50% difference. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: >50% difference. Near dewatering or strong hydropeaking. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-flow-alteration-regulation-water-use"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS NWIS / modeled baseline (if used)",
+    "Alaska SQT",
+    "USGS NWIS / modeled baseline (if used)",
+    "CO SQT 2019",
+    "USGS NWIS / modeled baseline (if used)",
+    "WI SQT 2022",
+    "USGS NWIS / modeled baseline (if used)",
+    "WY SQT 2019",
+    "USGS NWIS / modeled baseline (if used)",
+    "MN SQT 2020",
+    "USGS NWIS (current)",
+    "USGS StreamStats (natural baseline where available)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Streamflow regime",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Wisconsin SQT; Wyoming SQT; Minnesota SQT; ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "ADNR, ADF&G flow regulation & water rights data\nUSGS NWIS (gage data where available); modeled baseline hydrology; water-use/rights datasets; dam regulation information.",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": ">50% difference. Near dewatering or strong hydropeaking.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "10-50% difference.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "<10% difference from baseline.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

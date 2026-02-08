@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
+  "name": "Floodplain Engagement Frequency (bankfull recurrence)",
+  "shortName": "",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Moderate floods (~1-2 yr) overtop banks unless valley is naturally confined.",
+  "methodContextMarkdown": "Context: Floodplain and Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Relate bankfull stage to flood-frequency analysis to estimate recurrence of floodplain engagement. Use gage analysis where available or regional regressions as a screening proxy.",
+  "inputs": [
+    {
+      "label": "Floodplain Engagement Frequency (bankfull recurrence)",
+      "type": "desktop",
+      "source": "Floodplain and Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: About 1-2 yr floods engage the floodplain. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: About 3-5 yr floods are needed. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: About 5-10 yr floods are needed. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Floodplain is rarely inundated except during extreme events. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NRCS TR-55 (1986)",
+    "USGS StreamStats",
+    "USGS PeakFQ (where available)",
+    "state SQT manuals."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Floodplain is rarely inundated except during extreme events.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "About 3-5 yr floods are needed. / About 5-10 yr floods are needed.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "About 1-2 yr floods engage the floodplain.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

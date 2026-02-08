@@ -2,15 +2,16 @@
   "schemaVersion": 1,
   "metrics": [
     {
-      "metricId": "population-support-amphibian-or-crayfish-presence",
-      "name": "Amphibian or crayfish presence",
+      "metricId": "watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedde",
+      "name": "Adjacent Reach Condition for Recruitment (hardened/embedded)",
       "shortName": "",
       "discipline": "Biology",
-      "function": "Population support",
+      "function": "Watershed connectivity",
       "category": "Biology",
       "tags": [
         "Biology",
-        "Population support"
+        "Watershed connectivity",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -24,7 +25,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "Channel and Watershed"
         ],
         "effort": "field + desktop"
       },
@@ -46,7 +47,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/population-support-amphibian-or-crayfish-presence.json"
+      "detailsRef": "metrics/watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedde.json"
     },
     {
       "metricId": "population-support-amphibian-crayfish-presence",
@@ -94,53 +95,6 @@
         }
       },
       "detailsRef": "metrics/population-support-amphibian-crayfish-presence.json"
-    },
-    {
-      "metricId": "watershed-connectivity-aquatic-connectivity-or-fish-passage",
-      "name": "Aquatic connectivity or fish passage",
-      "shortName": "",
-      "discipline": "Biology",
-      "function": "Watershed connectivity",
-      "category": "Biology",
-      "tags": [
-        "Biology",
-        "Watershed connectivity"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel and Watershed"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/watershed-connectivity-aquatic-connectivity-or-fish-passage.json"
     },
     {
       "metricId": "population-support-aquatic-invertebrate-community",
@@ -334,15 +288,16 @@
       "detailsRef": "metrics/community-dynamics-beaver-presence.json"
     },
     {
-      "metricId": "habitat-provision-channel-alteration-from-imagery",
-      "name": "Channel alteration from imagery",
+      "metricId": "population-support-biological-integrity-ibi-community-condition",
+      "name": "Biological Integrity (IBI / community condition)",
       "shortName": "",
       "discipline": "Biology",
-      "function": "Habitat provision",
+      "function": "Population support",
       "category": "Biology",
       "tags": [
         "Biology",
-        "Habitat provision"
+        "Population support",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -378,18 +333,19 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/habitat-provision-channel-alteration-from-imagery.json"
+      "detailsRef": "metrics/population-support-biological-integrity-ibi-community-condition.json"
     },
     {
-      "metricId": "watershed-connectivity-culvert-or-road-crossing-passability",
-      "name": "Culvert or road crossing passability",
+      "metricId": "population-support-catchment-restoration-enhancement-context",
+      "name": "Catchment Restoration/Enhancement Context",
       "shortName": "",
       "discipline": "Biology",
-      "function": "Watershed connectivity",
+      "function": "Population support",
       "category": "Biology",
       "tags": [
         "Biology",
-        "Watershed connectivity"
+        "Population support",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -425,7 +381,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/watershed-connectivity-culvert-or-road-crossing-passability.json"
+      "detailsRef": "metrics/population-support-catchment-restoration-enhancement-context.json"
     },
     {
       "metricId": "watershed-connectivity-culvert-road-crossing-passability",
@@ -475,15 +431,16 @@
       "detailsRef": "metrics/watershed-connectivity-culvert-road-crossing-passability.json"
     },
     {
-      "metricId": "watershed-connectivity-dewatered-or-intermittent-segments",
-      "name": "Dewatered or intermittent segments",
+      "metricId": "watershed-connectivity-dewatered-intermittent-segments-screening",
+      "name": "Dewatered / Intermittent Segments",
       "shortName": "",
       "discipline": "Biology",
       "function": "Watershed connectivity",
       "category": "Biology",
       "tags": [
         "Biology",
-        "Watershed connectivity"
+        "Watershed connectivity",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -519,7 +476,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/watershed-connectivity-dewatered-or-intermittent-segments.json"
+      "detailsRef": "metrics/watershed-connectivity-dewatered-intermittent-segments-screening.json"
     },
     {
       "metricId": "watershed-connectivity-dewatered-intermittent-segments",
@@ -569,15 +526,16 @@
       "detailsRef": "metrics/watershed-connectivity-dewatered-intermittent-segments.json"
     },
     {
-      "metricId": "population-support-existing-macroinvertebrate-or-fish-ibi-class",
-      "name": "Existing macroinvertebrate or fish IBI class",
+      "metricId": "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivit",
+      "name": "Fish Passage & Barrier Effects (longitudinal connectivity)",
       "shortName": "",
       "discipline": "Biology",
-      "function": "Population support",
+      "function": "Watershed connectivity",
       "category": "Biology",
       "tags": [
         "Biology",
-        "Population support"
+        "Watershed connectivity",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -591,7 +549,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "Channel and Watershed"
         ],
         "effort": "field + desktop"
       },
@@ -613,7 +571,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/population-support-existing-macroinvertebrate-or-fish-ibi-class.json"
+      "detailsRef": "metrics/watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivit.json"
     },
     {
       "metricId": "population-support-fish-presence-abundance",
@@ -710,53 +668,6 @@
       "detailsRef": "metrics/community-dynamics-functional-trophic-groups.json"
     },
     {
-      "metricId": "community-dynamics-impervious-cover",
-      "name": "Impervious cover",
-      "shortName": "",
-      "discipline": "Biology",
-      "function": "Community dynamics",
-      "category": "Biology",
-      "tags": [
-        "Biology",
-        "Community dynamics"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Watershed"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/community-dynamics-impervious-cover.json"
-    },
-    {
       "metricId": "habitat-provision-in-stream-habitat-complexity",
       "name": "In-stream habitat complexity",
       "shortName": "",
@@ -807,15 +718,16 @@
       "detailsRef": "metrics/habitat-provision-in-stream-habitat-complexity.json"
     },
     {
-      "metricId": "community-dynamics-invasive-or-non-native-check",
-      "name": "Invasive or non-native check",
+      "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
+      "name": "In-stream Habitat Complexity & Cover",
       "shortName": "",
       "discipline": "Biology",
-      "function": "Community dynamics",
+      "function": "Habitat provision",
       "category": "Biology",
       "tags": [
         "Biology",
-        "Community dynamics"
+        "Habitat provision",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -851,7 +763,55 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/community-dynamics-invasive-or-non-native-check.json"
+      "detailsRef": "metrics/habitat-provision-in-stream-habitat-complexity-and-cover.json"
+    },
+    {
+      "metricId": "community-dynamics-invasive-non-native-species-presence",
+      "name": "Invasive / Non-native Species Presence",
+      "shortName": "",
+      "discipline": "Biology",
+      "function": "Community dynamics",
+      "category": "Biology",
+      "tags": [
+        "Biology",
+        "Community dynamics",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/community-dynamics-invasive-non-native-species-presence.json"
     },
     {
       "metricId": "community-dynamics-invasive-non-native-check",
@@ -901,53 +861,6 @@
       "detailsRef": "metrics/community-dynamics-invasive-non-native-check.json"
     },
     {
-      "metricId": "population-support-juvenile-refuge",
-      "name": "Juvenile refuge",
-      "shortName": "",
-      "discipline": "Biology",
-      "function": "Population support",
-      "category": "Biology",
-      "tags": [
-        "Biology",
-        "Population support"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/population-support-juvenile-refuge.json"
-    },
-    {
       "metricId": "population-support-juvenile-refuge-cover",
       "name": "Juvenile Refuge (cover)",
       "discipline": "Biology",
@@ -993,6 +906,54 @@
         }
       },
       "detailsRef": "metrics/population-support-juvenile-refuge-cover.json"
+    },
+    {
+      "metricId": "population-support-juvenile-refuge-cover-screening",
+      "name": "Juvenile Refuge / Cover",
+      "shortName": "",
+      "discipline": "Biology",
+      "function": "Population support",
+      "category": "Biology",
+      "tags": [
+        "Biology",
+        "Population support",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/population-support-juvenile-refuge-cover-screening.json"
     },
     {
       "metricId": "community-dynamics-keystone-species-presence",
@@ -1092,15 +1053,16 @@
       "detailsRef": "metrics/watershed-connectivity-lateral-connectivity-for-riparian-fauna.json"
     },
     {
-      "metricId": "habitat-provision-lateral-or-off-channel-habitats",
-      "name": "Lateral or off-channel habitats",
+      "metricId": "watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening",
+      "name": "Lateral Connectivity for Riparian Fauna",
       "shortName": "",
       "discipline": "Biology",
-      "function": "Habitat provision",
+      "function": "Watershed connectivity",
       "category": "Biology",
       "tags": [
         "Biology",
-        "Habitat provision"
+        "Watershed connectivity",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -1136,7 +1098,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/habitat-provision-lateral-or-off-channel-habitats.json"
+      "detailsRef": "metrics/watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening.json"
     },
     {
       "metricId": "habitat-provision-lateral-off-channel-habitats",
@@ -1236,6 +1198,54 @@
       "detailsRef": "metrics/community-dynamics-macroinvertebrate-taxa-richness.json"
     },
     {
+      "metricId": "community-dynamics-native-biodiversity-and-taxa-richness",
+      "name": "Native Biodiversity & Taxa Richness",
+      "shortName": "",
+      "discipline": "Biology",
+      "function": "Community dynamics",
+      "category": "Biology",
+      "tags": [
+        "Biology",
+        "Community dynamics",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel and Watershed; Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/community-dynamics-native-biodiversity-and-taxa-richness.json"
+    },
+    {
       "metricId": "community-dynamics-native-species-presence",
       "name": "Native species presence",
       "shortName": "",
@@ -1284,6 +1294,54 @@
         }
       },
       "detailsRef": "metrics/community-dynamics-native-species-presence.json"
+    },
+    {
+      "metricId": "habitat-provision-off-channel-habitat-availability",
+      "name": "Off-channel Habitat Availability",
+      "shortName": "",
+      "discipline": "Biology",
+      "function": "Habitat provision",
+      "category": "Biology",
+      "tags": [
+        "Biology",
+        "Habitat provision",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Floodplain"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/habitat-provision-off-channel-habitat-availability.json"
     },
     {
       "metricId": "population-support-recruitment-success-young-of-year",
@@ -1433,15 +1491,16 @@
       "detailsRef": "metrics/population-support-spawning-substrate.json"
     },
     {
-      "metricId": "habitat-provision-substrate-or-microhabitat-diversity",
-      "name": "Substrate or microhabitat diversity",
+      "metricId": "population-support-spawning-substrate-quality",
+      "name": "Spawning Substrate Quality",
       "shortName": "",
       "discipline": "Biology",
-      "function": "Habitat provision",
+      "function": "Population support",
       "category": "Biology",
       "tags": [
         "Biology",
-        "Habitat provision"
+        "Population support",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -1477,7 +1536,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/habitat-provision-substrate-or-microhabitat-diversity.json"
+      "detailsRef": "metrics/population-support-spawning-substrate-quality.json"
     },
     {
       "metricId": "habitat-provision-substrate-microhabitat-diversity",
@@ -1525,53 +1584,6 @@
         }
       },
       "detailsRef": "metrics/habitat-provision-substrate-microhabitat-diversity.json"
-    },
-    {
-      "metricId": "habitat-provision-undercut-banks-or-overhanging-vegetation",
-      "name": "Undercut banks or overhanging vegetation",
-      "shortName": "",
-      "discipline": "Biology",
-      "function": "Habitat provision",
-      "category": "Biology",
-      "tags": [
-        "Biology",
-        "Habitat provision"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/habitat-provision-undercut-banks-or-overhanging-vegetation.json"
     },
     {
       "metricId": "habitat-provision-undercut-banks-overhanging-veg",
@@ -1668,15 +1680,16 @@
       "detailsRef": "metrics/watershed-connectivity-upstream-downstream-barriers.json"
     },
     {
-      "metricId": "channel-and-floodplain-dynamics-bank-armoring-or-vegetation-condition",
-      "name": "Bank armoring or vegetation condition",
+      "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
+      "name": "Bank Erosion & Armoring Condition",
       "shortName": "",
       "discipline": "Geomorphology",
       "function": "Channel and floodplain dynamics",
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Channel and floodplain dynamics"
+        "Channel and floodplain dynamics",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -1712,7 +1725,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/channel-and-floodplain-dynamics-bank-armoring-or-vegetation-condition.json"
+      "detailsRef": "metrics/channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition.json"
     },
     {
       "metricId": "channel-and-floodplain-dynamics-bank-erosion-potential",
@@ -1858,53 +1871,6 @@
       "detailsRef": "metrics/bankfull-width-ratio.json"
     },
     {
-      "metricId": "bed-composition-and-large-wood-bed-surface-grain-size-pebble-count",
-      "name": "Bed surface grain size (pebble count)",
-      "shortName": "",
-      "discipline": "Geomorphology",
-      "function": "Bed composition and large wood",
-      "category": "Geomorphology",
-      "tags": [
-        "Geomorphology",
-        "Bed composition and large wood"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/bed-composition-and-large-wood-bed-surface-grain-size-pebble-count.json"
-    },
-    {
       "metricId": "bed-composition-and-large-wood-bedform-diversity",
       "name": "Bedform diversity",
       "shortName": "",
@@ -1955,15 +1921,16 @@
       "detailsRef": "metrics/bed-composition-and-large-wood-bedform-diversity.json"
     },
     {
-      "metricId": "channel-and-floodplain-dynamics-braiding-or-multi-thread-condition",
-      "name": "Braiding or multi-thread condition",
+      "metricId": "bed-composition-and-bedform-dynamics-bedform-diversity-sequence",
+      "name": "Bedform Diversity / Sequence",
       "shortName": "",
       "discipline": "Geomorphology",
-      "function": "Channel and floodplain dynamics",
+      "function": "Bed composition and bedform dynamics",
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Channel and floodplain dynamics"
+        "Bed composition and bedform dynamics",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -1999,54 +1966,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/channel-and-floodplain-dynamics-braiding-or-multi-thread-condition.json"
-    },
-    {
-      "metricId": "sediment-continuity-channel-degradation",
-      "name": "Channel degradation",
-      "shortName": "",
-      "discipline": "Geomorphology",
-      "function": "Sediment continuity",
-      "category": "Geomorphology",
-      "tags": [
-        "Geomorphology",
-        "Sediment continuity"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/sediment-continuity-channel-degradation.json"
+      "detailsRef": "metrics/bed-composition-and-bedform-dynamics-bedform-diversity-sequence.json"
     },
     {
       "metricId": "sediment-continuity-channel-degradation-incision",
@@ -2096,6 +2016,54 @@
       "detailsRef": "metrics/sediment-continuity-channel-degradation-incision.json"
     },
     {
+      "metricId": "sediment-continuity-channel-degradation-incision-screening",
+      "name": "Channel Degradation / Incision",
+      "shortName": "",
+      "discipline": "Geomorphology",
+      "function": "Sediment continuity",
+      "category": "Geomorphology",
+      "tags": [
+        "Geomorphology",
+        "Sediment continuity",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/sediment-continuity-channel-degradation-incision-screening.json"
+    },
+    {
       "metricId": "channel-evolution-channel-evolution",
       "name": "Channel Evolution",
       "discipline": "Geomorphology",
@@ -2143,15 +2111,16 @@
       "detailsRef": "metrics/channel-evolution-channel-evolution.json"
     },
     {
-      "metricId": "channel-evolution-channel-evolution-model-stage-i-vi",
-      "name": "Channel evolution model stage (I-VI)",
+      "metricId": "channel-evolution-channel-evolution-stage-and-trends",
+      "name": "Channel Evolution Stage & Trends",
       "shortName": "",
       "discipline": "Geomorphology",
       "function": "Channel evolution",
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Channel evolution"
+        "Channel evolution",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -2187,7 +2156,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/channel-evolution-channel-evolution-model-stage-i-vi.json"
+      "detailsRef": "metrics/channel-evolution-channel-evolution-stage-and-trends.json"
     },
     {
       "metricId": "channel-and-floodplain-dynamics-channel-pattern",
@@ -2237,15 +2206,16 @@
       "detailsRef": "metrics/channel-and-floodplain-dynamics-channel-pattern.json"
     },
     {
-      "metricId": "channel-and-floodplain-dynamics-channel-realignment",
-      "name": "Channel realignment",
+      "metricId": "channel-evolution-channelization-ditching-straightening",
+      "name": "Channelization / Ditching / Straightening",
       "shortName": "",
       "discipline": "Geomorphology",
-      "function": "Channel and floodplain dynamics",
+      "function": "Channel evolution",
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Channel and floodplain dynamics"
+        "Channel evolution",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -2281,54 +2251,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/channel-and-floodplain-dynamics-channel-realignment.json"
-    },
-    {
-      "metricId": "bed-composition-and-large-wood-embeddedness-or-fines",
-      "name": "Embeddedness or fines",
-      "shortName": "",
-      "discipline": "Geomorphology",
-      "function": "Bed composition and large wood",
-      "category": "Geomorphology",
-      "tags": [
-        "Geomorphology",
-        "Bed composition and large wood"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/bed-composition-and-large-wood-embeddedness-or-fines.json"
+      "detailsRef": "metrics/channel-evolution-channelization-ditching-straightening.json"
     },
     {
       "metricId": "sediment-continuity-fine-sediment-balance",
@@ -2381,15 +2304,16 @@
       "detailsRef": "metrics/sediment-continuity-fine-sediment-balance.json"
     },
     {
-      "metricId": "channel-evolution-incision-trend",
-      "name": "Incision trend",
+      "metricId": "bed-composition-and-bedform-dynamics-historic-tie-drives",
+      "name": "Historic Tie Drives",
       "shortName": "",
       "discipline": "Geomorphology",
-      "function": "Channel evolution",
+      "function": "Bed composition and bedform dynamics",
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Channel evolution"
+        "Bed composition and bedform dynamics",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -2425,7 +2349,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/channel-evolution-incision-trend.json"
+      "detailsRef": "metrics/bed-composition-and-bedform-dynamics-historic-tie-drives.json"
     },
     {
       "metricId": "channel-evolution-incision-trend-headcuts",
@@ -2522,15 +2446,64 @@
       "detailsRef": "metrics/bed-composition-and-large-wood-large-wood-frequency-and-diversity.json"
     },
     {
-      "metricId": "channel-and-floodplain-dynamics-meander-cutoffs-or-avulsions",
-      "name": "Meander cutoffs or avulsions",
+      "metricId": "sediment-continuity-permafrost-degradation-thermokarst",
+      "name": "Permafrost Degradation / Thermokarst",
+      "shortName": "",
+      "discipline": "Geomorphology",
+      "function": "Sediment continuity",
+      "category": "Geomorphology",
+      "tags": [
+        "Geomorphology",
+        "Sediment continuity",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed and Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/sediment-continuity-permafrost-degradation-thermokarst.json"
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-chan",
+      "name": "Planform Complexity (sinuosity/braiding/side channels/cutoffs)",
       "shortName": "",
       "discipline": "Geomorphology",
       "function": "Channel and floodplain dynamics",
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Channel and floodplain dynamics"
+        "Channel and floodplain dynamics",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -2544,7 +2517,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "Channel; Floodplain"
         ],
         "effort": "field + desktop"
       },
@@ -2566,101 +2539,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/channel-and-floodplain-dynamics-meander-cutoffs-or-avulsions.json"
-    },
-    {
-      "metricId": "channel-and-floodplain-dynamics-percent-banks-actively-eroding",
-      "name": "Percent banks actively eroding",
-      "shortName": "",
-      "discipline": "Geomorphology",
-      "function": "Channel and floodplain dynamics",
-      "category": "Geomorphology",
-      "tags": [
-        "Geomorphology",
-        "Channel and floodplain dynamics"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/channel-and-floodplain-dynamics-percent-banks-actively-eroding.json"
-    },
-    {
-      "metricId": "channel-evolution-recovery-indicators",
-      "name": "Recovery indicators",
-      "shortName": "",
-      "discipline": "Geomorphology",
-      "function": "Channel evolution",
-      "category": "Geomorphology",
-      "tags": [
-        "Geomorphology",
-        "Channel evolution"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/channel-evolution-recovery-indicators.json"
+      "detailsRef": "metrics/channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-chan.json"
     },
     {
       "metricId": "channel-evolution-recovery-metrics",
@@ -2710,6 +2589,54 @@
       "detailsRef": "metrics/channel-evolution-recovery-metrics.json"
     },
     {
+      "metricId": "channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity",
+      "name": "Riparian Corridor Vegetation (width/continuity)",
+      "shortName": "",
+      "discipline": "Geomorphology",
+      "function": "Channel and floodplain dynamics",
+      "category": "Geomorphology",
+      "tags": [
+        "Geomorphology",
+        "Channel and floodplain dynamics",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel and Floodplain"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity.json"
+    },
+    {
       "metricId": "bed-composition-and-large-wood-riparian-wood-recruitment",
       "name": "Riparian Wood Recruitment",
       "discipline": "Geomorphology",
@@ -2755,6 +2682,54 @@
         }
       },
       "detailsRef": "metrics/bed-composition-and-large-wood-riparian-wood-recruitment.json"
+    },
+    {
+      "metricId": "sediment-continuity-sediment-balance-transport-deposition-turbidity",
+      "name": "Sediment Balance (transport/deposition/turbidity)",
+      "shortName": "",
+      "discipline": "Geomorphology",
+      "function": "Sediment continuity",
+      "category": "Geomorphology",
+      "tags": [
+        "Geomorphology",
+        "Sediment continuity",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/sediment-continuity-sediment-balance-transport-deposition-turbidity.json"
     },
     {
       "metricId": "sediment-continuity-sediment-deposition-patterns",
@@ -2807,15 +2782,16 @@
       "detailsRef": "metrics/sediment-continuity-sediment-deposition-patterns.json"
     },
     {
-      "metricId": "sediment-continuity-sediment-supply",
-      "name": "Sediment supply",
+      "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
+      "name": "Sediment Supply Potential (watershed/banks)",
       "shortName": "",
       "discipline": "Geomorphology",
       "function": "Sediment continuity",
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Sediment continuity"
+        "Sediment continuity",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -2829,7 +2805,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Watershed"
+          "Watershed and Channel"
         ],
         "effort": "field + desktop"
       },
@@ -2851,54 +2827,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/sediment-continuity-sediment-supply.json"
-    },
-    {
-      "metricId": "channel-and-floodplain-dynamics-side-channels",
-      "name": "Side channels",
-      "shortName": "",
-      "discipline": "Geomorphology",
-      "function": "Channel and floodplain dynamics",
-      "category": "Geomorphology",
-      "tags": [
-        "Geomorphology",
-        "Channel and floodplain dynamics"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Floodplain"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/channel-and-floodplain-dynamics-side-channels.json"
+      "detailsRef": "metrics/sediment-continuity-sediment-supply-potential-watershed-banks.json"
     },
     {
       "metricId": "channel-and-floodplain-dynamics-sinuosity",
@@ -2998,15 +2927,16 @@
       "detailsRef": "metrics/bed-composition-and-large-wood-substrate-composition.json"
     },
     {
-      "metricId": "bed-composition-and-large-wood-substrate-consolidation-or-armoring",
-      "name": "Substrate consolidation or armoring",
+      "metricId": "bed-composition-and-bedform-dynamics-substrate-condition-grain-size-embeddedness",
+      "name": "Substrate Condition (grain size/embeddedness/fines/consolidation)",
       "shortName": "",
       "discipline": "Geomorphology",
-      "function": "Bed composition and large wood",
+      "function": "Bed composition and bedform dynamics",
       "category": "Geomorphology",
       "tags": [
         "Geomorphology",
-        "Bed composition and large wood"
+        "Bed composition and bedform dynamics",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -3042,7 +2972,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/bed-composition-and-large-wood-substrate-consolidation-or-armoring.json"
+      "detailsRef": "metrics/bed-composition-and-bedform-dynamics-substrate-condition-grain-size-embeddedness.json"
     },
     {
       "metricId": "sediment-continuity-transport-capacity",
@@ -3095,53 +3025,6 @@
       "detailsRef": "metrics/sediment-continuity-transport-capacity.json"
     },
     {
-      "metricId": "bed-composition-and-large-wood-visual-bed-composition",
-      "name": "Visual bed composition",
-      "shortName": "",
-      "discipline": "Geomorphology",
-      "function": "Bed composition and large wood",
-      "category": "Geomorphology",
-      "tags": [
-        "Geomorphology",
-        "Bed composition and large wood"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/bed-composition-and-large-wood-visual-bed-composition.json"
-    },
-    {
       "metricId": "channel-evolution-widening-trend",
       "name": "Widening trend",
       "shortName": "",
@@ -3192,15 +3075,16 @@
       "detailsRef": "metrics/channel-evolution-widening-trend.json"
     },
     {
-      "metricId": "low-flow-and-baseflow-dynamics-baseflow-index-relative-to-baseline",
-      "name": "Baseflow Index relative to baseline",
+      "metricId": "low-flow-and-baseflow-dynamics-aufeis-icing-impacts",
+      "name": "Aufeis / Icing Impacts",
       "shortName": "",
       "discipline": "Hydraulics",
       "function": "Low flow and baseflow dynamics",
       "category": "Hydraulics",
       "tags": [
         "Hydraulics",
-        "Low flow and baseflow dynamics"
+        "Low flow and baseflow dynamics",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -3236,7 +3120,55 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-baseflow-index-relative-to-baseline.json"
+      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-aufeis-icing-impacts.json"
+    },
+    {
+      "metricId": "low-flow-and-baseflow-dynamics-baseflow-index-bfi-vs-baseline",
+      "name": "Baseflow Index (BFI) vs Baseline",
+      "shortName": "",
+      "discipline": "Hydraulics",
+      "function": "Low flow and baseflow dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "Hydraulics",
+        "Low flow and baseflow dynamics",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-baseflow-index-bfi-vs-baseline.json"
     },
     {
       "metricId": "high-flow-dynamics-bed-mobilization-frequency",
@@ -3439,53 +3371,6 @@
       "detailsRef": "metrics/floodplain-connectivity-channel-condition.json"
     },
     {
-      "metricId": "low-flow-and-baseflow-dynamics-channel-flow-status",
-      "name": "Channel flow status",
-      "shortName": "",
-      "discipline": "Hydraulics",
-      "function": "Low flow and baseflow dynamics",
-      "category": "Hydraulics",
-      "tags": [
-        "Hydraulics",
-        "Low flow and baseflow dynamics"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-channel-flow-status.json"
-    },
-    {
       "metricId": "floodplain-connectivity-entrenchment-er",
       "name": "Entrenchment (ER)",
       "discipline": "Hydraulics",
@@ -3533,15 +3418,16 @@
       "detailsRef": "metrics/floodplain-connectivity-entrenchment-er.json"
     },
     {
-      "metricId": "floodplain-connectivity-entrenchment-ratio",
-      "name": "Entrenchment ratio",
+      "metricId": "floodplain-connectivity-floodplain-access-entrenchment",
+      "name": "Floodplain Access / Entrenchment",
       "shortName": "",
       "discipline": "Hydraulics",
       "function": "Floodplain connectivity",
       "category": "Hydraulics",
       "tags": [
         "Hydraulics",
-        "Floodplain connectivity"
+        "Floodplain connectivity",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -3555,7 +3441,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "Channel; Floodplain"
         ],
         "effort": "field + desktop"
       },
@@ -3577,54 +3463,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/floodplain-connectivity-entrenchment-ratio.json"
-    },
-    {
-      "metricId": "low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency",
-      "name": "Flashiness or high-flow frequency",
-      "shortName": "",
-      "discipline": "Hydraulics",
-      "function": "Low flow and baseflow dynamics",
-      "category": "Hydraulics",
-      "tags": [
-        "Hydraulics",
-        "Low flow and baseflow dynamics"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-flashiness-or-high-flow-frequency.json"
+      "detailsRef": "metrics/floodplain-connectivity-floodplain-access-entrenchment.json"
     },
     {
       "metricId": "floodplain-connectivity-floodplain-complexity",
@@ -3677,6 +3516,102 @@
       "detailsRef": "metrics/floodplain-connectivity-floodplain-complexity.json"
     },
     {
+      "metricId": "floodplain-connectivity-floodplain-complexity-side-channels-oxbows-wetlands",
+      "name": "Floodplain Complexity (side channels/oxbows/wetlands)",
+      "shortName": "",
+      "discipline": "Hydraulics",
+      "function": "Floodplain connectivity",
+      "category": "Hydraulics",
+      "tags": [
+        "Hydraulics",
+        "Floodplain connectivity",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Floodplain"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/floodplain-connectivity-floodplain-complexity-side-channels-oxbows-wetlands.json"
+    },
+    {
+      "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
+      "name": "Floodplain Engagement Frequency (bankfull recurrence)",
+      "shortName": "",
+      "discipline": "Hydraulics",
+      "function": "High flow dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "Hydraulics",
+        "High flow dynamics",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Floodplain and Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence.json"
+    },
+    {
       "metricId": "hyporheic-connectivity-floodplain-permeability",
       "name": "Floodplain permeability",
       "shortName": "",
@@ -3727,15 +3662,16 @@
       "detailsRef": "metrics/hyporheic-connectivity-floodplain-permeability.json"
     },
     {
-      "metricId": "high-flow-dynamics-high-flow-velocity-or-shear-indicators",
-      "name": "High flow velocity or shear indicators",
+      "metricId": "hyporheic-connectivity-floodplain-permeability-screening",
+      "name": "Floodplain Permeability",
       "shortName": "",
       "discipline": "Hydraulics",
-      "function": "High flow dynamics",
+      "function": "Hyporheic connectivity",
       "category": "Hydraulics",
       "tags": [
         "Hydraulics",
-        "High flow dynamics"
+        "Hyporheic connectivity",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -3749,7 +3685,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "Floodplain"
         ],
         "effort": "field + desktop"
       },
@@ -3771,7 +3707,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/high-flow-dynamics-high-flow-velocity-or-shear-indicators.json"
+      "detailsRef": "metrics/hyporheic-connectivity-floodplain-permeability-screening.json"
     },
     {
       "metricId": "high-flow-dynamics-high-flow-velocity-shear",
@@ -3821,15 +3757,16 @@
       "detailsRef": "metrics/high-flow-dynamics-high-flow-velocity-shear.json"
     },
     {
-      "metricId": "high-flow-dynamics-high-flow-event-frequency",
-      "name": "High-flow event frequency",
+      "metricId": "high-flow-dynamics-high-flow-power-and-stability-bed-bank-mobilization",
+      "name": "High-flow Power & Stability (bed/bank mobilization)",
       "shortName": "",
       "discipline": "Hydraulics",
       "function": "High flow dynamics",
       "category": "Hydraulics",
       "tags": [
         "Hydraulics",
-        "High flow dynamics"
+        "High flow dynamics",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -3843,7 +3780,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Floodplain and Channel"
+          "Channel"
         ],
         "effort": "field + desktop"
       },
@@ -3865,7 +3802,55 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/high-flow-dynamics-high-flow-event-frequency.json"
+      "detailsRef": "metrics/high-flow-dynamics-high-flow-power-and-stability-bed-bank-mobilization.json"
+    },
+    {
+      "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
+      "name": "Hyporheic Exchange Indicators",
+      "shortName": "",
+      "discipline": "Hydraulics",
+      "function": "Hyporheic connectivity",
+      "category": "Hydraulics",
+      "tags": [
+        "Hydraulics",
+        "Hyporheic connectivity",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/hyporheic-connectivity-hyporheic-exchange-indicators.json"
     },
     {
       "metricId": "low-flow-and-baseflow-dynamics-lateral-connectivity",
@@ -4106,6 +4091,54 @@
       "detailsRef": "metrics/low-flow-and-baseflow-dynamics-low-flow-velocity.json"
     },
     {
+      "metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
+      "name": "Low-flow Wetted Connectivity",
+      "shortName": "",
+      "discipline": "Hydraulics",
+      "function": "Low flow and baseflow dynamics",
+      "category": "Hydraulics",
+      "tags": [
+        "Hydraulics",
+        "Low flow and baseflow dynamics",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity.json"
+    },
+    {
       "metricId": "high-flow-dynamics-overbank-flow-frequency",
       "name": "Overbank Flow Frequency",
       "discipline": "Hydraulics",
@@ -4151,53 +4184,6 @@
         }
       },
       "detailsRef": "metrics/high-flow-dynamics-overbank-flow-frequency.json"
-    },
-    {
-      "metricId": "high-flow-dynamics-peak-flow-capacity",
-      "name": "Peak flow capacity",
-      "shortName": "",
-      "discipline": "Hydraulics",
-      "function": "High flow dynamics",
-      "category": "Hydraulics",
-      "tags": [
-        "Hydraulics",
-        "High flow dynamics"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/high-flow-dynamics-peak-flow-capacity.json"
     },
     {
       "metricId": "high-flow-dynamics-peak-flow-capacity-morphological-check",
@@ -4294,194 +4280,6 @@
       "detailsRef": "metrics/high-flow-dynamics-peak-flow-capacity-velocity-shear-stress.json"
     },
     {
-      "metricId": "low-flow-and-baseflow-dynamics-residual-pool-connectivity",
-      "name": "Residual pool connectivity",
-      "shortName": "",
-      "discipline": "Hydraulics",
-      "function": "Low flow and baseflow dynamics",
-      "category": "Hydraulics",
-      "tags": [
-        "Hydraulics",
-        "Low flow and baseflow dynamics"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-residual-pool-connectivity.json"
-    },
-    {
-      "metricId": "hyporheic-connectivity-sediment-supply",
-      "name": "Sediment supply",
-      "shortName": "",
-      "discipline": "Hydraulics",
-      "function": "Hyporheic connectivity",
-      "category": "Hydraulics",
-      "tags": [
-        "Hydraulics",
-        "Hyporheic connectivity"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Watershed"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/hyporheic-connectivity-sediment-supply.json"
-    },
-    {
-      "metricId": "low-flow-and-baseflow-dynamics-substrate-exposure-during-low-flow",
-      "name": "Substrate exposure during low flow",
-      "shortName": "",
-      "discipline": "Hydraulics",
-      "function": "Low flow and baseflow dynamics",
-      "category": "Hydraulics",
-      "tags": [
-        "Hydraulics",
-        "Low flow and baseflow dynamics"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/low-flow-and-baseflow-dynamics-substrate-exposure-during-low-flow.json"
-    },
-    {
-      "metricId": "hyporheic-connectivity-visible-hyporheic-indicators",
-      "name": "Visible hyporheic indicators",
-      "shortName": "",
-      "discipline": "Hydraulics",
-      "function": "Hyporheic connectivity",
-      "category": "Hydraulics",
-      "tags": [
-        "Hydraulics",
-        "Hyporheic connectivity"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/hyporheic-connectivity-visible-hyporheic-indicators.json"
-    },
-    {
       "metricId": "hyporheic-connectivity-visible-hyporheic-metrics",
       "name": "Visible Hyporheic Metrics",
       "discipline": "Hydraulics",
@@ -4527,53 +4325,6 @@
         }
       },
       "detailsRef": "metrics/hyporheic-connectivity-visible-hyporheic-metrics.json"
-    },
-    {
-      "metricId": "streamflow-regime-artificial-structures-affecting-flow",
-      "name": "Artificial structures affecting flow",
-      "shortName": "",
-      "discipline": "Hydrology",
-      "function": "Streamflow regime",
-      "category": "Hydrology",
-      "tags": [
-        "Hydrology",
-        "Streamflow regime"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/streamflow-regime-artificial-structures-affecting-flow.json"
     },
     {
       "metricId": "streamflow-regime-artificial-structures-and-inputs",
@@ -4720,15 +4471,112 @@
       "detailsRef": "metrics/reach-inflow-concentrated-flow-inputs.json"
     },
     {
-      "metricId": "streamflow-regime-flashiness-or-high-flow-frequency",
-      "name": "Flashiness or high-flow frequency",
+      "metricId": "reach-inflow-concentrated-runoff-stormwater-inputs",
+      "name": "Concentrated Runoff / Stormwater Inputs",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Reach inflow",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Reach inflow",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed and Channel; Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/reach-inflow-concentrated-runoff-stormwater-inputs.json"
+    },
+    {
+      "metricId": "reach-inflow-diversions-withdrawals-returns",
+      "name": "Diversions / Withdrawals / Returns",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Reach inflow",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Reach inflow",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/reach-inflow-diversions-withdrawals-returns.json"
+    },
+    {
+      "metricId": "streamflow-regime-flashiness-rate-and-frequency-of-change",
+      "name": "Flashiness / Rate & Frequency of Change",
       "shortName": "",
       "discipline": "Hydrology",
       "function": "Streamflow regime",
       "category": "Hydrology",
       "tags": [
         "Hydrology",
-        "Streamflow regime"
+        "Streamflow regime",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -4764,7 +4612,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/streamflow-regime-flashiness-or-high-flow-frequency.json"
+      "detailsRef": "metrics/streamflow-regime-flashiness-rate-and-frequency-of-change.json"
     },
     {
       "metricId": "surface-water-storage-floodplain-water-retention",
@@ -4817,6 +4665,102 @@
       "detailsRef": "metrics/surface-water-storage-floodplain-water-retention.json"
     },
     {
+      "metricId": "surface-water-storage-floodplain-water-retention-storage",
+      "name": "Floodplain Water Retention / Storage",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Surface water storage",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Surface water storage",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Floodplain"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/surface-water-storage-floodplain-water-retention-storage.json"
+    },
+    {
+      "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
+      "name": "Flow Alteration (Regulation / Water Use)",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Streamflow regime",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Streamflow regime",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/streamflow-regime-flow-alteration-regulation-water-use.json"
+    },
+    {
       "metricId": "streamflow-regime-flow-permanence",
       "name": "Flow permanence",
       "discipline": "Hydrology",
@@ -4864,15 +4808,16 @@
       "detailsRef": "metrics/streamflow-regime-flow-permanence.json"
     },
     {
-      "metricId": "streamflow-regime-flow-permanence-stats",
-      "name": "Flow permanence stats",
+      "metricId": "streamflow-regime-flow-permanence-intermittency",
+      "name": "Flow Permanence / Intermittency",
       "shortName": "",
       "discipline": "Hydrology",
       "function": "Streamflow regime",
       "category": "Hydrology",
       "tags": [
         "Hydrology",
-        "Streamflow regime"
+        "Streamflow regime",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -4908,7 +4853,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/streamflow-regime-flow-permanence-stats.json"
+      "detailsRef": "metrics/streamflow-regime-flow-permanence-intermittency.json"
     },
     {
       "metricId": "streamflow-regime-flow-statistics",
@@ -5005,6 +4950,54 @@
       "detailsRef": "metrics/catchment-hydrology-impervious-surface-area.json"
     },
     {
+      "metricId": "catchment-hydrology-impervious-surface-cover",
+      "name": "Impervious Surface Cover",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Catchment hydrology",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Catchment hydrology",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/catchment-hydrology-impervious-surface-cover.json"
+    },
+    {
       "metricId": "catchment-hydrology-impoundments",
       "name": "Impoundments",
       "discipline": "Hydrology",
@@ -5052,62 +5045,16 @@
       "detailsRef": "metrics/catchment-hydrology-impoundments.json"
     },
     {
-      "metricId": "catchment-hydrology-impoundments-and-regulated-reaches",
-      "name": "Impoundments and regulated reaches",
-      "shortName": "",
-      "discipline": "Hydrology",
-      "function": "Catchment hydrology",
-      "category": "Hydrology",
-      "tags": [
-        "Hydrology",
-        "Catchment hydrology"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Watershed"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/catchment-hydrology-impoundments-and-regulated-reaches.json"
-    },
-    {
-      "metricId": "surface-water-storage-in-channel-ponding-or-beaver-dams",
-      "name": "In-channel ponding or beaver dams",
+      "metricId": "surface-water-storage-impoundments-dams-ponds",
+      "name": "Impoundments / Dams / Ponds",
       "shortName": "",
       "discipline": "Hydrology",
       "function": "Surface water storage",
       "category": "Hydrology",
       "tags": [
         "Hydrology",
-        "Surface water storage"
+        "Surface water storage",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -5121,7 +5068,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "Watershed and Floodplain; Channel"
         ],
         "effort": "field + desktop"
       },
@@ -5143,7 +5090,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/surface-water-storage-in-channel-ponding-or-beaver-dams.json"
+      "detailsRef": "metrics/surface-water-storage-impoundments-dams-ponds.json"
     },
     {
       "metricId": "surface-water-storage-in-channel-ponding-beaver",
@@ -5290,100 +5237,6 @@
       "detailsRef": "metrics/reach-inflow-local-runoff-diversions.json"
     },
     {
-      "metricId": "reach-inflow-local-runoff-diversions-or-withdrawals",
-      "name": "Local runoff diversions or withdrawals",
-      "shortName": "",
-      "discipline": "Hydrology",
-      "function": "Reach inflow",
-      "category": "Hydrology",
-      "tags": [
-        "Hydrology",
-        "Reach inflow"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Watershed"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/reach-inflow-local-runoff-diversions-or-withdrawals.json"
-    },
-    {
-      "metricId": "streamflow-regime-mean-annual-flow-difference-from-baseline",
-      "name": "Mean annual flow difference from baseline",
-      "shortName": "",
-      "discipline": "Hydrology",
-      "function": "Streamflow regime",
-      "category": "Hydrology",
-      "tags": [
-        "Hydrology",
-        "Streamflow regime"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/streamflow-regime-mean-annual-flow-difference-from-baseline.json"
-    },
-    {
       "metricId": "surface-water-storage-off-channel-storage",
       "name": "Off-channel storage",
       "shortName": "",
@@ -5434,15 +5287,64 @@
       "detailsRef": "metrics/surface-water-storage-off-channel-storage.json"
     },
     {
-      "metricId": "catchment-hydrology-percent-impervious-area",
-      "name": "Percent impervious area",
+      "metricId": "surface-water-storage-off-channel-storage-features",
+      "name": "Off-channel Storage Features",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Surface water storage",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Surface water storage",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Floodplain"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/surface-water-storage-off-channel-storage-features.json"
+    },
+    {
+      "metricId": "catchment-hydrology-percent-forest-cover",
+      "name": "Percent Forest Cover",
       "shortName": "",
       "discipline": "Hydrology",
       "function": "Catchment hydrology",
       "category": "Hydrology",
       "tags": [
         "Hydrology",
-        "Catchment hydrology"
+        "Catchment hydrology",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -5478,18 +5380,19 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/catchment-hydrology-percent-impervious-area.json"
+      "detailsRef": "metrics/catchment-hydrology-percent-forest-cover.json"
     },
     {
       "metricId": "surface-water-storage-percent-wetlands-in-watershed",
-      "name": "Percent wetlands in watershed",
+      "name": "Percent Wetlands in Watershed",
       "shortName": "",
       "discipline": "Hydrology",
       "function": "Surface water storage",
       "category": "Hydrology",
       "tags": [
         "Hydrology",
-        "Surface water storage"
+        "Surface water storage",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -5528,15 +5431,16 @@
       "detailsRef": "metrics/surface-water-storage-percent-wetlands-in-watershed.json"
     },
     {
-      "metricId": "streamflow-regime-regional-sdam-rapid-metrics",
-      "name": "Regional SDAM rapid metrics",
+      "metricId": "reach-inflow-permitted-point-source-discharges",
+      "name": "Permitted Point-source Discharges",
       "shortName": "",
       "discipline": "Hydrology",
-      "function": "Streamflow regime",
+      "function": "Reach inflow",
       "category": "Hydrology",
       "tags": [
         "Hydrology",
-        "Streamflow regime"
+        "Reach inflow",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -5550,7 +5454,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "Watershed and Channel"
         ],
         "effort": "field + desktop"
       },
@@ -5572,7 +5476,55 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/streamflow-regime-regional-sdam-rapid-metrics.json"
+      "detailsRef": "metrics/reach-inflow-permitted-point-source-discharges.json"
+    },
+    {
+      "metricId": "catchment-hydrology-recent-land-use-land-cover-change",
+      "name": "Recent Land Use / Land Cover Change",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Catchment hydrology",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Catchment hydrology",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/catchment-hydrology-recent-land-use-land-cover-change.json"
     },
     {
       "metricId": "catchment-hydrology-road-density",
@@ -5625,100 +5577,6 @@
       "detailsRef": "metrics/catchment-hydrology-road-density.json"
     },
     {
-      "metricId": "reach-inflow-road-density-and-proximity-to-channel",
-      "name": "Road density and proximity to channel",
-      "shortName": "",
-      "discipline": "Hydrology",
-      "function": "Reach inflow",
-      "category": "Hydrology",
-      "tags": [
-        "Hydrology",
-        "Reach inflow"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Watershed and Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/reach-inflow-road-density-and-proximity-to-channel.json"
-    },
-    {
-      "metricId": "reach-inflow-road-or-highway-drainage-outfalls",
-      "name": "Road or highway drainage outfalls",
-      "shortName": "",
-      "discipline": "Hydrology",
-      "function": "Reach inflow",
-      "category": "Hydrology",
-      "tags": [
-        "Hydrology",
-        "Reach inflow"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/reach-inflow-road-or-highway-drainage-outfalls.json"
-    },
-    {
       "metricId": "reach-inflow-road-highway-drainage",
       "name": "Road/highway drainage",
       "discipline": "Hydrology",
@@ -5764,53 +5622,6 @@
         }
       },
       "detailsRef": "metrics/reach-inflow-road-highway-drainage.json"
-    },
-    {
-      "metricId": "streamflow-regime-streambed-vegetation-indicators",
-      "name": "Streambed vegetation indicators",
-      "shortName": "",
-      "discipline": "Hydrology",
-      "function": "Streamflow regime",
-      "category": "Hydrology",
-      "tags": [
-        "Hydrology",
-        "Streamflow regime"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/streamflow-regime-streambed-vegetation-indicators.json"
     },
     {
       "metricId": "reach-inflow-tributary-condition-and-impact",
@@ -5863,6 +5674,102 @@
       "detailsRef": "metrics/reach-inflow-tributary-condition-and-impact.json"
     },
     {
+      "metricId": "reach-inflow-tributary-inflow-condition",
+      "name": "Tributary Inflow Condition",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Reach inflow",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Reach inflow",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed and Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/reach-inflow-tributary-inflow-condition.json"
+    },
+    {
+      "metricId": "catchment-hydrology-watershed-development-and-roads-infrastructure",
+      "name": "Watershed Development & Roads / Infrastructure",
+      "shortName": "",
+      "discipline": "Hydrology",
+      "function": "Catchment hydrology",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Catchment hydrology",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/catchment-hydrology-watershed-development-and-roads-infrastructure.json"
+    },
+    {
       "metricId": "surface-water-storage-wetland-coverage",
       "name": "Wetland coverage",
       "discipline": "Hydrology",
@@ -5910,15 +5817,16 @@
       "detailsRef": "metrics/surface-water-storage-wetland-coverage.json"
     },
     {
-      "metricId": "light-and-thermal-regime-algal-growth",
-      "name": "Algal growth",
+      "metricId": "nutrient-cycling-agriculture-and-livestock-nutrient-pressure",
+      "name": "Agriculture & Livestock Nutrient Pressure",
       "shortName": "",
       "discipline": "Physicochemistry",
-      "function": "Light and thermal regime",
+      "function": "Nutrient cycling",
       "category": "Physicochemistry",
       "tags": [
         "Physicochemistry",
-        "Light and thermal regime"
+        "Nutrient cycling",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -5932,7 +5840,7 @@
       ],
       "inputsSummary": {
         "sources": [
-          "Channel"
+          "Watershed and Channel"
         ],
         "effort": "field + desktop"
       },
@@ -5954,7 +5862,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/light-and-thermal-regime-algal-growth.json"
+      "detailsRef": "metrics/nutrient-cycling-agriculture-and-livestock-nutrient-pressure.json"
     },
     {
       "metricId": "light-and-thermal-regime-algal-growth-light-limited",
@@ -6004,53 +5912,6 @@
       "detailsRef": "metrics/light-and-thermal-regime-algal-growth-light-limited.json"
     },
     {
-      "metricId": "carbon-processing-algal-or-primary-production-indicators",
-      "name": "Algal or primary production indicators",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Carbon processing",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Carbon processing"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/carbon-processing-algal-or-primary-production-indicators.json"
-    },
-    {
       "metricId": "carbon-processing-algal-primary-production",
       "name": "Algal/Primary Production",
       "discipline": "Physicochemistry",
@@ -6098,53 +5959,6 @@
       "detailsRef": "metrics/carbon-processing-algal-primary-production.json"
     },
     {
-      "metricId": "water-and-soil-quality-bank-or-floodplain-soil-condition",
-      "name": "Bank or floodplain soil condition",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Water and soil quality",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Water and soil quality"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Floodplain"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/water-and-soil-quality-bank-or-floodplain-soil-condition.json"
-    },
-    {
       "metricId": "water-and-soil-quality-bank-floodplain-soil-condition",
       "name": "Bank/Floodplain Soil Condition",
       "discipline": "Physicochemistry",
@@ -6190,6 +6004,54 @@
         }
       },
       "detailsRef": "metrics/water-and-soil-quality-bank-floodplain-soil-condition.json"
+    },
+    {
+      "metricId": "water-and-soil-quality-contaminants-and-soil-pollution-indicators",
+      "name": "Contaminants & Soil Pollution Indicators",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Water & soil quality",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Water & soil quality",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed and Channel; Floodplain"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/water-and-soil-quality-contaminants-and-soil-pollution-indicators.json"
     },
     {
       "metricId": "carbon-processing-cpom-retention",
@@ -6243,14 +6105,15 @@
     },
     {
       "metricId": "nutrient-cycling-denitrification-potential-floodplain-wetness",
-      "name": "Denitrification potential (floodplain wetness)",
+      "name": "Denitrification Potential (floodplain wetness)",
       "shortName": "",
       "discipline": "Physicochemistry",
       "function": "Nutrient cycling",
       "category": "Physicochemistry",
       "tags": [
         "Physicochemistry",
-        "Nutrient cycling"
+        "Nutrient cycling",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -6334,6 +6197,54 @@
         }
       },
       "detailsRef": "metrics/nutrient-cycling-denitrification-potential-visual.json"
+    },
+    {
+      "metricId": "carbon-processing-detrital-processing-cpom-retention-shredders",
+      "name": "Detrital Processing (CPOM retention / shredders)",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Carbon processing",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Carbon processing",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/carbon-processing-detrital-processing-cpom-retention-shredders.json"
     },
     {
       "metricId": "carbon-processing-detritus-decomposition-rate",
@@ -6433,6 +6344,102 @@
       "detailsRef": "metrics/water-and-soil-quality-dissolved-oxygen.json"
     },
     {
+      "metricId": "water-and-soil-quality-dissolved-oxygen-do",
+      "name": "Dissolved Oxygen (DO)",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Water & soil quality",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Water & soil quality",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/water-and-soil-quality-dissolved-oxygen-do.json"
+    },
+    {
+      "metricId": "nutrient-cycling-dissolved-oxygen-fluctuation-diel-swing",
+      "name": "Dissolved Oxygen Fluctuation (diel swing)",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Nutrient cycling",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Nutrient cycling",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/nutrient-cycling-dissolved-oxygen-fluctuation-diel-swing.json"
+    },
+    {
       "metricId": "nutrient-cycling-do-fluctuation",
       "name": "DO fluctuation",
       "shortName": "",
@@ -6483,53 +6490,6 @@
       "detailsRef": "metrics/nutrient-cycling-do-fluctuation.json"
     },
     {
-      "metricId": "nutrient-cycling-n-and-p-concentrations",
-      "name": "N and P concentrations",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Nutrient cycling",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Nutrient cycling"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/nutrient-cycling-n-and-p-concentrations.json"
-    },
-    {
       "metricId": "nutrient-cycling-n-p-concentrations-surrogates",
       "name": "N/P Concentrations (surrogates)",
       "discipline": "Physicochemistry",
@@ -6577,156 +6537,16 @@
       "detailsRef": "metrics/nutrient-cycling-n-p-concentrations-surrogates.json"
     },
     {
-      "metricId": "nutrient-cycling-nutrient-listing-status",
-      "name": "Nutrient listing status",
+      "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
+      "name": "Nitrogen & Phosphorus Concentrations",
       "shortName": "",
       "discipline": "Physicochemistry",
       "function": "Nutrient cycling",
       "category": "Physicochemistry",
       "tags": [
         "Physicochemistry",
-        "Nutrient cycling"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
+        "Nutrient cycling",
         "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Watershed"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/nutrient-cycling-nutrient-listing-status.json"
-    },
-    {
-      "metricId": "water-and-soil-quality-overall-status-for-aquatic-life-or-use-support",
-      "name": "Overall status for aquatic life or use support",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Water and soil quality",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Water and soil quality"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Watershed"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/water-and-soil-quality-overall-status-for-aquatic-life-or-use-support.json"
-    },
-    {
-      "metricId": "light-and-thermal-regime-percent-forested-land-cover-in-watershed",
-      "name": "Percent forested land cover in watershed",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Light and thermal regime",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Light and thermal regime"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Watershed"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/light-and-thermal-regime-percent-forested-land-cover-in-watershed.json"
-    },
-    {
-      "metricId": "water-and-soil-quality-ph-and-conductivity",
-      "name": "pH and conductivity",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Water and soil quality",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Water and soil quality"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -6762,7 +6582,103 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/water-and-soil-quality-ph-and-conductivity.json"
+      "detailsRef": "metrics/nutrient-cycling-nitrogen-and-phosphorus-concentrations.json"
+    },
+    {
+      "metricId": "nutrient-cycling-nuisance-algae-periphyton-indicator",
+      "name": "Nuisance Algae / Periphyton Indicator",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Nutrient cycling",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Nutrient cycling",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/nutrient-cycling-nuisance-algae-periphyton-indicator.json"
+    },
+    {
+      "metricId": "light-and-thermal-regime-nuisance-algal-growth",
+      "name": "Nuisance Algal Growth",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Light & thermal regime",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Light & thermal regime",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/light-and-thermal-regime-nuisance-algal-growth.json"
     },
     {
       "metricId": "water-and-soil-quality-ph-and-conductivity-rapid",
@@ -6810,6 +6726,102 @@
         }
       },
       "detailsRef": "metrics/water-and-soil-quality-ph-and-conductivity-rapid.json"
+    },
+    {
+      "metricId": "carbon-processing-primary-production-algal-indicators",
+      "name": "Primary Production / Algal Indicators",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Carbon processing",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Carbon processing",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/carbon-processing-primary-production-algal-indicators.json"
+    },
+    {
+      "metricId": "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl",
+      "name": "Regulatory Impairment Status (305b/303d/TMDL)",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Water & soil quality",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Water & soil quality",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed and Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl.json"
     },
     {
       "metricId": "light-and-thermal-regime-riparian-canopy-cover",
@@ -6906,100 +6918,6 @@
       "detailsRef": "metrics/carbon-processing-riparian-corridor-width-quality.json"
     },
     {
-      "metricId": "carbon-processing-riparian-vegetation-or-connectivity",
-      "name": "Riparian vegetation or connectivity",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Carbon processing",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Carbon processing"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Floodplain"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/carbon-processing-riparian-vegetation-or-connectivity.json"
-    },
-    {
-      "metricId": "carbon-processing-shredder-or-detritivore-presence",
-      "name": "Shredder or detritivore presence",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Carbon processing",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Carbon processing"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/carbon-processing-shredder-or-detritivore-presence.json"
-    },
-    {
       "metricId": "carbon-processing-shredder-detritivore-presence",
       "name": "Shredder/Detritivore Presence",
       "discipline": "Physicochemistry",
@@ -7045,6 +6963,54 @@
         }
       },
       "detailsRef": "metrics/carbon-processing-shredder-detritivore-presence.json"
+    },
+    {
+      "metricId": "water-and-soil-quality-specific-conductance",
+      "name": "Specific Conductance",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Water & soil quality",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Water & soil quality",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed and Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/water-and-soil-quality-specific-conductance.json"
     },
     {
       "metricId": "light-and-thermal-regime-stream-temperature",
@@ -7097,6 +7063,54 @@
       "detailsRef": "metrics/light-and-thermal-regime-stream-temperature.json"
     },
     {
+      "metricId": "light-and-thermal-regime-stream-temperature-screening",
+      "name": "Stream Temperature",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Light & thermal regime",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Light & thermal regime",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Field"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/light-and-thermal-regime-stream-temperature-screening.json"
+    },
+    {
       "metricId": "light-and-thermal-regime-thermal-refugia",
       "name": "Thermal refugia",
       "shortName": "",
@@ -7147,15 +7161,16 @@
       "detailsRef": "metrics/light-and-thermal-regime-thermal-refugia.json"
     },
     {
-      "metricId": "water-and-soil-quality-toxic-pollutants",
-      "name": "Toxic pollutants",
+      "metricId": "light-and-thermal-regime-thermal-refugia-availability",
+      "name": "Thermal Refugia Availability",
       "shortName": "",
       "discipline": "Physicochemistry",
-      "function": "Water and soil quality",
+      "function": "Light & thermal regime",
       "category": "Physicochemistry",
       "tags": [
         "Physicochemistry",
-        "Water and soil quality"
+        "Light & thermal regime",
+        "screening"
       ],
       "status": "active",
       "minimumTier": "screening",
@@ -7191,7 +7206,7 @@
           "detailed": 0
         }
       },
-      "detailsRef": "metrics/water-and-soil-quality-toxic-pollutants.json"
+      "detailsRef": "metrics/light-and-thermal-regime-thermal-refugia-availability.json"
     },
     {
       "metricId": "water-and-soil-quality-toxic-pollutants-visual-odor",
@@ -7239,6 +7254,54 @@
         }
       },
       "detailsRef": "metrics/water-and-soil-quality-toxic-pollutants-visual-odor.json"
+    },
+    {
+      "metricId": "water-and-soil-quality-turbidity-water-clarity",
+      "name": "Turbidity / Water Clarity",
+      "shortName": "",
+      "discipline": "Physicochemistry",
+      "function": "Water & soil quality",
+      "category": "Physicochemistry",
+      "tags": [
+        "Physicochemistry",
+        "Water & soil quality",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Channel"
+        ],
+        "effort": "field + desktop"
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "4 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/water-and-soil-quality-turbidity-water-clarity.json"
     },
     {
       "metricId": "nutrient-cycling-vegetated-riparian-corridor-width",
@@ -7291,53 +7354,6 @@
       "detailsRef": "metrics/nutrient-cycling-vegetated-riparian-corridor-width.json"
     },
     {
-      "metricId": "nutrient-cycling-visible-algal-indications",
-      "name": "Visible algal indications",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Nutrient cycling",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Nutrient cycling"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/nutrient-cycling-visible-algal-indications.json"
-    },
-    {
       "metricId": "nutrient-cycling-visible-algal-indications-n-p",
       "name": "Visible Algal Indications (N/P)",
       "discipline": "Physicochemistry",
@@ -7383,53 +7399,6 @@
         }
       },
       "detailsRef": "metrics/nutrient-cycling-visible-algal-indications-n-p.json"
-    },
-    {
-      "metricId": "water-and-soil-quality-water-clarity-or-turbidity",
-      "name": "Water clarity or turbidity",
-      "shortName": "",
-      "discipline": "Physicochemistry",
-      "function": "Water and soil quality",
-      "category": "Physicochemistry",
-      "tags": [
-        "Physicochemistry",
-        "Water and soil quality"
-      ],
-      "status": "active",
-      "minimumTier": "screening",
-      "profileAvailability": {
-        "screening": true,
-        "rapid": false,
-        "detailed": false
-      },
-      "recommendedTiers": [
-        "screening"
-      ],
-      "inputsSummary": {
-        "sources": [
-          "Channel"
-        ],
-        "effort": "field + desktop"
-      },
-      "profileSummaries": {
-        "screening": {
-          "profileId": "screening-default",
-          "scoringType": "categorical",
-          "scoringShape": "4 levels",
-          "rawOutput": "rating",
-          "normalizedOutput": "rating",
-          "curveSetCount": 1
-        }
-      },
-      "curvesSummary": {
-        "totalCurveSetCount": 1,
-        "byTier": {
-          "screening": 1,
-          "rapid": 0,
-          "detailed": 0
-        }
-      },
-      "detailsRef": "metrics/water-and-soil-quality-water-clarity-or-turbidity.json"
     },
     {
       "metricId": "water-and-soil-quality-water-clarity-turbidity",

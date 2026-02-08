@@ -3351,6 +3351,8 @@ body.modal-open {
   border: 1px solid #cfcfcf;
   padding: 0.35rem 0.4rem;
   vertical-align: top;
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 .curve-summary-table tr:nth-child(2) td,
@@ -3369,6 +3371,11 @@ body.modal-open {
   color: #555555;
   font-size: 0.8rem;
   line-height: 1.2;
+}
+
+.curve-summary-table .curve-point-value {
+  word-break: normal;
+  overflow-wrap: normal;
 }
 
 /* Metric library workbench layout */

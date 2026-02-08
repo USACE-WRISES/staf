@@ -1282,39 +1282,100 @@
       if (!state.orderingPromise) {
         state.orderingPromise = (async () => {
           try {
-            const url = store.buildUrl('/assets/data/screening-metrics.tsv');
-            const response = await fetch(url);
-            if (!response.ok) {
+            const [screeningResponse, functionsResponse] = await Promise.all([
+              fetch(store.buildUrl('/assets/data/screening-metrics.tsv')),
+              fetch(store.buildUrl('/assets/data/functions.json')),
+            ]);
+            if (!screeningResponse.ok) {
               throw new Error('Failed to load screening metrics order');
             }
-            const text = await response.text();
-            const rows = parseTSV(text);
-            rows.forEach((row) => {
-              const discipline = normalizeText(row.Discipline || row.discipline || '');
-              const func = normalizeText(row.Function || row.function || '');
-              const metric = normalizeText(row.Metric || row.metric || '');
-              if (!discipline || !func || !metric) {
+            const rows = parseTSV(await screeningResponse.text());
+            const functionsList = functionsResponse.ok
+              ? await functionsResponse.json()
+              : [];
+            const validFunctionsList = Array.isArray(functionsList) ? functionsList : [];
+
+            const functionAliases = new Map([
+              [
+                normalizeText('bed composition and bedform dynamics'),
+                normalizeText('bed composition and large wood'),
+              ],
+            ]);
+
+            const disciplineOrder = [];
+            const functionOrder = new Map();
+            const metricOrder = new Map();
+            const canonicalByFunction = new Map();
+
+            validFunctionsList.forEach((fn) => {
+              const discipline = normalizeText(fn?.category || '');
+              const func = normalizeText(fn?.name || '');
+              if (!discipline || !func) {
                 return;
               }
-              if (!state.ordering.disciplineOrder.includes(discipline)) {
-                state.ordering.disciplineOrder.push(discipline);
+              if (!disciplineOrder.includes(discipline)) {
+                disciplineOrder.push(discipline);
               }
-              if (!state.ordering.functionOrder.has(discipline)) {
-                state.ordering.functionOrder.set(discipline, []);
+              if (!functionOrder.has(discipline)) {
+                functionOrder.set(discipline, []);
               }
-              const funcList = state.ordering.functionOrder.get(discipline);
+              const funcList = functionOrder.get(discipline);
+              if (funcList && !funcList.includes(func)) {
+                funcList.push(func);
+              }
+              const canonical = { discipline, func };
+              canonicalByFunction.set(func, canonical);
+              const idAsName = normalizeText(String(fn?.id || '').replace(/-/g, ' '));
+              if (idAsName) {
+                canonicalByFunction.set(idAsName, canonical);
+              }
+            });
+
+            functionAliases.forEach((target, alias) => {
+              const canonical = canonicalByFunction.get(target);
+              if (canonical) {
+                canonicalByFunction.set(alias, canonical);
+              }
+            });
+
+            rows.forEach((row) => {
+              const rawDiscipline = normalizeText(row.Discipline || row.discipline || '');
+              const rawFunction = normalizeText(row.Function || row.function || '');
+              const metric = normalizeText(row.Metric || row.metric || '');
+              if (!metric) {
+                return;
+              }
+              const canonical =
+                canonicalByFunction.get(functionAliases.get(rawFunction) || rawFunction) ||
+                canonicalByFunction.get(rawFunction);
+              const discipline = canonical ? canonical.discipline : rawDiscipline;
+              const func = canonical ? canonical.func : rawFunction;
+              if (!discipline || !func) {
+                return;
+              }
+              if (!disciplineOrder.includes(discipline)) {
+                disciplineOrder.push(discipline);
+              }
+              if (!functionOrder.has(discipline)) {
+                functionOrder.set(discipline, []);
+              }
+              const funcList = functionOrder.get(discipline);
               if (funcList && !funcList.includes(func)) {
                 funcList.push(func);
               }
               const metricKey = `${discipline}|${func}`;
-              if (!state.ordering.metricOrder.has(metricKey)) {
-                state.ordering.metricOrder.set(metricKey, []);
+              if (!metricOrder.has(metricKey)) {
+                metricOrder.set(metricKey, []);
               }
-              const metricList = state.ordering.metricOrder.get(metricKey);
+              const metricList = metricOrder.get(metricKey);
               if (metricList && !metricList.includes(metric)) {
                 metricList.push(metric);
               }
             });
+
+            state.ordering.disciplineOrder = disciplineOrder;
+            state.ordering.functionOrder = functionOrder;
+            state.ordering.metricOrder = metricOrder;
             state.ordering.ready = true;
           } catch (error) {
             state.ordering.ready = true;

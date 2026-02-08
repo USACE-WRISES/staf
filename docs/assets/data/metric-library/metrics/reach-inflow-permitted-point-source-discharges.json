@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-permitted-point-source-discharges",
+  "name": "Permitted Point-source Discharges",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Reach inflow",
+  "functionStatement": "Quantity and quality of inflow (tributaries, ditches, and pipes) do not generate harmful peaks or pollution pulses and instead support diverse habitat conditions and native species.",
+  "descriptionMarkdown": "Presence of permitted point-source discharges upstream (municipal/industrial) that may affect flow and/or water quality.",
+  "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Desktop (permit/layer review) with field verification where feasible",
+  "howToMeasureMarkdown": "Query NPDES (or state-equivalent) permit records for facilities in the watershed and within the specified distance upstream. Summarize count and (if required) relative discharge magnitude (e.g., as a percent of baseflow). Assign the condition class using the bin thresholds for this metric.",
+  "inputs": [
+    {
+      "label": "Permitted Point-source Discharges",
+      "type": "desktop (permit/layer review) with field verification where feasible",
+      "source": "Watershed and Channel",
+      "required": true,
+      "helpMarkdown": "EPA ECHO/NPDES facility data and state permit databases; optional local outfall GIS layers.\nADEC database"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: No CDPS permitted facilities upstream of the project reach. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: CDPS permitted facilities comprise a low to moderate percentage of the baseflow in the project reach AND no facilities are located within 2 miles upstream of project reach. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: CDPS permitted facilities comprise a low to moderate percentage of the baseflow in the project reach AND no facilities are located within 2 miles upstream of project reach. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: CDPS permitted facilities comprise a high percentage of the baseflow in the project reach OR 1 or more facilities present within 2 miles upstream of project reach have a high potential to threaten aquatic life. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-permitted-point-source-discharges"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA ECHO/NPDES (if used)",
+    "CO SQT 2019",
+    "EPA ECHO/NPDES (if used)",
+    "NC SQT 2019",
+    "EPA ECHO/NPDES (if used)",
+    "SC SQT 2021",
+    "EPA ECHO/NPDES (if used)",
+    "TN SQT",
+    "EPA ECHO/NPDES (if used)",
+    "Alaska SQT",
+    "EPA ECHO/NPDES (if used)",
+    "WY SQT 2019"
+  ],
+  "tags": [
+    "Hydrology",
+    "Reach inflow",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; North Carolina SQT; South Carolina SQT; Tennessee SQT; Alaska SQT; Wyoming SQT",
+    "scsDefaultOn": false,
+    "metricDataSource": "EPA ECHO/NPDES facility data and state permit databases; optional local outfall GIS layers.\nADEC database",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "CDPS permitted facilities comprise a high percentage of the baseflow in the project reach OR 1 or more facilities present within 2 miles upstream of project reach have a high potential to threaten aquatic life.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "CDPS permitted facilities comprise a low to moderate percentage of the baseflow in the project reach AND no facilities are located within 2 miles upstream of project reach.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "No CDPS permitted facilities upstream of the project reach.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

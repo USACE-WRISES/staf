@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-evolution-channelization-ditching-straightening",
+  "name": "Channelization / Ditching / Straightening",
+  "shortName": "",
+  "discipline": "Geomorphology",
+  "function": "Channel evolution",
+  "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
+  "descriptionMarkdown": "Screening metric used to evaluate Channel evolution based on the definition and bin thresholds provided for this metric.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field screening and/or Desktop (imagery/LiDAR)",
+  "howToMeasureMarkdown": "Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.",
+  "inputs": [
+    {
+      "label": "Channelization / Ditching / Straightening",
+      "type": "field screening and/or desktop (imagery/lidar)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "State/agency datasets, GIS/imagery, and field observations (as applicable)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Altered watercourse score - 71% or greater. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Altered watercourse score between 41 and 70%. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Altered watercourse score between 41 and 70%. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Altered Watercourse Index Score of 40% or less. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-evolution-channelization-ditching-straightening"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "MN SQT 2020"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel evolution",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Minnesota SQT",
+    "scsDefaultOn": false,
+    "metricDataSource": "State/agency datasets, GIS/imagery, and field observations (as applicable).",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Altered Watercourse Index Score of 40% or less.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Altered watercourse score between 41 and 70%.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Altered watercourse score - 71% or greater.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

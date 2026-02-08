@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-biological-integrity-ibi-community-condition",
+  "name": "Biological Integrity (IBI / community condition)",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.\nSpecies interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "Healthy numbers if historically supported, unless ephemeral dryness naturally excludes them.\nIBI/multi-metric shows high integrity if historically expected, unless ephemeral dryness limits it.\nDiverse macroinvertebrates (incl. EPT) if historically expected, unless ephemeral dryness limits.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field; Field screening and/or Desktop (biomonitoring databases); Desktop",
+  "howToMeasureMarkdown": "Conduct a brief visual or dipnet survey and record presence where expected.\nStandard IBI score from sampling\nCompile the most recent macroinvertebrate or fish IBI score or class from state or local databases for the reach or nearest station.",
+  "inputs": [
+    {
+      "label": "Biological Integrity (IBI / community condition)",
+      "type": "field; field screening and/or desktop (biomonitoring databases); desktop",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "State agency datasets, brief field recon"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Multiple observations where historically expected. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Some presence but limited. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Rare or single individuals. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Absent where historically expected. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-biological-integrity-ibi-community-condition"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "State Natural Heritage Program records",
+    "Herp Atlas or similar",
+    "BISON and/or iNaturalist as supporting context.",
+    "State biomonitoring protocols",
+    "USGS BioData and/or EPA Water Quality Portal biological results (where available).",
+    "CO SQT 2019",
+    "MI SQT 2019",
+    "MN SQT 2020",
+    "NC SQT 2019",
+    "WI SQT 2022",
+    "WY SQT 2019",
+    "state biomonitoring databases."
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "State agency datasets, brief field recon",
+    "recommendedTiersRaw": "screening; rapid",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Absent where historically expected.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Some presence but limited. / Rare or single individuals.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Multiple observations where historically expected.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

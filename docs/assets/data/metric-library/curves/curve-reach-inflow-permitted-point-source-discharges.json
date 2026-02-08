@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-permitted-point-source-discharges",
+  "metricId": "reach-inflow-permitted-point-source-discharges",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "description": "Good: No CDPS permitted facilities upstream of the project reach. (Suggested index range 0.70-1.0)",
+              "yMax": 1,
+              "yMin": 0.7,
+              "y": 0.85
+            },
+            {
+              "x": "Suboptimal",
+              "description": "Fair: CDPS permitted facilities comprise a low to moderate percentage of the baseflow in the project reach AND no facilities are located within 2 miles upstream of project reach. (Suggested index range 0.50-0.69)",
+              "yMax": 0.69,
+              "yMin": 0.5,
+              "y": 0.59
+            },
+            {
+              "x": "Marginal",
+              "description": "Fair: CDPS permitted facilities comprise a low to moderate percentage of the baseflow in the project reach AND no facilities are located within 2 miles upstream of project reach. (Suggested index range 0.30-0.49)",
+              "yMax": 0.49,
+              "yMin": 0.3,
+              "y": 0.4
+            },
+            {
+              "x": "Poor",
+              "description": "Poor: CDPS permitted facilities comprise a high percentage of the baseflow in the project reach OR 1 or more facilities present within 2 miles upstream of project reach have a high potential to threaten aquatic life. (Suggested index range 0.0-0.29)",
+              "yMax": 0.29,
+              "yMin": 0,
+              "y": 0.14
+            }
+          ],
+          "id": "curve-reach-inflow-permitted-point-source-discharges-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-reach-inflow-permitted-point-source-discharges-default",
+      "name": "Screening",
+      "units": "",
+      "activeLayerId": "curve-reach-inflow-permitted-point-source-discharges-layer"
+    }
+  ]
+}

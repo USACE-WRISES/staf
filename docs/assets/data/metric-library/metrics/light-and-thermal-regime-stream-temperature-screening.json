@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-stream-temperature-screening",
+  "name": "Stream Temperature",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Stays within acceptable bounds for local aquatic life, rarely exceeding stress thresholds.",
+  "methodContextMarkdown": "Context: Field\n\nMethod: Use continuous or spot water-temperature records to assess maxima and diel range. Use modeled products where monitoring data are absent.",
+  "howToMeasureMarkdown": "Rarely surpasses local standard or typical seasonal maxima for the stream type.",
+  "inputs": [
+    {
+      "label": "Stream Temperature",
+      "type": "use continuous or spot water-temperature records to assess maxima and diel range. use modeled products where monitoring data are absent.",
+      "source": "Field",
+      "required": true,
+      "helpMarkdown": "Field"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Slightly exceeds thresholds occasionally. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Frequently near or above thresholds. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Consistently high or potentially lethal temperatures. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled temperatures (where available). (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-stream-temperature-screening"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available)",
+    "NorWeST modeled stream temperature products (where available)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "Field",
+    "recommendedTiersRaw": "rapid",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled temperatures (where available).",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Frequently near or above thresholds. / Consistently high or potentially lethal temperatures.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Slightly exceeds thresholds occasionally.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

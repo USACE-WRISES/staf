@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-tributary-inflow-condition",
+  "name": "Tributary Inflow Condition",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Reach inflow",
+  "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+  "descriptionMarkdown": "Tributaries stable, matching reference (flow, quality, form), with no major flash/pollution surges.",
+  "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "At confluences, visually assess flow stability and turbidity. Supplement with available impairment lists and local monitoring data.",
+  "inputs": [
+    {
+      "label": "Tributary Inflow Condition",
+      "type": "field",
+      "source": "Watershed and Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: 1-2 tributaries are moderately altered or somewhat polluted. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Multiple tributaries are significantly altered and deliver high sediment or pollutants. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Widespread severe tributary impacts that overwhelm the mainstem. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-tributary-inflow-condition"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field observations with turbidity tube or meter",
+    "available local monitoring datasets",
+    "state assessment listings (where available)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Reach inflow",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "rapid",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Widespread severe tributary impacts that overwhelm the mainstem.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "1-2 tributaries are moderately altered or somewhat polluted. / Multiple tributaries are significantly altered and deliver high sediment or pollutants.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

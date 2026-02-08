@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity",
+  "metricId": "channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "description": "Good: >80% of contributing streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.70-1.0)",
+              "yMax": 1,
+              "yMin": 0.7,
+              "y": 0.85
+            },
+            {
+              "x": "Suboptimal",
+              "description": "Fair: 50-80% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.50-0.69)",
+              "yMax": 0.69,
+              "yMin": 0.5,
+              "y": 0.59
+            },
+            {
+              "x": "Marginal",
+              "description": "Fair: 50-80% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.30-0.49)",
+              "yMax": 0.49,
+              "yMin": 0.3,
+              "y": 0.4
+            },
+            {
+              "x": "Poor",
+              "description": "Poor: <50% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.0-0.29)",
+              "yMax": 0.29,
+              "yMin": 0,
+              "y": 0.14
+            }
+          ],
+          "id": "curve-channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity-default",
+      "name": "Screening",
+      "units": "",
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity-layer"
+    }
+  ]
+}

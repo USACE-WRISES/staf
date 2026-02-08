@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
+  "name": "Nitrogen & Phosphorus Concentrations",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient cycling",
+  "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+  "descriptionMarkdown": "Nutrients near natural/guidelines unless higher levels are normal (e.g., blackwater).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Compile recent total nitrogen and total phosphorus data and compare to regional guidelines. Where data are absent, use watershed export models for context.",
+  "inputs": [
+    {
+      "label": "Nitrogen & Phosphorus Concentrations",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Near background or guideline values. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Slightly elevated N or P. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Marked elevation with likely ecological effects. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Significantly above guidelines indicating strong nutrient pollution. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-nitrogen-and-phosphorus-concentrations"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA Water Quality Portal (TN/TP)",
+    "USGS SPARROW nutrient maps (where available)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Nutrient cycling",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Significantly above guidelines indicating strong nutrient pollution.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Slightly elevated N or P. / Marked elevation with likely ecological effects.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Near background or guideline values.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

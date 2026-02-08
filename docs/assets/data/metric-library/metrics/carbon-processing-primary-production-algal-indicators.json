@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-primary-production-algal-indicators",
+  "name": "Primary Production / Algal Indicators",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Balanced algae/macrophyte growth, no nuisance blooms, unless moderate coverage is historically normal.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Use chlorophyll or periphyton data where available. If absent, infer risk from nutrients and light conditions.",
+  "inputs": [
+    {
+      "label": "Primary Production / Algal Indicators",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: Balanced growth with no nuisance blooms. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Slightly elevated algae. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Frequent moderate nuisance mats. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Thick blooms or scums that cover substrate. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-primary-production-algal-indicators"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "EPA Water Quality Portal (chlorophyll-a/periphyton where available)",
+    "nutrient datasets (TN/TP) and shade context."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Thick blooms or scums that cover substrate.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Slightly elevated algae. / Frequent moderate nuisance mats.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "Balanced growth with no nuisance blooms.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

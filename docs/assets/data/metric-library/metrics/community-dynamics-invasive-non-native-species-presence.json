@@ -1,0 +1,110 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-invasive-non-native-species-presence",
+  "name": "Invasive / Non-native Species Presence",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Community dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "Invasives don't dominate if historically native-dominated, unless naturalized species cause minimal impact.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Query available invasive species databases and summarize presence within the watershed or reach. Confirm key species during a field visit where feasible.",
+  "inputs": [
+    {
+      "label": "Invasive / Non-native Species Presence",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Channel"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: <5% invasive presence. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: 5-50% invasive presence. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: 5-50% invasive presence. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: >50% invasive presence or one invasive dominates. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-invasive-non-native-species-presence"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS Nonindigenous Aquatic Species (NAS)",
+    "EDDMapS",
+    "state invasive species lists."
+  ],
+  "tags": [
+    "Biology",
+    "Community dynamics",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": true,
+    "metricDataSource": "Channel",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": ">50% invasive presence or one invasive dominates.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "5-50% invasive presence.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "<5% invasive presence.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

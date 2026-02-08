@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-flashiness-rate-and-frequency-of-change",
+  "name": "Flashiness / Rate & Frequency of Change",
+  "shortName": "",
+  "discipline": "Hydrology",
+  "function": "Streamflow regime",
+  "functionStatement": "Streamflow regime integrates the range of flows experienced by other processes and supports channel form, habitat diversity, and ecological life-cycle cues.",
+  "descriptionMarkdown": "Flashiness (rate and frequency of short-term flow fluctuations). Higher flashiness often reflects watershed alteration and can stress aquatic habitat and geomorphic stability.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop (gage/records) with field verification where feasible",
+  "howToMeasureMarkdown": "Compute a flashiness metric (e.g., Richards–Baker Flashiness Index) from daily (or finer) discharge data, or apply a watershed proxy (e.g., curve number) where specified. Compare to reference conditions/quartiles and assign the condition class using the bin thresholds for this metric.",
+  "inputs": [
+    {
+      "label": "Flashiness / Rate & Frequency of Change",
+      "type": "desktop (gage/records) with field verification where feasible",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "USGS NWIS streamflow records (where available); watershed land cover/soils for proxies."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: RBI ≥ 25% quartile value and ≤75% quartile value. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: RBI declining over time and approaching 25% quartile value, or increasing and approaching the 75% quartile value. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: RBI declining over time and approaching 25% quartile value, or increasing and approaching the 75% quartile value. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: RBI <25% quartile value or >75% quartile value. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-flashiness-rate-and-frequency-of-change"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "USGS NWIS (if used)",
+    "WI SQT 2022",
+    "USGS NWIS (if used)",
+    "MI SQT 2019",
+    "USGS NWIS (if used)",
+    "MN SQT 2020"
+  ],
+  "tags": [
+    "Hydrology",
+    "Streamflow regime",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT; Michigan SQT; Minnesota SQT",
+    "scsDefaultOn": false,
+    "metricDataSource": "USGS NWIS streamflow records (where available); watershed land cover/soils for proxies.",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "RBI <25% quartile value or >75% quartile value.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "RBI declining over time and approaching 25% quartile value, or increasing and approaching the 75% quartile value.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "RBI ≥ 25% quartile value and ≤75% quartile value.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

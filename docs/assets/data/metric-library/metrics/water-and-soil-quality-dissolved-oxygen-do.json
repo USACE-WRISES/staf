@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-dissolved-oxygen-do",
+  "name": "Dissolved Oxygen (DO)",
+  "shortName": "",
+  "discipline": "Physicochemistry",
+  "function": "Water & soil quality",
+  "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+  "descriptionMarkdown": "DO is high enough (>5-6 mg/L) for aquatic life, unless naturally lower in warm/boggy streams.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Collect spot DO readings and compile minima from time series where available.",
+  "inputs": [
+    {
+      "label": "Dissolved Oxygen (DO)",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "State agency datasets; existing datasets"
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: >6 mg/L and no hypoxia. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: 5-6 mg/L. Borderline. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: 3-5 mg/L. Frequent stress. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: <3 mg/L. High risk of acute impacts. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-dissolved-oxygen-do"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Field DO meter",
+    "USGS NWIS and/or EPA Water Quality Portal (DO where available)."
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Water & soil quality",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "ERDC",
+    "scsDefaultOn": false,
+    "metricDataSource": "State agency datasets; existing datasets",
+    "recommendedTiersRaw": "rapid",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "<3 mg/L. High risk of acute impacts.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "5-6 mg/L. Borderline. / 3-5 mg/L. Frequent stress.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": ">6 mg/L and no hypoxia.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}

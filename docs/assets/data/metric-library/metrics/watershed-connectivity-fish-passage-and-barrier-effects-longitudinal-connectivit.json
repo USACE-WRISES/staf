@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivit",
+  "name": "Fish Passage & Barrier Effects (longitudinal connectivity)",
+  "shortName": "",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Continuous pathways for movement of water, sediment, and organisms support recolonization, maintain species diversity, and enable recovery after disturbance.",
+  "descriptionMarkdown": "Longitudinal connectivity and aquatic organism passage; barriers can limit recolonization, migration, and gene flow.\nPresence and proximity of impoundments (dams/ponds/reservoirs) that can alter flow regime, sediment transport, temperature, and aquatic connectivity.",
+  "methodContextMarkdown": "Context: Channel and Watershed\n\nMethod: Desktop (barrier inventory/imagery) with field verification where feasible",
+  "howToMeasureMarkdown": "Inventory potential barriers (culverts, dams, grade controls) within the specified upstream/downstream distance using barrier datasets and imagery; confirm passability where feasible. Assign the condition class using the bin thresholds for this metric.\nInventory impoundments upstream (and where specified, downstream) of the project reach using dam/impoundment datasets and imagery. Summarize proximity and/or density per the metric definition. Assign the condition class using the bin thresholds for this metric.",
+  "inputs": [
+    {
+      "label": "Fish Passage & Barrier Effects (longitudinal connectivity)",
+      "type": "desktop (barrier inventory/imagery) with field verification where feasible",
+      "source": "Channel and Watershed",
+      "required": true,
+      "helpMarkdown": "Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible.\nADF&G Web Mapper & Imagery\nNational Inventory of Dams (NID) and/or state dam databases; NHD/NHDPlus waterbodies/flowlines; recent imagery."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "fourBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "fourBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Optimal",
+              "ratingId": "optimal",
+              "criteriaMarkdown": "Good: No barrier within watershed OR barriers provide beneficial effect on project area and allows for aquatic organism passage. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Suboptimal",
+              "ratingId": "suboptimal",
+              "criteriaMarkdown": "Fair: Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists that is creating a minor fish passage barrier. (Suggested index range 0.50-0.69)"
+            },
+            {
+              "label": "Marginal",
+              "ratingId": "marginal",
+              "criteriaMarkdown": "Fair: Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists that is creating a minor fish passage barrier. (Suggested index range 0.30-0.49)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Aquatic organism barriers (including impoundment(s)) located within 1 mile upstream or downstream of project area has a negative effect on aquatic organism passage. (Suggested index range 0.0-0.29)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivit"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Barrier inventory (if used)",
+    "WI SQT 2022",
+    "Barrier inventory (if used)",
+    "TN SQT",
+    "Barrier inventory (if used)",
+    "Alaska SQT",
+    "Barrier inventory (if used)",
+    "CO SQT 2019",
+    "Barrier inventory (if used)",
+    "WY SQT 2019",
+    "National Inventory of Dams (if used)",
+    "MI SQT 2019",
+    "National Inventory of Dams (if used)",
+    "SC SQT 2021",
+    "Barrier inventory (if used)",
+    "MN SQT 2020",
+    "National Inventory of Dams (if used)",
+    "NC SQT 2019"
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "screening"
+  ],
+  "sourceMetadata": {
+    "importSource": "screening-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT; Tennessee SQT; Alaska SQT; Colorado SQT; Wyoming SQT; Michigan SQT; South Carolina SQT; Minnesota SQT; North Carolina SQT",
+    "scsDefaultOn": true,
+    "metricDataSource": "Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible.\nADF&G Web Mapper & Imagery\nNational Inventory of Dams (NID) and/or state dam databases; NHD/NHDPlus waterbodies/flowlines; recent imagery.",
+    "recommendedTiersRaw": "screening",
+    "originalBins": {
+      "bin1": {
+        "name": "Poor",
+        "desc": "Aquatic organism barriers (including impoundment(s)) located within 1 mile upstream or downstream of project area has a negative effect on aquatic organism passage.",
+        "range": {
+          "min": 0,
+          "max": 0.29
+        }
+      },
+      "bin2": {
+        "name": "Fair",
+        "desc": "Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists that is creating a minor fish passage barrier.",
+        "range": {
+          "min": 0.3,
+          "max": 0.69
+        }
+      },
+      "bin3": {
+        "name": "Good",
+        "desc": "No barrier within watershed OR barriers provide beneficial effect on project area and allows for aquatic organism passage.",
+        "range": {
+          "min": 0.7,
+          "max": 1
+        }
+      }
+    }
+  }
+}
