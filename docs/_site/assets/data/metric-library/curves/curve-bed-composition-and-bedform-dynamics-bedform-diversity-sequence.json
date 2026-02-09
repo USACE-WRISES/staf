@@ -1,0 +1,57 @@
+﻿{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-bedform-dynamics-bedform-diversity-sequence",
+  "metricId": "bed-composition-and-bedform-dynamics-bedform-diversity-sequence",
+  "tier": "screening",
+  "name": "Screening default curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "indexRange": true,
+      "layers": [
+        {
+          "name": "Screening",
+          "points": [
+            {
+              "x": "Optimal",
+              "description": "Good: Clear riffle-pool or step-pool sequence with robust variety. (Suggested index range 0.70-1.0)",
+              "yMax": 1,
+              "yMin": 0.7,
+              "y": 0.85
+            },
+            {
+              "x": "Suboptimal",
+              "description": "Fair: Some diversity but partially uniform. (Suggested index range 0.50-0.69)",
+              "yMax": 0.69,
+              "yMin": 0.5,
+              "y": 0.59
+            },
+            {
+              "x": "Marginal",
+              "description": "Fair: Mostly homogeneous bed with faint or missing sequences. (Suggested index range 0.30-0.49)",
+              "yMax": 0.49,
+              "yMin": 0.3,
+              "y": 0.4
+            },
+            {
+              "x": "Poor",
+              "description": "Poor: Flattened or artificially uniform bed. (Suggested index range 0.0-0.29)",
+              "yMax": 0.29,
+              "yMin": 0,
+              "y": 0.14
+            }
+          ],
+          "id": "curve-bed-composition-and-bedform-dynamics-bedform-diversity-sequence-layer"
+        }
+      ],
+      "xType": "categorical",
+      "curveId": "curve-bed-composition-and-bedform-dynamics-bedform-diversity-sequence-default",
+      "name": "Screening",
+      "units": "",
+      "activeLayerId": "curve-bed-composition-and-bedform-dynamics-bedform-diversity-sequence-layer"
+    }
+  ]
+}

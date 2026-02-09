@@ -549,6 +549,9 @@
         };
         script.onerror = () => reject(new Error('Failed to load ExcelJS.'));
         document.head.appendChild(script);
+      }).catch((error) => {
+        state.excelPromise = null;
+        throw error;
       });
       return state.excelPromise;
     };
@@ -708,17 +711,35 @@
         const userEntries = userMetricStore.metrics || [];
         const entries = baseEntries.concat(userEntries);
 
-        const details = await Promise.all(
-          entries.map(async (entry) => [
-            entry.metricId,
-            await loadMetricDetail(entry.metricId, entry.detailsRef),
-          ])
+        const detailResults = await Promise.allSettled(
+          entries.map(async (entry) => ({
+            entry,
+            detail: await loadMetricDetail(entry.metricId, entry.detailsRef),
+          }))
         );
-        const detailMap = new Map(details);
+        const detailMap = new Map();
+        const validEntries = [];
+        detailResults.forEach((result, index) => {
+          if (result.status === 'fulfilled' && result.value?.detail) {
+            const { entry, detail } = result.value;
+            detailMap.set(entry.metricId, detail);
+            validEntries.push(entry);
+            return;
+          }
+          const failedEntry = entries[index];
+          console.warn(
+            'Skipping metric during export because details failed to load.',
+            failedEntry?.metricId,
+            result.status === 'rejected' ? result.reason : result
+          );
+        });
+        if (!validEntries.length) {
+          throw new Error('No metric details available for export.');
+        }
 
-        const metricRows = buildMetricExportRows(entries, detailMap);
+        const metricRows = buildMetricExportRows(validEntries, detailMap);
         const { rows: curveRowsRaw, maxPoints } = await buildCurveExportRows(
-          entries,
+          validEntries,
           detailMap
         );
 
