@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-basal-area-sq-ft-ac-detailed",
+  "metricId": "carbon-processing-basal-area-sq-ft-ac-detailed",
+  "tier": "detailed",
+  "name": "Basal Area (sq.ft/ac) reference curve",
+  "axes": {
+    "xLabel": "Basal Area (sq.ft/ac)",
+    "yLabel": "Index score",
+    "xUnit": "sq.ft/ac",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-basal-area-sq-ft-ac-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "sq.ft/ac",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-basal-area-sq-ft-ac-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 40,
+              "y": 0.3,
+              "description": "Field 40, Index 0.3"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 209,
+            "sourceRows": [
+              209
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "40",
+              "",
+              "",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-basal-area-sq-ft-ac-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      209
+    ]
+  }
+}

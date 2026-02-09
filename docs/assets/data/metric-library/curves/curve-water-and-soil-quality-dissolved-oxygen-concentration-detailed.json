@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-dissolved-oxygen-concentration-detailed",
+  "metricId": "water-and-soil-quality-dissolved-oxygen-concentration-detailed",
+  "tier": "detailed",
+  "name": "Dissolved Oxygen Concentration reference curve",
+  "axes": {
+    "xLabel": "Dissolved Oxygen Concentration",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-dissolved-oxygen-concentration-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-dissolved-oxygen-concentration-detailed-colorado-sqt",
+          "name": "Colorado SQT",
+          "points": [
+            {
+              "x": 6,
+              "y": 0,
+              "description": "Field 6, Index 0"
+            },
+            {
+              "x": 9,
+              "y": 0.7,
+              "description": "Field 9, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 283,
+            "sourceRows": [
+              283
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "6",
+              "",
+              "",
+              "",
+              "9",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-dissolved-oxygen-concentration-detailed-colorado-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT",
+    "sourceCitations": [
+      "Colorado SQT"
+    ],
+    "mappedFunction": "Water & soil quality",
+    "sourceRows": [
+      283
+    ]
+  }
+}

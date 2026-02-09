@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-pool-spacing-ratio-for-slope-4-detailed",
+  "metricId": "habitat-provision-pool-spacing-ratio-for-slope-4-detailed",
+  "tier": "detailed",
+  "name": "Pool Spacing Ratio for slope >= 4% reference curve",
+  "axes": {
+    "xLabel": "Pool Spacing Ratio for slope >= 4%",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-pool-spacing-ratio-for-slope-4-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-for-slope-4-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0.1,
+              "y": 1,
+              "description": "Field 0.1, Index 1"
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            },
+            {
+              "x": 5.01,
+              "y": 0.7,
+              "description": "Field 5.01, Index 0.7"
+            },
+            {
+              "x": 8,
+              "y": 0.3,
+              "description": "Field 8, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 337,
+            "sourceRows": [
+              337
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "8",
+              "",
+              "5.01",
+              "5",
+              "0.1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-pool-spacing-ratio-for-slope-4-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      337
+    ]
+  }
+}

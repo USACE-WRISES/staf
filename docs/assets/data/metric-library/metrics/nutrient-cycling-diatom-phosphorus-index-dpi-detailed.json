@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-diatom-phosphorus-index-dpi-detailed",
+  "name": "Diatom Phosphorus Index (DPI)",
+  "shortName": "Diatom Phosphorus Index (DPI)",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient cycling",
+  "functionStatement": "Nitrogen and phosphorus inputs and transformations support productivity without causing eutrophication or nuisance growth.",
+  "descriptionMarkdown": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+  "inputs": [
+    {
+      "label": "Diatom Phosphorus Index (DPI)",
+      "type": "field (sampling) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Laboratory nutrient analysis (grab/automated samples) and/or bioindicator index outputs (e.g., diatom indices)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-nutrient-cycling-diatom-phosphorus-index-dpi-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-diatom-phosphorus-index-dpi-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Wisconsin SQT",
+    "EPA Water Quality Portal nutrient data where available",
+    "diatom index calculation references where applicable"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Nutrient cycling",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Nutrient cycling",
+    "metricDataSource": "Laboratory nutrient analysis (grab/automated samples) and/or bioindicator index outputs (e.g., diatom indices).",
+    "metricStatement": "Nitrogen and phosphorus inputs and transformations support productivity without causing eutrophication or nuisance growth.",
+    "description": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (sampling) and/or Desktop (data compilation)",
+    "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+    "referencesRaw": [
+      "Wisconsin SQT; EPA Water Quality Portal nutrient data where available; diatom index calculation references where applicable"
+    ],
+    "sourceRows": [
+      281
+    ],
+    "stratifications": [
+      {
+        "name": "Wisconsin SQT",
+        "stratification": "",
+        "sourceRow": 281,
+        "sourceRows": [
+          281
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "150",
+          "",
+          "75",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

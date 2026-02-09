@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-herbaceous-vegetation-cover-detailed",
+  "name": "Herbaceous Vegetation Cover",
+  "shortName": "Herbaceous Vegetation Cover",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+  "descriptionMarkdown": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+  "methodContextMarkdown": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+  "howToMeasureMarkdown": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+  "inputs": [
+    {
+      "label": "Herbaceous Vegetation Cover",
+      "type": "field and/or desktop (imagery/gis)",
+      "source": "Riparian/Floodplain",
+      "required": true,
+      "helpMarkdown": "Riparian vegetation field plots and/or GIS/imagery-based corridor metrics."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-herbaceous-vegetation-cover-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-herbaceous-vegetation-cover-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "NAIP or high-resolution imagery",
+    "local vegetation plot protocols where applicable",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Carbon processing",
+    "metricDataSource": "Riparian vegetation field plots and/or GIS/imagery-based corridor metrics.",
+    "metricStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+    "description": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+    "methodContextRaw": "Context: Riparian/Floodplain\nMethod: Field and/or Desktop (imagery/GIS)",
+    "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+    "referencesRaw": [
+      "Colorado SQT; NAIP or high-resolution imagery; local vegetation plot protocols where applicable",
+      "Wyoming SQT; NAIP or high-resolution imagery; local vegetation plot protocols where applicable"
+    ],
+    "sourceRows": [
+      198,
+      247
+    ],
+    "stratifications": [
+      {
+        "name": "Colorado SQT - Herbaceous Reference Vegetation Cover",
+        "stratification": "Herbaceous Reference Vegetation Cover",
+        "sourceRow": 198,
+        "sourceRows": [
+          198
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "34",
+          "",
+          "",
+          "",
+          "73",
+          "120",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT",
+        "stratification": "",
+        "sourceRow": 247,
+        "sourceRows": [
+          247
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "35",
+          "",
+          "",
+          "",
+          "74",
+          "119",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

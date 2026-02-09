@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-benthic-algal-biomass-detailed",
+  "name": "Benthic Algal Biomass",
+  "shortName": "Benthic Algal Biomass",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+  "descriptionMarkdown": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (sampling/assay)",
+  "howToMeasureMarkdown": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+  "inputs": [
+    {
+      "label": "Benthic Algal Biomass",
+      "type": "field (sampling/assay)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field/lab primary production or decomposition measurements; macroinvertebrate functional group counts."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-benthic-algal-biomass-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-benthic-algal-biomass-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Wisconsin SQT",
+    "EPA/USGS periphyton/chlorophyll sampling guidance where applicable"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Carbon processing",
+    "metricDataSource": "Field/lab primary production or decomposition measurements; macroinvertebrate functional group counts.",
+    "metricStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+    "description": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (sampling/assay)",
+    "howToMeasure": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+    "referencesRaw": [
+      "Wisconsin SQT; EPA/USGS periphyton/chlorophyll sampling guidance where applicable"
+    ],
+    "sourceRows": [
+      244
+    ],
+    "stratifications": [
+      {
+        "name": "Wisconsin SQT - Field Value (Mean Score)",
+        "stratification": "Field Value (Mean Score)",
+        "sourceRow": 244,
+        "sourceRows": [
+          244
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "2",
+          "",
+          "1",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

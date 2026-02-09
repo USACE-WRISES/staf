@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-wsii-plot-2-detailed",
+  "metricId": "catchment-hydrology-wsii-plot-2-detailed",
+  "tier": "detailed",
+  "name": "WSII Plot 2 reference curve",
+  "axes": {
+    "xLabel": "WSII Plot 2",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-wsii-plot-2-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-wsii-plot-2-detailed-wyoming-sqt-southern-rockies",
+          "name": "Wyoming SQT - Southern Rockies",
+          "points": [
+            {
+              "x": 5.1,
+              "y": 0,
+              "description": "Field 5.1, Index 0"
+            },
+            {
+              "x": 32.6,
+              "y": 0.3,
+              "description": "Field 32.6, Index 0.3"
+            },
+            {
+              "x": 48.8,
+              "y": 0.7,
+              "description": "Field 48.8, Index 0.7"
+            },
+            {
+              "x": 82.2,
+              "y": 1,
+              "description": "Field 82.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Southern Rockies",
+            "sourceRow": 18,
+            "sourceRows": [
+              18
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "5.1",
+              "",
+              "32.6",
+              "",
+              "48.8",
+              "82.2",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-wsii-plot-2-detailed-wyoming-sqt-se-plains",
+          "name": "Wyoming SQT - SE Plains",
+          "points": [
+            {
+              "x": 10.4,
+              "y": 0,
+              "description": "Field 10.4, Index 0"
+            },
+            {
+              "x": 36.7,
+              "y": 0.3,
+              "description": "Field 36.7, Index 0.3"
+            },
+            {
+              "x": 55.1,
+              "y": 0.7,
+              "description": "Field 55.1, Index 0.7"
+            },
+            {
+              "x": 87,
+              "y": 1,
+              "description": "Field 87, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "SE Plains",
+            "sourceRow": 19,
+            "sourceRows": [
+              19
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "10.4",
+              "",
+              "36.7",
+              "",
+              "55.1",
+              "87",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-wsii-plot-2-detailed-wyoming-sqt-ne-plains",
+          "name": "Wyoming SQT - NE Plains",
+          "points": [
+            {
+              "x": 1.6,
+              "y": 0,
+              "description": "Field 1.6, Index 0"
+            },
+            {
+              "x": 38.9,
+              "y": 0.3,
+              "description": "Field 38.9, Index 0.3"
+            },
+            {
+              "x": 58.4,
+              "y": 0.7,
+              "description": "Field 58.4, Index 0.7"
+            },
+            {
+              "x": 95.8,
+              "y": 1,
+              "description": "Field 95.8, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "NE Plains",
+            "sourceRow": 20,
+            "sourceRows": [
+              20
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "1.6",
+              "",
+              "38.9",
+              "",
+              "58.4",
+              "95.8",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-wsii-plot-2-detailed-wyoming-sqt-southern-rockies"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wyoming SQT",
+    "sourceCitations": [
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Catchment hydrology",
+    "sourceRows": [
+      18,
+      19,
+      20
+    ]
+  }
+}

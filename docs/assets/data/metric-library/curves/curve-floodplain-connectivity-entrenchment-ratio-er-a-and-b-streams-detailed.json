@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-floodplain-connectivity-entrenchment-ratio-er-a-and-b-streams-detailed",
+  "metricId": "floodplain-connectivity-entrenchment-ratio-er-a-and-b-streams-detailed",
+  "tier": "detailed",
+  "name": "Entrenchment Ratio (ER) A and B Streams reference curve",
+  "axes": {
+    "xLabel": "Entrenchment Ratio (ER) A and B Streams",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-entrenchment-ratio-er-a-and-b-streams-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-a-and-b-streams-detailed-colorado-sqt",
+          "name": "Colorado SQT",
+          "points": [
+            {
+              "x": 1.2,
+              "y": 0.3,
+              "description": "Field 1.2, Index 0.3"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2.2,
+              "y": 1,
+              "description": "Field 2.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 66,
+            "sourceRows": [
+              66
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "1.2",
+              "",
+              "1.4",
+              "2.2",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-entrenchment-ratio-er-a-and-b-streams-detailed-colorado-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT",
+    "sourceCitations": [
+      "Colorado SQT"
+    ],
+    "mappedFunction": "Floodplain connectivity",
+    "sourceRows": [
+      66
+    ]
+  }
+}

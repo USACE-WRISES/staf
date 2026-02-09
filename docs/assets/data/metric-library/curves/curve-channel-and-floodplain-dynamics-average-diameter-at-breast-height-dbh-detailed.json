@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh-detailed",
+  "metricId": "channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh-detailed",
+  "tier": "detailed",
+  "name": "Average Diameter at Breast Height (DBH) reference curve",
+  "axes": {
+    "xLabel": "Average Diameter at Breast Height (DBH)",
+    "yLabel": "Index score",
+    "xUnit": "DBH",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "DBH",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh-detailed-south-carol",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 9.3,
+              "y": 1,
+              "description": "Field 9.3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 124,
+            "sourceRows": [
+              124
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "9.3",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh-detailed-south-carol"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT",
+    "sourceCitations": [
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Channel and floodplain dynamics",
+    "sourceRows": [
+      124
+    ]
+  }
+}

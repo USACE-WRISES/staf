@@ -1,0 +1,203 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-chlorophyll-detailed",
+  "name": "Chlorophyll ?",
+  "shortName": "Chlorophyll ?",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+  "descriptionMarkdown": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (sampling/assay)",
+  "howToMeasureMarkdown": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+  "inputs": [
+    {
+      "label": "Chlorophyll ?",
+      "type": "field (sampling/assay)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field/lab primary production or decomposition measurements; macroinvertebrate functional group counts."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-chlorophyll-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-chlorophyll-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "EPA/USGS periphyton/chlorophyll sampling guidance where applicable",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": true,
+    "mappedFunction": "Carbon processing",
+    "metricDataSource": "Field/lab primary production or decomposition measurements; macroinvertebrate functional group counts.",
+    "metricStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+    "description": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (sampling/assay)",
+    "howToMeasure": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+    "referencesRaw": [
+      "Colorado SQT; EPA/USGS periphyton/chlorophyll sampling guidance where applicable",
+      "Wyoming SQT; EPA/USGS periphyton/chlorophyll sampling guidance where applicable"
+    ],
+    "sourceRows": [
+      192,
+      193,
+      249,
+      250
+    ],
+    "stratifications": [
+      {
+        "name": "Colorado SQT - Biotypes 1 and 2",
+        "stratification": "Biotypes 1 and 2",
+        "sourceRow": 192,
+        "sourceRows": [
+          192
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "",
+          "53",
+          "",
+          "27",
+          "",
+          "12",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Colorado SQT - Biotype 3",
+        "stratification": "Biotype 3",
+        "sourceRow": 193,
+        "sourceRows": [
+          193
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "150",
+          "117",
+          "",
+          "29",
+          "",
+          "16",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT - Basins and Plains",
+        "stratification": "Basins and Plains",
+        "sourceRow": 249,
+        "sourceRows": [
+          249
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "150",
+          "",
+          "117",
+          "",
+          "29",
+          "16",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT - Mountains",
+        "stratification": "Mountains",
+        "sourceRow": 250,
+        "sourceRows": [
+          250
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "53",
+          "",
+          "26.75",
+          "12",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-dissolved-oxygen-concentration-detailed",
+  "name": "Dissolved Oxygen Concentration",
+  "shortName": "Dissolved Oxygen Concentration",
+  "discipline": "Physicochemistry",
+  "function": "Water & soil quality",
+  "functionStatement": "Physical and chemical processes limit pollutants and maintain water quality suitable for designated uses.",
+  "descriptionMarkdown": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+  "inputs": [
+    {
+      "label": "Dissolved Oxygen Concentration",
+      "type": "field (meter/logger) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "In-situ sensors/meters and/or grab samples with lab analysis; existing monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-water-and-soil-quality-dissolved-oxygen-concentration-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-dissolved-oxygen-concentration-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "EPA Water Quality Portal",
+    "USGS NWIS water-quality records where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Water & soil quality",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT",
+    "sourceCitations": [
+      "Colorado SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Water & soil quality",
+    "metricDataSource": "In-situ sensors/meters and/or grab samples with lab analysis; existing monitoring databases.",
+    "metricStatement": "Physical and chemical processes limit pollutants and maintain water quality suitable for designated uses.",
+    "description": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+    "methodContextRaw": "Context: Channel\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+    "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+    "referencesRaw": [
+      "Colorado SQT; EPA Water Quality Portal; USGS NWIS water-quality records where available"
+    ],
+    "sourceRows": [
+      283
+    ],
+    "stratifications": [
+      {
+        "name": "Colorado SQT",
+        "stratification": "",
+        "sourceRow": 283,
+        "sourceRows": [
+          283
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "6",
+          "",
+          "",
+          "",
+          "9",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

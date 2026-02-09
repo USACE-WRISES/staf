@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed",
+  "metricId": "high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed",
+  "tier": "detailed",
+  "name": "Bankfull Freeboard to Floodplain (m) reference curve",
+  "axes": {
+    "xLabel": "Bankfull Freeboard to Floodplain (m)",
+    "yLabel": "Index score",
+    "xUnit": "m",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "m",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed-proposed-derived-from-sfari",
+          "name": "Proposed (derived from SFARI rapid curves) - Measure at representative cross-sections; separate by stream type.",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 0.3,
+              "y": 0.7,
+              "description": "Field 0.3, Index 0.7"
+            },
+            {
+              "x": 0.7,
+              "y": 0.3,
+              "description": "Field 0.7, Index 0.3"
+            },
+            {
+              "x": 1.2,
+              "y": 0.1,
+              "description": "Field 1.2, Index 0.1"
+            },
+            {
+              "x": 2,
+              "y": 0,
+              "description": "Field 2, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Measure at representative cross-sections; separate by stream type.",
+            "sourceRow": 55,
+            "sourceRows": [
+              55
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "0",
+              "0.3",
+              "0.7",
+              "1.2",
+              "2",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed-proposed-derived-from-sfari"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "High flow dynamics",
+    "sourceRows": [
+      55
+    ]
+  }
+}

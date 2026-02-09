@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-summer-daily-maximum-detailed",
+  "name": "Summer Daily Maximum",
+  "shortName": "Summer Daily Maximum",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+  "inputs": [
+    {
+      "label": "Summer Daily Maximum",
+      "type": "field (logger) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Continuous temperature logger, spot measurements, and/or monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-light-and-thermal-regime-summer-daily-maximum-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-summer-daily-maximum-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "South Carolina SQT",
+    "USGS NWIS temperature where available",
+    "regional temperature products where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT",
+    "sourceCitations": [
+      "South Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Light & thermal regime",
+    "metricDataSource": "Continuous temperature logger, spot measurements, and/or monitoring databases.",
+    "metricStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+    "description": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (logger) and/or Desktop (data compilation)",
+    "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+    "referencesRaw": [
+      "South Carolina SQT; USGS NWIS temperature where available; regional temperature products where available"
+    ],
+    "sourceRows": [
+      172
+    ],
+    "stratifications": [
+      {
+        "name": "South Carolina SQT",
+        "stratification": "",
+        "sourceRow": 172,
+        "sourceRows": [
+          172
+        ],
+        "sourceCitation": "South Carolina SQT",
+        "sourceCitations": [
+          "South Carolina SQT"
+        ],
+        "fieldValues": [
+          "77",
+          "",
+          "",
+          "",
+          "64",
+          "58",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

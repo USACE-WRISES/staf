@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-streamflow-regime-flow-alteration-module-all-metrics-detailed",
+  "metricId": "streamflow-regime-flow-alteration-module-all-metrics-detailed",
+  "tier": "detailed",
+  "name": "Flow Alteration Module - ALL METRICS reference curve",
+  "axes": {
+    "xLabel": "Flow Alteration Module - ALL METRICS",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-flow-alteration-module-all-metrics-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flow-alteration-module-all-metrics-detailed-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.9,
+              "y": 1,
+              "description": "Field 0.9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Multiple SQTs",
+            "sourceRow": 42,
+            "sourceRows": [
+              42,
+              43
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT",
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "0.9",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flow-alteration-module-all-metrics-detailed-multiple-sqts"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Streamflow regime",
+    "sourceRows": [
+      42,
+      43
+    ]
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-rivpacs-plot-2-detailed",
+  "metricId": "channel-and-floodplain-dynamics-rivpacs-plot-2-detailed",
+  "tier": "detailed",
+  "name": "RIVPACS Plot 2 reference curve",
+  "axes": {
+    "xLabel": "RIVPACS Plot 2",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-rivpacs-plot-2-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-rivpacs-plot-2-detailed-wyoming-sqt-southern-rockies",
+          "name": "Wyoming SQT - Southern Rockies",
+          "points": [
+            {
+              "x": 0.27,
+              "y": 0,
+              "description": "Field 0.27, Index 0"
+            },
+            {
+              "x": 0.62,
+              "y": 0.3,
+              "description": "Field 0.62, Index 0.3"
+            },
+            {
+              "x": 0.89,
+              "y": 0.7,
+              "description": "Field 0.89, Index 0.7"
+            },
+            {
+              "x": 1.18,
+              "y": 1,
+              "description": "Field 1.18, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Southern Rockies",
+            "sourceRow": 136,
+            "sourceRows": [
+              136
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0.27",
+              "",
+              "0.62",
+              "",
+              "0.89",
+              "1.18",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-rivpacs-plot-2-detailed-wyoming-sqt-se-plains",
+          "name": "Wyoming SQT - SE Plains",
+          "points": [
+            {
+              "x": 0.34,
+              "y": 0,
+              "description": "Field 0.34, Index 0"
+            },
+            {
+              "x": 0.51,
+              "y": 0.3,
+              "description": "Field 0.51, Index 0.3"
+            },
+            {
+              "x": 0.78,
+              "y": 0.7,
+              "description": "Field 0.78, Index 0.7"
+            },
+            {
+              "x": 1.12,
+              "y": 1,
+              "description": "Field 1.12, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "SE Plains",
+            "sourceRow": 137,
+            "sourceRows": [
+              137
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0.34",
+              "",
+              "0.51",
+              "",
+              "0.78",
+              "1.12",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-rivpacs-plot-2-detailed-wyoming-sqt-ne-plains",
+          "name": "Wyoming SQT - NE Plains",
+          "points": [
+            {
+              "x": 0.11,
+              "y": 0,
+              "description": "Field 0.11, Index 0"
+            },
+            {
+              "x": 0.52,
+              "y": 0.3,
+              "description": "Field 0.52, Index 0.3"
+            },
+            {
+              "x": 0.75,
+              "y": 0.7,
+              "description": "Field 0.75, Index 0.7"
+            },
+            {
+              "x": 0.98,
+              "y": 1,
+              "description": "Field 0.98, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "NE Plains",
+            "sourceRow": 138,
+            "sourceRows": [
+              138
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0.11",
+              "",
+              "0.52",
+              "",
+              "0.75",
+              "0.98",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-rivpacs-plot-2-detailed-wyoming-sqt-southern-rockies"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wyoming SQT",
+    "sourceCitations": [
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Channel and floodplain dynamics",
+    "sourceRows": [
+      136,
+      137,
+      138
+    ]
+  }
+}

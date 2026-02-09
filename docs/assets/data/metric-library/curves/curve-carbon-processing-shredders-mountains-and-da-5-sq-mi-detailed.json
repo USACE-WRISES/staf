@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-shredders-mountains-and-da-5-sq-mi-detailed",
+  "metricId": "carbon-processing-shredders-mountains-and-da-5-sq-mi-detailed",
+  "tier": "detailed",
+  "name": "Shredders- Mountains & DA <= 5 Sq.Mi. reference curve",
+  "axes": {
+    "xLabel": "Shredders- Mountains & DA <= 5 Sq.Mi.",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-shredders-mountains-and-da-5-sq-mi-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-shredders-mountains-and-da-5-sq-mi-detailed-north-carolina-sqt-field-w-s",
+          "name": "North Carolina SQT - Field - W/Sp",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 4.6,
+              "y": 0.2,
+              "description": "Field 4.6, Index 0.2"
+            },
+            {
+              "x": 6.9,
+              "y": 0.3,
+              "description": "Field 6.9, Index 0.3"
+            },
+            {
+              "x": 13.8,
+              "y": 0.6,
+              "description": "Field 13.8, Index 0.6"
+            },
+            {
+              "x": 16.1,
+              "y": 0.7,
+              "description": "Field 16.1, Index 0.7"
+            },
+            {
+              "x": 23,
+              "y": 1,
+              "description": "Field 23, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Field - W/Sp",
+            "sourceRow": 211,
+            "sourceRows": [
+              211
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "4.6",
+              "6.9",
+              "13.8",
+              "16.1",
+              "23",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-shredders-mountains-and-da-5-sq-mi-detailed-north-carolina-sqt-field-su",
+          "name": "North Carolina SQT - Field - Su",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 4.2,
+              "y": 0.2,
+              "description": "Field 4.2, Index 0.2"
+            },
+            {
+              "x": 6.3,
+              "y": 0.3,
+              "description": "Field 6.3, Index 0.3"
+            },
+            {
+              "x": 12.6,
+              "y": 0.6,
+              "description": "Field 12.6, Index 0.6"
+            },
+            {
+              "x": 14.7,
+              "y": 0.7,
+              "description": "Field 14.7, Index 0.7"
+            },
+            {
+              "x": 21,
+              "y": 1,
+              "description": "Field 21, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Field - Su",
+            "sourceRow": 212,
+            "sourceRows": [
+              212
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "4.2",
+              "6.3",
+              "12.6",
+              "14.7",
+              "21",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-shredders-mountains-and-da-5-sq-mi-detailed-north-carolina-sqt-field-fal",
+          "name": "North Carolina SQT - Field - Fall",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 3.6,
+              "y": 0.2,
+              "description": "Field 3.6, Index 0.2"
+            },
+            {
+              "x": 5.4,
+              "y": 0.3,
+              "description": "Field 5.4, Index 0.3"
+            },
+            {
+              "x": 10.8,
+              "y": 0.6,
+              "description": "Field 10.8, Index 0.6"
+            },
+            {
+              "x": 12.6,
+              "y": 0.7,
+              "description": "Field 12.6, Index 0.7"
+            },
+            {
+              "x": 18,
+              "y": 1,
+              "description": "Field 18, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Field - Fall",
+            "sourceRow": 213,
+            "sourceRows": [
+              213
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "3.6",
+              "5.4",
+              "10.8",
+              "12.6",
+              "18",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-shredders-mountains-and-da-5-sq-mi-detailed-north-carolina-sqt-field-w-s"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      211,
+      212,
+      213
+    ]
+  }
+}

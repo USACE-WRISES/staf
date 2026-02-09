@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-fish-abundance-detailed",
+  "name": "Fish Abundance",
+  "shortName": "Fish Abundance",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+  "descriptionMarkdown": "Population abundance/biomass indicator reflecting recruitment and survival of target game/native species.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (fish survey)",
+  "howToMeasureMarkdown": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+  "inputs": [
+    {
+      "label": "Fish Abundance",
+      "type": "field (fish survey)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Fish population surveys and biomass estimation from electrofishing/seining; historical comparison where required."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-population-support-fish-abundance-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-fish-abundance-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Wisconsin SQT",
+    "State fisheries survey methods",
+    "long-term monitoring records where available"
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Population support",
+    "metricDataSource": "Fish population surveys and biomass estimation from electrofishing/seining; historical comparison where required.",
+    "metricStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+    "description": "Population abundance/biomass indicator reflecting recruitment and survival of target game/native species.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (fish survey)",
+    "howToMeasure": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+    "referencesRaw": [
+      "Wisconsin SQT; State fisheries survey methods; long-term monitoring records where available"
+    ],
+    "sourceRows": [
+      427,
+      428,
+      429,
+      430,
+      431
+    ],
+    "stratifications": [
+      {
+        "name": "Wisconsin SQT - Adult Smallmouth Bass (Native)",
+        "stratification": "Adult Smallmouth Bass (Native)",
+        "sourceRow": 427,
+        "sourceRows": [
+          427
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "28",
+          "98",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT - Adult and Yearling Brown Trout",
+        "stratification": "Adult and Yearling Brown Trout",
+        "sourceRow": 428,
+        "sourceRows": [
+          428
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "533",
+          "1860",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT - Adult and Yearling Brook Trout (Native)",
+        "stratification": "Adult and Yearling Brook Trout (Native)",
+        "sourceRow": 429,
+        "sourceRows": [
+          429
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "380",
+          "1306",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT - Lake Superior Trout YoY",
+        "stratification": "Lake Superior Trout YoY",
+        "sourceRow": 430,
+        "sourceRows": [
+          430
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "300",
+          "900",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT - Lake Michigan Trout YoY",
+        "stratification": "Lake Michigan Trout YoY",
+        "sourceRow": 431,
+        "sourceRows": [
+          431
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "100",
+          "220",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

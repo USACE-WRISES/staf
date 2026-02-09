@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-floodplain-inundated-area-at-q2-detailed",
+  "metricId": "surface-water-storage-floodplain-inundated-area-at-q2-detailed",
+  "tier": "detailed",
+  "name": "Floodplain Inundated Area at Q2 (%) reference curve",
+  "axes": {
+    "xLabel": "Floodplain Inundated Area at Q2 (%)",
+    "yLabel": "Index score",
+    "xUnit": "%",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-floodplain-inundated-area-at-q2-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "%",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-floodplain-inundated-area-at-q2-detailed-proposed-derived-from-sfari",
+          "name": "Proposed (derived from SFARI rapid curves) - Use consistent floodplain polygon definition; stratify by reach type.",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 2,
+              "y": 0.1,
+              "description": "Field 2, Index 0.1"
+            },
+            {
+              "x": 8,
+              "y": 0.3,
+              "description": "Field 8, Index 0.3"
+            },
+            {
+              "x": 15,
+              "y": 0.7,
+              "description": "Field 15, Index 0.7"
+            },
+            {
+              "x": 30,
+              "y": 1,
+              "description": "Field 30, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Use consistent floodplain polygon definition; stratify by reach type.",
+            "sourceRow": 27,
+            "sourceRows": [
+              27
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "0",
+              "2",
+              "8",
+              "15",
+              "30",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.1",
+              "0.3",
+              "0.7",
+              "1",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-floodplain-inundated-area-at-q2-detailed-proposed-derived-from-sfari"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "Surface water storage",
+    "sourceRows": [
+      27
+    ]
+  }
+}

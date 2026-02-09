@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-ept-taxa-present-coastal-plain-detailed",
+  "name": "EPT Taxa Present - Coastal Plain",
+  "shortName": "EPT Taxa Present - Coastal Plain",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+  "descriptionMarkdown": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+  "howToMeasureMarkdown": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+  "inputs": [
+    {
+      "label": "EPT Taxa Present - Coastal Plain",
+      "type": "field (bioassessment) and/or desktop (existing scores)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Standard fish/macroinvertebrate bioassessment sampling and scoring; state biomonitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-population-support-ept-taxa-present-coastal-plain-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-ept-taxa-present-coastal-plain-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "North Carolina SQT",
+    "State biomonitoring protocols and databases",
+    "EPA Water Quality Portal biological results where available"
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Population support",
+    "metricDataSource": "Standard fish/macroinvertebrate bioassessment sampling and scoring; state biomonitoring databases.",
+    "metricStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+    "description": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+    "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+    "referencesRaw": [
+      "North Carolina SQT; State biomonitoring protocols and databases; EPA Water Quality Portal biological results where available"
+    ],
+    "sourceRows": [
+      411
+    ],
+    "stratifications": [
+      {
+        "name": "North Carolina SQT",
+        "stratification": "",
+        "sourceRow": 411,
+        "sourceRows": [
+          411
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "5",
+          "",
+          "12",
+          "",
+          "18",
+          "24",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

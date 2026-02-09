@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-summer-daily-maximum-f-detailed",
+  "name": "Summer Daily Maximum (°F)",
+  "shortName": "Summer Daily Maximum (°F)",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+  "inputs": [
+    {
+      "label": "Summer Daily Maximum (°F)",
+      "type": "field (logger) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Continuous temperature logger, spot measurements, and/or monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-light-and-thermal-regime-summer-daily-maximum-f-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-summer-daily-maximum-f-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "North Carolina SQT",
+    "USGS NWIS temperature where available",
+    "regional temperature products where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Light & thermal regime",
+    "metricDataSource": "Continuous temperature logger, spot measurements, and/or monitoring databases.",
+    "metricStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+    "description": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (logger) and/or Desktop (data compilation)",
+    "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+    "referencesRaw": [
+      "North Carolina SQT; USGS NWIS temperature where available; regional temperature products where available"
+    ],
+    "sourceRows": [
+      170,
+      171
+    ],
+    "stratifications": [
+      {
+        "name": "North Carolina SQT - Coldwater",
+        "stratification": "Coldwater",
+        "sourceRow": 170,
+        "sourceRows": [
+          170
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "77",
+          "",
+          "",
+          "",
+          "64",
+          "58",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "North Carolina SQT - Coolwater",
+        "stratification": "Coolwater",
+        "sourceRow": 171,
+        "sourceRows": [
+          171
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "97",
+          "",
+          "",
+          "",
+          "",
+          "67",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

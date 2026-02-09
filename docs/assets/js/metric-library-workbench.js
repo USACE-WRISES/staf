@@ -283,11 +283,30 @@
     });
   };
 
-  const ensureCurveRanges = (curve) => {
+  const getCurveLayer = (curve, preferredLayerId = null) => {
+    if (!curve || !Array.isArray(curve.layers) || !curve.layers.length) {
+      return null;
+    }
+    const requestedId = preferredLayerId || curve.activeLayerId;
+    if (requestedId) {
+      const activeLayer = curve.layers.find((layer) => layer.id === requestedId);
+      if (activeLayer) {
+        curve.activeLayerId = activeLayer.id;
+        return activeLayer;
+      }
+    }
+    const first = curve.layers[0];
+    if (first?.id) {
+      curve.activeLayerId = first.id;
+    }
+    return first || null;
+  };
+
+  const ensureCurveRanges = (curve, layerOverride = null) => {
     if (!curve?.indexRange) {
       return;
     }
-    const layer = curve.layers?.[0];
+    const layer = layerOverride || getCurveLayer(curve);
     if (!layer?.points?.length) {
       return;
     }
@@ -297,6 +316,93 @@
     if (needsRanges) {
       applyIndexRanges(layer.points);
     }
+  };
+
+  const formatCurveNumber = (value, places = 6) => {
+    const parsed = parseScore(value);
+    if (parsed === null) {
+      return '-';
+    }
+    const rounded = roundScore(parsed, places);
+    return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+  };
+
+  const buildCurveScoringTable = (curve, layerOverride = null) => {
+    const table = createEl('table', 'metric-rubric-table');
+    table.innerHTML = '<thead><tr><th>Value</th><th>Index</th><th>Function score</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+
+    const layer = layerOverride || getCurveLayer(curve);
+    const curveType = normalizeCurveType(curve?.xType);
+    const useRange = curveType === 'categorical' && !!curve?.indexRange;
+    if (useRange) {
+      ensureCurveRanges(curve, layer);
+    }
+
+    const points = (Array.isArray(layer?.points) ? layer.points : [])
+      .map((point, index) => {
+        const numericX = parseScore(point?.x);
+        return {
+          order: index,
+          numericX,
+          valueLabel:
+            curveType === 'categorical'
+              ? String(point?.x ?? '').trim() || `Category ${index + 1}`
+              : numericX !== null
+                ? formatCurveNumber(numericX)
+                : String(point?.x ?? '').trim() || '-',
+          y: parseScore(point?.y),
+          yMin: parseScore(point?.yMin),
+          yMax: parseScore(point?.yMax),
+        };
+      })
+      .sort((a, b) => {
+        if (curveType === 'categorical') {
+          return a.order - b.order;
+        }
+        if (a.numericX === null && b.numericX === null) {
+          return a.order - b.order;
+        }
+        if (a.numericX === null) {
+          return 1;
+        }
+        if (b.numericX === null) {
+          return -1;
+        }
+        return a.numericX - b.numericX;
+      });
+
+    if (!points.length) {
+      const empty = document.createElement('tr');
+      empty.innerHTML = '<td>-</td><td>-</td><td>-</td>';
+      tbody.appendChild(empty);
+      return table;
+    }
+
+    points.forEach((point) => {
+      const row = document.createElement('tr');
+      const valueCell = document.createElement('td');
+      const indexCell = document.createElement('td');
+      const functionCell = document.createElement('td');
+      valueCell.textContent = point.valueLabel;
+      if (useRange && point.yMin !== null && point.yMax !== null) {
+        indexCell.textContent = `${point.yMin.toFixed(2)}-${point.yMax.toFixed(2)}`;
+        functionCell.textContent = `${Math.round(point.yMin * 15)}-${Math.round(point.yMax * 15)}`;
+      } else if (point.y !== null) {
+        indexCell.textContent = point.y.toFixed(2);
+        functionCell.textContent = String(Math.round(point.y * 15));
+      } else {
+        indexCell.textContent = '-';
+        functionCell.textContent = '-';
+      }
+      row.appendChild(valueCell);
+      row.appendChild(indexCell);
+      row.appendChild(functionCell);
+      tbody.appendChild(row);
+    });
+
+    return table;
   };
 
   const buildScoringSummary = (profile) => {
@@ -2267,7 +2373,92 @@
           table.appendChild(tbody);
           panel.appendChild(table);
         } else if (scoring.type === 'curve') {
-          panel.appendChild(createEl('div', null, 'Scoring is defined by reference curves.'));
+          const pickActiveCurve = (curves) => {
+            if (!Array.isArray(curves) || !curves.length) {
+              return null;
+            }
+            if (state.selectedCurveId) {
+              const match = curves.find((curve) => curve.curveId === state.selectedCurveId);
+              if (match) {
+                return match;
+              }
+            }
+            return curves[0];
+          };
+          const resolveScoringCurves = async () => {
+            const curveKey = `${detail.metricId}|${profile.profileId}`;
+            const draftCurves = state.curveDrafts.get(curveKey);
+            if (Array.isArray(draftCurves) && draftCurves.length) {
+              return draftCurves;
+            }
+            if (isAdded && api?.getCurve) {
+              const curve = api.getCurve(detail.metricId);
+              if (curve) {
+                return [curve];
+              }
+            }
+            if (profile?.curveIntegration?.enabled) {
+              const curves = await loadCurvesForProfile(profile);
+              return curves.map((entry) => entry.data);
+            }
+            return [];
+          };
+
+          const curves = await resolveScoringCurves();
+          const activeCurve = pickActiveCurve(curves);
+          if (!activeCurve) {
+            panel.appendChild(createEl('div', null, 'Scoring is defined by reference curves.'));
+            return;
+          }
+          if (activeCurve.curveId) {
+            state.selectedCurveId = activeCurve.curveId;
+          }
+
+          const controls = createEl('div', 'metric-curve-controls');
+          if (curves.length > 1) {
+            const curveSelect = document.createElement('select');
+            curves.forEach((curve) => {
+              const option = document.createElement('option');
+              option.value = curve.curveId || '';
+              option.textContent = curve.name || curve.curveId || 'Curve';
+              curveSelect.appendChild(option);
+            });
+            curveSelect.value = activeCurve.curveId || curves[0]?.curveId || '';
+            curveSelect.addEventListener('change', () => {
+              state.selectedCurveId = curveSelect.value;
+              renderScoringTab();
+            });
+            controls.appendChild(curveSelect);
+          }
+
+          const activeLayer = getCurveLayer(activeCurve);
+          const layers = Array.isArray(activeCurve.layers) ? activeCurve.layers : [];
+          if (layers.length) {
+            const layerLabel = createEl('span', null, 'Stratification');
+            const layerSelect = document.createElement('select');
+            layers.forEach((layer) => {
+              const option = document.createElement('option');
+              option.value = layer.id || '';
+              option.textContent = layer.name || 'Default';
+              layerSelect.appendChild(option);
+            });
+            layerSelect.value = activeLayer?.id || layers[0]?.id || '';
+            layerSelect.addEventListener('change', () => {
+              activeCurve.activeLayerId = layerSelect.value;
+              if (isAdded && api?.setCurve) {
+                api.setCurve(detail.metricId, activeCurve);
+                api.refresh?.();
+              }
+              renderScoringTab();
+            });
+            controls.appendChild(layerLabel);
+            controls.appendChild(layerSelect);
+          }
+
+          if (controls.childElementCount > 0) {
+            panel.appendChild(controls);
+          }
+          panel.appendChild(buildCurveScoringTable(activeCurve, activeLayer));
         } else if (scoring.type === 'formula') {
           panel.appendChild(createEl('div', null, `Expression: ${scoring.rubric?.expression || '-'}`));
         } else {
@@ -2301,6 +2492,9 @@
         const builder = createEl('div', 'metric-curve-builder');
         const controls = createEl('div', 'metric-curve-controls');
         const curveSelect = document.createElement('select');
+        const layerLabel = createEl('span', 'metric-curve-layer-label', 'Stratification');
+        const layerSelect = document.createElement('select');
+        layerSelect.className = 'metric-curve-layer-select';
         const curveNameInput = document.createElement('input');
         curveNameInput.className = 'metric-curve-name-input';
         curveNameInput.placeholder = 'Curve name';
@@ -2309,6 +2503,8 @@
         const curveRemove = createEl('button', 'btn btn-small', 'Remove curve');
         curveRemove.type = 'button';
         controls.appendChild(curveSelect);
+        controls.appendChild(layerLabel);
+        controls.appendChild(layerSelect);
         controls.appendChild(curveNameInput);
         controls.appendChild(curveAdd);
         controls.appendChild(curveRemove);
@@ -2443,11 +2639,21 @@
           return curves[0];
         };
 
+        const getActiveLayer = (curve = getActiveCurve()) => getCurveLayer(curve);
+
         const updateCurveEmptyState = () => {
           const hasCurve = curves.length > 0;
+          const activeCurve = getActiveCurve();
+          const hasLayers = Array.isArray(activeCurve?.layers) && activeCurve.layers.length > 0;
           emptyNotice.hidden = !isUserMetric || hasCurve;
           if (curveSelect) {
-            curveSelect.disabled = !hasCurve || !canEditCurves;
+            curveSelect.disabled = !hasCurve;
+          }
+          if (layerSelect) {
+            layerSelect.disabled = !hasCurve || !hasLayers;
+          }
+          if (layerLabel) {
+            layerLabel.hidden = !hasLayers;
           }
           if (curveNameInput) {
             curveNameInput.disabled = !hasCurve || !canEditCurves;
@@ -2468,6 +2674,30 @@
             curveRemove.disabled = !canEditCurves || curves.length <= 1;
           }
           builder.classList.toggle('is-locked', !canEditCurves);
+        };
+
+        const renderLayerOptions = () => {
+          const active = getActiveCurve();
+          const layers = Array.isArray(active?.layers) ? active.layers : [];
+          layerSelect.innerHTML = '';
+          if (!layers.length) {
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No stratifications';
+            layerSelect.appendChild(option);
+            layerSelect.value = '';
+            updateCurveEmptyState();
+            return;
+          }
+          layers.forEach((layer, index) => {
+            const option = document.createElement('option');
+            option.value = layer.id || `layer-${index + 1}`;
+            option.textContent = layer.name || `Stratification ${index + 1}`;
+            layerSelect.appendChild(option);
+          });
+          const activeLayer = getActiveLayer(active);
+          layerSelect.value = activeLayer?.id || layers[0]?.id || '';
+          updateCurveEmptyState();
         };
 
         const renderCurveOptions = () => {
@@ -2492,6 +2722,7 @@
               curveNameInput.value = active.name || active.curveId;
             }
           }
+          renderLayerOptions();
           updateCurveEmptyState();
         };
 
@@ -2503,7 +2734,7 @@
             renderCurveChart();
             return;
           }
-          const layer = active.layers?.[0];
+          const layer = getActiveLayer(active);
           if (!layer) {
             updateCurveEmptyState();
             return;
@@ -2519,7 +2750,7 @@
           }
           const useRange = isCategorical && !!active.indexRange;
           if (useRange) {
-            ensureCurveRanges(active);
+            ensureCurveRanges(active, layer);
           }
           unitsInput.value = active.units || '';
           xTypeSelect.value = active.xType;
@@ -2666,7 +2897,7 @@
           ctx.lineTo(padding.left + width, padding.top + height);
           ctx.stroke();
 
-          const layer = curve.layers?.[0];
+          const layer = getCurveLayer(curve);
           if (!layer) {
             return;
           }
@@ -2675,7 +2906,7 @@
           const isCategorical = normalizedType === 'categorical';
           const useRange = isCategorical && !!curve.indexRange;
           if (useRange) {
-            ensureCurveRanges(curve);
+            ensureCurveRanges(curve, layer);
           }
           const points = isCategorical
             ? layer.points
@@ -2882,17 +3113,32 @@
         setupCurveColumnResizers();
 
         curveSelect.addEventListener('change', () => {
-          if (!canEditCurves) {
-            return;
-          }
           state.selectedCurveId = curveSelect.value;
           const active = getActiveCurve();
           if (active) {
             curveNameInput.value = active.name || active.curveId;
           }
+          renderLayerOptions();
           renderCurveTable();
           renderCurveChart();
-          notifyCurveChange();
+          syncCurveDrafts();
+          renderScoringTab();
+        });
+
+        layerSelect.addEventListener('change', () => {
+          const active = getActiveCurve();
+          if (!active) {
+            return;
+          }
+          active.activeLayerId = layerSelect.value;
+          if (isAdded && api?.setCurve) {
+            api.setCurve(detail.metricId, active);
+            api.refresh?.();
+          }
+          syncCurveDrafts();
+          renderCurveTable();
+          renderCurveChart();
+          renderScoringTab();
         });
 
         curveNameInput.addEventListener('input', () => {

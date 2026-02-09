@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-total-nitrogen-detailed",
+  "metricId": "nutrient-cycling-total-nitrogen-detailed",
+  "tier": "detailed",
+  "name": "Total Nitrogen reference curve",
+  "axes": {
+    "xLabel": "Total Nitrogen",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-total-nitrogen-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-total-nitrogen-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 0.7,
+              "y": 0.7,
+              "description": "Field 0.7, Index 0.7"
+            },
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 3.9,
+              "y": 0.082174,
+              "description": "Field 3.9, Index 0.082174"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 262,
+            "sourceRows": [
+              262
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "3.9",
+              "",
+              "2",
+              "",
+              "0.7",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0.082174",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-total-nitrogen-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0.4,
+              "y": 1,
+              "description": "Field 0.4, Index 1"
+            },
+            {
+              "x": 0.8,
+              "y": 0.7,
+              "description": "Field 0.8, Index 0.7"
+            },
+            {
+              "x": 2.3,
+              "y": 0,
+              "description": "Field 2.3, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 264,
+            "sourceRows": [
+              264
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "2.3",
+              "",
+              "",
+              "",
+              "0.8",
+              "0.4",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-total-nitrogen-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT; South Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT",
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Nutrient cycling",
+    "sourceRows": [
+      262,
+      264
+    ]
+  }
+}

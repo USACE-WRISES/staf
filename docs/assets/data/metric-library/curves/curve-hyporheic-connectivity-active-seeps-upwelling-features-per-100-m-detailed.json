@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-hyporheic-connectivity-active-seeps-upwelling-features-per-100-m-detailed",
+  "metricId": "hyporheic-connectivity-active-seeps-upwelling-features-per-100-m-detailed",
+  "tier": "detailed",
+  "name": "Active Seeps/Upwelling Features (# per 100 m) reference curve",
+  "axes": {
+    "xLabel": "Active Seeps/Upwelling Features (# per 100 m)",
+    "yLabel": "Index score",
+    "xUnit": "# per 100 m",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-active-seeps-upwelling-features-per-100-m-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "# per 100 m",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-active-seeps-upwelling-features-per-100-m-detailed-proposed-derived",
+          "name": "Proposed (derived from SFARI rapid curves) - Survey during warm season/low flow to maximize detectability.",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.5,
+              "y": 0.3,
+              "description": "Field 0.5, Index 0.3"
+            },
+            {
+              "x": 1.5,
+              "y": 0.7,
+              "description": "Field 1.5, Index 0.7"
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "description": "Field 3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Survey during warm season/low flow to maximize detectability.",
+            "sourceRow": 90,
+            "sourceRows": [
+              90
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "0",
+              "0.5",
+              "1.5",
+              "3",
+              "",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.3",
+              "0.7",
+              "1",
+              "",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-active-seeps-upwelling-features-per-100-m-detailed-proposed-derived"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "Hyporheic connectivity",
+    "sourceRows": [
+      90
+    ]
+  }
+}

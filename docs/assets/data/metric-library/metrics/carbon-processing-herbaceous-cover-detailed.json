@@ -1,0 +1,114 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-herbaceous-cover-detailed",
+  "name": "Herbaceous Cover",
+  "shortName": "Herbaceous Cover",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+  "descriptionMarkdown": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+  "methodContextMarkdown": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+  "howToMeasureMarkdown": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+  "inputs": [
+    {
+      "label": "Herbaceous Cover",
+      "type": "field and/or desktop (imagery/gis)",
+      "source": "Riparian/Floodplain",
+      "required": true,
+      "helpMarkdown": "Riparian vegetation field plots and/or GIS/imagery-based corridor metrics."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-herbaceous-cover-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-herbaceous-cover-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Michigan SQT",
+    "NAIP or high-resolution imagery",
+    "local vegetation plot protocols where applicable",
+    "Wisconsin SQT"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT; Wisconsin SQT",
+    "sourceCitations": [
+      "Michigan SQT",
+      "Wisconsin SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Carbon processing",
+    "metricDataSource": "Riparian vegetation field plots and/or GIS/imagery-based corridor metrics.",
+    "metricStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+    "description": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+    "methodContextRaw": "Context: Riparian/Floodplain\nMethod: Field and/or Desktop (imagery/GIS)",
+    "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+    "referencesRaw": [
+      "Michigan SQT; NAIP or high-resolution imagery; local vegetation plot protocols where applicable",
+      "Wisconsin SQT; NAIP or high-resolution imagery; local vegetation plot protocols where applicable"
+    ],
+    "sourceRows": [
+      201,
+      242
+    ],
+    "stratifications": [
+      {
+        "name": "Multiple SQTs",
+        "stratification": "Multiple SQTs",
+        "sourceRow": 201,
+        "sourceRows": [
+          201,
+          242
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT",
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "",
+          "80",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

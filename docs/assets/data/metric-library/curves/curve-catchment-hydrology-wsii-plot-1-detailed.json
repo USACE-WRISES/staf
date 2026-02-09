@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-wsii-plot-1-detailed",
+  "metricId": "catchment-hydrology-wsii-plot-1-detailed",
+  "tier": "detailed",
+  "name": "WSII Plot 1 reference curve",
+  "axes": {
+    "xLabel": "WSII Plot 1",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-wsii-plot-1-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-wsii-plot-1-detailed-wyoming-sqt-wyoming-basin",
+          "name": "Wyoming SQT - Wyoming Basin",
+          "points": [
+            {
+              "x": 5.3,
+              "y": 0,
+              "description": "Field 5.3, Index 0"
+            },
+            {
+              "x": 26.2,
+              "y": 0.3,
+              "description": "Field 26.2, Index 0.3"
+            },
+            {
+              "x": 39.9,
+              "y": 0.7,
+              "description": "Field 39.9, Index 0.7"
+            },
+            {
+              "x": 64.5,
+              "y": 1,
+              "description": "Field 64.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Wyoming Basin",
+            "sourceRow": 15,
+            "sourceRows": [
+              15
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "5.3",
+              "",
+              "26.2",
+              "",
+              "39.9",
+              "64.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-wsii-plot-1-detailed-wyoming-sqt-black-hills",
+          "name": "Wyoming SQT - Black Hills",
+          "points": [
+            {
+              "x": 12.8,
+              "y": 0,
+              "description": "Field 12.8, Index 0"
+            },
+            {
+              "x": 30.7,
+              "y": 0.3,
+              "description": "Field 30.7, Index 0.3"
+            },
+            {
+              "x": 46.1,
+              "y": 0.7,
+              "description": "Field 46.1, Index 0.7"
+            },
+            {
+              "x": 65.7,
+              "y": 1,
+              "description": "Field 65.7, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Black Hills",
+            "sourceRow": 16,
+            "sourceRows": [
+              16
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "12.8",
+              "",
+              "30.7",
+              "",
+              "46.1",
+              "65.7",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-wsii-plot-1-detailed-wyoming-sqt-high-valleys",
+          "name": "Wyoming SQT - High Valleys",
+          "points": [
+            {
+              "x": 17.1,
+              "y": 0,
+              "description": "Field 17.1, Index 0"
+            },
+            {
+              "x": 32.5,
+              "y": 0.3,
+              "description": "Field 32.5, Index 0.3"
+            },
+            {
+              "x": 48.8,
+              "y": 0.7,
+              "description": "Field 48.8, Index 0.7"
+            },
+            {
+              "x": 78.2,
+              "y": 1,
+              "description": "Field 78.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "High Valleys",
+            "sourceRow": 17,
+            "sourceRows": [
+              17
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "17.1",
+              "",
+              "32.5",
+              "",
+              "48.8",
+              "78.2",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-wsii-plot-1-detailed-wyoming-sqt-wyoming-basin"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wyoming SQT",
+    "sourceCitations": [
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Catchment hydrology",
+    "sourceRows": [
+      15,
+      16,
+      17
+    ]
+  }
+}

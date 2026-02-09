@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-canopy-cover-detailed",
+  "name": "Canopy Cover",
+  "shortName": "Canopy Cover",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Riparian canopy cover that controls shading and thermal/light regime in the channel.",
+  "methodContextMarkdown": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+  "howToMeasureMarkdown": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+  "inputs": [
+    {
+      "label": "Canopy Cover",
+      "type": "field and/or desktop",
+      "source": "Riparian/Channel",
+      "required": true,
+      "helpMarkdown": "Field canopy measurements (densiometer/hemispherical photo) and/or LiDAR/imagery-derived canopy cover."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-light-and-thermal-regime-canopy-cover-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-canopy-cover-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Minnesota SQT",
+    "Canopy measurement methods",
+    "LiDAR canopy products where available",
+    "Wisconsin SQT"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Minnesota SQT; Wisconsin SQT",
+    "sourceCitations": [
+      "Minnesota SQT",
+      "Wisconsin SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Light & thermal regime",
+    "metricDataSource": "Field canopy measurements (densiometer/hemispherical photo) and/or LiDAR/imagery-derived canopy cover.",
+    "metricStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+    "description": "Riparian canopy cover that controls shading and thermal/light regime in the channel.",
+    "methodContextRaw": "Context: Riparian/Channel\nMethod: Field and/or Desktop",
+    "howToMeasure": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+    "referencesRaw": [
+      "Minnesota SQT; Canopy measurement methods; LiDAR canopy products where available",
+      "Wisconsin SQT; Canopy measurement methods; LiDAR canopy products where available"
+    ],
+    "sourceRows": [
+      167,
+      168,
+      177,
+      178
+    ],
+    "stratifications": [
+      {
+        "name": "Minnesota SQT - Woody vegetation is a natural component of riparian zone",
+        "stratification": "Woody vegetation is a natural component of riparian zone",
+        "sourceRow": 167,
+        "sourceRows": [
+          167
+        ],
+        "sourceCitation": "Minnesota SQT",
+        "sourceCitations": [
+          "Minnesota SQT"
+        ],
+        "fieldValues": [
+          "50",
+          "",
+          "",
+          "",
+          "",
+          "80",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Minnesota SQT - Woody vegetation is not a natural component of riparian zone",
+        "stratification": "Woody vegetation is not a natural component of riparian zone",
+        "sourceRow": 168,
+        "sourceRows": [
+          168
+        ],
+        "sourceCitation": "Minnesota SQT",
+        "sourceCitations": [
+          "Minnesota SQT"
+        ],
+        "fieldValues": [
+          "80",
+          "",
+          "",
+          "",
+          "",
+          "50",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT - Woody Reference Vegetation Cover",
+        "stratification": "Woody Reference Vegetation Cover",
+        "sourceRow": 177,
+        "sourceRows": [
+          177
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "50",
+          "87",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT - Herbaceous Reference Vegetation Cover",
+        "stratification": "Herbaceous Reference Vegetation Cover",
+        "sourceRow": 178,
+        "sourceRows": [
+          178
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "70",
+          "",
+          "35",
+          "",
+          "15",
+          "0",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

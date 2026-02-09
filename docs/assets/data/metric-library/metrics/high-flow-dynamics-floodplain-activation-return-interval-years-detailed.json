@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-floodplain-activation-return-interval-years-detailed",
+  "name": "Floodplain Activation Return Interval (years)",
+  "shortName": "Floodplain Activation Return Interval (years)",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Moderate floods (~12 yr) activate benches/floodplain where valley setting allows.",
+  "descriptionMarkdown": "Return interval for first meaningful overbanking/bench inundation (lower is better).",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Estimate stage/discharge of bench overtopping; determine recurrence interval from gage/regional curves.",
+  "inputs": [
+    {
+      "label": "Floodplain Activation Return Interval (years)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Gage record or regional hydrology + bankfull indicators/HEC-RAS stage mapping."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-high-flow-dynamics-floodplain-activation-return-interval-years-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-floodplain-activation-return-interval-years-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "USGS gage data (where available)",
+    "bankfull field guides."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "High flow dynamics",
+    "metricDataSource": "Gage record or regional hydrology + bankfull indicators/HEC-RAS stage mapping.",
+    "metricStatement": "Moderate floods (~12 yr) activate benches/floodplain where valley setting allows.",
+    "description": "Return interval for first meaningful overbanking/bench inundation (lower is better).",
+    "methodContextRaw": "Desktop + field check",
+    "howToMeasure": "Estimate stage/discharge of bench overtopping; determine recurrence interval from gage/regional curves.",
+    "referencesRaw": [
+      "SFARI rapid assessment; USGS gage data (where available); bankfull field guides."
+    ],
+    "sourceRows": [
+      54
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Exclude naturally confined reaches where overbanking is not expected.",
+        "stratification": "Exclude naturally confined reaches where overbanking is not expected.",
+        "sourceRow": 54,
+        "sourceRows": [
+          54
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "1.5",
+          "4",
+          "7.5",
+          "15",
+          "25",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "1",
+          "0.7",
+          "0.3",
+          "0.1",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-width-departure-mismatch-factor-m-wbf-detailed",
+  "metricId": "high-flow-dynamics-width-departure-mismatch-factor-m-wbf-detailed",
+  "tier": "detailed",
+  "name": "Width Departure Mismatch Factor (M_Wbf) reference curve",
+  "axes": {
+    "xLabel": "Width Departure Mismatch Factor (M_Wbf)",
+    "yLabel": "Index score",
+    "xUnit": "M_Wbf",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-width-departure-mismatch-factor-m-wbf-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "M_Wbf",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-width-departure-mismatch-factor-m-wbf-detailed-proposed-derived-from-sf",
+          "name": "Proposed (derived from SFARI rapid curves) - Use curves appropriate to physiographic region and stream type.",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.3,
+              "y": 0.7,
+              "description": "Field 1.3, Index 0.7"
+            },
+            {
+              "x": 1.7,
+              "y": 0.3,
+              "description": "Field 1.7, Index 0.3"
+            },
+            {
+              "x": 2.5,
+              "y": 0.1,
+              "description": "Field 2.5, Index 0.1"
+            },
+            {
+              "x": 3.5,
+              "y": 0,
+              "description": "Field 3.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Use curves appropriate to physiographic region and stream type.",
+            "sourceRow": 56,
+            "sourceRows": [
+              56
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "1",
+              "1.3",
+              "1.7",
+              "2.5",
+              "3.5",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-width-departure-mismatch-factor-m-wbf-detailed-proposed-derived-from-sf"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "High flow dynamics",
+    "sourceRows": [
+      56
+    ]
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-wsii-plot-3-detailed",
+  "metricId": "catchment-hydrology-wsii-plot-3-detailed",
+  "tier": "detailed",
+  "name": "WSII Plot 3 reference curve",
+  "axes": {
+    "xLabel": "WSII Plot 3",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-wsii-plot-3-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-wsii-plot-3-detailed-wyoming-sqt-granitic-mountains",
+          "name": "Wyoming SQT - Granitic Mountains",
+          "points": [
+            {
+              "x": 32.6,
+              "y": 0,
+              "description": "Field 32.6, Index 0"
+            },
+            {
+              "x": 40.2,
+              "y": 0.3,
+              "description": "Field 40.2, Index 0.3"
+            },
+            {
+              "x": 60.3,
+              "y": 0.7,
+              "description": "Field 60.3, Index 0.7"
+            },
+            {
+              "x": 74.9,
+              "y": 1,
+              "description": "Field 74.9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Granitic Mountains",
+            "sourceRow": 21,
+            "sourceRows": [
+              21
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "32.6",
+              "",
+              "40.2",
+              "",
+              "60.3",
+              "74.9",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-wsii-plot-3-detailed-wyoming-sqt-southern-foothills-and-laramie-range",
+          "name": "Wyoming SQT - Southern Foothills & Laramie Range",
+          "points": [
+            {
+              "x": 30.7,
+              "y": 0,
+              "description": "Field 30.7, Index 0"
+            },
+            {
+              "x": 44.5,
+              "y": 0.3,
+              "description": "Field 44.5, Index 0.3"
+            },
+            {
+              "x": 66.7,
+              "y": 0.7,
+              "description": "Field 66.7, Index 0.7"
+            },
+            {
+              "x": 85.3,
+              "y": 1,
+              "description": "Field 85.3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Southern Foothills & Laramie Range",
+            "sourceRow": 22,
+            "sourceRows": [
+              22
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "30.7",
+              "",
+              "44.5",
+              "",
+              "66.7",
+              "85.3",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-wsii-plot-3-detailed-wyoming-sqt-volcanic-mountains-and-valleys",
+          "name": "Wyoming SQT - Volcanic Mountains & Valleys",
+          "points": [
+            {
+              "x": 24.9,
+              "y": 0,
+              "description": "Field 24.9, Index 0"
+            },
+            {
+              "x": 46.2,
+              "y": 0.3,
+              "description": "Field 46.2, Index 0.3"
+            },
+            {
+              "x": 69.3,
+              "y": 0.7,
+              "description": "Field 69.3, Index 0.7"
+            },
+            {
+              "x": 88.1,
+              "y": 1,
+              "description": "Field 88.1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Volcanic Mountains & Valleys",
+            "sourceRow": 23,
+            "sourceRows": [
+              23
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "24.9",
+              "",
+              "46.2",
+              "",
+              "69.3",
+              "88.1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-wsii-plot-3-detailed-wyoming-sqt-granitic-mountains"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wyoming SQT",
+    "sourceCitations": [
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Catchment hydrology",
+    "sourceRows": [
+      21,
+      22,
+      23
+    ]
+  }
+}

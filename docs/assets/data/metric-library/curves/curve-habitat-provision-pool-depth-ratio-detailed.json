@@ -1,0 +1,406 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-pool-depth-ratio-detailed",
+  "metricId": "habitat-provision-pool-depth-ratio-detailed",
+  "tier": "detailed",
+  "name": "Pool Depth Ratio reference curve",
+  "axes": {
+    "xLabel": "Pool Depth Ratio",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-pool-depth-ratio-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-alaska-sqt-b-and-ba-streams",
+          "name": "Alaska SQT - B & Ba Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.8,
+              "y": 0.7,
+              "description": "Field 1.8, Index 0.7"
+            },
+            {
+              "x": 2.8,
+              "y": 1,
+              "description": "Field 2.8, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B & Ba Streams",
+            "sourceRow": 308,
+            "sourceRows": [
+              308
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "1.8",
+              "2.8",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-alaska-sqt-all-other-streams",
+          "name": "Alaska SQT - All other Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 3.2,
+              "y": 1,
+              "description": "Field 3.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "All other Streams",
+            "sourceRow": 309,
+            "sourceRows": [
+              309
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "3.2",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-colorado-sqt",
+          "name": "Colorado SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 3.2,
+              "y": 1,
+              "description": "Field 3.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 317,
+            "sourceRows": [
+              317
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "3.2",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 1.1,
+              "y": 0,
+              "description": "Field 1.1, Index 0"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            },
+            {
+              "x": 2,
+              "y": 0.7,
+              "description": "Field 2, Index 0.7"
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "description": "Field 3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 324,
+            "sourceRows": [
+              324
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "1.1",
+              "",
+              "1.5",
+              "",
+              "2",
+              "3",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-minnesota-sqt",
+          "name": "Minnesota SQT",
+          "points": [
+            {
+              "x": 1.1,
+              "y": 0,
+              "description": "Field 1.1, Index 0"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            },
+            {
+              "x": 2,
+              "y": 0.7,
+              "description": "Field 2, Index 0.7"
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "description": "Field 3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 332,
+            "sourceRows": [
+              332
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "1.1",
+              "",
+              "1.5",
+              "",
+              "2",
+              "3",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2,
+              "y": 0.7,
+              "description": "Field 2, Index 0.7"
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "description": "Field 3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 365,
+            "sourceRows": [
+              365
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2",
+              "3",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 3.2,
+              "y": 1,
+              "description": "Field 3.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 375,
+            "sourceRows": [
+              375
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "3.2",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-pool-depth-ratio-detailed-alaska-sqt-b-and-ba-streams"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Michigan SQT; Minnesota SQT; Wisconsin SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      308,
+      309,
+      317,
+      324,
+      332,
+      365,
+      375
+    ]
+  }
+}

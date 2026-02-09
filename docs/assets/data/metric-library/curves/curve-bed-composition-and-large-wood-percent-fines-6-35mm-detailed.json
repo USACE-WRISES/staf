@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-large-wood-percent-fines-6-35mm-detailed",
+  "metricId": "bed-composition-and-large-wood-percent-fines-6-35mm-detailed",
+  "tier": "detailed",
+  "name": "Percent Fines <6.35mm reference curve",
+  "axes": {
+    "xLabel": "Percent Fines <6.35mm",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-percent-fines-6-35mm-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-percent-fines-6-35mm-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            },
+            {
+              "x": 16.9,
+              "y": 0.7,
+              "description": "Field 16.9, Index 0.7"
+            },
+            {
+              "x": 35,
+              "y": 0,
+              "description": "Field 35, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 153,
+            "sourceRows": [
+              153
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "35",
+              "",
+              "",
+              "",
+              "16.9",
+              "5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-percent-fines-6-35mm-detailed-wisconsin-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Bed composition and large wood",
+    "sourceRows": [
+      153
+    ]
+  }
+}

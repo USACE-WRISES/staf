@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-sinuosity-for-unconfined-alluvial-valleys-detailed",
+  "metricId": "channel-and-floodplain-dynamics-sinuosity-for-unconfined-alluvial-valleys-detailed",
+  "tier": "detailed",
+  "name": "Sinuosity for Unconfined Alluvial Valleys reference curve",
+  "axes": {
+    "xLabel": "Sinuosity for Unconfined Alluvial Valleys",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-sinuosity-for-unconfined-alluvial-valleys-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-sinuosity-for-unconfined-alluvial-valleys-detailed-north-c",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": ""
+            },
+            {
+              "x": 1,
+              "y": 0.29,
+              "description": ""
+            },
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": ""
+            },
+            {
+              "x": 3,
+              "y": 0.69,
+              "description": ""
+            },
+            {
+              "x": 4,
+              "y": 0.7,
+              "description": ""
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "description": ""
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 117,
+            "sourceRows": [
+              117
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "1.2",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-sinuosity-for-unconfined-alluvial-valleys-detailed-north-c"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Channel and floodplain dynamics",
+    "sourceRows": [
+      117
+    ]
+  }
+}

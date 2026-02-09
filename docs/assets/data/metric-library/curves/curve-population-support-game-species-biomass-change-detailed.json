@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-game-species-biomass-change-detailed",
+  "metricId": "population-support-game-species-biomass-change-detailed",
+  "tier": "detailed",
+  "name": "Game Species Biomass (% Change) reference curve",
+  "axes": {
+    "xLabel": "Game Species Biomass (% Change)",
+    "yLabel": "Index score",
+    "xUnit": "% Change",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-game-species-biomass-change-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "% Change",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-game-species-biomass-change-detailed-wyoming-sqt-blue-ribbon-and-non-tr",
+          "name": "Wyoming SQT - Blue Ribbon and non-trout game fish",
+          "points": [
+            {
+              "x": 5,
+              "y": 0.3,
+              "description": "Field 5, Index 0.3"
+            },
+            {
+              "x": 25,
+              "y": 0.7,
+              "description": "Field 25, Index 0.7"
+            },
+            {
+              "x": 40,
+              "y": 1,
+              "description": "Field 40, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Blue Ribbon and non-trout game fish",
+            "sourceRow": 432,
+            "sourceRows": [
+              432
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "5",
+              "",
+              "25",
+              "40",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-game-species-biomass-change-detailed-wyoming-sqt-red-ribbon",
+          "name": "Wyoming SQT - Red Ribbon",
+          "points": [
+            {
+              "x": 10,
+              "y": 0.3,
+              "description": "Field 10, Index 0.3"
+            },
+            {
+              "x": 50,
+              "y": 0.7,
+              "description": "Field 50, Index 0.7"
+            },
+            {
+              "x": 80,
+              "y": 1,
+              "description": "Field 80, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Red Ribbon",
+            "sourceRow": 433,
+            "sourceRows": [
+              433
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "10",
+              "",
+              "50",
+              "80",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-game-species-biomass-change-detailed-wyoming-sqt-yellow-green-ribbon",
+          "name": "Wyoming SQT - Yellow/Green Ribbon",
+          "points": [
+            {
+              "x": 15,
+              "y": 0.3,
+              "description": "Field 15, Index 0.3"
+            },
+            {
+              "x": 75,
+              "y": 0.7,
+              "description": "Field 75, Index 0.7"
+            },
+            {
+              "x": 119,
+              "y": 1,
+              "description": "Field 119, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Yellow/Green Ribbon",
+            "sourceRow": 434,
+            "sourceRows": [
+              434
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "15",
+              "",
+              "75",
+              "119",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-game-species-biomass-change-detailed-wyoming-sqt-blue-ribbon-and-non-tr"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wyoming SQT",
+    "sourceCitations": [
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      432,
+      433,
+      434
+    ]
+  }
+}

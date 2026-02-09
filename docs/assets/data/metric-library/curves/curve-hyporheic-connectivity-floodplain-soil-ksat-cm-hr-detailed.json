@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-hyporheic-connectivity-floodplain-soil-ksat-cm-hr-detailed",
+  "metricId": "hyporheic-connectivity-floodplain-soil-ksat-cm-hr-detailed",
+  "tier": "detailed",
+  "name": "Floodplain Soil Ksat (cm/hr) reference curve",
+  "axes": {
+    "xLabel": "Floodplain Soil Ksat (cm/hr)",
+    "yLabel": "Index score",
+    "xUnit": "cm/hr",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-floodplain-soil-ksat-cm-hr-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "cm/hr",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-floodplain-soil-ksat-cm-hr-detailed-proposed-derived-from-sfari-rap",
+          "name": "Proposed (derived from SFARI rapid curves) - Limit to frequently inundated floodplain surfaces (exclude upland terraces).",
+          "points": [
+            {
+              "x": 0.1,
+              "y": 0,
+              "description": "Field 0.1, Index 0"
+            },
+            {
+              "x": 0.8,
+              "y": 0.3,
+              "description": "Field 0.8, Index 0.3"
+            },
+            {
+              "x": 3,
+              "y": 0.7,
+              "description": "Field 3, Index 0.7"
+            },
+            {
+              "x": 10,
+              "y": 1,
+              "description": "Field 10, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Limit to frequently inundated floodplain surfaces (exclude upland terraces).",
+            "sourceRow": 88,
+            "sourceRows": [
+              88
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "0.1",
+              "0.8",
+              "3",
+              "10",
+              "",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.3",
+              "0.7",
+              "1",
+              "",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-floodplain-soil-ksat-cm-hr-detailed-proposed-derived-from-sfari-rap"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "Hyporheic connectivity",
+    "sourceRows": [
+      88
+    ]
+  }
+}

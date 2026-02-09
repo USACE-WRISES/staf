@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-shredders-coastal-and-da-10-sq-mi-detailed",
+  "name": "Shredders- Coastal & DA >= 10 Sq.Mi.",
+  "shortName": "Shredders- Coastal & DA >= 10 Sq.Mi.",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+  "descriptionMarkdown": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (sampling/assay)",
+  "howToMeasureMarkdown": "From a macroinvertebrate sample, identify and count shredder taxa and compute the shredder metric per SQT guidance for the appropriate drainage area/region stratum.",
+  "inputs": [
+    {
+      "label": "Shredders- Coastal & DA >= 10 Sq.Mi.",
+      "type": "field (sampling/assay)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field/lab primary production or decomposition measurements; macroinvertebrate functional group counts."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-shredders-coastal-and-da-10-sq-mi-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-shredders-coastal-and-da-10-sq-mi-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "North Carolina SQT",
+    "State macroinvertebrate protocols",
+    "functional feeding group references"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Carbon processing",
+    "metricDataSource": "Field/lab primary production or decomposition measurements; macroinvertebrate functional group counts.",
+    "metricStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+    "description": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (sampling/assay)",
+    "howToMeasure": "From a macroinvertebrate sample, identify and count shredder taxa and compute the shredder metric per SQT guidance for the appropriate drainage area/region stratum.",
+    "referencesRaw": [
+      "North Carolina SQT; State macroinvertebrate protocols; functional feeding group references"
+    ],
+    "sourceRows": [
+      235,
+      236,
+      237
+    ],
+    "stratifications": [
+      {
+        "name": "North Carolina SQT - Field - W/Sp",
+        "stratification": "Field - W/Sp",
+        "sourceRow": 235,
+        "sourceRows": [
+          235
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "3.4",
+          "5.1",
+          "10.2",
+          "11.9",
+          "17",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.2",
+          "0.3",
+          "0.6",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "North Carolina SQT - Field - Su",
+        "stratification": "Field - Su",
+        "sourceRow": 236,
+        "sourceRows": [
+          236
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "3.2",
+          "4.8",
+          "9.6",
+          "11.2",
+          "16",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.2",
+          "0.3",
+          "0.6",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "North Carolina SQT - Field - Fall",
+        "stratification": "Field - Fall",
+        "sourceRow": 237,
+        "sourceRows": [
+          237
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "1.6",
+          "2.4",
+          "4.8",
+          "5.6",
+          "8",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.2",
+          "0.3",
+          "0.6",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-connected-off-channel-features-at-q2-km-detailed",
+  "name": "Connected Off-Channel Features at Q2 (#/km)",
+  "shortName": "Connected Off-Channel Features at Q2 (#/km)",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Multiple off-channel features provide storage and low-velocity habitat when floodplain activates.",
+  "descriptionMarkdown": "Count of off-channel storage features connected at ~Q2 per km of main channel. Higher is better.",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Map features; determine if connected at Q2/bankfull; count connected features per km.",
+  "inputs": [
+    {
+      "label": "Connected Off-Channel Features at Q2 (#/km)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "LiDAR/imagery mapping with field verification."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-connected-off-channel-features-at-q2-km-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-connected-off-channel-features-at-q2-km-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "LiDAR/imagery interpretation",
+    "field verification."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Surface water storage",
+    "metricDataSource": "LiDAR/imagery mapping with field verification.",
+    "metricStatement": "Multiple off-channel features provide storage and low-velocity habitat when floodplain activates.",
+    "description": "Count of off-channel storage features connected at ~Q2 per km of main channel. Higher is better.",
+    "methodContextRaw": "Desktop + field check",
+    "howToMeasure": "Map features; determine if connected at Q2/bankfull; count connected features per km.",
+    "referencesRaw": [
+      "SFARI rapid assessment; LiDAR/imagery interpretation; field verification."
+    ],
+    "sourceRows": [
+      31
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Use O/E for confined valleys where expected density is low.",
+        "stratification": "Use O/E for confined valleys where expected density is low.",
+        "sourceRow": 31,
+        "sourceRows": [
+          31
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0",
+          "0.3",
+          "1.5",
+          "3",
+          "",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.3",
+          "0.7",
+          "1",
+          "",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

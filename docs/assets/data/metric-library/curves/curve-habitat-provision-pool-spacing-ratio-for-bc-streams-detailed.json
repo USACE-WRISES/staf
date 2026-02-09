@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-pool-spacing-ratio-for-bc-streams-detailed",
+  "metricId": "habitat-provision-pool-spacing-ratio-for-bc-streams-detailed",
+  "tier": "detailed",
+  "name": "Pool Spacing Ratio for Bc Streams reference curve",
+  "axes": {
+    "xLabel": "Pool Spacing Ratio for Bc Streams",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-pool-spacing-ratio-for-bc-streams-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-for-bc-streams-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            },
+            {
+              "x": 6,
+              "y": 0.7,
+              "description": "Field 6, Index 0.7"
+            },
+            {
+              "x": 8,
+              "y": 0,
+              "description": "Field 8, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 323,
+            "sourceRows": [
+              323
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "8",
+              "",
+              "",
+              "",
+              "6",
+              "5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-pool-spacing-ratio-for-bc-streams-detailed-michigan-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      323
+    ]
+  }
+}

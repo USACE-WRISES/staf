@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-impervious-cover-detailed",
+  "metricId": "catchment-hydrology-impervious-cover-detailed",
+  "tier": "detailed",
+  "name": "Impervious Cover reference curve",
+  "axes": {
+    "xLabel": "Impervious Cover",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-impervious-cover-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-impervious-cover-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 10,
+              "y": 0.7,
+              "description": "Field 10, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 3,
+            "sourceRows": [
+              3
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "10",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-impervious-cover-detailed-alaska-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "mappedFunction": "Catchment hydrology",
+    "sourceRows": [
+      3
+    ]
+  }
+}

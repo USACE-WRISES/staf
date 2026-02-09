@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-lwd-pieces-100-meters-detailed",
+  "metricId": "habitat-provision-lwd-pieces-100-meters-detailed",
+  "tier": "detailed",
+  "name": "LWD - # Pieces / 100 meters reference curve",
+  "axes": {
+    "xLabel": "LWD - # Pieces / 100 meters",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-lwd-pieces-100-meters-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-lwd-pieces-100-meters-detailed-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 13,
+              "y": 0.7,
+              "description": "Field 13, Index 0.7"
+            },
+            {
+              "x": 28,
+              "y": 1,
+              "description": "Field 28, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Multiple SQTs",
+            "sourceRow": 311,
+            "sourceRows": [
+              311,
+              328
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT",
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "13",
+              "28",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-lwd-pieces-100-meters-detailed-multiple-sqts"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Minnesota SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Minnesota SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      311,
+      328
+    ]
+  }
+}

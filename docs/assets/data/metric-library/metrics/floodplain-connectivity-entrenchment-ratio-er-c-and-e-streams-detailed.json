@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "metricId": "floodplain-connectivity-entrenchment-ratio-er-c-and-e-streams-detailed",
+  "name": "Entrenchment Ratio (ER) C and E Streams",
+  "shortName": "Entrenchment Ratio (ER) C and E Streams",
+  "discipline": "Hydraulics",
+  "function": "Floodplain connectivity",
+  "functionStatement": "Frequent overbank flows access the floodplain, reducing flood peaks and supporting nutrient processing and off-channel refugia.",
+  "descriptionMarkdown": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+  "methodContextMarkdown": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+  "howToMeasureMarkdown": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+  "inputs": [
+    {
+      "label": "Entrenchment Ratio (ER) C and E Streams",
+      "type": "field (survey) or desktop (lidar cross sections)",
+      "source": "Channel/Floodplain",
+      "required": true,
+      "helpMarkdown": "Field cross-section measurements and/or LiDAR/DEM-derived flood-prone width and bankfull indicators."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-floodplain-connectivity-entrenchment-ratio-er-c-and-e-streams-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-floodplain-connectivity-entrenchment-ratio-er-c-and-e-streams-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Michigan SQT",
+    "NRCS National Engineering Handbook",
+    "Rosgen stream classification references as applicable",
+    "USGS 3DEP LiDAR/DEM where available",
+    "North Carolina SQT"
+  ],
+  "tags": [
+    "Hydraulics",
+    "Floodplain connectivity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT; North Carolina SQT",
+    "sourceCitations": [
+      "Michigan SQT",
+      "North Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Floodplain connectivity",
+    "metricDataSource": "Field cross-section measurements and/or LiDAR/DEM-derived flood-prone width and bankfull indicators.",
+    "metricStatement": "Frequent overbank flows access the floodplain, reducing flood peaks and supporting nutrient processing and off-channel refugia.",
+    "description": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+    "methodContextRaw": "Context: Channel/Floodplain\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+    "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+    "referencesRaw": [
+      "Michigan SQT; NRCS National Engineering Handbook; Rosgen stream classification references as applicable; USGS 3DEP LiDAR/DEM where available",
+      "North Carolina SQT; NRCS National Engineering Handbook; Rosgen stream classification references as applicable; USGS 3DEP LiDAR/DEM where available"
+    ],
+    "sourceRows": [
+      67,
+      72
+    ],
+    "stratifications": [
+      {
+        "name": "Multiple SQTs",
+        "stratification": "Multiple SQTs",
+        "sourceRow": 67,
+        "sourceRows": [
+          67,
+          72
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT",
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "2",
+          "",
+          "2.4",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.6",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

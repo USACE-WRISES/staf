@@ -1,0 +1,277 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-pool-spacing-ratio-for-bc-stream-types-detailed",
+  "name": "Pool Spacing Ratio for Bc Stream Types",
+  "shortName": "Pool Spacing Ratio for Bc Stream Types",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+  "descriptionMarkdown": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+  "inputs": [
+    {
+      "label": "Pool Spacing Ratio for Bc Stream Types",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-habitat-provision-pool-spacing-ratio-for-bc-stream-types-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-pool-spacing-ratio-for-bc-stream-types-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "Rapid habitat assessment/geomorphic unit mapping methods",
+    "Colorado SQT",
+    "Minnesota SQT",
+    "South Carolina SQT",
+    "Wisconsin SQT",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Minnesota SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Minnesota SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Habitat provision",
+    "metricDataSource": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support.",
+    "metricStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+    "description": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+    "methodContextRaw": "Context: Channel\nMethod: Field",
+    "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+    "referencesRaw": [
+      "Alaska SQT; Rapid habitat assessment/geomorphic unit mapping methods",
+      "Colorado SQT; Rapid habitat assessment/geomorphic unit mapping methods",
+      "Minnesota SQT; Rapid habitat assessment/geomorphic unit mapping methods",
+      "South Carolina SQT; Rapid habitat assessment/geomorphic unit mapping methods",
+      "Wisconsin SQT; Rapid habitat assessment/geomorphic unit mapping methods",
+      "Wyoming SQT; Rapid habitat assessment/geomorphic unit mapping methods"
+    ],
+    "sourceRows": [
+      299,
+      315,
+      330,
+      350,
+      363,
+      371
+    ],
+    "stratifications": [
+      {
+        "name": "Alaska SQT",
+        "stratification": "",
+        "sourceRow": 299,
+        "sourceRows": [
+          299
+        ],
+        "sourceCitation": "Alaska SQT",
+        "sourceCitations": [
+          "Alaska SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "6",
+          "3.4",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Colorado SQT",
+        "stratification": "",
+        "sourceRow": 315,
+        "sourceRows": [
+          315
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "6",
+          "3.4",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Minnesota SQT",
+        "stratification": "",
+        "sourceRow": 330,
+        "sourceRows": [
+          330
+        ],
+        "sourceCitation": "Minnesota SQT",
+        "sourceCitations": [
+          "Minnesota SQT"
+        ],
+        "fieldValues": [
+          "8",
+          "",
+          "",
+          "",
+          "6",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "South Carolina SQT",
+        "stratification": "",
+        "sourceRow": 350,
+        "sourceRows": [
+          350
+        ],
+        "sourceCitation": "South Carolina SQT",
+        "sourceCitations": [
+          "South Carolina SQT"
+        ],
+        "fieldValues": [
+          "8",
+          "",
+          "",
+          "",
+          "6",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT",
+        "stratification": "",
+        "sourceRow": 363,
+        "sourceRows": [
+          363
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "8",
+          "",
+          "",
+          "",
+          "6",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT",
+        "stratification": "",
+        "sourceRow": 371,
+        "sourceRows": [
+          371
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "6",
+          "3.4",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

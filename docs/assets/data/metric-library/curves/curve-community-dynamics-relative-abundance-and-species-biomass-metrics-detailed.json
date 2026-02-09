@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-community-dynamics-relative-abundance-and-species-biomass-metrics-detailed",
+  "metricId": "community-dynamics-relative-abundance-and-species-biomass-metrics-detailed",
+  "tier": "detailed",
+  "name": "Relative Abundance and Species Biomass metrics reference curve",
+  "axes": {
+    "xLabel": "Relative Abundance and Species Biomass metrics",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-relative-abundance-and-species-biomass-metrics-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-community-dynamics-relative-abundance-and-species-biomass-metrics-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.9,
+              "y": 1,
+              "description": "Field 0.9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 435,
+            "sourceRows": [
+              435
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "0.9",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-relative-abundance-and-species-biomass-metrics-detailed-alaska-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "mappedFunction": "Community dynamics",
+    "sourceRows": [
+      435
+    ]
+  }
+}

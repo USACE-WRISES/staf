@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-summer-mean-temperature-detailed",
+  "metricId": "light-and-thermal-regime-summer-mean-temperature-detailed",
+  "tier": "detailed",
+  "name": "Summer Mean Temperature reference curve",
+  "axes": {
+    "xLabel": "Summer Mean Temperature",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-summer-mean-temperature-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-summer-mean-temperature-detailed-wisconsin-sqt-cold",
+          "name": "Wisconsin SQT - Cold",
+          "points": [
+            {
+              "x": 12.5,
+              "y": 1,
+              "description": "Field 12.5, Index 1"
+            },
+            {
+              "x": 17,
+              "y": 0.7,
+              "description": "Field 17, Index 0.7"
+            },
+            {
+              "x": 18.7,
+              "y": 0.3,
+              "description": "Field 18.7, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Cold",
+            "sourceRow": 173,
+            "sourceRows": [
+              173
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "18.7",
+              "",
+              "17",
+              "12.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-summer-mean-temperature-detailed-wisconsin-sqt-cold-transition",
+          "name": "Wisconsin SQT - Cold Transition",
+          "points": [
+            {
+              "x": 17,
+              "y": 1,
+              "description": "Field 17, Index 1"
+            },
+            {
+              "x": 18.7,
+              "y": 0.7,
+              "description": "Field 18.7, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Cold Transition",
+            "sourceRow": 174,
+            "sourceRows": [
+              174
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "18.7",
+              "17",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-summer-mean-temperature-detailed-wisconsin-sqt-warm-transition",
+          "name": "Wisconsin SQT - Warm Transition",
+          "points": [
+            {
+              "x": 18.7,
+              "y": 1,
+              "description": "Field 18.7, Index 1"
+            },
+            {
+              "x": 20.5,
+              "y": 0.7,
+              "description": "Field 20.5, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Warm Transition",
+            "sourceRow": 175,
+            "sourceRows": [
+              175
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "20.5",
+              "18.7",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-summer-mean-temperature-detailed-wisconsin-sqt-warm",
+          "name": "Wisconsin SQT - Warm",
+          "points": [
+            {
+              "x": 20.5,
+              "y": 1,
+              "description": "Field 20.5, Index 1"
+            },
+            {
+              "x": 23,
+              "y": 0.7,
+              "description": "Field 23, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Warm",
+            "sourceRow": 176,
+            "sourceRows": [
+              176
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "23",
+              "20.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-summer-mean-temperature-detailed-wisconsin-sqt-cold"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Light & thermal regime",
+    "sourceRows": [
+      173,
+      174,
+      175,
+      176
+    ]
+  }
+}

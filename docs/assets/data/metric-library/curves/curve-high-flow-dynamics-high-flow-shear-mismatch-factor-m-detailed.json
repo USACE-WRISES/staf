@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-high-flow-shear-mismatch-factor-m-detailed",
+  "metricId": "high-flow-dynamics-high-flow-shear-mismatch-factor-m-detailed",
+  "tier": "detailed",
+  "name": "High-Flow Shear Mismatch Factor (M_?*) reference curve",
+  "axes": {
+    "xLabel": "High-Flow Shear Mismatch Factor (M_?*)",
+    "yLabel": "Index score",
+    "xUnit": "M_?*",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-high-flow-shear-mismatch-factor-m-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "M_?*",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-high-flow-shear-mismatch-factor-m-detailed-proposed-derived-from-sfari-",
+          "name": "Proposed (derived from SFARI rapid curves) - Compute by representative cross-sections; stratify by stream type and bank strength.",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 3,
+              "y": 0.1,
+              "description": "Field 3, Index 0.1"
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "description": "Field 4, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Compute by representative cross-sections; stratify by stream type and bank strength.",
+            "sourceRow": 52,
+            "sourceRows": [
+              52
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "1",
+              "1.4",
+              "2",
+              "3",
+              "4",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-high-flow-shear-mismatch-factor-m-detailed-proposed-derived-from-sfari-"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "High flow dynamics",
+    "sourceRows": [
+      52
+    ]
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-percent-riffle-for-c-and-e-stream-types-detailed",
+  "metricId": "habitat-provision-percent-riffle-for-c-and-e-stream-types-detailed",
+  "tier": "detailed",
+  "name": "Percent Riffle for C and E Stream Types reference curve",
+  "axes": {
+    "xLabel": "Percent Riffle for C and E Stream Types",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-percent-riffle-for-c-and-e-stream-types-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-percent-riffle-for-c-and-e-stream-types-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 20,
+              "y": 0,
+              "description": "Field 20, Index 0"
+            },
+            {
+              "x": 45,
+              "y": 1,
+              "description": "Field 45, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 326,
+            "sourceRows": [
+              326
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "20",
+              "",
+              "",
+              "",
+              "",
+              "45",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-for-c-and-e-stream-types-detailed-minnesota-sqt",
+          "name": "Minnesota SQT",
+          "points": [
+            {
+              "x": 20,
+              "y": 0,
+              "description": "Field 20, Index 0"
+            },
+            {
+              "x": 45,
+              "y": 1,
+              "description": "Field 45, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 334,
+            "sourceRows": [
+              334
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "20",
+              "",
+              "",
+              "",
+              "",
+              "45",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-for-c-and-e-stream-types-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 45,
+              "y": 1,
+              "description": "Field 45, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 367,
+            "sourceRows": [
+              367
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "45",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-percent-riffle-for-c-and-e-stream-types-detailed-michigan-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT; Minnesota SQT; Wisconsin SQT",
+    "sourceCitations": [
+      "Michigan SQT",
+      "Minnesota SQT",
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      326,
+      334,
+      367
+    ]
+  }
+}

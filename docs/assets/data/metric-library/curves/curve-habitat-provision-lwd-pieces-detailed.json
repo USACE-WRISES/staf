@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-lwd-pieces-detailed",
+  "metricId": "habitat-provision-lwd-pieces-detailed",
+  "tier": "detailed",
+  "name": "LWD # Pieces reference curve",
+  "axes": {
+    "xLabel": "LWD # Pieces",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-lwd-pieces-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-lwd-pieces-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 10,
+              "y": 0.3,
+              "description": "Field 10, Index 0.3"
+            },
+            {
+              "x": 15,
+              "y": 0.69,
+              "description": "Field 15, Index 0.69"
+            },
+            {
+              "x": 30,
+              "y": 1,
+              "description": "Field 30, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 336,
+            "sourceRows": [
+              336
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "10",
+              "15",
+              "",
+              "30",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-lwd-pieces-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      336
+    ]
+  }
+}

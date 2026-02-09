@@ -1,0 +1,151 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-pool-spacing-ratio-for-slope-4-and-da-10-and-c-or-e-stream-types-detailed",
+  "metricId": "habitat-provision-pool-spacing-ratio-for-slope-4-and-da-10-and-c-or-e-stream-types-detailed",
+  "tier": "detailed",
+  "name": "Pool Spacing Ratio for slope < 4% & DA >=10 & C or E stream types reference curve",
+  "axes": {
+    "xLabel": "Pool Spacing Ratio for slope < 4% & DA >=10 & C or E stream types",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-pool-spacing-ratio-for-slope-4-and-da-10-and-c-or-e-stream-types-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-for-slope-4-and-da-10-and-c-or-e-stream-types-detaile",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 2.9416,
+              "y": 0,
+              "description": "Field 2.9416, Index 0"
+            },
+            {
+              "x": 3.2,
+              "y": 0.29,
+              "description": "Field 3.2, Index 0.29"
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            },
+            {
+              "x": 7,
+              "y": 1,
+              "description": "Field 7, Index 1"
+            },
+            {
+              "x": 7.8,
+              "y": 0.3,
+              "description": "Field 7.8, Index 0.3"
+            },
+            {
+              "x": 8.0668,
+              "y": 0,
+              "description": "Field 8.0668, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 338,
+            "sourceRows": [
+              338
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "8.0668",
+              "2.9416",
+              "3.2",
+              "7.8",
+              "",
+              "4",
+              "7"
+            ],
+            "indexValues": [
+              "0",
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "1",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-for-slope-4-and-da-10-and-c-or-e-stream-types-detaile-2",
+          "name": "North Carolina SQT (2)",
+          "points": [
+            {
+              "x": 3,
+              "y": 0.3,
+              "description": "Field 3, Index 0.3"
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            },
+            {
+              "x": 5.5,
+              "y": 1,
+              "description": "Field 5.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 339,
+            "sourceRows": [
+              339
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "3",
+              "",
+              "",
+              "4",
+              "5.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-pool-spacing-ratio-for-slope-4-and-da-10-and-c-or-e-stream-types-detaile"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      338,
+      339
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-habitat-accessibility-within-corridor-detailed",
+  "name": "Habitat Accessibility within Corridor (%)",
+  "shortName": "Habitat Accessibility within Corridor (%)",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Most habitat remains accessible without major blockages.",
+  "descriptionMarkdown": "Percent of channel habitat length accessible from assessment reach within defined corridor.",
+  "methodContextMarkdown": "Desktop + field confirm",
+  "howToMeasureMarkdown": "Define corridor; apply barrier passability; compute accessible length ÷ total corridor length.",
+  "inputs": [
+    {
+      "label": "Habitat Accessibility within Corridor (%)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Barrier inventory + corridor network analysis; optional field verification."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-habitat-accessibility-within-corridor-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-habitat-accessibility-within-corridor-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "barrier inventories",
+    "network connectivity methods."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Watershed connectivity",
+    "metricDataSource": "Barrier inventory + corridor network analysis; optional field verification.",
+    "metricStatement": "Most habitat remains accessible without major blockages.",
+    "description": "Percent of channel habitat length accessible from assessment reach within defined corridor.",
+    "methodContextRaw": "Desktop + field confirm",
+    "howToMeasure": "Define corridor; apply barrier passability; compute accessible length ÷ total corridor length.",
+    "referencesRaw": [
+      "SFARI rapid assessment; barrier inventories; network connectivity methods."
+    ],
+    "sourceRows": [
+      447
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Define corridor extent consistently (e.g., to next major natural barrier or 10 km).",
+        "stratification": "Define corridor extent consistently (e.g., to next major natural barrier or 10 km).",
+        "sourceRow": 447,
+        "sourceRows": [
+          447
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0",
+          "15",
+          "35",
+          "65",
+          "90",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.1",
+          "0.3",
+          "0.7",
+          "1",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

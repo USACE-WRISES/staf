@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-floodplain-soil-ksat-cm-hr-detailed",
+  "name": "Floodplain Soil Ksat (cm/hr)",
+  "shortName": "Floodplain Soil Ksat (cm/hr)",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Permeable floodplain soils support subsurface flow paths and exchange.",
+  "descriptionMarkdown": "Area-weighted saturated hydraulic conductivity (Ksat) of active floodplain soils. Higher is better.",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Extract Ksat from soils polygons within floodplain; compute area-weighted mean; verify with field texture test.",
+  "inputs": [
+    {
+      "label": "Floodplain Soil Ksat (cm/hr)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "SSURGO/gSSURGO Ksat (area-weighted) + field texture check/auger where possible."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-hyporheic-connectivity-floodplain-soil-ksat-cm-hr-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-floodplain-soil-ksat-cm-hr-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "NRCS SSURGO/Web Soil Survey."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Hyporheic connectivity",
+    "metricDataSource": "SSURGO/gSSURGO Ksat (area-weighted) + field texture check/auger where possible.",
+    "metricStatement": "Permeable floodplain soils support subsurface flow paths and exchange.",
+    "description": "Area-weighted saturated hydraulic conductivity (Ksat) of active floodplain soils. Higher is better.",
+    "methodContextRaw": "Desktop + field check",
+    "howToMeasure": "Extract Ksat from soils polygons within floodplain; compute area-weighted mean; verify with field texture test.",
+    "referencesRaw": [
+      "SFARI rapid assessment; NRCS SSURGO/Web Soil Survey."
+    ],
+    "sourceRows": [
+      88
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Limit to frequently inundated floodplain surfaces (exclude upland terraces).",
+        "stratification": "Limit to frequently inundated floodplain surfaces (exclude upland terraces).",
+        "sourceRow": 88,
+        "sourceRows": [
+          88
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0.1",
+          "0.8",
+          "3",
+          "10",
+          "",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.3",
+          "0.7",
+          "1",
+          "",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

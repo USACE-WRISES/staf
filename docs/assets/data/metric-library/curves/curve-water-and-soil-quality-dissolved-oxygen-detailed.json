@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-dissolved-oxygen-detailed",
+  "metricId": "water-and-soil-quality-dissolved-oxygen-detailed",
+  "tier": "detailed",
+  "name": "Dissolved Oxygen reference curve",
+  "axes": {
+    "xLabel": "Dissolved Oxygen",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-dissolved-oxygen-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-dissolved-oxygen-detailed-michigan-sqt-coldwater-and-cold-transitio",
+          "name": "Michigan SQT - Coldwater & Cold-Transitional",
+          "points": [
+            {
+              "x": 6,
+              "y": 0.3,
+              "description": "Field 6, Index 0.3"
+            },
+            {
+              "x": 7,
+              "y": 0.7,
+              "description": "Field 7, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Coldwater & Cold-Transitional",
+            "sourceRow": 285,
+            "sourceRows": [
+              285
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "6",
+              "",
+              "7",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-water-and-soil-quality-dissolved-oxygen-detailed-michigan-sqt-warm-and-warm-transitional",
+          "name": "Michigan SQT - Warm & Warm-transitional",
+          "points": [
+            {
+              "x": 4,
+              "y": 0.3,
+              "description": "Field 4, Index 0.3"
+            },
+            {
+              "x": 5,
+              "y": 0.7,
+              "description": "Field 5, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Warm & Warm-transitional",
+            "sourceRow": 286,
+            "sourceRows": [
+              286
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "4",
+              "",
+              "5",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-dissolved-oxygen-detailed-michigan-sqt-coldwater-and-cold-transitio"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "mappedFunction": "Water & soil quality",
+    "sourceRows": [
+      285,
+      286
+    ]
+  }
+}

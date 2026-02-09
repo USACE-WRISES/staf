@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-shields-departure-factor-relative-to-target-detailed",
+  "name": "Shields Departure Factor (relative to target ?*)",
+  "shortName": "Shields Departure Factor (relative to target ?*)",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Transport capacity is neither persistently under- nor over-capacity relative to bed material.",
+  "descriptionMarkdown": "Departure factor from target Shields stress: M = max(?*bf/0.045, 0.045/?*bf). Lower is better.",
+  "methodContextMarkdown": "Desktop",
+  "howToMeasureMarkdown": "Compute ?*bf; compute departure factor from target value.",
+  "inputs": [
+    {
+      "label": "Shields Departure Factor (relative to target ?*)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Bankfull hydraulics + D50; target ?* (e.g., 0.045) for gravel beds."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-high-flow-dynamics-shields-departure-factor-relative-to-target-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-shields-departure-factor-relative-to-target-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "General gravel-bed transport guidance",
+    "SFARI rapid assessment (concept)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "High flow dynamics",
+    "metricDataSource": "Bankfull hydraulics + D50; target ?* (e.g., 0.045) for gravel beds.",
+    "metricStatement": "Transport capacity is neither persistently under- nor over-capacity relative to bed material.",
+    "description": "Departure factor from target Shields stress: M = max(?*bf/0.045, 0.045/?*bf). Lower is better.",
+    "methodContextRaw": "Desktop",
+    "howToMeasure": "Compute ?*bf; compute departure factor from target value.",
+    "referencesRaw": [
+      "General gravel-bed transport guidance; SFARI rapid assessment (concept)."
+    ],
+    "sourceRows": [
+      53
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Use alternative target ?* for sand-bed or boulder-bed systems.",
+        "stratification": "Use alternative target ?* for sand-bed or boulder-bed systems.",
+        "sourceRow": 53,
+        "sourceRows": [
+          53
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "1",
+          "1.3",
+          "1.8",
+          "2.5",
+          "3.5",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "1",
+          "0.7",
+          "0.3",
+          "0.1",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

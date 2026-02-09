@@ -1,0 +1,337 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-riparian-extent-detailed",
+  "metricId": "carbon-processing-riparian-extent-detailed",
+  "tier": "detailed",
+  "name": "Riparian Extent reference curve",
+  "axes": {
+    "xLabel": "Riparian Extent",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-riparian-extent-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-riparian-extent-detailed-alaska-sqt-unconfined-alluvial-valleys",
+          "name": "Alaska SQT - Unconfined Alluvial Valleys",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Unconfined Alluvial Valleys",
+            "sourceRow": 185,
+            "sourceRows": [
+              185
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-riparian-extent-detailed-alaska-sqt-confined-alluvial-or-colluvial-v-sha",
+          "name": "Alaska SQT - Confined Alluvial or Colluvial/V-Shaped Valleys",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 60,
+              "y": 0.3,
+              "description": "Field 60, Index 0.3"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+            "sourceRow": 186,
+            "sourceRows": [
+              186
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "60",
+              "",
+              "",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-riparian-extent-detailed-colorado-sqt-unconfined-alluvial-valleys",
+          "name": "Colorado SQT - Unconfined Alluvial Valleys",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 30,
+              "y": 0.29,
+              "description": "Field 30, Index 0.29"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Unconfined Alluvial Valleys",
+            "sourceRow": 194,
+            "sourceRows": [
+              194
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "30",
+              "",
+              "",
+              "",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-riparian-extent-detailed-colorado-sqt-confined-alluvial-colluvial-v-shap",
+          "name": "Colorado SQT - Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 60,
+              "y": 0.29,
+              "description": "Field 60, Index 0.29"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+            "sourceRow": 195,
+            "sourceRows": [
+              195
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "60",
+              "",
+              "",
+              "",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-riparian-extent-detailed-wyoming-sqt-unconfined-alluvial-valleys",
+          "name": "Wyoming SQT - Unconfined Alluvial Valleys",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 30,
+              "y": 0.3,
+              "description": "Field 30, Index 0.3"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Unconfined Alluvial Valleys",
+            "sourceRow": 251,
+            "sourceRows": [
+              251
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "30",
+              "",
+              "",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-riparian-extent-detailed-wyoming-sqt-confined-alluvial-colluvial-v-shape",
+          "name": "Wyoming SQT - Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 60,
+              "y": 0.3,
+              "description": "Field 60, Index 0.3"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+            "sourceRow": 252,
+            "sourceRows": [
+              252
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "60",
+              "",
+              "",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-riparian-extent-detailed-alaska-sqt-unconfined-alluvial-valleys"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      185,
+      186,
+      194,
+      195,
+      251,
+      252
+    ]
+  }
+}

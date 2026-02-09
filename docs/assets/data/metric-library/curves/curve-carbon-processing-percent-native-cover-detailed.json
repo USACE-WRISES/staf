@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-percent-native-cover-detailed",
+  "metricId": "carbon-processing-percent-native-cover-detailed",
+  "tier": "detailed",
+  "name": "Percent Native Cover reference curve",
+  "axes": {
+    "xLabel": "Percent Native Cover",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-percent-native-cover-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-percent-native-cover-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 95,
+              "y": 0.7,
+              "description": "Field 95, Index 0.7"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 184,
+            "sourceRows": [
+              184
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "95",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-percent-native-cover-detailed-colorado-sqt",
+          "name": "Colorado SQT",
+          "points": [
+            {
+              "x": 65,
+              "y": 0.3,
+              "description": "Field 65, Index 0.3"
+            },
+            {
+              "x": 91,
+              "y": 0.69,
+              "description": "Field 91, Index 0.69"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 191,
+            "sourceRows": [
+              191
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "65",
+              "91",
+              "",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-percent-native-cover-detailed-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": 65,
+              "y": 0.3,
+              "description": "Field 65, Index 0.3"
+            },
+            {
+              "x": 91,
+              "y": 0.69,
+              "description": "Field 91, Index 0.69"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 248,
+            "sourceRows": [
+              248
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "65",
+              "91",
+              "",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-percent-native-cover-detailed-alaska-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      184,
+      191,
+      248
+    ]
+  }
+}

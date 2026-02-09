@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-percent-impervious-cover-bmp-runoff-detailed",
+  "metricId": "catchment-hydrology-percent-impervious-cover-bmp-runoff-detailed",
+  "tier": "detailed",
+  "name": "Percent Impervious Cover (BMP Runoff) reference curve",
+  "axes": {
+    "xLabel": "Percent Impervious Cover (BMP Runoff)",
+    "yLabel": "Index score",
+    "xUnit": "BMP Runoff",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-percent-impervious-cover-bmp-runoff-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "BMP Runoff",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-percent-impervious-cover-bmp-runoff-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 9,
+              "y": 0.7,
+              "description": "Field 9, Index 0.7"
+            },
+            {
+              "x": 10,
+              "y": 0.69,
+              "description": "Field 10, Index 0.69"
+            },
+            {
+              "x": 25,
+              "y": 0.3,
+              "description": "Field 25, Index 0.3"
+            },
+            {
+              "x": 26,
+              "y": 0.29,
+              "description": "Field 26, Index 0.29"
+            },
+            {
+              "x": 75.779661,
+              "y": 0,
+              "description": "Field 75.77966102, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 11,
+            "sourceRows": [
+              11
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "75.77966102",
+              "26",
+              "25",
+              "10",
+              "9",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-percent-impervious-cover-bmp-runoff-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Catchment hydrology",
+    "sourceRows": [
+      11
+    ]
+  }
+}

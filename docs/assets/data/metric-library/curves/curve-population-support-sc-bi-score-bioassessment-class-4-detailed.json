@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-sc-bi-score-bioassessment-class-4-detailed",
+  "metricId": "population-support-sc-bi-score-bioassessment-class-4-detailed",
+  "tier": "detailed",
+  "name": "SC BI Score - Bioassessment Class 4 reference curve",
+  "axes": {
+    "xLabel": "SC BI Score - Bioassessment Class 4",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-sc-bi-score-bioassessment-class-4-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-sc-bi-score-bioassessment-class-4-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": -1,
+              "y": 0,
+              "description": "Field -1, Index 0"
+            },
+            {
+              "x": 0.3,
+              "y": 0.7,
+              "description": "Field 0.3, Index 0.7"
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 421,
+            "sourceRows": [
+              421
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "-1",
+              "",
+              "",
+              "",
+              "0.3",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-sc-bi-score-bioassessment-class-4-detailed-south-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT",
+    "sourceCitations": [
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      421
+    ]
+  }
+}

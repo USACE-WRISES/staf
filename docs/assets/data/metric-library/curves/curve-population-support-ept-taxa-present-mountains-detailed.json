@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-ept-taxa-present-mountains-detailed",
+  "metricId": "population-support-ept-taxa-present-mountains-detailed",
+  "tier": "detailed",
+  "name": "EPT Taxa Present - Mountains reference curve",
+  "axes": {
+    "xLabel": "EPT Taxa Present - Mountains",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-ept-taxa-present-mountains-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-ept-taxa-present-mountains-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 10,
+              "y": 0,
+              "description": "Field 10, Index 0"
+            },
+            {
+              "x": 19,
+              "y": 0.3,
+              "description": "Field 19, Index 0.3"
+            },
+            {
+              "x": 28,
+              "y": 0.7,
+              "description": "Field 28, Index 0.7"
+            },
+            {
+              "x": 36,
+              "y": 1,
+              "description": "Field 36, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 409,
+            "sourceRows": [
+              409
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "10",
+              "",
+              "19",
+              "",
+              "28",
+              "36",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-ept-taxa-present-mountains-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      409
+    ]
+  }
+}

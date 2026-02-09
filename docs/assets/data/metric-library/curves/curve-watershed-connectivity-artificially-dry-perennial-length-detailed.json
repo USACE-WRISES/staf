@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-artificially-dry-perennial-length-detailed",
+  "metricId": "watershed-connectivity-artificially-dry-perennial-length-detailed",
+  "tier": "detailed",
+  "name": "Artificially Dry Perennial Length (%) reference curve",
+  "axes": {
+    "xLabel": "Artificially Dry Perennial Length (%)",
+    "yLabel": "Index score",
+    "xUnit": "%",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-watershed-connectivity-artificially-dry-perennial-length-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "%",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-artificially-dry-perennial-length-detailed-proposed-derived-from-sf",
+          "name": "Proposed (derived from SFARI rapid curves) - Separate perennial vs naturally intermittent classes (SDAM or local classification).",
+          "points": [
+            {
+              "x": 0.5,
+              "y": 1,
+              "description": "Field 0.5, Index 1"
+            },
+            {
+              "x": 3,
+              "y": 0.7,
+              "description": "Field 3, Index 0.7"
+            },
+            {
+              "x": 15,
+              "y": 0.3,
+              "description": "Field 15, Index 0.3"
+            },
+            {
+              "x": 40,
+              "y": 0.1,
+              "description": "Field 40, Index 0.1"
+            },
+            {
+              "x": 60,
+              "y": 0,
+              "description": "Field 60, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Separate perennial vs naturally intermittent classes (SDAM or local classification).",
+            "sourceRow": 442,
+            "sourceRows": [
+              442
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "0.5",
+              "3",
+              "15",
+              "40",
+              "60",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-artificially-dry-perennial-length-detailed-proposed-derived-from-sf"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "Watershed connectivity",
+    "sourceRows": [
+      442
+    ]
+  }
+}

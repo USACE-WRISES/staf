@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-ept-taxa-present-southeastern-plains-and-middle-atlantic-coastal-plain-detail",
+  "metricId": "population-support-ept-taxa-present-southeastern-plains-and-middle-atlantic-coastal-plain-detail",
+  "tier": "detailed",
+  "name": "EPT Taxa Present - Southeastern Plains and Middle Atlantic Coastal Plain reference curve",
+  "axes": {
+    "xLabel": "EPT Taxa Present - Southeastern Plains and Middle Atlantic Coastal Plain",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-ept-taxa-present-southeastern-plains-and-middle-atlantic-coastal-plain-detail-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-ept-taxa-present-southeastern-plains-and-middle-atlantic-coastal-plain-",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 5,
+              "y": 0.3,
+              "description": "Field 5, Index 0.3"
+            },
+            {
+              "x": 10,
+              "y": 0.7,
+              "description": "Field 10, Index 0.7"
+            },
+            {
+              "x": 15,
+              "y": 1,
+              "description": "Field 15, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 417,
+            "sourceRows": [
+              417
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "5",
+              "",
+              "10",
+              "15",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-ept-taxa-present-southeastern-plains-and-middle-atlantic-coastal-plain-"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT",
+    "sourceCitations": [
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      417
+    ]
+  }
+}

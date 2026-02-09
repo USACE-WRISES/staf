@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-beaver-ponding-density-mismatch-factor-m-beaver-detailed",
+  "name": "Beaver Ponding Density Mismatch Factor (M_beaver)",
+  "shortName": "Beaver Ponding Density Mismatch Factor (M_beaver)",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Beaver/ponding occurs near expected levels, enhancing storage without excessive fragmentation.",
+  "descriptionMarkdown": "Mismatch factor from expected beaver ponding density: M = max(O/E, E/O). Lower is better; minimum is 1.",
+  "methodContextMarkdown": "Field + desktop",
+  "howToMeasureMarkdown": "Estimate observed ponding density; estimate expected (from reference/capacity); compute mismatch factor.",
+  "inputs": [
+    {
+      "label": "Beaver Ponding Density Mismatch Factor (M_beaver)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field tally of beaver dams/ponds + predicted capacity model (O/E) or reference reach comparison."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-beaver-ponding-density-mismatch-factor-m-beaver-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-beaver-ponding-density-mismatch-factor-m-beaver-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "beaver capacity/analog methods (where available)."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Surface water storage",
+    "metricDataSource": "Field tally of beaver dams/ponds + predicted capacity model (O/E) or reference reach comparison.",
+    "metricStatement": "Beaver/ponding occurs near expected levels, enhancing storage without excessive fragmentation.",
+    "description": "Mismatch factor from expected beaver ponding density: M = max(O/E, E/O). Lower is better; minimum is 1.",
+    "methodContextRaw": "Field + desktop",
+    "howToMeasure": "Estimate observed ponding density; estimate expected (from reference/capacity); compute mismatch factor.",
+    "referencesRaw": [
+      "SFARI rapid assessment; beaver capacity/analog methods (where available)."
+    ],
+    "sourceRows": [
+      28
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Use beaver suitability/capacity stratification; separate naturally low-capacity systems.",
+        "stratification": "Use beaver suitability/capacity stratification; separate naturally low-capacity systems.",
+        "sourceRow": 28,
+        "sourceRows": [
+          28
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "1",
+          "1.5",
+          "2.5",
+          "4",
+          "6",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "1",
+          "0.7",
+          "0.3",
+          "0.1",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

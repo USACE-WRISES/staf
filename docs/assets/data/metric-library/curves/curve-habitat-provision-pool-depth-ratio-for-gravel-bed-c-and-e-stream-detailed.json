@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-pool-depth-ratio-for-gravel-bed-c-and-e-stream-detailed",
+  "metricId": "habitat-provision-pool-depth-ratio-for-gravel-bed-c-and-e-stream-detailed",
+  "tier": "detailed",
+  "name": "Pool Depth Ratio for gravel bed C and E stream reference curve",
+  "axes": {
+    "xLabel": "Pool Depth Ratio for gravel bed C and E stream",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-pool-depth-ratio-for-gravel-bed-c-and-e-stream-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-for-gravel-bed-c-and-e-stream-detailed-north-carolina-s",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 1.1,
+              "y": 0,
+              "description": "Field 1.1, Index 0"
+            },
+            {
+              "x": 1.2,
+              "y": 0.3,
+              "description": "Field 1.2, Index 0.3"
+            },
+            {
+              "x": 1.51,
+              "y": 0.7,
+              "description": "Field 1.51, Index 0.7"
+            },
+            {
+              "x": 1.74254,
+              "y": 1,
+              "description": "Field 1.742540494, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 341,
+            "sourceRows": [
+              341
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "1.1",
+              "",
+              "1.2",
+              "",
+              "1.51",
+              "1.742540494",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-pool-depth-ratio-for-gravel-bed-c-and-e-stream-detailed-north-carolina-s"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      341
+    ]
+  }
+}

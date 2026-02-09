@@ -1,0 +1,471 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed",
+  "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed",
+  "tier": "detailed",
+  "name": "Bank Height Ratio (BHR) reference curve",
+  "axes": {
+    "xLabel": "Bank Height Ratio (BHR)",
+    "yLabel": "Index score",
+    "xUnit": "BHR",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "BHR",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 96,
+            "sourceRows": [
+              96
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "1.5",
+              "",
+              "",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-colorado-sqt-all-regimes",
+          "name": "Colorado SQT - All Regimes",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "All Regimes",
+            "sourceRow": 102,
+            "sourceRows": [
+              102
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "1.5",
+              "",
+              "",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-colorado-sqt-transport",
+          "name": "Colorado SQT - Transport",
+          "points": [
+            {
+              "x": 0.8,
+              "y": 0.7,
+              "description": "Field 0.8, Index 0.7"
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Transport",
+            "sourceRow": 103,
+            "sourceRows": [
+              103
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "0.8",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 106,
+            "sourceRows": [
+              106
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "1.5",
+              "",
+              "",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-minnesota-sqt",
+          "name": "Minnesota SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.2,
+              "y": 0.7,
+              "description": "Field 1.2, Index 0.7"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 109,
+            "sourceRows": [
+              109
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "1.5",
+              "",
+              "1.2",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.2,
+              "y": 0.7,
+              "description": "Field 1.2, Index 0.7"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            },
+            {
+              "x": 1.6,
+              "y": 0.2,
+              "description": "Field 1.6, Index 0.2"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 112,
+            "sourceRows": [
+              112
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "",
+              "1.6",
+              "1.5",
+              "",
+              "1.2",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 120,
+            "sourceRows": [
+              120
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "1.5",
+              "",
+              "",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 125,
+            "sourceRows": [
+              125
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "1.5",
+              "",
+              "",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 130,
+            "sourceRows": [
+              130
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "1.5",
+              "",
+              "",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-alaska-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Michigan SQT; Minnesota SQT; North Carolina SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Channel and floodplain dynamics",
+    "sourceRows": [
+      96,
+      102,
+      103,
+      106,
+      109,
+      112,
+      120,
+      125,
+      130
+    ]
+  }
+}

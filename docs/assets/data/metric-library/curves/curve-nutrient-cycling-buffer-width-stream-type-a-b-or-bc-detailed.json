@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-buffer-width-stream-type-a-b-or-bc-detailed",
+  "metricId": "nutrient-cycling-buffer-width-stream-type-a-b-or-bc-detailed",
+  "tier": "detailed",
+  "name": "Buffer Width - Stream Type A, B, or Bc reference curve",
+  "axes": {
+    "xLabel": "Buffer Width - Stream Type A, B, or Bc",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-buffer-width-stream-type-a-b-or-bc-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-buffer-width-stream-type-a-b-or-bc-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 13,
+              "y": 0.3,
+              "description": "Field 13, Index 0.3"
+            },
+            {
+              "x": 30,
+              "y": 0.7,
+              "description": "Field 30, Index 0.7"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 260,
+            "sourceRows": [
+              260
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "13",
+              "",
+              "30",
+              "50",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-buffer-width-stream-type-a-b-or-bc-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Nutrient cycling",
+    "sourceRows": [
+      260
+    ]
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-herbaceous-cover-detailed",
+  "metricId": "carbon-processing-herbaceous-cover-detailed",
+  "tier": "detailed",
+  "name": "Herbaceous Cover reference curve",
+  "axes": {
+    "xLabel": "Herbaceous Cover",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-herbaceous-cover-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-herbaceous-cover-detailed-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 80,
+              "y": 1,
+              "description": "Field 80, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Multiple SQTs",
+            "sourceRow": 201,
+            "sourceRows": [
+              201,
+              242
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT",
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "80",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-herbaceous-cover-detailed-multiple-sqts"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT; Wisconsin SQT",
+    "sourceCitations": [
+      "Michigan SQT",
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      201,
+      242
+    ]
+  }
+}

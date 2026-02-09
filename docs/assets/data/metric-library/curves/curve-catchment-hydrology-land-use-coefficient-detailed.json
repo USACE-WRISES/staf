@@ -1,0 +1,345 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-land-use-coefficient-detailed",
+  "metricId": "catchment-hydrology-land-use-coefficient-detailed",
+  "tier": "detailed",
+  "name": "Land Use Coefficient reference curve",
+  "axes": {
+    "xLabel": "Land Use Coefficient",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-land-use-coefficient-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-land-use-coefficient-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 9,
+              "y": 1,
+              "description": "Field 9, Index 1"
+            },
+            {
+              "x": 16,
+              "y": 0.7,
+              "description": "Field 16, Index 0.7"
+            },
+            {
+              "x": 22,
+              "y": 0.3,
+              "description": "Field 22, Index 0.3"
+            },
+            {
+              "x": 86,
+              "y": 0,
+              "description": "Field 86, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 2,
+            "sourceRows": [
+              2
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "86",
+              "",
+              "22",
+              "",
+              "16",
+              "9",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-land-use-coefficient-detailed-colorado-sqt",
+          "name": "Colorado SQT",
+          "points": [
+            {
+              "x": 55,
+              "y": 1,
+              "description": "Field 55, Index 1"
+            },
+            {
+              "x": 62,
+              "y": 0.7,
+              "description": "Field 62, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 5,
+            "sourceRows": [
+              5
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "62",
+              "55",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-land-use-coefficient-detailed-minnesota-sqt",
+          "name": "Minnesota SQT",
+          "points": [
+            {
+              "x": 40,
+              "y": 1,
+              "description": "Field 40, Index 1"
+            },
+            {
+              "x": 68,
+              "y": 0.7,
+              "description": "Field 68, Index 0.7"
+            },
+            {
+              "x": 80,
+              "y": 0,
+              "description": "Field 80, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 8,
+            "sourceRows": [
+              8
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "80",
+              "",
+              "",
+              "",
+              "68",
+              "40",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-land-use-coefficient-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 55,
+              "y": 1,
+              "description": "Field 55, Index 1"
+            },
+            {
+              "x": 62,
+              "y": 0.7,
+              "description": "Field 62, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 12,
+            "sourceRows": [
+              12
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "62",
+              "55",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-land-use-coefficient-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 55,
+              "y": 1,
+              "description": "Field 55, Index 1"
+            },
+            {
+              "x": 68,
+              "y": 0.7,
+              "description": "Field 68, Index 0.7"
+            },
+            {
+              "x": 75,
+              "y": 0.3,
+              "description": "Field 75, Index 0.3"
+            },
+            {
+              "x": 98,
+              "y": 0,
+              "description": "Field 98, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 13,
+            "sourceRows": [
+              13
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "98",
+              "",
+              "75",
+              "",
+              "68",
+              "55",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-catchment-hydrology-land-use-coefficient-detailed-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": 45,
+              "y": 1,
+              "description": "Field 45, Index 1"
+            },
+            {
+              "x": 62,
+              "y": 0.7,
+              "description": "Field 62, Index 0.7"
+            },
+            {
+              "x": 80,
+              "y": 0,
+              "description": "Field 80, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 14,
+            "sourceRows": [
+              14
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "80",
+              "",
+              "",
+              "",
+              "62",
+              "45",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-land-use-coefficient-detailed-alaska-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Minnesota SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Minnesota SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Catchment hydrology",
+    "sourceRows": [
+      2,
+      5,
+      8,
+      12,
+      13,
+      14
+    ]
+  }
+}

@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-maximum-weekly-average-temperature-mwat-detailed",
+  "metricId": "light-and-thermal-regime-maximum-weekly-average-temperature-mwat-detailed",
+  "tier": "detailed",
+  "name": "Maximum Weekly Average Temperature (MWAT) reference curve",
+  "axes": {
+    "xLabel": "Maximum Weekly Average Temperature (MWAT)",
+    "yLabel": "Index score",
+    "xUnit": "MWAT",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-maximum-weekly-average-temperature-mwat-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "MWAT",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-maximum-weekly-average-temperature-mwat-detailed-wyoming-sqt-tier",
+          "name": "Wyoming SQT - Tier I (Cold)",
+          "points": [
+            {
+              "x": 15.4,
+              "y": 0.7,
+              "description": "Field 15.4, Index 0.7"
+            },
+            {
+              "x": 18.1,
+              "y": 0.3,
+              "description": "Field 18.1, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Tier I (Cold)",
+            "sourceRow": 179,
+            "sourceRows": [
+              179
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "18.1",
+              "",
+              "15.4",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-maximum-weekly-average-temperature-mwat-detailed-wyoming-sqt-tier-2",
+          "name": "Wyoming SQT - Tier II (Cold-Cool)",
+          "points": [
+            {
+              "x": 17.7,
+              "y": 0.7,
+              "description": "Field 17.7, Index 0.7"
+            },
+            {
+              "x": 19.3,
+              "y": 0.3,
+              "description": "Field 19.3, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Tier II (Cold-Cool)",
+            "sourceRow": 180,
+            "sourceRows": [
+              180
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "19.3",
+              "",
+              "17.7",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-maximum-weekly-average-temperature-mwat-detailed-wyoming-sqt-tier-3",
+          "name": "Wyoming SQT - Tier III (Cool)",
+          "points": [
+            {
+              "x": 19.9,
+              "y": 0.7,
+              "description": "Field 19.9, Index 0.7"
+            },
+            {
+              "x": 22,
+              "y": 0.3,
+              "description": "Field 22, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Tier III (Cool)",
+            "sourceRow": 181,
+            "sourceRows": [
+              181
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "22",
+              "",
+              "19.9",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-maximum-weekly-average-temperature-mwat-detailed-wyoming-sqt-tier-4",
+          "name": "Wyoming SQT - Tier IV (Cool-Warm)",
+          "points": [
+            {
+              "x": 24.4,
+              "y": 0.7,
+              "description": "Field 24.4, Index 0.7"
+            },
+            {
+              "x": 26,
+              "y": 0.3,
+              "description": "Field 26, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Tier IV (Cool-Warm)",
+            "sourceRow": 182,
+            "sourceRows": [
+              182
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "26",
+              "",
+              "24.4",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-maximum-weekly-average-temperature-mwat-detailed-wyoming-sqt-tier-5",
+          "name": "Wyoming SQT - Tier V (Warm)",
+          "points": [
+            {
+              "x": 27.3,
+              "y": 0.7,
+              "description": "Field 27.3, Index 0.7"
+            },
+            {
+              "x": 29,
+              "y": 0.3,
+              "description": "Field 29, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Tier V (Warm)",
+            "sourceRow": 183,
+            "sourceRows": [
+              183
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "29",
+              "",
+              "27.3",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-maximum-weekly-average-temperature-mwat-detailed-wyoming-sqt-tier"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wyoming SQT",
+    "sourceCitations": [
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Light & thermal regime",
+    "sourceRows": [
+      179,
+      180,
+      181,
+      182,
+      183
+    ]
+  }
+}

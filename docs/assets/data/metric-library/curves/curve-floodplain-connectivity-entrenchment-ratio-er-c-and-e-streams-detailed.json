@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-floodplain-connectivity-entrenchment-ratio-er-c-and-e-streams-detailed",
+  "metricId": "floodplain-connectivity-entrenchment-ratio-er-c-and-e-streams-detailed",
+  "tier": "detailed",
+  "name": "Entrenchment Ratio (ER) C and E Streams reference curve",
+  "axes": {
+    "xLabel": "Entrenchment Ratio (ER) C and E Streams",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-entrenchment-ratio-er-c-and-e-streams-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-c-and-e-streams-detailed-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.4,
+              "y": 0.7,
+              "description": "Field 2.4, Index 0.7"
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Multiple SQTs",
+            "sourceRow": 67,
+            "sourceRows": [
+              67,
+              72
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT",
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "2.4",
+              "5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-entrenchment-ratio-er-c-and-e-streams-detailed-multiple-sqts"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT; North Carolina SQT",
+    "sourceCitations": [
+      "Michigan SQT",
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Floodplain connectivity",
+    "sourceRows": [
+      67,
+      72
+    ]
+  }
+}

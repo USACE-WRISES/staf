@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-co-mmi-detailed",
+  "metricId": "population-support-co-mmi-detailed",
+  "tier": "detailed",
+  "name": "CO MMI reference curve",
+  "axes": {
+    "xLabel": "CO MMI",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-co-mmi-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-co-mmi-detailed-colorado-sqt-biotype-1",
+          "name": "Colorado SQT - Biotype 1",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 34,
+              "y": 0.29,
+              "description": "Field 34, Index 0.29"
+            },
+            {
+              "x": 45,
+              "y": 0.7,
+              "description": "Field 45, Index 0.7"
+            },
+            {
+              "x": 56,
+              "y": 1,
+              "description": "Field 56, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Biotype 1",
+            "sourceRow": 380,
+            "sourceRows": [
+              380
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "34",
+              "",
+              "",
+              "45",
+              "56",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-co-mmi-detailed-colorado-sqt-biotype-2",
+          "name": "Colorado SQT - Biotype 2",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 40,
+              "y": 0.29,
+              "description": "Field 40, Index 0.29"
+            },
+            {
+              "x": 48,
+              "y": 0.7,
+              "description": "Field 48, Index 0.7"
+            },
+            {
+              "x": 62,
+              "y": 1,
+              "description": "Field 62, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Biotype 2",
+            "sourceRow": 381,
+            "sourceRows": [
+              381
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "40",
+              "",
+              "",
+              "48",
+              "62",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-co-mmi-detailed-colorado-sqt-biotype-3",
+          "name": "Colorado SQT - Biotype 3",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 29,
+              "y": 0.29,
+              "description": "Field 29, Index 0.29"
+            },
+            {
+              "x": 42,
+              "y": 0.7,
+              "description": "Field 42, Index 0.7"
+            },
+            {
+              "x": 51,
+              "y": 1,
+              "description": "Field 51, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Biotype 3",
+            "sourceRow": 382,
+            "sourceRows": [
+              382
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "29",
+              "",
+              "",
+              "42",
+              "51",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-co-mmi-detailed-colorado-sqt-biotype-1"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT",
+    "sourceCitations": [
+      "Colorado SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      380,
+      381,
+      382
+    ]
+  }
+}

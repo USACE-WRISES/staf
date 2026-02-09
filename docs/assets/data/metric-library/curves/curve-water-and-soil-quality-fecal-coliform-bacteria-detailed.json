@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-fecal-coliform-bacteria-detailed",
+  "metricId": "water-and-soil-quality-fecal-coliform-bacteria-detailed",
+  "tier": "detailed",
+  "name": "Fecal Coliform Bacteria reference curve",
+  "axes": {
+    "xLabel": "Fecal Coliform Bacteria",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-fecal-coliform-bacteria-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-fecal-coliform-bacteria-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 85.275725,
+              "y": 0.7,
+              "description": "Field 85.27572484, Index 0.7"
+            },
+            {
+              "x": 199,
+              "y": 0.3,
+              "description": "Field 199, Index 0.3"
+            },
+            {
+              "x": 284.252416,
+              "y": 0,
+              "description": "Field 284.2524161, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 295,
+            "sourceRows": [
+              295
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "284.2524161",
+              "",
+              "199",
+              "",
+              "85.27572484",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-fecal-coliform-bacteria-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Water & soil quality",
+    "sourceRows": [
+      295
+    ]
+  }
+}

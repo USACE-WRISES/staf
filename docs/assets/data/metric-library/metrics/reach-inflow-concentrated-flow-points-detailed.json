@@ -1,0 +1,244 @@
+{
+  "schemaVersion": 1,
+  "metricId": "reach-inflow-concentrated-flow-points-detailed",
+  "name": "Concentrated Flow Points",
+  "shortName": "Concentrated Flow Points",
+  "discipline": "Hydrology",
+  "function": "Reach inflow",
+  "functionStatement": "Local inputs from tributaries, ditches, and pipes do not create harmful peaks or pollution and support diverse habitat conditions.",
+  "descriptionMarkdown": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+  "howToMeasureMarkdown": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+  "inputs": [
+    {
+      "label": "Concentrated Flow Points",
+      "type": "field (with desktop pre-screen)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field reconnaissance and/or municipal outfall/ditch GIS with imagery validation."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-reach-inflow-concentrated-flow-points-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-reach-inflow-concentrated-flow-points-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "Municipal MS4/NPDES outfall layers where available",
+    "high-resolution aerial imagery",
+    "Michigan SQT",
+    "North Carolina SQT",
+    "South Carolina SQT",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Hydrology",
+    "Reach inflow",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Michigan SQT; North Carolina SQT; South Carolina SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Michigan SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Wyoming SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Reach inflow",
+    "metricDataSource": "Field reconnaissance and/or municipal outfall/ditch GIS with imagery validation.",
+    "metricStatement": "Local inputs from tributaries, ditches, and pipes do not create harmful peaks or pollution and support diverse habitat conditions.",
+    "description": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (with desktop pre-screen)",
+    "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+    "referencesRaw": [
+      "Colorado SQT; Municipal MS4/NPDES outfall layers where available; high-resolution aerial imagery",
+      "Michigan SQT; Municipal MS4/NPDES outfall layers where available; high-resolution aerial imagery",
+      "North Carolina SQT; Municipal MS4/NPDES outfall layers where available; high-resolution aerial imagery",
+      "South Carolina SQT; Municipal MS4/NPDES outfall layers where available; high-resolution aerial imagery",
+      "Wyoming SQT; Municipal MS4/NPDES outfall layers where available; high-resolution aerial imagery"
+    ],
+    "sourceRows": [
+      35,
+      36,
+      38,
+      39,
+      41
+    ],
+    "stratifications": [
+      {
+        "name": "Colorado SQT",
+        "stratification": "",
+        "sourceRow": 35,
+        "sourceRows": [
+          35
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "1",
+          "",
+          "0",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Michigan SQT",
+        "stratification": "",
+        "sourceRow": 36,
+        "sourceRows": [
+          36
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "1",
+          "0",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "North Carolina SQT",
+        "stratification": "",
+        "sourceRow": 38,
+        "sourceRows": [
+          38
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          ">3",
+          "",
+          "3",
+          "1",
+          "",
+          "0",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "South Carolina SQT",
+        "stratification": "",
+        "sourceRow": 39,
+        "sourceRows": [
+          39
+        ],
+        "sourceCitation": "South Carolina SQT",
+        "sourceCitations": [
+          "South Carolina SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "1",
+          "0",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT",
+        "stratification": "",
+        "sourceRow": 41,
+        "sourceRows": [
+          41
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "1",
+          "",
+          "0",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}
