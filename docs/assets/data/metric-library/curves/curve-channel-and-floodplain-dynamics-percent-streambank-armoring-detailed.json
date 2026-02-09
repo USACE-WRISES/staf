@@ -1,0 +1,278 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed",
+  "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring-detailed",
+  "tier": "detailed",
+  "name": "Percent Streambank Armoring reference curve",
+  "axes": {
+    "xLabel": "Percent Streambank Armoring",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 30,
+              "y": 0,
+              "description": "Field 30, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 98,
+            "sourceRows": [
+              98
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "30",
+              "",
+              "",
+              "",
+              "",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 9,
+              "y": 0.7,
+              "description": "Field 9, Index 0.7"
+            },
+            {
+              "x": 21,
+              "y": 0.3,
+              "description": "Field 21, Index 0.3"
+            },
+            {
+              "x": 30,
+              "y": 0,
+              "description": "Field 30, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 108,
+            "sourceRows": [
+              108
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "30",
+              "",
+              "21",
+              "",
+              "9",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 30,
+              "y": 0,
+              "description": "Field 30, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 123,
+            "sourceRows": [
+              123
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "30",
+              "",
+              "",
+              "",
+              "",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 50,
+              "y": 0,
+              "description": "Field 50, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 127,
+            "sourceRows": [
+              127
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "50",
+              "",
+              "",
+              "",
+              "",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 30,
+              "y": 0,
+              "description": "Field 30, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 131,
+            "sourceRows": [
+              131
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "30",
+              "",
+              "",
+              "",
+              "",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed-alaska-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Michigan SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Michigan SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Channel and floodplain dynamics",
+    "sourceRows": [
+      98,
+      108,
+      123,
+      127,
+      131
+    ]
+  }
+}

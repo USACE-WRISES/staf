@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-floodplain-connectivity-entrenchment-ratio-er-c-stream-types-detailed",
+  "metricId": "floodplain-connectivity-entrenchment-ratio-er-c-stream-types-detailed",
+  "tier": "detailed",
+  "name": "Entrenchment Ratio (ER) C Stream Types reference curve",
+  "axes": {
+    "xLabel": "Entrenchment Ratio (ER) C Stream Types",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-entrenchment-ratio-er-c-stream-types-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-c-stream-types-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 77,
+            "sourceRows": [
+              77
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-c-stream-types-detailed-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 4.4,
+              "y": 1,
+              "description": "Field 4.4, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 81,
+            "sourceRows": [
+              81
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "4.4",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-entrenchment-ratio-er-c-stream-types-detailed-wisconsin-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Floodplain connectivity",
+    "sourceRows": [
+      77,
+      81
+    ]
+  }
+}

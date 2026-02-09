@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-community-dynamics-fish-species-richness-detailed",
+  "metricId": "community-dynamics-fish-species-richness-detailed",
+  "tier": "detailed",
+  "name": "Fish Species Richness reference curve",
+  "axes": {
+    "xLabel": "Fish Species Richness",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-fish-species-richness-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-community-dynamics-fish-species-richness-detailed-alaska-sqt-anadromous",
+          "name": "Alaska SQT - Anadromous",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 80,
+              "y": 0.7,
+              "description": "Field 80, Index 0.7"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Anadromous",
+            "sourceRow": 436,
+            "sourceRows": [
+              436
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "80",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-community-dynamics-fish-species-richness-detailed-alaska-sqt-non-anadromous",
+          "name": "Alaska SQT - Non-anadromous",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 60,
+              "y": 0.7,
+              "description": "Field 60, Index 0.7"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Non-anadromous",
+            "sourceRow": 437,
+            "sourceRows": [
+              437
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "60",
+              "100",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-fish-species-richness-detailed-alaska-sqt-anadromous"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "mappedFunction": "Community dynamics",
+    "sourceRows": [
+      436,
+      437
+    ]
+  }
+}

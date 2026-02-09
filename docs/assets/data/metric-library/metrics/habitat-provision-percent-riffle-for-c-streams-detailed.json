@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-percent-riffle-for-c-streams-detailed",
+  "name": "Percent Riffle for C streams",
+  "shortName": "Percent Riffle for C streams",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+  "descriptionMarkdown": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+  "inputs": [
+    {
+      "label": "Percent Riffle for C streams",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-habitat-provision-percent-riffle-for-c-streams-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-percent-riffle-for-c-streams-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "South Carolina SQT",
+    "Rapid habitat assessment/geomorphic unit mapping methods"
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT",
+    "sourceCitations": [
+      "South Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Habitat provision",
+    "metricDataSource": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support.",
+    "metricStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+    "description": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+    "methodContextRaw": "Context: Channel\nMethod: Field",
+    "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+    "referencesRaw": [
+      "South Carolina SQT; Rapid habitat assessment/geomorphic unit mapping methods"
+    ],
+    "sourceRows": [
+      358
+    ],
+    "stratifications": [
+      {
+        "name": "South Carolina SQT",
+        "stratification": "",
+        "sourceRow": 358,
+        "sourceRows": [
+          358
+        ],
+        "sourceCitation": "South Carolina SQT",
+        "sourceCitations": [
+          "South Carolina SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "",
+          "45",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-summer-daily-maximum-f-detailed",
+  "metricId": "light-and-thermal-regime-summer-daily-maximum-f-detailed",
+  "tier": "detailed",
+  "name": "Summer Daily Maximum (°F) reference curve",
+  "axes": {
+    "xLabel": "Summer Daily Maximum (°F)",
+    "yLabel": "Index score",
+    "xUnit": "°F",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-summer-daily-maximum-f-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "°F",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-summer-daily-maximum-f-detailed-north-carolina-sqt-coldwater",
+          "name": "North Carolina SQT - Coldwater",
+          "points": [
+            {
+              "x": 58,
+              "y": 1,
+              "description": "Field 58, Index 1"
+            },
+            {
+              "x": 64,
+              "y": 0.7,
+              "description": "Field 64, Index 0.7"
+            },
+            {
+              "x": 77,
+              "y": 0,
+              "description": "Field 77, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Coldwater",
+            "sourceRow": 170,
+            "sourceRows": [
+              170
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "77",
+              "",
+              "",
+              "",
+              "64",
+              "58",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-summer-daily-maximum-f-detailed-north-carolina-sqt-coolwater",
+          "name": "North Carolina SQT - Coolwater",
+          "points": [
+            {
+              "x": 67,
+              "y": 1,
+              "description": "Field 67, Index 1"
+            },
+            {
+              "x": 97,
+              "y": 0,
+              "description": "Field 97, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Coolwater",
+            "sourceRow": 171,
+            "sourceRows": [
+              171
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "97",
+              "",
+              "",
+              "",
+              "",
+              "67",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-summer-daily-maximum-f-detailed-north-carolina-sqt-coldwater"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Light & thermal regime",
+    "sourceRows": [
+      170,
+      171
+    ]
+  }
+}

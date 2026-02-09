@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed",
+  "name": "Bankfull Freeboard to Floodplain (m)",
+  "shortName": "Bankfull Freeboard to Floodplain (m)",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Banks/benches are positioned so moderate floods access the floodplain.",
+  "descriptionMarkdown": "Vertical distance from bankfull stage to floodplain/bench activation elevation (lower is better).",
+  "methodContextMarkdown": "Field + LiDAR",
+  "howToMeasureMarkdown": "Identify bankfull elevation; measure to floodplain/bench surface; compute freeboard.",
+  "inputs": [
+    {
+      "label": "Bankfull Freeboard to Floodplain (m)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field survey or LiDAR cross-sections to floodplain edge; bankfull indicators."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Bankfull identification guides",
+    "LiDAR cross-section methods."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "High flow dynamics",
+    "metricDataSource": "Field survey or LiDAR cross-sections to floodplain edge; bankfull indicators.",
+    "metricStatement": "Banks/benches are positioned so moderate floods access the floodplain.",
+    "description": "Vertical distance from bankfull stage to floodplain/bench activation elevation (lower is better).",
+    "methodContextRaw": "Field + LiDAR",
+    "howToMeasure": "Identify bankfull elevation; measure to floodplain/bench surface; compute freeboard.",
+    "referencesRaw": [
+      "Bankfull identification guides; LiDAR cross-section methods."
+    ],
+    "sourceRows": [
+      55
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Measure at representative cross-sections; separate by stream type.",
+        "stratification": "Measure at representative cross-sections; separate by stream type.",
+        "sourceRow": 55,
+        "sourceRows": [
+          55
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0",
+          "0.3",
+          "0.7",
+          "1.2",
+          "2",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "1",
+          "0.7",
+          "0.3",
+          "0.1",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

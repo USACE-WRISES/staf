@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-tss-detailed",
+  "metricId": "water-and-soil-quality-tss-detailed",
+  "tier": "detailed",
+  "name": "TSS reference curve",
+  "axes": {
+    "xLabel": "TSS",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-tss-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-tss-detailed-minnesota-sqt-2a",
+          "name": "Minnesota SQT - 2A / -",
+          "points": [
+            {
+              "x": 7.5,
+              "y": 1,
+              "description": "Field 7.5, Index 1"
+            },
+            {
+              "x": 9,
+              "y": 0.7,
+              "description": "Field 9, Index 0.7"
+            },
+            {
+              "x": 11,
+              "y": 0.3,
+              "description": "Field 11, Index 0.3"
+            },
+            {
+              "x": 12.5,
+              "y": 0,
+              "description": "Field 12.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "2A / -",
+            "sourceRow": 289,
+            "sourceRows": [
+              289
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "12.5",
+              "",
+              "11",
+              "",
+              "9",
+              "7.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-water-and-soil-quality-tss-detailed-minnesota-sqt-2b-2bd-north",
+          "name": "Minnesota SQT - 2B/2Bd - North",
+          "points": [
+            {
+              "x": 11.3,
+              "y": 1,
+              "description": "Field 11.3, Index 1"
+            },
+            {
+              "x": 13.5,
+              "y": 0.7,
+              "description": "Field 13.5, Index 0.7"
+            },
+            {
+              "x": 16.5,
+              "y": 0.3,
+              "description": "Field 16.5, Index 0.3"
+            },
+            {
+              "x": 18.8,
+              "y": 0,
+              "description": "Field 18.8, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "2B/2Bd - North",
+            "sourceRow": 290,
+            "sourceRows": [
+              290
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "18.8",
+              "",
+              "16.5",
+              "",
+              "13.5",
+              "11.3",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-water-and-soil-quality-tss-detailed-minnesota-sqt-2b-2bd-central",
+          "name": "Minnesota SQT - 2B/2Bd - Central",
+          "points": [
+            {
+              "x": 22.5,
+              "y": 1,
+              "description": "Field 22.5, Index 1"
+            },
+            {
+              "x": 27,
+              "y": 0.7,
+              "description": "Field 27, Index 0.7"
+            },
+            {
+              "x": 33,
+              "y": 0.3,
+              "description": "Field 33, Index 0.3"
+            },
+            {
+              "x": 37.5,
+              "y": 0,
+              "description": "Field 37.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "2B/2Bd - Central",
+            "sourceRow": 291,
+            "sourceRows": [
+              291
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "37.5",
+              "",
+              "33",
+              "",
+              "27",
+              "22.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-water-and-soil-quality-tss-detailed-minnesota-sqt-2b-2bd-south",
+          "name": "Minnesota SQT - 2B/2Bd - South",
+          "points": [
+            {
+              "x": 48.7,
+              "y": 1,
+              "description": "Field 48.7, Index 1"
+            },
+            {
+              "x": 58.5,
+              "y": 0.7,
+              "description": "Field 58.5, Index 0.7"
+            },
+            {
+              "x": 71.5,
+              "y": 0.3,
+              "description": "Field 71.5, Index 0.3"
+            },
+            {
+              "x": 81.2,
+              "y": 0,
+              "description": "Field 81.2, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "2B/2Bd - South",
+            "sourceRow": 292,
+            "sourceRows": [
+              292
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "81.2",
+              "",
+              "71.5",
+              "",
+              "58.5",
+              "48.7",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-tss-detailed-minnesota-sqt-2a"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Minnesota SQT",
+    "sourceCitations": [
+      "Minnesota SQT"
+    ],
+    "mappedFunction": "Water & soil quality",
+    "sourceRows": [
+      289,
+      290,
+      291,
+      292
+    ]
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-effective-impervious-cover-bmp-runoff-detailed",
+  "metricId": "catchment-hydrology-effective-impervious-cover-bmp-runoff-detailed",
+  "tier": "detailed",
+  "name": "Effective Impervious Cover (BMP Runoff) reference curve",
+  "axes": {
+    "xLabel": "Effective Impervious Cover (BMP Runoff)",
+    "yLabel": "Index score",
+    "xUnit": "BMP Runoff",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-effective-impervious-cover-bmp-runoff-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "BMP Runoff",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-effective-impervious-cover-bmp-runoff-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 5,
+              "y": 0.7,
+              "description": "Field 5, Index 0.7"
+            },
+            {
+              "x": 20,
+              "y": 0.3,
+              "description": "Field 20, Index 0.3"
+            },
+            {
+              "x": 60,
+              "y": 0.01,
+              "description": "Field 60, Index 0.01"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 7,
+            "sourceRows": [
+              7
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "60",
+              "",
+              "20",
+              "",
+              "5",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0.01",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-effective-impervious-cover-bmp-runoff-detailed-michigan-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "mappedFunction": "Catchment hydrology",
+    "sourceRows": [
+      7
+    ]
+  }
+}

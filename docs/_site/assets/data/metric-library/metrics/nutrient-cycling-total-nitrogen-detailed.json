@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-total-nitrogen-detailed",
+  "name": "Total Nitrogen",
+  "shortName": "Total Nitrogen",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient cycling",
+  "functionStatement": "Nitrogen and phosphorus inputs and transformations support productivity without causing eutrophication or nuisance growth.",
+  "descriptionMarkdown": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+  "inputs": [
+    {
+      "label": "Total Nitrogen",
+      "type": "field (sampling) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Laboratory nutrient analysis (grab/automated samples) and/or bioindicator index outputs (e.g., diatom indices)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-nutrient-cycling-total-nitrogen-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-total-nitrogen-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "North Carolina SQT",
+    "EPA Water Quality Portal nutrient data where available",
+    "diatom index calculation references where applicable",
+    "South Carolina SQT"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Nutrient cycling",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT; South Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT",
+      "South Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Nutrient cycling",
+    "metricDataSource": "Laboratory nutrient analysis (grab/automated samples) and/or bioindicator index outputs (e.g., diatom indices).",
+    "metricStatement": "Nitrogen and phosphorus inputs and transformations support productivity without causing eutrophication or nuisance growth.",
+    "description": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (sampling) and/or Desktop (data compilation)",
+    "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+    "referencesRaw": [
+      "North Carolina SQT; EPA Water Quality Portal nutrient data where available; diatom index calculation references where applicable",
+      "South Carolina SQT; EPA Water Quality Portal nutrient data where available; diatom index calculation references where applicable"
+    ],
+    "sourceRows": [
+      262,
+      264
+    ],
+    "stratifications": [
+      {
+        "name": "North Carolina SQT",
+        "stratification": "",
+        "sourceRow": 262,
+        "sourceRows": [
+          262
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "3.9",
+          "",
+          "2",
+          "",
+          "0.7",
+          "0",
+          ""
+        ],
+        "indexValues": [
+          "0.082174",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "South Carolina SQT",
+        "stratification": "",
+        "sourceRow": 264,
+        "sourceRows": [
+          264
+        ],
+        "sourceCitation": "South Carolina SQT",
+        "sourceCitations": [
+          "South Carolina SQT"
+        ],
+        "fieldValues": [
+          "2.3",
+          "",
+          "",
+          "",
+          "0.8",
+          "0.4",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-floodplain-activation-return-interval-years-detailed",
+  "name": "Floodplain Activation Return Interval (years)",
+  "shortName": "Floodplain Activation Return Interval (years)",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Floodplain engages at moderate recurrence intervals, providing attenuation and retention.",
+  "descriptionMarkdown": "Return interval for first meaningful floodplain engagement/retention (lower is better).",
+  "methodContextMarkdown": "Field + desktop",
+  "howToMeasureMarkdown": "Identify bankfull/activation stage; estimate recurrence (gage/regional); report years.",
+  "inputs": [
+    {
+      "label": "Floodplain Activation Return Interval (years)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field high-water marks + gage/regional flow frequency; optional inundation modeling."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "USGS gage data (where available)",
+    "bankfull guides."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Surface water storage",
+    "metricDataSource": "Field high-water marks + gage/regional flow frequency; optional inundation modeling.",
+    "metricStatement": "Floodplain engages at moderate recurrence intervals, providing attenuation and retention.",
+    "description": "Return interval for first meaningful floodplain engagement/retention (lower is better).",
+    "methodContextRaw": "Field + desktop",
+    "howToMeasure": "Identify bankfull/activation stage; estimate recurrence (gage/regional); report years.",
+    "referencesRaw": [
+      "SFARI rapid assessment; USGS gage data (where available); bankfull guides."
+    ],
+    "sourceRows": [
+      26
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Adjust expectation for valley confinement and historic flow regime.",
+        "stratification": "Adjust expectation for valley confinement and historic flow regime.",
+        "sourceRow": 26,
+        "sourceRows": [
+          26
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "2",
+          "4",
+          "7.5",
+          "15",
+          "25",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "1",
+          "0.7",
+          "0.3",
+          "0.1",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-daily-average-turbidity-detailed",
+  "name": "Daily Average Turbidity",
+  "shortName": "Daily Average Turbidity",
+  "discipline": "Physicochemistry",
+  "function": "Water & soil quality",
+  "functionStatement": "Physical and chemical processes limit pollutants and maintain water quality suitable for designated uses.",
+  "descriptionMarkdown": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+  "inputs": [
+    {
+      "label": "Daily Average Turbidity",
+      "type": "field (meter/logger) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "In-situ sensors/meters and/or grab samples with lab analysis; existing monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-water-and-soil-quality-daily-average-turbidity-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-daily-average-turbidity-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "EPA Water Quality Portal",
+    "USGS NWIS water-quality records where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Water & soil quality",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": true,
+    "mappedFunction": "Water & soil quality",
+    "metricDataSource": "In-situ sensors/meters and/or grab samples with lab analysis; existing monitoring databases.",
+    "metricStatement": "Physical and chemical processes limit pollutants and maintain water quality suitable for designated uses.",
+    "description": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+    "methodContextRaw": "Context: Channel\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+    "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+    "referencesRaw": [
+      "Alaska SQT; EPA Water Quality Portal; USGS NWIS water-quality records where available"
+    ],
+    "sourceRows": [
+      282
+    ],
+    "stratifications": [
+      {
+        "name": "Alaska SQT",
+        "stratification": "",
+        "sourceRow": 282,
+        "sourceRows": [
+          282
+        ],
+        "sourceCitation": "Alaska SQT",
+        "sourceCitations": [
+          "Alaska SQT"
+        ],
+        "fieldValues": [
+          "100",
+          "",
+          "",
+          "",
+          "10",
+          "3",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

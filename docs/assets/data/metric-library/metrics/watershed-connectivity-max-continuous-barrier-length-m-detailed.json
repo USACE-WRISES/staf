@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-max-continuous-barrier-length-m-detailed",
+  "name": "Max Continuous Barrier Length (m)",
+  "shortName": "Max Continuous Barrier Length (m)",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Barriers occur only in short segments with frequent passable gaps.",
+  "descriptionMarkdown": "Length of the longest uninterrupted levee/berm/wall segment along either bank (lower is better).",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Dissolve mapped barriers by continuity; compute maximum segment length.",
+  "inputs": [
+    {
+      "label": "Max Continuous Barrier Length (m)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Barrier mapping (LiDAR/imagery) + field verification of gaps."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NLD",
+    "FEMA floodplain",
+    "LiDAR hillshade",
+    "local infrastructure GIS."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Watershed connectivity",
+    "metricDataSource": "Barrier mapping (LiDAR/imagery) + field verification of gaps.",
+    "metricStatement": "Barriers occur only in short segments with frequent passable gaps.",
+    "description": "Length of the longest uninterrupted levee/berm/wall segment along either bank (lower is better).",
+    "methodContextRaw": "Desktop + field check",
+    "howToMeasure": "Dissolve mapped barriers by continuity; compute maximum segment length.",
+    "referencesRaw": [
+      "NLD; FEMA floodplain; LiDAR hillshade; local infrastructure GIS."
+    ],
+    "sourceRows": [
+      445
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Consider only barriers that block movement at ground level (not vegetated natural berms).",
+        "stratification": "Consider only barriers that block movement at ground level (not vegetated natural berms).",
+        "sourceRow": 445,
+        "sourceRows": [
+          445
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "50",
+          "300",
+          "800",
+          "1500",
+          "3000",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "1",
+          "0.7",
+          "0.3",
+          "0.1",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

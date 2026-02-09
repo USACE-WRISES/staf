@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-qual-4-biotic-index-mountain-detailed",
+  "metricId": "population-support-qual-4-biotic-index-mountain-detailed",
+  "tier": "detailed",
+  "name": "Qual 4 - Biotic Index Mountain reference curve",
+  "axes": {
+    "xLabel": "Qual 4 - Biotic Index Mountain",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-qual-4-biotic-index-mountain-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-qual-4-biotic-index-mountain-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 3.29,
+              "y": 1,
+              "description": "Field 3.29, Index 1"
+            },
+            {
+              "x": 4.73,
+              "y": 0.7,
+              "description": "Field 4.73, Index 0.7"
+            },
+            {
+              "x": 5.62,
+              "y": 0.3,
+              "description": "Field 5.62, Index 0.3"
+            },
+            {
+              "x": 6.53,
+              "y": 0,
+              "description": "Field 6.53, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 407,
+            "sourceRows": [
+              407
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "6.53",
+              "",
+              "5.62",
+              "",
+              "4.73",
+              "3.29",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-qual-4-biotic-index-mountain-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      407
+    ]
+  }
+}

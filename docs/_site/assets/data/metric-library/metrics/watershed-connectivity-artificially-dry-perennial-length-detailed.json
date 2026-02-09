@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-artificially-dry-perennial-length-detailed",
+  "name": "Artificially Dry Perennial Length (%)",
+  "shortName": "Artificially Dry Perennial Length (%)",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Historically perennial channels remain wetted during expected seasons; artificial dewatering does not fragment habitat.",
+  "descriptionMarkdown": "Percent of historically perennial network length that is dry/disconnected during expected flowing season (lower is better).",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Define historically perennial extent; map dry segments during target season(s); compute % length dry.",
+  "inputs": [
+    {
+      "label": "Artificially Dry Perennial Length (%)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Aerial imagery time series + gage/model zero-flow days (where available) + field confirmation of withdrawals/diversions."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-artificially-dry-perennial-length-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-artificially-dry-perennial-length-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "USGS gage records where available",
+    "local water use/diversion datasets."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Watershed connectivity",
+    "metricDataSource": "Aerial imagery time series + gage/model zero-flow days (where available) + field confirmation of withdrawals/diversions.",
+    "metricStatement": "Historically perennial channels remain wetted during expected seasons; artificial dewatering does not fragment habitat.",
+    "description": "Percent of historically perennial network length that is dry/disconnected during expected flowing season (lower is better).",
+    "methodContextRaw": "Desktop + field check",
+    "howToMeasure": "Define historically perennial extent; map dry segments during target season(s); compute % length dry.",
+    "referencesRaw": [
+      "SFARI rapid assessment; USGS gage records where available; local water use/diversion datasets."
+    ],
+    "sourceRows": [
+      442
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Separate perennial vs naturally intermittent classes (SDAM or local classification).",
+        "stratification": "Separate perennial vs naturally intermittent classes (SDAM or local classification).",
+        "sourceRow": 442,
+        "sourceRows": [
+          442
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0.5",
+          "3",
+          "15",
+          "40",
+          "60",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "1",
+          "0.7",
+          "0.3",
+          "0.1",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

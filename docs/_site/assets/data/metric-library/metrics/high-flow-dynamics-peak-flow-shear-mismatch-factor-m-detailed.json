@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-peak-flow-shear-mismatch-factor-m-detailed",
+  "name": "Peak-Flow Shear Mismatch Factor (M_?*)",
+  "shortName": "Peak-Flow Shear Mismatch Factor (M_?*)",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak-flow capacity matches bed resistance; channel does not frequently fail under moderate floods.",
+  "descriptionMarkdown": "Mismatch factor for shear/critical shear at bankfull/high flow (lower is better).",
+  "methodContextMarkdown": "Desktop model",
+  "howToMeasureMarkdown": "Compute ?* at target flow; compute mismatch factor relative to ?*crit.",
+  "inputs": [
+    {
+      "label": "Peak-Flow Shear Mismatch Factor (M_?*)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "HEC-RAS/Excel hydraulics + D50; bankfull/high-flow stage."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-high-flow-dynamics-peak-flow-shear-mismatch-factor-m-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-peak-flow-shear-mismatch-factor-m-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "shear stress computation methods."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "High flow dynamics",
+    "metricDataSource": "HEC-RAS/Excel hydraulics + D50; bankfull/high-flow stage.",
+    "metricStatement": "Peak-flow capacity matches bed resistance; channel does not frequently fail under moderate floods.",
+    "description": "Mismatch factor for shear/critical shear at bankfull/high flow (lower is better).",
+    "methodContextRaw": "Desktop model",
+    "howToMeasure": "Compute ?* at target flow; compute mismatch factor relative to ?*crit.",
+    "referencesRaw": [
+      "SFARI rapid assessment; shear stress computation methods."
+    ],
+    "sourceRows": [
+      59
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Set ?*crit by substrate and stream type.",
+        "stratification": "Set ?*crit by substrate and stream type.",
+        "sourceRow": 59,
+        "sourceRows": [
+          59
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "1",
+          "1.4",
+          "2",
+          "3",
+          "4",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "1",
+          "0.7",
+          "0.3",
+          "0.1",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

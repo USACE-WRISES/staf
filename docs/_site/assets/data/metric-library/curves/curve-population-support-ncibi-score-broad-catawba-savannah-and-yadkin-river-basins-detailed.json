@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-ncibi-score-broad-catawba-savannah-and-yadkin-river-basins-detailed",
+  "metricId": "population-support-ncibi-score-broad-catawba-savannah-and-yadkin-river-basins-detailed",
+  "tier": "detailed",
+  "name": "NCIBI Score - Broad, Catawba, Savannah, and Yadkin River basins reference curve",
+  "axes": {
+    "xLabel": "NCIBI Score - Broad, Catawba, Savannah, and Yadkin River basins",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-ncibi-score-broad-catawba-savannah-and-yadkin-river-basins-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-ncibi-score-broad-catawba-savannah-and-yadkin-river-basins-detailed-nor",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 26.6,
+              "y": 0,
+              "description": "Field 26.6, Index 0"
+            },
+            {
+              "x": 35,
+              "y": 0.3,
+              "description": "Field 35, Index 0.3"
+            },
+            {
+              "x": 48,
+              "y": 0.7,
+              "description": "Field 48, Index 0.7"
+            },
+            {
+              "x": 60,
+              "y": 1,
+              "description": "Field 60, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 413,
+            "sourceRows": [
+              413
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "26.6",
+              "",
+              "35",
+              "",
+              "48",
+              "60",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-ncibi-score-broad-catawba-savannah-and-yadkin-river-basins-detailed-nor"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      413
+    ]
+  }
+}

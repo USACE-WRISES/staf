@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-pool-depth-ratio-e-streams-detailed",
+  "metricId": "habitat-provision-pool-depth-ratio-e-streams-detailed",
+  "tier": "detailed",
+  "name": "Pool Depth Ratio E streams reference curve",
+  "axes": {
+    "xLabel": "Pool Depth Ratio E streams",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-pool-depth-ratio-e-streams-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-e-streams-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.4,
+              "y": 0.3,
+              "description": "Field 1.4, Index 0.3"
+            },
+            {
+              "x": 1.7,
+              "y": 0.7,
+              "description": "Field 1.7, Index 0.7"
+            },
+            {
+              "x": 2.1,
+              "y": 1,
+              "description": "Field 2.1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 355,
+            "sourceRows": [
+              355
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "1",
+              "",
+              "1.4",
+              "",
+              "1.7",
+              "2.1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-pool-depth-ratio-e-streams-detailed-south-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT",
+    "sourceCitations": [
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      355
+    ]
+  }
+}

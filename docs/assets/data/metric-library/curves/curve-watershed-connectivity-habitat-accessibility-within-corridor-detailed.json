@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-habitat-accessibility-within-corridor-detailed",
+  "metricId": "watershed-connectivity-habitat-accessibility-within-corridor-detailed",
+  "tier": "detailed",
+  "name": "Habitat Accessibility within Corridor (%) reference curve",
+  "axes": {
+    "xLabel": "Habitat Accessibility within Corridor (%)",
+    "yLabel": "Index score",
+    "xUnit": "%",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-watershed-connectivity-habitat-accessibility-within-corridor-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "%",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-habitat-accessibility-within-corridor-detailed-proposed-derived-fro",
+          "name": "Proposed (derived from SFARI rapid curves) - Define corridor extent consistently (e.g., to next major natural barrier or 10 km).",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 15,
+              "y": 0.1,
+              "description": "Field 15, Index 0.1"
+            },
+            {
+              "x": 35,
+              "y": 0.3,
+              "description": "Field 35, Index 0.3"
+            },
+            {
+              "x": 65,
+              "y": 0.7,
+              "description": "Field 65, Index 0.7"
+            },
+            {
+              "x": 90,
+              "y": 1,
+              "description": "Field 90, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Define corridor extent consistently (e.g., to next major natural barrier or 10 km).",
+            "sourceRow": 447,
+            "sourceRows": [
+              447
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "0",
+              "15",
+              "35",
+              "65",
+              "90",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.1",
+              "0.3",
+              "0.7",
+              "1",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-habitat-accessibility-within-corridor-detailed-proposed-derived-fro"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "Watershed connectivity",
+    "sourceRows": [
+      447
+    ]
+  }
+}

@@ -1,0 +1,346 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion-detailed",
+  "name": "Percent Streambank Erosion (%)",
+  "shortName": "Percent Streambank Erosion (%)",
+  "discipline": "Geomorphology",
+  "function": "Channel and floodplain dynamics",
+  "functionStatement": "Bank processes, planform, and riparian condition shape habitat complexity; balanced erosion and protection support stability.",
+  "descriptionMarkdown": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+  "methodContextMarkdown": "Context: Channel/Riparian\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+  "inputs": [
+    {
+      "label": "Percent Streambank Erosion (%)",
+      "type": "field",
+      "source": "Channel/Riparian",
+      "required": true,
+      "helpMarkdown": "Field geomorphic/bank assessment (e.g., BEHI components, greenline stability) with optional imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-channel-and-floodplain-dynamics-percent-streambank-erosion-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-percent-streambank-erosion-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "BEHI/greenline stability methods where used",
+    "aerial imagery for context",
+    "Colorado SQT",
+    "Michigan SQT",
+    "Minnesota SQT",
+    "North Carolina SQT",
+    "South Carolina SQT",
+    "Wisconsin SQT",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel and floodplain dynamics",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Michigan SQT; Minnesota SQT; North Carolina SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": true,
+    "mappedFunction": "Channel and floodplain dynamics",
+    "metricDataSource": "Field geomorphic/bank assessment (e.g., BEHI components, greenline stability) with optional imagery support.",
+    "metricStatement": "Bank processes, planform, and riparian condition shape habitat complexity; balanced erosion and protection support stability.",
+    "description": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+    "methodContextRaw": "Context: Channel/Riparian\nMethod: Field",
+    "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+    "referencesRaw": [
+      "Alaska SQT; BEHI/greenline stability methods where used; aerial imagery for context",
+      "Colorado SQT; BEHI/greenline stability methods where used; aerial imagery for context",
+      "Michigan SQT; BEHI/greenline stability methods where used; aerial imagery for context",
+      "Minnesota SQT; BEHI/greenline stability methods where used; aerial imagery for context",
+      "North Carolina SQT; BEHI/greenline stability methods where used; aerial imagery for context",
+      "South Carolina SQT; BEHI/greenline stability methods where used; aerial imagery for context",
+      "Wisconsin SQT; BEHI/greenline stability methods where used; aerial imagery for context",
+      "Wyoming SQT; BEHI/greenline stability methods where used; aerial imagery for context"
+    ],
+    "sourceRows": [
+      97,
+      100,
+      107,
+      110,
+      115,
+      122,
+      126,
+      129
+    ],
+    "stratifications": [
+      {
+        "name": "Alaska SQT",
+        "stratification": "",
+        "sourceRow": 97,
+        "sourceRows": [
+          97
+        ],
+        "sourceCitation": "Alaska SQT",
+        "sourceCitations": [
+          "Alaska SQT"
+        ],
+        "fieldValues": [
+          "75",
+          "",
+          "",
+          "",
+          "10",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Colorado SQT",
+        "stratification": "",
+        "sourceRow": 100,
+        "sourceRows": [
+          100
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "75",
+          "",
+          "",
+          "",
+          "10",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Michigan SQT",
+        "stratification": "",
+        "sourceRow": 107,
+        "sourceRows": [
+          107
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT"
+        ],
+        "fieldValues": [
+          "75",
+          "",
+          "",
+          "",
+          "10",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Minnesota SQT",
+        "stratification": "",
+        "sourceRow": 110,
+        "sourceRows": [
+          110
+        ],
+        "sourceCitation": "Minnesota SQT",
+        "sourceCitations": [
+          "Minnesota SQT"
+        ],
+        "fieldValues": [
+          "75",
+          "",
+          "",
+          "",
+          "10",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "North Carolina SQT",
+        "stratification": "",
+        "sourceRow": 115,
+        "sourceRows": [
+          115
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "41",
+          "",
+          "25",
+          "",
+          "9",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "South Carolina SQT",
+        "stratification": "",
+        "sourceRow": 122,
+        "sourceRows": [
+          122
+        ],
+        "sourceCitation": "South Carolina SQT",
+        "sourceCitations": [
+          "South Carolina SQT"
+        ],
+        "fieldValues": [
+          "50",
+          "",
+          "",
+          "",
+          "11",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT",
+        "stratification": "",
+        "sourceRow": 126,
+        "sourceRows": [
+          126
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "50",
+          "",
+          "",
+          "",
+          "11",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT",
+        "stratification": "",
+        "sourceRow": 129,
+        "sourceRows": [
+          129
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "75",
+          "",
+          "",
+          "",
+          "10",
+          "5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

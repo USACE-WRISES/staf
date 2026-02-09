@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-mwat-detailed",
+  "metricId": "light-and-thermal-regime-mwat-detailed",
+  "tier": "detailed",
+  "name": "MWAT reference curve",
+  "axes": {
+    "xLabel": "MWAT",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-mwat-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-mwat-detailed-colorado-sqt-cs-i-mwf",
+          "name": "Colorado SQT - CS-I (MWF)",
+          "points": [
+            {
+              "x": 13.8,
+              "y": 1,
+              "description": "Field 13.8, Index 1"
+            },
+            {
+              "x": 16.9,
+              "y": 0.3,
+              "description": "Field 16.9, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "CS-I (MWF)",
+            "sourceRow": 157,
+            "sourceRows": [
+              157
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "16.9",
+              "",
+              "",
+              "13.8",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-mwat-detailed-colorado-sqt-cs-i",
+          "name": "Colorado SQT - CS-I",
+          "points": [
+            {
+              "x": 15.7,
+              "y": 1,
+              "description": "Field 15.7, Index 1"
+            },
+            {
+              "x": 17,
+              "y": 0.3,
+              "description": "Field 17, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "CS-I",
+            "sourceRow": 158,
+            "sourceRows": [
+              158
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "17",
+              "",
+              "",
+              "15.7",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-mwat-detailed-colorado-sqt-cs-ii",
+          "name": "Colorado SQT - CS-II",
+          "points": [
+            {
+              "x": 16.6,
+              "y": 1,
+              "description": "Field 16.6, Index 1"
+            },
+            {
+              "x": 18.3,
+              "y": 0.3,
+              "description": "Field 18.3, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "CS-II",
+            "sourceRow": 159,
+            "sourceRows": [
+              159
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "18.3",
+              "",
+              "",
+              "16.6",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-mwat-detailed-colorado-sqt-ws-i",
+          "name": "Colorado SQT - WS-I",
+          "points": [
+            {
+              "x": 20.9,
+              "y": 1,
+              "description": "Field 20.9, Index 1"
+            },
+            {
+              "x": 24.2,
+              "y": 0.3,
+              "description": "Field 24.2, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "WS-I",
+            "sourceRow": 160,
+            "sourceRows": [
+              160
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "24.2",
+              "",
+              "",
+              "20.9",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-mwat-detailed-colorado-sqt-ws-ii",
+          "name": "Colorado SQT - WS-II",
+          "points": [
+            {
+              "x": 22.5,
+              "y": 1,
+              "description": "Field 22.5, Index 1"
+            },
+            {
+              "x": 27.5,
+              "y": 0.3,
+              "description": "Field 27.5, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "WS-II",
+            "sourceRow": 161,
+            "sourceRows": [
+              161
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "27.5",
+              "",
+              "",
+              "22.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-mwat-detailed-colorado-sqt-ws-iii",
+          "name": "Colorado SQT - WS-III",
+          "points": [
+            {
+              "x": 25.9,
+              "y": 1,
+              "description": "Field 25.9, Index 1"
+            },
+            {
+              "x": 28.7,
+              "y": 0.3,
+              "description": "Field 28.7, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "WS-III",
+            "sourceRow": 162,
+            "sourceRows": [
+              162
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "28.7",
+              "",
+              "",
+              "25.9",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-mwat-detailed-colorado-sqt-cs-i-mwf"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT",
+    "sourceCitations": [
+      "Colorado SQT"
+    ],
+    "mappedFunction": "Light & thermal regime",
+    "sourceRows": [
+      157,
+      158,
+      159,
+      160,
+      161,
+      162
+    ]
+  }
+}

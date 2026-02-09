@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-evolution-width-depth-ratio-state-o-e-detailed",
+  "metricId": "channel-evolution-width-depth-ratio-state-o-e-detailed",
+  "tier": "detailed",
+  "name": "Width/Depth Ratio State (O/E) reference curve",
+  "axes": {
+    "xLabel": "Width/Depth Ratio State (O/E)",
+    "yLabel": "Index score",
+    "xUnit": "O/E",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-evolution-width-depth-ratio-state-o-e-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "O/E",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-evolution-width-depth-ratio-state-o-e-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.8,
+              "y": 0,
+              "description": "Field 1.8, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 94,
+            "sourceRows": [
+              94
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "1.8",
+              "",
+              "",
+              "",
+              "",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-evolution-width-depth-ratio-state-o-e-detailed-wisconsin-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Channel evolution",
+    "sourceRows": [
+      94
+    ]
+  }
+}

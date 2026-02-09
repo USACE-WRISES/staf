@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-diatom-index-detailed",
+  "metricId": "nutrient-cycling-diatom-index-detailed",
+  "tier": "detailed",
+  "name": "Diatom Index reference curve",
+  "axes": {
+    "xLabel": "Diatom Index",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-diatom-index-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-diatom-index-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 58,
+              "y": 0.7,
+              "description": "Field 58, Index 0.7"
+            },
+            {
+              "x": 75,
+              "y": 1,
+              "description": "Field 75, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 255,
+            "sourceRows": [
+              255
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "58",
+              "75",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-diatom-index-detailed-alaska-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "mappedFunction": "Nutrient cycling",
+    "sourceRows": [
+      255
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-effective-barrier-density-severity-weighted-km-detailed",
+  "metricId": "watershed-connectivity-effective-barrier-density-severity-weighted-km-detailed",
+  "tier": "detailed",
+  "name": "Effective Barrier Density (severity-weighted #/km) reference curve",
+  "axes": {
+    "xLabel": "Effective Barrier Density (severity-weighted #/km)",
+    "yLabel": "Index score",
+    "xUnit": "severity-weighted #/km",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-watershed-connectivity-effective-barrier-density-severity-weighted-km-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "severity-weighted #/km",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-effective-barrier-density-severity-weighted-km-detailed-proposed-de",
+          "name": "Proposed (derived from SFARI rapid curves) - Compute separately for fish vs other taxa; choose corridor length (e.g., 520 km).",
+          "points": [
+            {
+              "x": 0.1,
+              "y": 1,
+              "description": "Field 0.1, Index 1"
+            },
+            {
+              "x": 0.3,
+              "y": 0.7,
+              "description": "Field 0.3, Index 0.7"
+            },
+            {
+              "x": 1,
+              "y": 0.3,
+              "description": "Field 1, Index 0.3"
+            },
+            {
+              "x": 2,
+              "y": 0.1,
+              "description": "Field 2, Index 0.1"
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "description": "Field 4, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Compute separately for fish vs other taxa; choose corridor length (e.g., 520 km).",
+            "sourceRow": 446,
+            "sourceRows": [
+              446
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "0.1",
+              "0.3",
+              "1",
+              "2",
+              "4",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-effective-barrier-density-severity-weighted-km-detailed-proposed-de"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "Watershed connectivity",
+    "sourceRows": [
+      446
+    ]
+  }
+}

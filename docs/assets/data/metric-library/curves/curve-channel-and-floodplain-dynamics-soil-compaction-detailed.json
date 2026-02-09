@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-soil-compaction-detailed",
+  "metricId": "channel-and-floodplain-dynamics-soil-compaction-detailed",
+  "tier": "detailed",
+  "name": "Soil Compaction reference curve",
+  "axes": {
+    "xLabel": "Soil Compaction",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-soil-compaction-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-soil-compaction-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 6,
+              "y": 0.3,
+              "description": "Field 6, Index 0.3"
+            },
+            {
+              "x": 30,
+              "y": 1,
+              "description": "Field 30, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 113,
+            "sourceRows": [
+              113
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "6",
+              "",
+              "",
+              "30",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-soil-compaction-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Channel and floodplain dynamics",
+    "sourceRows": [
+      113
+    ]
+  }
+}

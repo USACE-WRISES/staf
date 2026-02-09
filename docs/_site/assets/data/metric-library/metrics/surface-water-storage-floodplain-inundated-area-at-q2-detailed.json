@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-floodplain-inundated-area-at-q2-detailed",
+  "name": "Floodplain Inundated Area at Q2 (%)",
+  "shortName": "Floodplain Inundated Area at Q2 (%)",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Moderate floods inundate meaningful floodplain area, supporting storage and retention.",
+  "descriptionMarkdown": "Percent of floodplain area inundated at ~2-year event (higher is better).",
+  "methodContextMarkdown": "Desktop model",
+  "howToMeasureMarkdown": "Run screening inundation at Q2; compute inundated floodplain area ÷ total floodplain area.",
+  "inputs": [
+    {
+      "label": "Floodplain Inundated Area at Q2 (%)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "LiDAR/DEM + simple 2D inundation screening (or HEC-RAS 2D where available)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-floodplain-inundated-area-at-q2-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-floodplain-inundated-area-at-q2-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "LiDAR/DEM inundation mapping methods."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Surface water storage",
+    "metricDataSource": "LiDAR/DEM + simple 2D inundation screening (or HEC-RAS 2D where available).",
+    "metricStatement": "Moderate floods inundate meaningful floodplain area, supporting storage and retention.",
+    "description": "Percent of floodplain area inundated at ~2-year event (higher is better).",
+    "methodContextRaw": "Desktop model",
+    "howToMeasure": "Run screening inundation at Q2; compute inundated floodplain area ÷ total floodplain area.",
+    "referencesRaw": [
+      "SFARI rapid assessment; LiDAR/DEM inundation mapping methods."
+    ],
+    "sourceRows": [
+      27
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Use consistent floodplain polygon definition; stratify by reach type.",
+        "stratification": "Use consistent floodplain polygon definition; stratify by reach type.",
+        "sourceRow": 27,
+        "sourceRows": [
+          27
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0",
+          "2",
+          "8",
+          "15",
+          "30",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.1",
+          "0.3",
+          "0.7",
+          "1",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

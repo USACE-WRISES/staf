@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-erosion-rate-ft-yr-detailed",
+  "metricId": "channel-and-floodplain-dynamics-erosion-rate-ft-yr-detailed",
+  "tier": "detailed",
+  "name": "Erosion Rate (ft/yr) reference curve",
+  "axes": {
+    "xLabel": "Erosion Rate (ft/yr)",
+    "yLabel": "Index score",
+    "xUnit": "ft/yr",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-erosion-rate-ft-yr-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "ft/yr",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-erosion-rate-ft-yr-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0.1,
+              "y": 1,
+              "description": "Field 0.1, Index 1"
+            },
+            {
+              "x": 0.19,
+              "y": 0.7,
+              "description": "Field 0.19, Index 0.7"
+            },
+            {
+              "x": 0.4,
+              "y": 0.3,
+              "description": "Field 0.4, Index 0.3"
+            },
+            {
+              "x": 0.4117,
+              "y": 0.29,
+              "description": "Field 0.4117, Index 0.29"
+            },
+            {
+              "x": 0.71,
+              "y": 0,
+              "description": "Field 0.71, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 114,
+            "sourceRows": [
+              114
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0.71",
+              "0.4117",
+              "0.4",
+              "",
+              "0.19",
+              "0.1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-erosion-rate-ft-yr-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0.1,
+              "y": 1,
+              "description": "Field 0.1, Index 1"
+            },
+            {
+              "x": 0.2,
+              "y": 0.7,
+              "description": "Field 0.2, Index 0.7"
+            },
+            {
+              "x": 0.4,
+              "y": 0.3,
+              "description": "Field 0.4, Index 0.3"
+            },
+            {
+              "x": 0.71,
+              "y": 0,
+              "description": "Field 0.71, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 121,
+            "sourceRows": [
+              121
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "0.71",
+              "",
+              "0.4",
+              "",
+              "0.2",
+              "0.1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-erosion-rate-ft-yr-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT; South Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT",
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Channel and floodplain dynamics",
+    "sourceRows": [
+      114,
+      121
+    ]
+  }
+}

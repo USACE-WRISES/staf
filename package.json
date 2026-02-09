@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build:metric-index": "ts-node scripts/buildMetricIndex.ts",
+    "migrate:detailed-metrics": "ts-node scripts/migrateDetailedMetrics.ts",
     "migrate:screening-metrics": "ts-node scripts/migrateScreeningMetrics.ts",
     "test": "ts-node scripts/runMetricLibraryTests.ts"
   },

@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-percent-riffle-for-slopes-3-detailed",
+  "name": "Percent Riffle for Slopes ? 3%",
+  "shortName": "Percent Riffle for Slopes ? 3%",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+  "descriptionMarkdown": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+  "inputs": [
+    {
+      "label": "Percent Riffle for Slopes ? 3%",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-habitat-provision-percent-riffle-for-slopes-3-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-percent-riffle-for-slopes-3-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "Rapid habitat assessment/geomorphic unit mapping methods"
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Habitat provision",
+    "metricDataSource": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support.",
+    "metricStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+    "description": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+    "methodContextRaw": "Context: Channel\nMethod: Field",
+    "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+    "referencesRaw": [
+      "Alaska SQT; Rapid habitat assessment/geomorphic unit mapping methods"
+    ],
+    "sourceRows": [
+      302,
+      303
+    ],
+    "stratifications": [
+      {
+        "name": "Alaska SQT",
+        "stratification": "",
+        "sourceRow": 302,
+        "sourceRows": [
+          302
+        ],
+        "sourceCitation": "Alaska SQT",
+        "sourceCitations": [
+          "Alaska SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "62",
+          "68",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Alaska SQT",
+        "stratification": "",
+        "sourceRow": 303,
+        "sourceRows": [
+          303
+        ],
+        "sourceCitation": "Alaska SQT",
+        "sourceCitations": [
+          "Alaska SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "39",
+          "50",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

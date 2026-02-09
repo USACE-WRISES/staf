@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-percent-riffle-for-a-and-b-stream-types-detailed",
+  "metricId": "habitat-provision-percent-riffle-for-a-and-b-stream-types-detailed",
+  "tier": "detailed",
+  "name": "Percent Riffle for A and B Stream Types reference curve",
+  "axes": {
+    "xLabel": "Percent Riffle for A and B Stream Types",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-percent-riffle-for-a-and-b-stream-types-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-percent-riffle-for-a-and-b-stream-types-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 366,
+            "sourceRows": [
+              366
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "50",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-percent-riffle-for-a-and-b-stream-types-detailed-wisconsin-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      366
+    ]
+  }
+}

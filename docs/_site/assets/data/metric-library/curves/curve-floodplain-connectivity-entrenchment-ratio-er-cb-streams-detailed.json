@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-floodplain-connectivity-entrenchment-ratio-er-cb-streams-detailed",
+  "metricId": "floodplain-connectivity-entrenchment-ratio-er-cb-streams-detailed",
+  "tier": "detailed",
+  "name": "Entrenchment Ratio (ER) Cb Streams reference curve",
+  "axes": {
+    "xLabel": "Entrenchment Ratio (ER) Cb Streams",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-entrenchment-ratio-er-cb-streams-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-cb-streams-detailed-colorado-sqt",
+          "name": "Colorado SQT",
+          "points": [
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.4,
+              "y": 0.7,
+              "description": "Field 2.4, Index 0.7"
+            },
+            {
+              "x": 3.9,
+              "y": 1,
+              "description": "Field 3.9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 64,
+            "sourceRows": [
+              64
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "2.4",
+              "3.9",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-entrenchment-ratio-er-cb-streams-detailed-colorado-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT",
+    "sourceCitations": [
+      "Colorado SQT"
+    ],
+    "mappedFunction": "Floodplain connectivity",
+    "sourceRows": [
+      64
+    ]
+  }
+}

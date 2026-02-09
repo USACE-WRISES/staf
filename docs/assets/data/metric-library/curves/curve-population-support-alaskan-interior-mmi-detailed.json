@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-alaskan-interior-mmi-detailed",
+  "metricId": "population-support-alaskan-interior-mmi-detailed",
+  "tier": "detailed",
+  "name": "Alaskan Interior MMI reference curve",
+  "axes": {
+    "xLabel": "Alaskan Interior MMI",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-alaskan-interior-mmi-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-alaskan-interior-mmi-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 36,
+              "y": 1,
+              "description": "Field 36, Index 1"
+            },
+            {
+              "x": 43,
+              "y": 0.7,
+              "description": "Field 43, Index 0.7"
+            },
+            {
+              "x": 62,
+              "y": 0.3,
+              "description": "Field 62, Index 0.3"
+            },
+            {
+              "x": 81,
+              "y": 0,
+              "description": "Field 81, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 379,
+            "sourceRows": [
+              379
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "81",
+              "",
+              "62",
+              "",
+              "43",
+              "36",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-alaskan-interior-mmi-detailed-alaska-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      379
+    ]
+  }
+}

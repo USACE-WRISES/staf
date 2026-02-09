@@ -1,0 +1,201 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-summer-mean-temperature-detailed",
+  "name": "Summer Mean Temperature",
+  "shortName": "Summer Mean Temperature",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+  "inputs": [
+    {
+      "label": "Summer Mean Temperature",
+      "type": "field (logger) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Continuous temperature logger, spot measurements, and/or monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-light-and-thermal-regime-summer-mean-temperature-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-summer-mean-temperature-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Wisconsin SQT",
+    "USGS NWIS temperature where available",
+    "regional temperature products where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Light & thermal regime",
+    "metricDataSource": "Continuous temperature logger, spot measurements, and/or monitoring databases.",
+    "metricStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+    "description": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (logger) and/or Desktop (data compilation)",
+    "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+    "referencesRaw": [
+      "Wisconsin SQT; USGS NWIS temperature where available; regional temperature products where available"
+    ],
+    "sourceRows": [
+      173,
+      174,
+      175,
+      176
+    ],
+    "stratifications": [
+      {
+        "name": "Wisconsin SQT - Cold",
+        "stratification": "Cold",
+        "sourceRow": 173,
+        "sourceRows": [
+          173
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "18.7",
+          "",
+          "17",
+          "12.5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT - Cold Transition",
+        "stratification": "Cold Transition",
+        "sourceRow": 174,
+        "sourceRows": [
+          174
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "18.7",
+          "17",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT - Warm Transition",
+        "stratification": "Warm Transition",
+        "sourceRow": 175,
+        "sourceRows": [
+          175
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "20.5",
+          "18.7",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT - Warm",
+        "stratification": "Warm",
+        "sourceRow": 176,
+        "sourceRows": [
+          176
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "23",
+          "20.5",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

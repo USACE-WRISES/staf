@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-average-dbh-in-detailed",
+  "metricId": "carbon-processing-average-dbh-in-detailed",
+  "tier": "detailed",
+  "name": "Average DBH (in) reference curve",
+  "axes": {
+    "xLabel": "Average DBH (in)",
+    "yLabel": "Index score",
+    "xUnit": "in",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-average-dbh-in-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "in",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-average-dbh-in-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 12,
+              "y": 1,
+              "description": "Field 12, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 199,
+            "sourceRows": [
+              199
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "12",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-average-dbh-in-detailed-michigan-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      199
+    ]
+  }
+}

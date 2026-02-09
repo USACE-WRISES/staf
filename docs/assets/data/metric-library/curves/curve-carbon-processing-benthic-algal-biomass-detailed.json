@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-benthic-algal-biomass-detailed",
+  "metricId": "carbon-processing-benthic-algal-biomass-detailed",
+  "tier": "detailed",
+  "name": "Benthic Algal Biomass reference curve",
+  "axes": {
+    "xLabel": "Benthic Algal Biomass",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-benthic-algal-biomass-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-benthic-algal-biomass-detailed-wisconsin-sqt-field-value-mean-score",
+          "name": "Wisconsin SQT - Field Value (Mean Score)",
+          "points": [
+            {
+              "x": 1,
+              "y": 0.7,
+              "description": "Field 1, Index 0.7"
+            },
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Field Value (Mean Score)",
+            "sourceRow": 244,
+            "sourceRows": [
+              244
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "1",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-benthic-algal-biomass-detailed-wisconsin-sqt-field-value-mean-score"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      244
+    ]
+  }
+}

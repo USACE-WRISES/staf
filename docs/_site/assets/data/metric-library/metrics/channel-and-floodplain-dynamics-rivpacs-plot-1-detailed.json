@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-and-floodplain-dynamics-rivpacs-plot-1-detailed",
+  "name": "RIVPACS Plot 1",
+  "shortName": "RIVPACS Plot 1",
+  "discipline": "Geomorphology",
+  "function": "Channel and floodplain dynamics",
+  "functionStatement": "Bank processes, planform, and riparian condition shape habitat complexity; balanced erosion and protection support stability.",
+  "descriptionMarkdown": "Metric definition and measurement are state SQT-specific.",
+  "methodContextMarkdown": "Context: Varies\n\nMethod: See state SQT protocol",
+  "howToMeasureMarkdown": "Follow the state SQT metric definition and apply the scoring breakpoints for the appropriate stratum.",
+  "inputs": [
+    {
+      "label": "RIVPACS Plot 1",
+      "type": "see state sqt protocol",
+      "source": "Varies",
+      "required": true,
+      "helpMarkdown": "SQT-defined metric; see state protocol."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-channel-and-floodplain-dynamics-rivpacs-plot-1-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-rivpacs-plot-1-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Wyoming SQT",
+    "State SQT protocol"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel and floodplain dynamics",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wyoming SQT",
+    "sourceCitations": [
+      "Wyoming SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Channel and floodplain dynamics",
+    "metricDataSource": "SQT-defined metric; see state protocol.",
+    "metricStatement": "Bank processes, planform, and riparian condition shape habitat complexity; balanced erosion and protection support stability.",
+    "description": "Metric definition and measurement are state SQT-specific.",
+    "methodContextRaw": "Context: Varies\nMethod: See state SQT protocol",
+    "howToMeasure": "Follow the state SQT metric definition and apply the scoring breakpoints for the appropriate stratum.",
+    "referencesRaw": [
+      "Wyoming SQT; State SQT protocol"
+    ],
+    "sourceRows": [
+      132,
+      133,
+      134,
+      135
+    ],
+    "stratifications": [
+      {
+        "name": "Wyoming SQT - Wyoming Basin",
+        "stratification": "Wyoming Basin",
+        "sourceRow": 132,
+        "sourceRows": [
+          132
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "0.15",
+          "",
+          "0.64",
+          "",
+          "0.82",
+          "1.18",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT - Black Hills",
+        "stratification": "Black Hills",
+        "sourceRow": 133,
+        "sourceRows": [
+          133
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "0.37",
+          "",
+          "0.59",
+          "",
+          "0.88",
+          "1.08",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT - High Valleys",
+        "stratification": "High Valleys",
+        "sourceRow": 134,
+        "sourceRows": [
+          134
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "0.42",
+          "",
+          "0.68",
+          "",
+          "0.86",
+          "1.14",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT - Sedimentary Mountains",
+        "stratification": "Sedimentary Mountains",
+        "sourceRow": 135,
+        "sourceRows": [
+          135
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "0.42",
+          "",
+          "0.68",
+          "",
+          "0.82",
+          "1.17",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

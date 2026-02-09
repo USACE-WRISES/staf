@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-ept-taxa-present-piedmont-detailed",
+  "name": "EPT Taxa Present - Piedmont",
+  "shortName": "EPT Taxa Present - Piedmont",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+  "descriptionMarkdown": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+  "howToMeasureMarkdown": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+  "inputs": [
+    {
+      "label": "EPT Taxa Present - Piedmont",
+      "type": "field (bioassessment) and/or desktop (existing scores)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Standard fish/macroinvertebrate bioassessment sampling and scoring; state biomonitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-population-support-ept-taxa-present-piedmont-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-ept-taxa-present-piedmont-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "North Carolina SQT",
+    "State biomonitoring protocols and databases",
+    "EPA Water Quality Portal biological results where available",
+    "South Carolina SQT"
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT; South Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT",
+      "South Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Population support",
+    "metricDataSource": "Standard fish/macroinvertebrate bioassessment sampling and scoring; state biomonitoring databases.",
+    "metricStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+    "description": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+    "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+    "referencesRaw": [
+      "North Carolina SQT; State biomonitoring protocols and databases; EPA Water Quality Portal biological results where available",
+      "South Carolina SQT; State biomonitoring protocols and databases; EPA Water Quality Portal biological results where available"
+    ],
+    "sourceRows": [
+      410,
+      416
+    ],
+    "stratifications": [
+      {
+        "name": "North Carolina SQT",
+        "stratification": "",
+        "sourceRow": 410,
+        "sourceRows": [
+          410
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "6",
+          "",
+          "14",
+          "",
+          "21",
+          "28",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "South Carolina SQT",
+        "stratification": "",
+        "sourceRow": 416,
+        "sourceRows": [
+          416
+        ],
+        "sourceCitation": "South Carolina SQT",
+        "sourceCitations": [
+          "South Carolina SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "14",
+          "",
+          "21",
+          "28",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

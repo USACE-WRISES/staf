@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-ept-taxa-present-piedmont-detailed",
+  "metricId": "population-support-ept-taxa-present-piedmont-detailed",
+  "tier": "detailed",
+  "name": "EPT Taxa Present - Piedmont reference curve",
+  "axes": {
+    "xLabel": "EPT Taxa Present - Piedmont",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-ept-taxa-present-piedmont-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-ept-taxa-present-piedmont-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 6,
+              "y": 0,
+              "description": "Field 6, Index 0"
+            },
+            {
+              "x": 14,
+              "y": 0.3,
+              "description": "Field 14, Index 0.3"
+            },
+            {
+              "x": 21,
+              "y": 0.7,
+              "description": "Field 21, Index 0.7"
+            },
+            {
+              "x": 28,
+              "y": 1,
+              "description": "Field 28, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 410,
+            "sourceRows": [
+              410
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "6",
+              "",
+              "14",
+              "",
+              "21",
+              "28",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-ept-taxa-present-piedmont-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 14,
+              "y": 0.3,
+              "description": "Field 14, Index 0.3"
+            },
+            {
+              "x": 21,
+              "y": 0.7,
+              "description": "Field 21, Index 0.7"
+            },
+            {
+              "x": 28,
+              "y": 1,
+              "description": "Field 28, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 416,
+            "sourceRows": [
+              416
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "14",
+              "",
+              "21",
+              "28",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-ept-taxa-present-piedmont-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT; South Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT",
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      410,
+      416
+    ]
+  }
+}

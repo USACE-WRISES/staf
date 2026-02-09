@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "nutrient-cycling-total-phosphorus-huron-erie-lake-plains-and-eastern-corn-belt-plains-detailed",
+  "name": "Total Phosphorus - Huron Erie Lake Plains & Eastern Corn Belt Plains",
+  "shortName": "Total Phosphorus - Huron Erie Lake Plains & Eastern Corn Belt Plains",
+  "discipline": "Physicochemistry",
+  "function": "Nutrient cycling",
+  "functionStatement": "Nitrogen and phosphorus inputs and transformations support productivity without causing eutrophication or nuisance growth.",
+  "descriptionMarkdown": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+  "inputs": [
+    {
+      "label": "Total Phosphorus - Huron Erie Lake Plains & Eastern Corn Belt Plains",
+      "type": "field (sampling) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Laboratory nutrient analysis (grab/automated samples) and/or bioindicator index outputs (e.g., diatom indices)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-nutrient-cycling-total-phosphorus-huron-erie-lake-plains-and-eastern-corn-belt-plains-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-nutrient-cycling-total-phosphorus-huron-erie-lake-plains-and-eastern-corn-belt-plains-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Michigan SQT",
+    "EPA Water Quality Portal nutrient data where available",
+    "diatom index calculation references where applicable"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Nutrient cycling",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Nutrient cycling",
+    "metricDataSource": "Laboratory nutrient analysis (grab/automated samples) and/or bioindicator index outputs (e.g., diatom indices).",
+    "metricStatement": "Nitrogen and phosphorus inputs and transformations support productivity without causing eutrophication or nuisance growth.",
+    "description": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (sampling) and/or Desktop (data compilation)",
+    "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+    "referencesRaw": [
+      "Michigan SQT; EPA Water Quality Portal nutrient data where available; diatom index calculation references where applicable"
+    ],
+    "sourceRows": [
+      259
+    ],
+    "stratifications": [
+      {
+        "name": "Michigan SQT - Huron Erie Lake Plains & Eastern Corn Belt Plains",
+        "stratification": "Huron Erie Lake Plains & Eastern Corn Belt Plains",
+        "sourceRow": 259,
+        "sourceRows": [
+          259
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT"
+        ],
+        "fieldValues": [
+          "550",
+          "",
+          "160",
+          "",
+          "70",
+          "29",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-july-mean-temperature-f-detailed",
+  "name": "July Mean Temperature (°F)",
+  "shortName": "July Mean Temperature (°F)",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+  "inputs": [
+    {
+      "label": "July Mean Temperature (°F)",
+      "type": "field (logger) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Continuous temperature logger, spot measurements, and/or monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-light-and-thermal-regime-july-mean-temperature-f-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-july-mean-temperature-f-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Michigan SQT",
+    "USGS NWIS temperature where available",
+    "regional temperature products where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Light & thermal regime",
+    "metricDataSource": "Continuous temperature logger, spot measurements, and/or monitoring databases.",
+    "metricStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+    "description": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (logger) and/or Desktop (data compilation)",
+    "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+    "referencesRaw": [
+      "Michigan SQT; USGS NWIS temperature where available; regional temperature products where available"
+    ],
+    "sourceRows": [
+      163,
+      164,
+      165
+    ],
+    "stratifications": [
+      {
+        "name": "Michigan SQT - Coldwater",
+        "stratification": "Coldwater",
+        "sourceRow": 163,
+        "sourceRows": [
+          163
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "66.2",
+          "",
+          "",
+          "59",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Michigan SQT - Cold-transitional",
+        "stratification": "Cold-transitional",
+        "sourceRow": 164,
+        "sourceRows": [
+          164
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "69.8",
+          "",
+          "",
+          "66.2",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Michigan SQT - Warm & Warm-transitional",
+        "stratification": "Warm & Warm-transitional",
+        "sourceRow": 165,
+        "sourceRows": [
+          165
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "78.8",
+          "",
+          "",
+          "69.8",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

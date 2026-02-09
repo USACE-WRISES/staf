@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-bankline-with-continuous-lateral-barrier-detailed",
+  "metricId": "watershed-connectivity-bankline-with-continuous-lateral-barrier-detailed",
+  "tier": "detailed",
+  "name": "Bankline with Continuous Lateral Barrier (%) reference curve",
+  "axes": {
+    "xLabel": "Bankline with Continuous Lateral Barrier (%)",
+    "yLabel": "Index score",
+    "xUnit": "%",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-watershed-connectivity-bankline-with-continuous-lateral-barrier-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "%",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-bankline-with-continuous-lateral-barrier-detailed-proposed-derived-",
+          "name": "Proposed (derived from SFARI rapid curves) - Stratify by valley confinement; exclude naturally constrained canyon walls.",
+          "points": [
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            },
+            {
+              "x": 20,
+              "y": 0.7,
+              "description": "Field 20, Index 0.7"
+            },
+            {
+              "x": 60,
+              "y": 0.3,
+              "description": "Field 60, Index 0.3"
+            },
+            {
+              "x": 90,
+              "y": 0.1,
+              "description": "Field 90, Index 0.1"
+            },
+            {
+              "x": 100,
+              "y": 0,
+              "description": "Field 100, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Stratify by valley confinement; exclude naturally constrained canyon walls.",
+            "sourceRow": 444,
+            "sourceRows": [
+              444
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "5",
+              "20",
+              "60",
+              "90",
+              "100",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-bankline-with-continuous-lateral-barrier-detailed-proposed-derived-"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "Watershed connectivity",
+    "sourceRows": [
+      444
+    ]
+  }
+}

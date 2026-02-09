@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-total-phosphorus-forests-and-drift-plains-detailed",
+  "metricId": "nutrient-cycling-total-phosphorus-forests-and-drift-plains-detailed",
+  "tier": "detailed",
+  "name": "Total Phosphorus - Forests and Drift Plains reference curve",
+  "axes": {
+    "xLabel": "Total Phosphorus - Forests and Drift Plains",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-total-phosphorus-forests-and-drift-plains-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-total-phosphorus-forests-and-drift-plains-detailed-michigan-sqt-northern-",
+          "name": "Michigan SQT - Northern Lakes and Forests & North Central Hardwood Forests",
+          "points": [
+            {
+              "x": 3.9,
+              "y": 1,
+              "description": "Field 3.9, Index 1"
+            },
+            {
+              "x": 12,
+              "y": 0.7,
+              "description": "Field 12, Index 0.7"
+            },
+            {
+              "x": 50,
+              "y": 0.3,
+              "description": "Field 50, Index 0.3"
+            },
+            {
+              "x": 151,
+              "y": 0,
+              "description": "Field 151, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Northern Lakes and Forests & North Central Hardwood Forests",
+            "sourceRow": 257,
+            "sourceRows": [
+              257
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "151",
+              "",
+              "50",
+              "",
+              "12",
+              "3.9",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-total-phosphorus-forests-and-drift-plains-detailed-michigan-sqt-southern-",
+          "name": "Michigan SQT - Southern Michigan/ Northern Indiana Drift Plains",
+          "points": [
+            {
+              "x": 12.5,
+              "y": 1,
+              "description": "Field 12.5, Index 1"
+            },
+            {
+              "x": 30,
+              "y": 0.7,
+              "description": "Field 30, Index 0.7"
+            },
+            {
+              "x": 90,
+              "y": 0.3,
+              "description": "Field 90, Index 0.3"
+            },
+            {
+              "x": 186,
+              "y": 0,
+              "description": "Field 186, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Southern Michigan/ Northern Indiana Drift Plains",
+            "sourceRow": 258,
+            "sourceRows": [
+              258
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "186",
+              "",
+              "90",
+              "",
+              "30",
+              "12.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-total-phosphorus-forests-and-drift-plains-detailed-michigan-sqt-northern-"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "mappedFunction": "Nutrient cycling",
+    "sourceRows": [
+      257,
+      258
+    ]
+  }
+}

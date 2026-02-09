@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-bmp-mids-rv-coefficient-detailed",
+  "metricId": "catchment-hydrology-bmp-mids-rv-coefficient-detailed",
+  "tier": "detailed",
+  "name": "BMP MIDS Rv Coefficient reference curve",
+  "axes": {
+    "xLabel": "BMP MIDS Rv Coefficient",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-bmp-mids-rv-coefficient-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-bmp-mids-rv-coefficient-detailed-minnesota-sqt",
+          "name": "Minnesota SQT",
+          "points": [
+            {
+              "x": 0.02,
+              "y": 1,
+              "description": "Field 0.02, Index 1"
+            },
+            {
+              "x": 0.05,
+              "y": 0.7,
+              "description": "Field 0.05, Index 0.7"
+            },
+            {
+              "x": 0.25,
+              "y": 0.3,
+              "description": "Field 0.25, Index 0.3"
+            },
+            {
+              "x": 0.95,
+              "y": 0,
+              "description": "Field 0.95, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 9,
+            "sourceRows": [
+              9
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "0.95",
+              "",
+              "0.25",
+              "",
+              "0.05",
+              "0.02",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-bmp-mids-rv-coefficient-detailed-minnesota-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Minnesota SQT",
+    "sourceCitations": [
+      "Minnesota SQT"
+    ],
+    "mappedFunction": "Catchment hydrology",
+    "sourceRows": [
+      9
+    ]
+  }
+}

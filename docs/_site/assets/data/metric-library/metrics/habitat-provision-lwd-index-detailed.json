@@ -1,0 +1,312 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-lwd-index-detailed",
+  "name": "LWD Index",
+  "shortName": "LWD Index",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+  "descriptionMarkdown": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+  "inputs": [
+    {
+      "label": "LWD Index",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-habitat-provision-lwd-index-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-lwd-index-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "Large wood field methods",
+    "high-resolution imagery for jam identification where feasible",
+    "Michigan SQT",
+    "Minnesota SQT",
+    "North Carolina SQT",
+    "South Carolina SQT",
+    "Wisconsin SQT",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Michigan SQT; Minnesota SQT; North Carolina SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": true,
+    "mappedFunction": "Habitat provision",
+    "metricDataSource": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support.",
+    "metricStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+    "description": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+    "methodContextRaw": "Context: Channel\nMethod: Field",
+    "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+    "referencesRaw": [
+      "Colorado SQT; Large wood field methods; high-resolution imagery for jam identification where feasible",
+      "Michigan SQT; Large wood field methods; high-resolution imagery for jam identification where feasible",
+      "Minnesota SQT; Large wood field methods; high-resolution imagery for jam identification where feasible",
+      "North Carolina SQT; Large wood field methods; high-resolution imagery for jam identification where feasible",
+      "South Carolina SQT; Large wood field methods; high-resolution imagery for jam identification where feasible",
+      "Wisconsin SQT; Large wood field methods; high-resolution imagery for jam identification where feasible",
+      "Wyoming SQT; Large wood field methods; high-resolution imagery for jam identification where feasible"
+    ],
+    "sourceRows": [
+      310,
+      320,
+      327,
+      335,
+      347,
+      360,
+      368
+    ],
+    "stratifications": [
+      {
+        "name": "Colorado SQT",
+        "stratification": "",
+        "sourceRow": 310,
+        "sourceRows": [
+          310
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "430",
+          "660",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Michigan SQT",
+        "stratification": "",
+        "sourceRow": 320,
+        "sourceRows": [
+          320
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "1350",
+          "2825",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Minnesota SQT",
+        "stratification": "",
+        "sourceRow": 327,
+        "sourceRows": [
+          327
+        ],
+        "sourceCitation": "Minnesota SQT",
+        "sourceCitations": [
+          "Minnesota SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "430",
+          "660",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "North Carolina SQT",
+        "stratification": "",
+        "sourceRow": 335,
+        "sourceRows": [
+          335
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "200",
+          "",
+          "300",
+          "700",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "South Carolina SQT",
+        "stratification": "",
+        "sourceRow": 347,
+        "sourceRows": [
+          347
+        ],
+        "sourceCitation": "South Carolina SQT",
+        "sourceCitations": [
+          "South Carolina SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "355",
+          "731",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wisconsin SQT",
+        "stratification": "",
+        "sourceRow": 360,
+        "sourceRows": [
+          360
+        ],
+        "sourceCitation": "Wisconsin SQT",
+        "sourceCitations": [
+          "Wisconsin SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "1350",
+          "2825",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT",
+        "stratification": "",
+        "sourceRow": 368,
+        "sourceRows": [
+          368
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "430",
+          "660",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

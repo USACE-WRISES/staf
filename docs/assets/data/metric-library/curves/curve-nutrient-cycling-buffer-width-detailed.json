@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-buffer-width-detailed",
+  "metricId": "nutrient-cycling-buffer-width-detailed",
+  "tier": "detailed",
+  "name": "Buffer Width reference curve",
+  "axes": {
+    "xLabel": "Buffer Width",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-buffer-width-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 25,
+              "y": 0.3,
+              "description": "Field 25, Index 0.3"
+            },
+            {
+              "x": 75,
+              "y": 0.7,
+              "description": "Field 75, Index 0.7"
+            },
+            {
+              "x": 150,
+              "y": 1,
+              "description": "Field 150, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 256,
+            "sourceRows": [
+              256
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "25",
+              "",
+              "75",
+              "150",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-buffer-width-detailed-michigan-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "mappedFunction": "Nutrient cycling",
+    "sourceRows": [
+      256
+    ]
+  }
+}

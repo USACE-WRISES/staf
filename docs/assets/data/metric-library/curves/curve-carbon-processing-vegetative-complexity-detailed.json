@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-vegetative-complexity-detailed",
+  "metricId": "carbon-processing-vegetative-complexity-detailed",
+  "tier": "detailed",
+  "name": "Vegetative Complexity reference curve",
+  "axes": {
+    "xLabel": "Vegetative Complexity",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-vegetative-complexity-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-vegetative-complexity-detailed-alaska-sqt-alaska-and-brooks-range",
+          "name": "Alaska SQT - Alaska & Brooks Range",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.06,
+              "y": 0.3,
+              "description": "Field 0.06, Index 0.3"
+            },
+            {
+              "x": 0.83,
+              "y": 0.7,
+              "description": "Field 0.83, Index 0.7"
+            },
+            {
+              "x": 1.57,
+              "y": 1,
+              "description": "Field 1.57, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Alaska & Brooks Range",
+            "sourceRow": 187,
+            "sourceRows": [
+              187
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "0.06",
+              "",
+              "0.83",
+              "1.57",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-vegetative-complexity-detailed-alaska-sqt-interior-highlands",
+          "name": "Alaska SQT - Interior Highlands",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.94,
+              "y": 0.3,
+              "description": "Field 0.94, Index 0.3"
+            },
+            {
+              "x": 1.21,
+              "y": 0.7,
+              "description": "Field 1.21, Index 0.7"
+            },
+            {
+              "x": 1.67,
+              "y": 1,
+              "description": "Field 1.67, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Interior Highlands",
+            "sourceRow": 188,
+            "sourceRows": [
+              188
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "0.94",
+              "",
+              "1.21",
+              "1.67",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-vegetative-complexity-detailed-alaska-sqt-interior-bottomlands",
+          "name": "Alaska SQT - Interior Bottomlands",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 1.19,
+              "y": 0.3,
+              "description": "Field 1.19, Index 0.3"
+            },
+            {
+              "x": 1.37,
+              "y": 0.7,
+              "description": "Field 1.37, Index 0.7"
+            },
+            {
+              "x": 1.82,
+              "y": 1,
+              "description": "Field 1.82, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Interior Bottomlands",
+            "sourceRow": 189,
+            "sourceRows": [
+              189
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "1.19",
+              "",
+              "1.37",
+              "1.82",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-vegetative-complexity-detailed-alaska-sqt-interior-forested-lowlands-upl",
+          "name": "Alaska SQT - Interior Forested Lowlands/Uplands",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 1.24,
+              "y": 0.3,
+              "description": "Field 1.24, Index 0.3"
+            },
+            {
+              "x": 1.45,
+              "y": 0.7,
+              "description": "Field 1.45, Index 0.7"
+            },
+            {
+              "x": 1.87,
+              "y": 1,
+              "description": "Field 1.87, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Interior Forested Lowlands/Uplands",
+            "sourceRow": 190,
+            "sourceRows": [
+              190
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "1.24",
+              "",
+              "1.45",
+              "1.87",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-vegetative-complexity-detailed-alaska-sqt-alaska-and-brooks-range"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      187,
+      188,
+      189,
+      190
+    ]
+  }
+}

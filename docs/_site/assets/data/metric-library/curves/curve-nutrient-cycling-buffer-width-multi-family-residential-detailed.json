@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-buffer-width-multi-family-residential-detailed",
+  "metricId": "nutrient-cycling-buffer-width-multi-family-residential-detailed",
+  "tier": "detailed",
+  "name": "Buffer Width - Multi-Family Residential reference curve",
+  "axes": {
+    "xLabel": "Buffer Width - Multi-Family Residential",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-buffer-width-multi-family-residential-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-buffer-width-multi-family-residential-detailed-south-carolina-sqt-buffer-",
+          "name": "South Carolina SQT - Buffer slope < 5%",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 60,
+              "y": 0.7,
+              "description": "Field 60, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope < 5%",
+            "sourceRow": 270,
+            "sourceRows": [
+              270
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "60",
+              "300",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-multi-family-residential-detailed-south-carolina-sqt-buffer--2",
+          "name": "South Carolina SQT - Buffer slope 5-20%",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 120,
+              "y": 0.7,
+              "description": "Field 120, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 5-20%",
+            "sourceRow": 271,
+            "sourceRows": [
+              271
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "120",
+              "300",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-multi-family-residential-detailed-south-carolina-sqt-buffer--3",
+          "name": "South Carolina SQT - Buffer slope 21-40%",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 180,
+              "y": 0.7,
+              "description": "Field 180, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 21-40%",
+            "sourceRow": 272,
+            "sourceRows": [
+              272
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "180",
+              "300",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-multi-family-residential-detailed-south-carolina-sqt-buffer--4",
+          "name": "South Carolina SQT - Buffer slope >40%",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 240,
+              "y": 0.7,
+              "description": "Field 240, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope >40%",
+            "sourceRow": 273,
+            "sourceRows": [
+              273
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "240",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-buffer-width-multi-family-residential-detailed-south-carolina-sqt-buffer-"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT",
+    "sourceCitations": [
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Nutrient cycling",
+    "sourceRows": [
+      270,
+      271,
+      272,
+      273
+    ]
+  }
+}

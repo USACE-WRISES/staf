@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-wetland-patch-density-o-e-detailed",
+  "name": "Wetland Patch Density (O/E)",
+  "shortName": "Wetland Patch Density (O/E)",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands occur as a connected mosaic that supports storage and retention consistent with reference.",
+  "descriptionMarkdown": "Observed wetland patch density divided by expected/reference (O/E). Values near 1 are best.",
+  "methodContextMarkdown": "Desktop GIS",
+  "howToMeasureMarkdown": "Count wetland polygons within floodplain; compute patches per km² (or per km valley); divide by expected/reference.",
+  "inputs": [
+    {
+      "label": "Wetland Patch Density (O/E)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "NWI polygons within floodplain + reference reach/region comparison."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-wetland-patch-density-o-e-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-wetland-patch-density-o-e-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NWI",
+    "regional wetland reference summaries where available."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Surface water storage",
+    "metricDataSource": "NWI polygons within floodplain + reference reach/region comparison.",
+    "metricStatement": "Wetlands occur as a connected mosaic that supports storage and retention consistent with reference.",
+    "description": "Observed wetland patch density divided by expected/reference (O/E). Values near 1 are best.",
+    "methodContextRaw": "Desktop GIS",
+    "howToMeasure": "Count wetland polygons within floodplain; compute patches per km² (or per km valley); divide by expected/reference.",
+    "referencesRaw": [
+      "NWI; regional wetland reference summaries where available."
+    ],
+    "sourceRows": [
+      33
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Use physiographic region; separate large complexes vs small patches if needed.",
+        "stratification": "Use physiographic region; separate large complexes vs small patches if needed.",
+        "sourceRow": 33,
+        "sourceRows": [
+          33
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0.1",
+          "0.4",
+          "0.8",
+          "1",
+          "1.6",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.3",
+          "0.7",
+          "1",
+          "0.3",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

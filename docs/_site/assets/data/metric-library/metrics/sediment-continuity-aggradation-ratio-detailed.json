@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-aggradation-ratio-detailed",
+  "name": "Aggradation Ratio",
+  "shortName": "Aggradation Ratio",
+  "discipline": "Geomorphology",
+  "function": "Sediment continuity",
+  "functionStatement": "Sediment supply, transport, and deposition remain in balance to maintain channel morphology and habitat quality.",
+  "descriptionMarkdown": "Indicator of net sediment deposition/aggradation relative to reference condition.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field or Desktop (repeat elevation data)",
+  "howToMeasureMarkdown": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+  "inputs": [
+    {
+      "label": "Aggradation Ratio",
+      "type": "field or desktop (repeat elevation data)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field channel surveys and/or repeat cross sections/longitudinal profiles to compare bed elevation or depositional indicators."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-sediment-continuity-aggradation-ratio-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-aggradation-ratio-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "USGS 3DEP LiDAR/DEM differencing where available",
+    "geomorphic survey references",
+    "Michigan SQT",
+    "Minnesota SQT",
+    "North Carolina SQT"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Michigan SQT; Minnesota SQT; North Carolina SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "North Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": true,
+    "mappedFunction": "Sediment continuity",
+    "metricDataSource": "Field channel surveys and/or repeat cross sections/longitudinal profiles to compare bed elevation or depositional indicators.",
+    "metricStatement": "Sediment supply, transport, and deposition remain in balance to maintain channel morphology and habitat quality.",
+    "description": "Indicator of net sediment deposition/aggradation relative to reference condition.",
+    "methodContextRaw": "Context: Channel\nMethod: Field or Desktop (repeat elevation data)",
+    "howToMeasure": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+    "referencesRaw": [
+      "Colorado SQT; USGS 3DEP LiDAR/DEM differencing where available; geomorphic survey references",
+      "Michigan SQT; USGS 3DEP LiDAR/DEM differencing where available; geomorphic survey references",
+      "Minnesota SQT; USGS 3DEP LiDAR/DEM differencing where available; geomorphic survey references",
+      "North Carolina SQT; USGS 3DEP LiDAR/DEM differencing where available; geomorphic survey references"
+    ],
+    "sourceRows": [
+      145,
+      146,
+      147,
+      148
+    ],
+    "stratifications": [
+      {
+        "name": "Multiple SQTs",
+        "stratification": "Multiple SQTs",
+        "sourceRow": 145,
+        "sourceRows": [
+          145,
+          146,
+          147,
+          148
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT",
+          "Michigan SQT",
+          "Minnesota SQT",
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "1.6",
+          "",
+          "1.4",
+          "1.2",
+          "",
+          "1",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

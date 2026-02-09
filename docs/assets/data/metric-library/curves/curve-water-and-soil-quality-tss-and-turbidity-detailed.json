@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-tss-and-turbidity-detailed",
+  "metricId": "water-and-soil-quality-tss-and-turbidity-detailed",
+  "tier": "detailed",
+  "name": "TSS and Turbidity reference curve",
+  "axes": {
+    "xLabel": "TSS and Turbidity",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-tss-and-turbidity-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-tss-and-turbidity-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 10,
+              "y": 1,
+              "description": "Field 10, Index 1"
+            },
+            {
+              "x": 50,
+              "y": 0.3,
+              "description": "Field 50, Index 0.3"
+            },
+            {
+              "x": 100,
+              "y": 0,
+              "description": "Field 100, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 297,
+            "sourceRows": [
+              297
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "100",
+              "",
+              "50",
+              "",
+              "",
+              "10",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-tss-and-turbidity-detailed-south-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT",
+    "sourceCitations": [
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Water & soil quality",
+    "sourceRows": [
+      297
+    ]
+  }
+}

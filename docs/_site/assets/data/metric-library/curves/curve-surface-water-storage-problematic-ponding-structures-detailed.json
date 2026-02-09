@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-problematic-ponding-structures-detailed",
+  "metricId": "surface-water-storage-problematic-ponding-structures-detailed",
+  "tier": "detailed",
+  "name": "Problematic Ponding Structures (%) reference curve",
+  "axes": {
+    "xLabel": "Problematic Ponding Structures (%)",
+    "yLabel": "Index score",
+    "xUnit": "%",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-problematic-ponding-structures-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "%",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-problematic-ponding-structures-detailed-proposed-derived-from-sfari-",
+          "name": "Proposed (derived from SFARI rapid curves) - Interpret based on historic beaver presence and target species mobility.",
+          "points": [
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            },
+            {
+              "x": 20,
+              "y": 0.7,
+              "description": "Field 20, Index 0.7"
+            },
+            {
+              "x": 50,
+              "y": 0.3,
+              "description": "Field 50, Index 0.3"
+            },
+            {
+              "x": 80,
+              "y": 0.1,
+              "description": "Field 80, Index 0.1"
+            },
+            {
+              "x": 100,
+              "y": 0,
+              "description": "Field 100, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Interpret based on historic beaver presence and target species mobility.",
+            "sourceRow": 29,
+            "sourceRows": [
+              29
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "5",
+              "20",
+              "50",
+              "80",
+              "100",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-problematic-ponding-structures-detailed-proposed-derived-from-sfari-"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "Surface water storage",
+    "sourceRows": [
+      29
+    ]
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-herbaceous-strata-vegetation-cover-detailed",
+  "metricId": "carbon-processing-herbaceous-strata-vegetation-cover-detailed",
+  "tier": "detailed",
+  "name": "Herbaceous Strata Vegetation Cover reference curve",
+  "axes": {
+    "xLabel": "Herbaceous Strata Vegetation Cover",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-herbaceous-strata-vegetation-cover-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-herbaceous-strata-vegetation-cover-detailed-minnesota-sqt",
+          "name": "Minnesota SQT",
+          "points": [
+            {
+              "x": 50,
+              "y": 0,
+              "description": "Field 50, Index 0"
+            },
+            {
+              "x": 80,
+              "y": 1,
+              "description": "Field 80, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 204,
+            "sourceRows": [
+              204
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "50",
+              "",
+              "",
+              "",
+              "",
+              "80",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-herbaceous-strata-vegetation-cover-detailed-minnesota-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Minnesota SQT",
+    "sourceCitations": [
+      "Minnesota SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      204
+    ]
+  }
+}

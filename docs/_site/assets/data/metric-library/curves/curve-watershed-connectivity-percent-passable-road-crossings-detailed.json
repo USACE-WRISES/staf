@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-percent-passable-road-crossings-detailed",
+  "metricId": "watershed-connectivity-percent-passable-road-crossings-detailed",
+  "tier": "detailed",
+  "name": "Percent Passable Road Crossings (%) reference curve",
+  "axes": {
+    "xLabel": "Percent Passable Road Crossings (%)",
+    "yLabel": "Index score",
+    "xUnit": "%",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-watershed-connectivity-percent-passable-road-crossings-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "%",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-percent-passable-road-crossings-detailed-proposed-derived-from-sfar",
+          "name": "Proposed (derived from SFARI rapid curves) - Stratify by focal taxa (fish/amphibians), stream size, and flow season.",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 20,
+              "y": 0.1,
+              "description": "Field 20, Index 0.1"
+            },
+            {
+              "x": 35,
+              "y": 0.3,
+              "description": "Field 35, Index 0.3"
+            },
+            {
+              "x": 65,
+              "y": 0.7,
+              "description": "Field 65, Index 0.7"
+            },
+            {
+              "x": 90,
+              "y": 1,
+              "description": "Field 90, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Stratify by focal taxa (fish/amphibians), stream size, and flow season.",
+            "sourceRow": 440,
+            "sourceRows": [
+              440
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "0",
+              "20",
+              "35",
+              "65",
+              "90",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.1",
+              "0.3",
+              "0.7",
+              "1",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-percent-passable-road-crossings-detailed-proposed-derived-from-sfar"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "Watershed connectivity",
+    "sourceRows": [
+      440
+    ]
+  }
+}

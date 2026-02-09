@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-average-depth-detailed",
+  "metricId": "low-flow-and-baseflow-dynamics-average-depth-detailed",
+  "tier": "detailed",
+  "name": "Average Depth reference curve",
+  "axes": {
+    "xLabel": "Average Depth",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-low-flow-and-baseflow-dynamics-average-depth-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-average-depth-detailed-colorado-sqt-cs-i-and-cs-i-mwf-w-20f",
+          "name": "Colorado SQT - CS-I & CS-I MWF; W < 20ft",
+          "points": [
+            {
+              "x": 0.2,
+              "y": 0,
+              "description": "Field 0.2, Index 0"
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "CS-I & CS-I MWF; W < 20ft",
+            "sourceRow": 44,
+            "sourceRows": [
+              44
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0.2",
+              "",
+              "",
+              "",
+              "",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-average-depth-detailed-colorado-sqt-cs-i-and-cs-i-mwf-w-20f-2",
+          "name": "Colorado SQT - CS-I & CS-I MWF; W > 20ft",
+          "points": [
+            {
+              "x": 0.4,
+              "y": 0,
+              "description": "Field 0.4, Index 0"
+            },
+            {
+              "x": 1.5,
+              "y": 1,
+              "description": "Field 1.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "CS-I & CS-I MWF; W > 20ft",
+            "sourceRow": 45,
+            "sourceRows": [
+              45
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0.4",
+              "",
+              "",
+              "",
+              "",
+              "1.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-average-depth-detailed-colorado-sqt-cs-ii",
+          "name": "Colorado SQT - CS-II",
+          "points": [
+            {
+              "x": 0.6,
+              "y": 0,
+              "description": "Field 0.6, Index 0"
+            },
+            {
+              "x": 2.3,
+              "y": 1,
+              "description": "Field 2.3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "CS-II",
+            "sourceRow": 46,
+            "sourceRows": [
+              46
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0.6",
+              "",
+              "",
+              "",
+              "",
+              "2.3",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-average-depth-detailed-wyoming-sqt-tier-i-w-20",
+          "name": "Wyoming SQT - Tier I, W < 20'",
+          "points": [
+            {
+              "x": 0.2,
+              "y": 0,
+              "description": "Field 0.2, Index 0"
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Tier I, W < 20'",
+            "sourceRow": 47,
+            "sourceRows": [
+              47
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0.2",
+              "",
+              "",
+              "",
+              "",
+              "1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-average-depth-detailed-wyoming-sqt-tier-i-w-20-2",
+          "name": "Wyoming SQT - Tier I, W >20'",
+          "points": [
+            {
+              "x": 0.4,
+              "y": 0,
+              "description": "Field 0.4, Index 0"
+            },
+            {
+              "x": 1.5,
+              "y": 1,
+              "description": "Field 1.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Tier I, W >20'",
+            "sourceRow": 48,
+            "sourceRows": [
+              48
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0.4",
+              "",
+              "",
+              "",
+              "",
+              "1.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-average-depth-detailed-wyoming-sqt-tier-ii",
+          "name": "Wyoming SQT - Tier II",
+          "points": [
+            {
+              "x": 0.6,
+              "y": 0,
+              "description": "Field 0.6, Index 0"
+            },
+            {
+              "x": 2.3,
+              "y": 1,
+              "description": "Field 2.3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Tier II",
+            "sourceRow": 49,
+            "sourceRows": [
+              49
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0.6",
+              "",
+              "",
+              "",
+              "",
+              "2.3",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-average-depth-detailed-colorado-sqt-cs-i-and-cs-i-mwf-w-20f"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Low flow and baseflow dynamics",
+    "sourceRows": [
+      44,
+      45,
+      46,
+      47,
+      48,
+      49
+    ]
+  }
+}

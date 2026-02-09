@@ -1,0 +1,170 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-wild-trout-biomass-change-detailed",
+  "name": "Wild Trout Biomass (% Change)",
+  "shortName": "Wild Trout Biomass (% Change)",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+  "descriptionMarkdown": "Population abundance/biomass indicator reflecting recruitment and survival of target game/native species.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (fish survey)",
+  "howToMeasureMarkdown": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+  "inputs": [
+    {
+      "label": "Wild Trout Biomass (% Change)",
+      "type": "field (fish survey)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Fish population surveys and biomass estimation from electrofishing/seining; historical comparison where required."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-population-support-wild-trout-biomass-change-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-wild-trout-biomass-change-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "State fisheries survey methods",
+    "long-term monitoring records where available"
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT",
+    "sourceCitations": [
+      "Colorado SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Population support",
+    "metricDataSource": "Fish population surveys and biomass estimation from electrofishing/seining; historical comparison where required.",
+    "metricStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+    "description": "Population abundance/biomass indicator reflecting recruitment and survival of target game/native species.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (fish survey)",
+    "howToMeasure": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+    "referencesRaw": [
+      "Colorado SQT; State fisheries survey methods; long-term monitoring records where available"
+    ],
+    "sourceRows": [
+      383,
+      384,
+      385
+    ],
+    "stratifications": [
+      {
+        "name": "Colorado SQT - High",
+        "stratification": "High",
+        "sourceRow": 383,
+        "sourceRows": [
+          383
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "5",
+          "",
+          "25",
+          "40",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Colorado SQT - Moderate",
+        "stratification": "Moderate",
+        "sourceRow": 384,
+        "sourceRows": [
+          384
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "10",
+          "",
+          "50",
+          "80",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Colorado SQT - Low",
+        "stratification": "Low",
+        "sourceRow": 385,
+        "sourceRows": [
+          385
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "15",
+          "",
+          "75",
+          "119",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

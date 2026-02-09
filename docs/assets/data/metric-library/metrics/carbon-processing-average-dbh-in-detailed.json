@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-average-dbh-in-detailed",
+  "name": "Average DBH (in)",
+  "shortName": "Average DBH (in)",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+  "descriptionMarkdown": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+  "methodContextMarkdown": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+  "howToMeasureMarkdown": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+  "inputs": [
+    {
+      "label": "Average DBH (in)",
+      "type": "field and/or desktop (imagery/gis)",
+      "source": "Riparian/Floodplain",
+      "required": true,
+      "helpMarkdown": "Riparian vegetation field plots and/or GIS/imagery-based corridor metrics."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-average-dbh-in-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-average-dbh-in-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Michigan SQT",
+    "NAIP or high-resolution imagery",
+    "local vegetation plot protocols where applicable"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Carbon processing",
+    "metricDataSource": "Riparian vegetation field plots and/or GIS/imagery-based corridor metrics.",
+    "metricStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+    "description": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+    "methodContextRaw": "Context: Riparian/Floodplain\nMethod: Field and/or Desktop (imagery/GIS)",
+    "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+    "referencesRaw": [
+      "Michigan SQT; NAIP or high-resolution imagery; local vegetation plot protocols where applicable"
+    ],
+    "sourceRows": [
+      199
+    ],
+    "stratifications": [
+      {
+        "name": "Michigan SQT",
+        "stratification": "",
+        "sourceRow": 199,
+        "sourceRows": [
+          199
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "",
+          "12",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

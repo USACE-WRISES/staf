@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-floodplain-activation-return-interval-years-detailed",
+  "metricId": "high-flow-dynamics-floodplain-activation-return-interval-years-detailed",
+  "tier": "detailed",
+  "name": "Floodplain Activation Return Interval (years) reference curve",
+  "axes": {
+    "xLabel": "Floodplain Activation Return Interval (years)",
+    "yLabel": "Index score",
+    "xUnit": "years",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-floodplain-activation-return-interval-years-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "years",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-floodplain-activation-return-interval-years-detailed-proposed-derived-f",
+          "name": "Proposed (derived from SFARI rapid curves) - Exclude naturally confined reaches where overbanking is not expected.",
+          "points": [
+            {
+              "x": 1.5,
+              "y": 1,
+              "description": "Field 1.5, Index 1"
+            },
+            {
+              "x": 4,
+              "y": 0.7,
+              "description": "Field 4, Index 0.7"
+            },
+            {
+              "x": 7.5,
+              "y": 0.3,
+              "description": "Field 7.5, Index 0.3"
+            },
+            {
+              "x": 15,
+              "y": 0.1,
+              "description": "Field 15, Index 0.1"
+            },
+            {
+              "x": 25,
+              "y": 0,
+              "description": "Field 25, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Exclude naturally confined reaches where overbanking is not expected.",
+            "sourceRow": 54,
+            "sourceRows": [
+              54
+            ],
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceCitations": [
+              "Proposed (derived from SFARI rapid curves)"
+            ],
+            "fieldValues": [
+              "1.5",
+              "4",
+              "7.5",
+              "15",
+              "25",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0",
+              "",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-floodplain-activation-return-interval-years-detailed-proposed-derived-f"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "mappedFunction": "High flow dynamics",
+    "sourceRows": [
+      54
+    ]
+  }
+}

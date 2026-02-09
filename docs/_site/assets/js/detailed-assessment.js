@@ -10,14 +10,28 @@
   const dataUrl = `${baseUrl}/assets/data/detailed-metrics.tsv`;
   const functionsUrl = `${baseUrl}/assets/data/functions.json`;
   const mappingUrl = `${baseUrl}/assets/data/cwa-mapping.json`;
+  const metricLibraryIndexUrl = `${baseUrl}/assets/data/metric-library/index.json`;
   const fallback = container.querySelector('.detailed-assessment-fallback');
   const ui = container.querySelector('.detailed-assessment-ui');
+  const collapsedGlyph = '&#9656;';
+  const expandedGlyph = '&#9662;';
 
   const normalizeText = (value) =>
     value
       .toLowerCase()
       .replace(/&/g, 'and')
       .replace(/[^a-z0-9]+/g, '');
+
+  const makeMetricLookupKey = (functionName, metricName) =>
+    `${normalizeText(functionName || '')}|${normalizeText(metricName || '')}`;
+
+  const slugify = (value) =>
+    (value || '')
+      .toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 80);
 
   const slugCategory = (category) =>
     `category-${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
@@ -29,23 +43,155 @@
     return `id-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   };
 
-  const parseTSV = (text) => {
-    const lines = text.trim().split(/\r?\n/).filter(Boolean);
-    if (!lines.length) {
+  const parseQuotedTsv = (text) => {
+    const rows = [];
+    let row = [];
+    let cell = '';
+    let inQuotes = false;
+    const source = (text || '').replace(/^\ufeff/, '');
+    for (let i = 0; i < source.length; i += 1) {
+      const char = source[i];
+      if (char === '"') {
+        const next = source[i + 1];
+        if (inQuotes && next === '"') {
+          cell += '"';
+          i += 1;
+        } else {
+          inQuotes = !inQuotes;
+        }
+        continue;
+      }
+      if (char === '\t' && !inQuotes) {
+        row.push(cell);
+        cell = '';
+        continue;
+      }
+      if ((char === '\n' || char === '\r') && !inQuotes) {
+        if (char === '\r' && source[i + 1] === '\n') {
+          i += 1;
+        }
+        row.push(cell);
+        cell = '';
+        if (row.some((entry) => entry.length > 0)) {
+          rows.push(row);
+        }
+        row = [];
+        continue;
+      }
+      cell += char;
+    }
+    if (cell.length || row.length) {
+      row.push(cell);
+      if (row.some((entry) => entry.length > 0)) {
+        rows.push(row);
+      }
+    }
+    if (!rows.length) {
       return [];
     }
-    const header = lines[0]
-      .replace(/^\ufeff/, '')
-      .split('\t')
-      .map((value) => value.trim());
-    return lines.slice(1).map((line) => {
-      const cells = line.split('\t');
-      const row = {};
+    const header = rows[0].map((value) => value.trim());
+    return rows.slice(1).map((cells) => {
+      const parsed = {};
       header.forEach((key, index) => {
-        row[key] = cells[index] ? cells[index].trim() : '';
+        parsed[key] = (cells[index] || '').trim();
       });
-      return row;
+      return parsed;
     });
+  };
+
+  const compactWhitespace = (value) =>
+    (value || '')
+      .replace(/\r\n/g, '\n')
+      .replace(/\t/g, ' ')
+      .replace(/[ ]{2,}/g, ' ')
+      .trim();
+
+  const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const stripSourceSuffixFromMetricName = (metricName, sourceCitation) => {
+    const base = compactWhitespace(metricName);
+    const source = compactWhitespace(sourceCitation);
+    if (!base || !source) {
+      return base;
+    }
+    const pattern = new RegExp(`\\s*\\(${escapeRegExp(source)}\\)\\s*$`, 'i');
+    const stripped = base.replace(pattern, '').trim();
+    return stripped || base;
+  };
+
+  const buildLayerName = (sourceCitation, stratification, fallbackIndex) => {
+    const source = compactWhitespace(sourceCitation);
+    const strat = compactWhitespace(stratification);
+    if (source && strat) {
+      return normalizeText(source) === normalizeText(strat)
+        ? source
+        : `${source} - ${strat}`;
+    }
+    if (source) {
+      return source;
+    }
+    if (strat) {
+      return strat;
+    }
+    return fallbackIndex === 1 ? 'Default' : `Stratification ${fallbackIndex}`;
+  };
+
+  const toBooleanOn = (value) => /^(on|yes|true|1)$/i.test((value || '').trim());
+
+  const parseMethodContextCell = (value) => {
+    const source = (value || '').replace(/\r\n/g, '\n');
+    const contexts = Array.from(
+      new Set(
+        [...source.matchAll(/Context:\s*([^\n\r]+)/gi)]
+          .map((match) => compactWhitespace(match[1] || ''))
+          .filter(Boolean)
+      )
+    );
+    const methods = Array.from(
+      new Set(
+        [...source.matchAll(/Method:\s*([^\n\r]+)/gi)]
+          .map((match) => compactWhitespace(match[1] || ''))
+          .filter(Boolean)
+      )
+    );
+    return {
+      context: contexts.join('; '),
+      method: methods.join('; '),
+      markdown:
+        contexts.length || methods.length
+          ? `Context: ${contexts.join('; ') || 'Unspecified'}\n\nMethod: ${
+              methods.join('; ') || 'Unspecified'
+            }`
+          : compactWhitespace(source),
+    };
+  };
+
+  const parseIndexNumber = (value) => {
+    const parsed = Number.parseFloat((value || '').trim());
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const parseFieldNumber = (value) => {
+    const raw = (value || '').trim();
+    if (!raw) {
+      return null;
+    }
+    const match = raw.match(/-?\d+(?:\.\d+)?/);
+    if (!match) {
+      return null;
+    }
+    const parsed = Number.parseFloat(match[0]);
+    if (!Number.isFinite(parsed)) {
+      return null;
+    }
+    // Keep strict inequalities from the source table distinct from exact cut points.
+    if (raw.startsWith('>')) {
+      return parsed + 0.0001;
+    }
+    if (raw.startsWith('<')) {
+      return parsed - 0.0001;
+    }
+    return parsed;
   };
 
   const fetchText = async (url) => {
@@ -119,6 +265,9 @@
     ],
   });
 
+  const cloneCurve = (curve) =>
+    curve ? JSON.parse(JSON.stringify(curve)) : null;
+
   const getCurveLayer = (curve) => {
     if (!curve || !curve.layers?.length) {
       return null;
@@ -133,7 +282,7 @@
     return curve.layers[0];
   };
 
-  const computeIndexScore = (curve, fieldValue) => {
+  const resolveDetailedIndexMeta = (curve, fieldValue) => {
     if (!Number.isFinite(fieldValue) || !curve || !curve.layers?.length) {
       return null;
     }
@@ -157,10 +306,22 @@
     const min = points[0];
     const max = points[points.length - 1];
     if (fieldValue <= min.x) {
-      return clamp(min.y, 0, 1);
+      const minIndex = parseScore(min.yMin);
+      const maxIndex = parseScore(min.yMax);
+      return {
+        indexScore: clamp(min.y, 0, 1),
+        minIndex: minIndex === null ? null : clamp(minIndex, 0, 1),
+        maxIndex: maxIndex === null ? null : clamp(maxIndex, 0, 1),
+      };
     }
     if (fieldValue >= max.x) {
-      return clamp(max.y, 0, 1);
+      const minIndex = parseScore(max.yMin);
+      const maxIndex = parseScore(max.yMax);
+      return {
+        indexScore: clamp(max.y, 0, 1),
+        minIndex: minIndex === null ? null : clamp(minIndex, 0, 1),
+        maxIndex: maxIndex === null ? null : clamp(maxIndex, 0, 1),
+      };
     }
     for (let i = 0; i < points.length - 1; i += 1) {
       const left = points[i];
@@ -168,18 +329,40 @@
       if (fieldValue >= left.x && fieldValue <= right.x) {
         const t = (fieldValue - left.x) / (right.x - left.x);
         const y = left.y + t * (right.y - left.y);
-        return clamp(y, 0, 1);
+        const leftMin = parseScore(left.yMin);
+        const rightMin = parseScore(right.yMin);
+        const leftMax = parseScore(left.yMax);
+        const rightMax = parseScore(right.yMax);
+        const minIndex =
+          leftMin !== null && rightMin !== null
+            ? clamp(leftMin + t * (rightMin - leftMin), 0, 1)
+            : null;
+        const maxIndex =
+          leftMax !== null && rightMax !== null
+            ? clamp(leftMax + t * (rightMax - leftMax), 0, 1)
+            : null;
+        return {
+          indexScore: clamp(y, 0, 1),
+          minIndex,
+          maxIndex,
+        };
       }
     }
     return null;
   };
 
+  const computeIndexScore = (curve, fieldValue) => {
+    const meta = resolveDetailedIndexMeta(curve, fieldValue);
+    return meta ? meta.indexScore : null;
+  };
+
   const init = async () => {
     try {
-      const [metricsText, functionsList, mappingList] = await Promise.all([
+      const [metricsText, functionsList, mappingList, metricLibraryIndex] = await Promise.all([
         fetchText(dataUrl),
         fetchJson(functionsUrl),
         fetchJson(mappingUrl),
+        fetchJson(metricLibraryIndexUrl).catch(() => ({ metrics: [] })),
       ]);
 
       if (fallback) {
@@ -189,34 +372,398 @@
         ui.hidden = false;
       }
 
-      const metricsRaw = parseTSV(metricsText);
+      const metricsRaw = parseQuotedTsv(metricsText);
       const functionByName = new Map(
         functionsList.map((fn) => [normalizeText(fn.name), fn])
       );
+      const functionById = new Map(functionsList.map((fn) => [fn.id, fn]));
+      const functionOrder = new Map(
+        functionsList.map((fn, index) => [normalizeText(fn.name), index])
+      );
+      const functionAliases = new Map([
+        [
+          normalizeText('Bed composition and bedform dynamics'),
+          normalizeText('Bed composition and large wood'),
+        ],
+      ]);
+      const resolveFunctionKey = (name) => {
+        const key = normalizeText(name || '');
+        return functionAliases.get(key) || key;
+      };
       const mappingById = mappingList.reduce((acc, item) => {
         acc[item.id] = item;
         return acc;
       }, {});
-
-      const metrics = metricsRaw.map((row, index) => {
-        const functionName = row.Function || row.function || '';
-        const functionKey = normalizeText(functionName);
-        const functionMatch = functionByName.get(functionKey);
-        return {
-          id: `metric-${index + 1}`,
-          discipline: row.Discipline || row.discipline || functionMatch?.category || '',
-          functionName,
-          functionId: functionMatch ? functionMatch.id : null,
-          metric: row.Metric || row.metric || '',
-          context: row.Context || row.context || '',
-          method: row.Method || row.method || '',
-          howToMeasure: row['How to measure'] || row.how_to_measure || '',
-          references: row.References || row.references || '',
-        };
+      const detailedMetricIdByLookup = new Map();
+      const indexEntries = Array.isArray(metricLibraryIndex?.metrics)
+        ? metricLibraryIndex.metrics
+        : [];
+      indexEntries.forEach((entry) => {
+        const supportsDetailed =
+          entry?.minimumTier === 'detailed' ||
+          entry?.profileAvailability?.detailed === true ||
+          (Array.isArray(entry?.tags) && entry.tags.includes('detailed'));
+        if (!supportsDetailed || !entry?.metricId || !entry?.function || !entry?.name) {
+          return;
+        }
+        const functionName = compactWhitespace(entry.function);
+        const key = makeMetricLookupKey(functionName, compactWhitespace(entry.name));
+        if (key && !detailedMetricIdByLookup.has(key)) {
+          detailedMetricIdByLookup.set(key, entry.metricId);
+        }
+        const shortName = compactWhitespace(entry.shortName || '');
+        if (shortName) {
+          const shortKey = makeMetricLookupKey(functionName, shortName);
+          if (shortKey && !detailedMetricIdByLookup.has(shortKey)) {
+            detailedMetricIdByLookup.set(shortKey, entry.metricId);
+          }
+        }
       });
 
+      const getRowValue = (row, key, fallbackKeys = []) => {
+        if (row[key] !== undefined) {
+          return row[key];
+        }
+        for (const fallback of fallbackKeys) {
+          if (row[fallback] !== undefined) {
+            return row[fallback];
+          }
+        }
+        return '';
+      };
+
+      const parseRowCurvePoints = (row) => {
+        const points = [];
+        const usedX = new Set();
+        const rawFieldValues = [];
+        const rawIndexValues = [];
+        for (let i = 1; i <= 7; i += 1) {
+          const fieldRaw = compactWhitespace(
+            getRowValue(row, `Field Value ${i}`, [`field value ${i}`])
+          );
+          const indexRaw = compactWhitespace(
+            getRowValue(row, `Index Value ${i}`, [`index value ${i}`])
+          );
+          rawFieldValues.push(fieldRaw);
+          rawIndexValues.push(indexRaw);
+          const x = parseFieldNumber(fieldRaw);
+          const y = parseIndexNumber(indexRaw);
+          if (x === null || y === null) {
+            continue;
+          }
+          let adjustedX = x;
+          let key = adjustedX.toFixed(6);
+          while (usedX.has(key)) {
+            adjustedX += 0.0001;
+            key = adjustedX.toFixed(6);
+          }
+          usedX.add(key);
+          points.push({
+            x: roundScore(adjustedX, 6),
+            y: clamp(y, 0, 1),
+            description: fieldRaw && indexRaw ? `Field ${fieldRaw}, Index ${indexRaw}` : '',
+          });
+        }
+        const sortedPoints = points.sort((a, b) => a.x - b.x);
+        return {
+          points:
+            sortedPoints.length >= 2
+              ? sortedPoints
+              : defaultIndexValues.map((value, index) => ({
+                  x: index,
+                  y: value,
+                  description: '',
+                })),
+          rawFieldValues,
+          rawIndexValues,
+        };
+      };
+
+      const buildCurveSignature = (points) =>
+        (Array.isArray(points) ? points : [])
+          .map((point) => {
+            const x = parseScore(point?.x);
+            const y = parseScore(point?.y);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) {
+              return null;
+            }
+            return `${roundScore(x, 6)}:${roundScore(y, 6)}`;
+          })
+          .filter(Boolean)
+          .join('|');
+
+      const collapseMetricLayers = (metric) => {
+        const layers = Array.isArray(metric?.referenceCurve?.layers)
+          ? metric.referenceCurve.layers
+          : [];
+        const sources = Array.isArray(metric?.sources) ? metric.sources.filter(Boolean) : [];
+        if (layers.length <= 1 || sources.length <= 1) {
+          return;
+        }
+        const allSourcesAreSqt = sources.every((source) => /sqt/i.test(source));
+        if (!allSourcesAreSqt) {
+          return;
+        }
+        const signatures = new Set(layers.map((layer) => buildCurveSignature(layer.points)));
+        if (signatures.size !== 1) {
+          return;
+        }
+        const mergedRowIndexes = Array.from(
+          new Set(
+            layers.flatMap((layer) =>
+              Array.isArray(layer.sourceRowIndexes) && layer.sourceRowIndexes.length
+                ? layer.sourceRowIndexes
+                : [layer.sourceRowIndex]
+            )
+          )
+        )
+          .filter((value) => Number.isFinite(value))
+          .sort((a, b) => a - b);
+        const mergedSources = Array.from(
+          new Set(
+            layers.flatMap((layer) =>
+              Array.isArray(layer.sourceNames) && layer.sourceNames.length
+                ? layer.sourceNames
+                : [layer.sourceName]
+            )
+          )
+        ).filter(Boolean);
+        const representative = layers[0];
+        metric.referenceCurve.layers = [
+          {
+            ...representative,
+            name: 'Multiple SQTs',
+            stratification: 'Multiple SQTs',
+            sourceRowIndex: mergedRowIndexes[0] || representative.sourceRowIndex,
+            sourceRowIndexes: mergedRowIndexes.length
+              ? mergedRowIndexes
+              : [representative.sourceRowIndex],
+            sourceName: mergedSources[0] || representative.sourceName || '',
+            sourceNames: mergedSources.length
+              ? mergedSources
+              : representative.sourceName
+                ? [representative.sourceName]
+                : [],
+          },
+        ];
+        metric.referenceCurve.activeLayerId = metric.referenceCurve.layers[0]?.id || null;
+      };
+
+      const metricsByKey = new Map();
+      metricsRaw.forEach((row, index) => {
+        const functionName = compactWhitespace(
+          getRowValue(row, 'Mapped Function', ['Function', 'function'])
+        );
+        const metricName = compactWhitespace(
+          getRowValue(row, 'Metric Name', ['Metric', 'metric'])
+        );
+        if (!functionName || !metricName) {
+          return;
+        }
+        const sourceName = compactWhitespace(getRowValue(row, 'Source', ['source']));
+        const canonicalMetricName = stripSourceSuffixFromMetricName(metricName, sourceName);
+        const functionKey = resolveFunctionKey(functionName);
+        const functionMatch = functionByName.get(functionKey);
+        const methodContextRaw = getRowValue(row, 'Method/Context', [
+          'Method',
+          'method',
+        ]);
+        const methodContext = parseMethodContextCell(methodContextRaw);
+        const references = compactWhitespace(getRowValue(row, 'References', ['references']));
+        const howToMeasure = compactWhitespace(
+          getRowValue(row, 'How To Measure', ['How to measure', 'how_to_measure'])
+        );
+        const metricDataSource = compactWhitespace(
+          getRowValue(row, 'Metric Data Source', ['Metric data source'])
+        );
+        const stratification = compactWhitespace(
+          getRowValue(row, 'Stratification', ['stratification'])
+        );
+        const exampleOn = toBooleanOn(
+          getRowValue(row, 'Example Detailed Assessment as it "On" (only 1 metric per function)', [
+            'Example Detailed Assessment as it On (only 1 metric per function)',
+          ])
+        );
+        const rowCurve = parseRowCurvePoints(row);
+        const metricKey = [
+          normalizeText(functionMatch?.name || functionName),
+          normalizeText(canonicalMetricName || metricName),
+        ].join('|');
+
+        if (!metricsByKey.has(metricKey)) {
+          metricsByKey.set(metricKey, {
+            _order: index,
+            discipline: functionMatch?.category || compactWhitespace(row.Discipline || ''),
+            functionName: functionMatch?.name || functionName,
+            functionId: functionMatch ? functionMatch.id : null,
+            functionOrder: functionOrder.has(functionKey) ? functionOrder.get(functionKey) : 9999,
+            functionStatement:
+              compactWhitespace(functionMatch?.function_statement || '') ||
+              compactWhitespace(getRowValue(row, 'Metric Statement', ['metric statement'])) ||
+              '',
+            metricBaseName: canonicalMetricName || metricName,
+            metricLabel: canonicalMetricName || metricName,
+            source: sourceName,
+            sources: sourceName ? [sourceName] : [],
+            context: methodContext.context,
+            method: methodContext.method,
+            methodMarkdown: methodContext.markdown,
+            howToMeasure,
+            references,
+            metricDataSource,
+            exampleOn,
+            referenceCurve: {
+              name: 'Detailed reference',
+              xType: 'quantitative',
+              indexRange: false,
+              units: '',
+              activeLayerId: null,
+              layers: [],
+            },
+            sourceRows: [],
+          });
+        }
+
+        const metric = metricsByKey.get(metricKey);
+        if (sourceName && !metric.sources.includes(sourceName)) {
+          metric.sources.push(sourceName);
+        }
+        if (!metric.context && methodContext.context) {
+          metric.context = methodContext.context;
+        }
+        if (!metric.method && methodContext.method) {
+          metric.method = methodContext.method;
+        }
+        if (!metric.methodMarkdown && methodContext.markdown) {
+          metric.methodMarkdown = methodContext.markdown;
+        }
+        if (!metric.howToMeasure && howToMeasure) {
+          metric.howToMeasure = howToMeasure;
+        }
+        if (!metric.references && references) {
+          metric.references = references;
+        }
+        if (!metric.metricDataSource && metricDataSource) {
+          metric.metricDataSource = metricDataSource;
+        }
+        if (exampleOn) {
+          metric.exampleOn = true;
+        }
+
+        const nextLayerIndex = metric.referenceCurve.layers.length + 1;
+        const baseLayerName = buildLayerName(sourceName, stratification, nextLayerIndex);
+        let layerName = baseLayerName;
+        let layerNameSuffix = 2;
+        while (metric.referenceCurve.layers.some((layer) => layer.name === layerName)) {
+          layerName = `${baseLayerName} (${layerNameSuffix})`;
+          layerNameSuffix += 1;
+        }
+        const layerId = `${
+          slugify(`${metricKey}-${layerName || `layer-${nextLayerIndex}`}`)
+          || `layer-${nextLayerIndex}`
+        }`;
+        metric.referenceCurve.layers.push({
+          id: layerId,
+          name: layerName,
+          stratification,
+          points: rowCurve.points,
+          sourceRowIndex: index + 1,
+          sourceRowIndexes: [index + 1],
+          sourceName,
+          sourceNames: sourceName ? [sourceName] : [],
+        });
+        metric.referenceCurve.activeLayerId = metric.referenceCurve.layers[0]?.id || null;
+        metric.sourceRows.push({
+          stratification,
+          rawFieldValues: rowCurve.rawFieldValues,
+          rawIndexValues: rowCurve.rawIndexValues,
+        });
+      });
+      metricsByKey.forEach((metric) => collapseMetricLayers(metric));
+
+      const allocatedMetricIds = new Set();
+      const allocateMetricId = (functionName, metricName) => {
+        const base =
+          slugify(`${functionName}-${metricName}-detailed`) ||
+          `metric-${allocatedMetricIds.size + 1}`;
+        let candidate = base;
+        let suffix = 2;
+        while (allocatedMetricIds.has(candidate)) {
+          candidate = `${base}-${suffix}`;
+          suffix += 1;
+        }
+        allocatedMetricIds.add(candidate);
+        return candidate;
+      };
+      const resolveMetricId = (metric) => {
+        const preferredId =
+          detailedMetricIdByLookup.get(
+            makeMetricLookupKey(metric.functionName, metric.metricLabel)
+          ) ||
+          detailedMetricIdByLookup.get(
+            makeMetricLookupKey(metric.functionName, metric.metricBaseName)
+          );
+        if (preferredId) {
+          if (!allocatedMetricIds.has(preferredId)) {
+            allocatedMetricIds.add(preferredId);
+            return preferredId;
+          }
+          let suffix = 2;
+          let candidate = `${preferredId}-${suffix}`;
+          while (allocatedMetricIds.has(candidate)) {
+            suffix += 1;
+            candidate = `${preferredId}-${suffix}`;
+          }
+          allocatedMetricIds.add(candidate);
+          return candidate;
+        }
+        return allocateMetricId(metric.functionName, metric.metricBaseName);
+      };
+
+      const metrics = Array.from(metricsByKey.values())
+        .sort((a, b) => {
+          if ((a.functionOrder || 9999) !== (b.functionOrder || 9999)) {
+            return (a.functionOrder || 9999) - (b.functionOrder || 9999);
+          }
+          if ((a.functionName || '').localeCompare(b.functionName || '') !== 0) {
+            return (a.functionName || '').localeCompare(b.functionName || '');
+          }
+          if ((a.metricBaseName || '').localeCompare(b.metricBaseName || '') !== 0) {
+            return (a.metricBaseName || '').localeCompare(b.metricBaseName || '');
+          }
+          return 0;
+        })
+        .map((metric) => ({
+          id: resolveMetricId(metric),
+          discipline: metric.discipline || '',
+          functionName: metric.functionName,
+          functionId: metric.functionId,
+          functionStatement: metric.functionStatement || '',
+          metric: metric.metricLabel,
+          context: metric.context || '',
+          method: metric.method || '',
+          methodMarkdown: metric.methodMarkdown || '',
+          howToMeasure: metric.howToMeasure || '',
+          references: metric.references || '',
+          metricDataSource: metric.metricDataSource || '',
+          source: metric.source || '',
+          exampleOn: !!metric.exampleOn,
+          referenceCurve: metric.referenceCurve,
+          sourceRows: metric.sourceRows || [],
+        }));
+
       const metricById = new Map(metrics.map((metric) => [metric.id, metric]));
-      const metricIdSet = new Set(metrics.map((metric) => metric.id));
+      const defaultMetricIdsByFunction = new Map();
+      metrics.forEach((metric) => {
+        if (!metric.exampleOn) {
+          return;
+        }
+        const key = metric.functionId || normalizeText(metric.functionName || '');
+        if (key && !defaultMetricIdsByFunction.has(key)) {
+          defaultMetricIdsByFunction.set(key, metric.id);
+        }
+      });
+      const defaultMetricIds = Array.from(defaultMetricIdsByFunction.values());
 
       const ensureLibraryMetric = (detail) => {
         if (!detail) {
@@ -234,17 +781,26 @@
           discipline: detail.discipline || functionMatch?.category || 'Other',
           functionName,
           functionId: functionMatch ? functionMatch.id : null,
+          functionStatement:
+            compactWhitespace(functionMatch?.function_statement || '') ||
+            compactWhitespace(detail.functionStatement || '') ||
+            '',
           metric: detail.name || detail.metricId,
           context: detail.methodContextMarkdown || '',
           method: detail.methodContextMarkdown || '',
+          methodMarkdown: detail.methodContextMarkdown || '',
           howToMeasure: detail.howToMeasureMarkdown || '',
           references: Array.isArray(detail.references)
             ? detail.references.join('; ')
             : '',
+          metricDataSource: '',
+          source: '',
+          exampleOn: false,
+          referenceCurve: buildDefaultCurve(),
+          sourceRows: [],
         };
         metrics.push(metric);
         metricById.set(metric.id, metric);
-        metricIdSet.add(metric.id);
         return metric;
       };
 
@@ -276,23 +832,110 @@
       let activeScenarioId = null;
       let activeCurveMetricId = null;
 
-      const createScenario = () => ({
-        id: generateId(),
-        name: `Custom Detailed Assessment ${scenarios.length + 1}`,
-        applicability: '',
-        notes: '',
-        metricIds: [],
-        fieldValues: {},
-        curves: {},
-        metricProfiles: {},
-      });
+      const buildScenarioMetricsState = (metricIds) => {
+        const curves = {};
+        const metricProfiles = {};
+        Array.from(metricIds || []).forEach((metricId) => {
+          const metric = metricById.get(metricId);
+          curves[metricId] =
+            metric && metric.referenceCurve
+              ? cloneCurve(metric.referenceCurve)
+              : buildDefaultCurve();
+          metricProfiles[metricId] = defaultProfileId;
+        });
+        return {
+          metricIds: Array.from(metricIds || []),
+          curves,
+          metricProfiles,
+        };
+      };
+
+      const getNextCustomScenarioName = () => {
+        let max = 0;
+        scenarios.forEach((scenario) => {
+          const match = /^Custom Detailed Assessment (\d+)$/i.exec(
+            (scenario?.name || '').trim()
+          );
+          if (!match) {
+            return;
+          }
+          const index = Number.parseInt(match[1], 10);
+          if (Number.isFinite(index) && index > max) {
+            max = index;
+          }
+        });
+        return `Custom Detailed Assessment ${max + 1}`;
+      };
+
+      const createExampleScenario = () => {
+        const state = buildScenarioMetricsState(defaultMetricIds);
+        return {
+          id: generateId(),
+          name: 'Example Detailed Assessment',
+          applicability: '',
+          notes: '',
+          fieldValues: {},
+          metricIds: state.metricIds,
+          curves: state.curves,
+          metricProfiles: state.metricProfiles,
+          showAdvancedScoring: false,
+          showRollupComputations: false,
+          showFunctionMappings: false,
+          showSuggestedFunctionScoresCue: false,
+          showFunctionScoreCueLabels: false,
+        };
+      };
+
+      const createBlankScenario = () => {
+        const state = buildScenarioMetricsState([]);
+        return {
+          id: generateId(),
+          name: getNextCustomScenarioName(),
+          applicability: '',
+          notes: '',
+          fieldValues: {},
+          metricIds: state.metricIds,
+          curves: state.curves,
+          metricProfiles: state.metricProfiles,
+          showAdvancedScoring: false,
+          showRollupComputations: false,
+          showFunctionMappings: false,
+          showSuggestedFunctionScoresCue: false,
+          showFunctionScoreCueLabels: false,
+        };
+      };
 
       const getActiveScenario = () =>
         scenarios.find((scenario) => scenario.id === activeScenarioId);
 
+      const ensureScenarioViewOptions = (scenario) => {
+        if (!scenario) {
+          return;
+        }
+        if (typeof scenario.showAdvancedScoring !== 'boolean') {
+          scenario.showAdvancedScoring = false;
+        }
+        if (typeof scenario.showRollupComputations !== 'boolean') {
+          scenario.showRollupComputations = false;
+        }
+        if (typeof scenario.showFunctionMappings !== 'boolean') {
+          scenario.showFunctionMappings = false;
+        }
+        if (typeof scenario.showSuggestedFunctionScoresCue !== 'boolean') {
+          scenario.showSuggestedFunctionScoresCue = false;
+        }
+        if (typeof scenario.showFunctionScoreCueLabels !== 'boolean') {
+          scenario.showFunctionScoreCueLabels = false;
+        }
+      };
+
       const ensureCurve = (scenario, metricId) => {
         if (!scenario.curves[metricId]) {
-          scenario.curves[metricId] = buildDefaultCurve();
+          const metric = metricById.get(metricId);
+          scenario.curves[metricId] =
+            metric && metric.referenceCurve
+              ? cloneCurve(metric.referenceCurve)
+              : buildDefaultCurve();
         }
         return scenario.curves[metricId];
       };
@@ -423,7 +1066,7 @@
 
       if (addTabButton) {
         addTabButton.addEventListener('click', () => {
-          const scenario = createScenario();
+          const scenario = createBlankScenario();
           scenarios.push(scenario);
           activeScenarioId = scenario.id;
           renderAll();
@@ -444,6 +1087,7 @@
             fieldValues: { ...(scenario.fieldValues || {}) },
             curves: JSON.parse(JSON.stringify(scenario.curves || {})),
           };
+          ensureScenarioViewOptions(copy);
           scenarios.push(copy);
           activeScenarioId = copy.id;
           renderAll();
@@ -467,6 +1111,76 @@
         });
       }
 
+      const getShowAdvancedScoring = () =>
+        Boolean(getActiveScenario()?.showAdvancedScoring);
+      const getShowRollupComputations = () =>
+        Boolean(getActiveScenario()?.showRollupComputations);
+      const getShowFunctionMappings = () =>
+        Boolean(getActiveScenario()?.showFunctionMappings);
+      const getShowSuggestedFunctionScoresCue = () =>
+        Boolean(getActiveScenario()?.showSuggestedFunctionScoresCue);
+      const getShowFunctionScoreCueLabels = () =>
+        Boolean(getActiveScenario()?.showFunctionScoreCueLabels);
+
+      const scoringControls = document.createElement('div');
+      scoringControls.className = 'screening-scoring-controls';
+
+      const advancedToggleLabel = document.createElement('label');
+      advancedToggleLabel.className = 'screening-advanced-toggle';
+      const advancedToggle = document.createElement('input');
+      advancedToggle.type = 'checkbox';
+      advancedToggle.className = 'screening-advanced-toggle-input';
+      const advancedToggleText = document.createElement('span');
+      advancedToggleText.textContent = 'Show advanced scoring columns';
+      advancedToggleLabel.appendChild(advancedToggle);
+      advancedToggleLabel.appendChild(advancedToggleText);
+
+      const mappingToggleLabel = document.createElement('label');
+      mappingToggleLabel.className = 'screening-advanced-toggle';
+      const mappingToggle = document.createElement('input');
+      mappingToggle.type = 'checkbox';
+      mappingToggle.className = 'screening-mapping-toggle-input';
+      const mappingToggleText = document.createElement('span');
+      mappingToggleText.textContent = 'Show Function Mappings';
+      mappingToggleLabel.appendChild(mappingToggle);
+      mappingToggleLabel.appendChild(mappingToggleText);
+
+      const rollupToggleLabel = document.createElement('label');
+      rollupToggleLabel.className = 'screening-advanced-toggle';
+      const rollupToggle = document.createElement('input');
+      rollupToggle.type = 'checkbox';
+      rollupToggle.className = 'screening-rollup-toggle-input';
+      const rollupToggleText = document.createElement('span');
+      rollupToggleText.textContent = 'Show roll-up at bottom';
+      rollupToggleLabel.appendChild(rollupToggle);
+      rollupToggleLabel.appendChild(rollupToggleText);
+
+      const suggestedCueToggleLabel = document.createElement('label');
+      suggestedCueToggleLabel.className = 'screening-advanced-toggle';
+      const suggestedCueToggle = document.createElement('input');
+      suggestedCueToggle.type = 'checkbox';
+      suggestedCueToggle.className = 'screening-suggested-cue-toggle-input';
+      const suggestedCueToggleText = document.createElement('span');
+      suggestedCueToggleText.textContent = 'Show Suggested Function Scores';
+      suggestedCueToggleLabel.appendChild(suggestedCueToggle);
+      suggestedCueToggleLabel.appendChild(suggestedCueToggleText);
+
+      const sliderLabelsToggleLabel = document.createElement('label');
+      sliderLabelsToggleLabel.className = 'screening-advanced-toggle';
+      const sliderLabelsToggle = document.createElement('input');
+      sliderLabelsToggle.type = 'checkbox';
+      sliderLabelsToggle.className = 'screening-slider-labels-toggle-input';
+      const sliderLabelsToggleText = document.createElement('span');
+      sliderLabelsToggleText.textContent = 'Show F/AR/NF labels';
+      sliderLabelsToggleLabel.appendChild(sliderLabelsToggle);
+      sliderLabelsToggleLabel.appendChild(sliderLabelsToggleText);
+
+      scoringControls.appendChild(advancedToggleLabel);
+      scoringControls.appendChild(mappingToggleLabel);
+      scoringControls.appendChild(rollupToggleLabel);
+      scoringControls.appendChild(suggestedCueToggleLabel);
+      scoringControls.appendChild(sliderLabelsToggleLabel);
+
       const controls = document.createElement('div');
       controls.className = 'detailed-controls';
 
@@ -488,32 +1202,48 @@
         disciplineFilter.appendChild(option);
       });
 
-      const addSelect = document.createElement('select');
-      addSelect.className = 'metric-add-select';
-      const addPlaceholder = document.createElement('option');
-      addPlaceholder.value = '';
-      addPlaceholder.textContent = 'Quick add metric...';
-      addSelect.appendChild(addPlaceholder);
-
-      const addButton = document.createElement('button');
-      addButton.type = 'button';
-      addButton.className = 'btn btn-small';
-      addButton.textContent = 'Add';
-
       const libraryButton = document.createElement('button');
       libraryButton.type = 'button';
       libraryButton.className = 'btn btn-small library-open-btn';
       libraryButton.setAttribute('data-open-metric-library', 'true');
       libraryButton.textContent = 'Metric Library';
 
+      const openMetricLibraryWithFilters = (discipline, functionName) => {
+        if (!window.dispatchEvent) {
+          return;
+        }
+        window.dispatchEvent(
+          new CustomEvent('staf:set-library-filters', {
+            detail: { tier: 'detailed', discipline, functionName },
+          })
+        );
+      };
+
+      const openMetricInspectorForMetric = (metricId) => {
+        if (!window.dispatchEvent || !metricId) {
+          return;
+        }
+        const scenario = getActiveScenario();
+        const profileId = scenario?.metricProfiles?.[metricId] || defaultProfileId;
+        window.dispatchEvent(
+          new CustomEvent('staf:open-inspector', {
+            detail: {
+              tier: 'detailed',
+              metricId,
+              profileId,
+              tab: 'details',
+            },
+          })
+        );
+      };
+
       controls.appendChild(search);
       controls.appendChild(disciplineFilter);
-      controls.appendChild(addSelect);
-      controls.appendChild(addButton);
       controls.appendChild(libraryButton);
 
       if (controlsHost) {
         controlsHost.innerHTML = '';
+        controlsHost.appendChild(scoringControls);
         controlsHost.appendChild(controls);
       }
 
@@ -526,7 +1256,10 @@
         '<th class="col-function">Function</th>' +
         '<th class="col-metric">Metric</th>' +
         '<th class="col-field">Field value</th>' +
+        '<th class="col-scoring-criteria">Scoring<br>criteria</th>' +
         '<th class="col-index">Metric<br>index</th>' +
+        '<th class="col-function-estimate">Function<br>Estimate</th>' +
+        '<th class="col-function-score">Function<br>Score</th>' +
         '<th class="col-physical">Physical</th>' +
         '<th class="col-chemical">Chemical</th>' +
         '<th class="col-biological">Biological</th>' +
@@ -537,9 +1270,87 @@
       table.appendChild(tbody);
       table.appendChild(tfoot);
 
+      const chartsShell = document.createElement('div');
+      chartsShell.className =
+        'screening-settings-panel screening-charts-panel rapid-charts-panel detailed-charts-panel';
+      const chartsHeader = document.createElement('div');
+      chartsHeader.className = 'settings-header screening-charts-header';
+      const chartsTitle = document.createElement('h3');
+      chartsTitle.textContent = 'Summary Plots';
+      chartsHeader.appendChild(chartsTitle);
+      const chartsLegend = document.createElement('div');
+      chartsLegend.className = 'screening-chart-legend';
+      chartsLegend.innerHTML =
+        '<div class="legend-group" aria-label="Function score ranges">' +
+        '<div class="legend-labels legend-labels-left">' +
+        '<div>Functioning</div>' +
+        '<div>At-Risk</div>' +
+        '<div>Non-Functioning</div>' +
+        '<div class="detailed-legend-abbrev" hidden>F / AR / NF</div>' +
+        '</div>' +
+        '<div class="legend-bar" aria-hidden="true"></div>' +
+        '<div class="legend-labels legend-labels-right">' +
+        '<div>11 - 15</div>' +
+        '<div>6 - 10</div>' +
+        '<div>0 - 5</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="legend-spacer" aria-hidden="true"></div>' +
+        '<div class="legend-group" aria-label="Condition index ranges">' +
+        '<div class="legend-labels legend-labels-left">' +
+        '<div>Functioning</div>' +
+        '<div>At-Risk</div>' +
+        '<div>Non-Functioning</div>' +
+        '</div>' +
+        '<div class="legend-bar" aria-hidden="true"></div>' +
+        '<div class="legend-labels legend-labels-right">' +
+        '<div>0.70 - 1.00</div>' +
+        '<div>0.30 - 0.69</div>' +
+        '<div>0.00 - 0.29</div>' +
+        '</div>' +
+        '</div>';
+      chartsHeader.appendChild(chartsLegend);
+      const chartsWrap = document.createElement('div');
+      chartsWrap.className = 'screening-charts';
+      const functionChartSection = document.createElement('div');
+      functionChartSection.className = 'screening-chart-section';
+      const functionChartTitle = document.createElement('div');
+      functionChartTitle.className = 'screening-chart-title';
+      functionChartTitle.textContent = 'Function Scores';
+      const functionChartBody = document.createElement('div');
+      functionChartBody.className = 'screening-chart-body';
+      functionChartSection.appendChild(functionChartTitle);
+      functionChartSection.appendChild(functionChartBody);
+
+      const summaryChartSection = document.createElement('div');
+      summaryChartSection.className = 'screening-chart-section';
+      const summaryChartTitle = document.createElement('div');
+      summaryChartTitle.className = 'screening-chart-title';
+      summaryChartTitle.textContent = 'Condition Indices';
+      const summaryChartBody = document.createElement('div');
+      summaryChartBody.className = 'screening-chart-body';
+      summaryChartSection.appendChild(summaryChartTitle);
+      summaryChartSection.appendChild(summaryChartBody);
+
+      chartsWrap.appendChild(functionChartSection);
+      const chartsSpacer = document.createElement('div');
+      chartsSpacer.className = 'screening-chart-spacer';
+      chartsWrap.appendChild(chartsSpacer);
+      chartsWrap.appendChild(summaryChartSection);
+      chartsShell.appendChild(chartsHeader);
+      chartsShell.appendChild(chartsWrap);
+
       if (tableHost) {
         tableHost.innerHTML = '';
         tableHost.appendChild(table);
+        const parent = tableHost.parentElement;
+        if (parent) {
+          const existing = parent.querySelector('.detailed-charts-panel');
+          if (existing && existing !== chartsShell) {
+            existing.remove();
+          }
+          parent.appendChild(chartsShell);
+        }
       }
 
       const summaryCells = {
@@ -549,15 +1360,44 @@
         ecosystem: null,
       };
 
-      const buildSummary = () => {
+      const renderHeader = (showMappings, showAdvanced) => {
+        const useAbbrev = showMappings && showAdvanced;
+        const mappingHeaders = showMappings
+          ? `<th class="col-physical"${useAbbrev ? ' title="Physical"' : ''}>${
+              useAbbrev ? 'Phy' : 'Physical'
+            }</th>` +
+            `<th class="col-chemical"${useAbbrev ? ' title="Chemical"' : ''}>${
+              useAbbrev ? 'Chem' : 'Chemical'
+            }</th>` +
+            `<th class="col-biological"${useAbbrev ? ' title="Biological"' : ''}>${
+              useAbbrev ? 'Bio' : 'Biological'
+            }</th>`
+          : '';
+        thead.innerHTML =
+          '<tr>' +
+          '<th class="col-discipline">Discipline</th>' +
+          '<th class="col-function">Function</th>' +
+          '<th class="col-metric">Metric</th>' +
+          '<th class="col-field">Field value</th>' +
+          '<th class="col-scoring-criteria">Scoring<br>criteria</th>' +
+          '<th class="col-index">Metric<br>index</th>' +
+          '<th class="col-function-estimate">Function<br>Estimate</th>' +
+          '<th class="col-function-score">Function<br>Score</th>' +
+          mappingHeaders +
+          '</tr>';
+      };
+
+      const buildSummary = (showAdvanced, showMappings) => {
         const labelItems = [
-          'Direct Effect',
-          'Indirect Effect',
-          'Weighted Score Total',
-          'Max Weighted Score Total',
-          'Condition Sub-Index',
-          'Ecosystem Condition Index',
+          { label: 'Direct Effect', rollup: true },
+          { label: 'Indirect Effect', rollup: true },
+          { label: 'Weighted Score Total', rollup: true },
+          { label: 'Max Weighted Score Total', rollup: true },
+          { label: 'Condition Sub-Index', rollup: false },
+          { label: 'Ecosystem Condition Index', rollup: false },
         ];
+        const visibleColumns = 5 + (showAdvanced ? 3 : 0) + (showMappings ? 3 : 0);
+        const labelSpan = Math.max(1, visibleColumns - 3);
 
         tfoot.innerHTML = '';
         summaryCells.physical = [];
@@ -565,15 +1405,44 @@
         summaryCells.biological = [];
         summaryCells.ecosystem = null;
 
-        labelItems.forEach((label) => {
+        if (!showMappings) {
+          const gapRow = document.createElement('tr');
+          gapRow.className = 'summary-gap-row';
+          const gapCell = document.createElement('td');
+          gapCell.colSpan = visibleColumns;
+          gapRow.appendChild(gapCell);
+          tfoot.appendChild(gapRow);
+
+          const headerRow = document.createElement('tr');
+          const spacer = document.createElement('td');
+          spacer.colSpan = labelSpan;
+          spacer.className = 'summary-labels summary-spacer';
+          headerRow.appendChild(spacer);
+          [
+            { label: 'Physical', className: 'col-physical' },
+            { label: 'Chemical', className: 'col-chemical' },
+            { label: 'Biological', className: 'col-biological' },
+          ].forEach(({ label, className }) => {
+            const cell = document.createElement('td');
+            cell.className = `summary-mapping-header ${className}`;
+            cell.textContent = label;
+            headerRow.appendChild(cell);
+          });
+          tfoot.appendChild(headerRow);
+        }
+
+        labelItems.forEach((item) => {
           const row = document.createElement('tr');
+          if (item.rollup && !getShowRollupComputations()) {
+            row.hidden = true;
+          }
           const labelCell = document.createElement('td');
-          labelCell.colSpan = 5;
+          labelCell.colSpan = labelSpan;
           labelCell.className = 'summary-labels';
-          labelCell.textContent = label;
+          labelCell.textContent = item.label;
           row.appendChild(labelCell);
 
-          if (label === 'Ecosystem Condition Index') {
+          if (item.label === 'Ecosystem Condition Index') {
             const merged = document.createElement('td');
             merged.colSpan = 3;
             merged.className = 'summary-values summary-merged';
@@ -585,7 +1454,7 @@
           } else {
             ['physical', 'chemical', 'biological'].forEach((key) => {
               const cell = document.createElement('td');
-              cell.className = 'summary-values';
+              cell.className = `summary-values col-${key}`;
               const value = document.createElement('div');
               value.textContent = '-';
               summaryCells[key].push(value);
@@ -599,25 +1468,160 @@
 
       const expandedMetrics = new Set();
 
-      const buildAddOptions = (selectedMetricIds) => {
-        addSelect.innerHTML = '';
-        addSelect.appendChild(addPlaceholder);
-        const disciplineValue = disciplineFilter.value;
-        metrics
-          .filter((metric) => !selectedMetricIds.has(metric.id))
-          .filter(
-            (metric) =>
-              disciplineValue === 'all' ||
-              (metric.discipline || '') === disciplineValue ||
-              (functionByName.get(normalizeText(metric.functionName))?.category || '') ===
-                disciplineValue
-          )
-          .forEach((metric) => {
-            const option = document.createElement('option');
-            option.value = metric.id;
-            option.textContent = `${metric.functionName}: ${metric.metric}`;
-            addSelect.appendChild(option);
+      const summaryColorForValue = (value) => {
+        if (value <= 0.29) {
+          return '#f5b5b5';
+        }
+        if (value <= 0.69) {
+          return '#f5e7a6';
+        }
+        return '#c8d9f2';
+      };
+
+      const functionScoreColorForValue = (value) => {
+        if (value <= 5) {
+          return '#f5b5b5';
+        }
+        if (value <= 10) {
+          return '#f5e7a6';
+        }
+        return '#c8d9f2';
+      };
+
+      const getDetailedFunctionScorePalette = (score) => {
+        if (score >= 11) {
+          return { base: '#a7c7f2', active: '#7faee9' };
+        }
+        if (score >= 6) {
+          return { base: '#f7e088', active: '#f0cd52' };
+        }
+        return { base: '#ef9a9a', active: '#e07070' };
+      };
+
+      const updateDetailedFunctionScoreVisual = (rangeInput, scoreValue) => {
+        if (!rangeInput) {
+          return;
+        }
+        const min = Number(rangeInput.min) || 0;
+        const max = Number(rangeInput.max) || 15;
+        const safeValue = Number.isFinite(scoreValue) ? scoreValue : min;
+        const clamped = Math.min(max, Math.max(min, safeValue));
+        const palette = getDetailedFunctionScorePalette(clamped);
+        const percent = max > min ? ((clamped - min) / (max - min)) * 100 : 0;
+        rangeInput.style.setProperty('--screening-score-pct', `${percent}%`);
+        rangeInput.style.setProperty('--screening-score-color', palette.base);
+        rangeInput.style.setProperty('--screening-score-color-active', palette.active);
+      };
+
+      const updateDetailedSuggestedBracket = (
+        bracketEl,
+        minValue,
+        maxValue,
+        hasSuggestedRange
+      ) => {
+        if (!bracketEl) {
+          return;
+        }
+        if (!hasSuggestedRange || !Number.isFinite(minValue) || !Number.isFinite(maxValue)) {
+          bracketEl.hidden = true;
+          return;
+        }
+        const sliderMin = 0;
+        const sliderMax = 15;
+        const safeMin = Math.min(sliderMax, Math.max(sliderMin, minValue));
+        const safeMax = Math.min(sliderMax, Math.max(sliderMin, maxValue));
+        const low = Math.min(safeMin, safeMax);
+        const high = Math.max(safeMin, safeMax);
+        const leftPct = ((low - sliderMin) / (sliderMax - sliderMin)) * 100;
+        const rightPct = ((high - sliderMin) / (sliderMax - sliderMin)) * 100;
+        bracketEl.style.left = `${leftPct}%`;
+        bracketEl.style.width = `${Math.max(0, rightPct - leftPct)}%`;
+        bracketEl.hidden = false;
+      };
+
+      const buildBarRow = ({ label, value, maxValue, color, valueText }) => {
+        const row = document.createElement('div');
+        row.className = 'screening-bar-row';
+        const labelCell = document.createElement('div');
+        labelCell.className = 'screening-bar-label';
+        labelCell.textContent = label;
+        const barCell = document.createElement('div');
+        barCell.className = 'screening-bar-track';
+        const fill = document.createElement('div');
+        fill.className = 'screening-bar-fill';
+        const width = maxValue > 0 ? Math.max(0, Math.min(1, value / maxValue)) : 0;
+        fill.style.width = `${(width * 100).toFixed(1)}%`;
+        fill.style.background = color;
+        barCell.appendChild(fill);
+        const valueCell = document.createElement('div');
+        valueCell.className = 'screening-bar-value';
+        valueCell.textContent = valueText ?? value.toFixed(2);
+        row.appendChild(labelCell);
+        row.appendChild(barCell);
+        row.appendChild(valueCell);
+        return row;
+      };
+
+      const renderCharts = (functionOrder, functionScores, summaryValues) => {
+        if (!functionChartBody || !summaryChartBody) {
+          return;
+        }
+        functionChartBody.innerHTML = '';
+        summaryChartBody.innerHTML = '';
+
+        const functionsToShow = Array.isArray(functionOrder) ? functionOrder : [];
+        if (!functionsToShow.length) {
+          const empty = document.createElement('div');
+          empty.className = 'screening-chart-empty';
+          empty.textContent = 'No function scores available.';
+          functionChartBody.appendChild(empty);
+        } else {
+          let lastDiscipline = null;
+          functionsToShow.forEach((fn, index) => {
+            const disciplineKey = (fn.discipline || '').toLowerCase();
+            if (index > 0 && lastDiscipline !== null && disciplineKey !== lastDiscipline) {
+              const divider = document.createElement('div');
+              divider.className = 'screening-bar-divider';
+              functionChartBody.appendChild(divider);
+            }
+            const score = functionScores.get(fn.id);
+            if (score === undefined || score === null) {
+              return;
+            }
+            const rounded = Math.round(score);
+            functionChartBody.appendChild(
+              buildBarRow({
+                label: fn.name,
+                value: rounded,
+                maxValue: 15,
+                color: functionScoreColorForValue(rounded),
+                valueText: String(rounded),
+              })
+            );
+            lastDiscipline = disciplineKey;
           });
+        }
+
+        const summaryItems = [
+          { label: 'Physical', value: summaryValues.physical },
+          { label: 'Chemical', value: summaryValues.chemical },
+          { label: 'Biological', value: summaryValues.biological },
+          { label: 'Overall Ecosystem', value: summaryValues.ecosystem },
+        ];
+        summaryItems.forEach((item) => {
+          if (item.value === null || item.value === undefined) {
+            return;
+          }
+          summaryChartBody.appendChild(
+            buildBarRow({
+              label: item.label,
+              value: item.value,
+              maxValue: 1,
+              color: summaryColorForValue(item.value),
+              valueText: item.value.toFixed(2),
+            })
+          );
+        });
       };
 
       const updateSummary = (functionScores) => {
@@ -674,6 +1678,13 @@
         if (summaryCells.ecosystem) {
           summaryCells.ecosystem.textContent = formatNumber(ecosystemIndex);
         }
+
+        return {
+          physical: physicalIndex,
+          chemical: chemicalIndex,
+          biological: biologicalIndex,
+          ecosystem: ecosystemIndex,
+        };
       };
 
       const renderCurveLayerControls = (curve) => {
@@ -1148,9 +2159,168 @@
         });
       }
 
+      const renderViewOptionControls = () => {
+        const scenario = getActiveScenario();
+        if (advancedToggle) {
+          advancedToggle.checked = Boolean(scenario?.showAdvancedScoring);
+        }
+        if (mappingToggle) {
+          mappingToggle.checked = Boolean(scenario?.showFunctionMappings);
+        }
+        if (rollupToggle) {
+          rollupToggle.checked = Boolean(scenario?.showRollupComputations);
+        }
+        if (suggestedCueToggle) {
+          suggestedCueToggle.checked = Boolean(
+            scenario?.showSuggestedFunctionScoresCue
+          );
+        }
+        if (sliderLabelsToggle) {
+          sliderLabelsToggle.checked = Boolean(
+            scenario?.showFunctionScoreCueLabels
+          );
+        }
+      };
+
+      const formatCurveNumber = (value, places = 6) => {
+        const parsed = parseScore(value);
+        if (parsed === null) {
+          return '-';
+        }
+        const rounded = roundScore(parsed, places);
+        return Number.isInteger(rounded) ? String(rounded) : String(rounded);
+      };
+
+      const buildDetailedCurveSummaryTable = (curve) => {
+        const table = document.createElement('table');
+        table.className = 'curve-summary-table';
+
+        const layer = getCurveLayer(curve);
+        let rawPoints = Array.isArray(layer?.points) ? [...layer.points] : [];
+        const curveType = normalizeCurveType(curve?.xType);
+        const useRange = curveType === 'categorical' && !!curve?.indexRange;
+        if (useRange) {
+          const needsRanges = rawPoints.some(
+            (point) => parseScore(point.yMin) === null || parseScore(point.yMax) === null
+          );
+          if (needsRanges) {
+            applyIndexRanges(rawPoints);
+          }
+        }
+
+        const points = rawPoints
+          .map((point, index) => {
+            const numericX = parseScore(point.x);
+            const valueLabel =
+              curveType === 'categorical'
+                ? compactWhitespace(point.x ?? '') || `Category ${index + 1}`
+                : numericX !== null
+                  ? formatCurveNumber(numericX)
+                  : compactWhitespace(point.x ?? '') || '-';
+            return {
+              order: index,
+              numericX,
+              valueLabel,
+              y: parseScore(point.y),
+              yMin: parseScore(point.yMin),
+              yMax: parseScore(point.yMax),
+            };
+          })
+          .sort((a, b) => {
+            if (curveType === 'categorical') {
+              return a.order - b.order;
+            }
+            if (a.numericX === null && b.numericX === null) {
+              return a.order - b.order;
+            }
+            if (a.numericX === null) {
+              return 1;
+            }
+            if (b.numericX === null) {
+              return -1;
+            }
+            return a.numericX - b.numericX;
+          });
+
+        const buildRow = (label, valueBuilder) => {
+          const row = document.createElement('tr');
+          const rowLabel = document.createElement('th');
+          rowLabel.textContent = label;
+          row.appendChild(rowLabel);
+          if (!points.length) {
+            const empty = document.createElement('td');
+            empty.textContent = '-';
+            row.appendChild(empty);
+            return row;
+          }
+          points.forEach((point) => {
+            const cell = document.createElement('td');
+            cell.textContent = valueBuilder(point);
+            row.appendChild(cell);
+          });
+          return row;
+        };
+
+        table.appendChild(buildRow('Value', (point) => point.valueLabel));
+        table.appendChild(
+          buildRow('Index', (point) => {
+            if (useRange && point.yMin !== null && point.yMax !== null) {
+              return `${point.yMin.toFixed(2)}-${point.yMax.toFixed(2)}`;
+            }
+            return point.y === null ? '-' : point.y.toFixed(2);
+          })
+        );
+        table.appendChild(
+          buildRow('Function Score', (point) => {
+            if (useRange && point.yMin !== null && point.yMax !== null) {
+              return `${Math.round(point.yMin * 15)}-${Math.round(point.yMax * 15)}`;
+            }
+            return point.y === null ? '-' : String(Math.round(point.y * 15));
+          })
+        );
+
+        return table;
+      };
+
+      const getFunctionEstimateText = (curve, fieldValue) => {
+        const meta = resolveDetailedIndexMeta(curve, fieldValue);
+        if (!meta || !Number.isFinite(meta.indexScore)) {
+          return '-';
+        }
+        const avgScore = Math.round(clamp(meta.indexScore, 0, 1) * 15);
+        if (
+          Number.isFinite(meta.minIndex) &&
+          Number.isFinite(meta.maxIndex)
+        ) {
+          const minScore = Math.round(clamp(meta.minIndex, 0, 1) * 15);
+          const maxScore = Math.round(clamp(meta.maxIndex, 0, 1) * 15);
+          if (minScore !== maxScore) {
+            return `${avgScore} (${minScore}-${maxScore})`;
+          }
+        }
+        return String(avgScore);
+      };
+
       const renderTable = () => {
         tbody.innerHTML = '';
         const scenario = getActiveScenario();
+        ensureScenarioViewOptions(scenario);
+        const showAdvanced = getShowAdvancedScoring();
+        const showMappings = getShowFunctionMappings();
+        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
+        const showSliderLabels = getShowFunctionScoreCueLabels();
+        table.classList.toggle('show-advanced-scoring', showAdvanced);
+        table.classList.toggle('show-function-mappings', showMappings);
+        table.classList.toggle('show-suggested-function-cues', showSuggestedCue);
+        table.classList.toggle('show-function-score-cue-labels', showSliderLabels);
+        chartsShell.classList.toggle('show-suggested-function-cues', showSuggestedCue);
+        chartsShell.classList.toggle('show-function-score-cue-labels', showSliderLabels);
+        renderHeader(showMappings, showAdvanced);
+        renderViewOptionControls();
+        const abbrevLegend = chartsShell.querySelector('.detailed-legend-abbrev');
+        if (abbrevLegend) {
+          abbrevLegend.hidden = !showSliderLabels;
+        }
         if (!scenario) {
           tfoot.innerHTML = '';
           if (search) {
@@ -1159,16 +2329,24 @@
           if (disciplineFilter) {
             disciplineFilter.disabled = true;
           }
-          if (addSelect) {
-            addSelect.disabled = true;
+          if (functionChartBody) {
+            functionChartBody.innerHTML = '';
+            const empty = document.createElement('div');
+            empty.className = 'screening-chart-empty';
+            empty.textContent = 'No function scores available.';
+            functionChartBody.appendChild(empty);
           }
-          if (addButton) {
-            addButton.disabled = true;
+          if (summaryChartBody) {
+            summaryChartBody.innerHTML = '';
+            const empty = document.createElement('div');
+            empty.className = 'screening-chart-empty';
+            empty.textContent = 'No condition indices available.';
+            summaryChartBody.appendChild(empty);
           }
           const emptyRow = document.createElement('tr');
           emptyRow.className = 'empty-row';
           const emptyCell = document.createElement('td');
-          emptyCell.colSpan = 8;
+          emptyCell.colSpan = 5 + (showAdvanced ? 3 : 0) + (showMappings ? 3 : 0);
           emptyCell.textContent = 'No detailed assessments yet. Click + to add one.';
           emptyRow.appendChild(emptyCell);
           tbody.appendChild(emptyRow);
@@ -1180,19 +2358,12 @@
         if (disciplineFilter) {
           disciplineFilter.disabled = false;
         }
-        if (addSelect) {
-          addSelect.disabled = false;
-        }
-        if (addButton) {
-          addButton.disabled = false;
-        }
 
-        buildSummary();
+        buildSummary(showAdvanced, showMappings);
+        tfoot.hidden = false;
         const term = search.value.trim().toLowerCase();
         const disciplineValue = disciplineFilter.value;
         const selectedMetricIds = new Set(scenario.metricIds || []);
-
-        buildAddOptions(selectedMetricIds);
 
         const metricsByFunction = new Map();
         metrics.forEach((metric) => {
@@ -1209,6 +2380,7 @@
         });
 
         const renderRows = [];
+        const functionOrder = [];
         functionsList.forEach((fn) => {
           const discipline = fn.category || '';
           if (disciplineValue !== 'all' && disciplineValue !== discipline) {
@@ -1225,12 +2397,20 @@
             );
           });
           if (filteredMetrics.length) {
+            functionOrder.push({
+              id: fn.id,
+              name: fn.name,
+              discipline,
+            });
             filteredMetrics.forEach((metric) => {
               renderRows.push({
                 type: 'metric',
                 discipline,
                 functionId: fn.id,
                 functionName: fn.name,
+                functionStatement:
+                  metric.functionStatement ||
+                  compactWhitespace(functionById.get(fn.id)?.function_statement || ''),
                 metric,
               });
               if (expandedMetrics.has(metric.id)) {
@@ -1239,6 +2419,9 @@
                   discipline,
                   functionId: fn.id,
                   functionName: fn.name,
+                  functionStatement:
+                    metric.functionStatement ||
+                    compactWhitespace(functionById.get(fn.id)?.function_statement || ''),
                   metric,
                 });
               }
@@ -1249,24 +2432,62 @@
               discipline,
               functionId: fn.id,
               functionName: fn.name,
+              functionStatement: compactWhitespace(fn.function_statement || ''),
             });
           }
         });
 
         const functionScores = new Map();
+        const functionScoreMeta = new Map();
         functionsList.forEach((fn) => {
           const fnMetrics = metricsByFunction.get(fn.id) || [];
-          const scores = fnMetrics
+          const metas = fnMetrics
             .map((metric) => {
               const value = Number.parseFloat(scenario.fieldValues[metric.id]);
               const curve = ensureCurve(scenario, metric.id);
-              return computeIndexScore(curve, value);
+              return resolveDetailedIndexMeta(curve, value);
             })
-            .filter((score) => Number.isFinite(score));
-          const avg = scores.length
-            ? scores.reduce((sum, value) => sum + value, 0) / scores.length
+            .filter((meta) => meta && Number.isFinite(meta.indexScore));
+          const indexScores = metas.map((meta) => clamp(meta.indexScore, 0, 1));
+          const avgIndex = indexScores.length
+            ? indexScores.reduce((sum, value) => sum + value, 0) / indexScores.length
             : 0;
-          functionScores.set(fn.id, avg * 15);
+          const functionScore = Math.round(avgIndex * 15);
+          functionScores.set(fn.id, functionScore);
+
+          const rangeEntries = metas.map((meta) => {
+            const avgScore = Math.round(clamp(meta.indexScore, 0, 1) * 15);
+            const hasRange =
+              Number.isFinite(meta.minIndex) &&
+              Number.isFinite(meta.maxIndex) &&
+              Math.round(clamp(meta.minIndex, 0, 1) * 15) <
+                Math.round(clamp(meta.maxIndex, 0, 1) * 15);
+            return {
+              minScore: Number.isFinite(meta.minIndex)
+                ? Math.round(clamp(meta.minIndex, 0, 1) * 15)
+                : avgScore,
+              maxScore: Number.isFinite(meta.maxIndex)
+                ? Math.round(clamp(meta.maxIndex, 0, 1) * 15)
+                : avgScore,
+              hasRange,
+            };
+          });
+          const minLimit = rangeEntries.length
+            ? Math.min(...rangeEntries.map((range) => range.minScore))
+            : 0;
+          const maxLimit = rangeEntries.length
+            ? Math.max(...rangeEntries.map((range) => range.maxScore))
+            : 15;
+          const hasSuggestedRange =
+            rangeEntries.some((range) => range.hasRange) && minLimit < maxLimit;
+          functionScoreMeta.set(fn.id, {
+            value: functionScore,
+            minLimit,
+            maxLimit,
+            hasSuggestedRange,
+            isOutsideSuggestedRange:
+              hasSuggestedRange && (functionScore < minLimit || functionScore > maxLimit),
+          });
         });
 
         for (let i = 0; i < renderRows.length; i += 1) {
@@ -1307,12 +2528,20 @@
           if (row.type === 'placeholder') {
             tr.classList.add('is-empty');
           }
+          let functionScoreCellForRow = null;
 
           if (!row._disciplineSkip) {
             const disciplineCell = document.createElement('td');
             disciplineCell.className = 'discipline-cell col-discipline';
             disciplineCell.rowSpan = row._disciplineSpan;
-            disciplineCell.textContent = row.discipline;
+            const disciplineLink = document.createElement('button');
+            disciplineLink.type = 'button';
+            disciplineLink.className = 'metric-curve-link';
+            disciplineLink.textContent = row.discipline;
+            disciplineLink.addEventListener('click', () => {
+              openMetricLibraryWithFilters(row.discipline, 'all');
+            });
+            disciplineCell.appendChild(disciplineLink);
             tr.appendChild(disciplineCell);
           }
 
@@ -1320,109 +2549,220 @@
             const functionCell = document.createElement('td');
             functionCell.className = 'function-cell col-function';
             functionCell.rowSpan = row._functionSpan;
-            const functionName = document.createElement('div');
-            functionName.className = 'function-name';
-            functionName.textContent = row.functionName;
-            functionCell.appendChild(functionName);
-            const score = functionScores.get(row.functionId) ?? 0;
+            const nameLine = document.createElement('div');
+            nameLine.className = 'function-title';
+            const functionText = document.createElement('span');
+            functionText.className = 'metric-curve-link';
+            functionText.setAttribute('role', 'button');
+            functionText.tabIndex = 0;
+            functionText.appendChild(document.createTextNode(row.functionName));
+            const openFunctionLibrary = () => {
+              openMetricLibraryWithFilters(row.discipline, row.functionName);
+            };
+            functionText.addEventListener('click', openFunctionLibrary);
+            functionText.addEventListener('keydown', (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openFunctionLibrary();
+              }
+            });
+            const functionToggle = document.createElement('button');
+            functionToggle.type = 'button';
+            functionToggle.className = 'criteria-toggle function-toggle';
+            functionToggle.innerHTML = collapsedGlyph;
+            functionToggle.setAttribute('aria-expanded', 'false');
+            functionToggle.setAttribute('aria-label', 'Toggle function statement');
+            functionToggle.addEventListener('mousedown', (event) => {
+              if (event.detail > 0) {
+                event.preventDefault();
+              }
+            });
+            functionText.appendChild(document.createTextNode('\u00A0'));
+            functionText.appendChild(functionToggle);
+            nameLine.appendChild(functionText);
+            functionCell.appendChild(nameLine);
+            const statementLine = document.createElement('div');
+            statementLine.className = 'function-statement';
+            statementLine.textContent = row.functionStatement || '';
+            statementLine.hidden = true;
+            if (!statementLine.textContent) {
+              functionToggle.disabled = true;
+            }
+            functionToggle.addEventListener('click', (event) => {
+              event.stopPropagation();
+              if (!statementLine.textContent) {
+                return;
+              }
+              const isOpen = !statementLine.hidden;
+              statementLine.hidden = isOpen;
+              functionToggle.setAttribute('aria-expanded', String(!isOpen));
+              functionToggle.innerHTML = isOpen ? collapsedGlyph : expandedGlyph;
+            });
+            functionCell.appendChild(statementLine);
+            tr.appendChild(functionCell);
+
+            const functionScoreCell = document.createElement('td');
+            functionScoreCell.className = 'col-function-score function-score-cell';
+            functionScoreCell.rowSpan = row._functionSpan;
+            const scoreMeta = functionScoreMeta.get(row.functionId) || {
+              value: 0,
+              minLimit: 0,
+              maxLimit: 15,
+              hasSuggestedRange: false,
+              isOutsideSuggestedRange: false,
+            };
             const scoreWrap = document.createElement('div');
-            scoreWrap.className = 'function-score-wrap';
+            scoreWrap.className = 'score-input function-score-inline';
+            const sliderWrap = document.createElement('div');
+            sliderWrap.className = 'function-score-slider';
+
+            const cueLabels = document.createElement('div');
+            cueLabels.className = 'function-score-cue-labels';
+            [
+              { text: 'F', left: '16.67%' },
+              { text: 'AR', left: '50%' },
+              { text: 'NF', left: '83.33%' },
+            ].forEach(({ text, left }) => {
+              const label = document.createElement('span');
+              label.className = 'function-score-cue-label';
+              label.textContent = text;
+              label.style.left = left;
+              cueLabels.appendChild(label);
+            });
+
+            const cueBar = document.createElement('button');
+            cueBar.type = 'button';
+            cueBar.className = 'function-score-cue-bar';
+            cueBar.setAttribute('aria-label', 'Function score cue ranges');
+            cueBar.tabIndex = -1;
+            [0, 33.33, 66.67, 100].forEach((percent) => {
+              const tick = document.createElement('span');
+              tick.className = 'function-score-cue-tick';
+              tick.style.left = `${percent}%`;
+              cueBar.appendChild(tick);
+            });
+
+            const suggestedBracketLayer = document.createElement('div');
+            suggestedBracketLayer.className = 'function-score-suggested-layer';
+            const suggestedBracket = document.createElement('div');
+            suggestedBracket.className = 'function-score-suggested-bracket';
+            suggestedBracketLayer.appendChild(suggestedBracket);
+
             const range = document.createElement('input');
             range.type = 'range';
             range.min = '0';
             range.max = '15';
             range.step = '1';
-            range.value = Math.round(score).toString();
+            range.value = String(scoreMeta.value);
             range.disabled = true;
-            const scoreValue = document.createElement('span');
-            scoreValue.textContent = score.toFixed(2);
-            scoreWrap.appendChild(range);
-            scoreWrap.appendChild(scoreValue);
-            functionCell.appendChild(scoreWrap);
-            tr.appendChild(functionCell);
+            updateDetailedFunctionScoreVisual(range, scoreMeta.value);
+
+            const valueLabel = document.createElement('span');
+            valueLabel.className = 'score-value';
+            valueLabel.textContent = String(scoreMeta.value);
+
+            updateDetailedSuggestedBracket(
+              suggestedBracket,
+              scoreMeta.minLimit,
+              scoreMeta.maxLimit,
+              scoreMeta.hasSuggestedRange
+            );
+            const showOutOfRangeCue = Boolean(
+              scoreMeta.isOutsideSuggestedRange && showSuggestedCue
+            );
+            valueLabel.classList.toggle('is-outside-suggested', showOutOfRangeCue);
+            if (showOutOfRangeCue) {
+              valueLabel.title = 'Score is outside suggested range';
+            } else {
+              valueLabel.removeAttribute('title');
+            }
+            suggestedBracket.hidden = !showSuggestedCue || !scoreMeta.hasSuggestedRange;
+
+            sliderWrap.appendChild(cueLabels);
+            sliderWrap.appendChild(cueBar);
+            sliderWrap.appendChild(suggestedBracketLayer);
+            sliderWrap.appendChild(range);
+            scoreWrap.appendChild(sliderWrap);
+            scoreWrap.appendChild(valueLabel);
+            functionScoreCell.appendChild(scoreWrap);
+            functionScoreCellForRow = functionScoreCell;
           }
 
           if (row.type === 'details') {
             tr.classList.add('criteria-row');
+            tr.id = `detailed-criteria-${row.metric.id}`;
             const detailsCell = document.createElement('td');
-            detailsCell.className = 'criteria-details-cell';
-            detailsCell.colSpan = 6;
+            detailsCell.colSpan = 2 + (showAdvanced ? 3 : 0) + (showMappings ? 3 : 0);
             const details = document.createElement('div');
             details.className = 'criteria-details';
-
-            const curveRow = document.createElement('div');
-            curveRow.className = 'reference-curve-row';
-            const curveLabel = document.createElement('span');
-            curveLabel.textContent = 'Reference curve: Default';
-            const curveButton = document.createElement('button');
-            curveButton.type = 'button';
-            curveButton.className = 'btn btn-small';
-            curveButton.textContent = 'View/Edit Curve';
-            curveButton.addEventListener('click', () => openCurveModal(row.metric.id));
-            curveRow.appendChild(curveLabel);
-            curveRow.appendChild(curveButton);
-            details.appendChild(curveRow);
-
-            const metaBlock = document.createElement('div');
-            metaBlock.className = 'criteria-block';
-            metaBlock.innerHTML = `<strong>Context/Method</strong><div>Context: ${
-              row.metric.context || '-'
-            }</div><div>Method: ${row.metric.method || '-'}</div>`;
-            details.appendChild(metaBlock);
-
-            const measureBlock = document.createElement('div');
-            measureBlock.className = 'criteria-block';
-            measureBlock.innerHTML = `<strong>How to measure</strong><div>${
-              row.metric.howToMeasure || '-'
-            }</div>`;
-            details.appendChild(measureBlock);
-
-            const refBlock = document.createElement('div');
-            refBlock.className = 'criteria-block';
-            refBlock.innerHTML = `<strong>References</strong><div>${
-              row.metric.references || '-'
-            }</div>`;
-            details.appendChild(refBlock);
+            const headerRow = document.createElement('div');
+            headerRow.className = 'criteria-summary-header';
+            const headerLabel = document.createElement('span');
+            headerLabel.textContent = 'Scoring Criteria';
+            headerRow.appendChild(headerLabel);
+            details.appendChild(headerRow);
+            const curve = ensureCurve(scenario, row.metric.id);
+            details.appendChild(buildDetailedCurveSummaryTable(curve));
 
             detailsCell.appendChild(details);
             tr.appendChild(detailsCell);
           } else {
             const metricCell = document.createElement('td');
-            metricCell.className = 'metric-cell col-metric';
+            metricCell.className = 'col-metric';
             if (row.type === 'placeholder') {
               metricCell.textContent = 'No metrics selected for this function';
               tr.appendChild(metricCell);
             } else {
+              const metricTitle = document.createElement('span');
+              metricTitle.className = 'metric-title';
               const metricText = document.createElement('span');
-              metricText.textContent = row.metric.metric;
-              const metricInline = document.createElement('div');
-              metricInline.className = 'metric-inline';
-              metricInline.appendChild(metricText);
+              metricText.className = 'metric-curve-link';
+              metricText.setAttribute('role', 'button');
+              metricText.tabIndex = 0;
+              metricText.appendChild(document.createTextNode(row.metric.metric));
+              const openMetricInspector = () => {
+                openMetricInspectorForMetric(row.metric.id);
+              };
+              metricText.addEventListener('click', openMetricInspector);
+              metricText.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  openMetricInspector();
+                }
+              });
+              const detailsId = `detailed-criteria-${row.metric.id}`;
+              const criteriaExpanded = expandedMetrics.has(row.metric.id);
               const toggleBtn = document.createElement('button');
               toggleBtn.type = 'button';
               toggleBtn.className = 'criteria-toggle';
-              toggleBtn.innerHTML = '&#9662;';
-              toggleBtn.addEventListener('click', () => {
+              toggleBtn.innerHTML = criteriaExpanded ? expandedGlyph : collapsedGlyph;
+              toggleBtn.setAttribute(
+                'aria-expanded',
+                criteriaExpanded ? 'true' : 'false'
+              );
+              toggleBtn.setAttribute('aria-controls', detailsId);
+              toggleBtn.setAttribute('aria-label', 'Toggle criteria details');
+              toggleBtn.addEventListener('mousedown', (event) => {
+                if (event.detail > 0) {
+                  event.preventDefault();
+                }
+              });
+              toggleBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
                 if (expandedMetrics.has(row.metric.id)) {
                   expandedMetrics.delete(row.metric.id);
                 } else {
                   expandedMetrics.add(row.metric.id);
                 }
                 renderTable();
+                if (event.detail > 0) {
+                  setTimeout(() => toggleBtn.blur(), 0);
+                }
               });
-              metricInline.appendChild(toggleBtn);
-
-              const removeBtn = document.createElement('button');
-              removeBtn.type = 'button';
-              removeBtn.className = 'criteria-toggle criteria-remove';
-              removeBtn.textContent = 'X';
-              removeBtn.addEventListener('click', () => {
-                scenario.metricIds = scenario.metricIds.filter((id) => id !== row.metric.id);
-                delete scenario.fieldValues[row.metric.id];
-                renderTable();
-              });
-              metricInline.appendChild(removeBtn);
-              metricCell.appendChild(metricInline);
+              metricText.appendChild(document.createTextNode('\u00A0'));
+              metricText.appendChild(toggleBtn);
+              metricTitle.appendChild(metricText);
+              metricCell.appendChild(metricTitle);
               tr.appendChild(metricCell);
             }
 
@@ -1450,6 +2790,38 @@
             }
             tr.appendChild(fieldCell);
 
+            const criteriaCell = document.createElement('td');
+            criteriaCell.className = 'col-scoring-criteria';
+            if (row.type === 'metric') {
+              const curve = ensureCurve(scenario, row.metric.id);
+              const layerSelect = document.createElement('select');
+              const layers = Array.isArray(curve?.layers) ? curve.layers : [];
+              const activeLayerId =
+                curve?.activeLayerId && layers.some((layer) => layer.id === curve.activeLayerId)
+                  ? curve.activeLayerId
+                  : layers[0]?.id || '';
+              if (curve && activeLayerId && curve.activeLayerId !== activeLayerId) {
+                curve.activeLayerId = activeLayerId;
+              }
+              layers.forEach((layer) => {
+                const option = document.createElement('option');
+                option.value = layer.id;
+                option.textContent = layer.name || 'Default';
+                layerSelect.appendChild(option);
+              });
+              layerSelect.value = activeLayerId;
+              layerSelect.addEventListener('change', () => {
+                if (curve) {
+                  curve.activeLayerId = layerSelect.value;
+                }
+                renderTable();
+              });
+              criteriaCell.appendChild(layerSelect);
+            } else {
+              criteriaCell.textContent = '-';
+            }
+            tr.appendChild(criteriaCell);
+
             const indexCell = document.createElement('td');
             indexCell.className = 'index-cell col-index';
             if (row.type === 'metric') {
@@ -1464,53 +2836,90 @@
             }
             tr.appendChild(indexCell);
 
-            const mapping =
-              mappingById[row.functionId] || {
-                physical: '-',
-                chemical: '-',
-                biological: '-',
-              };
-            const physicalCell = document.createElement('td');
-            const chemicalCell = document.createElement('td');
-            const biologicalCell = document.createElement('td');
-            physicalCell.className = 'weight-cell col-physical physical-cell';
-            chemicalCell.className = 'weight-cell col-chemical chemical-cell';
-            biologicalCell.className = 'weight-cell col-biological biological-cell';
-            physicalCell.textContent = mapping.physical || '-';
-            chemicalCell.textContent = mapping.chemical || '-';
-            biologicalCell.textContent = mapping.biological || '-';
-            tr.appendChild(physicalCell);
-            tr.appendChild(chemicalCell);
-            tr.appendChild(biologicalCell);
+            const functionEstimateCell = document.createElement('td');
+            functionEstimateCell.className = 'col-function-estimate';
+            if (row.type === 'metric') {
+              const curve = ensureCurve(scenario, row.metric.id);
+              const fieldValue = Number.parseFloat(scenario.fieldValues[row.metric.id]);
+              functionEstimateCell.textContent = getFunctionEstimateText(curve, fieldValue);
+            } else {
+              functionEstimateCell.textContent = '-';
+            }
+            tr.appendChild(functionEstimateCell);
+
+            if (functionScoreCellForRow) {
+              tr.appendChild(functionScoreCellForRow);
+            }
+
+            if (showMappings) {
+              const mapping =
+                mappingById[row.functionId] || {
+                  physical: '-',
+                  chemical: '-',
+                  biological: '-',
+                };
+              const physicalCell = document.createElement('td');
+              const chemicalCell = document.createElement('td');
+              const biologicalCell = document.createElement('td');
+              physicalCell.className = 'weight-cell col-physical physical-cell';
+              chemicalCell.className = 'weight-cell col-chemical chemical-cell';
+              biologicalCell.className = 'weight-cell col-biological biological-cell';
+              physicalCell.textContent = mapping.physical || '-';
+              chemicalCell.textContent = mapping.chemical || '-';
+              biologicalCell.textContent = mapping.biological || '-';
+              tr.appendChild(physicalCell);
+              tr.appendChild(chemicalCell);
+              tr.appendChild(biologicalCell);
+            }
           }
 
           tbody.appendChild(tr);
         });
 
-        updateSummary(functionScores);
+        const summaryValues = updateSummary(functionScores);
+        renderCharts(functionOrder, functionScores, summaryValues);
       };
 
-      addButton.addEventListener('click', () => {
+      advancedToggle.addEventListener('change', () => {
         const scenario = getActiveScenario();
         if (!scenario) {
           return;
         }
-        const value = addSelect.value;
-        if (!value) {
-          return;
-        }
-        if (!scenario.metricIds.includes(value)) {
-          scenario.metricIds.push(value);
-        }
-        if (!scenario.metricProfiles) {
-          scenario.metricProfiles = {};
-        }
-        scenario.metricProfiles[value] = defaultProfileId;
-        ensureCurve(scenario, value);
-        addSelect.value = '';
+        scenario.showAdvancedScoring = advancedToggle.checked;
         renderTable();
       });
-
+      mappingToggle.addEventListener('change', () => {
+        const scenario = getActiveScenario();
+        if (!scenario) {
+          return;
+        }
+        scenario.showFunctionMappings = mappingToggle.checked;
+        renderTable();
+      });
+      rollupToggle.addEventListener('change', () => {
+        const scenario = getActiveScenario();
+        if (!scenario) {
+          return;
+        }
+        scenario.showRollupComputations = rollupToggle.checked;
+        renderTable();
+      });
+      suggestedCueToggle.addEventListener('change', () => {
+        const scenario = getActiveScenario();
+        if (!scenario) {
+          return;
+        }
+        scenario.showSuggestedFunctionScoresCue = suggestedCueToggle.checked;
+        renderTable();
+      });
+      sliderLabelsToggle.addEventListener('change', () => {
+        const scenario = getActiveScenario();
+        if (!scenario) {
+          return;
+        }
+        scenario.showFunctionScoreCueLabels = sliderLabelsToggle.checked;
+        renderTable();
+      });
       search.addEventListener('input', renderTable);
       disciplineFilter.addEventListener('change', renderTable);
 
@@ -1610,6 +3019,13 @@
           },
         });
       }
+
+      if (!scenarios.length) {
+        const exampleScenario = createExampleScenario();
+        scenarios.push(exampleScenario);
+        activeScenarioId = exampleScenario.id;
+      }
+      scenarios.forEach((scenario) => ensureScenarioViewOptions(scenario));
 
       renderAll();
     } catch (error) {

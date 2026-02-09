@@ -1,0 +1,289 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-fish-abundance-detailed",
+  "metricId": "population-support-fish-abundance-detailed",
+  "tier": "detailed",
+  "name": "Fish Abundance reference curve",
+  "axes": {
+    "xLabel": "Fish Abundance",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-fish-abundance-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-fish-abundance-detailed-wisconsin-sqt-adult-smallmouth-bass-native",
+          "name": "Wisconsin SQT - Adult Smallmouth Bass (Native)",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 28,
+              "y": 0.7,
+              "description": "Field 28, Index 0.7"
+            },
+            {
+              "x": 98,
+              "y": 1,
+              "description": "Field 98, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Adult Smallmouth Bass (Native)",
+            "sourceRow": 427,
+            "sourceRows": [
+              427
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "28",
+              "98",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-abundance-detailed-wisconsin-sqt-adult-and-yearling-brown-trout",
+          "name": "Wisconsin SQT - Adult and Yearling Brown Trout",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 533,
+              "y": 0.7,
+              "description": "Field 533, Index 0.7"
+            },
+            {
+              "x": 1860,
+              "y": 1,
+              "description": "Field 1860, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Adult and Yearling Brown Trout",
+            "sourceRow": 428,
+            "sourceRows": [
+              428
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "533",
+              "1860",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-abundance-detailed-wisconsin-sqt-adult-and-yearling-brook-trout-na",
+          "name": "Wisconsin SQT - Adult and Yearling Brook Trout (Native)",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 380,
+              "y": 0.7,
+              "description": "Field 380, Index 0.7"
+            },
+            {
+              "x": 1306,
+              "y": 1,
+              "description": "Field 1306, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Adult and Yearling Brook Trout (Native)",
+            "sourceRow": 429,
+            "sourceRows": [
+              429
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "380",
+              "1306",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-abundance-detailed-wisconsin-sqt-lake-superior-trout-yoy",
+          "name": "Wisconsin SQT - Lake Superior Trout YoY",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 300,
+              "y": 0.7,
+              "description": "Field 300, Index 0.7"
+            },
+            {
+              "x": 900,
+              "y": 1,
+              "description": "Field 900, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Lake Superior Trout YoY",
+            "sourceRow": 430,
+            "sourceRows": [
+              430
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "300",
+              "900",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-abundance-detailed-wisconsin-sqt-lake-michigan-trout-yoy",
+          "name": "Wisconsin SQT - Lake Michigan Trout YoY",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 100,
+              "y": 0.7,
+              "description": "Field 100, Index 0.7"
+            },
+            {
+              "x": 220,
+              "y": 1,
+              "description": "Field 220, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Lake Michigan Trout YoY",
+            "sourceRow": 431,
+            "sourceRows": [
+              431
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "100",
+              "220",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-fish-abundance-detailed-wisconsin-sqt-adult-smallmouth-bass-native"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      427,
+      428,
+      429,
+      430,
+      431
+    ]
+  }
+}

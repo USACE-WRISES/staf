@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-diatom-phosphorus-index-dpi-detailed",
+  "metricId": "nutrient-cycling-diatom-phosphorus-index-dpi-detailed",
+  "tier": "detailed",
+  "name": "Diatom Phosphorus Index (DPI) reference curve",
+  "axes": {
+    "xLabel": "Diatom Phosphorus Index (DPI)",
+    "yLabel": "Index score",
+    "xUnit": "DPI",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-diatom-phosphorus-index-dpi-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "DPI",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-diatom-phosphorus-index-dpi-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 75,
+              "y": 0.7,
+              "description": "Field 75, Index 0.7"
+            },
+            {
+              "x": 150,
+              "y": 0.3,
+              "description": "Field 150, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 281,
+            "sourceRows": [
+              281
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "150",
+              "",
+              "75",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-diatom-phosphorus-index-dpi-detailed-wisconsin-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Nutrient cycling",
+    "sourceRows": [
+      281
+    ]
+  }
+}

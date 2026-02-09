@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-riparian-extent-detailed",
+  "name": "Riparian Extent",
+  "shortName": "Riparian Extent",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+  "descriptionMarkdown": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+  "methodContextMarkdown": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+  "howToMeasureMarkdown": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+  "inputs": [
+    {
+      "label": "Riparian Extent",
+      "type": "field and/or desktop (imagery/gis)",
+      "source": "Riparian/Floodplain",
+      "required": true,
+      "helpMarkdown": "Riparian vegetation field plots and/or GIS/imagery-based corridor metrics."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-riparian-extent-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-riparian-extent-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "NAIP or high-resolution imagery",
+    "local vegetation plot protocols where applicable",
+    "Colorado SQT",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Colorado SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Carbon processing",
+    "metricDataSource": "Riparian vegetation field plots and/or GIS/imagery-based corridor metrics.",
+    "metricStatement": "Organic matter and primary production are captured and processed, fueling food webs and balancing production/respiration.",
+    "description": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+    "methodContextRaw": "Context: Riparian/Floodplain\nMethod: Field and/or Desktop (imagery/GIS)",
+    "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+    "referencesRaw": [
+      "Alaska SQT; NAIP or high-resolution imagery; local vegetation plot protocols where applicable",
+      "Colorado SQT; NAIP or high-resolution imagery; local vegetation plot protocols where applicable",
+      "Wyoming SQT; NAIP or high-resolution imagery; local vegetation plot protocols where applicable"
+    ],
+    "sourceRows": [
+      185,
+      186,
+      194,
+      195,
+      251,
+      252
+    ],
+    "stratifications": [
+      {
+        "name": "Alaska SQT - Unconfined Alluvial Valleys",
+        "stratification": "Unconfined Alluvial Valleys",
+        "sourceRow": 185,
+        "sourceRows": [
+          185
+        ],
+        "sourceCitation": "Alaska SQT",
+        "sourceCitations": [
+          "Alaska SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "",
+          "100",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Alaska SQT - Confined Alluvial or Colluvial/V-Shaped Valleys",
+        "stratification": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+        "sourceRow": 186,
+        "sourceRows": [
+          186
+        ],
+        "sourceCitation": "Alaska SQT",
+        "sourceCitations": [
+          "Alaska SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "60",
+          "",
+          "",
+          "100",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Colorado SQT - Unconfined Alluvial Valleys",
+        "stratification": "Unconfined Alluvial Valleys",
+        "sourceRow": 194,
+        "sourceRows": [
+          194
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "30",
+          "",
+          "",
+          "",
+          "100",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Colorado SQT - Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+        "stratification": "Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+        "sourceRow": 195,
+        "sourceRows": [
+          195
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "60",
+          "",
+          "",
+          "",
+          "100",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT - Unconfined Alluvial Valleys",
+        "stratification": "Unconfined Alluvial Valleys",
+        "sourceRow": 251,
+        "sourceRows": [
+          251
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "30",
+          "",
+          "",
+          "100",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT - Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+        "stratification": "Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+        "sourceRow": 252,
+        "sourceRows": [
+          252
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "60",
+          "",
+          "",
+          "100",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

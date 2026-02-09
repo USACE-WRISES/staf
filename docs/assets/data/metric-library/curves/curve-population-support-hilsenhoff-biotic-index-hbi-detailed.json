@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-hilsenhoff-biotic-index-hbi-detailed",
+  "metricId": "population-support-hilsenhoff-biotic-index-hbi-detailed",
+  "tier": "detailed",
+  "name": "Hilsenhoff Biotic Index (HBI) reference curve",
+  "axes": {
+    "xLabel": "Hilsenhoff Biotic Index (HBI)",
+    "yLabel": "Index score",
+    "xUnit": "HBI",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-hilsenhoff-biotic-index-hbi-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "HBI",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-hilsenhoff-biotic-index-hbi-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 3.5,
+              "y": 1,
+              "description": "Field 3.5, Index 1"
+            },
+            {
+              "x": 4.5,
+              "y": 0.7,
+              "description": "Field 4.5, Index 0.7"
+            },
+            {
+              "x": 6.5,
+              "y": 0.3,
+              "description": "Field 6.5, Index 0.3"
+            },
+            {
+              "x": 10,
+              "y": 0,
+              "description": "Field 10, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 423,
+            "sourceRows": [
+              423
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "10",
+              "",
+              "6.5",
+              "",
+              "4.5",
+              "3.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-hilsenhoff-biotic-index-hbi-detailed-wisconsin-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      423
+    ]
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-summer-daily-maximum-detailed",
+  "metricId": "light-and-thermal-regime-summer-daily-maximum-detailed",
+  "tier": "detailed",
+  "name": "Summer Daily Maximum reference curve",
+  "axes": {
+    "xLabel": "Summer Daily Maximum",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-summer-daily-maximum-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-summer-daily-maximum-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 58,
+              "y": 1,
+              "description": "Field 58, Index 1"
+            },
+            {
+              "x": 64,
+              "y": 0.7,
+              "description": "Field 64, Index 0.7"
+            },
+            {
+              "x": 77,
+              "y": 0,
+              "description": "Field 77, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 172,
+            "sourceRows": [
+              172
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "77",
+              "",
+              "",
+              "",
+              "64",
+              "58",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-summer-daily-maximum-detailed-south-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "South Carolina SQT",
+    "sourceCitations": [
+      "South Carolina SQT"
+    ],
+    "mappedFunction": "Light & thermal regime",
+    "sourceRows": [
+      172
+    ]
+  }
+}

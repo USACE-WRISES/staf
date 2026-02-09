@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-leaf-litter-processing-rate-detailed",
+  "metricId": "carbon-processing-leaf-litter-processing-rate-detailed",
+  "tier": "detailed",
+  "name": "Leaf Litter Processing Rate reference curve",
+  "axes": {
+    "xLabel": "Leaf Litter Processing Rate",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-leaf-litter-processing-rate-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-leaf-litter-processing-rate-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0.5,
+              "y": 0.3,
+              "description": "Field 0.5, Index 0.3"
+            },
+            {
+              "x": 0.75,
+              "y": 0.7,
+              "description": "Field 0.75, Index 0.7"
+            },
+            {
+              "x": 1.33,
+              "y": 1,
+              "description": "Field 1.33, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 208,
+            "sourceRows": [
+              208
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "",
+              "",
+              "0.5",
+              "",
+              "0.75",
+              "1.33",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-leaf-litter-processing-rate-detailed-north-carolina-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      208
+    ]
+  }
+}

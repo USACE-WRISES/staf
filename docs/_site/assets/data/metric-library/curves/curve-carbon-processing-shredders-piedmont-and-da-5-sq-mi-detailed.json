@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-shredders-piedmont-and-da-5-sq-mi-detailed",
+  "metricId": "carbon-processing-shredders-piedmont-and-da-5-sq-mi-detailed",
+  "tier": "detailed",
+  "name": "Shredders- Piedmont & DA <= 5 Sq.Mi. reference curve",
+  "axes": {
+    "xLabel": "Shredders- Piedmont & DA <= 5 Sq.Mi.",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-shredders-piedmont-and-da-5-sq-mi-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-shredders-piedmont-and-da-5-sq-mi-detailed-north-carolina-sqt-field-w-sp",
+          "name": "North Carolina SQT - Field - W/Sp",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 3.6,
+              "y": 0.2,
+              "description": "Field 3.6, Index 0.2"
+            },
+            {
+              "x": 5.4,
+              "y": 0.3,
+              "description": "Field 5.4, Index 0.3"
+            },
+            {
+              "x": 10.8,
+              "y": 0.6,
+              "description": "Field 10.8, Index 0.6"
+            },
+            {
+              "x": 12.6,
+              "y": 0.7,
+              "description": "Field 12.6, Index 0.7"
+            },
+            {
+              "x": 18,
+              "y": 1,
+              "description": "Field 18, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Field - W/Sp",
+            "sourceRow": 220,
+            "sourceRows": [
+              220
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "3.6",
+              "5.4",
+              "10.8",
+              "12.6",
+              "18",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-shredders-piedmont-and-da-5-sq-mi-detailed-north-carolina-sqt-field-su",
+          "name": "North Carolina SQT - Field - Su",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 2.4,
+              "y": 0.2,
+              "description": "Field 2.4, Index 0.2"
+            },
+            {
+              "x": 3.6,
+              "y": 0.3,
+              "description": "Field 3.6, Index 0.3"
+            },
+            {
+              "x": 7.2,
+              "y": 0.6,
+              "description": "Field 7.2, Index 0.6"
+            },
+            {
+              "x": 8.4,
+              "y": 0.7,
+              "description": "Field 8.4, Index 0.7"
+            },
+            {
+              "x": 12,
+              "y": 1,
+              "description": "Field 12, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Field - Su",
+            "sourceRow": 221,
+            "sourceRows": [
+              221
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "2.4",
+              "3.6",
+              "7.2",
+              "8.4",
+              "12",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-shredders-piedmont-and-da-5-sq-mi-detailed-north-carolina-sqt-field-fall",
+          "name": "North Carolina SQT - Field - Fall",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 2.8,
+              "y": 0.2,
+              "description": "Field 2.8, Index 0.2"
+            },
+            {
+              "x": 4.2,
+              "y": 0.3,
+              "description": "Field 4.2, Index 0.3"
+            },
+            {
+              "x": 8.4,
+              "y": 0.6,
+              "description": "Field 8.4, Index 0.6"
+            },
+            {
+              "x": 9.8,
+              "y": 0.7,
+              "description": "Field 9.8, Index 0.7"
+            },
+            {
+              "x": 14,
+              "y": 1,
+              "description": "Field 14, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Field - Fall",
+            "sourceRow": 222,
+            "sourceRows": [
+              222
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "2.8",
+              "4.2",
+              "8.4",
+              "9.8",
+              "14",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-shredders-piedmont-and-da-5-sq-mi-detailed-north-carolina-sqt-field-w-sp"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      220,
+      221,
+      222
+    ]
+  }
+}

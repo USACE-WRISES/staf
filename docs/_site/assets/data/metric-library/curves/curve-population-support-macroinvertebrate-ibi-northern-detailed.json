@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-macroinvertebrate-ibi-northern-detailed",
+  "metricId": "population-support-macroinvertebrate-ibi-northern-detailed",
+  "tier": "detailed",
+  "name": "Macroinvertebrate IBI - Northern reference curve",
+  "axes": {
+    "xLabel": "Macroinvertebrate IBI - Northern",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-macroinvertebrate-ibi-northern-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-macroinvertebrate-ibi-northern-detailed-minnesota-sqt-northern-forest-r",
+          "name": "Minnesota SQT - Northern Forest Rivers",
+          "points": [
+            {
+              "x": 38.2,
+              "y": 0,
+              "description": "Field 38.2, Index 0"
+            },
+            {
+              "x": 49,
+              "y": 0.3,
+              "description": "Field 49, Index 0.3"
+            },
+            {
+              "x": 59.8,
+              "y": 0.7,
+              "description": "Field 59.8, Index 0.7"
+            },
+            {
+              "x": 77,
+              "y": 1,
+              "description": "Field 77, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Northern Forest Rivers",
+            "sourceRow": 389,
+            "sourceRows": [
+              389
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "38.2",
+              "",
+              "49",
+              "",
+              "59.8",
+              "77",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-macroinvertebrate-ibi-northern-detailed-minnesota-sqt-northern-forest-s",
+          "name": "Minnesota SQT - Northern Forest Streams Riffle-run",
+          "points": [
+            {
+              "x": 40.4,
+              "y": 0,
+              "description": "Field 40.4, Index 0"
+            },
+            {
+              "x": 53,
+              "y": 0.3,
+              "description": "Field 53, Index 0.3"
+            },
+            {
+              "x": 65.6,
+              "y": 0.7,
+              "description": "Field 65.6, Index 0.7"
+            },
+            {
+              "x": 82,
+              "y": 1,
+              "description": "Field 82, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Northern Forest Streams Riffle-run",
+            "sourceRow": 390,
+            "sourceRows": [
+              390
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "40.4",
+              "",
+              "53",
+              "",
+              "65.6",
+              "82",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-macroinvertebrate-ibi-northern-detailed-minnesota-sqt-northern-forest-s-2",
+          "name": "Minnesota SQT - Northern Forest Streams Glide-pool",
+          "points": [
+            {
+              "x": 37,
+              "y": 0,
+              "description": "Field 37, Index 0"
+            },
+            {
+              "x": 51,
+              "y": 0.3,
+              "description": "Field 51, Index 0.3"
+            },
+            {
+              "x": 64.6,
+              "y": 0.7,
+              "description": "Field 64.6, Index 0.7"
+            },
+            {
+              "x": 76,
+              "y": 1,
+              "description": "Field 76, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Northern Forest Streams Glide-pool",
+            "sourceRow": 391,
+            "sourceRows": [
+              391
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "37",
+              "",
+              "51",
+              "",
+              "64.6",
+              "76",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-macroinvertebrate-ibi-northern-detailed-minnesota-sqt-northern-coldwate",
+          "name": "Minnesota SQT - Northern Coldwater",
+          "points": [
+            {
+              "x": 19.6,
+              "y": 0,
+              "description": "Field 19.6, Index 0"
+            },
+            {
+              "x": 32,
+              "y": 0.3,
+              "description": "Field 32, Index 0.3"
+            },
+            {
+              "x": 44.4,
+              "y": 0.7,
+              "description": "Field 44.4, Index 0.7"
+            },
+            {
+              "x": 52,
+              "y": 1,
+              "description": "Field 52, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Northern Coldwater",
+            "sourceRow": 392,
+            "sourceRows": [
+              392
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "19.6",
+              "",
+              "32",
+              "",
+              "44.4",
+              "52",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-macroinvertebrate-ibi-northern-detailed-minnesota-sqt-northern-forest-r"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Minnesota SQT",
+    "sourceCitations": [
+      "Minnesota SQT"
+    ],
+    "mappedFunction": "Population support",
+    "sourceRows": [
+      389,
+      390,
+      391,
+      392
+    ]
+  }
+}

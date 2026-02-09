@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-concentrated-flow-point-index-detailed",
+  "metricId": "reach-inflow-concentrated-flow-point-index-detailed",
+  "tier": "detailed",
+  "name": "Concentrated Flow Point Index reference curve",
+  "axes": {
+    "xLabel": "Concentrated Flow Point Index",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-concentrated-flow-point-index-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-reach-inflow-concentrated-flow-point-index-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 0.6,
+              "y": 0.3,
+              "description": "Field 0.6, Index 0.3"
+            },
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 40,
+            "sourceRows": [
+              40
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "1",
+              "",
+              "0.6",
+              "",
+              "",
+              "0",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-concentrated-flow-point-index-detailed-wisconsin-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Wisconsin SQT",
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Reach inflow",
+    "sourceRows": [
+      40
+    ]
+  }
+}

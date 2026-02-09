@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-canopy-coverage-detailed",
+  "name": "Canopy Coverage",
+  "shortName": "Canopy Coverage",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Riparian canopy cover that controls shading and thermal/light regime in the channel.",
+  "methodContextMarkdown": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+  "howToMeasureMarkdown": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+  "inputs": [
+    {
+      "label": "Canopy Coverage",
+      "type": "field and/or desktop",
+      "source": "Riparian/Channel",
+      "required": true,
+      "helpMarkdown": "Field canopy measurements (densiometer/hemispherical photo) and/or LiDAR/imagery-derived canopy cover."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-light-and-thermal-regime-canopy-coverage-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-canopy-coverage-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "North Carolina SQT",
+    "Canopy measurement methods",
+    "LiDAR canopy products where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "North Carolina SQT",
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Light & thermal regime",
+    "metricDataSource": "Field canopy measurements (densiometer/hemispherical photo) and/or LiDAR/imagery-derived canopy cover.",
+    "metricStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for metabolism and dissolved oxygen.",
+    "description": "Riparian canopy cover that controls shading and thermal/light regime in the channel.",
+    "methodContextRaw": "Context: Riparian/Channel\nMethod: Field and/or Desktop",
+    "howToMeasure": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+    "referencesRaw": [
+      "North Carolina SQT; Canopy measurement methods; LiDAR canopy products where available"
+    ],
+    "sourceRows": [
+      169
+    ],
+    "stratifications": [
+      {
+        "name": "North Carolina SQT",
+        "stratification": "",
+        "sourceRow": 169,
+        "sourceRows": [
+          169
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "25",
+          "",
+          "61",
+          "90.54",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

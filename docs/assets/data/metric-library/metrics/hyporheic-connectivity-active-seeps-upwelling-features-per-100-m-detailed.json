@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-active-seeps-upwelling-features-per-100-m-detailed",
+  "name": "Active Seeps/Upwelling Features (# per 100 m)",
+  "shortName": "Active Seeps/Upwelling Features (# per 100 m)",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Visible indicators of subsurface exchange are present at expected frequency.",
+  "descriptionMarkdown": "Count of active seeps/upwelling boils/cold inflows per 100 m reach at baseflow. Higher is better.",
+  "methodContextMarkdown": "Field",
+  "howToMeasureMarkdown": "Survey reach; tally distinct active upwelling/seeps; normalize per 100 m.",
+  "inputs": [
+    {
+      "label": "Active Seeps/Upwelling Features (# per 100 m)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field survey during baseflow or falling limb; optional thermal camera support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-hyporheic-connectivity-active-seeps-upwelling-features-per-100-m-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-active-seeps-upwelling-features-per-100-m-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "hyporheic indicator field methods."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Hyporheic connectivity",
+    "metricDataSource": "Field survey during baseflow or falling limb; optional thermal camera support.",
+    "metricStatement": "Visible indicators of subsurface exchange are present at expected frequency.",
+    "description": "Count of active seeps/upwelling boils/cold inflows per 100 m reach at baseflow. Higher is better.",
+    "methodContextRaw": "Field",
+    "howToMeasure": "Survey reach; tally distinct active upwelling/seeps; normalize per 100 m.",
+    "referencesRaw": [
+      "SFARI rapid assessment; hyporheic indicator field methods."
+    ],
+    "sourceRows": [
+      90
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Survey during warm season/low flow to maximize detectability.",
+        "stratification": "Survey during warm season/low flow to maximize detectability.",
+        "sourceRow": 90,
+        "sourceRows": [
+          90
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0",
+          "0.5",
+          "1.5",
+          "3",
+          "",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.3",
+          "0.7",
+          "1",
+          "",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed",
+  "name": "Thermal Patch Area with ?T ? 1°C (%)",
+  "shortName": "Thermal Patch Area with ?T ? 1°C (%)",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Hyporheic exchange creates measurable thermal heterogeneity and refugia.",
+  "descriptionMarkdown": "Percent of wetted area showing temperature anomaly ?1°C relative to main channel. Higher is better.",
+  "methodContextMarkdown": "Field (thermal)",
+  "howToMeasureMarkdown": "Map thermal anomalies; delineate patch area; divide by wetted area.",
+  "inputs": [
+    {
+      "label": "Thermal Patch Area with ?T ? 1°C (%)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Handheld IR/thermal survey or distributed temperature sensing (DTS) screening; field verification."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment (concept)",
+    "thermal mapping protocols."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Hyporheic connectivity",
+    "metricDataSource": "Handheld IR/thermal survey or distributed temperature sensing (DTS) screening; field verification.",
+    "metricStatement": "Hyporheic exchange creates measurable thermal heterogeneity and refugia.",
+    "description": "Percent of wetted area showing temperature anomaly ?1°C relative to main channel. Higher is better.",
+    "methodContextRaw": "Field (thermal)",
+    "howToMeasure": "Map thermal anomalies; delineate patch area; divide by wetted area.",
+    "referencesRaw": [
+      "SFARI rapid assessment (concept); thermal mapping protocols."
+    ],
+    "sourceRows": [
+      91
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Measure during peak thermal stress periods (hot afternoons) for strongest signal.",
+        "stratification": "Measure during peak thermal stress periods (hot afternoons) for strongest signal.",
+        "sourceRow": 91,
+        "sourceRows": [
+          91
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0",
+          "0.3",
+          "1",
+          "2.5",
+          "",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.3",
+          "0.7",
+          "1",
+          "",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-percent-passable-road-crossings-detailed",
+  "name": "Percent Passable Road Crossings (%)",
+  "shortName": "Percent Passable Road Crossings (%)",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Road crossings allow aquatic organism passage and do not fragment movement pathways.",
+  "descriptionMarkdown": "Percent of evaluated crossings that are passable at typical seasonal flows (aligned, embedded, no significant outlet drop).",
+  "methodContextMarkdown": "Field + desktop screening",
+  "howToMeasureMarkdown": "Assess each crossing (slope, embedment, outlet drop). Classify passable/non-passable; compute percent passable.",
+  "inputs": [
+    {
+      "label": "Percent Passable Road Crossings (%)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Road/culvert inventory + field passage survey (slope, outlet drop, embedment) and/or imagery/LiDAR validation."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-percent-passable-road-crossings-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-percent-passable-road-crossings-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "state/agency fish passage guidance",
+    "culvert assessment protocols."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Watershed connectivity",
+    "metricDataSource": "Road/culvert inventory + field passage survey (slope, outlet drop, embedment) and/or imagery/LiDAR validation.",
+    "metricStatement": "Road crossings allow aquatic organism passage and do not fragment movement pathways.",
+    "description": "Percent of evaluated crossings that are passable at typical seasonal flows (aligned, embedded, no significant outlet drop).",
+    "methodContextRaw": "Field + desktop screening",
+    "howToMeasure": "Assess each crossing (slope, embedment, outlet drop). Classify passable/non-passable; compute percent passable.",
+    "referencesRaw": [
+      "SFARI rapid assessment; state/agency fish passage guidance; culvert assessment protocols."
+    ],
+    "sourceRows": [
+      440
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Stratify by focal taxa (fish/amphibians), stream size, and flow season.",
+        "stratification": "Stratify by focal taxa (fish/amphibians), stream size, and flow season.",
+        "sourceRow": 440,
+        "sourceRows": [
+          440
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "0",
+          "20",
+          "35",
+          "65",
+          "90",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.1",
+          "0.3",
+          "0.7",
+          "1",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

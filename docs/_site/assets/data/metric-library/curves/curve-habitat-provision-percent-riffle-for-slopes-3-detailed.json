@@ -1,0 +1,136 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-percent-riffle-for-slopes-3-detailed",
+  "metricId": "habitat-provision-percent-riffle-for-slopes-3-detailed",
+  "tier": "detailed",
+  "name": "Percent Riffle for Slopes ? 3% reference curve",
+  "axes": {
+    "xLabel": "Percent Riffle for Slopes ? 3%",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-percent-riffle-for-slopes-3-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-percent-riffle-for-slopes-3-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 62,
+              "y": 0.7,
+              "description": "Field 62, Index 0.7"
+            },
+            {
+              "x": 68,
+              "y": 1,
+              "description": "Field 68, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 302,
+            "sourceRows": [
+              302
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "62",
+              "68",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-for-slopes-3-detailed-alaska-sqt-2",
+          "name": "Alaska SQT (2)",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 39,
+              "y": 0.7,
+              "description": "Field 39, Index 0.7"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 303,
+            "sourceRows": [
+              303
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "39",
+              "50",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-percent-riffle-for-slopes-3-detailed-alaska-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      302,
+      303
+    ]
+  }
+}

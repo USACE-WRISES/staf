@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-fish-p51-wadeable-and-warm-and-warm-transitional-water-detailed",
+  "name": "Fish - P51 Wadeable & Warm and Warm-transitional Water",
+  "shortName": "Fish - P51 Wadeable & Warm and Warm-transitional Water",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+  "descriptionMarkdown": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+  "howToMeasureMarkdown": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+  "inputs": [
+    {
+      "label": "Fish - P51 Wadeable & Warm and Warm-transitional Water",
+      "type": "field (bioassessment) and/or desktop (existing scores)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Standard fish/macroinvertebrate bioassessment sampling and scoring; state biomonitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-population-support-fish-p51-wadeable-and-warm-and-warm-transitional-water-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-fish-p51-wadeable-and-warm-and-warm-transitional-water-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Michigan SQT",
+    "State biomonitoring protocols and databases",
+    "EPA Water Quality Portal biological results where available"
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Michigan SQT",
+    "sourceCitations": [
+      "Michigan SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Population support",
+    "metricDataSource": "Standard fish/macroinvertebrate bioassessment sampling and scoring; state biomonitoring databases.",
+    "metricStatement": "Habitat and water quality enable reproduction, juvenile growth, survival, and movement of key taxa.",
+    "description": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+    "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+    "referencesRaw": [
+      "Michigan SQT; State biomonitoring protocols and databases; EPA Water Quality Portal biological results where available"
+    ],
+    "sourceRows": [
+      388
+    ],
+    "stratifications": [
+      {
+        "name": "Michigan SQT",
+        "stratification": "",
+        "sourceRow": 388,
+        "sourceRows": [
+          388
+        ],
+        "sourceCitation": "Michigan SQT",
+        "sourceCitations": [
+          "Michigan SQT"
+        ],
+        "fieldValues": [
+          "-10",
+          "",
+          "-4",
+          "4",
+          "",
+          "10",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

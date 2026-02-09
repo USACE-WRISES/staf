@@ -1,0 +1,310 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-lwd-frequency-detailed",
+  "metricId": "habitat-provision-lwd-frequency-detailed",
+  "tier": "detailed",
+  "name": "LWD Frequency reference curve",
+  "axes": {
+    "xLabel": "LWD Frequency",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-lwd-frequency-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-lwd-frequency-detailed-alaska-sqt-alaska-range",
+          "name": "Alaska SQT - Alaska Range",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.8,
+              "y": 0.3,
+              "description": "Field 0.8, Index 0.3"
+            },
+            {
+              "x": 1.5,
+              "y": 0.7,
+              "description": "Field 1.5, Index 0.7"
+            },
+            {
+              "x": 6.3,
+              "y": 1,
+              "description": "Field 6.3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Alaska Range",
+            "sourceRow": 304,
+            "sourceRows": [
+              304
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "0.8",
+              "",
+              "1.5",
+              "6.3",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-frequency-detailed-alaska-sqt-brooks-range",
+          "name": "Alaska SQT - Brooks Range",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.62,
+              "y": 0.3,
+              "description": "Field 0.62, Index 0.3"
+            },
+            {
+              "x": 1.2,
+              "y": 0.7,
+              "description": "Field 1.2, Index 0.7"
+            },
+            {
+              "x": 4.2,
+              "y": 1,
+              "description": "Field 4.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Brooks Range",
+            "sourceRow": 305,
+            "sourceRows": [
+              305
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "0.62",
+              "",
+              "1.2",
+              "4.2",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-frequency-detailed-alaska-sqt-interior-bottomlands",
+          "name": "Alaska SQT - Interior Bottomlands",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 3.7,
+              "y": 0.3,
+              "description": "Field 3.7, Index 0.3"
+            },
+            {
+              "x": 4.7,
+              "y": 0.7,
+              "description": "Field 4.7, Index 0.7"
+            },
+            {
+              "x": 54.5,
+              "y": 1,
+              "description": "Field 54.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Interior Bottomlands",
+            "sourceRow": 306,
+            "sourceRows": [
+              306
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "3.7",
+              "",
+              "4.7",
+              "54.5",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-frequency-detailed-alaska-sqt-interior-forested-lowlands-uplands-and",
+          "name": "Alaska SQT - Interior Forested Lowlands/Uplands and Highlands",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.6,
+              "y": 0.3,
+              "description": "Field 0.6, Index 0.3"
+            },
+            {
+              "x": 1.3,
+              "y": 0.7,
+              "description": "Field 1.3, Index 0.7"
+            },
+            {
+              "x": 24.1,
+              "y": 1,
+              "description": "Field 24.1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Interior Forested Lowlands/Uplands and Highlands",
+            "sourceRow": 307,
+            "sourceRows": [
+              307
+            ],
+            "sourceCitation": "Alaska SQT",
+            "sourceCitations": [
+              "Alaska SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "0.6",
+              "",
+              "1.3",
+              "24.1",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-frequency-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 90,
+              "y": 0.7,
+              "description": "Field 90, Index 0.7"
+            },
+            {
+              "x": 171,
+              "y": 1,
+              "description": "Field 171, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 361,
+            "sourceRows": [
+              361
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "90",
+              "171",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-lwd-frequency-detailed-alaska-sqt-alaska-range"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT; Wisconsin SQT",
+    "sourceCitations": [
+      "Alaska SQT",
+      "Wisconsin SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      304,
+      305,
+      306,
+      307,
+      361
+    ]
+  }
+}

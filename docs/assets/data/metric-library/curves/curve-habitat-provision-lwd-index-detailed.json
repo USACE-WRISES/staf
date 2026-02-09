@@ -1,0 +1,402 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-lwd-index-detailed",
+  "metricId": "habitat-provision-lwd-index-detailed",
+  "tier": "detailed",
+  "name": "LWD Index reference curve",
+  "axes": {
+    "xLabel": "LWD Index",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-lwd-index-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-lwd-index-detailed-colorado-sqt",
+          "name": "Colorado SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 430,
+              "y": 0.7,
+              "description": "Field 430, Index 0.7"
+            },
+            {
+              "x": 660,
+              "y": 1,
+              "description": "Field 660, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 310,
+            "sourceRows": [
+              310
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "430",
+              "660",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-index-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 1350,
+              "y": 0.7,
+              "description": "Field 1350, Index 0.7"
+            },
+            {
+              "x": 2825,
+              "y": 1,
+              "description": "Field 2825, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 320,
+            "sourceRows": [
+              320
+            ],
+            "sourceCitation": "Michigan SQT",
+            "sourceCitations": [
+              "Michigan SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "1350",
+              "2825",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-index-detailed-minnesota-sqt",
+          "name": "Minnesota SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 430,
+              "y": 0.7,
+              "description": "Field 430, Index 0.7"
+            },
+            {
+              "x": 660,
+              "y": 1,
+              "description": "Field 660, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 327,
+            "sourceRows": [
+              327
+            ],
+            "sourceCitation": "Minnesota SQT",
+            "sourceCitations": [
+              "Minnesota SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "430",
+              "660",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-index-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 200,
+              "y": 0.3,
+              "description": "Field 200, Index 0.3"
+            },
+            {
+              "x": 300,
+              "y": 0.7,
+              "description": "Field 300, Index 0.7"
+            },
+            {
+              "x": 700,
+              "y": 1,
+              "description": "Field 700, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 335,
+            "sourceRows": [
+              335
+            ],
+            "sourceCitation": "North Carolina SQT",
+            "sourceCitations": [
+              "North Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "200",
+              "",
+              "300",
+              "700",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-index-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 355,
+              "y": 0.7,
+              "description": "Field 355, Index 0.7"
+            },
+            {
+              "x": 731,
+              "y": 1,
+              "description": "Field 731, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 347,
+            "sourceRows": [
+              347
+            ],
+            "sourceCitation": "South Carolina SQT",
+            "sourceCitations": [
+              "South Carolina SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "355",
+              "731",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-index-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 1350,
+              "y": 0.7,
+              "description": "Field 1350, Index 0.7"
+            },
+            {
+              "x": 2825,
+              "y": 1,
+              "description": "Field 2825, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 360,
+            "sourceRows": [
+              360
+            ],
+            "sourceCitation": "Wisconsin SQT",
+            "sourceCitations": [
+              "Wisconsin SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "1350",
+              "2825",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-index-detailed-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 430,
+              "y": 0.7,
+              "description": "Field 430, Index 0.7"
+            },
+            {
+              "x": 660,
+              "y": 1,
+              "description": "Field 660, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceRow": 368,
+            "sourceRows": [
+              368
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "430",
+              "660",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-lwd-index-detailed-colorado-sqt"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Michigan SQT; Minnesota SQT; North Carolina SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Habitat provision",
+    "sourceRows": [
+      310,
+      320,
+      327,
+      335,
+      347,
+      360,
+      368
+    ]
+  }
+}

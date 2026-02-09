@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-percent-riffle-for-streams-3-slope-detailed",
+  "name": "Percent Riffle for Streams < 3% slope",
+  "shortName": "Percent Riffle for Streams < 3% slope",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+  "descriptionMarkdown": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+  "inputs": [
+    {
+      "label": "Percent Riffle for Streams < 3% slope",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-habitat-provision-percent-riffle-for-streams-3-slope-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-percent-riffle-for-streams-3-slope-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "Rapid habitat assessment/geomorphic unit mapping methods",
+    "North Carolina SQT",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; North Carolina SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "North Carolina SQT",
+      "Wyoming SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Habitat provision",
+    "metricDataSource": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support.",
+    "metricStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and cover to support native organisms through all life stages.",
+    "description": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+    "methodContextRaw": "Context: Channel\nMethod: Field",
+    "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+    "referencesRaw": [
+      "Colorado SQT; Rapid habitat assessment/geomorphic unit mapping methods",
+      "North Carolina SQT; Rapid habitat assessment/geomorphic unit mapping methods",
+      "Wyoming SQT; Rapid habitat assessment/geomorphic unit mapping methods"
+    ],
+    "sourceRows": [
+      318,
+      319,
+      344,
+      376,
+      377
+    ],
+    "stratifications": [
+      {
+        "name": "Colorado SQT",
+        "stratification": "",
+        "sourceRow": 318,
+        "sourceRows": [
+          318
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "39",
+          "50",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Colorado SQT",
+        "stratification": "",
+        "sourceRow": 319,
+        "sourceRows": [
+          319
+        ],
+        "sourceCitation": "Colorado SQT",
+        "sourceCitations": [
+          "Colorado SQT"
+        ],
+        "fieldValues": [
+          "",
+          "",
+          "",
+          "",
+          "60",
+          "68",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "North Carolina SQT",
+        "stratification": "",
+        "sourceRow": 344,
+        "sourceRows": [
+          344
+        ],
+        "sourceCitation": "North Carolina SQT",
+        "sourceCitations": [
+          "North Carolina SQT"
+        ],
+        "fieldValues": [
+          "31.42857143",
+          "",
+          "40",
+          "",
+          "",
+          "60",
+          "70"
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          "1"
+        ]
+      },
+      {
+        "name": "Wyoming SQT",
+        "stratification": "",
+        "sourceRow": 376,
+        "sourceRows": [
+          376
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "60",
+          "68",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Wyoming SQT",
+        "stratification": "",
+        "sourceRow": 377,
+        "sourceRows": [
+          377
+        ],
+        "sourceCitation": "Wyoming SQT",
+        "sourceCitations": [
+          "Wyoming SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "39",
+          "50",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

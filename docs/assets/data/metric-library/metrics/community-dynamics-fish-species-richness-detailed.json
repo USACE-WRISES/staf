@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-fish-species-richness-detailed",
+  "name": "Fish Species Richness",
+  "shortName": "Fish Species Richness",
+  "discipline": "Biology",
+  "function": "Community dynamics",
+  "functionStatement": "Balanced native assemblages and trophic structure persist with minimal invasive dominance.",
+  "descriptionMarkdown": "Community composition indicator reflecting native diversity and assemblage balance relative to expectation.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+  "howToMeasureMarkdown": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+  "inputs": [
+    {
+      "label": "Fish Species Richness",
+      "type": "field (fish survey) and/or desktop (existing data)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Fish community surveys (electrofishing/seining) and/or compiled species lists from monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-community-dynamics-fish-species-richness-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-fish-species-richness-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "State fish sampling protocols",
+    "state fish databases where available"
+  ],
+  "tags": [
+    "Biology",
+    "Community dynamics",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Alaska SQT",
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Community dynamics",
+    "metricDataSource": "Fish community surveys (electrofishing/seining) and/or compiled species lists from monitoring databases.",
+    "metricStatement": "Balanced native assemblages and trophic structure persist with minimal invasive dominance.",
+    "description": "Community composition indicator reflecting native diversity and assemblage balance relative to expectation.",
+    "methodContextRaw": "Context: Channel\nMethod: Field (fish survey) and/or Desktop (existing data)",
+    "howToMeasure": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+    "referencesRaw": [
+      "Alaska SQT; State fish sampling protocols; state fish databases where available"
+    ],
+    "sourceRows": [
+      436,
+      437
+    ],
+    "stratifications": [
+      {
+        "name": "Alaska SQT - Anadromous",
+        "stratification": "Anadromous",
+        "sourceRow": 436,
+        "sourceRows": [
+          436
+        ],
+        "sourceCitation": "Alaska SQT",
+        "sourceCitations": [
+          "Alaska SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "80",
+          "100",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      },
+      {
+        "name": "Alaska SQT - Non-anadromous",
+        "stratification": "Non-anadromous",
+        "sourceRow": 437,
+        "sourceRows": [
+          437
+        ],
+        "sourceCitation": "Alaska SQT",
+        "sourceCitations": [
+          "Alaska SQT"
+        ],
+        "fieldValues": [
+          "0",
+          "",
+          "",
+          "",
+          "60",
+          "100",
+          ""
+        ],
+        "indexValues": [
+          "0",
+          "0.29",
+          "0.3",
+          "0.69",
+          "0.7",
+          "1",
+          ""
+        ]
+      }
+    ]
+  }
+}

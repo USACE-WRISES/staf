@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-substrate-embeddedness-detailed",
+  "name": "Substrate Embeddedness (%)",
+  "shortName": "Substrate Embeddedness (%)",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Low embeddedness supports subsurface exchange and habitat quality.",
+  "descriptionMarkdown": "Percent embeddedness of gravel/cobble (lower is better).",
+  "methodContextMarkdown": "Field",
+  "howToMeasureMarkdown": "Estimate embeddedness using standard visual classes or grid/photo method; compute reach mean.",
+  "inputs": [
+    {
+      "label": "Substrate Embeddedness (%)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field embeddedness estimate at riffles/runs; photo documentation."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-hyporheic-connectivity-substrate-embeddedness-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-substrate-embeddedness-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "embeddedness classes (e.g., Sylte & Fischenich style bins)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity",
+    "detailed"
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "metricTier": "Detailed",
+    "exampleDetailedAssessmentOn": false,
+    "mappedFunction": "Hyporheic connectivity",
+    "metricDataSource": "Field embeddedness estimate at riffles/runs; photo documentation.",
+    "metricStatement": "Low embeddedness supports subsurface exchange and habitat quality.",
+    "description": "Percent embeddedness of gravel/cobble (lower is better).",
+    "methodContextRaw": "Field",
+    "howToMeasure": "Estimate embeddedness using standard visual classes or grid/photo method; compute reach mean.",
+    "referencesRaw": [
+      "SFARI rapid assessment; embeddedness classes (e.g., Sylte & Fischenich style bins)."
+    ],
+    "sourceRows": [
+      85
+    ],
+    "stratifications": [
+      {
+        "name": "Proposed (derived from SFARI rapid curves) - Stratify by riffle habitat; avoid pools for embeddedness scoring.",
+        "stratification": "Stratify by riffle habitat; avoid pools for embeddedness scoring.",
+        "sourceRow": 85,
+        "sourceRows": [
+          85
+        ],
+        "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+        "sourceCitations": [
+          "Proposed (derived from SFARI rapid curves)"
+        ],
+        "fieldValues": [
+          "10",
+          "35",
+          "60",
+          "80",
+          "95",
+          "",
+          ""
+        ],
+        "indexValues": [
+          "1",
+          "0.7",
+          "0.3",
+          "0.1",
+          "0",
+          "",
+          ""
+        ]
+      }
+    ]
+  }
+}

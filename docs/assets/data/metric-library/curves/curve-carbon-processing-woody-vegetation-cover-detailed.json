@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-carbon-processing-woody-vegetation-cover-detailed",
+  "metricId": "carbon-processing-woody-vegetation-cover-detailed",
+  "tier": "detailed",
+  "name": "Woody Vegetation Cover reference curve",
+  "axes": {
+    "xLabel": "Woody Vegetation Cover",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-carbon-processing-woody-vegetation-cover-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-carbon-processing-woody-vegetation-cover-detailed-colorado-sqt-mountains-and-basins",
+          "name": "Colorado SQT - Mountains & Basins",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 69,
+              "y": 0.7,
+              "description": "Field 69, Index 0.7"
+            },
+            {
+              "x": 122,
+              "y": 1,
+              "description": "Field 122, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Mountains & Basins",
+            "sourceRow": 196,
+            "sourceRows": [
+              196
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "69",
+              "122",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-woody-vegetation-cover-detailed-colorado-sqt-plains",
+          "name": "Colorado SQT - Plains",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 76,
+              "y": 1,
+              "description": "Field 76, Index 1"
+            },
+            {
+              "x": 101,
+              "y": 0.29,
+              "description": "Field 101, Index 0.29"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Plains",
+            "sourceRow": 197,
+            "sourceRows": [
+              197
+            ],
+            "sourceCitation": "Colorado SQT",
+            "sourceCitations": [
+              "Colorado SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "101",
+              "",
+              "",
+              "",
+              "76",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-woody-vegetation-cover-detailed-wyoming-sqt-mountains-and-basins",
+          "name": "Wyoming SQT - Mountains and Basins",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 69,
+              "y": 0.7,
+              "description": "Field 69, Index 0.7"
+            },
+            {
+              "x": 122,
+              "y": 1,
+              "description": "Field 122, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Mountains and Basins",
+            "sourceRow": 253,
+            "sourceRows": [
+              253
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "69",
+              "122",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-woody-vegetation-cover-detailed-wyoming-sqt-plains",
+          "name": "Wyoming SQT - Plains",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 76,
+              "y": 1,
+              "description": "Field 76, Index 1"
+            },
+            {
+              "x": 101,
+              "y": 0.29,
+              "description": "Field 101, Index 0.29"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Plains",
+            "sourceRow": 254,
+            "sourceRows": [
+              254
+            ],
+            "sourceCitation": "Wyoming SQT",
+            "sourceCitations": [
+              "Wyoming SQT"
+            ],
+            "fieldValues": [
+              "0",
+              "101",
+              "",
+              "",
+              "",
+              "76",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-woody-vegetation-cover-detailed-colorado-sqt-mountains-and-basins"
+    }
+  ],
+  "sourceMetadata": {
+    "importSource": "detailed-metrics-source-rich.tsv",
+    "sourceCitation": "Colorado SQT; Wyoming SQT",
+    "sourceCitations": [
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "mappedFunction": "Carbon processing",
+    "sourceRows": [
+      196,
+      197,
+      253,
+      254
+    ]
+  }
+}
