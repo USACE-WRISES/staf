@@ -38,8 +38,8 @@
             },
             {
               "x": 8,
-              "y": 0.3,
-              "description": "Field 8, Index 0.3"
+              "y": 0.4,
+              "description": "Field 8, Index 0.4"
             }
           ],
           "sourceMetadata": {
@@ -63,8 +63,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",

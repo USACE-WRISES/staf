@@ -19,12 +19,11 @@
   const ui = container.querySelector('.screening-assessment-ui');
 
   const ratingOptions = [
-    { label: 'Optimal', score: 15 },
-    { label: 'Suboptimal', score: 10 },
-    { label: 'Marginal', score: 5 },
+    { label: 'Good', score: 15 },
+    { label: 'Fair', score: 8 },
     { label: 'Poor', score: 0 },
   ];
-  const defaultRating = 'Optimal';
+  const defaultRating = 'Good';
   const fallbackCriteriaName = 'Screening';
   const defaultProfileId = 'screening-default';
   const collapsedGlyph = '&#9656;';
@@ -300,6 +299,17 @@
           row.Metric || row.metric || '',
           row['Metric ID'] || row.metric_id || row.metricId || ''
         );
+        const goodCriteria =
+          row.Good || row.good || row.Optimal || row.optimal || '';
+        const fairCriteria =
+          row.Fair ||
+          row.fair ||
+          row.Suboptimal ||
+          row.suboptimal ||
+          row.Marginal ||
+          row.marginal ||
+          '';
+        const poorCriteria = row.Poor || row.poor || '';
         return {
           id: `metric-${index + 1}`,
           libraryId,
@@ -320,10 +330,12 @@
           method: row.Method || row.method || '',
           howToMeasure: row['How to measure'] || row.how_to_measure || '',
           criteria: {
-            optimal: row.Optimal || row.optimal || '',
-            suboptimal: row.Suboptimal || row.suboptimal || '',
-            marginal: row.Marginal || row.marginal || '',
-            poor: row.Poor || row.poor || '',
+            optimal: goodCriteria,
+            suboptimal: row.Suboptimal || row.suboptimal || fairCriteria,
+            marginal: row.Marginal || row.marginal || fairCriteria,
+            poor: poorCriteria,
+            good: goodCriteria,
+            fair: fairCriteria,
           },
           references: row.References || row.references || '',
           sourceOrder: index,
@@ -382,18 +394,22 @@
       const buildCriteriaFromProfile = (profile) => {
         if (!profile || !profile.scoring) {
           return {
+            good: '',
+            fair: '',
+            poor: '',
             optimal: '',
             suboptimal: '',
             marginal: '',
-            poor: '',
           };
         }
         if (profile.scoring.type !== 'categorical') {
           return {
+            good: '',
+            fair: '',
+            poor: '',
             optimal: '',
             suboptimal: '',
             marginal: '',
-            poor: '',
           };
         }
         const levels = profile.scoring.rubric?.levels || [];
@@ -403,11 +419,34 @@
               normalizeText(level.label || '') === normalizeText(label) ||
               normalizeText(level.ratingId || '') === normalizeText(label)
           );
+        const goodLevel = findLevel('good');
+        const fairLevel = findLevel('fair');
+        const poorLevel = findLevel('poor');
+        if (goodLevel || fairLevel || poorLevel) {
+          const goodText = goodLevel?.criteriaMarkdown || '';
+          const fairText = fairLevel?.criteriaMarkdown || '';
+          const poorText = poorLevel?.criteriaMarkdown || '';
+          return {
+            good: goodText,
+            fair: fairText,
+            poor: poorText,
+            optimal: goodText,
+            suboptimal: fairText,
+            marginal: fairText,
+          };
+        }
+        const optimalText = findLevel('optimal')?.criteriaMarkdown || '';
+        const suboptimalText = findLevel('suboptimal')?.criteriaMarkdown || '';
+        const marginalText = findLevel('marginal')?.criteriaMarkdown || '';
+        const poorText = findLevel('poor')?.criteriaMarkdown || '';
+        const fairText = suboptimalText || marginalText || '';
         return {
-          optimal: findLevel('optimal')?.criteriaMarkdown || '',
-          suboptimal: findLevel('suboptimal')?.criteriaMarkdown || '',
-          marginal: findLevel('marginal')?.criteriaMarkdown || '',
-          poor: findLevel('poor')?.criteriaMarkdown || '',
+          good: optimalText,
+          fair: fairText,
+          poor: poorText,
+          optimal: optimalText,
+          suboptimal: fairText,
+          marginal: fairText,
         };
       };
 
@@ -467,12 +506,11 @@
         predefinedMetricIds.push(...Array.from(starMetricIdsByFunction.values()));
       }
 
-      const defaultCurveIndexValues = [0, 0.3, 0.69, 1];
+      const defaultCurveIndexValues = [0, 0.55, 1];
   const defaultCurveRanges = new Map([
-    ['optimal', { min: 0.76, max: 1 }],
-    ['suboptimal', { min: 0.5, max: 0.75 }],
-    ['marginal', { min: 0.25, max: 0.49 }],
-    ['poor', { min: 0, max: 0.24 }],
+    ['good', { min: 0.7, max: 1 }],
+    ['fair', { min: 0.4, max: 0.69 }],
+    ['poor', { min: 0, max: 0.39 }],
   ]);
 
   const applyDefaultRanges = (points) => {
@@ -498,19 +536,18 @@
       const buildDefaultCurve = (metric) => {
         const points = [
           {
-            x: 'Optimal',
+            x: 'Good',
             y: 1,
-            description: metric?.criteria?.optimal || '',
+            description: metric?.criteria?.good || metric?.criteria?.optimal || '',
           },
           {
-            x: 'Suboptimal',
-            y: 0.69,
-            description: metric?.criteria?.suboptimal || '',
-          },
-          {
-            x: 'Marginal',
-            y: 0.3,
-            description: metric?.criteria?.marginal || '',
+            x: 'Fair',
+            y: 0.55,
+            description:
+              metric?.criteria?.fair ||
+              metric?.criteria?.suboptimal ||
+              metric?.criteria?.marginal ||
+              '',
           },
           {
             x: 'Poor',
@@ -1465,8 +1502,8 @@
           const min = parseScore(point.yMin);
           const max = parseScore(point.yMax);
           if (curve.indexRange && min !== null && max !== null) {
-            const minScore = Math.floor(min * 15);
-            const maxScore = Math.ceil(max * 15);
+            const minScore = Math.ceil(min * 15);
+            const maxScore = Math.floor(max * 15);
             cell.textContent = `${minScore}-${maxScore}`;
           } else {
             const value = parseScore(point.y);
@@ -1741,7 +1778,6 @@
           'col-how',
           'col-optimal',
           'col-suboptimal',
-          'col-marginal',
           'col-poor',
           'col-references',
           'col-include',
@@ -1759,9 +1795,8 @@
           '<th class="col-metric">Metric</th>' +
           '<th class="col-context">Context/Method</th>' +
           '<th class="col-how">How to Measure</th>' +
-          '<th class="col-optimal">Optimal</th>' +
-          '<th class="col-suboptimal">Suboptimal</th>' +
-          '<th class="col-marginal">Marginal</th>' +
+          '<th class="col-optimal">Good</th>' +
+          '<th class="col-suboptimal">Fair</th>' +
           '<th class="col-poor">Poor</th>' +
           '<th class="col-references">References</th>' +
           '<th class=\"col-include\">Include</th>' +
@@ -1783,9 +1818,8 @@
             metric.context,
             metric.method,
             metric.howToMeasure,
-            metric.criteria.optimal,
-            metric.criteria.suboptimal,
-            metric.criteria.marginal,
+            metric.criteria.good || metric.criteria.optimal,
+            metric.criteria.fair || metric.criteria.suboptimal || metric.criteria.marginal,
             metric.criteria.poor,
             metric.references,
           ]
@@ -1798,7 +1832,7 @@
         if (filteredMetrics.length === 0) {
           const emptyRow = document.createElement('tr');
           const emptyCell = document.createElement('td');
-          emptyCell.colSpan = 11;
+          emptyCell.colSpan = 10;
           emptyCell.className = 'empty-cell';
           emptyCell.textContent = 'No metrics match your filters.';
           emptyRow.appendChild(emptyCell);
@@ -1924,7 +1958,6 @@
                 { value: '', className: 'col-how' },
                 { value: '', className: 'col-optimal' },
                 { value: '', className: 'col-suboptimal' },
-                { value: '', className: 'col-marginal' },
                 { value: '', className: 'col-poor' },
                 { value: '', className: 'col-references' },
               ];
@@ -1966,9 +1999,18 @@
                   { value: metric.metric || '-', className: 'col-metric' },
                   { value: contextMethod, className: 'col-context', isNode: true },
                   { value: metric.howToMeasure || '-', className: 'col-how' },
-                  { value: metric.criteria.optimal || '-', className: 'col-optimal' },
-                  { value: metric.criteria.suboptimal || '-', className: 'col-suboptimal' },
-                  { value: metric.criteria.marginal || '-', className: 'col-marginal' },
+                  {
+                    value: metric.criteria.good || metric.criteria.optimal || '-',
+                    className: 'col-optimal',
+                  },
+                  {
+                    value:
+                      metric.criteria.fair ||
+                      metric.criteria.suboptimal ||
+                      metric.criteria.marginal ||
+                      '-',
+                    className: 'col-suboptimal',
+                  },
                   { value: metric.criteria.poor || '-', className: 'col-poor' },
                   { value: metric.references || '-', className: 'col-references' },
                 ];
@@ -2314,8 +2356,8 @@
         '<div class="legend-bar" aria-hidden="true"></div>' +
         '<div class="legend-labels legend-labels-right">' +
         '<div>0.70 - 1.00</div>' +
-        '<div>0.30 - 0.69</div>' +
-        '<div>0.00 - 0.29</div>' +
+        '<div>0.40 - 0.69</div>' +
+        '<div>0.00 - 0.39</div>' +
         '</div>' +
         '</div>';
       chartsHeader.appendChild(chartsLegend);
@@ -2536,7 +2578,7 @@
       };
 
       const summaryColorForValue = (value) => {
-        if (value <= 0.29) {
+        if (value <= 0.39) {
           return '#f5b5b5';
         }
         if (value <= 0.69) {
@@ -2708,8 +2750,8 @@
         const resolveMetricScoreRange = (metricId) => {
           const indexRange = getMetricIndexRange(metricId);
           if (indexRange) {
-            const minScore = Math.floor(indexRange.min * 15);
-            const maxScore = Math.ceil(indexRange.max * 15);
+            const minScore = Math.ceil(indexRange.min * 15);
+            const maxScore = Math.floor(indexRange.max * 15);
             const avgScore = Math.round(indexRange.avg * 15);
             return {
               indexRange,
@@ -3639,9 +3681,9 @@
               const cueLabels = document.createElement('div');
               cueLabels.className = 'function-score-cue-labels';
               [
-                { text: 'F', left: '16.67%' },
+                { text: 'NF', left: '16.67%' },
                 { text: 'AR', left: '50%' },
-                { text: 'NF', left: '83.33%' },
+                { text: 'F', left: '83.33%' },
               ].forEach(({ text, left }) => {
                 const label = document.createElement('span');
                 label.className = 'function-score-cue-label';

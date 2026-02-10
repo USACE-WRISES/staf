@@ -26,27 +26,22 @@
       "recommended": false,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "threeBand",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "threeBand"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
+              "label": "Good",
+              "ratingId": "good",
               "criteriaMarkdown": "Good: No major levees or walls and free lateral movement. (Suggested index range 0.70-1.0)"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Fair: Some partial barriers with remaining access. (Suggested index range 0.50-0.69)"
-            },
-            {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Fair: Large levees hamper movement in many areas. (Suggested index range 0.30-0.49)"
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Some partial barriers with remaining access. / Large levees hamper movement in many areas. (Suggested index range 0.40-0.69)"
             },
             {
               "label": "Poor",
@@ -80,7 +75,7 @@
     "sourceCitation": "ERDC",
     "scsDefaultOn": false,
     "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "rapid",
+    "recommendedTiersRaw": "screening",
     "originalBins": {
       "bin1": {
         "name": "Poor",
@@ -94,7 +89,7 @@
         "name": "Fair",
         "desc": "Some partial barriers with remaining access. / Large levees hamper movement in many areas.",
         "range": {
-          "min": 0.3,
+          "min": 0.4,
           "max": 0.69
         }
       },

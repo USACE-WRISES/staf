@@ -1,6 +1,30 @@
-﻿{
+{
   "schemaVersion": 1,
   "ratingScales": [
+    {
+      "ratingScaleId": "threeBand",
+      "name": "Three-band categorical",
+      "levels": [
+        {
+          "id": "poor",
+          "label": "Poor",
+          "order": 1,
+          "score": 0
+        },
+        {
+          "id": "fair",
+          "label": "Fair",
+          "order": 2,
+          "score": 0.55
+        },
+        {
+          "id": "good",
+          "label": "Good",
+          "order": 3,
+          "score": 1
+        }
+      ]
+    },
     {
       "ratingScaleId": "fourBand",
       "name": "Four-band categorical",
@@ -15,7 +39,7 @@
           "id": "marginal",
           "label": "Marginal",
           "order": 2,
-          "score": 0.3
+          "score": 0.4
         },
         {
           "id": "suboptimal",

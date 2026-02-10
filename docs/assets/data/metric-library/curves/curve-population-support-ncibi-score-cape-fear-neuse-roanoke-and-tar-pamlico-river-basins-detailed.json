@@ -28,8 +28,8 @@
             },
             {
               "x": 33,
-              "y": 0.3,
-              "description": "Field 33, Index 0.3"
+              "y": 0.4,
+              "description": "Field 33, Index 0.4"
             },
             {
               "x": 46,
@@ -64,7 +64,7 @@
             "indexValues": [
               "0",
               "0.2",
-              "0.3",
+              "0.4",
               "0.6",
               "0.7",
               "1",

@@ -26,27 +26,22 @@
       "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "threeBand",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "threeBand"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
+              "label": "Good",
+              "ratingId": "good",
               "criteriaMarkdown": "Good: In category 1, 2, or 3 or aquatic life uses not evaluated. (Suggested index range 0.70-1.0)"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Fair: In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated. (Suggested index range 0.50-0.69)"
-            },
-            {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Fair: In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated. (Suggested index range 0.30-0.49)"
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated. (Suggested index range 0.40-0.69)"
             },
             {
               "label": "Poor",
@@ -107,7 +102,7 @@
         "name": "Fair",
         "desc": "In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated.",
         "range": {
-          "min": 0.3,
+          "min": 0.4,
           "max": 0.69
         }
       },

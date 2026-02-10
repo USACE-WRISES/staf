@@ -237,6 +237,13 @@
         { label: 'Strongly Agree', ratingId: 'sa', criteriaMarkdown: '' },
       ];
     }
+    if (ratingScaleId === 'threeBand') {
+      return [
+        { label: 'Good', ratingId: 'good', criteriaMarkdown: '' },
+        { label: 'Fair', ratingId: 'fair', criteriaMarkdown: '' },
+        { label: 'Poor', ratingId: 'poor', criteriaMarkdown: '' },
+      ];
+    }
     return [
       { label: 'Optimal', ratingId: 'optimal', criteriaMarkdown: '' },
       { label: 'Suboptimal', ratingId: 'suboptimal', criteriaMarkdown: '' },
@@ -388,7 +395,14 @@
       valueCell.textContent = point.valueLabel;
       if (useRange && point.yMin !== null && point.yMax !== null) {
         indexCell.textContent = `${point.yMin.toFixed(2)}-${point.yMax.toFixed(2)}`;
-        functionCell.textContent = `${Math.round(point.yMin * 15)}-${Math.round(point.yMax * 15)}`;
+        const minScore = Math.ceil(point.yMin * 15);
+        const maxScore = Math.floor(point.yMax * 15);
+        if (minScore <= maxScore) {
+          functionCell.textContent = `${minScore}-${maxScore}`;
+        } else {
+          const fallback = Math.round(((point.yMin + point.yMax) / 2) * 15);
+          functionCell.textContent = String(fallback);
+        }
       } else if (point.y !== null) {
         indexCell.textContent = point.y.toFixed(2);
         functionCell.textContent = String(Math.round(point.y * 15));
@@ -438,14 +452,13 @@
     const isScreening = profile?.tier === 'screening';
     const points = isScreening
       ? [
-          { x: 'Optimal', y: 1, description: '' },
-          { x: 'Suboptimal', y: 0.69, description: '' },
-          { x: 'Marginal', y: 0.3, description: '' },
+          { x: 'Good', y: 1, description: '' },
+          { x: 'Fair', y: 0.55, description: '' },
           { x: 'Poor', y: 0, description: '' },
         ]
       : [
           { x: 0, y: 0 },
-          { x: 1, y: 0.3 },
+          { x: 1, y: 0.4 },
           { x: 2, y: 0.69 },
           { x: 3, y: 1 },
         ];
@@ -517,6 +530,7 @@
       selectedMetricId: null,
       selectedProfileId: null,
       selectedCurveId: null,
+      selectedScoringLayerByKey: new Map(),
       activeTab: 'details',
       expandedRows: new Set(),
       curveCountOverrides: new Map(),
@@ -526,6 +540,8 @@
         value: 120,
         index: 70,
       },
+      groupExpanded: new Map(),
+      groupAddMenus: new Map(),
       excelPromise: null,
       exporting: false,
       ordering: {
@@ -1010,9 +1026,10 @@
     const resolveUserMetricTier = () =>
       state.tierFilter !== 'all' ? state.tierFilter : pageTier || 'screening';
 
-    const buildUserMetricEntry = (group, count) => {
-      const tier = resolveUserMetricTier();
-      const ratingScaleId = tier === 'rapid' ? 'sfariLikert' : 'fourBand';
+    const buildUserMetricEntry = (group, count, tierOverride = null) => {
+      const tier = tierOverride || resolveUserMetricTier();
+      const ratingScaleId =
+        tier === 'rapid' ? 'sfariLikert' : tier === 'screening' ? 'threeBand' : 'fourBand';
       const rubricLevels = buildUserRubricLevels(ratingScaleId);
       const metricId = `user-${slugify(group.function || 'metric')}-${Date.now()}`;
       const profileId = `${tier}-user-${metricId}`;
@@ -1086,13 +1103,13 @@
       return { entry, detail };
     };
 
-    const createUserMetric = (group) => {
+    const createUserMetric = (group, tierOverride = null) => {
       const functionKey = normalizeText(group.function || '');
       const count =
         userMetricStore.metrics.filter(
           (entry) => normalizeText(entry.function || '') === functionKey
         ).length + 1;
-      const { entry, detail } = buildUserMetricEntry(group, count);
+      const { entry, detail } = buildUserMetricEntry(group, count, tierOverride);
       userMetricStore.metrics.push(entry);
       userMetricStore.details[entry.metricId] = detail;
       if (!userMetricStore.curves) {
@@ -1138,6 +1155,7 @@
         state.selectedMetricId = null;
         state.selectedCurveId = null;
         state.selectedProfileId = null;
+        state.selectedScoringLayerByKey.clear();
       }
       renderLibrary();
       renderInspector();
@@ -1376,6 +1394,7 @@
       }
       if (state.selectedMetricId !== metricId) {
         state.selectedCurveId = null;
+        state.selectedScoringLayerByKey.clear();
       }
       state.selectedMetricId = metricId;
       if (options.tab) {
@@ -1385,14 +1404,18 @@
         state.selectedCurveId = options.curveId;
       }
       const detail = await loadMetricDetail(metricId);
+      if (!detail) {
+        return;
+      }
+      const profiles = Array.isArray(detail.profiles) ? detail.profiles : [];
       const api = getAssessmentApi();
       const preferredProfileId =
         options.profileId || (api && typeof api.getProfile === 'function'
           ? api.getProfile(metricId)
           : null);
       const profile = preferredProfileId
-        ? detail.profiles.find((p) => p.profileId === preferredProfileId)
-        : getDefaultProfile(detail, state.tierFilter);
+        ? profiles.find((p) => p.profileId === preferredProfileId)
+        : getDefaultProfile({ profiles }, state.tierFilter);
       state.selectedProfileId = profile ? profile.profileId : null;
       if (options.openRight !== false) {
         openRight();
@@ -1796,6 +1819,48 @@
         }
         return entry.minimumTier || 'screening';
       };
+      const formatMetricActionLabel = (isRemove, tier) => {
+        const fallbackTier =
+          tier || (state.tierFilter === 'all' ? pageTier : state.tierFilter) || pageTier;
+        return `${isRemove ? '-' : '+'}${formatTierAbbrev(fallbackTier)}`;
+      };
+      const resolveActionProfile = (entry) => {
+        const summaries = entry.profileSummaries || {};
+        const availability = entry.profileAvailability || {};
+        const tierOrderList = ['screening', 'rapid', 'detailed'];
+        const preferredTier = state.tierFilter === 'all' ? pageTier : state.tierFilter;
+
+        if (preferredTier && summaries[preferredTier]?.profileId) {
+          return {
+            tier: preferredTier,
+            profileId: summaries[preferredTier].profileId,
+          };
+        }
+
+        const firstAvailableWithProfile = tierOrderList.find(
+          (tier) => availability[tier] && summaries[tier]?.profileId
+        );
+        if (firstAvailableWithProfile) {
+          return {
+            tier: firstAvailableWithProfile,
+            profileId: summaries[firstAvailableWithProfile].profileId,
+          };
+        }
+
+        const firstProfileTier = tierOrderList.find((tier) => summaries[tier]?.profileId);
+        if (firstProfileTier) {
+          return {
+            tier: firstProfileTier,
+            profileId: summaries[firstProfileTier].profileId,
+          };
+        }
+
+        const firstAvailableTier = tierOrderList.find((tier) => availability[tier]);
+        return {
+          tier: firstAvailableTier || preferredTier || pageTier || 'screening',
+          profileId: null,
+        };
+      };
 
       const groups = [];
       const groupMap = new Map();
@@ -1807,6 +1872,7 @@
         let group = groupMap.get(groupKey);
         if (!group) {
           group = {
+            key: groupKey,
             discipline: entry.discipline || 'Discipline',
             function: entry.function || 'Function',
             entries: [],
@@ -1821,12 +1887,69 @@
       });
 
       groups.forEach((group) => {
+        const normalizedFilterFunction = normalizeText(state.filters.function || '');
+        const normalizedFilterDiscipline = normalizeText(state.filters.discipline || '');
+        const hasSpecificFunctionFilter =
+          normalizedFilterFunction &&
+          normalizedFilterFunction !== 'all' &&
+          normalizedFilterFunction !== 'allfunctions';
+        const hasSpecificDisciplineFilter =
+          normalizedFilterDiscipline &&
+          normalizedFilterDiscipline !== 'all' &&
+          normalizedFilterDiscipline !== 'alldisciplines';
+        const matchesFilteredFunction =
+          hasSpecificFunctionFilter &&
+          normalizeText(group.function || '') === normalizedFilterFunction &&
+          (!hasSpecificDisciplineFilter ||
+            normalizeText(group.discipline || '') === normalizedFilterDiscipline);
+
+        if (!state.groupExpanded.has(group.key)) {
+          state.groupExpanded.set(group.key, matchesFilteredFunction);
+        }
+        if (!state.groupAddMenus.has(group.key)) {
+          state.groupAddMenus.set(group.key, false);
+        }
+        if (matchesFilteredFunction && !state.groupExpanded.get(group.key)) {
+          state.groupExpanded.set(group.key, true);
+        }
+
+        const isExpanded = Boolean(state.groupExpanded.get(group.key));
+        if (!isExpanded && state.groupAddMenus.get(group.key)) {
+          state.groupAddMenus.set(group.key, false);
+        }
+        const isAddMenuOpen = isExpanded && Boolean(state.groupAddMenus.get(group.key));
+
         const groupRow = createEl('div', 'metric-library-group');
         const categoryClass = getDisciplineCategoryClass(group.discipline);
         if (categoryClass) {
           groupRow.classList.add(categoryClass);
         }
+        if (isExpanded) {
+          groupRow.classList.add('is-expanded');
+        } else {
+          groupRow.classList.add('is-collapsed');
+        }
+
         const groupMain = createEl('div', 'metric-library-group-main');
+        const groupToggle = createEl(
+          'button',
+          'metric-group-toggle',
+          isExpanded ? '\u25BE' : '\u25B8'
+        );
+        groupToggle.type = 'button';
+        groupToggle.setAttribute('aria-label', `${isExpanded ? 'Collapse' : 'Expand'} section`);
+        groupToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        groupToggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          const next = !Boolean(state.groupExpanded.get(group.key));
+          state.groupExpanded.set(group.key, next);
+          if (!next) {
+            state.groupAddMenus.set(group.key, false);
+          }
+          renderLibrary();
+        });
+        groupMain.appendChild(groupToggle);
+
         const disciplineLabel = createEl(
           'span',
           'metric-library-group-discipline',
@@ -1839,25 +1962,70 @@
         );
         groupMain.appendChild(disciplineLabel);
         groupMain.appendChild(functionLabel);
-        const groupActions = createEl('div', 'metric-library-group-actions');
-        const addMetricBtn = createEl('button', 'metric-group-add', '+');
-        addMetricBtn.type = 'button';
-        addMetricBtn.setAttribute('aria-label', 'Add metric');
-        addMetricBtn.setAttribute(
-          'title',
-          `Add metric to ${group.function || 'function'}`
-        );
-        addMetricBtn.addEventListener('click', (event) => {
-          event.stopPropagation();
-          const newEntry = createUserMetric(group);
+
+        groupMain.addEventListener('click', () => {
+          const next = !Boolean(state.groupExpanded.get(group.key));
+          state.groupExpanded.set(group.key, next);
+          if (!next) {
+            state.groupAddMenus.set(group.key, false);
+          }
           renderLibrary();
-          selectMetric(newEntry.metricId, { tab: 'details' });
-          openRight();
         });
-        groupActions.appendChild(addMetricBtn);
+
+        const groupActions = createEl('div', 'metric-library-group-actions');
+        if (isExpanded) {
+          const addMetricBtn = createEl('button', 'metric-group-add-trigger', 'Add');
+          addMetricBtn.type = 'button';
+          addMetricBtn.setAttribute('aria-label', 'Choose tier to add metric');
+          addMetricBtn.setAttribute(
+            'title',
+            `Add metric to ${group.function || 'function'}`
+          );
+          addMetricBtn.setAttribute('aria-expanded', isAddMenuOpen ? 'true' : 'false');
+          addMetricBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const next = !Boolean(state.groupAddMenus.get(group.key));
+            state.groupAddMenus.set(group.key, next);
+            renderLibrary();
+          });
+          groupActions.appendChild(addMetricBtn);
+
+          if (isAddMenuOpen) {
+            const addMenu = createEl('div', 'metric-group-add-menu');
+            const tierOptions = [
+              { tier: 'screening', label: 'Add Screening' },
+              { tier: 'rapid', label: 'Add Rapid' },
+              { tier: 'detailed', label: 'Add Detailed' },
+            ];
+            tierOptions.forEach((option) => {
+              const tierBtn = createEl('button', 'metric-group-add-option', option.label);
+              tierBtn.type = 'button';
+              tierBtn.setAttribute(
+                'aria-label',
+                `${option.label} metric in ${group.function || 'function'}`
+              );
+              tierBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                const newEntry = createUserMetric(group, option.tier);
+                state.groupExpanded.set(group.key, true);
+                state.groupAddMenus.set(group.key, false);
+                renderLibrary();
+                selectMetric(newEntry.metricId, { tab: 'details' });
+                openRight();
+              });
+              addMenu.appendChild(tierBtn);
+            });
+            groupActions.appendChild(addMenu);
+          }
+        }
+
         groupRow.appendChild(groupMain);
         groupRow.appendChild(groupActions);
         fragment.appendChild(groupRow);
+
+        if (!isExpanded) {
+          return;
+        }
 
         group.entries
           .slice()
@@ -1878,9 +2046,6 @@
             const isUserMetric = Boolean(entry.isUserMetric);
             if (entry.metricId === state.selectedMetricId) {
               row.classList.add('is-selected');
-            }
-            if (!isUserMetric) {
-              row.classList.add('is-locked');
             }
             row.setAttribute('role', 'button');
             row.setAttribute('tabindex', '0');
@@ -1911,44 +2076,56 @@
             metricNameRow.appendChild(metricName);
             const addButton = createEl('button', 'metric-add-btn');
             addButton.type = 'button';
-            addButton.textContent = '+';
-            addButton.setAttribute('title', 'Add Metric');
 
             const api = getAssessmentApi();
             const isReadOnly =
               api && typeof api.isReadOnly === 'function' ? api.isReadOnly() : false;
-            const defaultSummary =
-              state.tierFilter !== 'all'
-                ? entry.profileSummaries?.[state.tierFilter]
-                : entry.profileSummaries?.screening ||
-                  entry.profileSummaries?.rapid ||
-                  entry.profileSummaries?.detailed;
-            const defaultProfileId = defaultSummary?.profileId || null;
+            const actionProfile = resolveActionProfile(entry);
+            const actionTier = actionProfile.tier;
+            const actionProfileId = actionProfile.profileId;
             const isAdded =
-              api && defaultProfileId
-                ? api.isMetricAdded(entry.metricId, defaultProfileId)
+              api && actionProfileId
+                ? api.isMetricAdded(entry.metricId, actionProfileId)
                 : false;
+            addButton.textContent = formatMetricActionLabel(isAdded, actionTier);
+            addButton.setAttribute(
+              'title',
+              `${isAdded ? 'Remove' : 'Add'} ${formatTier(actionTier)} Metric`
+            );
             if (isAdded) {
-              addButton.textContent = '-';
               addButton.classList.add('is-remove');
-              addButton.setAttribute('aria-label', 'Remove metric');
-              addButton.setAttribute('title', 'Remove Metric');
+              addButton.setAttribute(
+                'aria-label',
+                `Remove ${formatTier(actionTier)} metric`
+              );
+            } else {
+              addButton.setAttribute(
+                'aria-label',
+                `Add ${formatTier(actionTier)} metric`
+              );
             }
 
-            if (isReadOnly) {
+            if (isReadOnly || !actionProfileId) {
               addButton.disabled = true;
               addButton.classList.add('is-disabled');
+              if (!actionProfileId) {
+                addButton.setAttribute('title', 'No profile available');
+                addButton.setAttribute('aria-label', 'No profile available');
+              }
             }
 
             addButton.addEventListener('click', () => {
-              if (isReadOnly) {
+              if (isReadOnly || !actionProfileId) {
                 return;
               }
               if (isAdded) {
-                removeMetricFromAssessment(entry.metricId, defaultProfileId);
+                removeMetricFromAssessment(entry.metricId, actionProfileId);
                 return;
               }
-              addMetricToAssessment(entry);
+              addMetricToAssessment(entry, {
+                profileId: actionProfileId,
+                tier: actionTier,
+              });
             });
             metricNameRow.appendChild(addButton);
             metricCell.appendChild(metricNameRow);
@@ -1957,42 +2134,16 @@
             }
 
             const minTier = createEl('div', 'metric-cell metric-tier-cell');
-            if (state.tierFilter === 'all') {
-              const tierOrderList = ['screening', 'rapid', 'detailed'];
-              const availableTiers = tierOrderList.filter(
-                (tier) => entry.profileAvailability?.[tier]
-              );
-              if (availableTiers.length) {
-                availableTiers.forEach((tier) => {
-                  const chip = createEl(
-                    'span',
-                    'metric-min-tier',
-                    formatTierAbbrev(tier)
-                  );
-                  minTier.appendChild(chip);
-                });
-              } else {
-                const fallbackChip = createEl('span', 'metric-min-tier', '-');
-                minTier.appendChild(fallbackChip);
-              }
-            } else {
-              const displayTier = state.tierFilter;
-              const minTierChip = createEl(
-                'span',
-                'metric-min-tier',
-                displayTier ? formatTierAbbrev(displayTier) : '-'
-              );
-              minTier.appendChild(minTierChip);
-            }
-            if (!isUserMetric) {
-              const lockIcon = createEl('span', 'metric-lock-icon metric-lock-icon-tier');
-              lockIcon.setAttribute('aria-hidden', 'true');
-              lockIcon.innerHTML =
+            if (isUserMetric) {
+              const userIcon = createEl('span', 'metric-lock-icon metric-lock-icon-tier metric-origin-icon-user');
+              userIcon.setAttribute('aria-hidden', 'true');
+              userIcon.setAttribute('title', 'User-defined metric');
+              userIcon.innerHTML =
                 '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-                '<path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2" />' +
-                '<rect x="5" y="11" width="14" height="10" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2" />' +
+                '<circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="1.8" />' +
+                '<path d="M5 20c0-3.3 3.1-6 7-6s7 2.7 7 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />' +
                 '</svg>';
-              minTier.appendChild(lockIcon);
+              minTier.appendChild(userIcon);
             }
 
             row.appendChild(metricCell);
@@ -2016,113 +2167,122 @@
         return;
       }
 
-      const detail = await loadMetricDetail(state.selectedMetricId);
-      if (!detail) {
-        return;
-      }
-      const isUserMetric = Boolean(detail.isUserMetric);
-      const isLockedMetric = !isUserMetric;
-
-      const profile = detail.profiles.find((p) => p.profileId === state.selectedProfileId) ||
-        getDefaultProfile(detail, state.tierFilter);
-      if (profile) {
-        state.selectedProfileId = profile.profileId;
-      }
-
-      inspectorContent.hidden = false;
-      inspectorEmpty.hidden = true;
-
-      if (inspectorTitle) {
-        inspectorTitle.innerHTML = '';
-        if (isUserMetric) {
-          const nameInput = document.createElement('input');
-          nameInput.type = 'text';
-          nameInput.className = 'metric-inspector-title-input';
-          nameInput.value = detail.name || detail.metricId;
-          nameInput.setAttribute('aria-label', 'Metric name');
-          nameInput.addEventListener('input', () => {
-            const nextValue = nameInput.value.trim() || detail.metricId;
-            saveUserMetric(detail.metricId, { name: nextValue }, { name: nextValue });
-            renderLibrary();
-          });
-          inspectorTitle.appendChild(nameInput);
-        } else {
-          inspectorTitle.textContent = detail.name || detail.metricId;
+      try {
+        const detail = await loadMetricDetail(state.selectedMetricId);
+        if (!detail) {
+          return;
         }
-      }
-      if (inspectorSubtitle) {
-        inspectorSubtitle.textContent =
-          detail.discipline && detail.function
-            ? `${detail.discipline} - ${detail.function}`
-            : detail.function || detail.discipline || '';
-      }
+        const isUserMetric = Boolean(detail.isUserMetric);
+        const isLockedMetric = !isUserMetric;
+        const profiles = Array.isArray(detail.profiles) ? detail.profiles : [];
 
-      const api = getAssessmentApi();
-      const isAdded =
-        api && profile ? api.isMetricAdded(detail.metricId, profile.profileId) : false;
-      const isReadOnly =
-        !api || (typeof api.isReadOnly === 'function' ? api.isReadOnly() : false);
+        const profile =
+          profiles.find((p) => p.profileId === state.selectedProfileId) ||
+          getDefaultProfile({ profiles }, state.tierFilter);
+        if (profile) {
+          state.selectedProfileId = profile.profileId;
+        }
 
-      const curveOverrideKey = `${detail.metricId}|${profile?.tier || ''}`;
-      const overrideCount = state.curveCountOverrides.get(curveOverrideKey);
-      const baseCount = profile?.curveIntegration?.curveSetRefs?.length || 0;
-      const curveCount = overrideCount !== undefined ? overrideCount : baseCount;
+        inspectorContent.hidden = false;
+        inspectorEmpty.hidden = true;
 
-      if (inspectorToggle) {
-        inspectorToggle.textContent = isAdded ? '-' : '+';
-        inspectorToggle.classList.toggle('is-remove', isAdded);
-        inspectorToggle.setAttribute(
-          'aria-label',
-          isAdded ? 'Remove metric' : 'Add metric'
-        );
-        inspectorToggle.setAttribute('title', isAdded ? 'Remove Metric' : 'Add Metric');
-        inspectorToggle.disabled =
-          isReadOnly || (!isAdded && profile?.curveIntegration?.enabled && curveCount === 0);
-        inspectorToggle.classList.toggle('is-disabled', inspectorToggle.disabled);
-        inspectorToggle.onclick = () => {
-          if (inspectorToggle.disabled) {
-            return;
+        if (inspectorTitle) {
+          inspectorTitle.innerHTML = '';
+          if (isUserMetric) {
+            const nameInput = document.createElement('input');
+            nameInput.type = 'text';
+            nameInput.className = 'metric-inspector-title-input';
+            nameInput.value = detail.name || detail.metricId;
+            nameInput.setAttribute('aria-label', 'Metric name');
+            nameInput.addEventListener('input', () => {
+              const nextValue = nameInput.value.trim() || detail.metricId;
+              saveUserMetric(detail.metricId, { name: nextValue }, { name: nextValue });
+              renderLibrary();
+            });
+            inspectorTitle.appendChild(nameInput);
+          } else {
+            inspectorTitle.textContent = detail.name || detail.metricId;
           }
-          if (isAdded) {
-            removeMetricFromAssessment(detail.metricId, profile?.profileId);
-            return;
-          }
-          addMetricToAssessment({ metricId: detail.metricId, detailsRef: detail.detailsRef }, profile);
-        };
-      }
+        }
+        if (inspectorSubtitle) {
+          inspectorSubtitle.textContent =
+            detail.discipline && detail.function
+              ? `${detail.discipline} - ${detail.function}`
+              : detail.function || detail.discipline || '';
+        }
 
-      if (profileSelector) {
-        profileSelector.innerHTML = '';
-        detail.profiles.forEach((p) => {
-          const chip = createEl('button', 'metric-profile-chip', formatTier(p.tier));
-          chip.type = 'button';
-          chip.classList.toggle('is-active', p.profileId === profile?.profileId);
-          chip.addEventListener('click', () => {
-            state.selectedProfileId = p.profileId;
-            renderInspector();
+        const api = getAssessmentApi();
+        const isAdded =
+          api && profile ? api.isMetricAdded(detail.metricId, profile.profileId) : false;
+        const isReadOnly =
+          !api || (typeof api.isReadOnly === 'function' ? api.isReadOnly() : false);
+
+        const curveOverrideKey = `${detail.metricId}|${profile?.tier || ''}`;
+        const overrideCount = state.curveCountOverrides.get(curveOverrideKey);
+        const baseCount = profile?.curveIntegration?.curveSetRefs?.length || 0;
+        const curveCount = overrideCount !== undefined ? overrideCount : baseCount;
+
+        if (inspectorToggle) {
+          const toggleTier =
+            profile?.tier || (state.tierFilter === 'all' ? pageTier : state.tierFilter) || pageTier;
+          inspectorToggle.textContent = `${isAdded ? '-' : '+'}${formatTierAbbrev(toggleTier)}`;
+          inspectorToggle.classList.toggle('is-remove', isAdded);
+          const toggleTierLabel = formatTier(toggleTier);
+          inspectorToggle.setAttribute(
+            'aria-label',
+            isAdded ? `Remove ${toggleTierLabel} metric` : `Add ${toggleTierLabel} metric`
+          );
+          inspectorToggle.setAttribute(
+            'title',
+            isAdded ? `Remove ${toggleTierLabel} Metric` : `Add ${toggleTierLabel} Metric`
+          );
+          inspectorToggle.disabled =
+            isReadOnly || (!isAdded && profile?.curveIntegration?.enabled && curveCount === 0);
+          inspectorToggle.classList.toggle('is-disabled', inspectorToggle.disabled);
+          inspectorToggle.onclick = () => {
+            if (inspectorToggle.disabled) {
+              return;
+            }
+            if (isAdded) {
+              removeMetricFromAssessment(detail.metricId, profile?.profileId);
+              return;
+            }
+            addMetricToAssessment({ metricId: detail.metricId, detailsRef: detail.detailsRef }, profile);
+          };
+        }
+
+        if (profileSelector) {
+          profileSelector.innerHTML = '';
+          profiles.forEach((p) => {
+            const chip = createEl('button', 'metric-profile-chip', formatTier(p.tier));
+            chip.type = 'button';
+            chip.classList.toggle('is-active', p.profileId === profile?.profileId);
+            chip.addEventListener('click', () => {
+              state.selectedProfileId = p.profileId;
+              renderInspector();
+            });
+            profileSelector.appendChild(chip);
           });
-          profileSelector.appendChild(chip);
-        });
-      }
+        }
 
-      if (profileSummary) {
-        profileSummary.textContent = profile ? buildScoringSummary(profile) : '';
-      }
+        if (profileSummary) {
+          profileSummary.textContent = profile ? buildScoringSummary(profile) : '';
+        }
 
-      let addWarning = inspectorContent.querySelector('.metric-add-warning');
-      if (!addWarning) {
-        addWarning = createEl('div', 'metric-add-warning');
-        inspectorContent.insertBefore(addWarning, profileSummary?.nextSibling || null);
-      }
-      const needsCurveWarning =
-        !isReadOnly && profile?.curveIntegration?.enabled && curveCount === 0;
-      if (needsCurveWarning) {
-        addWarning.textContent =
-          'Configure at least one reference curve to add this metric.';
-        addWarning.hidden = false;
-      } else {
-        addWarning.hidden = true;
-      }
+        let addWarning = inspectorContent.querySelector('.metric-add-warning');
+        if (!addWarning) {
+          addWarning = createEl('div', 'metric-add-warning');
+          inspectorContent.insertBefore(addWarning, profileSummary?.nextSibling || null);
+        }
+        const needsCurveWarning =
+          !isReadOnly && profile?.curveIntegration?.enabled && curveCount === 0;
+        if (needsCurveWarning) {
+          addWarning.textContent =
+            'Configure at least one reference curve to add this metric.';
+          addWarning.hidden = false;
+        } else {
+          addWarning.hidden = true;
+        }
 
       const renderDetailsTab = () => {
         const panel = tabPanels.find((p) => p.dataset.tab === 'details');
@@ -2225,6 +2385,9 @@
           let ratingScale = null;
           let rangeMap = new Map();
           let curveLabels = [];
+          let curves = [];
+          let activeCurve = null;
+          let activeLayer = null;
           const pickActiveCurve = (curves) => {
             if (!Array.isArray(curves) || !curves.length) {
               return null;
@@ -2269,21 +2432,26 @@
             ratingScale = null;
           }
           try {
-            const curves = await resolveScoringCurves();
-            const activeCurve = pickActiveCurve(curves);
+            curves = await resolveScoringCurves();
+            activeCurve = pickActiveCurve(curves);
             if (activeCurve && normalizeCurveType(activeCurve.xType) === 'categorical') {
+              if (activeCurve.curveId) {
+                state.selectedCurveId = activeCurve.curveId;
+              }
               if (activeCurve.indexRange) {
                 ensureCurveRanges(activeCurve);
               }
-              const activeLayerId = activeCurve.activeLayerId;
-              const layer =
-                (activeCurve.layers || []).find((entry) => entry.id === activeLayerId) ||
-                (activeCurve.layers ? activeCurve.layers[0] : null);
-              if (layer && Array.isArray(layer.points)) {
-                curveLabels = layer.points
+              const scoringLayerKey = `${detail.metricId}|${profile.profileId}|${activeCurve.curveId || ''}`;
+              const preferredLayerId = state.selectedScoringLayerByKey.get(scoringLayerKey);
+              activeLayer = getCurveLayer(activeCurve, preferredLayerId || activeCurve.activeLayerId);
+              if (activeLayer?.id) {
+                state.selectedScoringLayerByKey.set(scoringLayerKey, activeLayer.id);
+              }
+              if (activeLayer && Array.isArray(activeLayer.points)) {
+                curveLabels = activeLayer.points
                   .map((point) => (point?.x != null ? String(point.x).trim() : ''))
                   .filter(Boolean);
-                layer.points.forEach((point) => {
+                activeLayer.points.forEach((point) => {
                   const min = parseScore(point.yMin);
                   const max = parseScore(point.yMax);
                   if (min !== null && max !== null) {
@@ -2293,7 +2461,51 @@
               }
             }
           } catch (error) {
+            curves = [];
+            activeCurve = null;
+            activeLayer = null;
             rangeMap = new Map();
+          }
+          if (activeCurve) {
+            const controls = createEl('div', 'metric-curve-controls');
+            if (curves.length > 1) {
+              const curveSelect = document.createElement('select');
+              curves.forEach((curve) => {
+                const option = document.createElement('option');
+                option.value = curve.curveId || '';
+                option.textContent = curve.name || curve.curveId || 'Curve';
+                curveSelect.appendChild(option);
+              });
+              curveSelect.value = activeCurve.curveId || curves[0]?.curveId || '';
+              curveSelect.addEventListener('change', () => {
+                state.selectedCurveId = curveSelect.value;
+                renderScoringTab();
+              });
+              controls.appendChild(curveSelect);
+            }
+            const layers = Array.isArray(activeCurve.layers) ? activeCurve.layers : [];
+            if (layers.length > 1) {
+              const layerLabel = createEl('span', null, 'Stratification');
+              const layerSelect = document.createElement('select');
+              layers.forEach((layer) => {
+                const option = document.createElement('option');
+                option.value = layer.id || '';
+                option.textContent = layer.name || 'Default';
+                layerSelect.appendChild(option);
+              });
+              layerSelect.value = activeLayer?.id || layers[0]?.id || '';
+              layerSelect.addEventListener('change', () => {
+                const scoringLayerKey = `${detail.metricId}|${profile.profileId}|${activeCurve.curveId || ''}`;
+                state.selectedScoringLayerByKey.set(scoringLayerKey, layerSelect.value);
+                activeCurve.activeLayerId = layerSelect.value;
+                renderScoringTab();
+              });
+              controls.appendChild(layerLabel);
+              controls.appendChild(layerSelect);
+            }
+            if (controls.childElementCount > 0) {
+              panel.appendChild(controls);
+            }
           }
           const hasScores = Boolean(
             ratingScale && ratingScale.levels?.some((level) => typeof level.score === 'number')
@@ -3297,32 +3509,69 @@
         chartExpand.addEventListener('click', openCurveModal);
       };
 
-      renderDetailsTab();
-      renderScoringTab();
-      renderCurvesTab();
+        renderDetailsTab();
+        renderScoringTab();
+        renderCurvesTab();
 
-      let inspectorFooter = inspectorContent.querySelector('.metric-inspector-footer');
-      if (!inspectorFooter) {
-        inspectorFooter = createEl('div', 'metric-inspector-footer');
-        inspectorContent.appendChild(inspectorFooter);
-      }
-      inspectorFooter.innerHTML = '';
-      if (isUserMetric) {
-        const deleteBtn = createEl(
-          'button',
-          'metric-delete-btn',
-          'Delete Metric from Library'
-        );
-        deleteBtn.type = 'button';
-        deleteBtn.addEventListener('click', () => {
-          deleteUserMetric(detail.metricId);
+        let inspectorFooter = inspectorContent.querySelector('.metric-inspector-footer');
+        if (!inspectorFooter) {
+          inspectorFooter = createEl('div', 'metric-inspector-footer');
+          inspectorContent.appendChild(inspectorFooter);
+        }
+        inspectorFooter.innerHTML = '';
+        if (isUserMetric) {
+          const deleteBtn = createEl(
+            'button',
+            'metric-delete-btn',
+            'Delete Metric from Library'
+          );
+          deleteBtn.type = 'button';
+          deleteBtn.addEventListener('click', () => {
+            deleteUserMetric(detail.metricId);
+          });
+          inspectorFooter.appendChild(deleteBtn);
+          inspectorFooter.hidden = false;
+        } else {
+          inspectorFooter.hidden = true;
+        }
+        setActiveTab(state.activeTab);
+      } catch (error) {
+        console.error('Failed to render metric inspector', error);
+        inspectorContent.hidden = false;
+        inspectorEmpty.hidden = true;
+        if (inspectorTitle) {
+          inspectorTitle.textContent = 'Metric details unavailable';
+        }
+        if (inspectorSubtitle) {
+          inspectorSubtitle.textContent = '';
+        }
+        if (profileSelector) {
+          profileSelector.innerHTML = '';
+        }
+        if (profileSummary) {
+          profileSummary.textContent = '';
+        }
+        if (inspectorToggle) {
+          inspectorToggle.disabled = true;
+          inspectorToggle.classList.add('is-disabled');
+        }
+        tabPanels.forEach((panel) => {
+          panel.innerHTML = '';
+          panel.appendChild(
+            createEl(
+              'div',
+              'metric-detail-locked',
+              'Unable to load metric details. Refresh the page and try again.'
+            )
+          );
         });
-        inspectorFooter.appendChild(deleteBtn);
-        inspectorFooter.hidden = false;
-      } else {
-        inspectorFooter.hidden = true;
+        const inspectorFooter = inspectorContent.querySelector('.metric-inspector-footer');
+        if (inspectorFooter) {
+          inspectorFooter.hidden = true;
+          inspectorFooter.innerHTML = '';
+        }
+        setActiveTab('details');
       }
-      setActiveTab(state.activeTab);
     };
 
     renderLibrary();

@@ -24,8 +24,8 @@
           "points": [
             {
               "x": 5,
-              "y": 0.3,
-              "description": "Field 5, Index 0.3"
+              "y": 0.4,
+              "description": "Field 5, Index 0.4"
             },
             {
               "x": 25,
@@ -59,8 +59,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",
@@ -74,8 +74,8 @@
           "points": [
             {
               "x": 10,
-              "y": 0.3,
-              "description": "Field 10, Index 0.3"
+              "y": 0.4,
+              "description": "Field 10, Index 0.4"
             },
             {
               "x": 50,
@@ -109,8 +109,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",
@@ -124,8 +124,8 @@
           "points": [
             {
               "x": 15,
-              "y": 0.3,
-              "description": "Field 15, Index 0.3"
+              "y": 0.4,
+              "description": "Field 15, Index 0.4"
             },
             {
               "x": 75,
@@ -159,8 +159,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",
