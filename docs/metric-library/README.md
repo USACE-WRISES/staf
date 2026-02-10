@@ -1,7 +1,8 @@
-﻿# Metric Library
+# Metric Library
 
 ## Overview
-The Metric Library is a shared dataset and UI that powers metric browsing across Screening, Rapid, and Detailed tiers. It stores metric definitions, scoring profiles, and reference curves in a single library that can be used by any assessment page.
+The metric library is the canonical dataset used by Screening, Rapid, and Detailed widgets.
+It stores metric definitions, profile scoring rules, and reference curves in one place.
 
 ## Folder layout
 ```
@@ -14,42 +15,54 @@ docs/assets/data/metric-library/
     <curveSetId>.json
 ```
 
-## Adding a new metric
-1. Create a metric detail file in `docs/assets/data/metric-library/metrics/`.
-2. Add one or more scoring profiles in the `profiles` array.
-3. If the profile uses curves, create a curve set file in `docs/assets/data/metric-library/curves/` and reference it via `curveIntegration.curveSetRefs`.
-4. Rebuild the index:
+## Primary workflow (recommended)
+Use the source CSV as the single input and regenerate all metric-library outputs.
+
+1. Update CSV in:
+   - `docs/assets/data/metric-library/Metric Library Complete *.csv`
+2. Build library:
+```bash
+npm run build:metric-library
 ```
+3. Validate:
+```bash
+npm test
+```
+
+The build command runs `scripts/compileMetricLibraryFromCsv.ts` and regenerates:
+- Canonical metric library JSON (`index.json`, `metrics/*.json`, `curves/*.json`)
+- Tier files (`screening-metrics.tsv`, `rapid-indicators.tsv`, `rapid-criteria.tsv`, `detailed-metrics.tsv`)
+- Source-rich TSV variants and `_site` mirrors.
+
+## Alternative run options
+Run the compiler directly:
+```bash
+npx ts-node scripts/compileMetricLibraryFromCsv.ts
+```
+
+Use a specific CSV file:
+```powershell
+$env:METRIC_LIBRARY_CSV_PATH = "docs/assets/data/metric-library/Metric Library Complete 2026-02-10.csv"
+npm run build:metric-library
+```
+
+## Metric Library download (XLSX)
+The in-app **Metric Library download** button exports an Excel workbook with:
+- `Metrics` tab
+- `Reference Curves` tab
+
+That workbook is generated in the browser from canonical JSON metric-library files (`index.json`, `metrics/*.json`, `curves/*.json`).
+It is not rebuilt from TSV files.
+
+## Manual JSON edits (advanced)
+If you edit `metrics/*.json` or `curves/*.json` directly, rebuild only the index with:
+```bash
 npm run build:metric-index
 ```
 
-## Adding a new scoring profile (tier variant)
-- Add a new object to `profiles` with:
-  - `profileId`, `tier`, `status`
-  - `scoring` definition
-  - `curveIntegration` (enabled + curveSetRefs)
-- Rebuild the index so availability and summaries update.
+## Legacy migration scripts
+Older migration scripts remain available:
+- `npm run migrate:screening-metrics`
+- `npm run migrate:detailed-metrics`
 
-## Scoring types (summary)
-- `categorical`: rubric levels (e.g., Optimal/Suboptimal/Marginal/Poor)
-- `thresholds`: numeric bands mapped to rating levels
-- `curve`: scoring derived from reference curves
-- `formula`: expression + variable mapping
-- `binary` / `lookup`: minimal support for yes/no or lookup tables
-
-## Curves and counts
-- A profile declares curves via `curveIntegration.curveSetRefs`.
-- The Metric Library UI counts curves by tier using curve set references.
-- If `curveIntegration.enabled = true` but there are no curve set refs, the UI warns and disables Add.
-
-## Rebuild the index
-```
-npm run build:metric-index
-```
-
-## Migrate legacy screening metrics
-```
-npm run migrate:screening-metrics
-```
-See `docs/metric-library/MIGRATION.md` for mapping assumptions.
-
+Use them only for legacy conversions; prefer the CSV-first workflow above.

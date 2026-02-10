@@ -4214,11 +4214,6 @@ body.modal-open {
   margin-left: auto;
 }
 
-.metric-short-name {
-  font-size: 0.78rem;
-  color: #666666;
-}
-
 .metric-library-group {
   grid-column: 1 / -1;
   display: flex;

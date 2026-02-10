@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   const store = window.STAFMetricLibraryStore;
   if (!store) {
     return;
@@ -2129,9 +2129,6 @@
             });
             metricNameRow.appendChild(addButton);
             metricCell.appendChild(metricNameRow);
-            if (entry.shortName) {
-              metricCell.appendChild(createEl('div', 'metric-short-name', entry.shortName));
-            }
 
             const minTier = createEl('div', 'metric-cell metric-tier-cell');
             if (isUserMetric) {

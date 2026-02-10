@@ -42,3 +42,46 @@ Each data file is JSON and feeds one or more widgets. Field definitions are also
 
 ## Contributing
 See `docs/contribute/index.md` for the contribution workflow and content style guidelines.
+
+## Metric library build workflow
+The metric library is generated from the source CSV file:
+
+- Source CSV location: `docs/assets/data/metric-library/Metric Library Complete *.csv`
+- Generator script: `scripts/compileMetricLibraryFromCsv.ts`
+- Package command:
+
+```bash
+npm run build:metric-library
+```
+
+You can also run the script directly (equivalent behavior):
+
+```bash
+npx ts-node scripts/compileMetricLibraryFromCsv.ts
+```
+
+Optional: specify an explicit CSV path:
+
+```bash
+# PowerShell
+$env:METRIC_LIBRARY_CSV_PATH = "docs/assets/data/metric-library/Metric Library Complete 2026-02-10.csv"
+npm run build:metric-library
+```
+
+After a build, run:
+
+```bash
+npm test
+```
+
+Generated outputs include:
+- Canonical JSON metric library (`docs/assets/data/metric-library/index.json`, `metrics/*.json`, `curves/*.json`)
+- Tier datasets (`screening-metrics.tsv`, `rapid-indicators.tsv`, `rapid-criteria.tsv`, `detailed-metrics.tsv`)
+- Mirrored `_site` copies for local/docs rendering.
+
+### Metric library download (XLSX)
+The in-app **Metric Library download** (left sidebar button) exports an `.xlsx` with:
+- Sheet 1: `Metrics`
+- Sheet 2: `Reference Curves`
+
+This workbook is built at runtime from the canonical JSON metric library (`index.json` + metric detail JSON + curve-set JSON), not by rebuilding from TSV files.
