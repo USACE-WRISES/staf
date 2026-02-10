@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "water-and-soil-quality-turbidity-water-clarity",
   "name": "Turbidity / Water Clarity",
-  "shortName": "",
+  "shortName": "Turbidity / Water Clarity",
   "discipline": "Physicochemistry",
   "function": "Water & soil quality",
   "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Persistently muddy water or visible sheen indicating severe pollution. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Persistently muddy water or visible sheen indicating severe pollution. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-water-and-soil-quality-turbidity-water-clarity"
+          "curve-water-and-soil-quality-turbidity-water-clarity-screening"
         ]
       }
     }
@@ -69,37 +69,19 @@
     "Water & soil quality",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Persistently muddy water or visible sheen indicating severe pollution.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Slight turbidity or discoloration. / Persistent cloudiness with habitat impacts.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Mostly clear and consistent with reference. No obvious pollution.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      52
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

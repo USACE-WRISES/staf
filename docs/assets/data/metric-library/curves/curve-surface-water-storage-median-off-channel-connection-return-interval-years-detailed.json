@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-surface-water-storage-median-off-channel-connection-return-interval-years-detailed",
-  "metricId": "surface-water-storage-median-off-channel-connection-return-interval-years-detailed",
+  "metricId": "surface-water-storage-median-off-channel-connection-return-interval-years",
   "tier": "detailed",
   "name": "Median Off-Channel Connection Return Interval (years) reference curve",
   "axes": {
     "xLabel": "Median Off-Channel Connection Return Interval (years)",
     "yLabel": "Index score",
-    "xUnit": "years",
     "yUnit": "index"
   },
   "curves": [
@@ -15,11 +14,11 @@
       "curveId": "curve-surface-water-storage-median-off-channel-connection-return-interval-years-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "years",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-surface-water-storage-median-off-channel-connection-return-interval-years-detailed-propose",
+          "id": "curve-surface-water-storage-median-off-channel-connection-return-interval-years-detailed-proposed-derived-from-sfari-rap",
           "name": "Proposed (derived from SFARI rapid curves) - Separate feature types (side channels vs oxbows) if needed.",
           "points": [
             {
@@ -34,8 +33,8 @@
             },
             {
               "x": 10,
-              "y": 0.4,
-              "description": "Field 10, Index 0.4"
+              "y": 0.3,
+              "description": "Field 10, Index 0.3"
             },
             {
               "x": 25,
@@ -50,47 +49,26 @@
           ],
           "sourceMetadata": {
             "stratification": "Separate feature types (side channels vs oxbows) if needed.",
-            "sourceRow": 30,
-            "sourceRows": [
-              30
-            ],
             "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-            "sourceCitations": [
-              "Proposed (derived from SFARI rapid curves)"
-            ],
+            "sourceRow": 168,
             "fieldValues": [
               "2",
               "4",
               "10",
               "25",
-              "50",
-              "",
-              ""
+              "50"
             ],
             "indexValues": [
               "1",
               "0.7",
-              "0.4",
+              "0.3",
               "0.1",
-              "0",
-              "",
-              ""
+              "0"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-surface-water-storage-median-off-channel-connection-return-interval-years-detailed-propose"
+      "activeLayerId": "curve-surface-water-storage-median-off-channel-connection-return-interval-years-detailed-proposed-derived-from-sfari-rap"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-    "sourceCitations": [
-      "Proposed (derived from SFARI rapid curves)"
-    ],
-    "mappedFunction": "Surface water storage",
-    "sourceRows": [
-      30
-    ]
-  }
+  ]
 }

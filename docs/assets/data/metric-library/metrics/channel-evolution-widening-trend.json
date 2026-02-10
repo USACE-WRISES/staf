@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "channel-evolution-widening-trend",
   "name": "Widening trend",
-  "shortName": "",
+  "shortName": "Widening trend",
   "discipline": "Geomorphology",
   "function": "Channel evolution",
   "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
@@ -14,7 +14,8 @@
       "label": "Widening trend",
       "type": "field",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -73,10 +74,23 @@
     "RivWidthCloud or RivMAP (where available)."
   ],
   "tags": [
-    "Channel evolution",
     "Geomorphology",
-    "geomorphology",
-    "sfari",
+    "Channel evolution",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      101
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

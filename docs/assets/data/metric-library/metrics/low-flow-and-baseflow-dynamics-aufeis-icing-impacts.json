@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "metricId": "low-flow-and-baseflow-dynamics-aufeis-icing-impacts",
   "name": "Aufeis / Icing Impacts",
-  "shortName": "",
+  "shortName": "Aufeis / Icing Impacts",
   "discipline": "Hydraulics",
   "function": "Low flow and baseflow dynamics",
-  "functionStatement": "Low flow and baseflow dynamics ensure habitat availability and water quality during low water levels and indicate non-storm conditions experienced the majority of the time.",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
   "descriptionMarkdown": "Aufeis (icing) formation and extent near the project reach. Changes in aufeis can indicate altered groundwater/surface water interactions and land disturbance.",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field screening and/or Desktop (flow records/imagery)",
   "howToMeasureMarkdown": "Map aufeis presence/extent using winter imagery and/or field observations and assess proximity to the project reach per the metric definition. Assign the condition class using the bin thresholds for this metric.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Aufeis formation caused by land disturbance is extensive within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Aufeis formation caused by land disturbance is extensive within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-low-flow-and-baseflow-dynamics-aufeis-icing-impacts"
+          "curve-low-flow-and-baseflow-dynamics-aufeis-icing-impacts-screening"
         ]
       }
     }
@@ -67,37 +67,19 @@
     "Low flow and baseflow dynamics",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT",
-    "scsDefaultOn": false,
-    "metricDataSource": "Site data",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Aufeis formation caused by land disturbance is extensive within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Aufeis formation caused by land disturbance is moderate within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Aufeis formation caused by land disturbance is minor or nonexistent within, extends into the reach from downstream, or is found upstream of the project reach.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      17
+    ],
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

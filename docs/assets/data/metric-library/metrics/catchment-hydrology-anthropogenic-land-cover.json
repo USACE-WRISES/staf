@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "catchment-hydrology-anthropogenic-land-cover",
+  "name": "Anthropogenic Land Cover",
+  "shortName": "Anthropogenic Land Cover",
+  "discipline": "Hydrology",
+  "function": "Catchment hydrology",
+  "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+  "descriptionMarkdown": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop (GIS)",
+  "howToMeasureMarkdown": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+  "inputs": [
+    {
+      "label": "Anthropogenic Land Cover",
+      "type": "desktop (gis)",
+      "source": "Watershed",
+      "required": true,
+      "helpMarkdown": "Watershed GIS (land cover/impervious/soils) and watershed delineation."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-catchment-hydrology-anthropogenic-land-cover-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-catchment-hydrology-anthropogenic-land-cover-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "NLCD (MRLC) land cover/impervious where applicable",
+    "NRCS soils/curve number datasets where applicable"
+  ],
+  "tags": [
+    "Hydrology",
+    "Catchment hydrology",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      158
+    ],
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

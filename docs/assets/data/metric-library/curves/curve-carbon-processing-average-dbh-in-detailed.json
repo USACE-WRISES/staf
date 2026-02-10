@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-average-dbh-in-detailed",
-  "metricId": "carbon-processing-average-dbh-in-detailed",
+  "metricId": "carbon-processing-average-dbh-in",
   "tier": "detailed",
   "name": "Average DBH (in) reference curve",
   "axes": {
     "xLabel": "Average DBH (in)",
     "yLabel": "Index score",
-    "xUnit": "in",
     "yUnit": "index"
   },
   "curves": [
@@ -15,7 +14,7 @@
       "curveId": "curve-carbon-processing-average-dbh-in-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "in",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
@@ -35,47 +34,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 199,
-            "sourceRows": [
-              199
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 227,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "",
-              "12",
-              ""
+              "12"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-carbon-processing-average-dbh-in-detailed-michigan-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Michigan SQT",
-    "sourceCitations": [
-      "Michigan SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      199
-    ]
-  }
+  ]
 }

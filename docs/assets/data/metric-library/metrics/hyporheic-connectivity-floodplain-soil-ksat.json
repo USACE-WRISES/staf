@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-floodplain-soil-ksat",
+  "name": "Floodplain Soil Ksat",
+  "shortName": "Floodplain Soil Ksat",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Area-weighted saturated hydraulic conductivity (Ksat) of active floodplain soils. Higher is better.",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Extract Ksat from soils polygons within floodplain; compute area-weighted mean; verify with field texture test.",
+  "inputs": [
+    {
+      "label": "Floodplain Soil Ksat",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "SSURGO/gSSURGO Ksat (area-weighted) + field texture check/auger where possible."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-hyporheic-connectivity-floodplain-soil-ksat-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-floodplain-soil-ksat-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "NRCS SSURGO/Web Soil Survey."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      191
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

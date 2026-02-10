@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-streamflow-regime-flashiness-rate-and-frequency-of-change-screening",
+  "metricId": "streamflow-regime-flashiness-rate-and-frequency-of-change",
+  "tier": "screening",
+  "name": "Flashiness / Rate & Frequency of Change screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-flashiness-rate-and-frequency-of-change-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flashiness-rate-and-frequency-of-change-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: RBI ? 25% quartile value and ?75% quartile value. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: RBI declining over time and approaching 25% quartile value, or increasing and approaching the 75% quartile value. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: RBI <25% quartile value or >75% quartile value. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flashiness-rate-and-frequency-of-change-screening-multiple-sqts",
+      "indexRange": true
+    }
+  ]
+}

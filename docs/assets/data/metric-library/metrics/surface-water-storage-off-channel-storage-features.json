@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "metricId": "surface-water-storage-off-channel-storage-features",
   "name": "Off-channel Storage Features",
-  "shortName": "",
+  "shortName": "Off-channel Storage Features",
   "discipline": "Hydrology",
   "function": "Surface water storage",
   "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
   "descriptionMarkdown": "Side channels/beaver ponds/oxbows connect during moderate floods, providing off-channel storage and habitat.",
-  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Map side channels and oxbows and verify whether they connect at about bankfull stage. Use simple inundation mapping if needed.",
   "inputs": [
     {
       "label": "Off-channel Storage Features",
-      "type": "field",
+      "type": "desktop",
       "source": "Floodplain",
       "required": true,
       "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Off-channel features are mostly gone or permanently cut off. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Off-channel features are mostly gone or permanently cut off. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-surface-water-storage-off-channel-storage-features"
+          "curve-surface-water-storage-off-channel-storage-features-screening"
         ]
       }
     }
@@ -68,37 +68,19 @@
     "Surface water storage",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Off-channel features are mostly gone or permanently cut off.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Partial connection or fewer off-channel areas. / Only large floods access these areas, or off-channel areas are minimal.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Multiple off-channel features connect in moderate floods.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      8
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

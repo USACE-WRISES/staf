@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-co-mmi",
+  "name": "CO MMI",
+  "shortName": "CO MMI",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+  "descriptionMarkdown": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+  "howToMeasureMarkdown": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+  "inputs": [
+    {
+      "label": "CO MMI",
+      "type": "field (bioassessment) and/or desktop (existing scores)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Standard fish/macroinvertebrate bioassessment sampling and scoring; state biomonitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-population-support-co-mmi-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-co-mmi-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "State biomonitoring protocols and databases",
+    "EPA Water Quality Portal biological results where available"
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      266
+    ],
+    "sourceCitations": [
+      "Colorado SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-width-departure-mismatch-factor-detailed",
+  "metricId": "high-flow-dynamics-width-departure-mismatch-factor",
+  "tier": "detailed",
+  "name": "Width Departure Mismatch Factor reference curve",
+  "axes": {
+    "xLabel": "Width Departure Mismatch Factor",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-width-departure-mismatch-factor-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-width-departure-mismatch-factor-detailed-proposed-derived-from-sfari-rapid-curves-use-curves-ap",
+          "name": "Proposed (derived from SFARI rapid curves) - Use curves appropriate to physiographic region and stream type.",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.3,
+              "y": 0.7,
+              "description": "Field 1.3, Index 0.7"
+            },
+            {
+              "x": 1.7,
+              "y": 0.3,
+              "description": "Field 1.7, Index 0.3"
+            },
+            {
+              "x": 2.5,
+              "y": 0.1,
+              "description": "Field 2.5, Index 0.1"
+            },
+            {
+              "x": 3.5,
+              "y": 0,
+              "description": "Field 3.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Use curves appropriate to physiographic region and stream type.",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 182,
+            "fieldValues": [
+              "1",
+              "1.3",
+              "1.7",
+              "2.5",
+              "3.5"
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-width-departure-mismatch-factor-detailed-proposed-derived-from-sfari-rapid-curves-use-curves-ap"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-bed-composition-and-large-wood-percent-fines-6-35mm-detailed",
-  "metricId": "bed-composition-and-large-wood-percent-fines-6-35mm-detailed",
+  "metricId": "bed-composition-and-large-wood-percent-fines-6-35mm",
   "tier": "detailed",
   "name": "Percent Fines <6.35mm reference curve",
   "axes": {
@@ -39,47 +39,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 153,
-            "sourceRows": [
-              153
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 210,
             "fieldValues": [
               "35",
               "",
               "",
               "",
               "16.9",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-bed-composition-and-large-wood-percent-fines-6-35mm-detailed-wisconsin-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Wisconsin SQT",
-    "sourceCitations": [
-      "Wisconsin SQT"
-    ],
-    "mappedFunction": "Bed composition and large wood",
-    "sourceRows": [
-      153
-    ]
-  }
+  ]
 }

@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Bars form on inner bends and migrate gradually. Pools maintained. Criteria: Bankfull Shields stress ~0.03-0.06 and consistent with D50. Morphology shows balanced scour/fill (Buffington & Montgomery 1997).",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Modest bar growth in low-energy sections. Some narrowing. Criteria: Shields slightly below critical range. Minor deposition.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Large new bars in straight sections. Pools infilling. Criteria: Shields well below critical range. Under-capacity relative to supply.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Deep scour and exposed armor. Few bars remain. Criteria: Shields well above critical range. Persistent over-capacity (Knighton 1998).",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-sediment-continuity-transport-capacity-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-sediment-continuity-transport-capacity-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-sediment-continuity-transport-capacity-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-sediment-continuity-transport-capacity-rapid",
+  "metricId": "sediment-continuity-transport-capacity",
   "tier": "rapid",
+  "name": "Transport capacity rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "sediment-continuity-transport-capacity"
+  "curves": [
+    {
+      "curveId": "curve-sediment-continuity-transport-capacity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-transport-capacity-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Bars form on inner bends and migrate gradually. Pools maintained. Criteria: Bankfull Shields stress ~0.03-0.06 and consistent with D50. Morphology shows balanced scour/fill (Buffington & Montgomery 1997)."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Modest bar growth in low-energy sections. Some narrowing. Criteria: Shields slightly below critical range. Minor deposition."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Large new bars in straight sections. Pools infilling. Criteria: Shields well below critical range. Under-capacity relative to supply."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Deep scour and exposed armor. Few bars remain. Criteria: Shields well above critical range. Persistent over-capacity (Knighton 1998)."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-transport-capacity-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

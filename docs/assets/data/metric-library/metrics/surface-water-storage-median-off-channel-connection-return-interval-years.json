@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-median-off-channel-connection-return-interval-years",
+  "name": "Median Off-Channel Connection Return Interval (years)",
+  "shortName": "Median Off-Channel Connection Return Interval (years)",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Median return interval when off-channel features connect (lower is better).",
+  "methodContextMarkdown": "Field + desktop model",
+  "howToMeasureMarkdown": "Map off-channel features; estimate connection stage; convert to return interval; take median.",
+  "inputs": [
+    {
+      "label": "Median Off-Channel Connection Return Interval (years)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field indicators + DEM/HEC-RAS screening for side channels/oxbows/backwaters."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-median-off-channel-connection-return-interval-years-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-median-off-channel-connection-return-interval-years-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "LiDAR/DEM mapping",
+    "optional HEC-RAS 2D."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      168
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

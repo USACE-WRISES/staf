@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Abundant large wood with key pieces/rootwads or small jams. Criteria: Meets upper-range reference for density and variety.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Moderate wood; some larger pieces but patchy. Criteria: Slightly below reference; habitat added but less consistent.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Very little wood; mostly small/decayed pieces. Criteria: Few or no key pieces; limited hydraulic influence.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Almost no large wood where expected. Criteria: No key pieces or jams; far below reference unless naturally low wood.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-bed-composition-and-large-wood-large-wood-frequency-and-diversity-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-bed-composition-and-large-wood-large-wood-frequency-and-diversity-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-bed-composition-and-large-wood-large-wood-frequency-and-diversity-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-bed-composition-and-large-wood-large-wood-frequency-and-diversity-rapid",
+  "metricId": "bed-composition-and-large-wood-large-wood-frequency-and-diversity",
   "tier": "rapid",
+  "name": "Large Wood Frequency and Diversity rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "bed-composition-and-large-wood-large-wood-frequency-and-diversity"
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-large-wood-frequency-and-diversity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-large-wood-frequency-and-diversity-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Abundant large wood with key pieces/rootwads or small jams. Criteria: Meets upper-range reference for density and variety."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Moderate wood; some larger pieces but patchy. Criteria: Slightly below reference; habitat added but less consistent."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Very little wood; mostly small/decayed pieces. Criteria: Few or no key pieces; limited hydraulic influence."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Almost no large wood where expected. Criteria: No key pieces or jams; far below reference unless naturally low wood."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-large-wood-frequency-and-diversity-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

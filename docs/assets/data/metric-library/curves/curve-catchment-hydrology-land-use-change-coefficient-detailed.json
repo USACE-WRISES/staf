@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-catchment-hydrology-land-use-change-coefficient-detailed",
-  "metricId": "catchment-hydrology-land-use-change-coefficient-detailed",
+  "metricId": "catchment-hydrology-land-use-change-coefficient",
   "tier": "detailed",
   "name": "Land Use Change Coefficient reference curve",
   "axes": {
@@ -33,53 +33,34 @@
             },
             {
               "x": 70,
-              "y": 0.4,
-              "description": "Field 70, Index 0.4"
+              "y": 0.3,
+              "description": "Field 70, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 6,
-            "sourceRows": [
-              6
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 159,
             "fieldValues": [
               "",
               "",
               "70",
               "",
               "55",
-              "30",
-              ""
+              "30"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-catchment-hydrology-land-use-change-coefficient-detailed-michigan-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Michigan SQT",
-    "sourceCitations": [
-      "Michigan SQT"
-    ],
-    "mappedFunction": "Catchment hydrology",
-    "sourceRows": [
-      6
-    ]
-  }
+  ]
 }

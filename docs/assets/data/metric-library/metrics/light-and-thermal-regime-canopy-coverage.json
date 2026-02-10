@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-canopy-coverage",
+  "name": "Canopy Coverage",
+  "shortName": "Canopy Coverage",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Riparian canopy cover that controls shading and thermal/light regime in the channel.",
+  "methodContextMarkdown": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+  "howToMeasureMarkdown": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+  "inputs": [
+    {
+      "label": "Canopy Coverage",
+      "type": "field and/or desktop",
+      "source": "Riparian/Channel",
+      "required": true,
+      "helpMarkdown": "Field canopy measurements (densiometer/hemispherical photo) and/or LiDAR/imagery-derived canopy cover."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-light-and-thermal-regime-canopy-coverage-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-canopy-coverage-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "North Carolina SQT",
+    "Canopy measurement methods",
+    "LiDAR canopy products where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      217
+    ],
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

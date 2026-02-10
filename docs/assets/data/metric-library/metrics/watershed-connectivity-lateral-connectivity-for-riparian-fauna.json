@@ -1,23 +1,63 @@
 {
   "schemaVersion": 1,
   "metricId": "watershed-connectivity-lateral-connectivity-for-riparian-fauna",
-  "name": "Lateral connectivity for riparian fauna",
-  "shortName": "",
+  "name": "Lateral Connectivity for Riparian Fauna",
+  "shortName": "Lateral Connectivity for Riparian Fauna",
   "discipline": "Biology",
   "function": "Watershed connectivity",
   "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
   "descriptionMarkdown": "Floodplain/wetlands accessible for semiaquatic fauna unless steep canyons preclude it.",
-  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Map levees or berms along the corridor and summarize continuous barrier length. Confirm passable gaps where present.",
   "inputs": [
     {
-      "label": "Lateral connectivity for riparian fauna",
-      "type": "field",
+      "label": "Lateral Connectivity for Riparian Fauna",
+      "type": "desktop",
       "source": "Floodplain",
-      "required": true
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
     }
   ],
   "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "threeBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "threeBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Good",
+              "ratingId": "good",
+              "criteriaMarkdown": "Good: No major levees or walls and free lateral movement. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Some partial barriers with remaining access. / Large levees hamper movement in many areas. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Heavily walled or leveed corridor with minimal lateral connectivity. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening"
+        ]
+      }
+    },
     {
       "profileId": "rapid-sfari-likert",
       "tier": "rapid",
@@ -45,7 +85,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -77,8 +117,24 @@
   "tags": [
     "Biology",
     "Watershed connectivity",
-    "biology",
-    "sfari",
+    "screening",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      64,
+      154
+    ],
+    "sourceCitations": [
+      "ERDC",
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

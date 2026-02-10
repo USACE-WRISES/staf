@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-nitrogen-and-phosphorus-concentrations-screening",
+  "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
+  "tier": "screening",
+  "name": "Nitrogen & Phosphorus Concentrations screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-nitrogen-and-phosphorus-concentrations-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-nitrogen-and-phosphorus-concentrations-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Near background or guideline values. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slightly elevated N or P. / Marked elevation with likely ecological effects. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Significantly above guidelines indicating strong nutrient pollution. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-nitrogen-and-phosphorus-concentrations-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

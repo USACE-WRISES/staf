@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-width-depth-departure-mismatch-factor-detailed",
+  "metricId": "high-flow-dynamics-width-depth-departure-mismatch-factor",
+  "tier": "detailed",
+  "name": "Width:Depth Departure Mismatch Factor reference curve",
+  "axes": {
+    "xLabel": "Width:Depth Departure Mismatch Factor",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-width-depth-departure-mismatch-factor-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-width-depth-departure-mismatch-factor-detailed-proposed-derived-from-sfari-rapid-curves-define-",
+          "name": "Proposed (derived from SFARI rapid curves) - Define W/D_ref by stream type and valley setting.",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 3,
+              "y": 0.1,
+              "description": "Field 3, Index 0.1"
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "description": "Field 4, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Define W/D_ref by stream type and valley setting.",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 183,
+            "fieldValues": [
+              "1",
+              "1.4",
+              "2",
+              "3",
+              "4"
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-width-depth-departure-mismatch-factor-detailed-proposed-derived-from-sfari-rapid-curves-define-"
+    }
+  ]
+}

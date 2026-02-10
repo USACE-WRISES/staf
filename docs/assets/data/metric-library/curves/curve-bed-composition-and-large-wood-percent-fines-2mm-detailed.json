@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-bed-composition-and-large-wood-percent-fines-2mm-detailed",
-  "metricId": "bed-composition-and-large-wood-percent-fines-2mm-detailed",
+  "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
   "tier": "detailed",
   "name": "Percent Fines < 2mm reference curve",
   "axes": {
@@ -33,42 +33,34 @@
             },
             {
               "x": 37,
-              "y": 0.4,
-              "description": "Field 37, Index 0.4"
+              "y": 0.3,
+              "description": "Field 37, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "Gravel Bed",
-            "sourceRow": 149,
-            "sourceRows": [
-              149
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 208,
             "fieldValues": [
               "",
               "",
               "37",
               "",
               "15",
-              "3",
-              ""
+              "3"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-bed-composition-and-large-wood-percent-fines-2mm-detailed-alaska-sqt-cobble-boulders-bedro",
+          "id": "curve-bed-composition-and-large-wood-percent-fines-2mm-detailed-alaska-sqt-cobble-boulders-bedrock",
           "name": "Alaska SQT - Cobble, Boulders, Bedrock",
           "points": [
             {
@@ -83,37 +75,29 @@
             },
             {
               "x": 10,
-              "y": 0.4,
-              "description": "Field 10, Index 0.4"
+              "y": 0.3,
+              "description": "Field 10, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "Cobble, Boulders, Bedrock",
-            "sourceRow": 150,
-            "sourceRows": [
-              150
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 208,
             "fieldValues": [
               "",
               "",
               "10",
               "",
               "5",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -139,31 +123,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 152,
-            "sourceRows": [
-              152
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 208,
             "fieldValues": [
               "32",
               "",
               "",
               "",
               "14.8",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -189,52 +165,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 155,
-            "sourceRows": [
-              155
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 208,
             "fieldValues": [
               "50",
               "",
               "",
               "",
               "15",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-bed-composition-and-large-wood-percent-fines-2mm-detailed-alaska-sqt-gravel-bed"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; Wisconsin SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Alaska SQT",
-      "Wisconsin SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Bed composition and large wood",
-    "sourceRows": [
-      149,
-      150,
-      152,
-      155
-    ]
-  }
+  ]
 }

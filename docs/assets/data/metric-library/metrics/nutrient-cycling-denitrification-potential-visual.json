@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "nutrient-cycling-denitrification-potential-visual",
   "name": "Denitrification Potential (visual)",
+  "shortName": "Denitrification Potential (visual)",
   "discipline": "Physicochemistry",
-  "function": "Nutrient Cycling",
+  "function": "Nutrient cycling",
   "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
   "descriptionMarkdown": "Adequate floodplain/wetland pockets for denitrification, consistent with local reference.",
   "methodContextMarkdown": "Context: F\n\nMethod: F",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Denitrification Potential (visual)",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "f",
+      "source": "F",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "physicochemistry"
+    "Physicochemistry",
+    "Nutrient cycling",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      123
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

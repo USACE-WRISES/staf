@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-herbaceous-cover-detailed",
-  "metricId": "carbon-processing-herbaceous-cover-detailed",
+  "metricId": "carbon-processing-herbaceous-cover",
   "tier": "detailed",
   "name": "Herbaceous Cover reference curve",
   "axes": {
@@ -18,8 +18,8 @@
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-carbon-processing-herbaceous-cover-detailed-multiple-sqts",
-          "name": "Multiple SQTs",
+          "id": "curve-carbon-processing-herbaceous-cover-detailed-michigan-sqt",
+          "name": "Michigan SQT",
           "points": [
             {
               "x": 0,
@@ -33,52 +33,66 @@
             }
           ],
           "sourceMetadata": {
-            "stratification": "Multiple SQTs",
-            "sourceRow": 201,
-            "sourceRows": [
-              201,
-              242
-            ],
+            "stratification": "",
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT",
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 229,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "",
-              "80",
-              ""
+              "80"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-carbon-processing-herbaceous-cover-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 80,
+              "y": 1,
+              "description": "Field 80, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 229,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "80"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-carbon-processing-herbaceous-cover-detailed-multiple-sqts"
+      "activeLayerId": "curve-carbon-processing-herbaceous-cover-detailed-michigan-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Michigan SQT; Wisconsin SQT",
-    "sourceCitations": [
-      "Michigan SQT",
-      "Wisconsin SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      201,
-      242
-    ]
-  }
+  ]
 }

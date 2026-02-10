@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "metricId": "water-and-soil-quality-dissolved-oxygen",
   "name": "Dissolved oxygen",
-  "shortName": "",
+  "shortName": "Dissolved oxygen",
   "discipline": "Physicochemistry",
-  "function": "Water and soil quality",
+  "function": "Water & soil quality",
   "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
   "descriptionMarkdown": "DO is high enough (>5-6 mg/L) for aquatic life, unless naturally lower in warm/boggy streams.",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
@@ -14,7 +14,8 @@
       "label": "Dissolved oxygen",
       "type": "field",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -66,17 +67,58 @@
           "curve-water-and-soil-quality-dissolved-oxygen-rapid"
         ]
       }
+    },
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-water-and-soil-quality-dissolved-oxygen-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-dissolved-oxygen-detailed"
+        ]
+      }
     }
   ],
   "references": [
     "Field DO meter",
-    "USGS NWIS and/or EPA Water Quality Portal (DO where available)."
+    "USGS NWIS and/or EPA Water Quality Portal (DO where available).",
+    "Michigan SQT",
+    "EPA Water Quality Portal",
+    "USGS NWIS water-quality records where available"
   ],
   "tags": [
     "Physicochemistry",
-    "Water and soil quality",
-    "physicochemistry",
-    "sfari",
-    "rapid"
-  ]
+    "Water & soil quality",
+    "rapid",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      129,
+      250
+    ],
+    "sourceCitations": [
+      "SFARI Rapid",
+      "Michigan SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": true
+    }
+  }
 }

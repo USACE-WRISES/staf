@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-light-and-thermal-regime-daily-maximum-temperature-detailed",
-  "metricId": "light-and-thermal-regime-daily-maximum-temperature-detailed",
+  "metricId": "light-and-thermal-regime-daily-maximum-temperature",
   "tier": "detailed",
   "name": "Daily Maximum Temperature reference curve",
   "axes": {
@@ -28,53 +28,34 @@
             },
             {
               "x": 1.25,
-              "y": 0.4,
-              "description": "Field 1.25, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.25, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 156,
-            "sourceRows": [
-              156
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 212,
             "fieldValues": [
               "",
               "",
               "1.25",
               "",
               "",
-              "1.1",
-              ""
+              "1.1"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-light-and-thermal-regime-daily-maximum-temperature-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT",
-    "sourceCitations": [
-      "Alaska SQT"
-    ],
-    "mappedFunction": "Light & thermal regime",
-    "sourceRows": [
-      156
-    ]
-  }
+  ]
 }

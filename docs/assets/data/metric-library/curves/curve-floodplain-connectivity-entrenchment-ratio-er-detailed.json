@@ -1,0 +1,1032 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed",
+  "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+  "tier": "detailed",
+  "name": "Entrenchment Ratio (ER) reference curve",
+  "axes": {
+    "xLabel": "Entrenchment Ratio (ER)",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-alaska-sqt-c-streams",
+          "name": "Alaska SQT - C Streams",
+          "points": [
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.4,
+              "y": 0.7,
+              "description": "Field 2.4, Index 0.7"
+            },
+            {
+              "x": 4.4,
+              "y": 1,
+              "description": "Field 4.4, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C Streams",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "2.4",
+              "4.4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-alaska-sqt-e-streams",
+          "name": "Alaska SQT - E Streams",
+          "points": [
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.4,
+              "y": 0.7,
+              "description": "Field 2.4, Index 0.7"
+            },
+            {
+              "x": 6.5,
+              "y": 1,
+              "description": "Field 6.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E Streams",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "2.4",
+              "6.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-alaska-sqt-b-stream-types",
+          "name": "Alaska SQT - B Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2.2,
+              "y": 1,
+              "description": "Field 2.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B Stream Types",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "1.4",
+              "2.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-colorado-sqt-c-streams",
+          "name": "Colorado SQT - C Streams",
+          "points": [
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.4,
+              "y": 0.7,
+              "description": "Field 2.4, Index 0.7"
+            },
+            {
+              "x": 4.2,
+              "y": 1,
+              "description": "Field 4.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C Streams",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "2.4",
+              "4.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-colorado-sqt-cb-streams",
+          "name": "Colorado SQT - Cb Streams",
+          "points": [
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.4,
+              "y": 0.7,
+              "description": "Field 2.4, Index 0.7"
+            },
+            {
+              "x": 3.9,
+              "y": 1,
+              "description": "Field 3.9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Cb Streams",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "2.4",
+              "3.9"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-colorado-sqt-e-streams",
+          "name": "Colorado SQT - E Streams",
+          "points": [
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.4,
+              "y": 0.7,
+              "description": "Field 2.4, Index 0.7"
+            },
+            {
+              "x": 6.7,
+              "y": 1,
+              "description": "Field 6.7, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E Streams",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "2.4",
+              "6.7"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-colorado-sqt-a-and-b-streams",
+          "name": "Colorado SQT - A and B Streams",
+          "points": [
+            {
+              "x": 1.2,
+              "y": 0.3,
+              "description": "Field 1.2, Index 0.3"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2.2,
+              "y": 1,
+              "description": "Field 2.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A and B Streams",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "1.2",
+              "",
+              "1.4",
+              "2.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-michigan-sqt-c-and-e-streams",
+          "name": "Michigan SQT - C and E Streams",
+          "points": [
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.4,
+              "y": 0.7,
+              "description": "Field 2.4, Index 0.7"
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C and E Streams",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "2.4",
+              "5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-michigan-sqt-a-b-and-bc-streams",
+          "name": "Michigan SQT - A, B and Bc Streams",
+          "points": [
+            {
+              "x": 1.2,
+              "y": 0.3,
+              "description": "Field 1.2, Index 0.3"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2.2,
+              "y": 1,
+              "description": "Field 2.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A, B and Bc Streams",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "1.2",
+              "",
+              "1.4",
+              "2.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-minnesota-sqt-c-streams",
+          "name": "Minnesota SQT - C Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C Streams",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-minnesota-sqt-b-streams",
+          "name": "Minnesota SQT - B Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2.2,
+              "y": 1,
+              "description": "Field 2.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B Streams",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "1.4",
+              "2.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-minnesota-sqt-e-streams",
+          "name": "Minnesota SQT - E Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 9,
+              "y": 1,
+              "description": "Field 9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E Streams",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "9"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-north-carolina-sqt-c-and-e-streams",
+          "name": "North Carolina SQT - C and E Streams",
+          "points": [
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.4,
+              "y": 0.7,
+              "description": "Field 2.4, Index 0.7"
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C and E Streams",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "2",
+              "",
+              "2.4",
+              "5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-north-carolina-sqt-a-b-and-bc-streams",
+          "name": "North Carolina SQT - A, B and Bc Streams",
+          "points": [
+            {
+              "x": 1.2,
+              "y": 0.3,
+              "description": "Field 1.2, Index 0.3"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2.2,
+              "y": 1,
+              "description": "Field 2.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A, B and Bc Streams",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "",
+              "",
+              "1.2",
+              "",
+              "1.4",
+              "2.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-south-carolina-sqt-c-streams",
+          "name": "South Carolina SQT - C Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 7.3,
+              "y": 1,
+              "description": "Field 7.3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C Streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "7.3"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-south-carolina-sqt-e-streams",
+          "name": "South Carolina SQT - E Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 10,
+              "y": 1,
+              "description": "Field 10, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E Streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "10"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-south-carolina-sqt-b-streams",
+          "name": "South Carolina SQT - B Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2,
+              "y": 1,
+              "description": "Field 2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B Streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "1.4",
+              "2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-wisconsin-sqt-c-stream-types",
+          "name": "Wisconsin SQT - C Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C Stream Types",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-wisconsin-sqt-e-stream-types",
+          "name": "Wisconsin SQT - E Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 9,
+              "y": 1,
+              "description": "Field 9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E Stream Types",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "9"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-wisconsin-sqt-b-stream-types",
+          "name": "Wisconsin SQT - B Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2.2,
+              "y": 1,
+              "description": "Field 2.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B Stream Types",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "1.4",
+              "2.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-wyoming-sqt-cb-stream-types",
+          "name": "Wyoming SQT - Cb Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 3.9,
+              "y": 1,
+              "description": "Field 3.9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Cb Stream Types",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "3.9"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-wyoming-sqt-c-stream-types",
+          "name": "Wyoming SQT - C Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 4.4,
+              "y": 1,
+              "description": "Field 4.4, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C Stream Types",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "4.4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-wyoming-sqt-e-stream-types",
+          "name": "Wyoming SQT - E Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2.2,
+              "y": 0.7,
+              "description": "Field 2.2, Index 0.7"
+            },
+            {
+              "x": 6.5,
+              "y": 1,
+              "description": "Field 6.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E Stream Types",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "2.2",
+              "6.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-wyoming-sqt-a-b-ba-and-bc-stream-types",
+          "name": "Wyoming SQT - A, B, Ba, and Bc Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2.2,
+              "y": 1,
+              "description": "Field 2.2, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A, B, Ba, and Bc Stream Types",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 186,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "1.4",
+              "2.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-entrenchment-ratio-er-detailed-alaska-sqt-c-streams"
+    }
+  ]
+}

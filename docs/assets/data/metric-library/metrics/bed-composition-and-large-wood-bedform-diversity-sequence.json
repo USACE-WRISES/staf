@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "metricId": "bed-composition-and-large-wood-bedform-diversity-sequence",
   "name": "Bedform Diversity / Sequence",
-  "shortName": "",
+  "shortName": "Bedform Diversity / Sequence",
   "discipline": "Geomorphology",
   "function": "Bed composition and large wood",
   "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
   "descriptionMarkdown": "Presence and clarity of expected bedform sequence (riffle-run-pool or step-pool) indicate organized transport and habitat variety.",
-  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Count presence of riffle, run, pool, or step-pool units and note whether sequences are intact.",
   "inputs": [
     {
       "label": "Bedform Diversity / Sequence",
-      "type": "field",
-      "source": "Channel",
+      "type": "desktop",
+      "source": "Floodplain",
       "required": true,
       "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
     }
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Flattened or artificially uniform bed. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Flattened or artificially uniform bed. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-bed-composition-and-large-wood-bedform-diversity-sequence"
+          "curve-bed-composition-and-large-wood-bedform-diversity-sequence-screening"
         ]
       }
     }
@@ -69,37 +69,19 @@
     "Bed composition and large wood",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Flattened or artificially uniform bed.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Some diversity but partially uniform. / Mostly homogeneous bed with faint or missing sequences.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Clear riffle-pool or step-pool sequence with robust variety.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      35
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

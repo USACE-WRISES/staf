@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-effective-vegetated-riparian-area-detailed",
-  "metricId": "carbon-processing-effective-vegetated-riparian-area-detailed",
+  "metricId": "carbon-processing-effective-vegetated-riparian-area",
   "tier": "detailed",
   "name": "Effective Vegetated Riparian Area reference curve",
   "axes": {
@@ -18,7 +18,7 @@
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-minnesota-sqt-unconfined-allu",
+          "id": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-minnesota-sqt-unconfined-alluvial-valleys",
           "name": "Minnesota SQT - Unconfined Alluvial Valleys",
           "points": [
             {
@@ -34,36 +34,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Unconfined Alluvial Valleys",
-            "sourceRow": 206,
-            "sourceRows": [
-              206
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 233,
             "fieldValues": [
               "30",
               "",
               "",
               "",
               "",
-              "100",
-              ""
+              "100"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-minnesota-sqt-confined-alluvi",
+          "id": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-minnesota-sqt-confined-alluvial-or-colluvial-v-shaped",
           "name": "Minnesota SQT - Confined Alluvial or Colluvial/V-Shaped Valleys",
           "points": [
             {
@@ -79,36 +71,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Confined Alluvial or Colluvial/V-Shaped Valleys",
-            "sourceRow": 207,
-            "sourceRows": [
-              207
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 233,
             "fieldValues": [
               "60",
               "",
               "",
               "",
               "",
-              "100",
-              ""
+              "100"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-wisconsin-sqt-unconfined-allu",
+          "id": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-wisconsin-sqt-unconfined-alluvial",
           "name": "Wisconsin SQT - Unconfined Alluvial",
           "points": [
             {
@@ -118,8 +102,8 @@
             },
             {
               "x": 30,
-              "y": 0.4,
-              "description": "Field 30, Index 0.4"
+              "y": 0.3,
+              "description": "Field 30, Index 0.3"
             },
             {
               "x": 100,
@@ -129,36 +113,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Unconfined Alluvial",
-            "sourceRow": 245,
-            "sourceRows": [
-              245
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 233,
             "fieldValues": [
               "0",
               "",
               "30",
               "",
               "",
-              "100",
-              ""
+              "100"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-wisconsin-sqt-confined-and-co",
+          "id": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-wisconsin-sqt-confined-and-colluvial",
           "name": "Wisconsin SQT - Confined and Colluvial",
           "points": [
             {
@@ -168,8 +144,8 @@
             },
             {
               "x": 60,
-              "y": 0.4,
-              "description": "Field 60, Index 0.4"
+              "y": 0.3,
+              "description": "Field 60, Index 0.3"
             },
             {
               "x": 100,
@@ -179,51 +155,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Confined and Colluvial",
-            "sourceRow": 246,
-            "sourceRows": [
-              246
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 233,
             "fieldValues": [
               "0",
               "",
               "60",
               "",
               "",
-              "100",
-              ""
+              "100"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-minnesota-sqt-unconfined-allu"
+      "activeLayerId": "curve-carbon-processing-effective-vegetated-riparian-area-detailed-minnesota-sqt-unconfined-alluvial-valleys"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Minnesota SQT; Wisconsin SQT",
-    "sourceCitations": [
-      "Minnesota SQT",
-      "Wisconsin SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      206,
-      207,
-      245,
-      246
-    ]
-  }
+  ]
 }

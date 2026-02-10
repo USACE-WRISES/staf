@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-riparian-vegetation-stem-density-detailed",
-  "metricId": "carbon-processing-riparian-vegetation-stem-density-detailed",
+  "metricId": "carbon-processing-riparian-vegetation-stem-density",
   "tier": "detailed",
   "name": "Riparian Vegetation Stem Density reference curve",
   "axes": {
@@ -34,47 +34,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 210,
-            "sourceRows": [
-              210
-            ],
             "sourceCitation": "North Carolina SQT",
-            "sourceCitations": [
-              "North Carolina SQT"
-            ],
+            "sourceRow": 236,
             "fieldValues": [
               "0",
               "",
               "",
               "260",
               "",
-              "",
               ""
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.5",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-carbon-processing-riparian-vegetation-stem-density-detailed-north-carolina-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "North Carolina SQT",
-    "sourceCitations": [
-      "North Carolina SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      210
-    ]
-  }
+  ]
 }

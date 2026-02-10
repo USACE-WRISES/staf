@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-off-channel-storage-features-screening",
+  "metricId": "surface-water-storage-off-channel-storage-features",
+  "tier": "screening",
+  "name": "Off-channel Storage Features screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-off-channel-storage-features-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-off-channel-storage-features-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Multiple off-channel features connect in moderate floods. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Partial connection or fewer off-channel areas. / Only large floods access these areas, or off-channel areas are minimal. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Off-channel features are mostly gone or permanently cut off. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-off-channel-storage-features-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

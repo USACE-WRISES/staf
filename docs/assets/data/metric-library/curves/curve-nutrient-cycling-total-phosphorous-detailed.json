@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-nutrient-cycling-total-phosphorous-detailed",
-  "metricId": "nutrient-cycling-total-phosphorous-detailed",
+  "metricId": "nutrient-cycling-total-phosphorous",
   "tier": "detailed",
   "name": "Total Phosphorous reference curve",
   "axes": {
@@ -17,6 +17,53 @@
       "units": "",
       "indexRange": false,
       "layers": [
+        {
+          "id": "curve-nutrient-cycling-total-phosphorous-detailed-north-carolina-sqt-adjacent",
+          "name": "North Carolina SQT - Adjacent",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 0.09,
+              "y": 0.7,
+              "description": "Field 0.09, Index 0.7"
+            },
+            {
+              "x": 0.18,
+              "y": 0.3,
+              "description": "Field 0.18, Index 0.3"
+            },
+            {
+              "x": 0.236,
+              "y": 0,
+              "description": "Field 0.236, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Adjacent",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 245,
+            "fieldValues": [
+              "0.236",
+              "",
+              "0.18",
+              "",
+              "0.09",
+              "0"
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1"
+            ]
+          }
+        },
         {
           "id": "curve-nutrient-cycling-total-phosphorous-detailed-south-carolina-sqt",
           "name": "South Carolina SQT",
@@ -39,47 +86,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 265,
-            "sourceRows": [
-              265
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 245,
             "fieldValues": [
               "0.2",
               "",
               "",
               "",
               "0.08",
-              "0.04",
-              ""
+              "0.04"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-nutrient-cycling-total-phosphorous-detailed-south-carolina-sqt"
+      "activeLayerId": "curve-nutrient-cycling-total-phosphorous-detailed-north-carolina-sqt-adjacent"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "South Carolina SQT",
-    "sourceCitations": [
-      "South Carolina SQT"
-    ],
-    "mappedFunction": "Nutrient cycling",
-    "sourceRows": [
-      265
-    ]
-  }
+  ]
 }

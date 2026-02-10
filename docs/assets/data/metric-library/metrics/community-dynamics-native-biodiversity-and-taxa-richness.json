@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "metricId": "community-dynamics-native-biodiversity-and-taxa-richness",
   "name": "Native Biodiversity & Taxa Richness",
-  "shortName": "",
+  "shortName": "Native Biodiversity & Taxa Richness",
   "discipline": "Biology",
   "function": "Community dynamics",
   "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
-  "descriptionMarkdown": "Longitudinal connectivity and aquatic organism passage; barriers can limit recolonization, migration, and gene flow.\nQuick sample shows multiple families (incl. EPT) unless dryness/high-altitude limits diversity.\nMost historically native fish/inverts remain, unless naturally low-diversity (headwaters, ephemeral).",
+  "descriptionMarkdown": "\"Longitudinal connectivity and aquatic organism passage; barriers can limit recolonization, migration, and gene flow. Quick sample shows multiple families (incl. EPT) unless dryness/high-altitude limits diversity. Most historically native fish/inverts remain, unless naturally low-diversity (headwaters, ephemeral).\"",
   "methodContextMarkdown": "Context: Channel and Watershed; Channel\n\nMethod: Field screening and/or Desktop (databases); Field",
-  "howToMeasureMarkdown": "Inventory potential barriers (culverts, dams, grade controls) within the specified upstream/downstream distance using barrier datasets and imagery; confirm passability where feasible. Assign the condition class using the bin thresholds for this metric.\nCompute major group richness from a kick-net sample or use existing biological records where available.\nCompare observed fish and invertebrate lists to available historical records or reference expectations.",
+  "howToMeasureMarkdown": "\"Inventory potential barriers (culverts, dams, grade controls) within the specified upstream/downstream distance using barrier datasets and imagery; confirm passability where feasible. Assign the condition class using the bin thresholds for this metric. Compute major group richness from a kick-net sample or use existing biological records where available. Compare observed fish and invertebrate lists to available historical records or reference expectations.\"",
   "inputs": [
     {
       "label": "Native Biodiversity & Taxa Richness",
       "type": "field screening and/or desktop (databases); field",
       "source": "Channel and Watershed; Channel",
       "required": true,
-      "helpMarkdown": "Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible."
+      "helpMarkdown": "\"Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible. \""
     }
   ],
   "profiles": [
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Zero, or only one extremely tolerant group. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Zero, or only one extremely tolerant group. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-community-dynamics-native-biodiversity-and-taxa-richness"
+          "curve-community-dynamics-native-biodiversity-and-taxa-richness-screening"
         ]
       }
     }
@@ -72,37 +72,20 @@
     "Community dynamics",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Minnesota SQT; ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible.",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Zero, or only one extremely tolerant group.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Two to four distinct major groups. / One to two distinct major groups.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Four to five or more distinct major groups.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      60
+    ],
+    "sourceCitations": [
+      "Minnesota SQT",
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

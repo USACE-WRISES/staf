@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed",
-  "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed",
+  "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
   "tier": "detailed",
   "name": "Bank Height Ratio (BHR) reference curve",
   "axes": {
     "xLabel": "Bank Height Ratio (BHR)",
     "yLabel": "Index score",
-    "xUnit": "BHR",
     "yUnit": "index"
   },
   "curves": [
@@ -15,7 +14,7 @@
       "curveId": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "BHR",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
@@ -29,37 +28,29 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 96,
-            "sourceRows": [
-              96
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 197,
             "fieldValues": [
               "",
               "",
               "1.5",
               "",
               "",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
               "0.2",
-              "0.4",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -74,37 +65,29 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "All Regimes",
-            "sourceRow": 102,
-            "sourceRows": [
-              102
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 197,
             "fieldValues": [
               "",
               "",
               "1.5",
               "",
               "",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -125,31 +108,23 @@
           ],
           "sourceMetadata": {
             "stratification": "Transport",
-            "sourceRow": 103,
-            "sourceRows": [
-              103
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 197,
             "fieldValues": [
               "",
               "",
               "",
               "",
               "0.8",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -164,37 +139,29 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 106,
-            "sourceRows": [
-              106
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 197,
             "fieldValues": [
               "",
               "",
               "1.5",
               "",
               "",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
               "0.2",
-              "0.4",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -214,37 +181,29 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 109,
-            "sourceRows": [
-              109
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 197,
             "fieldValues": [
               "",
               "",
               "1.5",
               "",
               "1.2",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
               "0.2",
-              "0.4",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -264,8 +223,8 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             },
             {
               "x": 1.6,
@@ -275,31 +234,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 112,
-            "sourceRows": [
-              112
-            ],
             "sourceCitation": "North Carolina SQT",
-            "sourceCitations": [
-              "North Carolina SQT"
-            ],
+            "sourceRow": 197,
             "fieldValues": [
               "",
               "1.6",
               "1.5",
               "",
               "1.2",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
               "0.2",
-              "0.4",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -314,37 +265,29 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 120,
-            "sourceRows": [
-              120
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 197,
             "fieldValues": [
               "",
               "",
               "1.5",
               "",
               "",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -359,37 +302,29 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 125,
-            "sourceRows": [
-              125
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 197,
             "fieldValues": [
               "",
               "",
               "1.5",
               "",
               "",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -404,68 +339,34 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 130,
-            "sourceRows": [
-              130
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 197,
             "fieldValues": [
               "",
               "",
               "1.5",
               "",
               "",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-channel-and-floodplain-dynamics-bank-height-ratio-bhr-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; Colorado SQT; Michigan SQT; Minnesota SQT; North Carolina SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Alaska SQT",
-      "Colorado SQT",
-      "Michigan SQT",
-      "Minnesota SQT",
-      "North Carolina SQT",
-      "South Carolina SQT",
-      "Wisconsin SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Channel and floodplain dynamics",
-    "sourceRows": [
-      96,
-      102,
-      103,
-      106,
-      109,
-      112,
-      120,
-      125,
-      130
-    ]
-  }
+  ]
 }

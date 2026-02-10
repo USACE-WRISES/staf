@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
   "name": "Hyporheic Exchange Indicators",
-  "shortName": "",
+  "shortName": "Hyporheic Exchange Indicators",
   "discipline": "Hydraulics",
   "function": "Hyporheic connectivity",
   "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
-  "descriptionMarkdown": "Diverse bedforms enhance surface-subsurface exchange, matching reference morphology.\nSprings/seeps/subsurface flow show active hyporheic exchange, matching local reference.",
+  "descriptionMarkdown": "\"Diverse bedforms enhance surface-subsurface exchange, matching reference morphology. Springs/seeps/subsurface flow show active hyporheic exchange, matching local reference.\"",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
-  "howToMeasureMarkdown": "Count riffle-pool or other bedform features per 100 m using imagery and a field check.\nCount active upwelling spots, springs, seeps, or other infiltration indicators during a field visit.",
+  "howToMeasureMarkdown": "\"Count riffle-pool or other bedform features per 100 m using imagery and a field check. Count active upwelling spots, springs, seeps, or other infiltration indicators during a field visit.\"",
   "inputs": [
     {
       "label": "Hyporheic Exchange Indicators",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Featureless or silted bed with negligible exchange. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Featureless or silted bed with negligible exchange. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-hyporheic-connectivity-hyporheic-exchange-indicators"
+          "curve-hyporheic-connectivity-hyporheic-exchange-indicators-screening"
         ]
       }
     }
@@ -72,37 +72,19 @@
     "Hyporheic connectivity",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Featureless or silted bed with negligible exchange.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Some bedform variety but partially uniform. / Mostly uniform run with limited exchange.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Well developed bedforms and strong potential for exchange.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      25
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

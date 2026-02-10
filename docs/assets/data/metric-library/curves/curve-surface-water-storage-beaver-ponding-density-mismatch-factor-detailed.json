@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-beaver-ponding-density-mismatch-factor-detailed",
+  "metricId": "surface-water-storage-beaver-ponding-density-mismatch-factor",
+  "tier": "detailed",
+  "name": "Beaver Ponding Density Mismatch Factor reference curve",
+  "axes": {
+    "xLabel": "Beaver Ponding Density Mismatch Factor",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-beaver-ponding-density-mismatch-factor-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-beaver-ponding-density-mismatch-factor-detailed-proposed-derived-from-sfari-rapid-curves-use",
+          "name": "Proposed (derived from SFARI rapid curves) - Use beaver suitability/capacity stratification; separate naturally low-capacity systems.",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.5,
+              "y": 0.7,
+              "description": "Field 1.5, Index 0.7"
+            },
+            {
+              "x": 2.5,
+              "y": 0.3,
+              "description": "Field 2.5, Index 0.3"
+            },
+            {
+              "x": 4,
+              "y": 0.1,
+              "description": "Field 4, Index 0.1"
+            },
+            {
+              "x": 6,
+              "y": 0,
+              "description": "Field 6, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Use beaver suitability/capacity stratification; separate naturally low-capacity systems.",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 166,
+            "fieldValues": [
+              "1",
+              "1.5",
+              "2.5",
+              "4",
+              "6"
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-beaver-ponding-density-mismatch-factor-detailed-proposed-derived-from-sfari-rapid-curves-use"
+    }
+  ]
+}

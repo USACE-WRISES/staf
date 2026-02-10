@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-native-shrub-density-detailed",
-  "metricId": "carbon-processing-native-shrub-density-detailed",
+  "metricId": "carbon-processing-native-shrub-density",
   "tier": "detailed",
   "name": "Native Shrub Density reference curve",
   "axes": {
@@ -34,31 +34,23 @@
           ],
           "sourceMetadata": {
             "stratification": "Forested",
-            "sourceRow": 202,
-            "sourceRows": [
-              202
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 230,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "",
-              "100",
-              ""
+              "100"
             ],
             "indexValues": [
               "0",
               "0.2",
-              "0.4",
+              "0.3",
               "0.6",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -79,31 +71,23 @@
           ],
           "sourceMetadata": {
             "stratification": "Scrub-shrub",
-            "sourceRow": 203,
-            "sourceRows": [
-              203
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 230,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "",
-              "470",
-              ""
+              "470"
             ],
             "indexValues": [
               "0",
               "0.2",
-              "0.4",
+              "0.3",
               "0.6",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -124,50 +108,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 239,
-            "sourceRows": [
-              239
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 230,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "",
-              "566",
-              ""
+              "566"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-carbon-processing-native-shrub-density-detailed-michigan-sqt-forested"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Michigan SQT; South Carolina SQT",
-    "sourceCitations": [
-      "Michigan SQT",
-      "South Carolina SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      202,
-      203,
-      239
-    ]
-  }
+  ]
 }

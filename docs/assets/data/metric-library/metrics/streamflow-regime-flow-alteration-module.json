@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "metricId": "streamflow-regime-flow-alteration-module",
+  "name": "Flow Alteration Module",
+  "shortName": "Flow Alteration Module",
+  "discipline": "Hydrology",
+  "function": "Streamflow regime",
+  "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+  "descriptionMarkdown": "Composite indicator of departure from natural flow timing, magnitude, and variability due to regulation, withdrawals, or land use.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop (hydrology/flow analysis)",
+  "howToMeasureMarkdown": "Compile daily discharge (or model outputs). Calculate the module score per SQT guidance (often based on multiple IHA-style metrics).",
+  "inputs": [
+    {
+      "label": "Flow Alteration Module",
+      "type": "desktop (hydrology/flow analysis)",
+      "source": "Watershed",
+      "required": true,
+      "helpMarkdown": "Hydrologic alteration model outputs and/or gage-based IHA/flow statistics."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-streamflow-regime-flow-alteration-module-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-streamflow-regime-flow-alteration-module-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "USGS NWIS daily discharge where available",
+    "IHA/EflowStats methods where applicable",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Hydrology",
+    "Streamflow regime",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      175
+    ],
+    "sourceCitations": [
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

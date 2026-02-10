@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed",
-  "metricId": "watershed-connectivity-max-continuous-barrier-length-m-detailed",
+  "metricId": "watershed-connectivity-max-continuous-barrier-length-m",
   "tier": "detailed",
   "name": "Max Continuous Barrier Length (m) reference curve",
   "axes": {
     "xLabel": "Max Continuous Barrier Length (m)",
     "yLabel": "Index score",
-    "xUnit": "m",
     "yUnit": "index"
   },
   "curves": [
@@ -15,11 +14,11 @@
       "curveId": "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "m",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed-proposed-derived-from-sfar",
+          "id": "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed-proposed-derived-from-sfari-rapid-curves-consider-",
           "name": "Proposed (derived from SFARI rapid curves) - Consider only barriers that block movement at ground level (not vegetated natural berms).",
           "points": [
             {
@@ -34,8 +33,8 @@
             },
             {
               "x": 800,
-              "y": 0.4,
-              "description": "Field 800, Index 0.4"
+              "y": 0.3,
+              "description": "Field 800, Index 0.3"
             },
             {
               "x": 1500,
@@ -50,47 +49,26 @@
           ],
           "sourceMetadata": {
             "stratification": "Consider only barriers that block movement at ground level (not vegetated natural berms).",
-            "sourceRow": 445,
-            "sourceRows": [
-              445
-            ],
             "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-            "sourceCitations": [
-              "Proposed (derived from SFARI rapid curves)"
-            ],
+            "sourceRow": 288,
             "fieldValues": [
               "50",
               "300",
               "800",
               "1500",
-              "3000",
-              "",
-              ""
+              "3000"
             ],
             "indexValues": [
               "1",
               "0.7",
-              "0.4",
+              "0.3",
               "0.1",
-              "0",
-              "",
-              ""
+              "0"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed-proposed-derived-from-sfar"
+      "activeLayerId": "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed-proposed-derived-from-sfari-rapid-curves-consider-"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-    "sourceCitations": [
-      "Proposed (derived from SFARI rapid curves)"
-    ],
-    "mappedFunction": "Watershed connectivity",
-    "sourceRows": [
-      445
-    ]
-  }
+  ]
 }

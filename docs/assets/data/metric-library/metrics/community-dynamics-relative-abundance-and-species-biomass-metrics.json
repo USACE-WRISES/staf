@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "community-dynamics-relative-abundance-and-species-biomass-metrics",
+  "name": "Relative Abundance and Species Biomass metrics",
+  "shortName": "Relative Abundance and Species Biomass metrics",
+  "discipline": "Biology",
+  "function": "Community dynamics",
+  "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+  "descriptionMarkdown": "Community composition indicator reflecting native diversity and assemblage balance relative to expectation.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+  "howToMeasureMarkdown": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+  "inputs": [
+    {
+      "label": "Relative Abundance and Species Biomass metrics",
+      "type": "field (fish survey) and/or desktop (existing data)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Fish community surveys (electrofishing/seining) and/or compiled species lists from monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-community-dynamics-relative-abundance-and-species-biomass-metrics-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-community-dynamics-relative-abundance-and-species-biomass-metrics-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "State fish sampling protocols",
+    "state fish databases where available"
+  ],
+  "tags": [
+    "Biology",
+    "Community dynamics",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      280
+    ],
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

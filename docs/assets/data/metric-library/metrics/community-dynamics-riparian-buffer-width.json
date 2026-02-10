@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "community-dynamics-riparian-buffer-width",
   "name": "Riparian buffer width",
-  "shortName": "",
+  "shortName": "Riparian buffer width",
   "discipline": "Biology",
   "function": "Community dynamics",
   "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
@@ -14,7 +14,8 @@
       "label": "Riparian buffer width",
       "type": "desktop",
       "source": "Floodplain",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -76,8 +77,21 @@
   "tags": [
     "Biology",
     "Community dynamics",
-    "biology",
-    "sfari",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      151
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

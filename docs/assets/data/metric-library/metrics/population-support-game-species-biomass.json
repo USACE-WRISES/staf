@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "population-support-game-species-biomass",
+  "name": "Game Species Biomass",
+  "shortName": "Game Species Biomass",
+  "discipline": "Biology",
+  "function": "Population support",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+  "descriptionMarkdown": "Population abundance/biomass indicator reflecting recruitment and survival of target game/native species.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (fish survey)",
+  "howToMeasureMarkdown": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+  "inputs": [
+    {
+      "label": "Game Species Biomass",
+      "type": "field (fish survey)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Fish population surveys and biomass estimation from electrofishing/seining; historical comparison where required."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-population-support-game-species-biomass-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-game-species-biomass-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Wyoming SQT",
+    "State fisheries survey methods",
+    "long-term monitoring records where available"
+  ],
+  "tags": [
+    "Biology",
+    "Population support",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      279
+    ],
+    "sourceCitations": [
+      "Wyoming SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

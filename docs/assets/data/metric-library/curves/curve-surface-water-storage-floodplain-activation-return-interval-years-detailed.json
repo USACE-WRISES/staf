@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed",
-  "metricId": "surface-water-storage-floodplain-activation-return-interval-years-detailed",
+  "metricId": "surface-water-storage-floodplain-activation-return-interval-years",
   "tier": "detailed",
   "name": "Floodplain Activation Return Interval (years) reference curve",
   "axes": {
     "xLabel": "Floodplain Activation Return Interval (years)",
     "yLabel": "Index score",
-    "xUnit": "years",
     "yUnit": "index"
   },
   "curves": [
@@ -15,11 +14,11 @@
       "curveId": "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "years",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed-proposed-derive",
+          "id": "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed-proposed-derived-from-sfari-rapid-curve",
           "name": "Proposed (derived from SFARI rapid curves) - Adjust expectation for valley confinement and historic flow regime.",
           "points": [
             {
@@ -34,8 +33,8 @@
             },
             {
               "x": 7.5,
-              "y": 0.4,
-              "description": "Field 7.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 7.5, Index 0.3"
             },
             {
               "x": 15,
@@ -50,47 +49,76 @@
           ],
           "sourceMetadata": {
             "stratification": "Adjust expectation for valley confinement and historic flow regime.",
-            "sourceRow": 26,
-            "sourceRows": [
-              26
-            ],
             "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-            "sourceCitations": [
-              "Proposed (derived from SFARI rapid curves)"
-            ],
+            "sourceRow": 164,
             "fieldValues": [
               "2",
               "4",
               "7.5",
               "15",
-              "25",
-              "",
-              ""
+              "25"
             ],
             "indexValues": [
               "1",
               "0.7",
-              "0.4",
+              "0.3",
               "0.1",
-              "0",
-              "",
-              ""
+              "0"
+            ]
+          }
+        },
+        {
+          "id": "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed-proposed-derived-from-sfari-rapid-curve",
+          "name": "Proposed (derived from SFARI rapid curves) - Exclude naturally confined reaches where overbanking is not expected.",
+          "points": [
+            {
+              "x": 1.5,
+              "y": 1,
+              "description": "Field 1.5, Index 1"
+            },
+            {
+              "x": 4,
+              "y": 0.7,
+              "description": "Field 4, Index 0.7"
+            },
+            {
+              "x": 7.5,
+              "y": 0.3,
+              "description": "Field 7.5, Index 0.3"
+            },
+            {
+              "x": 15,
+              "y": 0.1,
+              "description": "Field 15, Index 0.1"
+            },
+            {
+              "x": 25,
+              "y": 0,
+              "description": "Field 25, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Exclude naturally confined reaches where overbanking is not expected.",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 164,
+            "fieldValues": [
+              "1.5",
+              "4",
+              "7.5",
+              "15",
+              "25"
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed-proposed-derive"
+      "activeLayerId": "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed-proposed-derived-from-sfari-rapid-curve"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-    "sourceCitations": [
-      "Proposed (derived from SFARI rapid curves)"
-    ],
-    "mappedFunction": "Surface water storage",
-    "sourceRows": [
-      26
-    ]
-  }
+  ]
 }

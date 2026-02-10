@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-nutrient-cycling-agriculture-and-livestock-nutrient-pressure-screening",
+  "metricId": "nutrient-cycling-agriculture-and-livestock-nutrient-pressure",
+  "tier": "screening",
+  "name": "Agriculture & Livestock Nutrient Pressure screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-agriculture-and-livestock-nutrient-pressure-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-agriculture-and-livestock-nutrient-pressure-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: There is little to no agricultural land uses or the livestock or cropland is far enough away from project reach to cause no impact to water quality or biology. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Livestock access to stream and/or intensive cropland upstream of project reach. A sufficient reach of stream is between Ag. land use and project reach. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Livestock access to stream and/or intensive cropland immediately upstream of project reach. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-agriculture-and-livestock-nutrient-pressure-screening-multiple-sqts",
+      "indexRange": true
+    }
+  ]
+}

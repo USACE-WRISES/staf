@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-effective-barrier-density",
+  "name": "Effective Barrier Density",
+  "shortName": "Effective Barrier Density",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "Severity-weighted barrier density per km (e.g., sum of (1�passability) per km). Lower is better.",
+  "methodContextMarkdown": "Desktop + field confirm",
+  "howToMeasureMarkdown": "Compile barriers; assign passability (0�1); compute ?(1�passability)/km within analysis corridor.",
+  "inputs": [
+    {
+      "label": "Effective Barrier Density",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Dam/weir/culvert inventory (PAD-US/dam layers/road crossings) + passability scoring."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-effective-barrier-density-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-effective-barrier-density-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "dam/barrier inventories",
+    "field confirmation protocols."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      289
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

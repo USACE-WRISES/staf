@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-bankline-with-continuous-lateral-barrier",
+  "name": "Bankline with Continuous Lateral Barrier",
+  "shortName": "Bankline with Continuous Lateral Barrier",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "Percent of reach bankline bordered by continuous barriers that prevent lateral movement (lower is better).",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Map barriers along banks; compute barrier length � total bankline length.",
+  "inputs": [
+    {
+      "label": "Bankline with Continuous Lateral Barrier",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Levee/berm/wall/riprap mapping from LiDAR/imagery + field verification."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-bankline-with-continuous-lateral-barrier-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-bankline-with-continuous-lateral-barrier-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "National Levee Database (NLD)",
+    "FEMA floodplain layers (where available)",
+    "USGS 3DEP LiDAR",
+    "local levee GIS."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      287
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

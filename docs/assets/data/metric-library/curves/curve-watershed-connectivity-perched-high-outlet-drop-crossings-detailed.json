@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-watershed-connectivity-perched-high-outlet-drop-crossings-detailed",
-  "metricId": "watershed-connectivity-perched-high-outlet-drop-crossings-detailed",
+  "metricId": "watershed-connectivity-perched-high-outlet-drop-crossings",
   "tier": "detailed",
-  "name": "Perched/High Outlet Drop Crossings (%) reference curve",
+  "name": "Perched/High Outlet Drop Crossings reference curve",
   "axes": {
-    "xLabel": "Perched/High Outlet Drop Crossings (%)",
+    "xLabel": "Perched/High Outlet Drop Crossings",
     "yLabel": "Index score",
-    "xUnit": "%",
     "yUnit": "index"
   },
   "curves": [
@@ -15,11 +14,11 @@
       "curveId": "curve-watershed-connectivity-perched-high-outlet-drop-crossings-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "%",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-watershed-connectivity-perched-high-outlet-drop-crossings-detailed-proposed-derived-from-s",
+          "id": "curve-watershed-connectivity-perched-high-outlet-drop-crossings-detailed-proposed-derived-from-sfari-rapid-curves-adjust",
           "name": "Proposed (derived from SFARI rapid curves) - Adjust outlet-drop threshold for focal taxa and stream type.",
           "points": [
             {
@@ -34,8 +33,8 @@
             },
             {
               "x": 40,
-              "y": 0.4,
-              "description": "Field 40, Index 0.4"
+              "y": 0.3,
+              "description": "Field 40, Index 0.3"
             },
             {
               "x": 60,
@@ -50,47 +49,26 @@
           ],
           "sourceMetadata": {
             "stratification": "Adjust outlet-drop threshold for focal taxa and stream type.",
-            "sourceRow": 441,
-            "sourceRows": [
-              441
-            ],
             "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-            "sourceCitations": [
-              "Proposed (derived from SFARI rapid curves)"
-            ],
+            "sourceRow": 284,
             "fieldValues": [
               "5",
               "15",
               "40",
               "60",
-              "80",
-              "",
-              ""
+              "80"
             ],
             "indexValues": [
               "1",
               "0.7",
-              "0.4",
+              "0.3",
               "0.1",
-              "0",
-              "",
-              ""
+              "0"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-watershed-connectivity-perched-high-outlet-drop-crossings-detailed-proposed-derived-from-s"
+      "activeLayerId": "curve-watershed-connectivity-perched-high-outlet-drop-crossings-detailed-proposed-derived-from-sfari-rapid-curves-adjust"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-    "sourceCitations": [
-      "Proposed (derived from SFARI rapid curves)"
-    ],
-    "mappedFunction": "Watershed connectivity",
-    "sourceRows": [
-      441
-    ]
-  }
+  ]
 }

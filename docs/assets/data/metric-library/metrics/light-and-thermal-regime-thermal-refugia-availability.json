@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "metricId": "light-and-thermal-regime-thermal-refugia-availability",
   "name": "Thermal Refugia Availability",
-  "shortName": "",
+  "shortName": "Thermal Refugia Availability",
   "discipline": "Physicochemistry",
   "function": "Light & thermal regime",
   "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
   "descriptionMarkdown": "Springs or deeper pools temper extremes, unless large daily swings are historically normal (arid ephemeral).",
-  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Locate cooler pockets or deeper pools using a field temperature check or loggers where available.",
   "inputs": [
     {
       "label": "Thermal Refugia Availability",
-      "type": "field",
-      "source": "Channel",
+      "type": "desktop",
+      "source": "Floodplain",
       "required": true,
       "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
     }
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: No refugia where expected. High thermal stress risk. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: No refugia where expected. High thermal stress risk. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-light-and-thermal-regime-thermal-refugia-availability"
+          "curve-light-and-thermal-regime-thermal-refugia-availability-screening"
         ]
       }
     }
@@ -68,37 +68,19 @@
     "Light & thermal regime",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "No refugia where expected. High thermal stress risk.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "One or two minor refuges. / Rare or minimal cooler zones.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Multiple cooler pockets or deeper pools provide refugia during warm periods.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      40
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

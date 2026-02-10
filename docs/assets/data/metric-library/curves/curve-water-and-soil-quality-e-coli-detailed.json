@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-e-coli-detailed",
+  "metricId": "water-and-soil-quality-e-coli",
+  "tier": "detailed",
+  "name": "E.Coli reference curve",
+  "axes": {
+    "xLabel": "E.Coli",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-e-coli-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-e-coli-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0.29,
+              "y": 1,
+              "description": "Field 0.29, Index 349"
+            },
+            {
+              "x": 0.69,
+              "y": 1,
+              "description": "Field 0.69, Index 121"
+            },
+            {
+              "x": 0.7,
+              "y": 1,
+              "description": "Field 0.7, Index 35"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 255,
+            "fieldValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ],
+            "indexValues": [
+              "",
+              "349",
+              "",
+              "121",
+              "35",
+              ""
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-e-coli-detailed-south-carolina-sqt"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "catchment-hydrology-road-density",
   "name": "Road density",
-  "shortName": "",
+  "shortName": "Road density",
   "discipline": "Hydrology",
   "function": "Catchment hydrology",
   "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
@@ -14,7 +14,8 @@
       "label": "Road density",
       "type": "desktop",
       "source": "Watershed",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -73,10 +74,23 @@
     "EPA EnviroAtlas (where available)."
   ],
   "tags": [
-    "Catchment hydrology",
     "Hydrology",
-    "hydrology",
-    "sfari",
+    "Catchment hydrology",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      68
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

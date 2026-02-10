@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
   "name": "Bank Erosion & Armoring Condition",
-  "shortName": "",
+  "shortName": "Bank Erosion & Armoring Condition",
   "discipline": "Geomorphology",
   "function": "Channel and floodplain dynamics",
   "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
-  "descriptionMarkdown": "Integrates bank geometry, rooting, surface protection, raw or failing banks, and hardening to summarize erosion risk and sediment delivery.\nCompares meander migration rates and cutoff frequency to reference behavior; excessive migration or avulsions indicate instability.",
+  "descriptionMarkdown": "\"Integrates bank geometry, rooting, surface protection, raw or failing banks, and hardening to summarize erosion risk and sediment delivery. Compares meander migration rates and cutoff frequency to reference behavior; excessive migration or avulsions indicate instability.\"",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
-  "howToMeasureMarkdown": "Map hardened versus natural or vegetated bank lengths and compute percent by type.\nMeasure raw or eroding bank length and divide by total bank length across both banks.",
+  "howToMeasureMarkdown": "\"Map hardened versus natural or vegetated bank lengths and compute percent by type. Measure raw or eroding bank length and divide by total bank length across both banks.\"",
   "inputs": [
     {
       "label": "Bank Erosion & Armoring Condition",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Failing armoring or widespread bare banks with severe instability. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Failing armoring or widespread bare banks with severe instability. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition"
+          "curve-channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition-screening"
         ]
       }
     }
@@ -70,37 +70,19 @@
     "Channel and floodplain dynamics",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Failing armoring or widespread bare banks with severe instability.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Some armoring or partial vegetation coverage. / Large portion of banks is armored or vegetation is sparse.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Predominantly natural banks with deeply rooted cover.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      28
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

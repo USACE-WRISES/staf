@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-lwd-detailed",
+  "metricId": "habitat-provision-lwd",
+  "tier": "detailed",
+  "name": "LWD reference curve",
+  "axes": {
+    "xLabel": "LWD",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-lwd-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-lwd-detailed-colorado-sqt-pieces-100-meters",
+          "name": "Colorado SQT - # Pieces / 100 meters",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 13,
+              "y": 0.7,
+              "description": "Field 13, Index 0.7"
+            },
+            {
+              "x": 28,
+              "y": 1,
+              "description": "Field 28, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "# Pieces / 100 meters",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 262,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "13",
+              "28"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-detailed-minnesota-sqt-pieces-100-meters",
+          "name": "Minnesota SQT - # Pieces / 100 meters",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 13,
+              "y": 0.7,
+              "description": "Field 13, Index 0.7"
+            },
+            {
+              "x": 28,
+              "y": 1,
+              "description": "Field 28, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "# Pieces / 100 meters",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 262,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "13",
+              "28"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-lwd-detailed-colorado-sqt-pieces-100-meters"
+    }
+  ]
+}

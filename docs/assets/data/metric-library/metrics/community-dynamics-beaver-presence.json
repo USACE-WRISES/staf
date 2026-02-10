@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "community-dynamics-beaver-presence",
   "name": "Beaver Presence",
+  "shortName": "Beaver Presence",
   "discipline": "Biology",
-  "function": "Community Dynamics",
+  "function": "Community dynamics",
   "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
   "descriptionMarkdown": "Beaver enhance wetland/channel complexity if historically present, unless naturally absent (arid deserts).",
   "methodContextMarkdown": "Context: F/C\n\nMethod: F",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Beaver Presence",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "f",
+      "source": "F/C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "biology"
+    "Biology",
+    "Community dynamics",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      145
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

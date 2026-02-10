@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-chlorophyll-detailed",
-  "metricId": "carbon-processing-chlorophyll-detailed",
+  "metricId": "carbon-processing-chlorophyll",
   "tier": "detailed",
   "name": "Chlorophyll ? reference curve",
   "axes": {
@@ -33,37 +33,29 @@
             },
             {
               "x": 53,
-              "y": 0.39,
-              "description": "Field 53, Index 0.39"
+              "y": 0.29,
+              "description": "Field 53, Index 0.29"
             }
           ],
           "sourceMetadata": {
             "stratification": "Biotypes 1 and 2",
-            "sourceRow": 192,
-            "sourceRows": [
-              192
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 224,
             "fieldValues": [
               "",
               "53",
               "",
               "27",
               "",
-              "12",
-              ""
+              "12"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -83,8 +75,8 @@
             },
             {
               "x": 117,
-              "y": 0.39,
-              "description": "Field 117, Index 0.39"
+              "y": 0.29,
+              "description": "Field 117, Index 0.29"
             },
             {
               "x": 150,
@@ -94,31 +86,23 @@
           ],
           "sourceMetadata": {
             "stratification": "Biotype 3",
-            "sourceRow": 193,
-            "sourceRows": [
-              193
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 224,
             "fieldValues": [
               "150",
               "117",
               "",
               "29",
               "",
-              "16",
-              ""
+              "16"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -138,8 +122,8 @@
             },
             {
               "x": 117,
-              "y": 0.4,
-              "description": "Field 117, Index 0.4"
+              "y": 0.3,
+              "description": "Field 117, Index 0.3"
             },
             {
               "x": 150,
@@ -149,31 +133,23 @@
           ],
           "sourceMetadata": {
             "stratification": "Basins and Plains",
-            "sourceRow": 249,
-            "sourceRows": [
-              249
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 224,
             "fieldValues": [
               "150",
               "",
               "117",
               "",
               "29",
-              "16",
-              ""
+              "16"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -193,57 +169,34 @@
             },
             {
               "x": 53,
-              "y": 0.4,
-              "description": "Field 53, Index 0.4"
+              "y": 0.3,
+              "description": "Field 53, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "Mountains",
-            "sourceRow": 250,
-            "sourceRows": [
-              250
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 224,
             "fieldValues": [
               "",
               "",
               "53",
               "",
               "26.75",
-              "12",
-              ""
+              "12"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-carbon-processing-chlorophyll-detailed-colorado-sqt-biotypes-1-and-2"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Colorado SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Colorado SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      192,
-      193,
-      249,
-      250
-    ]
-  }
+  ]
 }

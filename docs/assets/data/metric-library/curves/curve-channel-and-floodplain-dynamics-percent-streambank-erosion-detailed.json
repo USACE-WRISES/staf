@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-channel-and-floodplain-dynamics-percent-streambank-erosion-detailed",
-  "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion-detailed",
+  "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
   "tier": "detailed",
-  "name": "Percent Streambank Erosion (%) reference curve",
+  "name": "Percent Streambank Erosion reference curve",
   "axes": {
-    "xLabel": "Percent Streambank Erosion (%)",
+    "xLabel": "Percent Streambank Erosion",
     "yLabel": "Index score",
-    "xUnit": "%",
     "yUnit": "index"
   },
   "curves": [
@@ -15,7 +14,7 @@
       "curveId": "curve-channel-and-floodplain-dynamics-percent-streambank-erosion-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "%",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
@@ -40,31 +39,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 97,
-            "sourceRows": [
-              97
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 198,
             "fieldValues": [
               "75",
               "",
               "",
               "",
               "10",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -90,31 +81,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 100,
-            "sourceRows": [
-              100
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 198,
             "fieldValues": [
               "75",
               "",
               "",
               "",
               "10",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -140,31 +123,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 107,
-            "sourceRows": [
-              107
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 198,
             "fieldValues": [
               "75",
               "",
               "",
               "",
               "10",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -190,31 +165,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 110,
-            "sourceRows": [
-              110
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 198,
             "fieldValues": [
               "75",
               "",
               "",
               "",
               "10",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -234,8 +201,8 @@
             },
             {
               "x": 25,
-              "y": 0.4,
-              "description": "Field 25, Index 0.4"
+              "y": 0.3,
+              "description": "Field 25, Index 0.3"
             },
             {
               "x": 41,
@@ -245,31 +212,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 115,
-            "sourceRows": [
-              115
-            ],
             "sourceCitation": "North Carolina SQT",
-            "sourceCitations": [
-              "North Carolina SQT"
-            ],
+            "sourceRow": 198,
             "fieldValues": [
               "41",
               "",
               "25",
               "",
               "9",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -295,31 +254,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 122,
-            "sourceRows": [
-              122
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 198,
             "fieldValues": [
               "50",
               "",
               "",
               "",
               "11",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -345,31 +296,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 126,
-            "sourceRows": [
-              126
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 198,
             "fieldValues": [
               "50",
               "",
               "",
               "",
               "11",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -395,61 +338,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 129,
-            "sourceRows": [
-              129
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 198,
             "fieldValues": [
               "75",
               "",
               "",
               "",
               "10",
-              "5",
-              ""
+              "5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-channel-and-floodplain-dynamics-percent-streambank-erosion-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; Colorado SQT; Michigan SQT; Minnesota SQT; North Carolina SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Alaska SQT",
-      "Colorado SQT",
-      "Michigan SQT",
-      "Minnesota SQT",
-      "North Carolina SQT",
-      "South Carolina SQT",
-      "Wisconsin SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Channel and floodplain dynamics",
-    "sourceRows": [
-      97,
-      100,
-      107,
-      110,
-      115,
-      122,
-      126,
-      129
-    ]
-  }
+  ]
 }

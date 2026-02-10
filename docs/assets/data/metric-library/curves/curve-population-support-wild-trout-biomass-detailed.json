@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-wild-trout-biomass-detailed",
+  "metricId": "population-support-wild-trout-biomass",
+  "tier": "detailed",
+  "name": "Wild Trout Biomass reference curve",
+  "axes": {
+    "xLabel": "Wild Trout Biomass",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-wild-trout-biomass-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-wild-trout-biomass-detailed-colorado-sqt-high",
+          "name": "Colorado SQT - High",
+          "points": [
+            {
+              "x": 5,
+              "y": 0.3,
+              "description": "Field 5, Index 0.3"
+            },
+            {
+              "x": 25,
+              "y": 0.7,
+              "description": "Field 25, Index 0.7"
+            },
+            {
+              "x": 40,
+              "y": 1,
+              "description": "Field 40, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "High",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 267,
+            "fieldValues": [
+              "",
+              "",
+              "5",
+              "",
+              "25",
+              "40"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-wild-trout-biomass-detailed-colorado-sqt-moderate",
+          "name": "Colorado SQT - Moderate",
+          "points": [
+            {
+              "x": 10,
+              "y": 0.3,
+              "description": "Field 10, Index 0.3"
+            },
+            {
+              "x": 50,
+              "y": 0.7,
+              "description": "Field 50, Index 0.7"
+            },
+            {
+              "x": 80,
+              "y": 1,
+              "description": "Field 80, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Moderate",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 267,
+            "fieldValues": [
+              "",
+              "",
+              "10",
+              "",
+              "50",
+              "80"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-wild-trout-biomass-detailed-colorado-sqt-low",
+          "name": "Colorado SQT - Low",
+          "points": [
+            {
+              "x": 15,
+              "y": 0.3,
+              "description": "Field 15, Index 0.3"
+            },
+            {
+              "x": 75,
+              "y": 0.7,
+              "description": "Field 75, Index 0.7"
+            },
+            {
+              "x": 119,
+              "y": 1,
+              "description": "Field 119, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Low",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 267,
+            "fieldValues": [
+              "",
+              "",
+              "15",
+              "",
+              "75",
+              "119"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-wild-trout-biomass-detailed-colorado-sqt-high"
+    }
+  ]
+}

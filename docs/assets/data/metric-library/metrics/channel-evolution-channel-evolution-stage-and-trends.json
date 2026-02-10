@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "metricId": "channel-evolution-channel-evolution-stage-and-trends",
   "name": "Channel Evolution Stage & Trends",
-  "shortName": "",
+  "shortName": "Channel Evolution Stage & Trends",
   "discipline": "Geomorphology",
   "function": "Channel evolution",
   "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
-  "descriptionMarkdown": "Channel is stable/recovered (Stage I/VI or 0,1,6,8), not actively degrading, unless partial evolution is normal.\nNo active headcuts or fully stabilized ones; no ongoing incision or bank widening.\nChannel shows vegetated benches/floodplain formation, indicating recovery from incision/widening.\nBank erosion/migration rates match natural reference; no excessive widening unless historically typical.",
+  "descriptionMarkdown": "\"Channel is stable/recovered (Stage I/VI or 0,1,6,8), not actively degrading, unless partial evolution is normal. No active headcuts or fully stabilized ones; no ongoing incision or bank widening. Channel shows vegetated benches/floodplain formation, indicating recovery from incision/widening. Bank erosion/migration rates match natural reference; no excessive widening unless historically typical.\"",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
-  "howToMeasureMarkdown": "Assess channel evolution stage using field indicators or recent geomorphic reports. Use desktop review only for coarse screening.\nLocate headcuts or knickpoints and estimate migration using multi-date elevation or imagery. Confirm in the field.\nIdentify vegetated benches or inset floodplains and track their extent using imagery and elevation profiles where available.\nMap active channel edges across years and compute width change using imagery and field indicators where feasible.",
+  "howToMeasureMarkdown": "\"Assess channel evolution stage using field indicators or recent geomorphic reports. Use desktop review only for coarse screening. Locate headcuts or knickpoints and estimate migration using multi-date elevation or imagery. Confirm in the field. Identify vegetated benches or inset floodplains and track their extent using imagery and elevation profiles where available. Map active channel edges across years and compute width change using imagery and field indicators where feasible.\"",
   "inputs": [
     {
       "label": "Channel Evolution Stage & Trends",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Severe incision or destructive phases (often Stage II or severe III-IV). (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Severe incision or destructive phases (often Stage II or severe III-IV). (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-channel-evolution-channel-evolution-stage-and-trends"
+          "curve-channel-evolution-channel-evolution-stage-and-trends-screening"
         ]
       }
     }
@@ -75,37 +75,19 @@
     "Channel evolution",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Severe incision or destructive phases (often Stage II or severe III-IV).",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Partially recovered channel (often Stage V). / Actively widening or incising (often Stage III-IV).",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Stable or re-stabilized channel (Stage I or VI).",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      26
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

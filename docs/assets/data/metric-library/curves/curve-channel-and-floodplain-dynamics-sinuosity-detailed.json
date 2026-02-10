@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-sinuosity-detailed",
+  "metricId": "channel-and-floodplain-dynamics-sinuosity",
+  "tier": "detailed",
+  "name": "Sinuosity reference curve",
+  "axes": {
+    "xLabel": "Sinuosity",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-sinuosity-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-sinuosity-detailed-north-carolina-sqt-e5-streams-in-unconfined-alluvial-valleys",
+          "name": "North Carolina SQT - E5 streams in Unconfined Alluvial Valleys",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": ""
+            },
+            {
+              "x": 1,
+              "y": 0.4,
+              "description": ""
+            },
+            {
+              "x": 2,
+              "y": 0.7,
+              "description": ""
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "description": ""
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E5 streams in Unconfined Alluvial Valleys",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 205,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "1.3"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-sinuosity-detailed-north-carolina-sqt-unconfined-alluvial-valleys",
+          "name": "North Carolina SQT - Unconfined Alluvial Valleys",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": ""
+            },
+            {
+              "x": 1,
+              "y": 0.4,
+              "description": ""
+            },
+            {
+              "x": 2,
+              "y": 0.7,
+              "description": ""
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "description": ""
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Unconfined Alluvial Valleys",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 205,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "",
+              "1.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-sinuosity-detailed-north-carolina-sqt-confined-alluvial-valleys",
+          "name": "North Carolina SQT - Confined Alluvial Valleys",
+          "points": [
+            {
+              "x": 1.15,
+              "y": 0.7,
+              "description": "Field 1.15, Index 0.7"
+            },
+            {
+              "x": 1.4,
+              "y": 1,
+              "description": "Field 1.4, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Confined Alluvial Valleys",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 205,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "1.15",
+              "1.4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-sinuosity-detailed-north-carolina-sqt-colluvial-valleys",
+          "name": "North Carolina SQT - Colluvial Valleys",
+          "points": [
+            {
+              "x": 1.21,
+              "y": 0.69,
+              "description": "Field 1.21, Index 0.69"
+            },
+            {
+              "x": 1.3,
+              "y": 0.3,
+              "description": "Field 1.3, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Colluvial Valleys",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 205,
+            "fieldValues": [
+              "",
+              "",
+              "1.3",
+              "1.21",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-sinuosity-detailed-north-carolina-sqt-e5-streams-in-unconfined-alluvial-valleys"
+    }
+  ]
+}

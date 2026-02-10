@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Zero-flow days and dry spells match historical pattern. Criteria: Stable zero-flow counts and dry-period lengths relative to reference.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Slight increase in zero-flow days without changing flow class. Criteria: Minor increase in zero-flow days or short new dry periods.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: New or longer dry periods restrict habitat for weeks. Criteria: Noticeable increase in zero-flow days or dry-spell length that reduces habitat availability.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Prolonged cessation shifts expected flow category. Criteria: Extended dry periods effectively change flow class (e.g., perennial to intermittent).",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-streamflow-regime-flow-statistics-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-streamflow-regime-flow-statistics-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-streamflow-regime-flow-statistics-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-streamflow-regime-flow-statistics-rapid",
+  "metricId": "streamflow-regime-flow-statistics",
   "tier": "rapid",
+  "name": "Flow statistics rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "streamflow-regime-flow-statistics"
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-flow-statistics-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flow-statistics-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Zero-flow days and dry spells match historical pattern. Criteria: Stable zero-flow counts and dry-period lengths relative to reference."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Slight increase in zero-flow days without changing flow class. Criteria: Minor increase in zero-flow days or short new dry periods."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: New or longer dry periods restrict habitat for weeks. Criteria: Noticeable increase in zero-flow days or dry-spell length that reduces habitat availability."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Prolonged cessation shifts expected flow category. Criteria: Extended dry periods effectively change flow class (e.g., perennial to intermittent)."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flow-statistics-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

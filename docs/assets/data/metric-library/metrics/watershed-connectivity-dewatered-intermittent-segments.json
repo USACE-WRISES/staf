@@ -1,22 +1,63 @@
 {
   "schemaVersion": 1,
   "metricId": "watershed-connectivity-dewatered-intermittent-segments",
-  "name": "Dewatered/Intermittent Segments",
+  "name": "Dewatered / Intermittent Segments",
+  "shortName": "Dewatered / Intermittent Segments",
   "discipline": "Biology",
-  "function": "Watershed Connectivity",
+  "function": "Watershed connectivity",
   "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
   "descriptionMarkdown": "No artificial dryness in a historically perennial system, unless ephemeral dryness is normal.",
-  "methodContextMarkdown": "Context: C\n\nMethod: D",
-  "howToMeasureMarkdown": "Aerial imagery + gauge zero-flow spans",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Combine multi-date imagery and available flow records to identify dry segments and summarize frequency and extent.",
   "inputs": [
     {
-      "label": "Dewatered/Intermittent Segments",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "label": "Dewatered / Intermittent Segments",
+      "type": "desktop",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
     }
   ],
   "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "threeBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "threeBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Good",
+              "ratingId": "good",
+              "criteriaMarkdown": "Good: No artificial dryness and natural connectivity is maintained. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Minor dryness in small segments. / Notable dryness or disconnection in key reaches. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Chronic or large-scale dewatering causing major fragmentation. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-dewatered-intermittent-segments-screening"
+        ]
+      }
+    },
     {
       "profileId": "rapid-sfari-likert",
       "tier": "rapid",
@@ -44,7 +85,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +108,32 @@
       }
     }
   ],
-  "tags": [
-    "rapid",
-    "sfari",
-    "biology"
+  "references": [
+    "USGS NWIS zero-flow days (where available)",
+    "NAIP and Google Earth imagery time series",
+    "NHDPlus flow regime codes."
   ],
-  "status": "active"
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "screening",
+    "rapid"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      62,
+      153
+    ],
+    "sourceCitations": [
+      "ERDC",
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

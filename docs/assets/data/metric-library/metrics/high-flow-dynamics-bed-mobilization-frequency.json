@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "high-flow-dynamics-bed-mobilization-frequency",
   "name": "Bed mobilization frequency",
-  "shortName": "",
+  "shortName": "Bed mobilization frequency",
   "discipline": "Hydraulics",
   "function": "High flow dynamics",
   "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
@@ -14,7 +14,8 @@
       "label": "Bed mobilization frequency",
       "type": "desktop",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -74,10 +75,23 @@
     "Pfankuch stability checks (where available)."
   ],
   "tags": [
-    "High flow dynamics",
     "Hydraulics",
-    "hydraulics",
-    "sfari",
+    "High flow dynamics",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      85
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

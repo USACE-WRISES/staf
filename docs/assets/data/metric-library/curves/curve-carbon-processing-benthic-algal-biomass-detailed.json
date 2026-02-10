@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-benthic-algal-biomass-detailed",
-  "metricId": "carbon-processing-benthic-algal-biomass-detailed",
+  "metricId": "carbon-processing-benthic-algal-biomass",
   "tier": "detailed",
   "name": "Benthic Algal Biomass reference curve",
   "axes": {
@@ -28,53 +28,34 @@
             },
             {
               "x": 2,
-              "y": 0.4,
-              "description": "Field 2, Index 0.4"
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "Field Value (Mean Score)",
-            "sourceRow": 244,
-            "sourceRows": [
-              244
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 240,
             "fieldValues": [
               "",
               "",
               "2",
               "",
               "1",
-              "",
               ""
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-carbon-processing-benthic-algal-biomass-detailed-wisconsin-sqt-field-value-mean-score"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Wisconsin SQT",
-    "sourceCitations": [
-      "Wisconsin SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      244
-    ]
-  }
+  ]
 }

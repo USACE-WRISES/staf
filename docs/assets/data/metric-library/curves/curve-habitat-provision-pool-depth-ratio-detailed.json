@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-habitat-provision-pool-depth-ratio-detailed",
-  "metricId": "habitat-provision-pool-depth-ratio-detailed",
+  "metricId": "habitat-provision-pool-depth-ratio",
   "tier": "detailed",
   "name": "Pool Depth Ratio reference curve",
   "axes": {
@@ -39,31 +39,23 @@
           ],
           "sourceMetadata": {
             "stratification": "B & Ba Streams",
-            "sourceRow": 308,
-            "sourceRows": [
-              308
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 260,
             "fieldValues": [
               "1",
               "",
               "",
               "",
               "1.8",
-              "2.8",
-              ""
+              "2.8"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -89,31 +81,23 @@
           ],
           "sourceMetadata": {
             "stratification": "All other Streams",
-            "sourceRow": 309,
-            "sourceRows": [
-              309
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 260,
             "fieldValues": [
               "1",
               "",
               "",
               "",
               "2.2",
-              "3.2",
-              ""
+              "3.2"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -139,31 +123,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 317,
-            "sourceRows": [
-              317
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 260,
             "fieldValues": [
               "1",
               "",
               "",
               "",
               "2.2",
-              "3.2",
-              ""
+              "3.2"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -178,8 +154,8 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             },
             {
               "x": 2,
@@ -194,31 +170,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 324,
-            "sourceRows": [
-              324
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 260,
             "fieldValues": [
               "1.1",
               "",
               "1.5",
               "",
               "2",
-              "3",
-              ""
+              "3"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -233,8 +201,8 @@
             },
             {
               "x": 1.5,
-              "y": 0.4,
-              "description": "Field 1.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
             },
             {
               "x": 2,
@@ -249,31 +217,352 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 332,
-            "sourceRows": [
-              332
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 260,
             "fieldValues": [
               "1.1",
               "",
               "1.5",
               "",
               "2",
-              "3",
-              ""
+              "3"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-north-carolina-sqt-gravel-bed-c-and-e-stream",
+          "name": "North Carolina SQT - gravel bed C and E stream",
+          "points": [
+            {
+              "x": 1.1,
+              "y": 0,
+              "description": "Field 1.1, Index 0"
+            },
+            {
+              "x": 1.2,
+              "y": 0.3,
+              "description": "Field 1.2, Index 0.3"
+            },
+            {
+              "x": 1.51,
+              "y": 0.7,
+              "description": "Field 1.51, Index 0.7"
+            },
+            {
+              "x": 1.742540494,
+              "y": 1,
+              "description": "Field 1.742540494, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "gravel bed C and E stream",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 260,
+            "fieldValues": [
+              "1.1",
+              "",
+              "1.2",
+              "",
+              "1.51",
+              "1.742540494"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-north-carolina-sqt-sand-bed-c-and-e-stream",
+          "name": "North Carolina SQT - sand bed C and E stream",
+          "points": [
+            {
+              "x": 1.1,
+              "y": 0,
+              "description": "Field 1.1, Index 0"
+            },
+            {
+              "x": 1.15,
+              "y": 0.3,
+              "description": "Field 1.15, Index 0.3"
+            },
+            {
+              "x": 1.21,
+              "y": 0.7,
+              "description": "Field 1.21, Index 0.7"
+            },
+            {
+              "x": 1.2513,
+              "y": 1,
+              "description": "Field 1.2513, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "sand bed C and E stream",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 260,
+            "fieldValues": [
+              "1.1",
+              "",
+              "1.15",
+              "",
+              "1.21",
+              "1.2513"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-north-carolina-sqt-a-b-and-bc-stream",
+          "name": "North Carolina SQT - A, B and Bc stream",
+          "points": [
+            {
+              "x": 1.1,
+              "y": 0,
+              "description": "Field 1.1, Index 0"
+            },
+            {
+              "x": 1.2,
+              "y": 0.3,
+              "description": "Field 1.2, Index 0.3"
+            },
+            {
+              "x": 1.51,
+              "y": 0.7,
+              "description": "Field 1.51, Index 0.7"
+            },
+            {
+              "x": 1.742540494,
+              "y": 1,
+              "description": "Field 1.742540494, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A, B and Bc stream",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 260,
+            "fieldValues": [
+              "1.1",
+              "",
+              "1.2",
+              "",
+              "1.51",
+              "1.742540494"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-south-carolina-sqt-a-streams",
+          "name": "South Carolina SQT - A streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.1,
+              "y": 0.3,
+              "description": "Field 1.1, Index 0.3"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 1.7,
+              "y": 1,
+              "description": "Field 1.7, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 260,
+            "fieldValues": [
               "1",
-              ""
+              "",
+              "1.1",
+              "",
+              "1.4",
+              "1.7"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-south-carolina-sqt-b-streams",
+          "name": "South Carolina SQT - B streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 2.3,
+              "y": 0.7,
+              "description": "Field 2.3, Index 0.7"
+            },
+            {
+              "x": 2.9,
+              "y": 1,
+              "description": "Field 2.9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 260,
+            "fieldValues": [
+              "1",
+              "",
+              "2",
+              "",
+              "2.3",
+              "2.9"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-south-carolina-sqt-c-streams",
+          "name": "South Carolina SQT - C streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.2,
+              "y": 0.3,
+              "description": "Field 1.2, Index 0.3"
+            },
+            {
+              "x": 1.9,
+              "y": 0.7,
+              "description": "Field 1.9, Index 0.7"
+            },
+            {
+              "x": 2.3,
+              "y": 1,
+              "description": "Field 2.3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 260,
+            "fieldValues": [
+              "1",
+              "",
+              "1.2",
+              "",
+              "1.9",
+              "2.3"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-depth-ratio-detailed-south-carolina-sqt-e-streams",
+          "name": "South Carolina SQT - E streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 1.4,
+              "y": 0.3,
+              "description": "Field 1.4, Index 0.3"
+            },
+            {
+              "x": 1.7,
+              "y": 0.7,
+              "description": "Field 1.7, Index 0.7"
+            },
+            {
+              "x": 2.1,
+              "y": 1,
+              "description": "Field 2.1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 260,
+            "fieldValues": [
+              "1",
+              "",
+              "1.4",
+              "",
+              "1.7",
+              "2.1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
             ]
           }
         },
@@ -299,31 +588,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 365,
-            "sourceRows": [
-              365
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 260,
             "fieldValues": [
               "1",
               "",
               "",
               "",
               "2",
-              "3",
-              ""
+              "3"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -349,58 +630,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 375,
-            "sourceRows": [
-              375
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 260,
             "fieldValues": [
               "1",
               "",
               "",
               "",
               "2.2",
-              "3.2",
-              ""
+              "3.2"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-habitat-provision-pool-depth-ratio-detailed-alaska-sqt-b-and-ba-streams"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; Colorado SQT; Michigan SQT; Minnesota SQT; Wisconsin SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Alaska SQT",
-      "Colorado SQT",
-      "Michigan SQT",
-      "Minnesota SQT",
-      "Wisconsin SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Habitat provision",
-    "sourceRows": [
-      308,
-      309,
-      317,
-      324,
-      332,
-      365,
-      375
-    ]
-  }
+  ]
 }

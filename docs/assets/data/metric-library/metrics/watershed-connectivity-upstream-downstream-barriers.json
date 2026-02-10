@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "watershed-connectivity-upstream-downstream-barriers",
   "name": "Upstream/Downstream Barriers",
+  "shortName": "Upstream/Downstream Barriers",
   "discipline": "Biology",
-  "function": "Watershed Connectivity",
+  "function": "Watershed connectivity",
   "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
   "descriptionMarkdown": "No major barriers impede migration unless natural waterfalls exist.",
   "methodContextMarkdown": "Context: C/W\n\nMethod: D",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Upstream/Downstream Barriers",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "d",
+      "source": "C/W",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "biology"
+    "Biology",
+    "Watershed connectivity",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      155
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

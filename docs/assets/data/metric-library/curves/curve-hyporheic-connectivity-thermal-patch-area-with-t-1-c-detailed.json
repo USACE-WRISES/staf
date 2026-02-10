@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed",
-  "metricId": "hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed",
+  "metricId": "hyporheic-connectivity-thermal-patch-area-with-t-1-c",
   "tier": "detailed",
-  "name": "Thermal Patch Area with ?T ? 1°C (%) reference curve",
+  "name": "Thermal Patch Area with ?T ? 1�C reference curve",
   "axes": {
-    "xLabel": "Thermal Patch Area with ?T ? 1°C (%)",
+    "xLabel": "Thermal Patch Area with ?T ? 1�C",
     "yLabel": "Index score",
-    "xUnit": "%",
     "yUnit": "index"
   },
   "curves": [
@@ -15,11 +14,11 @@
       "curveId": "curve-hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "%",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed-proposed-derived-from-sfari-",
+          "id": "curve-hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed-proposed-derived-from-sfari-rapid-curves-measure-dur",
           "name": "Proposed (derived from SFARI rapid curves) - Measure during peak thermal stress periods (hot afternoons) for strongest signal.",
           "points": [
             {
@@ -29,8 +28,8 @@
             },
             {
               "x": 0.3,
-              "y": 0.4,
-              "description": "Field 0.3, Index 0.4"
+              "y": 0.3,
+              "description": "Field 0.3, Index 0.3"
             },
             {
               "x": 1,
@@ -45,47 +44,24 @@
           ],
           "sourceMetadata": {
             "stratification": "Measure during peak thermal stress periods (hot afternoons) for strongest signal.",
-            "sourceRow": 91,
-            "sourceRows": [
-              91
-            ],
             "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-            "sourceCitations": [
-              "Proposed (derived from SFARI rapid curves)"
-            ],
+            "sourceRow": 194,
             "fieldValues": [
               "0",
               "0.3",
               "1",
-              "2.5",
-              "",
-              "",
-              ""
+              "2.5"
             ],
             "indexValues": [
               "0",
-              "0.4",
+              "0.3",
               "0.7",
-              "1",
-              "",
-              "",
-              ""
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed-proposed-derived-from-sfari-"
+      "activeLayerId": "curve-hyporheic-connectivity-thermal-patch-area-with-t-1-c-detailed-proposed-derived-from-sfari-rapid-curves-measure-dur"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-    "sourceCitations": [
-      "Proposed (derived from SFARI rapid curves)"
-    ],
-    "mappedFunction": "Hyporheic connectivity",
-    "sourceRows": [
-      91
-    ]
-  }
+  ]
 }

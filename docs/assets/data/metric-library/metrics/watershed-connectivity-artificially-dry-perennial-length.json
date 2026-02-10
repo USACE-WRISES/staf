@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-artificially-dry-perennial-length",
+  "name": "Artificially Dry Perennial Length",
+  "shortName": "Artificially Dry Perennial Length",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "Percent of historically perennial network length that is dry/disconnected during expected flowing season (lower is better).",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Define historically perennial extent; map dry segments during target season(s); compute % length dry.",
+  "inputs": [
+    {
+      "label": "Artificially Dry Perennial Length",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Aerial imagery time series + gage/model zero-flow days (where available) + field confirmation of withdrawals/diversions."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-artificially-dry-perennial-length-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-artificially-dry-perennial-length-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "USGS gage records where available",
+    "local water use/diversion datasets."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      285
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

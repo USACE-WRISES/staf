@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "carbon-processing-primary-production-algal-indicators",
   "name": "Primary Production / Algal Indicators",
-  "shortName": "",
+  "shortName": "Primary Production / Algal Indicators",
   "discipline": "Physicochemistry",
   "function": "Carbon processing",
   "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Thick blooms or scums that cover substrate. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Thick blooms or scums that cover substrate. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-carbon-processing-primary-production-algal-indicators"
+          "curve-carbon-processing-primary-production-algal-indicators-screening"
         ]
       }
     }
@@ -68,37 +68,19 @@
     "Carbon processing",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Thick blooms or scums that cover substrate.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Slightly elevated algae. / Frequent moderate nuisance mats.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Balanced growth with no nuisance blooms.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      42
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

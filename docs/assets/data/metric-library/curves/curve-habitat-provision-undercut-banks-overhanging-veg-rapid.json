@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Thick root mats and overhanging shrubs along outside bends. Criteria: About 50% or more of banks provide undercut or overhanging cover.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Intermittent undercuts and low branches in meanders. Criteria: About 25-50% cover.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Short isolated undercut pockets. Many bare or armored banks. Criteria: About 10-25% cover.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Banks straight and hardened. Little to no overhanging vegetation. Criteria: <10% cover.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-habitat-provision-undercut-banks-overhanging-veg-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-habitat-provision-undercut-banks-overhanging-veg-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-habitat-provision-undercut-banks-overhanging-veg-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-habitat-provision-undercut-banks-overhanging-veg-rapid",
+  "metricId": "habitat-provision-undercut-banks-overhanging-veg",
   "tier": "rapid",
+  "name": "Undercut Banks/Overhanging Veg rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "habitat-provision-undercut-banks-overhanging-veg"
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-undercut-banks-overhanging-veg-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-habitat-provision-undercut-banks-overhanging-veg-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Thick root mats and overhanging shrubs along outside bends. Criteria: About 50% or more of banks provide undercut or overhanging cover."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Intermittent undercuts and low branches in meanders. Criteria: About 25-50% cover."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Short isolated undercut pockets. Many bare or armored banks. Criteria: About 10-25% cover."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Banks straight and hardened. Little to no overhanging vegetation. Criteria: <10% cover."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-undercut-banks-overhanging-veg-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

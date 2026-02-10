@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
   "name": "Floodplain Engagement Frequency (bankfull recurrence)",
-  "shortName": "",
+  "shortName": "Floodplain Engagement Frequency (bankfull recurrence)",
   "discipline": "Hydraulics",
   "function": "High flow dynamics",
   "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Floodplain is rarely inundated except during extreme events. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Floodplain is rarely inundated except during extreme events. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence"
+          "curve-high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence-screening"
         ]
       }
     }
@@ -70,37 +70,19 @@
     "High flow dynamics",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Floodplain is rarely inundated except during extreme events.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "About 3-5 yr floods are needed. / About 5-10 yr floods are needed.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "About 1-2 yr floods engage the floodplain.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      20
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

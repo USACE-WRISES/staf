@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-sediment-continuity-aggradation-ratio-detailed",
-  "metricId": "sediment-continuity-aggradation-ratio-detailed",
+  "metricId": "sediment-continuity-aggradation-ratio",
   "tier": "detailed",
   "name": "Aggradation Ratio reference curve",
   "axes": {
@@ -18,8 +18,8 @@
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-sediment-continuity-aggradation-ratio-detailed-multiple-sqts",
-          "name": "Multiple SQTs",
+          "id": "curve-sediment-continuity-aggradation-ratio-detailed-colorado-sqt",
+          "name": "Colorado SQT",
           "points": [
             {
               "x": 1,
@@ -33,8 +33,8 @@
             },
             {
               "x": 1.4,
-              "y": 0.4,
-              "description": "Field 1.4, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1.4, Index 0.3"
             },
             {
               "x": 1.6,
@@ -43,60 +43,170 @@
             }
           ],
           "sourceMetadata": {
-            "stratification": "Multiple SQTs",
-            "sourceRow": 145,
-            "sourceRows": [
-              145,
-              146,
-              147,
-              148
-            ],
+            "stratification": "",
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT",
-              "Michigan SQT",
-              "Minnesota SQT",
-              "North Carolina SQT"
-            ],
+            "sourceRow": 207,
             "fieldValues": [
               "1.6",
               "",
               "1.4",
               "1.2",
               "",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-sediment-continuity-aggradation-ratio-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.2,
+              "y": 0.69,
+              "description": "Field 1.2, Index 0.69"
+            },
+            {
+              "x": 1.4,
+              "y": 0.3,
+              "description": "Field 1.4, Index 0.3"
+            },
+            {
+              "x": 1.6,
+              "y": 0,
+              "description": "Field 1.6, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 207,
+            "fieldValues": [
+              "1.6",
+              "",
+              "1.4",
+              "1.2",
+              "",
+              "1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-sediment-continuity-aggradation-ratio-detailed-minnesota-sqt",
+          "name": "Minnesota SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.2,
+              "y": 0.69,
+              "description": "Field 1.2, Index 0.69"
+            },
+            {
+              "x": 1.4,
+              "y": 0.3,
+              "description": "Field 1.4, Index 0.3"
+            },
+            {
+              "x": 1.6,
+              "y": 0,
+              "description": "Field 1.6, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 207,
+            "fieldValues": [
+              "1.6",
+              "",
+              "1.4",
+              "1.2",
+              "",
+              "1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-sediment-continuity-aggradation-ratio-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.2,
+              "y": 0.69,
+              "description": "Field 1.2, Index 0.69"
+            },
+            {
+              "x": 1.4,
+              "y": 0.3,
+              "description": "Field 1.4, Index 0.3"
+            },
+            {
+              "x": 1.6,
+              "y": 0,
+              "description": "Field 1.6, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 207,
+            "fieldValues": [
+              "1.6",
+              "",
+              "1.4",
+              "1.2",
+              "",
+              "1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-sediment-continuity-aggradation-ratio-detailed-multiple-sqts"
+      "activeLayerId": "curve-sediment-continuity-aggradation-ratio-detailed-colorado-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Colorado SQT; Michigan SQT; Minnesota SQT; North Carolina SQT",
-    "sourceCitations": [
-      "Colorado SQT",
-      "Michigan SQT",
-      "Minnesota SQT",
-      "North Carolina SQT"
-    ],
-    "mappedFunction": "Sediment continuity",
-    "sourceRows": [
-      145,
-      146,
-      147,
-      148
-    ]
-  }
+  ]
 }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "carbon-processing-cpom-retention",
   "name": "CPOM retention",
-  "shortName": "",
+  "shortName": "CPOM retention",
   "discipline": "Physicochemistry",
   "function": "Carbon processing",
   "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
@@ -14,7 +14,8 @@
       "label": "CPOM retention",
       "type": "field",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -74,10 +75,23 @@
     "planform complexity from imagery as supporting context."
   ],
   "tags": [
-    "Carbon processing",
     "Physicochemistry",
-    "physicochemistry",
-    "sfari",
+    "Carbon processing",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      119
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

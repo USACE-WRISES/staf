@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-tree-density-detailed",
-  "metricId": "carbon-processing-tree-density-detailed",
+  "metricId": "carbon-processing-tree-density",
   "tier": "detailed",
   "name": "Tree Density reference curve",
   "axes": {
@@ -17,6 +17,43 @@
       "units": "",
       "indexRange": false,
       "layers": [
+        {
+          "id": "curve-carbon-processing-tree-density-detailed-michigan-sqt",
+          "name": "Michigan SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 95,
+              "y": 1,
+              "description": "Field 95, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 228,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "95"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.5",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
         {
           "id": "curve-carbon-processing-tree-density-detailed-south-carolina-sqt",
           "name": "South Carolina SQT",
@@ -34,47 +71,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 238,
-            "sourceRows": [
-              238
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 228,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "",
-              "135",
-              ""
+              "135"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.5",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-carbon-processing-tree-density-detailed-south-carolina-sqt"
+      "activeLayerId": "curve-carbon-processing-tree-density-detailed-michigan-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "South Carolina SQT",
-    "sourceCitations": [
-      "South Carolina SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      238
-    ]
-  }
+  ]
 }

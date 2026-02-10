@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-water-and-soil-quality-do-detailed",
-  "metricId": "water-and-soil-quality-do-detailed",
+  "metricId": "water-and-soil-quality-do",
   "tier": "detailed",
   "name": "DO reference curve",
   "axes": {
@@ -28,8 +28,8 @@
             },
             {
               "x": 6.3,
-              "y": 0.4,
-              "description": "Field 6.3, Index 0.4"
+              "y": 0.3,
+              "description": "Field 6.3, Index 0.3"
             },
             {
               "x": 7.7,
@@ -44,31 +44,23 @@
           ],
           "sourceMetadata": {
             "stratification": "2A",
-            "sourceRow": 287,
-            "sourceRows": [
-              287
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 251,
             "fieldValues": [
               "5.25",
               "",
               "6.3",
               "",
               "7.7",
-              "8.75",
-              ""
+              "8.75"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -83,8 +75,8 @@
             },
             {
               "x": 0.9,
-              "y": 0.4,
-              "description": "Field 0.9, Index 0.4"
+              "y": 0.3,
+              "description": "Field 0.9, Index 0.3"
             },
             {
               "x": 1.1,
@@ -99,48 +91,28 @@
           ],
           "sourceMetadata": {
             "stratification": "2B/2Bd",
-            "sourceRow": 288,
-            "sourceRows": [
-              288
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 251,
             "fieldValues": [
               "0.75",
               "",
               "0.9",
               "",
               "1.1",
-              "1.25",
-              ""
+              "1.25"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-water-and-soil-quality-do-detailed-minnesota-sqt-2a"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Minnesota SQT",
-    "sourceCitations": [
-      "Minnesota SQT"
-    ],
-    "mappedFunction": "Water & soil quality",
-    "sourceRows": [
-      287,
-      288
-    ]
-  }
+  ]
 }

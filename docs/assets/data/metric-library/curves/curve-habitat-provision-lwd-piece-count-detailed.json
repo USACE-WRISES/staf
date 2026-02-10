@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-lwd-piece-count-detailed",
+  "metricId": "habitat-provision-lwd-piece-count",
+  "tier": "detailed",
+  "name": "LWD Piece Count reference curve",
+  "axes": {
+    "xLabel": "LWD Piece Count",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-lwd-piece-count-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-lwd-piece-count-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 16,
+              "y": 0.7,
+              "description": "Field 16, Index 0.7"
+            },
+            {
+              "x": 28,
+              "y": 1,
+              "description": "Field 28, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 264,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "16",
+              "28"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-lwd-piece-count-detailed-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 13,
+              "y": 0.7,
+              "description": "Field 13, Index 0.7"
+            },
+            {
+              "x": 28,
+              "y": 1,
+              "description": "Field 28, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 264,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "13",
+              "28"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-lwd-piece-count-detailed-south-carolina-sqt"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-substrate-embeddedness",
+  "name": "Substrate Embeddedness",
+  "shortName": "Substrate Embeddedness",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Percent embeddedness of gravel/cobble (lower is better).",
+  "methodContextMarkdown": "Field",
+  "howToMeasureMarkdown": "Estimate embeddedness using standard visual classes or grid/photo method; compute reach mean.",
+  "inputs": [
+    {
+      "label": "Substrate Embeddedness",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field embeddedness estimate at riffles/runs; photo documentation."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-hyporheic-connectivity-substrate-embeddedness-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-substrate-embeddedness-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "embeddedness classes (e.g., Sylte & Fischenich style bins)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      188
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

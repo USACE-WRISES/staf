@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "metricId": "light-and-thermal-regime-thermal-refugia",
   "name": "Thermal refugia",
-  "shortName": "",
+  "shortName": "Thermal refugia",
   "discipline": "Physicochemistry",
-  "function": "Light and thermal regime",
+  "function": "Light & thermal regime",
   "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
   "descriptionMarkdown": "Springs or deeper pools temper extremes, unless large daily swings are historically normal (arid ephemeral).",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
@@ -14,7 +14,8 @@
       "label": "Thermal refugia",
       "type": "field",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -73,10 +74,23 @@
     "mapped springs/seeps and baseflow indices (where available)."
   ],
   "tags": [
-    "Light and thermal regime",
     "Physicochemistry",
-    "physicochemistry",
-    "sfari",
+    "Light & thermal regime",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      117
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

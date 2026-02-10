@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "low-flow-and-baseflow-dynamics-baseflow-index-bfi-vs-baseline",
   "name": "Baseflow Index (BFI) vs Baseline",
-  "shortName": "",
+  "shortName": "Baseflow Index (BFI) vs Baseline",
   "discipline": "Hydraulics",
   "function": "Low flow and baseflow dynamics",
   "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: More than 40% difference from baseline, indicating extreme baseflow alteration. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: More than 40% difference from baseline, indicating extreme baseflow alteration. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-low-flow-and-baseflow-dynamics-baseflow-index-bfi-vs-baseline"
+          "curve-low-flow-and-baseflow-dynamics-baseflow-index-bfi-vs-baseline-screening"
         ]
       }
     }
@@ -68,37 +68,19 @@
     "Low flow and baseflow dynamics",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "More than 40% difference from baseline, indicating extreme baseflow alteration.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "About 10-20% difference from baseline. / About 20-40% difference from baseline.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "BFI closely matches the region's baseline.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      18
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-light-and-thermal-regime-summer-average-detailed",
-  "metricId": "light-and-thermal-regime-summer-average-detailed",
+  "metricId": "light-and-thermal-regime-summer-average",
   "tier": "detailed",
   "name": "Summer Average reference curve",
   "axes": {
@@ -33,8 +33,8 @@
             },
             {
               "x": 18,
-              "y": 0.4,
-              "description": "Field 18, Index 0.4"
+              "y": 0.3,
+              "description": "Field 18, Index 0.3"
             },
             {
               "x": 25,
@@ -44,47 +44,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 166,
-            "sourceRows": [
-              166
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 215,
             "fieldValues": [
               "25",
               "",
               "18",
               "",
               "14",
-              "10",
-              ""
+              "10"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-light-and-thermal-regime-summer-average-detailed-minnesota-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Minnesota SQT",
-    "sourceCitations": [
-      "Minnesota SQT"
-    ],
-    "mappedFunction": "Light & thermal regime",
-    "sourceRows": [
-      166
-    ]
-  }
+  ]
 }

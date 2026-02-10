@@ -1,0 +1,306 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-ept-taxa-present-detailed",
+  "metricId": "population-support-ept-taxa-present",
+  "tier": "detailed",
+  "name": "EPT Taxa Present reference curve",
+  "axes": {
+    "xLabel": "EPT Taxa Present",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-ept-taxa-present-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-ept-taxa-present-detailed-north-carolina-sqt-mountains",
+          "name": "North Carolina SQT - Mountains",
+          "points": [
+            {
+              "x": 10,
+              "y": 0,
+              "description": "Field 10, Index 0"
+            },
+            {
+              "x": 19,
+              "y": 0.3,
+              "description": "Field 19, Index 0.3"
+            },
+            {
+              "x": 28,
+              "y": 0.7,
+              "description": "Field 28, Index 0.7"
+            },
+            {
+              "x": 36,
+              "y": 1,
+              "description": "Field 36, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Mountains",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 272,
+            "fieldValues": [
+              "10",
+              "",
+              "19",
+              "",
+              "28",
+              "36"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-ept-taxa-present-detailed-north-carolina-sqt-piedmont",
+          "name": "North Carolina SQT - Piedmont",
+          "points": [
+            {
+              "x": 6,
+              "y": 0,
+              "description": "Field 6, Index 0"
+            },
+            {
+              "x": 14,
+              "y": 0.3,
+              "description": "Field 14, Index 0.3"
+            },
+            {
+              "x": 21,
+              "y": 0.7,
+              "description": "Field 21, Index 0.7"
+            },
+            {
+              "x": 28,
+              "y": 1,
+              "description": "Field 28, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Piedmont",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 272,
+            "fieldValues": [
+              "6",
+              "",
+              "14",
+              "",
+              "21",
+              "28"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-ept-taxa-present-detailed-north-carolina-sqt-coastal-plain",
+          "name": "North Carolina SQT - Coastal Plain",
+          "points": [
+            {
+              "x": 5,
+              "y": 0,
+              "description": "Field 5, Index 0"
+            },
+            {
+              "x": 12,
+              "y": 0.3,
+              "description": "Field 12, Index 0.3"
+            },
+            {
+              "x": 18,
+              "y": 0.7,
+              "description": "Field 18, Index 0.7"
+            },
+            {
+              "x": 24,
+              "y": 1,
+              "description": "Field 24, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Coastal Plain",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 272,
+            "fieldValues": [
+              "5",
+              "",
+              "12",
+              "",
+              "18",
+              "24"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-ept-taxa-present-detailed-south-carolina-sqt-blue-ridge-mountains",
+          "name": "South Carolina SQT - Blue Ridge Mountains",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 19,
+              "y": 0.3,
+              "description": "Field 19, Index 0.3"
+            },
+            {
+              "x": 28,
+              "y": 0.7,
+              "description": "Field 28, Index 0.7"
+            },
+            {
+              "x": 36,
+              "y": 1,
+              "description": "Field 36, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Blue Ridge Mountains",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 272,
+            "fieldValues": [
+              "0",
+              "",
+              "19",
+              "",
+              "28",
+              "36"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-ept-taxa-present-detailed-south-carolina-sqt-piedmont",
+          "name": "South Carolina SQT - Piedmont",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 14,
+              "y": 0.3,
+              "description": "Field 14, Index 0.3"
+            },
+            {
+              "x": 21,
+              "y": 0.7,
+              "description": "Field 21, Index 0.7"
+            },
+            {
+              "x": 28,
+              "y": 1,
+              "description": "Field 28, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Piedmont",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 272,
+            "fieldValues": [
+              "0",
+              "",
+              "14",
+              "",
+              "21",
+              "28"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-ept-taxa-present-detailed-south-carolina-sqt-southeastern-plains-and-middle-atlantic-coastal-pl",
+          "name": "South Carolina SQT - Southeastern Plains and Middle Atlantic Coastal Plain",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 5,
+              "y": 0.3,
+              "description": "Field 5, Index 0.3"
+            },
+            {
+              "x": 10,
+              "y": 0.7,
+              "description": "Field 10, Index 0.7"
+            },
+            {
+              "x": 15,
+              "y": 1,
+              "description": "Field 15, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Southeastern Plains and Middle Atlantic Coastal Plain",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 272,
+            "fieldValues": [
+              "0",
+              "",
+              "5",
+              "",
+              "10",
+              "15"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-ept-taxa-present-detailed-north-carolina-sqt-mountains"
+    }
+  ]
+}

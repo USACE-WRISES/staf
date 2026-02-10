@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "catchment-hydrology-impoundments",
   "name": "Impoundments",
+  "shortName": "Impoundments",
   "discipline": "Hydrology",
-  "function": "Catchment Hydrology",
+  "function": "Catchment hydrology",
   "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
   "descriptionMarkdown": "Flow is near-natural, with no major dams or only negligible small ones, unless larger dams are historically normal.",
   "methodContextMarkdown": "Context: W\n\nMethod: D",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Impoundments",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "d",
+      "source": "W",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "hydrology"
+    "Hydrology",
+    "Catchment hydrology",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      66
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

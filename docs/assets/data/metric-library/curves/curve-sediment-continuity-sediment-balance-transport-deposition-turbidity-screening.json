@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-sediment-continuity-sediment-balance-transport-deposition-turbidity-screening",
+  "metricId": "sediment-continuity-sediment-balance-transport-deposition-turbidity",
+  "tier": "screening",
+  "name": "Sediment Balance (transport/deposition/turbidity) screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-sediment-continuity-sediment-balance-transport-deposition-turbidity-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-sediment-balance-transport-deposition-turbidity-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Low chronic turbidity and minimal fines, or regionally normal conditions. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Minor silt layers or partial turbidity. / High turbidity or moderate silt coverage. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Severe siltation or turbidity that smothers substrate. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-sediment-balance-transport-deposition-turbidity-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

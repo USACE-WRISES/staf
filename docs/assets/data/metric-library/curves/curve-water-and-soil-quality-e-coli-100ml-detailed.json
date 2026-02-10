@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-water-and-soil-quality-e-coli-100ml-detailed",
-  "metricId": "water-and-soil-quality-e-coli-100ml-detailed",
+  "metricId": "water-and-soil-quality-e-coli-100ml",
   "tier": "detailed",
   "name": "E. Coli/100mL reference curve",
   "axes": {
@@ -33,8 +33,8 @@
             },
             {
               "x": 1000,
-              "y": 0.4,
-              "description": "Field 1000, Index 0.4"
+              "y": 0.3,
+              "description": "Field 1000, Index 0.3"
             },
             {
               "x": 4500,
@@ -44,47 +44,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 284,
-            "sourceRows": [
-              284
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 249,
             "fieldValues": [
               "4500",
               "",
               "1000",
               "",
               "300",
-              "10",
-              ""
+              "10"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-water-and-soil-quality-e-coli-100ml-detailed-michigan-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Michigan SQT",
-    "sourceCitations": [
-      "Michigan SQT"
-    ],
-    "mappedFunction": "Water & soil quality",
-    "sourceRows": [
-      284
-    ]
-  }
+  ]
 }

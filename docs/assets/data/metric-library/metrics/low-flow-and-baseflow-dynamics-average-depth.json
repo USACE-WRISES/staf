@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "metricId": "low-flow-and-baseflow-dynamics-average-depth",
+  "name": "Average Depth",
+  "shortName": "Average Depth",
+  "discipline": "Hydraulics",
+  "function": "Low flow and baseflow dynamics",
+  "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+  "descriptionMarkdown": "Typical water depth at baseflow conditions used to infer low-flow habitat availability.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Measure water depth at multiple transects during representative low flow and compute average; apply stratified scoring breakpoints.",
+  "inputs": [
+    {
+      "label": "Average Depth",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field habitat transects or cross sections (depth measurements) stratified by reach type."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-low-flow-and-baseflow-dynamics-average-depth-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-low-flow-and-baseflow-dynamics-average-depth-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "Field habitat survey protocols",
+    "local flow context where available",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Hydraulics",
+    "Low flow and baseflow dynamics",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      176
+    ],
+    "sourceCitations": [
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

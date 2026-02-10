@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-watershed-connectivity-longest-continuous-dry-gap-m-detailed",
-  "metricId": "watershed-connectivity-longest-continuous-dry-gap-m-detailed",
+  "metricId": "watershed-connectivity-longest-continuous-dry-gap-m",
   "tier": "detailed",
   "name": "Longest Continuous Dry Gap (m) reference curve",
   "axes": {
     "xLabel": "Longest Continuous Dry Gap (m)",
     "yLabel": "Index score",
-    "xUnit": "m",
     "yUnit": "index"
   },
   "curves": [
@@ -15,11 +14,11 @@
       "curveId": "curve-watershed-connectivity-longest-continuous-dry-gap-m-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "m",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-watershed-connectivity-longest-continuous-dry-gap-m-detailed-proposed-derived-from-sfari-r",
+          "id": "curve-watershed-connectivity-longest-continuous-dry-gap-m-detailed-proposed-derived-from-sfari-rapid-curves-evaluate-dur",
           "name": "Proposed (derived from SFARI rapid curves) - Evaluate during biologically critical period (e.g., late summer).",
           "points": [
             {
@@ -34,8 +33,8 @@
             },
             {
               "x": 250,
-              "y": 0.4,
-              "description": "Field 250, Index 0.4"
+              "y": 0.3,
+              "description": "Field 250, Index 0.3"
             },
             {
               "x": 600,
@@ -50,47 +49,26 @@
           ],
           "sourceMetadata": {
             "stratification": "Evaluate during biologically critical period (e.g., late summer).",
-            "sourceRow": 443,
-            "sourceRows": [
-              443
-            ],
             "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-            "sourceCitations": [
-              "Proposed (derived from SFARI rapid curves)"
-            ],
+            "sourceRow": 286,
             "fieldValues": [
               "20",
               "80",
               "250",
               "600",
-              "1000",
-              "",
-              ""
+              "1000"
             ],
             "indexValues": [
               "1",
               "0.7",
-              "0.4",
+              "0.3",
               "0.1",
-              "0",
-              "",
-              ""
+              "0"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-watershed-connectivity-longest-continuous-dry-gap-m-detailed-proposed-derived-from-sfari-r"
+      "activeLayerId": "curve-watershed-connectivity-longest-continuous-dry-gap-m-detailed-proposed-derived-from-sfari-rapid-curves-evaluate-dur"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-    "sourceCitations": [
-      "Proposed (derived from SFARI rapid curves)"
-    ],
-    "mappedFunction": "Watershed connectivity",
-    "sourceRows": [
-      443
-    ]
-  }
+  ]
 }

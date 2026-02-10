@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-max-continuous-barrier-length-m",
+  "name": "Max Continuous Barrier Length (m)",
+  "shortName": "Max Continuous Barrier Length (m)",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "Length of the longest uninterrupted levee/berm/wall segment along either bank (lower is better).",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Dissolve mapped barriers by continuity; compute maximum segment length.",
+  "inputs": [
+    {
+      "label": "Max Continuous Barrier Length (m)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Barrier mapping (LiDAR/imagery) + field verification of gaps."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-max-continuous-barrier-length-m-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NLD",
+    "FEMA floodplain",
+    "LiDAR hillshade",
+    "local infrastructure GIS."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      288
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

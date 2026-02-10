@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Continuous native trees, shrubs, and groundcover. Criteria: Wide, intact native corridor with minimal invasives.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Mostly vegetated corridor with some gaps. Criteria: Moderate width and structure. Some invasive patches present.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Thin or patchy vegetation along banks. Criteria: Narrow corridor. Fragmented native cover with common invasives.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Little native vegetation. Banks mostly lawn or invasives. Criteria: Corridor very narrow or absent. Native plants largely missing.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-community-dynamics-riparian-buffer-width-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-community-dynamics-riparian-buffer-width-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-community-dynamics-riparian-buffer-width-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-community-dynamics-riparian-buffer-width-rapid",
+  "metricId": "community-dynamics-riparian-buffer-width",
   "tier": "rapid",
+  "name": "Riparian buffer width rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "community-dynamics-riparian-buffer-width"
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-riparian-buffer-width-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-riparian-buffer-width-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Continuous native trees, shrubs, and groundcover. Criteria: Wide, intact native corridor with minimal invasives."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Mostly vegetated corridor with some gaps. Criteria: Moderate width and structure. Some invasive patches present."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Thin or patchy vegetation along banks. Criteria: Narrow corridor. Fragmented native cover with common invasives."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Little native vegetation. Banks mostly lawn or invasives. Criteria: Corridor very narrow or absent. Native plants largely missing."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-riparian-buffer-width-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

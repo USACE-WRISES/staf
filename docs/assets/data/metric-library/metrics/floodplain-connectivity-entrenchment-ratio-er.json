@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+  "name": "Entrenchment Ratio (ER)",
+  "shortName": "Entrenchment Ratio (ER)",
+  "discipline": "Hydraulics",
+  "function": "Floodplain connectivity",
+  "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
+  "descriptionMarkdown": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+  "methodContextMarkdown": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+  "howToMeasureMarkdown": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+  "inputs": [
+    {
+      "label": "Entrenchment Ratio (ER)",
+      "type": "field (survey) or desktop (lidar cross sections)",
+      "source": "Channel/Floodplain",
+      "required": true,
+      "helpMarkdown": "Field cross-section measurements and/or LiDAR/DEM-derived flood-prone width and bankfull indicators."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-floodplain-connectivity-entrenchment-ratio-er-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-floodplain-connectivity-entrenchment-ratio-er-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "NRCS National Engineering Handbook",
+    "Rosgen stream classification references as applicable",
+    "USGS 3DEP LiDAR/DEM where available",
+    "Colorado SQT",
+    "Michigan SQT",
+    "Minnesota SQT",
+    "North Carolina SQT",
+    "South Carolina SQT",
+    "Wisconsin SQT",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Hydraulics",
+    "Floodplain connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      186
+    ],
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

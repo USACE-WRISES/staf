@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "metricId": "bed-composition-and-large-wood-historic-tie-drives",
   "name": "Historic Tie Drives",
-  "shortName": "",
+  "shortName": "Historic Tie Drives",
   "discipline": "Geomorphology",
   "function": "Bed composition and large wood",
-  "functionStatement": "Streambed material and bedforms provide habitat and influence stability; appropriate substrate sizes and heterogeneity support aquatic communities.",
+  "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
   "descriptionMarkdown": "Screening metric used to evaluate Bed composition and bedform dynamics based on the definition and bin thresholds provided for this metric.",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field screening",
   "howToMeasureMarkdown": "Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Occurred and effects persist. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Occurred and effects persist. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-bed-composition-and-large-wood-historic-tie-drives"
+          "curve-bed-composition-and-large-wood-historic-tie-drives-screening"
         ]
       }
     }
@@ -67,37 +67,19 @@
     "Bed composition and large wood",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Wyoming SQT",
-    "scsDefaultOn": false,
-    "metricDataSource": "State/agency datasets, GIS/imagery, and field observations (as applicable).",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Occurred and effects persist.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "May have occurred but effects ameliorated.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Never had them, or no remaining evidence.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      36
+    ],
+    "sourceCitations": [
+      "Wyoming SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

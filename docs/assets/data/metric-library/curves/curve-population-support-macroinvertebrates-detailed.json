@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-macroinvertebrates-detailed",
+  "metricId": "population-support-macroinvertebrates",
+  "tier": "detailed",
+  "name": "Macroinvertebrates reference curve",
+  "axes": {
+    "xLabel": "Macroinvertebrates",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-macroinvertebrates-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-macroinvertebrates-detailed-michigan-sqt-p51-wadeable",
+          "name": "Michigan SQT - P51 Wadeable",
+          "points": [
+            {
+              "x": -9,
+              "y": 0,
+              "description": "Field -9, Index 0"
+            },
+            {
+              "x": -4,
+              "y": 0.3,
+              "description": "Field -4, Index 0.3"
+            },
+            {
+              "x": 4,
+              "y": 0.69,
+              "description": "Field 4, Index 0.69"
+            },
+            {
+              "x": 9,
+              "y": 1,
+              "description": "Field 9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "P51 Wadeable",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 268,
+            "fieldValues": [
+              "-9",
+              "",
+              "-4",
+              "4",
+              "",
+              "9"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-macroinvertebrates-detailed-michigan-sqt-p22-non-wadeable",
+          "name": "Michigan SQT - P22 Non-Wadeable",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 25,
+              "y": 0.3,
+              "description": "Field 25, Index 0.3"
+            },
+            {
+              "x": 75,
+              "y": 0.69,
+              "description": "Field 75, Index 0.69"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "P22 Non-Wadeable",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 268,
+            "fieldValues": [
+              "0",
+              "",
+              "25",
+              "75",
+              "",
+              "100"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-macroinvertebrates-detailed-michigan-sqt-p51-wadeable"
+    }
+  ]
+}

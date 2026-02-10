@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "nutrient-cycling-denitrification-potential-floodplain-wetness",
   "name": "Denitrification Potential (floodplain wetness)",
-  "shortName": "",
+  "shortName": "Denitrification Potential (floodplain wetness)",
   "discipline": "Physicochemistry",
   "function": "Nutrient cycling",
   "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: No wetlands or heavily drained soils with low denitrification potential. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: No wetlands or heavily drained soils with low denitrification potential. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-nutrient-cycling-denitrification-potential-floodplain-wetness"
+          "curve-nutrient-cycling-denitrification-potential-floodplain-wetness-screening"
         ]
       }
     }
@@ -68,37 +68,19 @@
     "Nutrient cycling",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "No wetlands or heavily drained soils with low denitrification potential.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Some wet zones but partially disconnected. / Limited wetland area and moderate export risk.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Strong potential with connected wet areas and soils.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      44
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

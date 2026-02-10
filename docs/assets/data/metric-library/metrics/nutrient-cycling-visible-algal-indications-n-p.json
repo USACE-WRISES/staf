@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "nutrient-cycling-visible-algal-indications-n-p",
   "name": "Visible Algal Indications (N/P)",
+  "shortName": "Visible Algal Indications (N/P)",
   "discipline": "Physicochemistry",
-  "function": "Nutrient Cycling",
+  "function": "Nutrient cycling",
   "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
   "descriptionMarkdown": "Algae suggests no excessive nutrients vs reference, unless historically moderate (open canopy).",
   "methodContextMarkdown": "Context: C\n\nMethod: F",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Visible Algal Indications (N/P)",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "f",
+      "source": "C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "physicochemistry"
+    "Physicochemistry",
+    "Nutrient cycling",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      127
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

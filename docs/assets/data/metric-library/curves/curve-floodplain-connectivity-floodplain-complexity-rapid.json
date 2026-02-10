@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Multiple active side channels, backwaters, and oxbows exchange flow during moderate floods. Field photos confirm inundation paths. Criteria: Several off-channel features connected at ~1-2 year stage; pattern resembles historical complexity.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Some side channels remain but several are truncated by berms or levees. Connectivity occurs only in parts of the reach. Criteria: Partial complexity. Some features are disconnected at moderate floods.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Only a small backwater remains. Most historic features are isolated or filled. Criteria: Most side channels lost or isolated. Minimal diversity of floodplain features.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Both banks are leveed or the reach is straightened and dredged. No off-channel areas remain despite historical evidence. Criteria: Drastically simplified or leveed. No functional off-channel areas.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-floodplain-connectivity-floodplain-complexity-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-floodplain-connectivity-floodplain-complexity-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-floodplain-connectivity-floodplain-complexity-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-floodplain-connectivity-floodplain-complexity-rapid",
+  "metricId": "floodplain-connectivity-floodplain-complexity",
   "tier": "rapid",
+  "name": "Floodplain complexity rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "floodplain-connectivity-floodplain-complexity"
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-floodplain-complexity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-floodplain-complexity-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Multiple active side channels, backwaters, and oxbows exchange flow during moderate floods. Field photos confirm inundation paths. Criteria: Several off-channel features connected at ~1-2 year stage; pattern resembles historical complexity."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Some side channels remain but several are truncated by berms or levees. Connectivity occurs only in parts of the reach. Criteria: Partial complexity. Some features are disconnected at moderate floods."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Only a small backwater remains. Most historic features are isolated or filled. Criteria: Most side channels lost or isolated. Minimal diversity of floodplain features."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Both banks are leveed or the reach is straightened and dredged. No off-channel areas remain despite historical evidence. Criteria: Drastically simplified or leveed. No functional off-channel areas."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-floodplain-complexity-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

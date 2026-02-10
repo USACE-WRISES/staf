@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "surface-water-storage-percent-wetlands-in-watershed",
   "name": "Percent Wetlands in Watershed",
-  "shortName": "",
+  "shortName": "Percent Wetlands in Watershed",
   "discipline": "Hydrology",
   "function": "Surface water storage",
   "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: <1% wetland coverage, or heavily drained wetlands. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: <1% wetland coverage, or heavily drained wetlands. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-surface-water-storage-percent-wetlands-in-watershed"
+          "curve-surface-water-storage-percent-wetlands-in-watershed-screening"
         ]
       }
     }
@@ -70,37 +70,19 @@
     "Surface water storage",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "Watershed",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "<1% wetland coverage, or heavily drained wetlands.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "1-5% wetland coverage.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": ">5% wetland coverage, or consistent with historical norm.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      9
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

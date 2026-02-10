@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-mwat",
+  "name": "MWAT",
+  "shortName": "MWAT",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+  "inputs": [
+    {
+      "label": "MWAT",
+      "type": "field (logger) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Continuous temperature logger, spot measurements, and/or monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-light-and-thermal-regime-mwat-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-mwat-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "USGS NWIS temperature where available",
+    "regional temperature products where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      213
+    ],
+    "sourceCitations": [
+      "Colorado SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

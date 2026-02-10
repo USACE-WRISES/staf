@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "metricId": "water-and-soil-quality-contaminants-and-soil-pollution-indicators",
   "name": "Contaminants & Soil Pollution Indicators",
-  "shortName": "",
+  "shortName": "Contaminants & Soil Pollution Indicators",
   "discipline": "Physicochemistry",
   "function": "Water & soil quality",
   "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
-  "descriptionMarkdown": "Screening metric used to evaluate Water & soil quality based on the definition and bin thresholds provided for this metric.\nNo chemical/fecal contamination signs; soils appear natural, no suspicious odors/staining.",
+  "descriptionMarkdown": "\"Screening metric used to evaluate Water & soil quality based on the definition and bin thresholds provided for this metric. No chemical/fecal contamination signs; soils appear natural, no suspicious odors/staining.\"",
   "methodContextMarkdown": "Context: Watershed and Channel; Floodplain\n\nMethod: Desktop (listings/monitoring) and/or Field screening; Field",
-  "howToMeasureMarkdown": "Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.\nInspect soils for odor or staining and review contaminated-site registries where relevant.",
+  "howToMeasureMarkdown": "\"Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds. Inspect soils for odor or staining and review contaminated-site registries where relevant.\"",
   "inputs": [
     {
       "label": "Contaminants & Soil Pollution Indicators",
       "type": "desktop (listings/monitoring) and/or field screening; field",
       "source": "Watershed and Channel; Floodplain",
       "required": true,
-      "helpMarkdown": "In-situ sampling or ADEC database\nFloodplain"
+      "helpMarkdown": "\"In-situ sampling or ADEC database Floodplain\""
     }
   ],
   "profiles": [
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Highly contaminated soils with strong odor or toxicity indicators. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Highly contaminated soils with strong odor or toxicity indicators. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-water-and-soil-quality-contaminants-and-soil-pollution-indicators"
+          "curve-water-and-soil-quality-contaminants-and-soil-pollution-indicators-screening"
         ]
       }
     }
@@ -69,37 +69,20 @@
     "Water & soil quality",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "In-situ sampling or ADEC database\nFloodplain",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Highly contaminated soils with strong odor or toxicity indicators.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Minor dumping or moderate manure presence. / Known moderate contamination risk.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Natural soils with no contamination indicators.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      48
+    ],
+    "sourceCitations": [
+      "Alaska SQT",
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-floodplain-inundated-area-at-q2",
+  "name": "Floodplain Inundated Area at Q2",
+  "shortName": "Floodplain Inundated Area at Q2",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Percent of floodplain area inundated at ~2-year event (higher is better).",
+  "methodContextMarkdown": "Desktop model",
+  "howToMeasureMarkdown": "Run screening inundation at Q2; compute inundated floodplain area � total floodplain area.",
+  "inputs": [
+    {
+      "label": "Floodplain Inundated Area at Q2",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "LiDAR/DEM + simple 2D inundation screening (or HEC-RAS 2D where available)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-floodplain-inundated-area-at-q2-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-floodplain-inundated-area-at-q2-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "LiDAR/DEM inundation mapping methods."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      165
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

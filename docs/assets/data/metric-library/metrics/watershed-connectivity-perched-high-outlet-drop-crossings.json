@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-perched-high-outlet-drop-crossings",
+  "name": "Perched/High Outlet Drop Crossings",
+  "shortName": "Perched/High Outlet Drop Crossings",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "Percent of crossings with outlet drop >0.2 m (or locally relevant threshold). Lower is better.",
+  "methodContextMarkdown": "Field",
+  "howToMeasureMarkdown": "Measure outlet drop at each crossing outlet; compute percent exceeding threshold.",
+  "inputs": [
+    {
+      "label": "Perched/High Outlet Drop Crossings",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field survey of outlet drops; optional LiDAR/imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-perched-high-outlet-drop-crossings-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-perched-high-outlet-drop-crossings-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "culvert passability assessment guidance."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      284
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-large-wood-median-particle-size-detailed",
+  "metricId": "bed-composition-and-large-wood-median-particle-size",
+  "tier": "detailed",
+  "name": "Median Particle Size reference curve",
+  "axes": {
+    "xLabel": "Median Particle Size",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-median-particle-size-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-median-particle-size-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 10,
+              "y": 0,
+              "description": "Field 10, Index 0"
+            },
+            {
+              "x": 34,
+              "y": 0.7,
+              "description": "Field 34, Index 0.7"
+            },
+            {
+              "x": 70,
+              "y": 1,
+              "description": "Field 70, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 211,
+            "fieldValues": [
+              "10",
+              "",
+              "",
+              "",
+              "34",
+              "70"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-median-particle-size-detailed-wisconsin-sqt"
+    }
+  ]
+}

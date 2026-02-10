@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "habitat-provision-off-channel-habitat-availability",
   "name": "Off-channel Habitat Availability",
-  "shortName": "",
+  "shortName": "Off-channel Habitat Availability",
   "discipline": "Biology",
   "function": "Habitat provision",
   "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: No side or backwaters remain despite suitable valley setting. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: No side or backwaters remain despite suitable valley setting. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-habitat-provision-off-channel-habitat-availability"
+          "curve-habitat-provision-off-channel-habitat-availability-screening"
         ]
       }
     }
@@ -70,37 +70,19 @@
     "Habitat provision",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "No side or backwaters remain despite suitable valley setting.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Some partial connection. / Rare or only episodic off-channel use.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Well connected off-channel areas provide refuge or spawning habitat.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      54
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

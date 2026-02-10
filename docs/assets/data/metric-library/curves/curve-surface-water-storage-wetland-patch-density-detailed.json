@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-wetland-patch-density-detailed",
+  "metricId": "surface-water-storage-wetland-patch-density",
+  "tier": "detailed",
+  "name": "Wetland Patch Density reference curve",
+  "axes": {
+    "xLabel": "Wetland Patch Density",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-wetland-patch-density-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-wetland-patch-density-detailed-proposed-derived-from-sfari-rapid-curves-use-physiographic-re",
+          "name": "Proposed (derived from SFARI rapid curves) - Use physiographic region; separate large complexes vs small patches if needed.",
+          "points": [
+            {
+              "x": 0.1,
+              "y": 0,
+              "description": "Field 0.1, Index 0"
+            },
+            {
+              "x": 0.4,
+              "y": 0.3,
+              "description": "Field 0.4, Index 0.3"
+            },
+            {
+              "x": 0.8,
+              "y": 0.7,
+              "description": "Field 0.8, Index 0.7"
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.6,
+              "y": 0.3,
+              "description": "Field 1.6, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Use physiographic region; separate large complexes vs small patches if needed.",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 171,
+            "fieldValues": [
+              "0.1",
+              "0.4",
+              "0.8",
+              "1",
+              "1.6"
+            ],
+            "indexValues": [
+              "0",
+              "0.3",
+              "0.7",
+              "1",
+              "0.3"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-wetland-patch-density-detailed-proposed-derived-from-sfari-rapid-curves-use-physiographic-re"
+    }
+  ]
+}

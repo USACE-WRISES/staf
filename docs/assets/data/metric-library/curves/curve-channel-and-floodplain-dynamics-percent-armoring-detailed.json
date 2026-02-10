@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-channel-and-floodplain-dynamics-percent-armoring-detailed",
-  "metricId": "channel-and-floodplain-dynamics-percent-armoring-detailed",
+  "metricId": "channel-and-floodplain-dynamics-percent-armoring",
   "tier": "detailed",
   "name": "Percent Armoring reference curve",
   "axes": {
@@ -34,31 +34,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 101,
-            "sourceRows": [
-              101
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 201,
             "fieldValues": [
               "30",
               "",
               "",
               "",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -79,49 +71,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 111,
-            "sourceRows": [
-              111
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 201,
             "fieldValues": [
               "50",
               "",
               "",
               "",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-channel-and-floodplain-dynamics-percent-armoring-detailed-colorado-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Colorado SQT; Minnesota SQT",
-    "sourceCitations": [
-      "Colorado SQT",
-      "Minnesota SQT"
-    ],
-    "mappedFunction": "Channel and floodplain dynamics",
-    "sourceRows": [
-      101,
-      111
-    ]
-  }
+  ]
 }

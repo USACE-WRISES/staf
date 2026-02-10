@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Most residual pools connected with continuous wetted thalweg. Criteria: >75% of pools connected; few or no dry gaps.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Some dry gaps but many pools still linked. Criteria: About 50-75% of pools connected with short dry gaps.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Several dry gaps; many pools isolated. Criteria: About 25-50% connected; riffles mostly dry.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Long dry segments; pools isolated. Criteria: <25% connected; no continuous surface flow.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-low-flow-and-baseflow-dynamics-longitudinal-connectivity-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-low-flow-and-baseflow-dynamics-longitudinal-connectivity-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-longitudinal-connectivity-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-low-flow-and-baseflow-dynamics-longitudinal-connectivity-rapid",
+  "metricId": "low-flow-and-baseflow-dynamics-longitudinal-connectivity",
   "tier": "rapid",
+  "name": "Longitudinal connectivity rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "low-flow-and-baseflow-dynamics-longitudinal-connectivity"
+  "curves": [
+    {
+      "curveId": "curve-low-flow-and-baseflow-dynamics-longitudinal-connectivity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-longitudinal-connectivity-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Most residual pools connected with continuous wetted thalweg. Criteria: >75% of pools connected; few or no dry gaps."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Some dry gaps but many pools still linked. Criteria: About 50-75% of pools connected with short dry gaps."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Several dry gaps; many pools isolated. Criteria: About 25-50% connected; riffles mostly dry."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Long dry segments; pools isolated. Criteria: <25% connected; no continuous surface flow."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-longitudinal-connectivity-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-lwd-index",
+  "name": "LWD Index",
+  "shortName": "LWD Index",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+  "inputs": [
+    {
+      "label": "LWD Index",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-habitat-provision-lwd-index-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-lwd-index-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "Large wood field methods",
+    "high-resolution imagery for jam identification where feasible",
+    "Michigan SQT",
+    "Minnesota SQT",
+    "North Carolina SQT",
+    "South Carolina SQT",
+    "Wisconsin SQT",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      261
+    ],
+    "sourceCitations": [
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

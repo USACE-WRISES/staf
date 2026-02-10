@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-leaf-litter-processing-rate-detailed",
-  "metricId": "carbon-processing-leaf-litter-processing-rate-detailed",
+  "metricId": "carbon-processing-leaf-litter-processing-rate",
   "tier": "detailed",
   "name": "Leaf Litter Processing Rate reference curve",
   "axes": {
@@ -23,8 +23,8 @@
           "points": [
             {
               "x": 0.5,
-              "y": 0.4,
-              "description": "Field 0.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 0.5, Index 0.3"
             },
             {
               "x": 0.75,
@@ -39,47 +39,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 208,
-            "sourceRows": [
-              208
-            ],
             "sourceCitation": "North Carolina SQT",
-            "sourceCitations": [
-              "North Carolina SQT"
-            ],
+            "sourceRow": 234,
             "fieldValues": [
               "",
               "",
               "0.5",
               "",
               "0.75",
-              "1.33",
-              ""
+              "1.33"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-carbon-processing-leaf-litter-processing-rate-detailed-north-carolina-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "North Carolina SQT",
-    "sourceCitations": [
-      "North Carolina SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      208
-    ]
-  }
+  ]
 }

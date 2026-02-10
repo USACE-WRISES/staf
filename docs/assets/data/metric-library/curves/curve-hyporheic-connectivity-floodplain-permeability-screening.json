@@ -1,50 +1,50 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-hyporheic-connectivity-floodplain-permeability-screening",
-  "metricId": "hyporheic-connectivity-floodplain-permeability-screening",
+  "metricId": "hyporheic-connectivity-floodplain-permeability",
   "tier": "screening",
-  "name": "Screening default curve",
+  "name": "Floodplain Permeability screening curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
   "curves": [
     {
-      "indexRange": true,
+      "curveId": "curve-hyporheic-connectivity-floodplain-permeability-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
       "layers": [
         {
-          "name": "Screening",
+          "id": "curve-hyporheic-connectivity-floodplain-permeability-screening-erdc",
+          "name": "ERDC",
           "points": [
             {
               "x": "Good",
-              "description": "Good: Permeable floodplain soils that support subsurface flow. (Suggested index range 0.70-1.0)",
-              "yMax": 1,
+              "y": 0.85,
               "yMin": 0.7,
-              "y": 0.85
+              "yMax": 1,
+              "description": "Good: Permeable floodplain soils that support subsurface flow. (Suggested index range 0.70-1.0)"
             },
             {
               "x": "Fair",
-              "description": "Fair: Partially permeable soils or some clogging. / Mostly fine fill or bedrock that limits infiltration. (Suggested index range 0.40-0.69)",
-              "yMax": 0.69,
+              "y": 0.545,
               "yMin": 0.4,
-              "y": 0.54
+              "yMax": 0.69,
+              "description": "Fair: Partially permeable soils or some clogging. / Mostly fine fill or bedrock that limits infiltration. (Suggested index range 0.40-0.69)"
             },
             {
               "x": "Poor",
-              "description": "Poor: Heavily compacted or lined soils with minimal subsurface exchange. (Suggested index range 0.0-0.29)",
-              "yMax": 0.29,
+              "y": 0.195,
               "yMin": 0,
-              "y": 0.14
+              "yMax": 0.39,
+              "description": "Poor: Heavily compacted or lined soils with minimal subsurface exchange. (Suggested index range 0.0-0.39)"
             }
-          ],
-          "id": "curve-hyporheic-connectivity-floodplain-permeability-screening-layer"
+          ]
         }
       ],
-      "xType": "categorical",
-      "curveId": "curve-hyporheic-connectivity-floodplain-permeability-screening-default",
-      "name": "Screening",
-      "units": "",
-      "activeLayerId": "curve-hyporheic-connectivity-floodplain-permeability-screening-layer"
+      "activeLayerId": "curve-hyporheic-connectivity-floodplain-permeability-screening-erdc",
+      "indexRange": true
     }
   ]
 }

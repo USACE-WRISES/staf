@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-wetland-patch-density",
+  "name": "Wetland Patch Density",
+  "shortName": "Wetland Patch Density",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Observed wetland patch density divided by expected/reference (O/E). Values near 1 are best.",
+  "methodContextMarkdown": "Desktop GIS",
+  "howToMeasureMarkdown": "Count wetland polygons within floodplain; compute patches per km� (or per km valley); divide by expected/reference.",
+  "inputs": [
+    {
+      "label": "Wetland Patch Density",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "NWI polygons within floodplain + reference reach/region comparison."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-wetland-patch-density-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-wetland-patch-density-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "NWI",
+    "regional wetland reference summaries where available."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      171
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

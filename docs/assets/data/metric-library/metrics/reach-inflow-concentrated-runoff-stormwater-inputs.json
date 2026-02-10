@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "metricId": "reach-inflow-concentrated-runoff-stormwater-inputs",
   "name": "Concentrated Runoff / Stormwater Inputs",
-  "shortName": "",
+  "shortName": "Concentrated Runoff / Stormwater Inputs",
   "discipline": "Hydrology",
   "function": "Reach inflow",
-  "functionStatement": "Quantity and quality of inflow (tributaries, ditches, and pipes) do not generate harmful peaks or pollution pulses and instead support diverse habitat conditions and native species.\nQuantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
-  "descriptionMarkdown": "Screening metric used to evaluate Reach inflow based on the definition and bin thresholds provided for this metric.\nRunoff is minimal or well-managed, causing no significant direct inflows or pollutant pulses.",
+  "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+  "descriptionMarkdown": "\"Screening metric used to evaluate Reach inflow based on the definition and bin thresholds provided for this metric. Runoff is minimal or well-managed, causing no significant direct inflows or pollutant pulses.\"",
   "methodContextMarkdown": "Context: Watershed and Channel; Channel\n\nMethod: Desktop (permit/layer review) with field verification where feasible; Field",
-  "howToMeasureMarkdown": "Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.\nCount road or highway drainage outfalls per 100 m and note erosion or sediment plumes. Corroborate with available transportation layers if present.",
+  "howToMeasureMarkdown": "\"Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds. Count road or highway drainage outfalls per 100 m and note erosion or sediment plumes. Corroborate with available transportation layers if present.\"",
   "inputs": [
     {
       "label": "Concentrated Runoff / Stormwater Inputs",
       "type": "desktop (permit/layer review) with field verification where feasible; field",
       "source": "Watershed and Channel; Channel",
       "required": true,
-      "helpMarkdown": "State/agency datasets, GIS/imagery, and field observations (as applicable)."
+      "helpMarkdown": "\"State/agency datasets, GIS/imagery, and field observations (as applicable). \""
     }
   ],
   "profiles": [
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: More than 5 outfalls per 100 m, or major highway drains with concentrated discharge. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: More than 5 outfalls per 100 m, or major highway drains with concentrated discharge. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-reach-inflow-concentrated-runoff-stormwater-inputs"
+          "curve-reach-inflow-concentrated-runoff-stormwater-inputs-screening"
         ]
       }
     }
@@ -72,37 +72,22 @@
     "Reach inflow",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Michigan SQT; North Carolina SQT; South Carolina SQT; ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "State/agency datasets, GIS/imagery, and field observations (as applicable).",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "More than 5 outfalls per 100 m, or major highway drains with concentrated discharge.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering. / 4-5 outfalls per 100 m, with noticeable sediment or pollutant inputs.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "0-1 outfall per 100 m, and no noticeable discharge effects.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      10
+    ],
+    "sourceCitations": [
+      "Michigan SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

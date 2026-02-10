@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "metricId": "light-and-thermal-regime-canopy-cover",
+  "name": "Canopy Cover",
+  "shortName": "Canopy Cover",
+  "discipline": "Physicochemistry",
+  "function": "Light & thermal regime",
+  "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+  "descriptionMarkdown": "Riparian canopy cover that controls shading and thermal/light regime in the channel.",
+  "methodContextMarkdown": "Context: Riparian/Channel\n\nMethod: Field and/or Desktop",
+  "howToMeasureMarkdown": "Measure percent canopy cover over the channel and near banks along the reach; score using SQT thresholds for the appropriate region/vegetation setting.",
+  "inputs": [
+    {
+      "label": "Canopy Cover",
+      "type": "field and/or desktop",
+      "source": "Riparian/Channel",
+      "required": true,
+      "helpMarkdown": "Field canopy measurements (densiometer/hemispherical photo) and/or LiDAR/imagery-derived canopy cover."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-light-and-thermal-regime-canopy-cover-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-canopy-cover-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Minnesota SQT",
+    "Canopy measurement methods",
+    "LiDAR canopy products where available",
+    "Wisconsin SQT"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Light & thermal regime",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      216
+    ],
+    "sourceCitations": [
+      "Minnesota SQT",
+      "Wisconsin SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "nutrient-cycling-nuisance-algae-periphyton-indicator",
   "name": "Nuisance Algae / Periphyton Indicator",
-  "shortName": "",
+  "shortName": "Nuisance Algae / Periphyton Indicator",
   "discipline": "Physicochemistry",
   "function": "Nutrient cycling",
   "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: >50% cover or thick scums. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: >50% cover or thick scums. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-nutrient-cycling-nuisance-algae-periphyton-indicator"
+          "curve-nutrient-cycling-nuisance-algae-periphyton-indicator-screening"
         ]
       }
     }
@@ -69,37 +69,19 @@
     "Nutrient cycling",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": ">50% cover or thick scums.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "10-30% cover or mild filaments. / 30-50% cover with partial blooms.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "No nuisance algae and <10% cover, or normal for region.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      47
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

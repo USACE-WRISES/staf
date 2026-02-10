@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-light-and-thermal-regime-canopy-coverage-detailed",
-  "metricId": "light-and-thermal-regime-canopy-coverage-detailed",
+  "metricId": "light-and-thermal-regime-canopy-coverage",
   "tier": "detailed",
   "name": "Canopy Coverage reference curve",
   "axes": {
@@ -28,8 +28,8 @@
             },
             {
               "x": 25,
-              "y": 0.4,
-              "description": "Field 25, Index 0.4"
+              "y": 0.3,
+              "description": "Field 25, Index 0.3"
             },
             {
               "x": 61,
@@ -44,47 +44,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 169,
-            "sourceRows": [
-              169
-            ],
             "sourceCitation": "North Carolina SQT",
-            "sourceCitations": [
-              "North Carolina SQT"
-            ],
+            "sourceRow": 217,
             "fieldValues": [
               "0",
               "",
               "25",
               "",
               "61",
-              "90.54",
-              ""
+              "90.54"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-light-and-thermal-regime-canopy-coverage-detailed-north-carolina-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "North Carolina SQT",
-    "sourceCitations": [
-      "North Carolina SQT"
-    ],
-    "mappedFunction": "Light & thermal regime",
-    "sourceRows": [
-      169
-    ]
-  }
+  ]
 }

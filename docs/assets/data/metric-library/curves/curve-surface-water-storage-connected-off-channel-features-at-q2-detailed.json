@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-connected-off-channel-features-at-q2-detailed",
+  "metricId": "surface-water-storage-connected-off-channel-features-at-q2",
+  "tier": "detailed",
+  "name": "Connected Off-Channel Features at Q2 reference curve",
+  "axes": {
+    "xLabel": "Connected Off-Channel Features at Q2",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-connected-off-channel-features-at-q2-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-connected-off-channel-features-at-q2-detailed-proposed-derived-from-sfari-rapid-curves-use-o",
+          "name": "Proposed (derived from SFARI rapid curves) - Use O/E for confined valleys where expected density is low.",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.3,
+              "y": 0.3,
+              "description": "Field 0.3, Index 0.3"
+            },
+            {
+              "x": 1.5,
+              "y": 0.7,
+              "description": "Field 1.5, Index 0.7"
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "description": "Field 3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Use O/E for confined valleys where expected density is low.",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 169,
+            "fieldValues": [
+              "0",
+              "0.3",
+              "1.5",
+              "3"
+            ],
+            "indexValues": [
+              "0",
+              "0.3",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-connected-off-channel-features-at-q2-detailed-proposed-derived-from-sfari-rapid-curves-use-o"
+    }
+  ]
+}

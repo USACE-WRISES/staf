@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-bed-composition-and-large-wood-bed-material-characterization-detailed",
-  "metricId": "bed-composition-and-large-wood-bed-material-characterization-detailed",
+  "metricId": "bed-composition-and-large-wood-bed-material-characterization",
   "tier": "detailed",
   "name": "Bed Material Characterization reference curve",
   "axes": {
@@ -28,8 +28,8 @@
             },
             {
               "x": 0.05,
-              "y": 0.39,
-              "description": "Field 0.05, Index 0.39"
+              "y": 0.29,
+              "description": "Field 0.05, Index 0.29"
             },
             {
               "x": 0.1,
@@ -44,47 +44,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 151,
-            "sourceRows": [
-              151
-            ],
             "sourceCitation": "North Carolina SQT",
-            "sourceCitations": [
-              "North Carolina SQT"
-            ],
+            "sourceRow": 209,
             "fieldValues": [
               "0.01",
               "0.05",
               "",
               "0.1",
               "",
-              "0.11",
-              ""
+              "0.11"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.652",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-bed-composition-and-large-wood-bed-material-characterization-detailed-north-carolina-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "North Carolina SQT",
-    "sourceCitations": [
-      "North Carolina SQT"
-    ],
-    "mappedFunction": "Bed composition and large wood",
-    "sourceRows": [
-      151
-    ]
-  }
+  ]
 }

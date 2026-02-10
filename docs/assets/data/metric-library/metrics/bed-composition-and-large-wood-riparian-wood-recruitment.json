@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "bed-composition-and-large-wood-riparian-wood-recruitment",
   "name": "Riparian Wood Recruitment",
+  "shortName": "Riparian Wood Recruitment",
   "discipline": "Geomorphology",
-  "function": "Bed Composition and Large Wood",
+  "function": "Bed composition and large wood",
   "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
   "descriptionMarkdown": "Near-channel forest supplies future wood; most recruitment comes from within about 20-30 m of banks.",
   "methodContextMarkdown": "Context: F\n\nMethod: F",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Riparian Wood Recruitment",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "f",
+      "source": "F",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "geomorphology"
+    "Geomorphology",
+    "Bed composition and large wood",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      112
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

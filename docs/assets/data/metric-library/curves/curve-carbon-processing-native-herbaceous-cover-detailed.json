@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-native-herbaceous-cover-detailed",
-  "metricId": "carbon-processing-native-herbaceous-cover-detailed",
+  "metricId": "carbon-processing-native-herbaceous-cover",
   "tier": "detailed",
   "name": "Native Herbaceous Cover reference curve",
   "axes": {
@@ -34,47 +34,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 240,
-            "sourceRows": [
-              240
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 238,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "",
-              "75",
-              ""
+              "75"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-carbon-processing-native-herbaceous-cover-detailed-south-carolina-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "South Carolina SQT",
-    "sourceCitations": [
-      "South Carolina SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      240
-    ]
-  }
+  ]
 }

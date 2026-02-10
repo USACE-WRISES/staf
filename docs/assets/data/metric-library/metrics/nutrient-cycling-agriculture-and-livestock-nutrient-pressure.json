@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "metricId": "nutrient-cycling-agriculture-and-livestock-nutrient-pressure",
   "name": "Agriculture & Livestock Nutrient Pressure",
-  "shortName": "",
+  "shortName": "Agriculture & Livestock Nutrient Pressure",
   "discipline": "Physicochemistry",
   "function": "Nutrient cycling",
-  "functionStatement": "Nitrogen and phosphorus transformations support primary production and food webs while limiting excess nutrient loads.",
-  "descriptionMarkdown": "Extent of agricultural land use and/or livestock access in the watershed, which can contribute nutrients, bacteria, and sediment.\nScreening metric used to evaluate Nutrient cycling based on the definition and bin thresholds provided for this metric.",
+  "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+  "descriptionMarkdown": "\"Extent of agricultural land use and/or livestock access in the watershed, which can contribute nutrients, bacteria, and sediment. Screening metric used to evaluate Nutrient cycling based on the definition and bin thresholds provided for this metric.\"",
   "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Desktop (land cover/listings) and/or Field screening",
-  "howToMeasureMarkdown": "Use land cover/agricultural datasets and imagery to quantify agricultural extent and identify livestock access where specified. Assign the condition class using the bin thresholds for this metric.\nUse available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.",
+  "howToMeasureMarkdown": "\"Use land cover/agricultural datasets and imagery to quantify agricultural extent and identify livestock access where specified. Assign the condition class using the bin thresholds for this metric. Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.\"",
   "inputs": [
     {
       "label": "Agriculture & Livestock Nutrient Pressure",
       "type": "desktop (land cover/listings) and/or field screening",
       "source": "Watershed and Channel",
       "required": true,
-      "helpMarkdown": "NLCD Land Cover; USDA Cropland Data Layer (CDL) (if used); recent imagery; local agricultural layers.\nState/agency datasets, GIS/imagery, and field observations (as applicable)."
+      "helpMarkdown": "\"NLCD Land Cover; USDA Cropland Data Layer (CDL) (if used); recent imagery; local agricultural layers. State/agency datasets, GIS/imagery, and field observations (as applicable).\""
     }
   ],
   "profiles": [
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Livestock access to stream and/or intensive cropland immediately upstream of project reach. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Livestock access to stream and/or intensive cropland immediately upstream of project reach. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-nutrient-cycling-agriculture-and-livestock-nutrient-pressure"
+          "curve-nutrient-cycling-agriculture-and-livestock-nutrient-pressure-screening"
         ]
       }
     }
@@ -63,14 +63,9 @@
     "USDA CDL/NLCD (if used)",
     "MI SQT 2019",
     "NC SQT 2019",
-    "USDA CDL/NLCD (if used)",
     "SC SQT 2021",
-    "USDA CDL/NLCD (if used)",
     "TN SQT",
-    "USDA CDL/NLCD (if used)",
     "WI SQT 2022",
-    "MN SQT 2020",
-    "USDA CDL/NLCD (if used)",
     "MN SQT 2020"
   ],
   "tags": [
@@ -78,37 +73,24 @@
     "Nutrient cycling",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Michigan SQT; North Carolina SQT; South Carolina SQT; Tennessee SQT; Wisconsin SQT; Minnesota SQT",
-    "scsDefaultOn": false,
-    "metricDataSource": "NLCD Land Cover; USDA Cropland Data Layer (CDL) (if used); recent imagery; local agricultural layers.\nState/agency datasets, GIS/imagery, and field observations (as applicable).",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Livestock access to stream and/or intensive cropland immediately upstream of project reach.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Livestock access to stream and/or intensive cropland upstream of project reach. A sufficient reach of stream is between Ag. land use and project reach.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "There is little to no agricultural land uses or the livestock or cropland is far enough away from project reach to cause no impact to water quality or biology.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      43
+    ],
+    "sourceCitations": [
+      "Michigan SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Tennessee SQT",
+      "Wisconsin SQT",
+      "Minnesota SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

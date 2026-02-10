@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "light-and-thermal-regime-nuisance-algal-growth",
   "name": "Nuisance Algal Growth",
-  "shortName": "",
+  "shortName": "Nuisance Algal Growth",
   "discipline": "Physicochemistry",
   "function": "Light & thermal regime",
   "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Dense bloom or scum that covers substrate. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Dense bloom or scum that covers substrate. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-light-and-thermal-regime-nuisance-algal-growth"
+          "curve-light-and-thermal-regime-nuisance-algal-growth-screening"
         ]
       }
     }
@@ -69,37 +69,19 @@
     "Light & thermal regime",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Dense bloom or scum that covers substrate.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Slightly elevated algal coverage. / Large mats that partially impair habitat.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Minimal algae and no nuisance mats.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      38
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

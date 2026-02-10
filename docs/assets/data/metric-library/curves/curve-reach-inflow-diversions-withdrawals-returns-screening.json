@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-diversions-withdrawals-returns-screening",
+  "metricId": "reach-inflow-diversions-withdrawals-returns",
+  "tier": "screening",
+  "name": "Diversions / Withdrawals / Returns screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-diversions-withdrawals-returns-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-diversions-withdrawals-returns-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No significant withdrawals or returns. Flows remain near natural. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Minor ditches or returns with limited effect. / Moderate diversions or returns causing seasonal stress. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Large or chronic diversions or returns that drastically alter the flow regime. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-diversions-withdrawals-returns-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

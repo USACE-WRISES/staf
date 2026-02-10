@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-hyporheic-connectivity-active-seeps-upwelling-features-detailed",
+  "metricId": "hyporheic-connectivity-active-seeps-upwelling-features",
+  "tier": "detailed",
+  "name": "Active Seeps/Upwelling Features reference curve",
+  "axes": {
+    "xLabel": "Active Seeps/Upwelling Features",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-active-seeps-upwelling-features-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-active-seeps-upwelling-features-detailed-proposed-derived-from-sfari-rapid-curves-survey-du",
+          "name": "Proposed (derived from SFARI rapid curves) - Survey during warm season/low flow to maximize detectability.",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.5,
+              "y": 0.3,
+              "description": "Field 0.5, Index 0.3"
+            },
+            {
+              "x": 1.5,
+              "y": 0.7,
+              "description": "Field 1.5, Index 0.7"
+            },
+            {
+              "x": 3,
+              "y": 1,
+              "description": "Field 3, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Survey during warm season/low flow to maximize detectability.",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 193,
+            "fieldValues": [
+              "0",
+              "0.5",
+              "1.5",
+              "3"
+            ],
+            "indexValues": [
+              "0",
+              "0.3",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-active-seeps-upwelling-features-detailed-proposed-derived-from-sfari-rapid-curves-survey-du"
+    }
+  ]
+}
