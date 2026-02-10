@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-thermal-refugia-availability-screening",
+  "metricId": "light-and-thermal-regime-thermal-refugia-availability",
+  "tier": "screening",
+  "name": "Thermal Refugia Availability screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-thermal-refugia-availability-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-thermal-refugia-availability-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Multiple cooler pockets or deeper pools provide refugia during warm periods. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: One or two minor refuges. / Rare or minimal cooler zones. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: No refugia where expected. High thermal stress risk. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-thermal-refugia-availability-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

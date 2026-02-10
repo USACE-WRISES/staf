@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-reach-inflow-concentrated-flow-point-index-detailed",
-  "metricId": "reach-inflow-concentrated-flow-point-index-detailed",
+  "metricId": "reach-inflow-concentrated-flow-point-index",
   "tier": "detailed",
   "name": "Concentrated Flow Point Index reference curve",
   "axes": {
@@ -28,8 +28,8 @@
             },
             {
               "x": 0.6,
-              "y": 0.4,
-              "description": "Field 0.6, Index 0.4"
+              "y": 0.3,
+              "description": "Field 0.6, Index 0.3"
             },
             {
               "x": 1,
@@ -39,47 +39,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 40,
-            "sourceRows": [
-              40
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 174,
             "fieldValues": [
               "1",
               "",
               "0.6",
               "",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-reach-inflow-concentrated-flow-point-index-detailed-wisconsin-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Wisconsin SQT",
-    "sourceCitations": [
-      "Wisconsin SQT"
-    ],
-    "mappedFunction": "Reach inflow",
-    "sourceRows": [
-      40
-    ]
-  }
+  ]
 }

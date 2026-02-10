@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-large-wood-historic-tie-drives-screening",
+  "metricId": "bed-composition-and-large-wood-historic-tie-drives",
+  "tier": "screening",
+  "name": "Historic Tie Drives screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-historic-tie-drives-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-historic-tie-drives-screening-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Never had them, or no remaining evidence. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: May have occurred but effects ameliorated. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Occurred and effects persist. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-historic-tie-drives-screening-wyoming-sqt",
+      "indexRange": true
+    }
+  ]
+}

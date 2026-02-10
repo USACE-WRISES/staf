@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "metricId": "population-support-spawning-substrate-quality",
   "name": "Spawning Substrate Quality",
-  "shortName": "",
+  "shortName": "Spawning Substrate Quality",
   "discipline": "Biology",
   "function": "Population support",
   "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
   "descriptionMarkdown": "Clean gravel/vegetation is present if historically expected, unless alternative spawning is normal.",
-  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Assess percent of clean gravel or other suitable spawning substrate for target species and note fine sediment cover.",
   "inputs": [
     {
       "label": "Spawning Substrate Quality",
-      "type": "field",
-      "source": "Channel",
+      "type": "desktop",
+      "source": "Floodplain",
       "required": true,
       "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon;"
     }
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: No suitable substrate. High embeddedness, bedrock, or other limiting condition. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: No suitable substrate. High embeddedness, bedrock, or other limiting condition. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-population-support-spawning-substrate-quality"
+          "curve-population-support-spawning-substrate-quality-screening"
         ]
       }
     }
@@ -69,37 +69,19 @@
     "Population support",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon;",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "No suitable substrate. High embeddedness, bedrock, or other limiting condition.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Some silt but still feasible for spawning. / Heavily silted with limited spawning success expected.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Clean or appropriate substrate with minimal silt.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      58
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

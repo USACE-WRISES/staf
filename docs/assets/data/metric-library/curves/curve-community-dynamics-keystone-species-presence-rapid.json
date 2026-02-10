@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Beaver, mussels, or crayfish common where expected. Criteria: Expected keystone taxa widespread. No invasive dominance.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Some keystone species present but patchy. Criteria: At least one keystone taxon present but limited distribution.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Keystone species observed only in small numbers. Criteria: Keystone taxa rare compared to reference or historical levels.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Expected keystone species absent. Invasives common. Criteria: No keystone taxa present. Strong invasive dominance.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-community-dynamics-keystone-species-presence-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-community-dynamics-keystone-species-presence-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-community-dynamics-keystone-species-presence-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-community-dynamics-keystone-species-presence-rapid",
+  "metricId": "community-dynamics-keystone-species-presence",
   "tier": "rapid",
+  "name": "Keystone Species Presence rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "community-dynamics-keystone-species-presence"
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-keystone-species-presence-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-keystone-species-presence-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Beaver, mussels, or crayfish common where expected. Criteria: Expected keystone taxa widespread. No invasive dominance."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Some keystone species present but patchy. Criteria: At least one keystone taxon present but limited distribution."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Keystone species observed only in small numbers. Criteria: Keystone taxa rare compared to reference or historical levels."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Expected keystone species absent. Invasives common. Criteria: No keystone taxa present. Strong invasive dominance."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-keystone-species-presence-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

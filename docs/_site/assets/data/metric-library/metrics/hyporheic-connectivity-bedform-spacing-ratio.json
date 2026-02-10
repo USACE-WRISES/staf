@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-bedform-spacing-ratio",
+  "name": "Bedform Spacing Ratio",
+  "shortName": "Bedform Spacing Ratio",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Characteristic bedform spacing (Ls) normalized by bankfull width (Wbf). Lower (within expected) is better; high values indicate uniform runs.",
+  "methodContextMarkdown": "Field + imagery",
+  "howToMeasureMarkdown": "Map bedforms; measure spacing between repeats (e.g., pool-to-pool); divide by Wbf; compute reach median.",
+  "inputs": [
+    {
+      "label": "Bedform Spacing Ratio",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping + imagery; bankfull width measurement."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-hyporheic-connectivity-bedform-spacing-ratio-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-bedform-spacing-ratio-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "habitat unit mapping guidance."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      189
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-community-dynamics-relative-abundance-and-species-biomass-metrics-detailed",
-  "metricId": "community-dynamics-relative-abundance-and-species-biomass-metrics-detailed",
+  "metricId": "community-dynamics-relative-abundance-and-species-biomass-metrics",
   "tier": "detailed",
   "name": "Relative Abundance and Species Biomass metrics reference curve",
   "axes": {
@@ -34,47 +34,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 435,
-            "sourceRows": [
-              435
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 280,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "",
-              "0.9",
-              ""
+              "0.9"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-community-dynamics-relative-abundance-and-species-biomass-metrics-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT",
-    "sourceCitations": [
-      "Alaska SQT"
-    ],
-    "mappedFunction": "Community dynamics",
-    "sourceRows": [
-      435
-    ]
-  }
+  ]
 }

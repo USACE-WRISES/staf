@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-specific-conductance-screening",
+  "metricId": "water-and-soil-quality-specific-conductance",
+  "tier": "screening",
+  "name": "Specific Conductance screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-specific-conductance-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-specific-conductance-screening-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Piedmont = <78; Blue Ridge = <41 (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Piedmont = 78-229; Blue Ridge = 41-66 (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Piedmont = >229; Blue Ridge = >66 (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-specific-conductance-screening-north-carolina-sqt",
+      "indexRange": true
+    }
+  ]
+}

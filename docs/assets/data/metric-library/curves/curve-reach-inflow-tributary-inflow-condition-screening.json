@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-tributary-inflow-condition-screening",
+  "metricId": "reach-inflow-tributary-inflow-condition",
+  "tier": "screening",
+  "name": "Tributary Inflow Condition screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-tributary-inflow-condition-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-tributary-inflow-condition-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 1-2 tributaries are moderately altered or somewhat polluted. / Multiple tributaries are significantly altered and deliver high sediment or pollutants. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Widespread severe tributary impacts that overwhelm the mainstem. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-tributary-inflow-condition-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

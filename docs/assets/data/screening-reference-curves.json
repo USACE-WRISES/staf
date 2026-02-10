@@ -1,3 +1,2272 @@
-﻿{
-  "curves": {}
+{
+  "curves": {
+    "catchment-hydrology-impervious-surface-cover": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-impervious-surface-cover-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: IC Index score of 71% or greater. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: IC Index Score Between 41% and 70%. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Impervious Cover (IC) Index Score of 40% or less. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-impervious-surface-cover-screening-multiple-sqts"
+    },
+    "catchment-hydrology-percent-forest-cover": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-percent-forest-cover-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: >70% (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: >20% and <70% (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: <20% (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-percent-forest-cover-screening-multiple-sqts"
+    },
+    "catchment-hydrology-recent-land-use-land-cover-change": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-recent-land-use-land-cover-change-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Rural communities/slow growth or primarily forested (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Single family homes/suburban (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Rapidly urbanizing/urban (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-recent-land-use-land-cover-change-screening-multiple-sqts"
+    },
+    "catchment-hydrology-watershed-development-and-roads-infrastructure": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-watershed-development-and-roads-infrastructure-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No development or no potential for impacts. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Moderate development or moderate potential for impacts, but none within 1 mile of project reach. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: High development or potential for impacts in contributing watershed or within 1 mile of project reach, or high potential of impacts >1 mile away from project reach. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-watershed-development-and-roads-infrastructure-screening-multiple-sqts"
+    },
+    "surface-water-storage-floodplain-water-retention-storage": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-floodplain-water-retention-storage-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Floodplain is actively engaged at the local moderate-flood standard (often about 1-2 yr or 2-5 yr). (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Overbanking requires flows slightly larger than typical bankfull, but still not rare. / Overbanking requires 5-10 yr floods. Partial disconnection. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-floodplain-water-retention-storage-screening-erdc"
+    },
+    "surface-water-storage-impoundments-dams-ponds": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-impoundments-dams-ponds-screening-multiple-sources",
+          "name": "Multiple Sources",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Beaver dams or small ponds enhance baseflow and habitat with negligible fragmentation. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 1-2 small obstructions with minor impacts. / Multiple ponds moderately disrupt connectivity. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Widespread channel fragmentation or overabundant ponding. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-impoundments-dams-ponds-screening-multiple-sources"
+    },
+    "surface-water-storage-off-channel-storage-features": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-off-channel-storage-features-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Multiple off-channel features connect in moderate floods. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Partial connection or fewer off-channel areas. / Only large floods access these areas, or off-channel areas are minimal. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Off-channel features are mostly gone or permanently cut off. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-off-channel-storage-features-screening-erdc"
+    },
+    "surface-water-storage-percent-wetlands-in-watershed": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-percent-wetlands-in-watershed-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: >5% wetland coverage, or consistent with historical norm. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 1-5% wetland coverage. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: <1% wetland coverage, or heavily drained wetlands. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-percent-wetlands-in-watershed-screening-erdc"
+    },
+    "reach-inflow-concentrated-runoff-stormwater-inputs": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-concentrated-runoff-stormwater-inputs-screening-multiple-sources",
+          "name": "Multiple Sources",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: 0-1 outfall per 100 m, and no noticeable discharge effects. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering. / 4-5 outfalls per 100 m, with noticeable sediment or pollutant inputs. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: More than 5 outfalls per 100 m, or major highway drains with concentrated discharge. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-concentrated-runoff-stormwater-inputs-screening-multiple-sources"
+    },
+    "reach-inflow-diversions-withdrawals-returns": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-diversions-withdrawals-returns-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No significant withdrawals or returns. Flows remain near natural. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Minor ditches or returns with limited effect. / Moderate diversions or returns causing seasonal stress. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Large or chronic diversions or returns that drastically alter the flow regime. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-diversions-withdrawals-returns-screening-erdc"
+    },
+    "reach-inflow-permitted-point-source-discharges": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-permitted-point-source-discharges-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No CDPS permitted facilities upstream of the project reach. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: CDPS permitted facilities comprise a low to moderate percentage of the baseflow in the project reach AND no facilities are located within 2 miles upstream of project reach. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: CDPS permitted facilities comprise a high percentage of the baseflow in the project reach OR 1 or more facilities present within 2 miles upstream of project reach have a high potential to threaten aquatic life. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-permitted-point-source-discharges-screening-multiple-sqts"
+    },
+    "reach-inflow-tributary-inflow-condition": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-tributary-inflow-condition-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 1-2 tributaries are moderately altered or somewhat polluted. / Multiple tributaries are significantly altered and deliver high sediment or pollutants. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Widespread severe tributary impacts that overwhelm the mainstem. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-tributary-inflow-condition-screening-erdc"
+    },
+    "streamflow-regime-flashiness-rate-and-frequency-of-change": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flashiness-rate-and-frequency-of-change-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: RBI ? 25% quartile value and ?75% quartile value. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: RBI declining over time and approaching 25% quartile value, or increasing and approaching the 75% quartile value. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: RBI <25% quartile value or >75% quartile value. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flashiness-rate-and-frequency-of-change-screening-multiple-sqts"
+    },
+    "streamflow-regime-flow-alteration-regulation-water-use": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flow-alteration-regulation-water-use-screening-multiple-sources",
+          "name": "Multiple Sources",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: <10% difference from baseline. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 10-50% difference. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: >50% difference. Near dewatering or strong hydropeaking. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flow-alteration-regulation-water-use-screening-multiple-sources"
+    },
+    "streamflow-regime-flow-permanence-intermittency": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flow-permanence-intermittency-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Flow permanence is stable and near the historical pattern for the stream type. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Minor changes in dry or wet intervals. / Significant changes in flow permanence (for example a formerly perennial reach goes dry for extended periods). (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Major departure from reference flow permanence. Flow regime category is effectively changed. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flow-permanence-intermittency-screening-erdc"
+    },
+    "low-flow-and-baseflow-dynamics-aufeis-icing-impacts": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-aufeis-icing-impacts-screening-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Aufeis formation caused by land disturbance is minor or nonexistent within, extends into the reach from downstream, or is found upstream of the project reach. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Aufeis formation caused by land disturbance is moderate within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Aufeis formation caused by land disturbance is extensive within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-aufeis-icing-impacts-screening-alaska-sqt"
+    },
+    "low-flow-and-baseflow-dynamics-baseflow-index-bfi-vs-baseline": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-baseflow-index-bfi-vs-baseline-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: BFI closely matches the region's baseline. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: About 10-20% difference from baseline. / About 20-40% difference from baseline. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: More than 40% difference from baseline, indicating extreme baseflow alteration. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-baseflow-index-bfi-vs-baseline-screening-erdc"
+    },
+    "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: >75% of channel wetted at normal low flow (or dryness is normal if ephemeral). (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 25-75% wetted. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: <25% wetted, or mostly disconnected pools in a historically perennial reach. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity-screening-erdc"
+    },
+    "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: About 1-2 yr floods engage the floodplain. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: About 3-5 yr floods are needed. / About 5-10 yr floods are needed. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Floodplain is rarely inundated except during extreme events. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence-screening-erdc"
+    },
+    "high-flow-dynamics-high-flow-power-and-stability-bed-bank-mobilization": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-high-flow-power-and-stability-bed-bank-mobilization-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Bed mobilizes at appropriate flows for the channel type, often near bankfull. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slight mismatch. Bed moves below or above expected flows. / Marked mismatch. Bed is often locked or frequently scoured. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Extreme mismatch. Bed rarely moves or is reworked by small floods. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-high-flow-power-and-stability-bed-bank-mobilization-screening-erdc"
+    },
+    "floodplain-connectivity-floodplain-access-entrenchment": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-floodplain-access-entrenchment-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Stable channel that is not incised or dredged with frequent floodplain access. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slight channelization or partial dredging. / Heavily modified or incised channel with limited floodplain access. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Deeply dredged or channelized reach with little functional floodplain. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-floodplain-access-entrenchment-screening-erdc"
+    },
+    "floodplain-connectivity-floodplain-complexity-side-channels-oxbows-wetlands": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-floodplain-complexity-side-channels-oxbows-wetlands-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Multiple active features connected during moderate floods and consistent with historical complexity. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Partial complexity remains with some features truncated or partially isolated. / Most off-channel features are lost or only minimally connected. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Floodplain is simplified or leveed with little or no off-channel function remaining. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-floodplain-complexity-side-channels-oxbows-wetlands-screening-erdc"
+    },
+    "hyporheic-connectivity-floodplain-permeability": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-floodplain-permeability-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Permeable floodplain soils that support subsurface flow. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Partially permeable soils or some clogging. / Mostly fine fill or bedrock that limits infiltration. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Heavily compacted or lined soils with minimal subsurface exchange. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-floodplain-permeability-screening-erdc"
+    },
+    "hyporheic-connectivity-hyporheic-exchange-indicators": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-hyporheic-exchange-indicators-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Well developed bedforms and strong potential for exchange. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some bedform variety but partially uniform. / Mostly uniform run with limited exchange. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Featureless or silted bed with negligible exchange. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-hyporheic-exchange-indicators-screening-erdc"
+    },
+    "channel-evolution-channel-evolution-stage-and-trends": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-evolution-channel-evolution-stage-and-trends-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Stable or re-stabilized channel (Stage I or VI). (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Partially recovered channel (often Stage V). / Actively widening or incising (often Stage III-IV). (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Severe incision or destructive phases (often Stage II or severe III-IV). (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-evolution-channel-evolution-stage-and-trends-screening-erdc"
+    },
+    "channel-evolution-channelization-ditching-straightening": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-evolution-channelization-ditching-straightening-screening-minnesota-sqt",
+          "name": "Minnesota SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Altered watercourse score - 71% or greater. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Altered watercourse score between 41 and 70%. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Altered Watercourse Index Score of 40% or less. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-evolution-channelization-ditching-straightening-screening-minnesota-sqt"
+    },
+    "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Predominantly natural banks with deeply rooted cover. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some armoring or partial vegetation coverage. / Large portion of banks is armored or vegetation is sparse. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Failing armoring or widespread bare banks with severe instability. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition-screening-erdc"
+    },
+    "channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-channels-cutoffs": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-channels-cutoffs-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Condition aligns with local reference for the stream type. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slight departure from reference condition. / Moderate braiding where not typical, or loss of braiding where it is typical. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Heavily braided from instability, or forced single-thread where braiding is expected. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-channels-cutoffs-screening-erdc"
+    },
+    "channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: >80% of contributing streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 50-80% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: <50% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-riparian-corridor-vegetation-width-continuity-screening-multiple-sqts"
+    },
+    "sediment-continuity-channel-degradation-incision": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-channel-degradation-incision-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No active downcutting. Bed elevation is stable. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Minor localized incision. / Noticeable incision or one or two moderate headcuts that reduce floodplain access. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Severe channel-wide incision with multiple major headcuts. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-channel-degradation-incision-screening-erdc"
+    },
+    "sediment-continuity-permafrost-degradation-thermokarst": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-permafrost-degradation-thermokarst-screening-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No areas of permafrost degradation in the catchment area have been observed. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Areas of permafrost degradation exist within or upstream of the project reach contributing to hillslope slumping or increased erosion but are not resulting in impacts to water quality. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Areas of permafrost degradation exist within or upstream of the project reach, contributing to hillslope slumping, increased erosion, and/or water quality impacts. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-permafrost-degradation-thermokarst-screening-alaska-sqt"
+    },
+    "sediment-continuity-sediment-balance-transport-deposition-turbidity": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-sediment-balance-transport-deposition-turbidity-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Low chronic turbidity and minimal fines, or regionally normal conditions. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Minor silt layers or partial turbidity. / High turbidity or moderate silt coverage. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Severe siltation or turbidity that smothers substrate. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-sediment-balance-transport-deposition-turbidity-screening-erdc"
+    },
+    "sediment-continuity-sediment-supply-potential-watershed-banks": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-sediment-supply-potential-watershed-banks-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-sediment-supply-potential-watershed-banks-screening-multiple-sqts"
+    },
+    "bed-composition-and-large-wood-bedform-diversity-sequence": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-bedform-diversity-sequence-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Clear riffle-pool or step-pool sequence with robust variety. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some diversity but partially uniform. / Mostly homogeneous bed with faint or missing sequences. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Flattened or artificially uniform bed. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-bedform-diversity-sequence-screening-erdc"
+    },
+    "bed-composition-and-large-wood-historic-tie-drives": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-historic-tie-drives-screening-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Never had them, or no remaining evidence. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: May have occurred but effects ameliorated. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Occurred and effects persist. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-historic-tie-drives-screening-wyoming-sqt"
+    },
+    "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation-screening-multiple-",
+          "name": "Multiple Sources",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Open interstitial coarse bed with minimal fines. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Mild embedding or partial fine coverage. / Strong embedding or siltation limiting infiltration. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Predominantly fine or consolidated bed with little interstitial space. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation-screening-multiple-"
+    },
+    "light-and-thermal-regime-nuisance-algal-growth": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-nuisance-algal-growth-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Minimal algae and no nuisance mats. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slightly elevated algal coverage. / Large mats that partially impair habitat. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Dense bloom or scum that covers substrate. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-nuisance-algal-growth-screening-erdc"
+    },
+    "light-and-thermal-regime-stream-temperature": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-stream-temperature-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Rarely surpasses local standard or typical seasonal maxima for the stream type. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slightly exceeds thresholds occasionally. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Frequently near or above thresholds. / Consistently high or potentially lethal temperatures. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-stream-temperature-screening-erdc"
+    },
+    "light-and-thermal-regime-thermal-refugia-availability": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-thermal-refugia-availability-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Multiple cooler pockets or deeper pools provide refugia during warm periods. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: One or two minor refuges. / Rare or minimal cooler zones. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: No refugia where expected. High thermal stress risk. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-thermal-refugia-availability-screening-erdc"
+    },
+    "carbon-processing-detrital-processing-cpom-retention-shredders": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-carbon-processing-detrital-processing-cpom-retention-shredders-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Abundant CPOM retention with stable leaf packs typical for the system. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some retention but partially flushed out. / Sparse organic matter and limited retention. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Essentially no retained organic matter, or severe overload causing anoxia risk. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-detrital-processing-cpom-retention-shredders-screening-erdc"
+    },
+    "carbon-processing-primary-production-algal-indicators": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-carbon-processing-primary-production-algal-indicators-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Balanced growth with no nuisance blooms. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slightly elevated algae. / Frequent moderate nuisance mats. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Thick blooms or scums that cover substrate. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-carbon-processing-primary-production-algal-indicators-screening-erdc"
+    },
+    "nutrient-cycling-agriculture-and-livestock-nutrient-pressure": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-agriculture-and-livestock-nutrient-pressure-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: There is little to no agricultural land uses or the livestock or cropland is far enough away from project reach to cause no impact to water quality or biology. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Livestock access to stream and/or intensive cropland upstream of project reach. A sufficient reach of stream is between Ag. land use and project reach. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Livestock access to stream and/or intensive cropland immediately upstream of project reach. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-agriculture-and-livestock-nutrient-pressure-screening-multiple-sqts"
+    },
+    "nutrient-cycling-denitrification-potential-floodplain-wetness": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-denitrification-potential-floodplain-wetness-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Strong potential with connected wet areas and soils. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some wet zones but partially disconnected. / Limited wetland area and moderate export risk. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: No wetlands or heavily drained soils with low denitrification potential. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-denitrification-potential-floodplain-wetness-screening-erdc"
+    },
+    "nutrient-cycling-dissolved-oxygen-fluctuation-diel-swing": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-dissolved-oxygen-fluctuation-diel-swing-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: <2 mg/L diurnal swing and no frequent hypoxia. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 2-4 mg/L swing with occasional stress. / 4-6 mg/L swing and borderline low DO at night. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: >6 mg/L swing or frequent dips below 3 mg/L. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-dissolved-oxygen-fluctuation-diel-swing-screening-erdc"
+    },
+    "nutrient-cycling-nitrogen-and-phosphorus-concentrations": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-nitrogen-and-phosphorus-concentrations-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Near background or guideline values. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slightly elevated N or P. / Marked elevation with likely ecological effects. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Significantly above guidelines indicating strong nutrient pollution. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-nitrogen-and-phosphorus-concentrations-screening-erdc"
+    },
+    "nutrient-cycling-nuisance-algae-periphyton-indicator": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-nuisance-algae-periphyton-indicator-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No nuisance algae and <10% cover, or normal for region. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 10-30% cover or mild filaments. / 30-50% cover with partial blooms. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: >50% cover or thick scums. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-nuisance-algae-periphyton-indicator-screening-erdc"
+    },
+    "water-and-soil-quality-contaminants-and-soil-pollution-indicators": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-contaminants-and-soil-pollution-indicators-screening-multiple-sources",
+          "name": "Multiple Sources",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Natural soils with no contamination indicators. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Minor dumping or moderate manure presence. / Known moderate contamination risk. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Highly contaminated soils with strong odor or toxicity indicators. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-contaminants-and-soil-pollution-indicators-screening-multiple-sources"
+    },
+    "water-and-soil-quality-dissolved-oxygen-do": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-dissolved-oxygen-do-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: >6 mg/L and no hypoxia. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 5-6 mg/L. Borderline. / 3-5 mg/L. Frequent stress. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: <3 mg/L. High risk of acute impacts. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-dissolved-oxygen-do-screening-erdc"
+    },
+    "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: In category 1, 2, or 3 or aquatic life uses not evaluated. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: In Category 5 due to nonsupport of aquatic life uses OR in Category 4 and aquatic life impairment not actively being mitigated. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl-screening-multiple-sqts"
+    },
+    "water-and-soil-quality-specific-conductance": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-specific-conductance-screening-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Piedmont = <78; Blue Ridge = <41 (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Piedmont = 78-229; Blue Ridge = 41-66 (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Piedmont = >229; Blue Ridge = >66 (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-specific-conductance-screening-north-carolina-sqt"
+    },
+    "water-and-soil-quality-turbidity-water-clarity": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-turbidity-water-clarity-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Mostly clear and consistent with reference. No obvious pollution. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slight turbidity or discoloration. / Persistent cloudiness with habitat impacts. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Persistently muddy water or visible sheen indicating severe pollution. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-turbidity-water-clarity-screening-erdc"
+    },
+    "habitat-provision-in-stream-habitat-complexity-and-cover": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-habitat-provision-in-stream-habitat-complexity-and-cover-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Multiple habitat types well represented. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some variety but key elements are missing. / Mostly uniform with only 1-2 distinct features. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Very uniform channel with limited structural diversity. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-in-stream-habitat-complexity-and-cover-screening-erdc"
+    },
+    "habitat-provision-off-channel-habitat-availability": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-habitat-provision-off-channel-habitat-availability-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Well connected off-channel areas provide refuge or spawning habitat. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some partial connection. / Rare or only episodic off-channel use. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: No side or backwaters remain despite suitable valley setting. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-off-channel-habitat-availability-screening-erdc"
+    },
+    "population-support-biological-integrity-ibi-community-condition": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-biological-integrity-ibi-community-condition-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Multiple observations where historically expected. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some presence but limited. / Rare or single individuals. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Absent where historically expected. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-biological-integrity-ibi-community-condition-screening-erdc"
+    },
+    "population-support-catchment-restoration-enhancement-context": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-catchment-restoration-enhancement-context-screening-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Greater than 60% of the total catchment area is draining to the project reach. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 40 to 60% of the total catchment area is draining to the project reach. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Less than 40% of the total catchment area is draining to the project reach. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-catchment-restoration-enhancement-context-screening-north-carolina-sqt"
+    },
+    "population-support-juvenile-refuge-cover": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-juvenile-refuge-cover-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: More than 40% of reach has adequate juvenile cover. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 5-40% cover. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: <5% cover or none. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-juvenile-refuge-cover-screening-erdc"
+    },
+    "population-support-spawning-substrate-quality": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-spawning-substrate-quality-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Clean or appropriate substrate with minimal silt. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some silt but still feasible for spawning. / Heavily silted with limited spawning success expected. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: No suitable substrate. High embeddedness, bedrock, or other limiting condition. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-spawning-substrate-quality-screening-erdc"
+    },
+    "community-dynamics-invasive-non-native-species-presence": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-invasive-non-native-species-presence-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: <5% invasive presence. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 5-50% invasive presence. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: >50% invasive presence or one invasive dominates. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-invasive-non-native-species-presence-screening-erdc"
+    },
+    "community-dynamics-native-biodiversity-and-taxa-richness": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-native-biodiversity-and-taxa-richness-screening-multiple-sources",
+          "name": "Multiple Sources",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Four to five or more distinct major groups. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Two to four distinct major groups. / One to two distinct major groups. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Zero, or only one extremely tolerant group. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-native-biodiversity-and-taxa-richness-screening-multiple-sources"
+    },
+    "watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) has native bed and bank material. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) has native bed and bank material that is highly embedded by fine sediment. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) is concrete, piped, or hardened. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded-screening-multiple-sqts"
+    },
+    "watershed-connectivity-dewatered-intermittent-segments": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-dewatered-intermittent-segments-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No artificial dryness and natural connectivity is maintained. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Minor dryness in small segments. / Notable dryness or disconnection in key reaches. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Chronic or large-scale dewatering causing major fragmentation. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-dewatered-intermittent-segments-screening-erdc"
+    },
+    "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No barrier within watershed OR barriers provide beneficial effect on project area and allows for aquatic organism passage. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists that is creating a minor fish passage barrier. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Aquatic organism barriers (including impoundment(s)) located within 1 mile upstream or downstream of project area has a negative effect on aquatic organism passage. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity-screening-multiple-sqts"
+    },
+    "watershed-connectivity-lateral-connectivity-for-riparian-fauna": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No major levees or walls and free lateral movement. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some partial barriers with remaining access. / Large levees hamper movement in many areas. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Heavily walled or leveed corridor with minimal lateral connectivity. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening-erdc"
+    }
+  }
 }

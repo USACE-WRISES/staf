@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded-screening",
+  "metricId": "watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded",
+  "tier": "screening",
+  "name": "Adjacent Reach Condition for Recruitment (hardened/embedded) screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) has native bed and bank material. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) has native bed and bank material that is highly embedded by fine sediment. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) is concrete, piped, or hardened. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded-screening-multiple-sqts",
+      "indexRange": true
+    }
+  ]
+}

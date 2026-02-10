@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-connected-off-channel-features-at-q2",
+  "name": "Connected Off-Channel Features at Q2",
+  "shortName": "Connected Off-Channel Features at Q2",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Count of off-channel storage features connected at ~Q2 per km of main channel. Higher is better.",
+  "methodContextMarkdown": "Desktop + field check",
+  "howToMeasureMarkdown": "Map features; determine if connected at Q2/bankfull; count connected features per km.",
+  "inputs": [
+    {
+      "label": "Connected Off-Channel Features at Q2",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "LiDAR/imagery mapping with field verification."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-connected-off-channel-features-at-q2-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-connected-off-channel-features-at-q2-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "LiDAR/imagery interpretation",
+    "field verification."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      169
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

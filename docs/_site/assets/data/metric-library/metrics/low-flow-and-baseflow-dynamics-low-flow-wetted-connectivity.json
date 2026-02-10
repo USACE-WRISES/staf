@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
   "name": "Low-flow Wetted Connectivity",
-  "shortName": "",
+  "shortName": "Low-flow Wetted Connectivity",
   "discipline": "Hydraulics",
   "function": "Low flow and baseflow dynamics",
   "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
-  "descriptionMarkdown": "Evaluates whether the reach maintains adequate wetted depth and continuity during low flow by integrating pool depth, wetted length, exposed bed, and Q90/Q10 differences.\nExtent to which water remains in contact with both banks and low benches during low flow, sustaining edge habitat and exchange.",
+  "descriptionMarkdown": "\"Evaluates whether the reach maintains adequate wetted depth and continuity during low flow by integrating pool depth, wetted length, exposed bed, and Q90/Q10 differences. Extent to which water remains in contact with both banks and low benches during low flow, sustaining edge habitat and exchange.\"",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
-  "howToMeasureMarkdown": "Estimate percent of channel length wetted at typical low-flow conditions and document with photos where feasible.\nCount pools that remain connected versus isolated at low flow and note dominant disconnection causes.\nEstimate percent of bed exposed during low flow using field photos or dry-season imagery where available.",
+  "howToMeasureMarkdown": "\"Estimate percent of channel length wetted at typical low-flow conditions and document with photos where feasible. Count pools that remain connected versus isolated at low flow and note dominant disconnection causes. Estimate percent of bed exposed during low flow using field photos or dry-season imagery where available.\"",
   "inputs": [
     {
       "label": "Low-flow Wetted Connectivity",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: <25% wetted, or mostly disconnected pools in a historically perennial reach. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: <25% wetted, or mostly disconnected pools in a historically perennial reach. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity"
+          "curve-low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity-screening"
         ]
       }
     }
@@ -69,7 +69,6 @@
     "optional HEC-RAS 2D at low flow",
     "LiDAR longitudinal profile (where available).",
     "Field photos",
-    "NAIP dry-season imagery",
     "LiDAR with estimated low-flow water surface (where available)."
   ],
   "tags": [
@@ -77,37 +76,19 @@
     "Low flow and baseflow dynamics",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "<25% wetted, or mostly disconnected pools in a historically perennial reach.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "25-75% wetted.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": ">75% of channel wetted at normal low flow (or dryness is normal if ephemeral).",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      19
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

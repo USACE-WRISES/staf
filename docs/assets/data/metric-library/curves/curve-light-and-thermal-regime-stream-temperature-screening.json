@@ -1,50 +1,50 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-light-and-thermal-regime-stream-temperature-screening",
-  "metricId": "light-and-thermal-regime-stream-temperature-screening",
+  "metricId": "light-and-thermal-regime-stream-temperature",
   "tier": "screening",
-  "name": "Screening default curve",
+  "name": "Stream Temperature screening curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
   "curves": [
     {
-      "indexRange": true,
+      "curveId": "curve-light-and-thermal-regime-stream-temperature-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
       "layers": [
         {
-          "name": "Screening",
+          "id": "curve-light-and-thermal-regime-stream-temperature-screening-erdc",
+          "name": "ERDC",
           "points": [
             {
               "x": "Good",
-              "description": "Good: Slightly exceeds thresholds occasionally. (Suggested index range 0.70-1.0)",
-              "yMax": 1,
+              "y": 0.85,
               "yMin": 0.7,
-              "y": 0.85
+              "yMax": 1,
+              "description": "Good: Rarely surpasses local standard or typical seasonal maxima for the stream type. (Suggested index range 0.70-1.0)"
             },
             {
               "x": "Fair",
-              "description": "Fair: Frequently near or above thresholds. / Consistently high or potentially lethal temperatures. (Suggested index range 0.40-0.69)",
-              "yMax": 0.69,
+              "y": 0.545,
               "yMin": 0.4,
-              "y": 0.54
+              "yMax": 0.69,
+              "description": "Fair: Slightly exceeds thresholds occasionally. (Suggested index range 0.40-0.69)"
             },
             {
               "x": "Poor",
-              "description": "Poor: USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled temperatures (where available). (Suggested index range 0.0-0.29)",
-              "yMax": 0.29,
+              "y": 0.195,
               "yMin": 0,
-              "y": 0.14
+              "yMax": 0.39,
+              "description": "Poor: Frequently near or above thresholds. / Consistently high or potentially lethal temperatures. (Suggested index range 0.0-0.39)"
             }
-          ],
-          "id": "curve-light-and-thermal-regime-stream-temperature-screening-layer"
+          ]
         }
       ],
-      "xType": "categorical",
-      "curveId": "curve-light-and-thermal-regime-stream-temperature-screening-default",
-      "name": "Screening",
-      "units": "",
-      "activeLayerId": "curve-light-and-thermal-regime-stream-temperature-screening-layer"
+      "activeLayerId": "curve-light-and-thermal-regime-stream-temperature-screening-erdc",
+      "indexRange": true
     }
   ]
 }

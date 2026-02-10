@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-nutrient-cycling-buffer-width-detailed",
-  "metricId": "nutrient-cycling-buffer-width-detailed",
+  "metricId": "nutrient-cycling-buffer-width",
   "tier": "detailed",
   "name": "Buffer Width reference curve",
   "axes": {
@@ -28,8 +28,8 @@
             },
             {
               "x": 25,
-              "y": 0.4,
-              "description": "Field 25, Index 0.4"
+              "y": 0.3,
+              "description": "Field 25, Index 0.3"
             },
             {
               "x": 75,
@@ -44,47 +44,727 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 256,
-            "sourceRows": [
-              256
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 242,
             "fieldValues": [
               "0",
               "",
               "25",
               "",
               "75",
+              "150"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-north-carolina-sqt-stream-type-a-b-or-bc",
+          "name": "North Carolina SQT - Stream Type A, B, or Bc",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 13,
+              "y": 0.3,
+              "description": "Field 13, Index 0.3"
+            },
+            {
+              "x": 30,
+              "y": 0.7,
+              "description": "Field 30, Index 0.7"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Stream Type A, B, or Bc",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "13",
+              "",
+              "30",
+              "50"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-north-carolina-sqt-stream-type-c-or-e",
+          "name": "North Carolina SQT - Stream type C or E",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 30,
+              "y": 0.3,
+              "description": "Field 30, Index 0.3"
+            },
+            {
+              "x": 45,
+              "y": 0.7,
+              "description": "Field 45, Index 0.7"
+            },
+            {
+              "x": 150,
+              "y": 1,
+              "description": "Field 150, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Stream type C or E",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "30",
+              "",
+              "45",
+              "150"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-5-single-family-residential",
+          "name": "South Carolina SQT - Buffer slope < 5% - Single Family Residential",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 50,
+              "y": 0.7,
+              "description": "Field 50, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope < 5% - Single Family Residential",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "50",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-5-20-single-family-residential",
+          "name": "South Carolina SQT - Buffer slope 5-20% - Single Family Residential",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 100,
+              "y": 0.7,
+              "description": "Field 100, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 5-20% - Single Family Residential",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "100",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-21-40-single-family-residential",
+          "name": "South Carolina SQT - Buffer slope 21-40% - Single Family Residential",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 150,
+              "y": 0.7,
+              "description": "Field 150, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 21-40% - Single Family Residential",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
               "150",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-40-single-family-residential",
+          "name": "South Carolina SQT - Buffer slope >40% - Single Family Residential",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 200,
+              "y": 0.7,
+              "description": "Field 200, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope >40% - Single Family Residential",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "200",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-5-multi-family-residential",
+          "name": "South Carolina SQT - Buffer slope < 5% - Multi-Family Residential",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 60,
+              "y": 0.7,
+              "description": "Field 60, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope < 5% - Multi-Family Residential",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "60",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-5-20-multi-family-residential",
+          "name": "South Carolina SQT - Buffer slope 5-20% - Multi-Family Residential",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 120,
+              "y": 0.7,
+              "description": "Field 120, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 5-20% - Multi-Family Residential",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "120",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-21-40-multi-family-residential",
+          "name": "South Carolina SQT - Buffer slope 21-40% - Multi-Family Residential",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 180,
+              "y": 0.7,
+              "description": "Field 180, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 21-40% - Multi-Family Residential",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "180",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-40-multi-family-residential",
+          "name": "South Carolina SQT - Buffer slope >40% - Multi-Family Residential",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 240,
+              "y": 0.7,
+              "description": "Field 240, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope >40% - Multi-Family Residential",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "240",
               ""
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-5-commercial-golf-course-agriculture-silvic",
+          "name": "South Carolina SQT - Buffer slope < 5% - Commercial / Golf Course / Agriculture / Silviculture",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 150,
+              "y": 0.7,
+              "description": "Field 150, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope < 5% - Commercial / Golf Course / Agriculture / Silviculture",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "150",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-5-20-commercial-golf-course-agriculture-sil",
+          "name": "South Carolina SQT - Buffer slope 5-20% - Commercial / Golf Course / Agriculture / Silviculture",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 150,
+              "y": 0.7,
+              "description": "Field 150, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 5-20% - Commercial / Golf Course / Agriculture / Silviculture",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "150",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-21-40-commercial-golf-course-agriculture-si",
+          "name": "South Carolina SQT - Buffer slope 21-40% - Commercial / Golf Course / Agriculture / Silviculture",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 225,
+              "y": 0.7,
+              "description": "Field 225, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 21-40% - Commercial / Golf Course / Agriculture / Silviculture",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "225",
               ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-40-commercial-golf-course-agriculture-silvi",
+          "name": "South Carolina SQT - Buffer slope >40% - Commercial / Golf Course / Agriculture / Silviculture",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 300,
+              "y": 0.7,
+              "description": "Field 300, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope >40% - Commercial / Golf Course / Agriculture / Silviculture",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "300",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-5-industrial-landfill",
+          "name": "South Carolina SQT - Buffer slope < 5% - Industrial / Landfill",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 150,
+              "y": 0.7,
+              "description": "Field 150, Index 0.7"
+            },
+            {
+              "x": 300,
+              "y": 1,
+              "description": "Field 300, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope < 5% - Industrial / Landfill",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "150",
+              "300"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-5-20-industrial-landfill",
+          "name": "South Carolina SQT - Buffer slope 5-20% - Industrial / Landfill",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 250,
+              "y": 0.7,
+              "description": "Field 250, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 5-20% - Industrial / Landfill",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "250",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-nutrient-cycling-buffer-width-detailed-south-carolina-sqt-buffer-slope-21-40-industrial-landfill",
+          "name": "South Carolina SQT - Buffer slope 21-40% - Industrial / Landfill",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 350,
+              "y": 0.7,
+              "description": "Field 350, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Buffer slope 21-40% - Industrial / Landfill",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 242,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "350",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-nutrient-cycling-buffer-width-detailed-michigan-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Michigan SQT",
-    "sourceCitations": [
-      "Michigan SQT"
-    ],
-    "mappedFunction": "Nutrient cycling",
-    "sourceRows": [
-      256
-    ]
-  }
+  ]
 }

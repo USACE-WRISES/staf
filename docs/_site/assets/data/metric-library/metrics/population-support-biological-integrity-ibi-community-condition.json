@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "metricId": "population-support-biological-integrity-ibi-community-condition",
   "name": "Biological Integrity (IBI / community condition)",
-  "shortName": "",
+  "shortName": "Biological Integrity (IBI / community condition)",
   "discipline": "Biology",
   "function": "Population support",
-  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.\nSpecies interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
-  "descriptionMarkdown": "Healthy numbers if historically supported, unless ephemeral dryness naturally excludes them.\nIBI/multi-metric shows high integrity if historically expected, unless ephemeral dryness limits it.\nDiverse macroinvertebrates (incl. EPT) if historically expected, unless ephemeral dryness limits.",
+  "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+  "descriptionMarkdown": "\"Healthy numbers if historically supported, unless ephemeral dryness naturally excludes them. IBI/multi-metric shows high integrity if historically expected, unless ephemeral dryness limits it. Diverse macroinvertebrates (incl. EPT) if historically expected, unless ephemeral dryness limits.\"",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field; Field screening and/or Desktop (biomonitoring databases); Desktop",
-  "howToMeasureMarkdown": "Conduct a brief visual or dipnet survey and record presence where expected.\nStandard IBI score from sampling\nCompile the most recent macroinvertebrate or fish IBI score or class from state or local databases for the reach or nearest station.",
+  "howToMeasureMarkdown": "\"Conduct a brief visual or dipnet survey and record presence where expected. Standard IBI score from sampling Compile the most recent macroinvertebrate or fish IBI score or class from state or local databases for the reach or nearest station.\"",
   "inputs": [
     {
       "label": "Biological Integrity (IBI / community condition)",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Absent where historically expected. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Absent where historically expected. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-population-support-biological-integrity-ibi-community-condition"
+          "curve-population-support-biological-integrity-ibi-community-condition-screening"
         ]
       }
     }
@@ -78,37 +78,19 @@
     "Population support",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "State agency datasets, brief field recon",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Absent where historically expected.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Some presence but limited. / Rare or single individuals.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Multiple observations where historically expected.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      55
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

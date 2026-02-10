@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-catchment-hydrology-curve-number-detailed",
-  "metricId": "catchment-hydrology-curve-number-detailed",
+  "metricId": "catchment-hydrology-curve-number",
   "tier": "detailed",
   "name": "Curve Number reference curve",
   "axes": {
@@ -33,8 +33,8 @@
             },
             {
               "x": 70,
-              "y": 0.4,
-              "description": "Field 70, Index 0.4"
+              "y": 0.3,
+              "description": "Field 70, Index 0.3"
             },
             {
               "x": 78.44963,
@@ -44,47 +44,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 10,
-            "sourceRows": [
-              10
-            ],
             "sourceCitation": "North Carolina SQT",
-            "sourceCitations": [
-              "North Carolina SQT"
-            ],
+            "sourceRow": 162,
             "fieldValues": [
               "78.44963",
               "",
               "70",
               "",
               "55",
-              "30",
-              ""
+              "30"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-catchment-hydrology-curve-number-detailed-north-carolina-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "North Carolina SQT",
-    "sourceCitations": [
-      "North Carolina SQT"
-    ],
-    "mappedFunction": "Catchment hydrology",
-    "sourceRows": [
-      10
-    ]
-  }
+  ]
 }

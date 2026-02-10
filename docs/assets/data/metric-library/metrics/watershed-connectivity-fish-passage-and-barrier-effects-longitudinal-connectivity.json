@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity",
+  "name": "Fish Passage & Barrier Effects (longitudinal connectivity)",
+  "shortName": "Fish Passage & Barrier Effects (longitudinal connectivity)",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "\"Longitudinal connectivity and aquatic organism passage; barriers can limit recolonization, migration, and gene flow. Presence and proximity of impoundments (dams/ponds/reservoirs) that can alter flow regime, sediment transport, temperature, and aquatic connectivity.\"",
+  "methodContextMarkdown": "Context: Channel and Watershed\n\nMethod: Desktop (barrier inventory/imagery) with field verification where feasible",
+  "howToMeasureMarkdown": "\"Inventory potential barriers (culverts, dams, grade controls) within the specified upstream/downstream distance using barrier datasets and imagery; confirm passability where feasible. Assign the condition class using the bin thresholds for this metric. Inventory impoundments upstream (and where specified, downstream) of the project reach using dam/impoundment datasets and imagery. Summarize proximity and/or density per the metric definition. Assign the condition class using the bin thresholds for this metric.\"",
+  "inputs": [
+    {
+      "label": "Fish Passage & Barrier Effects (longitudinal connectivity)",
+      "type": "desktop (barrier inventory/imagery) with field verification where feasible",
+      "source": "Channel and Watershed",
+      "required": true,
+      "helpMarkdown": "\"Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible. ADF&G Web Mapper & Imagery National Inventory of Dams (NID) and/or state dam databases; NHD/NHDPlus waterbodies/flowlines; recent imagery.\""
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "threeBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "threeBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Good",
+              "ratingId": "good",
+              "criteriaMarkdown": "Good: No barrier within watershed OR barriers provide beneficial effect on project area and allows for aquatic organism passage. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists that is creating a minor fish passage barrier. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Aquatic organism barriers (including impoundment(s)) located within 1 mile upstream or downstream of project area has a negative effect on aquatic organism passage. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity-screening"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Barrier inventory (if used)",
+    "WI SQT 2022",
+    "TN SQT",
+    "Alaska SQT",
+    "CO SQT 2019",
+    "WY SQT 2019",
+    "National Inventory of Dams (if used)",
+    "MI SQT 2019",
+    "SC SQT 2021",
+    "MN SQT 2020",
+    "NC SQT 2019"
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "screening"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      63
+    ],
+    "sourceCitations": [
+      "Wisconsin SQT",
+      "Tennessee SQT",
+      "Alaska SQT",
+      "Colorado SQT",
+      "Wyoming SQT",
+      "Michigan SQT",
+      "South Carolina SQT",
+      "Minnesota SQT",
+      "North Carolina SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
+    }
+  }
+}

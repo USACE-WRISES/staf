@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-channels-cutoffs-screening",
+  "metricId": "channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-channels-cutoffs",
+  "tier": "screening",
+  "name": "Planform Complexity (sinuosity/braiding/side channels/cutoffs) screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-channels-cutoffs-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-channels-cutoffs-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Condition aligns with local reference for the stream type. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slight departure from reference condition. / Moderate braiding where not typical, or loss of braiding where it is typical. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Heavily braided from instability, or forced single-thread where braiding is expected. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-planform-complexity-sinuosity-braiding-side-channels-cutoffs-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

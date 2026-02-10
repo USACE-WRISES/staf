@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "catchment-hydrology-impervious-surface-cover",
   "name": "Impervious Surface Cover",
-  "shortName": "",
+  "shortName": "Impervious Surface Cover",
   "discipline": "Hydrology",
   "function": "Catchment hydrology",
   "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Impervious Cover (IC) Index Score of 40% or less. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Impervious Cover (IC) Index Score of 40% or less. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-catchment-hydrology-impervious-surface-cover"
+          "curve-catchment-hydrology-impervious-surface-cover-screening"
         ]
       }
     }
@@ -62,12 +62,9 @@
   "references": [
     "NLCD Impervious Surface (MRLC) (if used)",
     "MN SQT 2020",
-    "NLCD Impervious Surface (MRLC) (if used)",
     "MI SQT 2019",
     "NC SQT 2019",
-    "NLCD Impervious Surface (MRLC) (if used)",
     "SC SQT 2021",
-    "NLCD Impervious Surface (MRLC) (if used)",
     "TN SQT"
   ],
   "tags": [
@@ -75,37 +72,23 @@
     "Catchment hydrology",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Minnesota SQT; Michigan SQT; North Carolina SQT; South Carolina SQT; Tennessee SQT",
-    "scsDefaultOn": true,
-    "metricDataSource": "Impervious-surface GIS (e.g., NLCD Impervious Surface or local impervious dataset); watershed boundary.",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Impervious Cover (IC) Index Score of 40% or less.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "IC Index Score Between 41% and 70%.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "IC Index score of 71% or greater.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      2
+    ],
+    "sourceCitations": [
+      "Minnesota SQT",
+      "Michigan SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Tennessee SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

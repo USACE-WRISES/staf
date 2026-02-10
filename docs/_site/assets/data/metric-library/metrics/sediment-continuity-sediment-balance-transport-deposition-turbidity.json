@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "metricId": "sediment-continuity-sediment-balance-transport-deposition-turbidity",
   "name": "Sediment Balance (transport/deposition/turbidity)",
-  "shortName": "",
+  "shortName": "Sediment Balance (transport/deposition/turbidity)",
   "discipline": "Geomorphology",
   "function": "Sediment continuity",
   "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
-  "descriptionMarkdown": "Fine input aligns with transport, unless higher turbidity/fines are historically normal (e.g., blackwater).\nDeposition matches natural form, no severe bar formation beyond typical references.\nFlow/slope balance incoming sediment, avoiding major bars or deep scour, unless imbalance is historically normal.",
-  "methodContextMarkdown": "Context: Channel\n\nMethod: Field; Desktop",
-  "howToMeasureMarkdown": "Review available turbidity or TSS data and visually assess bed fines. Where data are absent, infer risk from land use and soils.\nDelineate bar types (point, mid-channel, lateral) and compare to expected morphology for the channel type.\nScreen stream power using discharge and slope and compare with observed bars or scour. Detailed transport modeling is beyond screening.",
+  "descriptionMarkdown": "\"Fine input aligns with transport, unless higher turbidity/fines are historically normal (e.g., blackwater). Deposition matches natural form, no severe bar formation beyond typical references. Flow/slope balance incoming sediment, avoiding major bars or deep scour, unless imbalance is historically normal.\"",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "\"Review available turbidity or TSS data and visually assess bed fines. Where data are absent, infer risk from land use and soils. Delineate bar types (point, mid-channel, lateral) and compare to expected morphology for the channel type. Screen stream power using discharge and slope and compare with observed bars or scour. Detailed transport modeling is beyond screening.\"",
   "inputs": [
     {
       "label": "Sediment Balance (transport/deposition/turbidity)",
-      "type": "field; desktop",
-      "source": "Channel",
+      "type": "desktop",
+      "source": "Floodplain",
       "required": true,
       "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
     }
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Severe siltation or turbidity that smothers substrate. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Severe siltation or turbidity that smothers substrate. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-sediment-continuity-sediment-balance-transport-deposition-turbidity"
+          "curve-sediment-continuity-sediment-balance-transport-deposition-turbidity-screening"
         ]
       }
     }
@@ -75,37 +75,19 @@
     "Sediment continuity",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Severe siltation or turbidity that smothers substrate.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Minor silt layers or partial turbidity. / High turbidity or moderate silt coverage.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Low chronic turbidity and minimal fines, or regionally normal conditions.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      33
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

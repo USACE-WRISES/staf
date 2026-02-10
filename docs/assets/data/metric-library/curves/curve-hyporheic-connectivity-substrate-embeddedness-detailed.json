@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-hyporheic-connectivity-substrate-embeddedness-detailed",
-  "metricId": "hyporheic-connectivity-substrate-embeddedness-detailed",
+  "metricId": "hyporheic-connectivity-substrate-embeddedness",
   "tier": "detailed",
-  "name": "Substrate Embeddedness (%) reference curve",
+  "name": "Substrate Embeddedness reference curve",
   "axes": {
-    "xLabel": "Substrate Embeddedness (%)",
+    "xLabel": "Substrate Embeddedness",
     "yLabel": "Index score",
-    "xUnit": "%",
     "yUnit": "index"
   },
   "curves": [
@@ -15,11 +14,11 @@
       "curveId": "curve-hyporheic-connectivity-substrate-embeddedness-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "%",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-hyporheic-connectivity-substrate-embeddedness-detailed-proposed-derived-from-sfari-rapid-c",
+          "id": "curve-hyporheic-connectivity-substrate-embeddedness-detailed-proposed-derived-from-sfari-rapid-curves-stratify-by-riffle",
           "name": "Proposed (derived from SFARI rapid curves) - Stratify by riffle habitat; avoid pools for embeddedness scoring.",
           "points": [
             {
@@ -34,8 +33,8 @@
             },
             {
               "x": 60,
-              "y": 0.4,
-              "description": "Field 60, Index 0.4"
+              "y": 0.3,
+              "description": "Field 60, Index 0.3"
             },
             {
               "x": 80,
@@ -50,47 +49,26 @@
           ],
           "sourceMetadata": {
             "stratification": "Stratify by riffle habitat; avoid pools for embeddedness scoring.",
-            "sourceRow": 85,
-            "sourceRows": [
-              85
-            ],
             "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-            "sourceCitations": [
-              "Proposed (derived from SFARI rapid curves)"
-            ],
+            "sourceRow": 188,
             "fieldValues": [
               "10",
               "35",
               "60",
               "80",
-              "95",
-              "",
-              ""
+              "95"
             ],
             "indexValues": [
               "1",
               "0.7",
-              "0.4",
+              "0.3",
               "0.1",
-              "0",
-              "",
-              ""
+              "0"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-hyporheic-connectivity-substrate-embeddedness-detailed-proposed-derived-from-sfari-rapid-c"
+      "activeLayerId": "curve-hyporheic-connectivity-substrate-embeddedness-detailed-proposed-derived-from-sfari-rapid-curves-stratify-by-riffle"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-    "sourceCitations": [
-      "Proposed (derived from SFARI rapid curves)"
-    ],
-    "mappedFunction": "Hyporheic connectivity",
-    "sourceRows": [
-      85
-    ]
-  }
+  ]
 }

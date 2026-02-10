@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-large-wood-bedform-diversity-sequence-screening",
+  "metricId": "bed-composition-and-large-wood-bedform-diversity-sequence",
+  "tier": "screening",
+  "name": "Bedform Diversity / Sequence screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-bedform-diversity-sequence-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-bedform-diversity-sequence-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Clear riffle-pool or step-pool sequence with robust variety. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some diversity but partially uniform. / Mostly homogeneous bed with faint or missing sequences. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Flattened or artificially uniform bed. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-bedform-diversity-sequence-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

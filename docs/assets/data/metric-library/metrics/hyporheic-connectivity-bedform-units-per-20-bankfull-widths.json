@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-bedform-units-per-20-bankfull-widths",
+  "name": "Bedform Units per 20 Bankfull Widths",
+  "shortName": "Bedform Units per 20 Bankfull Widths",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Count of exchange-relevant bedform units normalized by reach length expressed as 20�Wbf. Higher is better.",
+  "methodContextMarkdown": "Field + imagery",
+  "howToMeasureMarkdown": "Count riffles/pools/steps within reach length = 20�Wbf; report total.",
+  "inputs": [
+    {
+      "label": "Bedform Units per 20 Bankfull Widths",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping + imagery; bankfull width."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-hyporheic-connectivity-bedform-units-per-20-bankfull-widths-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-bedform-units-per-20-bankfull-widths-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "habitat mapping protocols."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      190
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

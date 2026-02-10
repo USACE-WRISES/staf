@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "streamflow-regime-channel-natural-flow-regime",
   "name": "Channel natural flow regime",
+  "shortName": "Channel natural flow regime",
   "discipline": "Hydrology",
-  "function": "Streamflow Regime",
+  "function": "Streamflow regime",
   "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
   "descriptionMarkdown": "Compares current daily-flow pattern to the natural regime, combining IHA metrics with the Richards-Baker flashiness index to screen for alteration from dams, withdrawals, or urbanization.",
   "methodContextMarkdown": "Context: C\n\nMethod: D",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Channel natural flow regime",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "d",
+      "source": "C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "hydrology"
+    "Hydrology",
+    "Streamflow regime",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      78
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

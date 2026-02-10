@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-streamflow-regime-flow-alteration-regulation-water-use-screening",
+  "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
+  "tier": "screening",
+  "name": "Flow Alteration (Regulation / Water Use) screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-flow-alteration-regulation-water-use-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flow-alteration-regulation-water-use-screening-multiple-sources",
+          "name": "Multiple Sources",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: <10% difference from baseline. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 10-50% difference. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: >50% difference. Near dewatering or strong hydropeaking. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flow-alteration-regulation-water-use-screening-multiple-sources",
+      "indexRange": true
+    }
+  ]
+}

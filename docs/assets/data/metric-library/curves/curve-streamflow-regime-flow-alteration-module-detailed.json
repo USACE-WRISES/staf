@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-streamflow-regime-flow-alteration-module-detailed",
+  "metricId": "streamflow-regime-flow-alteration-module",
+  "tier": "detailed",
+  "name": "Flow Alteration Module reference curve",
+  "axes": {
+    "xLabel": "Flow Alteration Module",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-flow-alteration-module-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flow-alteration-module-detailed-colorado-sqt-all-metrics",
+          "name": "Colorado SQT - ALL METRICS",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.9,
+              "y": 1,
+              "description": "Field 0.9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "ALL METRICS",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 175,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "0.9"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-streamflow-regime-flow-alteration-module-detailed-wyoming-sqt-all-metrics",
+          "name": "Wyoming SQT - ALL METRICS",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 0.9,
+              "y": 1,
+              "description": "Field 0.9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "ALL METRICS",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 175,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "0.9"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flow-alteration-module-detailed-colorado-sqt-all-metrics"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-channel-and-floodplain-dynamics-greenline-stability-rating-detailed",
-  "metricId": "channel-and-floodplain-dynamics-greenline-stability-rating-detailed",
+  "metricId": "channel-and-floodplain-dynamics-greenline-stability-rating",
   "tier": "detailed",
   "name": "Greenline Stability Rating reference curve",
   "axes": {
@@ -18,8 +18,8 @@
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-channel-and-floodplain-dynamics-greenline-stability-rating-detailed-multiple-sqts",
-          "name": "Multiple SQTs",
+          "id": "curve-channel-and-floodplain-dynamics-greenline-stability-rating-detailed-colorado-sqt",
+          "name": "Colorado SQT",
           "points": [
             {
               "x": 2,
@@ -28,8 +28,8 @@
             },
             {
               "x": 5,
-              "y": 0.4,
-              "description": "Field 5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 5, Index 0.3"
             },
             {
               "x": 7,
@@ -43,52 +43,76 @@
             }
           ],
           "sourceMetadata": {
-            "stratification": "Multiple SQTs",
-            "sourceRow": 99,
-            "sourceRows": [
-              99,
-              128
-            ],
+            "stratification": "",
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT",
-              "Wyoming SQT"
-            ],
+            "sourceRow": 200,
             "fieldValues": [
               "2",
               "",
               "5",
               "",
               "7",
-              "9",
-              ""
+              "9"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-greenline-stability-rating-detailed-wyoming-sqt",
+          "name": "Wyoming SQT",
+          "points": [
+            {
+              "x": 2,
+              "y": 0,
+              "description": "Field 2, Index 0"
+            },
+            {
+              "x": 5,
+              "y": 0.3,
+              "description": "Field 5, Index 0.3"
+            },
+            {
+              "x": 7,
+              "y": 0.7,
+              "description": "Field 7, Index 0.7"
+            },
+            {
+              "x": 9,
+              "y": 1,
+              "description": "Field 9, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 200,
+            "fieldValues": [
+              "2",
+              "",
+              "5",
+              "",
+              "7",
+              "9"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-channel-and-floodplain-dynamics-greenline-stability-rating-detailed-multiple-sqts"
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-greenline-stability-rating-detailed-colorado-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Colorado SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Colorado SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Channel and floodplain dynamics",
-    "sourceRows": [
-      99,
-      128
-    ]
-  }
+  ]
 }

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-percent-passable-road-crossings",
+  "name": "Percent Passable Road Crossings",
+  "shortName": "Percent Passable Road Crossings",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "Percent of evaluated crossings that are passable at typical seasonal flows (aligned, embedded, no significant outlet drop).",
+  "methodContextMarkdown": "Field + desktop screening",
+  "howToMeasureMarkdown": "Assess each crossing (slope, embedment, outlet drop). Classify passable/non-passable; compute percent passable.",
+  "inputs": [
+    {
+      "label": "Percent Passable Road Crossings",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Road/culvert inventory + field passage survey (slope, outlet drop, embedment) and/or imagery/LiDAR validation."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-watershed-connectivity-percent-passable-road-crossings-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-percent-passable-road-crossings-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "state/agency fish passage guidance",
+    "culvert assessment protocols."
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      283
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

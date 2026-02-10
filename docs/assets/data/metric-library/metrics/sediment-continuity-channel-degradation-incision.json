@@ -1,22 +1,63 @@
 {
   "schemaVersion": 1,
   "metricId": "sediment-continuity-channel-degradation-incision",
-  "name": "Channel Degradation (Incision)",
+  "name": "Channel Degradation / Incision",
+  "shortName": "Channel Degradation / Incision",
   "discipline": "Geomorphology",
-  "function": "Sediment Continuity",
+  "function": "Sediment continuity",
   "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
   "descriptionMarkdown": "Bed is stable, with no active incision disconnecting floodplain unless minor incision is normal.",
-  "methodContextMarkdown": "Context: C\n\nMethod: F",
-  "howToMeasureMarkdown": "Cross-section repeat survey or visual headcut",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Extract cross sections from LiDAR or survey data to compare bed elevation to the floodplain and locate active headcuts.",
   "inputs": [
     {
-      "label": "Channel Degradation (Incision)",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "label": "Channel Degradation / Incision",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Channel"
     }
   ],
   "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "threeBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "threeBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Good",
+              "ratingId": "good",
+              "criteriaMarkdown": "Good: No active downcutting. Bed elevation is stable. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Minor localized incision. / Noticeable incision or one or two moderate headcuts that reduce floodplain access. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Severe channel-wide incision with multiple major headcuts. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-channel-degradation-incision-screening"
+        ]
+      }
+    },
     {
       "profileId": "rapid-sfari-likert",
       "tier": "rapid",
@@ -44,7 +85,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +108,31 @@
       }
     }
   ],
-  "tags": [
-    "rapid",
-    "sfari",
-    "geomorphology"
+  "references": [
+    "USGS 3DEP LiDAR cross sections and hillshade",
+    "repeat DEMs where available."
   ],
-  "status": "active"
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity",
+    "screening",
+    "rapid"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      31,
+      106
+    ],
+    "sourceCitations": [
+      "ERDC",
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

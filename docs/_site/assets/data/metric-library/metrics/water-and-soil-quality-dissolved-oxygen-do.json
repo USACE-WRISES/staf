@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "metricId": "water-and-soil-quality-dissolved-oxygen-do",
   "name": "Dissolved Oxygen (DO)",
-  "shortName": "",
+  "shortName": "Dissolved Oxygen (DO)",
   "discipline": "Physicochemistry",
   "function": "Water & soil quality",
   "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
   "descriptionMarkdown": "DO is high enough (>5-6 mg/L) for aquatic life, unless naturally lower in warm/boggy streams.",
-  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Collect spot DO readings and compile minima from time series where available.",
   "inputs": [
     {
       "label": "Dissolved Oxygen (DO)",
-      "type": "field",
-      "source": "Channel",
+      "type": "desktop",
+      "source": "Floodplain",
       "required": true,
       "helpMarkdown": "State agency datasets; existing datasets"
     }
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: <3 mg/L. High risk of acute impacts. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: <3 mg/L. High risk of acute impacts. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-water-and-soil-quality-dissolved-oxygen-do"
+          "curve-water-and-soil-quality-dissolved-oxygen-do-screening"
         ]
       }
     }
@@ -68,37 +68,19 @@
     "Water & soil quality",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "State agency datasets; existing datasets",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "<3 mg/L. High risk of acute impacts.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "5-6 mg/L. Borderline. / 3-5 mg/L. Frequent stress.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": ">6 mg/L and no hypoxia.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      49
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-leaf-litter-processing-rate",
+  "name": "Leaf Litter Processing Rate",
+  "shortName": "Leaf Litter Processing Rate",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (sampling/assay)",
+  "howToMeasureMarkdown": "Deploy standardized leaf packs, retrieve after set period, and calculate processing/decay rate per SQT method.",
+  "inputs": [
+    {
+      "label": "Leaf Litter Processing Rate",
+      "type": "field (sampling/assay)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field/lab primary production or decomposition measurements; macroinvertebrate functional group counts."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-leaf-litter-processing-rate-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-leaf-litter-processing-rate-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "North Carolina SQT",
+    "Leaf pack decomposition methods",
+    "state bioassessment protocols where relevant"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      234
+    ],
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

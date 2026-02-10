@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-fish-detailed",
+  "metricId": "population-support-fish",
+  "tier": "detailed",
+  "name": "Fish reference curve",
+  "axes": {
+    "xLabel": "Fish",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-fish-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-fish-detailed-michigan-sqt-p51-wadeable-and-warm-and-warm-transitional-water",
+          "name": "Michigan SQT - P51 Wadeable & Warm and Warm-transitional Water",
+          "points": [
+            {
+              "x": -10,
+              "y": 0,
+              "description": "Field -10, Index 0"
+            },
+            {
+              "x": -4,
+              "y": 0.3,
+              "description": "Field -4, Index 0.3"
+            },
+            {
+              "x": 4,
+              "y": 0.69,
+              "description": "Field 4, Index 0.69"
+            },
+            {
+              "x": 10,
+              "y": 1,
+              "description": "Field 10, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "P51 Wadeable & Warm and Warm-transitional Water",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 269,
+            "fieldValues": [
+              "-10",
+              "",
+              "-4",
+              "4",
+              "",
+              "10"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-fish-detailed-michigan-sqt-p51-wadeable-and-warm-and-warm-transitional-water"
+    }
+  ]
+}

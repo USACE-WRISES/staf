@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: No levees or spoil banks. Sinuous planform. No signs of dredging. Criteria: Stable channel. Not incised or dredged. Frequent floodplain access.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Short straightened segment and intermittent spoil berm on one bank. Criteria: Slight channelization or partial dredging.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Reach is incised by about 1-2 m with continuous spoil banks on one or both banks. Criteria: Heavily modified or incised with limited floodplain access.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Recently dredged trapezoidal channel with levees along both banks. Criteria: Deeply dredged or fully channelized. No functional floodplain.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-floodplain-connectivity-channel-condition-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-floodplain-connectivity-channel-condition-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-floodplain-connectivity-channel-condition-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-floodplain-connectivity-channel-condition-rapid",
+  "metricId": "floodplain-connectivity-channel-condition",
   "tier": "rapid",
+  "name": "Channel condition rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "floodplain-connectivity-channel-condition"
+  "curves": [
+    {
+      "curveId": "curve-floodplain-connectivity-channel-condition-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-floodplain-connectivity-channel-condition-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: No levees or spoil banks. Sinuous planform. No signs of dredging. Criteria: Stable channel. Not incised or dredged. Frequent floodplain access."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Short straightened segment and intermittent spoil berm on one bank. Criteria: Slight channelization or partial dredging."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Reach is incised by about 1-2 m with continuous spoil banks on one or both banks. Criteria: Heavily modified or incised with limited floodplain access."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Recently dredged trapezoidal channel with levees along both banks. Criteria: Deeply dredged or fully channelized. No functional floodplain."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-floodplain-connectivity-channel-condition-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "metricId": "watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded",
+  "name": "Adjacent Reach Condition for Recruitment (hardened/embedded)",
+  "shortName": "Adjacent Reach Condition for Recruitment (hardened/embedded)",
+  "discipline": "Biology",
+  "function": "Watershed connectivity",
+  "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+  "descriptionMarkdown": "Longitudinal connectivity and aquatic organism passage; barriers can limit recolonization, migration, and gene flow.",
+  "methodContextMarkdown": "Context: Channel and Watershed\n\nMethod: Desktop (barrier inventory/imagery) with field verification where feasible",
+  "howToMeasureMarkdown": "Inventory potential barriers (culverts, dams, grade controls) within the specified upstream/downstream distance using barrier datasets and imagery; confirm passability where feasible. Assign the condition class using the bin thresholds for this metric.",
+  "inputs": [
+    {
+      "label": "Adjacent Reach Condition for Recruitment (hardened/embedded)",
+      "type": "desktop (barrier inventory/imagery) with field verification where feasible",
+      "source": "Channel and Watershed",
+      "required": true,
+      "helpMarkdown": "\"Imagery & Site data Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible.\""
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "threeBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "threeBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Good",
+              "ratingId": "good",
+              "criteriaMarkdown": "Good: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) has native bed and bank material. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) has native bed and bank material that is highly embedded by fine sediment. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Channel immediately upstream or downstream of project reach (i.e., within 1 km or 0.62 mi) is concrete, piped, or hardened. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-watershed-connectivity-adjacent-reach-condition-for-recruitment-hardened-embedded-screening"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Barrier inventory (if used)",
+    "Alaska SQT",
+    "CO SQT 2019",
+    "MI SQT 2019",
+    "NC SQT 2019",
+    "SC SQT 2021",
+    "WI SQT 2022",
+    "WY SQT 2019",
+    "TN SQT"
+  ],
+  "tags": [
+    "Biology",
+    "Watershed connectivity",
+    "screening"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      61
+    ],
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Michigan SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT",
+      "Tennessee SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
+    }
+  }
+}

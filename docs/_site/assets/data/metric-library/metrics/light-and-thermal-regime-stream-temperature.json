@@ -1,23 +1,63 @@
 {
   "schemaVersion": 1,
   "metricId": "light-and-thermal-regime-stream-temperature",
-  "name": "Stream temperature",
-  "shortName": "",
+  "name": "Stream Temperature",
+  "shortName": "Stream Temperature",
   "discipline": "Physicochemistry",
-  "function": "Light and thermal regime",
+  "function": "Light & thermal regime",
   "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
   "descriptionMarkdown": "Stays within acceptable bounds for local aquatic life, rarely exceeding stress thresholds.",
-  "methodContextMarkdown": "Context: Field\n\nMethod: Use continuous or spot water-temperature records to assess maxima and diel range. Use modeled products where monitoring data are absent.",
-  "howToMeasureMarkdown": "Rarely surpasses local standard or typical seasonal maxima for the stream type.",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
+  "howToMeasureMarkdown": "Pull historical evidence or GIS data from public sources on temperature data such as USGS NWIS and EPA Water Quality Portal. In absence of data sources, use riparian shading as a surrograte based on GIS data and aerial photogrammetry",
   "inputs": [
     {
-      "label": "Stream temperature",
-      "type": "use continuous or spot water-temperature records to assess maxima and diel range. use modeled products where monitoring data are absent.",
-      "source": "Field",
-      "required": true
+      "label": "Stream Temperature",
+      "type": "desktop",
+      "source": "Floodplain",
+      "required": true,
+      "helpMarkdown": "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled temperatures (where available); Riparian shading proxy in absence of data sources"
     }
   ],
   "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "threeBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "threeBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Good",
+              "ratingId": "good",
+              "criteriaMarkdown": "Good: Rarely surpasses local standard or typical seasonal maxima for the stream type. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Slightly exceeds thresholds occasionally. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Frequently near or above thresholds. / Consistently high or potentially lethal temperatures. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-light-and-thermal-regime-stream-temperature-screening"
+        ]
+      }
+    },
     {
       "profileId": "rapid-sfari-likert",
       "tier": "rapid",
@@ -45,7 +85,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -68,12 +108,31 @@
       }
     }
   ],
-  "references": [],
+  "references": [
+    "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available)",
+    "NorWeST modeled stream temperature products (where available)."
+  ],
   "tags": [
-    "Light and thermal regime",
     "Physicochemistry",
-    "physicochemistry",
-    "sfari",
+    "Light & thermal regime",
+    "screening",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      39,
+      116
+    ],
+    "sourceCitations": [
+      "ERDC",
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

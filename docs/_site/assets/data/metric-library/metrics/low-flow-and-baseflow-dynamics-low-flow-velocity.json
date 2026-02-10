@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "low-flow-and-baseflow-dynamics-low-flow-velocity",
   "name": "Low flow velocity",
+  "shortName": "Low flow velocity",
   "discipline": "Hydraulics",
-  "function": "Low Flow and Baseflow Dynamics",
+  "function": "Low flow and baseflow dynamics",
   "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
   "descriptionMarkdown": "Low flow velocity describes movement through the thalweg during typical low flow; measurable movement supports dissolved oxygen and limits stagnation, while shifts indicate altered baseflow timing.",
   "methodContextMarkdown": "Context: C\n\nMethod: F",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Low flow velocity",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "f",
+      "source": "C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "hydraulics"
+    "Hydraulics",
+    "Low flow and baseflow dynamics",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      84
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-wetland-open-water-area-detailed",
+  "metricId": "surface-water-storage-wetland-open-water-area",
+  "tier": "detailed",
+  "name": "Wetland + Open Water Area reference curve",
+  "axes": {
+    "xLabel": "Wetland + Open Water Area",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-wetland-open-water-area-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-wetland-open-water-area-detailed-proposed-derived-from-sfari-rapid-curves-floodplain-interpr",
+          "name": "Proposed (derived from SFARI rapid curves) - Floodplain / Interpret against regional historic wetland prevalence; use O/E where wetlands are naturally scarce.",
+          "points": [
+            {
+              "x": 0.5,
+              "y": 0,
+              "description": "Field 0.5, Index 0"
+            },
+            {
+              "x": 1.5,
+              "y": 0.3,
+              "description": "Field 1.5, Index 0.3"
+            },
+            {
+              "x": 3.5,
+              "y": 0.7,
+              "description": "Field 3.5, Index 0.7"
+            },
+            {
+              "x": 8,
+              "y": 1,
+              "description": "Field 8, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Floodplain / Interpret against regional historic wetland prevalence; use O/E where wetlands are naturally scarce.",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 170,
+            "fieldValues": [
+              "0.5",
+              "1.5",
+              "3.5",
+              "8"
+            ],
+            "indexValues": [
+              "0",
+              "0.3",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-wetland-open-water-area-detailed-proposed-derived-from-sfari-rapid-curves-floodplain-interpr"
+    }
+  ]
+}

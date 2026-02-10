@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-channel-evolution-width-depth-ratio-state-detailed",
-  "metricId": "channel-evolution-width-depth-ratio-state-detailed",
+  "metricId": "channel-evolution-width-depth-ratio-state",
   "tier": "detailed",
   "name": "Width/Depth Ratio State reference curve",
   "axes": {
@@ -34,31 +34,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 93,
-            "sourceRows": [
-              93
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 196,
             "fieldValues": [
               "1.8",
               "",
               "",
               "",
               "",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -79,49 +71,65 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 95,
-            "sourceRows": [
-              95
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 196,
             "fieldValues": [
               "0.2",
               "",
               "",
               "",
               "",
-              "1",
-              ""
+              "1"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-evolution-width-depth-ratio-state-detailed-wisconsin-sqt",
+          "name": "Wisconsin SQT",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.8,
+              "y": 0,
+              "description": "Field 1.8, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 196,
+            "fieldValues": [
+              "1.8",
+              "",
+              "",
+              "",
+              "",
+              "1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-channel-evolution-width-depth-ratio-state-detailed-south-carolina-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "South Carolina SQT; Wyoming SQT",
-    "sourceCitations": [
-      "South Carolina SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Channel evolution",
-    "sourceRows": [
-      93,
-      95
-    ]
-  }
+  ]
 }

@@ -1,0 +1,814 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-percent-riffle-detailed",
+  "metricId": "habitat-provision-percent-riffle",
+  "tier": "detailed",
+  "name": "Percent Riffle reference curve",
+  "axes": {
+    "xLabel": "Percent Riffle",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-percent-riffle-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-alaska-sqt-slopes-3",
+          "name": "Alaska SQT - Slopes < 3%",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 62,
+              "y": 0.7,
+              "description": "Field 62, Index 0.7"
+            },
+            {
+              "x": 68,
+              "y": 1,
+              "description": "Field 68, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Slopes < 3%",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "62",
+              "68"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-alaska-sqt-slopes-3-overall",
+          "name": "Alaska SQT - Slopes < 3% / Overall",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 39,
+              "y": 0.7,
+              "description": "Field 39, Index 0.7"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Slopes < 3% / Overall",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "39",
+              "50"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-colorado-sqt-streams-3-slope",
+          "name": "Colorado SQT - Streams < 3% slope",
+          "points": [
+            {
+              "x": 39,
+              "y": 0.7,
+              "description": "Field 39, Index 0.7"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Streams < 3% slope",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "39",
+              "50"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-colorado-sqt-streams-3-slope-overall",
+          "name": "Colorado SQT - Streams < 3% slope / Overall",
+          "points": [
+            {
+              "x": 60,
+              "y": 0.7,
+              "description": "Field 60, Index 0.7"
+            },
+            {
+              "x": 68,
+              "y": 1,
+              "description": "Field 68, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Streams < 3% slope / Overall",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "60",
+              "68"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-north-carolina-sqt-streams-3-slope",
+          "name": "North Carolina SQT - Streams < 3% slope",
+          "points": [
+            {
+              "x": 31.42857143,
+              "y": 0,
+              "description": "Field 31.42857143, Index 0"
+            },
+            {
+              "x": 40,
+              "y": 0.3,
+              "description": "Field 40, Index 0.3"
+            },
+            {
+              "x": 60,
+              "y": 1,
+              "description": "Field 60, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Streams < 3% slope",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "31.42857143",
+              "",
+              "40",
+              "",
+              "",
+              "60"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-wyoming-sqt-streams-3-slope",
+          "name": "Wyoming SQT - Streams < 3% slope",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 60,
+              "y": 0.7,
+              "description": "Field 60, Index 0.7"
+            },
+            {
+              "x": 68,
+              "y": 1,
+              "description": "Field 68, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Streams < 3% slope",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "60",
+              "68"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-wyoming-sqt-streams-3-slope-overall",
+          "name": "Wyoming SQT - Streams < 3% slope / Overall",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 39,
+              "y": 0.7,
+              "description": "Field 39, Index 0.7"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Streams < 3% slope / Overall",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "39",
+              "50"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-michigan-sqt-a-and-b-streams",
+          "name": "Michigan SQT - A and B Streams",
+          "points": [
+            {
+              "x": 20,
+              "y": 0,
+              "description": "Field 20, Index 0"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A and B Streams",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "20",
+              "",
+              "",
+              "",
+              "",
+              "50"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-michigan-sqt-c-and-e-stream-types",
+          "name": "Michigan SQT - C and E Stream Types",
+          "points": [
+            {
+              "x": 20,
+              "y": 0,
+              "description": "Field 20, Index 0"
+            },
+            {
+              "x": 45,
+              "y": 1,
+              "description": "Field 45, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C and E Stream Types",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "20",
+              "",
+              "",
+              "",
+              "",
+              "45"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-minnesota-sqt-a-and-b-streams",
+          "name": "Minnesota SQT - A and B Streams",
+          "points": [
+            {
+              "x": 20,
+              "y": 0,
+              "description": "Field 20, Index 0"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A and B Streams",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "20",
+              "",
+              "",
+              "",
+              "",
+              "50"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-minnesota-sqt-c-and-e-stream-types",
+          "name": "Minnesota SQT - C and E Stream Types",
+          "points": [
+            {
+              "x": 20,
+              "y": 0,
+              "description": "Field 20, Index 0"
+            },
+            {
+              "x": 45,
+              "y": 1,
+              "description": "Field 45, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C and E Stream Types",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "20",
+              "",
+              "",
+              "",
+              "",
+              "45"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-south-carolina-sqt-a-streams",
+          "name": "South Carolina SQT - A streams",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 54,
+              "y": 1,
+              "description": "Field 54, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "54"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-south-carolina-sqt-b-streams",
+          "name": "South Carolina SQT - B streams",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 53,
+              "y": 1,
+              "description": "Field 53, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "53"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-south-carolina-sqt-c-streams",
+          "name": "South Carolina SQT - C streams",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 45,
+              "y": 1,
+              "description": "Field 45, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "45"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-south-carolina-sqt-e-streams",
+          "name": "South Carolina SQT - E streams",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 43,
+              "y": 1,
+              "description": "Field 43, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E streams",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "43"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-wisconsin-sqt-a-and-b-stream-types",
+          "name": "Wisconsin SQT - A and B Stream Types",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A and B Stream Types",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "50"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-wisconsin-sqt-c-and-e-stream-types",
+          "name": "Wisconsin SQT - C and E Stream Types",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 45,
+              "y": 1,
+              "description": "Field 45, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C and E Stream Types",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "",
+              "45"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-north-carolina-sqt-streams-3-10-slope",
+          "name": "North Carolina SQT - Streams 3%-10% slope",
+          "points": [
+            {
+              "x": 33.10161663,
+              "y": 0,
+              "description": "Field 33.10161663, Index 0"
+            },
+            {
+              "x": 40,
+              "y": 0.3,
+              "description": "Field 40, Index 0.3"
+            },
+            {
+              "x": 49,
+              "y": 0.69,
+              "description": "Field 49, Index 0.69"
+            },
+            {
+              "x": 50,
+              "y": 1,
+              "description": "Field 50, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Streams 3%-10% slope",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "33.10161663",
+              "",
+              "40",
+              "49",
+              "",
+              "50"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-north-carolina-sqt-streams-10-slope",
+          "name": "North Carolina SQT - Streams >10% slope",
+          "points": [
+            {
+              "x": 66.7145,
+              "y": 0,
+              "description": "Field 66.7145, Index 0"
+            },
+            {
+              "x": 70,
+              "y": 0.3,
+              "description": "Field 70, Index 0.3"
+            },
+            {
+              "x": 75,
+              "y": 0.69,
+              "description": "Field 75, Index 0.69"
+            },
+            {
+              "x": 80,
+              "y": 1,
+              "description": "Field 80, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Streams >10% slope",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "66.7145",
+              "",
+              "70",
+              "75",
+              "",
+              "80"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-percent-riffle-detailed-wyoming-sqt-volcanics-mountains-and-valleys-bioregion",
+          "name": "Wyoming SQT - Volcanics Mountains and Valleys Bioregion",
+          "points": [
+            {
+              "x": 0,
+              "y": 0,
+              "description": "Field 0, Index 0"
+            },
+            {
+              "x": 76,
+              "y": 0.7,
+              "description": "Field 76, Index 0.7"
+            },
+            {
+              "x": 80,
+              "y": 1,
+              "description": "Field 80, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Volcanics Mountains and Valleys Bioregion",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 258,
+            "fieldValues": [
+              "0",
+              "",
+              "",
+              "",
+              "76",
+              "80"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-percent-riffle-detailed-alaska-sqt-slopes-3"
+    }
+  ]
+}

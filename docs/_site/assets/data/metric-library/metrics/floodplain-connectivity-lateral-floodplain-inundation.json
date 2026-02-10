@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "floodplain-connectivity-lateral-floodplain-inundation",
   "name": "Lateral floodplain inundation",
-  "shortName": "",
+  "shortName": "Lateral floodplain inundation",
   "discipline": "Hydraulics",
   "function": "Floodplain connectivity",
   "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
@@ -14,7 +14,8 @@
       "label": "Lateral floodplain inundation",
       "type": "desktop",
       "source": "Floodplain",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -74,10 +75,23 @@
     "FEMA floodplain layers (where available)."
   ],
   "tags": [
-    "Floodplain connectivity",
     "Hydraulics",
-    "hydraulics",
-    "sfari",
+    "Floodplain connectivity",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      93
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

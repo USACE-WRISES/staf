@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation-screening",
+  "metricId": "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation",
+  "tier": "screening",
+  "name": "Substrate Condition (grain size/embeddedness/fines/consolidation) screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation-screening-multiple-",
+          "name": "Multiple Sources",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Open interstitial coarse bed with minimal fines. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Mild embedding or partial fine coverage. / Strong embedding or siltation limiting infiltration. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Predominantly fine or consolidated bed with little interstitial space. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation-screening-multiple-",
+      "indexRange": true
+    }
+  ]
+}

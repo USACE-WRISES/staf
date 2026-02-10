@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed",
-  "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring-detailed",
+  "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
   "tier": "detailed",
   "name": "Percent Streambank Armoring reference curve",
   "axes": {
@@ -34,31 +34,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 98,
-            "sourceRows": [
-              98
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 199,
             "fieldValues": [
               "30",
               "",
               "",
               "",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -78,8 +70,8 @@
             },
             {
               "x": 21,
-              "y": 0.4,
-              "description": "Field 21, Index 0.4"
+              "y": 0.3,
+              "description": "Field 21, Index 0.3"
             },
             {
               "x": 30,
@@ -89,31 +81,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 108,
-            "sourceRows": [
-              108
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 199,
             "fieldValues": [
               "30",
               "",
               "21",
               "",
               "9",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -134,31 +118,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 123,
-            "sourceRows": [
-              123
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 199,
             "fieldValues": [
               "30",
               "",
               "",
               "",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -179,31 +155,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 127,
-            "sourceRows": [
-              127
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 199,
             "fieldValues": [
               "50",
               "",
               "",
               "",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -224,55 +192,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 131,
-            "sourceRows": [
-              131
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 199,
             "fieldValues": [
               "30",
               "",
               "",
               "",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-channel-and-floodplain-dynamics-percent-streambank-armoring-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; Michigan SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Alaska SQT",
-      "Michigan SQT",
-      "South Carolina SQT",
-      "Wisconsin SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Channel and floodplain dynamics",
-    "sourceRows": [
-      98,
-      108,
-      123,
-      127,
-      131
-    ]
-  }
+  ]
 }

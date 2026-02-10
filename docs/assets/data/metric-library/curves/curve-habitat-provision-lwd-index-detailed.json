@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-habitat-provision-lwd-index-detailed",
-  "metricId": "habitat-provision-lwd-index-detailed",
+  "metricId": "habitat-provision-lwd-index",
   "tier": "detailed",
   "name": "LWD Index reference curve",
   "axes": {
@@ -39,31 +39,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 310,
-            "sourceRows": [
-              310
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 261,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "430",
-              "660",
-              ""
+              "660"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -89,31 +81,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 320,
-            "sourceRows": [
-              320
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 261,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "1350",
-              "2825",
-              ""
+              "2825"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -139,31 +123,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 327,
-            "sourceRows": [
-              327
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 261,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "430",
-              "660",
-              ""
+              "660"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -178,8 +154,8 @@
             },
             {
               "x": 200,
-              "y": 0.4,
-              "description": "Field 200, Index 0.4"
+              "y": 0.3,
+              "description": "Field 200, Index 0.3"
             },
             {
               "x": 300,
@@ -194,31 +170,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 335,
-            "sourceRows": [
-              335
-            ],
             "sourceCitation": "North Carolina SQT",
-            "sourceCitations": [
-              "North Carolina SQT"
-            ],
+            "sourceRow": 261,
             "fieldValues": [
               "0",
               "",
               "200",
               "",
               "300",
-              "700",
-              ""
+              "700"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -244,31 +212,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 347,
-            "sourceRows": [
-              347
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 261,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "355",
-              "731",
-              ""
+              "731"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -294,31 +254,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 360,
-            "sourceRows": [
-              360
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 261,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "1350",
-              "2825",
-              ""
+              "2825"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -344,59 +296,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 368,
-            "sourceRows": [
-              368
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 261,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "430",
-              "660",
-              ""
+              "660"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-habitat-provision-lwd-index-detailed-colorado-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Colorado SQT; Michigan SQT; Minnesota SQT; North Carolina SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Colorado SQT",
-      "Michigan SQT",
-      "Minnesota SQT",
-      "North Carolina SQT",
-      "South Carolina SQT",
-      "Wisconsin SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Habitat provision",
-    "sourceRows": [
-      310,
-      320,
-      327,
-      335,
-      347,
-      360,
-      368
-    ]
-  }
+  ]
 }

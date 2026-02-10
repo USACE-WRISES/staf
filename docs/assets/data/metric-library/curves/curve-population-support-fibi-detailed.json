@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-population-support-fibi-detailed",
-  "metricId": "population-support-fibi-detailed",
+  "metricId": "population-support-fibi",
   "tier": "detailed",
   "name": "fIBI reference curve",
   "axes": {
@@ -28,8 +28,8 @@
             },
             {
               "x": 30,
-              "y": 0.4,
-              "description": "Field 30, Index 0.4"
+              "y": 0.3,
+              "description": "Field 30, Index 0.3"
             },
             {
               "x": 60,
@@ -44,31 +44,23 @@
           ],
           "sourceMetadata": {
             "stratification": "Coldwater",
-            "sourceRow": 424,
-            "sourceRows": [
-              424
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 277,
             "fieldValues": [
               "0",
               "",
               "30",
               "",
               "60",
-              "90",
-              ""
+              "90"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -83,8 +75,8 @@
             },
             {
               "x": 30,
-              "y": 0.4,
-              "description": "Field 30, Index 0.4"
+              "y": 0.3,
+              "description": "Field 30, Index 0.3"
             },
             {
               "x": 50,
@@ -99,31 +91,23 @@
           ],
           "sourceMetadata": {
             "stratification": "Coolwater",
-            "sourceRow": 425,
-            "sourceRows": [
-              425
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 277,
             "fieldValues": [
               "0",
               "",
               "30",
               "",
               "50",
-              "70",
-              ""
+              "70"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -138,8 +122,8 @@
             },
             {
               "x": 30,
-              "y": 0.4,
-              "description": "Field 30, Index 0.4"
+              "y": 0.3,
+              "description": "Field 30, Index 0.3"
             },
             {
               "x": 50,
@@ -154,49 +138,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Warmwater",
-            "sourceRow": 426,
-            "sourceRows": [
-              426
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 277,
             "fieldValues": [
               "0",
               "",
               "30",
               "",
               "50",
-              "65",
-              ""
+              "65"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-population-support-fibi-detailed-wisconsin-sqt-coldwater"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Wisconsin SQT",
-    "sourceCitations": [
-      "Wisconsin SQT"
-    ],
-    "mappedFunction": "Population support",
-    "sourceRows": [
-      424,
-      425,
-      426
-    ]
-  }
+  ]
 }

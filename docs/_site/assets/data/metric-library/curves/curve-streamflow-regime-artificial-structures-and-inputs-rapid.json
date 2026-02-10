@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: No major regulating structures or inputs affecting the reach. Criteria: No dams, levees, or diversions; IHA components generally within reference.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: One small structure or minor diversion with limited local effects. Criteria: Localized regulation or slight departures in IHA components.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: One or two moderate structures or diversions noticeably alter flows. Criteria: Reduced floodplain access, altered baseflow, or shifted seasonal timing.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Multiple or large structures strongly regulate or dewater. Criteria: Flattened peaks, daily stage swings, or widespread IHA departures.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-streamflow-regime-artificial-structures-and-inputs-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-streamflow-regime-artificial-structures-and-inputs-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-streamflow-regime-artificial-structures-and-inputs-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-streamflow-regime-artificial-structures-and-inputs-rapid",
+  "metricId": "streamflow-regime-artificial-structures-and-inputs",
   "tier": "rapid",
+  "name": "Artificial structures and inputs rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "streamflow-regime-artificial-structures-and-inputs"
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-artificial-structures-and-inputs-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-artificial-structures-and-inputs-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: No major regulating structures or inputs affecting the reach. Criteria: No dams, levees, or diversions; IHA components generally within reference."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: One small structure or minor diversion with limited local effects. Criteria: Localized regulation or slight departures in IHA components."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: One or two moderate structures or diversions noticeably alter flows. Criteria: Reduced floodplain access, altered baseflow, or shifted seasonal timing."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Multiple or large structures strongly regulate or dewater. Criteria: Flattened peaks, daily stage swings, or widespread IHA departures."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-artificial-structures-and-inputs-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

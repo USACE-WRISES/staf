@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-catchment-hydrology-impervious-cover-detailed",
-  "metricId": "catchment-hydrology-impervious-cover-detailed",
+  "metricId": "catchment-hydrology-impervious-cover",
   "tier": "detailed",
   "name": "Impervious Cover reference curve",
   "axes": {
@@ -34,47 +34,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 3,
-            "sourceRows": [
-              3
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 157,
             "fieldValues": [
               "",
               "",
               "",
               "",
               "10",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-catchment-hydrology-impervious-cover-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT",
-    "sourceCitations": [
-      "Alaska SQT"
-    ],
-    "mappedFunction": "Catchment hydrology",
-    "sourceRows": [
-      3
-    ]
-  }
+  ]
 }

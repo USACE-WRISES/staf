@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: TN ~0.5 mg/L and TP ~0.03 mg/L. Criteria: Near low to moderate trophic benchmarks",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: TN ~0.7-1.0 mg/L or TP ~0.05-0.075 mg/L. Criteria: Slightly elevated nutrients",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: TN ~1.0-1.5 mg/L or TP ~0.075-0.10 mg/L. Criteria: Marked elevation",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: TN > 1.5 mg/L or TP > 0.10 mg/L. Criteria: Strong enrichment",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid",
+  "metricId": "nutrient-cycling-n-p-concentrations-surrogates",
   "tier": "rapid",
+  "name": "N/P Concentrations (surrogates) rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "nutrient-cycling-n-p-concentrations-surrogates"
+  "curves": [
+    {
+      "curveId": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: TN ~0.5 mg/L and TP ~0.03 mg/L. Criteria: Near low to moderate trophic benchmarks"
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: TN ~0.7-1.0 mg/L or TP ~0.05-0.075 mg/L. Criteria: Slightly elevated nutrients"
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: TN ~1.0-1.5 mg/L or TP ~0.075-0.10 mg/L. Criteria: Marked elevation"
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: TN > 1.5 mg/L or TP > 0.10 mg/L. Criteria: Strong enrichment"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-nutrient-cycling-n-p-concentrations-surrogates-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

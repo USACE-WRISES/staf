@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Continuous inset benches on both banks with established woody and herbaceous cover. Criteria: Broad, established vegetated benches or inset floodplains.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Patchy vegetated bars and short bench segments. Vegetation is establishing. Criteria: Noticeable but incomplete bench and bar formation.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Narrow, mostly bare bars. Few inset surfaces. Fresh erosion visible. Criteria: Sparse new floodplain surfaces and limited vegetation.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: No benches or inset floodplains. Vertical raw banks dominate. Criteria: No meaningful signs of recovery.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-channel-evolution-recovery-metrics-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-channel-evolution-recovery-metrics-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-channel-evolution-recovery-metrics-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-channel-evolution-recovery-metrics-rapid",
+  "metricId": "channel-evolution-recovery-metrics",
   "tier": "rapid",
+  "name": "Recovery Metrics rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "channel-evolution-recovery-metrics"
+  "curves": [
+    {
+      "curveId": "curve-channel-evolution-recovery-metrics-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-evolution-recovery-metrics-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Continuous inset benches on both banks with established woody and herbaceous cover. Criteria: Broad, established vegetated benches or inset floodplains."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Patchy vegetated bars and short bench segments. Vegetation is establishing. Criteria: Noticeable but incomplete bench and bar formation."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Narrow, mostly bare bars. Few inset surfaces. Fresh erosion visible. Criteria: Sparse new floodplain surfaces and limited vegetation."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: No benches or inset floodplains. Vertical raw banks dominate. Criteria: No meaningful signs of recovery."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-evolution-recovery-metrics-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

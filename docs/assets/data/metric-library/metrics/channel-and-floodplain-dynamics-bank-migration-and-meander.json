@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "channel-and-floodplain-dynamics-bank-migration-and-meander",
   "name": "Bank Migration and Meander",
+  "shortName": "Bank Migration and Meander",
   "discipline": "Geomorphology",
-  "function": "Channel and Floodplain Dynamics",
+  "function": "Channel and floodplain dynamics",
   "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
   "descriptionMarkdown": "Compares meander migration rates and cutoff frequency to reference behavior; excessive migration or avulsions indicate instability.",
   "methodContextMarkdown": "Context: C\n\nMethod: D",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Bank Migration and Meander",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "d",
+      "source": "C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "geomorphology"
+    "Geomorphology",
+    "Channel and floodplain dynamics",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      103
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

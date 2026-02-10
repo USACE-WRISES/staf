@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Many species across several feeding groups. Criteria: High richness. Balanced feeding groups. Good index score.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Several species present. Some groups missing. Criteria: Moderate richness. Some imbalance in feeding groups.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Few species. One or two groups dominate. Criteria: Low richness. Dominance by tolerant taxa or single group.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Very few species. Mostly tolerant taxa. Criteria: Extremely low richness and diversity. Poor index score.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-community-dynamics-functional-trophic-groups-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-community-dynamics-functional-trophic-groups-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-community-dynamics-functional-trophic-groups-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-community-dynamics-functional-trophic-groups-rapid",
+  "metricId": "community-dynamics-functional-trophic-groups",
   "tier": "rapid",
+  "name": "Functional/Trophic Groups rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "community-dynamics-functional-trophic-groups"
+  "curves": [
+    {
+      "curveId": "curve-community-dynamics-functional-trophic-groups-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-community-dynamics-functional-trophic-groups-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Many species across several feeding groups. Criteria: High richness. Balanced feeding groups. Good index score."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Several species present. Some groups missing. Criteria: Moderate richness. Some imbalance in feeding groups."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Few species. One or two groups dominate. Criteria: Low richness. Dominance by tolerant taxa or single group."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Very few species. Mostly tolerant taxa. Criteria: Extremely low richness and diversity. Poor index score."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-community-dynamics-functional-trophic-groups-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

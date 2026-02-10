@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "channel-and-floodplain-dynamics-sinuosity",
   "name": "Sinuosity",
-  "shortName": "",
+  "shortName": "Sinuosity",
   "discipline": "Geomorphology",
   "function": "Channel and floodplain dynamics",
   "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
@@ -14,7 +14,8 @@
       "label": "Sinuosity",
       "type": "desktop",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -66,16 +67,57 @@
           "curve-channel-and-floodplain-dynamics-sinuosity-rapid"
         ]
       }
+    },
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-channel-and-floodplain-dynamics-sinuosity-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-sinuosity-detailed"
+        ]
+      }
     }
   ],
   "references": [
-    "Rosgen (2006)."
+    "Rosgen (2006).",
+    "North Carolina SQT",
+    "Rosgen stream classification guidance",
+    "NAIP or orthophotos"
   ],
   "tags": [
-    "Channel and floodplain dynamics",
     "Geomorphology",
-    "geomorphology",
-    "sfari",
-    "rapid"
-  ]
+    "Channel and floodplain dynamics",
+    "rapid",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      105,
+      205
+    ],
+    "sourceCitations": [
+      "SFARI Rapid",
+      "North Carolina SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": true
+    }
+  }
 }

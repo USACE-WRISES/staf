@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "habitat-provision-in-stream-habitat-complexity",
   "name": "In-stream habitat complexity",
-  "shortName": "",
+  "shortName": "In-stream habitat complexity",
   "discipline": "Biology",
   "function": "Habitat provision",
   "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
@@ -14,7 +14,8 @@
       "label": "In-stream habitat complexity",
       "type": "field",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -76,8 +77,21 @@
   "tags": [
     "Biology",
     "Habitat provision",
-    "biology",
-    "sfari",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      134
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

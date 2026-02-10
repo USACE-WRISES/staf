@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "metricId": "floodplain-connectivity-floodplain-access-entrenchment",
   "name": "Floodplain Access / Entrenchment",
-  "shortName": "",
+  "shortName": "Floodplain Access / Entrenchment",
   "discipline": "Hydraulics",
   "function": "Floodplain connectivity",
   "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
-  "descriptionMarkdown": "Stable, not heavily dredged/incised, allowing normal overbank flows/meanders unless dredging is historical.\nChannel is not deeply incised; moderate floods access a broad floodplain, matching reference conditions.\n1-2 yr floods routinely access the floodplain, matching reference inundation patterns.",
+  "descriptionMarkdown": "\"Stable, not heavily dredged/incised, allowing normal overbank flows/meanders unless dredging is historical. Channel is not deeply incised; moderate floods access a broad floodplain, matching reference conditions. 1-2 yr floods routinely access the floodplain, matching reference inundation patterns.\"",
   "methodContextMarkdown": "Context: Channel; Floodplain\n\nMethod: Field; Desktop",
-  "howToMeasureMarkdown": "Identify incision, dredging, levees, and spoil banks from imagery and confirm in the field or with historical sources where feasible.\nCompute entrenchment ratio as flood-prone width (often about 2x bankfull depth) divided by bankfull width using DEM or LiDAR cross sections and bankfull indicators.\nMap bankfull inundation extent using a DEM and bankfull flow estimate and compare to mapped floodplain layers as a proxy for moderate-flood access.",
+  "howToMeasureMarkdown": "\"Identify incision, dredging, levees, and spoil banks from imagery and confirm in the field or with historical sources where feasible. Compute entrenchment ratio as flood-prone width (often about 2x bankfull depth) divided by bankfull width using DEM or LiDAR cross sections and bankfull indicators. Map bankfull inundation extent using a DEM and bankfull flow estimate and compare to mapped floodplain layers as a proxy for moderate-flood access.\"",
   "inputs": [
     {
       "label": "Floodplain Access / Entrenchment",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Deeply dredged or channelized reach with little functional floodplain. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Deeply dredged or channelized reach with little functional floodplain. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-floodplain-connectivity-floodplain-access-entrenchment"
+          "curve-floodplain-connectivity-floodplain-access-entrenchment-screening"
         ]
       }
     }
@@ -74,37 +74,19 @@
     "Floodplain connectivity",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Deeply dredged or channelized reach with little functional floodplain.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Slight channelization or partial dredging. / Heavily modified or incised channel with limited floodplain access.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Stable channel that is not incised or dredged with frequent floodplain access.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      22
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

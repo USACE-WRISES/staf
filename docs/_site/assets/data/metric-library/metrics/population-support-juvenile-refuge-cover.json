@@ -1,22 +1,63 @@
 {
   "schemaVersion": 1,
   "metricId": "population-support-juvenile-refuge-cover",
-  "name": "Juvenile Refuge (cover)",
+  "name": "Juvenile Refuge / Cover",
+  "shortName": "Juvenile Refuge / Cover",
   "discipline": "Biology",
-  "function": "Population Support",
+  "function": "Population support",
   "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
   "descriptionMarkdown": "Sufficient cover (wood, undercuts, veg) for recruitment/survival if historically expected.",
-  "methodContextMarkdown": "Context: C\n\nMethod: F",
-  "howToMeasureMarkdown": "Percent shallow low-velocity cover",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Estimate percent of reach with shallow, low-velocity cover usable as juvenile refuge.",
   "inputs": [
     {
-      "label": "Juvenile Refuge (cover)",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "label": "Juvenile Refuge / Cover",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon;"
     }
   ],
   "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "threeBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "threeBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Good",
+              "ratingId": "good",
+              "criteriaMarkdown": "Good: More than 40% of reach has adequate juvenile cover. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: 5-40% cover. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: <5% cover or none. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-population-support-juvenile-refuge-cover-screening"
+        ]
+      }
+    },
     {
       "profileId": "rapid-sfari-likert",
       "tier": "rapid",
@@ -44,7 +85,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +108,32 @@
       }
     }
   ],
-  "tags": [
-    "rapid",
-    "sfari",
-    "biology"
+  "references": [
+    "Field mapping",
+    "hydrograph context (USGS NWIS where available)",
+    "NAIP imagery as supporting context."
   ],
-  "status": "active"
+  "tags": [
+    "Biology",
+    "Population support",
+    "screening",
+    "rapid"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      57,
+      141
+    ],
+    "sourceCitations": [
+      "ERDC",
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

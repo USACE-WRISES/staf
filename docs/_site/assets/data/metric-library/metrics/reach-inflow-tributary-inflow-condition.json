@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "metricId": "reach-inflow-tributary-inflow-condition",
   "name": "Tributary Inflow Condition",
-  "shortName": "",
+  "shortName": "Tributary Inflow Condition",
   "discipline": "Hydrology",
   "function": "Reach inflow",
   "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
   "descriptionMarkdown": "Tributaries stable, matching reference (flow, quality, form), with no major flash/pollution surges.",
-  "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "At confluences, visually assess flow stability and turbidity. Supplement with available impairment lists and local monitoring data.",
   "inputs": [
     {
       "label": "Tributary Inflow Condition",
-      "type": "field",
-      "source": "Watershed and Channel",
+      "type": "desktop",
+      "source": "Floodplain",
       "required": true,
       "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
     }
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Widespread severe tributary impacts that overwhelm the mainstem. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Widespread severe tributary impacts that overwhelm the mainstem. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-reach-inflow-tributary-inflow-condition"
+          "curve-reach-inflow-tributary-inflow-condition-screening"
         ]
       }
     }
@@ -69,37 +69,19 @@
     "Reach inflow",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Widespread severe tributary impacts that overwhelm the mainstem.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "1-2 tributaries are moderately altered or somewhat polluted. / Multiple tributaries are significantly altered and deliver high sediment or pollutants.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      13
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

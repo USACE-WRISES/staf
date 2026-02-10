@@ -1,23 +1,63 @@
 {
   "schemaVersion": 1,
   "metricId": "hyporheic-connectivity-floodplain-permeability",
-  "name": "Floodplain permeability",
-  "shortName": "",
+  "name": "Floodplain Permeability",
+  "shortName": "Floodplain Permeability",
   "discipline": "Hydraulics",
   "function": "Hyporheic connectivity",
   "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
   "descriptionMarkdown": "Floodplain soils allow hyporheic/groundwater exchange, consistent with local reference.",
-  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Assess soil texture and permeability in the floodplain using a hand texture test or auger. Use soils GIS as a desktop proxy where field access is limited.",
   "inputs": [
     {
-      "label": "Floodplain permeability",
-      "type": "field",
+      "label": "Floodplain Permeability",
+      "type": "desktop",
       "source": "Floodplain",
-      "required": true
+      "required": true,
+      "helpMarkdown": "GIS Soils data (SSURGO); High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
     }
   ],
   "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "threeBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "threeBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Good",
+              "ratingId": "good",
+              "criteriaMarkdown": "Good: Permeable floodplain soils that support subsurface flow. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Partially permeable soils or some clogging. / Mostly fine fill or bedrock that limits infiltration. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": "Poor: Heavily compacted or lined soils with minimal subsurface exchange. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-floodplain-permeability-screening"
+        ]
+      }
+    },
     {
       "profileId": "rapid-sfari-likert",
       "tier": "rapid",
@@ -45,7 +85,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -77,8 +117,24 @@
   "tags": [
     "Hydraulics",
     "Hyporheic connectivity",
-    "hydraulics",
-    "sfari",
+    "screening",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      24,
+      96
+    ],
+    "sourceCitations": [
+      "ERDC",
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-catchment-hydrology-percent-impervious-cover-detailed",
+  "metricId": "catchment-hydrology-percent-impervious-cover",
+  "tier": "detailed",
+  "name": "Percent Impervious Cover reference curve",
+  "axes": {
+    "xLabel": "Percent Impervious Cover",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-catchment-hydrology-percent-impervious-cover-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-percent-impervious-cover-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0,
+              "y": 1,
+              "description": "Field 0, Index 1"
+            },
+            {
+              "x": 9,
+              "y": 0.7,
+              "description": "Field 9, Index 0.7"
+            },
+            {
+              "x": 10,
+              "y": 0.69,
+              "description": "Field 10, Index 0.69"
+            },
+            {
+              "x": 25,
+              "y": 0.3,
+              "description": "Field 25, Index 0.3"
+            },
+            {
+              "x": 26,
+              "y": 0.29,
+              "description": "Field 26, Index 0.29"
+            },
+            {
+              "x": 75.77966102,
+              "y": 0,
+              "description": "Field 75.77966102, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 163,
+            "fieldValues": [
+              "75.77966102",
+              "26",
+              "25",
+              "10",
+              "9",
+              "0"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-percent-impervious-cover-detailed-north-carolina-sqt"
+    }
+  ]
+}

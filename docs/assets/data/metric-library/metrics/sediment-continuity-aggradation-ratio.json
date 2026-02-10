@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "metricId": "sediment-continuity-aggradation-ratio",
+  "name": "Aggradation Ratio",
+  "shortName": "Aggradation Ratio",
+  "discipline": "Geomorphology",
+  "function": "Sediment continuity",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+  "descriptionMarkdown": "Indicator of net sediment deposition/aggradation relative to reference condition.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field or Desktop (repeat elevation data)",
+  "howToMeasureMarkdown": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+  "inputs": [
+    {
+      "label": "Aggradation Ratio",
+      "type": "field or desktop (repeat elevation data)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field channel surveys and/or repeat cross sections/longitudinal profiles to compare bed elevation or depositional indicators."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-sediment-continuity-aggradation-ratio-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-sediment-continuity-aggradation-ratio-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "USGS 3DEP LiDAR/DEM differencing where available",
+    "geomorphic survey references",
+    "Michigan SQT",
+    "Minnesota SQT",
+    "North Carolina SQT"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Sediment continuity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      207
+    ],
+    "sourceCitations": [
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "North Carolina SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

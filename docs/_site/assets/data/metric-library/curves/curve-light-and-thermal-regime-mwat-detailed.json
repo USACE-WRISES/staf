@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-light-and-thermal-regime-mwat-detailed",
-  "metricId": "light-and-thermal-regime-mwat-detailed",
+  "metricId": "light-and-thermal-regime-mwat",
   "tier": "detailed",
   "name": "MWAT reference curve",
   "axes": {
@@ -28,37 +28,29 @@
             },
             {
               "x": 16.9,
-              "y": 0.4,
-              "description": "Field 16.9, Index 0.4"
+              "y": 0.3,
+              "description": "Field 16.9, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "CS-I (MWF)",
-            "sourceRow": 157,
-            "sourceRows": [
-              157
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 213,
             "fieldValues": [
               "",
               "",
               "16.9",
               "",
               "",
-              "13.8",
-              ""
+              "13.8"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -73,37 +65,29 @@
             },
             {
               "x": 17,
-              "y": 0.4,
-              "description": "Field 17, Index 0.4"
+              "y": 0.3,
+              "description": "Field 17, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "CS-I",
-            "sourceRow": 158,
-            "sourceRows": [
-              158
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 213,
             "fieldValues": [
               "",
               "",
               "17",
               "",
               "",
-              "15.7",
-              ""
+              "15.7"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -118,37 +102,29 @@
             },
             {
               "x": 18.3,
-              "y": 0.4,
-              "description": "Field 18.3, Index 0.4"
+              "y": 0.3,
+              "description": "Field 18.3, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "CS-II",
-            "sourceRow": 159,
-            "sourceRows": [
-              159
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 213,
             "fieldValues": [
               "",
               "",
               "18.3",
               "",
               "",
-              "16.6",
-              ""
+              "16.6"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -163,37 +139,29 @@
             },
             {
               "x": 24.2,
-              "y": 0.4,
-              "description": "Field 24.2, Index 0.4"
+              "y": 0.3,
+              "description": "Field 24.2, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "WS-I",
-            "sourceRow": 160,
-            "sourceRows": [
-              160
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 213,
             "fieldValues": [
               "",
               "",
               "24.2",
               "",
               "",
-              "20.9",
-              ""
+              "20.9"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -208,37 +176,29 @@
             },
             {
               "x": 27.5,
-              "y": 0.4,
-              "description": "Field 27.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 27.5, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "WS-II",
-            "sourceRow": 161,
-            "sourceRows": [
-              161
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 213,
             "fieldValues": [
               "",
               "",
               "27.5",
               "",
               "",
-              "22.5",
-              ""
+              "22.5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -253,58 +213,34 @@
             },
             {
               "x": 28.7,
-              "y": 0.4,
-              "description": "Field 28.7, Index 0.4"
+              "y": 0.3,
+              "description": "Field 28.7, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "WS-III",
-            "sourceRow": 162,
-            "sourceRows": [
-              162
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 213,
             "fieldValues": [
               "",
               "",
               "28.7",
               "",
               "",
-              "25.9",
-              ""
+              "25.9"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-light-and-thermal-regime-mwat-detailed-colorado-sqt-cs-i-mwf"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Colorado SQT",
-    "sourceCitations": [
-      "Colorado SQT"
-    ],
-    "mappedFunction": "Light & thermal regime",
-    "sourceRows": [
-      157,
-      158,
-      159,
-      160,
-      161,
-      162
-    ]
-  }
+  ]
 }

@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: No headcuts mapped in imagery or field. Old steps fully vegetated. Criteria: No active headcuts.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: One small local knickpoint at a tributary junction with little change between dates. Criteria: Localized feature with limited progression.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Headcut with fresh plunge pool and exposed strata observed in two locations. Upstream migration evident between image years. Criteria: One to two moderate, actively migrating headcuts.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Several large headcuts marching upstream across the reach with widespread bank failures above cuts. Criteria: Multiple or large active headcuts with rapid advance.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-channel-evolution-incision-trend-headcuts-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-channel-evolution-incision-trend-headcuts-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-channel-evolution-incision-trend-headcuts-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-channel-evolution-incision-trend-headcuts-rapid",
+  "metricId": "channel-evolution-incision-trend-headcuts",
   "tier": "rapid",
+  "name": "Incision Trend (headcuts) rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "channel-evolution-incision-trend-headcuts"
+  "curves": [
+    {
+      "curveId": "curve-channel-evolution-incision-trend-headcuts-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-evolution-incision-trend-headcuts-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: No headcuts mapped in imagery or field. Old steps fully vegetated. Criteria: No active headcuts."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: One small local knickpoint at a tributary junction with little change between dates. Criteria: Localized feature with limited progression."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Headcut with fresh plunge pool and exposed strata observed in two locations. Upstream migration evident between image years. Criteria: One to two moderate, actively migrating headcuts."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Several large headcuts marching upstream across the reach with widespread bank failures above cuts. Criteria: Multiple or large active headcuts with rapid advance."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-evolution-incision-trend-headcuts-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

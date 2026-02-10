@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-reach-inflow-concentrated-flow-points-detailed",
-  "metricId": "reach-inflow-concentrated-flow-points-detailed",
+  "metricId": "reach-inflow-concentrated-flow-points",
   "tier": "detailed",
   "name": "Concentrated Flow Points reference curve",
   "axes": {
@@ -34,31 +34,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 35,
-            "sourceRows": [
-              35
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 173,
             "fieldValues": [
               "",
               "",
               "",
               "1",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -79,31 +71,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 36,
-            "sourceRows": [
-              36
-            ],
             "sourceCitation": "Michigan SQT",
-            "sourceCitations": [
-              "Michigan SQT"
-            ],
+            "sourceRow": 173,
             "fieldValues": [
               "",
               "",
               "",
               "",
               "1",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -123,42 +107,34 @@
             },
             {
               "x": 3,
-              "y": 0.4,
-              "description": "Field 3, Index 0.4"
-            },
-            {
-              "x": 3.0001,
               "y": 0,
               "description": "Field >3, Index 0"
+            },
+            {
+              "x": 3,
+              "y": 0.3,
+              "description": "Field 3, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 38,
-            "sourceRows": [
-              38
-            ],
             "sourceCitation": "North Carolina SQT",
-            "sourceCitations": [
-              "North Carolina SQT"
-            ],
+            "sourceRow": 173,
             "fieldValues": [
               ">3",
               "",
               "3",
               "1",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -179,31 +155,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 39,
-            "sourceRows": [
-              39
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 173,
             "fieldValues": [
               "",
               "",
               "",
               "",
               "1",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -224,55 +192,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 41,
-            "sourceRows": [
-              41
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 173,
             "fieldValues": [
               "",
               "",
               "",
               "1",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-reach-inflow-concentrated-flow-points-detailed-colorado-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Colorado SQT; Michigan SQT; North Carolina SQT; South Carolina SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Colorado SQT",
-      "Michigan SQT",
-      "North Carolina SQT",
-      "South Carolina SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Reach inflow",
-    "sourceRows": [
-      35,
-      36,
-      38,
-      39,
-      41
-    ]
-  }
+  ]
 }

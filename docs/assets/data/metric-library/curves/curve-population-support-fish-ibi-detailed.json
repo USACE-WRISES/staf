@@ -1,0 +1,447 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-fish-ibi-detailed",
+  "metricId": "population-support-fish-ibi",
+  "tier": "detailed",
+  "name": "Fish IBI reference curve",
+  "axes": {
+    "xLabel": "Fish IBI",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-fish-ibi-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-fish-ibi-detailed-minnesota-sqt-northern-rivers-northern",
+          "name": "Minnesota SQT - Northern Rivers - Northern",
+          "points": [
+            {
+              "x": 29,
+              "y": 0,
+              "description": "Field 29, Index 0"
+            },
+            {
+              "x": 38,
+              "y": 0.3,
+              "description": "Field 38, Index 0.3"
+            },
+            {
+              "x": 47,
+              "y": 0.7,
+              "description": "Field 47, Index 0.7"
+            },
+            {
+              "x": 67,
+              "y": 1,
+              "description": "Field 67, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Northern Rivers - Northern",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 271,
+            "fieldValues": [
+              "29",
+              "",
+              "38",
+              "",
+              "47",
+              "67"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-ibi-detailed-minnesota-sqt-northern-streams-northern",
+          "name": "Minnesota SQT - Northern Streams - Northern",
+          "points": [
+            {
+              "x": 35,
+              "y": 0,
+              "description": "Field 35, Index 0"
+            },
+            {
+              "x": 47,
+              "y": 0.3,
+              "description": "Field 47, Index 0.3"
+            },
+            {
+              "x": 56,
+              "y": 0.7,
+              "description": "Field 56, Index 0.7"
+            },
+            {
+              "x": 61,
+              "y": 1,
+              "description": "Field 61, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Northern Streams - Northern",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 271,
+            "fieldValues": [
+              "35",
+              "",
+              "47",
+              "",
+              "56",
+              "61"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-ibi-detailed-minnesota-sqt-northern-headwaters-northern",
+          "name": "Minnesota SQT - Northern Headwaters - Northern",
+          "points": [
+            {
+              "x": 23,
+              "y": 0,
+              "description": "Field 23, Index 0"
+            },
+            {
+              "x": 42,
+              "y": 0.3,
+              "description": "Field 42, Index 0.3"
+            },
+            {
+              "x": 58,
+              "y": 0.7,
+              "description": "Field 58, Index 0.7"
+            },
+            {
+              "x": 68,
+              "y": 1,
+              "description": "Field 68, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Northern Headwaters - Northern",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 271,
+            "fieldValues": [
+              "23",
+              "",
+              "42",
+              "",
+              "58",
+              "68"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-ibi-detailed-minnesota-sqt-northern-coldwater-northern",
+          "name": "Minnesota SQT - Northern Coldwater - Northern",
+          "points": [
+            {
+              "x": 25,
+              "y": 0,
+              "description": "Field 25, Index 0"
+            },
+            {
+              "x": 35,
+              "y": 0.3,
+              "description": "Field 35, Index 0.3"
+            },
+            {
+              "x": 45,
+              "y": 0.7,
+              "description": "Field 45, Index 0.7"
+            },
+            {
+              "x": 60,
+              "y": 1,
+              "description": "Field 60, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Northern Coldwater - Northern",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 271,
+            "fieldValues": [
+              "25",
+              "",
+              "35",
+              "",
+              "45",
+              "60"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-ibi-detailed-minnesota-sqt-southern-river-southern",
+          "name": "Minnesota SQT - Southern River - Southern",
+          "points": [
+            {
+              "x": 38,
+              "y": 0,
+              "description": "Field 38, Index 0"
+            },
+            {
+              "x": 49,
+              "y": 0.3,
+              "description": "Field 49, Index 0.3"
+            },
+            {
+              "x": 60,
+              "y": 0.7,
+              "description": "Field 60, Index 0.7"
+            },
+            {
+              "x": 71,
+              "y": 1,
+              "description": "Field 71, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Southern River - Southern",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 271,
+            "fieldValues": [
+              "38",
+              "",
+              "49",
+              "",
+              "60",
+              "71"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-ibi-detailed-minnesota-sqt-southern-streams-southern",
+          "name": "Minnesota SQT - Southern Streams - Southern",
+          "points": [
+            {
+              "x": 35,
+              "y": 0,
+              "description": "Field 35, Index 0"
+            },
+            {
+              "x": 50,
+              "y": 0.3,
+              "description": "Field 50, Index 0.3"
+            },
+            {
+              "x": 59,
+              "y": 0.7,
+              "description": "Field 59, Index 0.7"
+            },
+            {
+              "x": 66,
+              "y": 1,
+              "description": "Field 66, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Southern Streams - Southern",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 271,
+            "fieldValues": [
+              "35",
+              "",
+              "50",
+              "",
+              "59",
+              "66"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-ibi-detailed-minnesota-sqt-southern-headwaters-southern",
+          "name": "Minnesota SQT - Southern Headwaters - Southern",
+          "points": [
+            {
+              "x": 33,
+              "y": 0,
+              "description": "Field 33, Index 0"
+            },
+            {
+              "x": 55,
+              "y": 0.3,
+              "description": "Field 55, Index 0.3"
+            },
+            {
+              "x": 62,
+              "y": 0.7,
+              "description": "Field 62, Index 0.7"
+            },
+            {
+              "x": 74,
+              "y": 1,
+              "description": "Field 74, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Southern Headwaters - Southern",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 271,
+            "fieldValues": [
+              "33",
+              "",
+              "55",
+              "",
+              "62",
+              "74"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-ibi-detailed-minnesota-sqt-southern-coldwater-southern",
+          "name": "Minnesota SQT - Southern Coldwater - Southern",
+          "points": [
+            {
+              "x": 37,
+              "y": 0,
+              "description": "Field 37, Index 0"
+            },
+            {
+              "x": 50,
+              "y": 0.3,
+              "description": "Field 50, Index 0.3"
+            },
+            {
+              "x": 63,
+              "y": 0.7,
+              "description": "Field 63, Index 0.7"
+            },
+            {
+              "x": 82,
+              "y": 1,
+              "description": "Field 82, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Southern Coldwater - Southern",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 271,
+            "fieldValues": [
+              "37",
+              "",
+              "50",
+              "",
+              "63",
+              "82"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-fish-ibi-detailed-minnesota-sqt-low-gradient-low-gradient",
+          "name": "Minnesota SQT - Low Gradient - Low Gradient",
+          "points": [
+            {
+              "x": 15,
+              "y": 0,
+              "description": "Field 15, Index 0"
+            },
+            {
+              "x": 42,
+              "y": 0.3,
+              "description": "Field 42, Index 0.3"
+            },
+            {
+              "x": 52,
+              "y": 0.7,
+              "description": "Field 52, Index 0.7"
+            },
+            {
+              "x": 70,
+              "y": 1,
+              "description": "Field 70, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Low Gradient - Low Gradient",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 271,
+            "fieldValues": [
+              "15",
+              "",
+              "42",
+              "",
+              "52",
+              "70"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-fish-ibi-detailed-minnesota-sqt-northern-rivers-northern"
+    }
+  ]
+}

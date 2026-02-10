@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-high-flow-dynamics-bed-mobility-timing-mismatch-factor-detailed",
+  "metricId": "high-flow-dynamics-bed-mobility-timing-mismatch-factor",
+  "tier": "detailed",
+  "name": "Bed Mobility Timing Mismatch Factor reference curve",
+  "axes": {
+    "xLabel": "Bed Mobility Timing Mismatch Factor",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-bed-mobility-timing-mismatch-factor-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-bed-mobility-timing-mismatch-factor-detailed-proposed-derived-from-sfari-rapid-curves-use-strea",
+          "name": "Proposed (derived from SFARI rapid curves) - Use stream-type specific target return interval if locally justified.",
+          "points": [
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            },
+            {
+              "x": 1.4,
+              "y": 0.7,
+              "description": "Field 1.4, Index 0.7"
+            },
+            {
+              "x": 2,
+              "y": 0.3,
+              "description": "Field 2, Index 0.3"
+            },
+            {
+              "x": 3,
+              "y": 0.1,
+              "description": "Field 3, Index 0.1"
+            },
+            {
+              "x": 4,
+              "y": 0,
+              "description": "Field 4, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Use stream-type specific target return interval if locally justified.",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 177,
+            "fieldValues": [
+              "1",
+              "1.4",
+              "2",
+              "3",
+              "4"
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-bed-mobility-timing-mismatch-factor-detailed-proposed-derived-from-sfari-rapid-curves-use-strea"
+    }
+  ]
+}

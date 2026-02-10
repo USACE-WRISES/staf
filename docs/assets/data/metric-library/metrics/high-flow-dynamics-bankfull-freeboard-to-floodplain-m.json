@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-bankfull-freeboard-to-floodplain-m",
+  "name": "Bankfull Freeboard to Floodplain (m)",
+  "shortName": "Bankfull Freeboard to Floodplain (m)",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Vertical distance from bankfull stage to floodplain/bench activation elevation (lower is better).",
+  "methodContextMarkdown": "Field + LiDAR",
+  "howToMeasureMarkdown": "Identify bankfull elevation; measure to floodplain/bench surface; compute freeboard.",
+  "inputs": [
+    {
+      "label": "Bankfull Freeboard to Floodplain (m)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field survey or LiDAR cross-sections to floodplain edge; bankfull indicators."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-bankfull-freeboard-to-floodplain-m-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Bankfull identification guides",
+    "LiDAR cross-section methods."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      181
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

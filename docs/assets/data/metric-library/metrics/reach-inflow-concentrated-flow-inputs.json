@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "reach-inflow-concentrated-flow-inputs",
   "name": "Concentrated flow inputs",
-  "shortName": "",
+  "shortName": "Concentrated flow inputs",
   "discipline": "Hydrology",
   "function": "Reach inflow",
   "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
@@ -14,7 +14,8 @@
       "label": "Concentrated flow inputs",
       "type": "desktop",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -76,8 +77,21 @@
   "tags": [
     "Hydrology",
     "Reach inflow",
-    "hydrology",
-    "sfari",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      73
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

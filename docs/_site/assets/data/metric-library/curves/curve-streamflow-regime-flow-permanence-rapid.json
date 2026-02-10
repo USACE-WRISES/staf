@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: SDAM class, bed vegetation, mean annual flow, and flowing-days data (if available) match reference. Criteria: Flow duration class matches expected; mean annual flow and flowing days within ~10% of baseline.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Minor but consistent departures across indicators. Criteria: About 10-20% change in mean annual flow or flowing days, or slightly more/less bed vegetation than expected.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Substantial sustained shift in dryness or baseflow. Criteria: SDAM class trending away from reference or 20-50% change in mean annual flow/flowing days; vegetation suggests longer wet or dry intervals.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Major regime shift across lines of evidence. Criteria: Historically perennial reach now intermittent/ephemeral, >50% change in mean annual flow or flowing days, and vegetation contradicts expected scour/inundation.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-streamflow-regime-flow-permanence-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-streamflow-regime-flow-permanence-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-streamflow-regime-flow-permanence-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-streamflow-regime-flow-permanence-rapid",
+  "metricId": "streamflow-regime-flow-permanence",
   "tier": "rapid",
+  "name": "Flow permanence rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "streamflow-regime-flow-permanence"
+  "curves": [
+    {
+      "curveId": "curve-streamflow-regime-flow-permanence-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-streamflow-regime-flow-permanence-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: SDAM class, bed vegetation, mean annual flow, and flowing-days data (if available) match reference. Criteria: Flow duration class matches expected; mean annual flow and flowing days within ~10% of baseline."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Minor but consistent departures across indicators. Criteria: About 10-20% change in mean annual flow or flowing days, or slightly more/less bed vegetation than expected."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Substantial sustained shift in dryness or baseflow. Criteria: SDAM class trending away from reference or 20-50% change in mean annual flow/flowing days; vegetation suggests longer wet or dry intervals."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Major regime shift across lines of evidence. Criteria: Historically perennial reach now intermittent/ephemeral, >50% change in mean annual flow or flowing days, and vegetation contradicts expected scour/inundation."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-streamflow-regime-flow-permanence-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

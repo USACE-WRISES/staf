@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "metricId": "surface-water-storage-floodplain-water-retention-storage",
   "name": "Floodplain Water Retention / Storage",
-  "shortName": "",
+  "shortName": "Floodplain Water Retention / Storage",
   "discipline": "Hydrology",
   "function": "Surface water storage",
   "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
   "descriptionMarkdown": "Moderate floods (~1-5 yr) reach the floodplain, providing water retention/infiltration per regional norms.",
-  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Identify bankfull indicators and recent high-water marks and compare to bankfull elevation. Corroborate with a nearby gage bankfull or recurrence estimate where available.",
   "inputs": [
     {
       "label": "Floodplain Water Retention / Storage",
-      "type": "field",
+      "type": "desktop",
       "source": "Floodplain",
       "required": true,
       "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence; Cross-section calculation tools"
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-surface-water-storage-floodplain-water-retention-storage"
+          "curve-surface-water-storage-floodplain-water-retention-storage-screening"
         ]
       }
     }
@@ -68,37 +68,19 @@
     "Surface water storage",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence; Cross-section calculation tools",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Overbanking requires flows slightly larger than typical bankfull, but still not rare. / Overbanking requires 5-10 yr floods. Partial disconnection.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Floodplain is actively engaged at the local moderate-flood standard (often about 1-2 yr or 2-5 yr).",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      6
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

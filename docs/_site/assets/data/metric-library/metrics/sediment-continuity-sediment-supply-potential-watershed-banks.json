@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
   "name": "Sediment Supply Potential (watershed/banks)",
-  "shortName": "",
+  "shortName": "Sediment Supply Potential (watershed/banks)",
   "discipline": "Geomorphology",
   "function": "Sediment continuity",
-  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, and habitat quality while supporting riparian succession.",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
   "descriptionMarkdown": "Relative sediment supply from the watershed and near-channel sources. Excessive sediment supply can increase turbidity, embed substrates, and degrade habitat.",
   "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Desktop (GIS/imagery) with field verification where feasible",
   "howToMeasureMarkdown": "Use available GIS layers and imagery (land cover, soils, slopes, roads) and local knowledge to rate potential sediment supply per the metric definition. Assign the condition class using the bin thresholds for this metric.",
@@ -15,7 +15,7 @@
       "type": "desktop (gis/imagery) with field verification where feasible",
       "source": "Watershed and Channel",
       "required": true,
-      "helpMarkdown": "Imagery & \nSite data\nLand cover and soils (e.g., NLCD, SSURGO), DEM/slope, roads layers, and recent imagery."
+      "helpMarkdown": "\"Imagery & Site data Land cover and soils (e.g., NLCD, SSURGO), DEM/slope, roads layers, and recent imagery.\""
     }
   ],
   "profiles": [
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-sediment-continuity-sediment-supply-potential-watershed-banks"
+          "curve-sediment-continuity-sediment-supply-potential-watershed-banks-screening"
         ]
       }
     }
@@ -62,15 +62,11 @@
   "references": [
     "NLCD/SSURGO/DEM (if used)",
     "Alaska SQT",
-    "NLCD/SSURGO/DEM (if used)",
     "CO SQT 2019",
     "WY SQT 2019",
-    "NLCD/SSURGO/DEM (if used)",
     "MI SQT 2019",
     "NC SQT 2019",
-    "NLCD/SSURGO/DEM (if used)",
     "MN SQT 2020",
-    "NLCD/SSURGO/DEM (if used)",
     "SC SQT 2021"
   ],
   "tags": [
@@ -78,37 +74,25 @@
     "Sediment continuity",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; Colorado SQT; Wyoming SQT; Michigan SQT; North Carolina SQT; Minnesota SQT; South Carolina SQT",
-    "scsDefaultOn": true,
-    "metricDataSource": "Imagery & \nSite data\nLand cover and soils (e.g., NLCD, SSURGO), DEM/slope, roads layers, and recent imagery.",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      34
+    ],
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Wyoming SQT",
+      "Michigan SQT",
+      "North Carolina SQT",
+      "Minnesota SQT",
+      "South Carolina SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

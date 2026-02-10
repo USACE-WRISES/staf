@@ -1,50 +1,50 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-watershed-connectivity-dewatered-intermittent-segments-screening",
-  "metricId": "watershed-connectivity-dewatered-intermittent-segments-screening",
+  "metricId": "watershed-connectivity-dewatered-intermittent-segments",
   "tier": "screening",
-  "name": "Screening default curve",
+  "name": "Dewatered / Intermittent Segments screening curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
   "curves": [
     {
-      "indexRange": true,
+      "curveId": "curve-watershed-connectivity-dewatered-intermittent-segments-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
       "layers": [
         {
-          "name": "Screening",
+          "id": "curve-watershed-connectivity-dewatered-intermittent-segments-screening-erdc",
+          "name": "ERDC",
           "points": [
             {
               "x": "Good",
-              "description": "Good: No artificial dryness and natural connectivity is maintained. (Suggested index range 0.70-1.0)",
-              "yMax": 1,
+              "y": 0.85,
               "yMin": 0.7,
-              "y": 0.85
+              "yMax": 1,
+              "description": "Good: No artificial dryness and natural connectivity is maintained. (Suggested index range 0.70-1.0)"
             },
             {
               "x": "Fair",
-              "description": "Fair: Minor dryness in small segments. / Notable dryness or disconnection in key reaches. (Suggested index range 0.40-0.69)",
-              "yMax": 0.69,
+              "y": 0.545,
               "yMin": 0.4,
-              "y": 0.54
+              "yMax": 0.69,
+              "description": "Fair: Minor dryness in small segments. / Notable dryness or disconnection in key reaches. (Suggested index range 0.40-0.69)"
             },
             {
               "x": "Poor",
-              "description": "Poor: Chronic or large-scale dewatering causing major fragmentation. (Suggested index range 0.0-0.29)",
-              "yMax": 0.29,
+              "y": 0.195,
               "yMin": 0,
-              "y": 0.14
+              "yMax": 0.39,
+              "description": "Poor: Chronic or large-scale dewatering causing major fragmentation. (Suggested index range 0.0-0.39)"
             }
-          ],
-          "id": "curve-watershed-connectivity-dewatered-intermittent-segments-screening-layer"
+          ]
         }
       ],
-      "xType": "categorical",
-      "curveId": "curve-watershed-connectivity-dewatered-intermittent-segments-screening-default",
-      "name": "Screening",
-      "units": "",
-      "activeLayerId": "curve-watershed-connectivity-dewatered-intermittent-segments-screening-layer"
+      "activeLayerId": "curve-watershed-connectivity-dewatered-intermittent-segments-screening-erdc",
+      "indexRange": true
     }
   ]
 }

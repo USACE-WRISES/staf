@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-monoculture-area-detailed",
-  "metricId": "carbon-processing-monoculture-area-detailed",
+  "metricId": "carbon-processing-monoculture-area",
   "tier": "detailed",
-  "name": "Monoculture Area (%) reference curve",
+  "name": "Monoculture Area reference curve",
   "axes": {
-    "xLabel": "Monoculture Area (%)",
+    "xLabel": "Monoculture Area",
     "yLabel": "Index score",
-    "xUnit": "%",
     "yUnit": "index"
   },
   "curves": [
@@ -15,7 +14,7 @@
       "curveId": "curve-carbon-processing-monoculture-area-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "%",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
@@ -35,47 +34,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 241,
-            "sourceRows": [
-              241
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 239,
             "fieldValues": [
               "100",
               "",
               "",
               "",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-carbon-processing-monoculture-area-detailed-south-carolina-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "South Carolina SQT",
-    "sourceCitations": [
-      "South Carolina SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      241
-    ]
-  }
+  ]
 }

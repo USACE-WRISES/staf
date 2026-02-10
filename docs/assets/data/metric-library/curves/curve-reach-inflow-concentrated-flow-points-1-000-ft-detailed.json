@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-reach-inflow-concentrated-flow-points-1-000-ft-detailed",
-  "metricId": "reach-inflow-concentrated-flow-points-1-000-ft-detailed",
+  "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
   "tier": "detailed",
   "name": "Concentrated Flow Points / 1,000 ft reference curve",
   "axes": {
@@ -34,31 +34,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 34,
-            "sourceRows": [
-              34
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 172,
             "fieldValues": [
               "",
               "",
               "",
               "",
               "1",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -79,49 +71,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 37,
-            "sourceRows": [
-              37
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 172,
             "fieldValues": [
               "",
               "",
               "",
               "1",
               "",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-reach-inflow-concentrated-flow-points-1-000-ft-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; Minnesota SQT",
-    "sourceCitations": [
-      "Alaska SQT",
-      "Minnesota SQT"
-    ],
-    "mappedFunction": "Reach inflow",
-    "sourceRows": [
-      34,
-      37
-    ]
-  }
+  ]
 }

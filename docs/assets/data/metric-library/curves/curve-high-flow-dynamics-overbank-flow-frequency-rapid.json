@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Recent moderate events inundate low benches and side bars. Field stakes at bankfull are inundated about every other year. Criteria: Floodplain activation ~1-2 yr",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Benches inundated in a few recent years but not consistently. Criteria: Activation ~3-5 yr",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Only larger, less frequent events reach benches. Benches are dusty or vegetated with upland species. Criteria: Activation ~5-10 yr",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Benches rarely or never wet. Levees or incision isolate the floodplain except during extremes. Criteria: Activation rare except large floods",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-high-flow-dynamics-overbank-flow-frequency-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-high-flow-dynamics-overbank-flow-frequency-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-high-flow-dynamics-overbank-flow-frequency-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-high-flow-dynamics-overbank-flow-frequency-rapid",
+  "metricId": "high-flow-dynamics-overbank-flow-frequency",
   "tier": "rapid",
+  "name": "Overbank Flow Frequency rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "high-flow-dynamics-overbank-flow-frequency"
+  "curves": [
+    {
+      "curveId": "curve-high-flow-dynamics-overbank-flow-frequency-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-high-flow-dynamics-overbank-flow-frequency-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Recent moderate events inundate low benches and side bars. Field stakes at bankfull are inundated about every other year. Criteria: Floodplain activation ~1-2 yr"
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Benches inundated in a few recent years but not consistently. Criteria: Activation ~3-5 yr"
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Only larger, less frequent events reach benches. Benches are dusty or vegetated with upland species. Criteria: Activation ~5-10 yr"
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Benches rarely or never wet. Levees or incision isolate the floodplain except during extremes. Criteria: Activation rare except large floods"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-high-flow-dynamics-overbank-flow-frequency-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

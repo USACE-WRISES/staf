@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-population-support-mibi-detailed",
-  "metricId": "population-support-mibi-detailed",
+  "metricId": "population-support-mibi",
   "tier": "detailed",
   "name": "mIBI reference curve",
   "axes": {
@@ -28,8 +28,8 @@
             },
             {
               "x": 2.5,
-              "y": 0.4,
-              "description": "Field 2.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 2.5, Index 0.3"
             },
             {
               "x": 5,
@@ -44,47 +44,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 422,
-            "sourceRows": [
-              422
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 275,
             "fieldValues": [
               "0",
               "",
               "2.5",
               "",
               "5",
-              "7.5",
-              ""
+              "7.5"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-population-support-mibi-detailed-wisconsin-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Wisconsin SQT",
-    "sourceCitations": [
-      "Wisconsin SQT"
-    ],
-    "mappedFunction": "Population support",
-    "sourceRows": [
-      422
-    ]
-  }
+  ]
 }

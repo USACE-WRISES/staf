@@ -1,50 +1,50 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-sediment-continuity-channel-degradation-incision-screening",
-  "metricId": "sediment-continuity-channel-degradation-incision-screening",
+  "metricId": "sediment-continuity-channel-degradation-incision",
   "tier": "screening",
-  "name": "Screening default curve",
+  "name": "Channel Degradation / Incision screening curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
   "curves": [
     {
-      "indexRange": true,
+      "curveId": "curve-sediment-continuity-channel-degradation-incision-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
       "layers": [
         {
-          "name": "Screening",
+          "id": "curve-sediment-continuity-channel-degradation-incision-screening-erdc",
+          "name": "ERDC",
           "points": [
             {
               "x": "Good",
-              "description": "Good: No active downcutting. Bed elevation is stable. (Suggested index range 0.70-1.0)",
-              "yMax": 1,
+              "y": 0.85,
               "yMin": 0.7,
-              "y": 0.85
+              "yMax": 1,
+              "description": "Good: No active downcutting. Bed elevation is stable. (Suggested index range 0.70-1.0)"
             },
             {
               "x": "Fair",
-              "description": "Fair: Minor localized incision. / Noticeable incision or one or two moderate headcuts that reduce floodplain access. (Suggested index range 0.40-0.69)",
-              "yMax": 0.69,
+              "y": 0.545,
               "yMin": 0.4,
-              "y": 0.54
+              "yMax": 0.69,
+              "description": "Fair: Minor localized incision. / Noticeable incision or one or two moderate headcuts that reduce floodplain access. (Suggested index range 0.40-0.69)"
             },
             {
               "x": "Poor",
-              "description": "Poor: Severe channel-wide incision with multiple major headcuts. (Suggested index range 0.0-0.29)",
-              "yMax": 0.29,
+              "y": 0.195,
               "yMin": 0,
-              "y": 0.14
+              "yMax": 0.39,
+              "description": "Poor: Severe channel-wide incision with multiple major headcuts. (Suggested index range 0.0-0.39)"
             }
-          ],
-          "id": "curve-sediment-continuity-channel-degradation-incision-screening-layer"
+          ]
         }
       ],
-      "xType": "categorical",
-      "curveId": "curve-sediment-continuity-channel-degradation-incision-screening-default",
-      "name": "Screening",
-      "units": "",
-      "activeLayerId": "curve-sediment-continuity-channel-degradation-incision-screening-layer"
+      "activeLayerId": "curve-sediment-continuity-channel-degradation-incision-screening-erdc",
+      "indexRange": true
     }
   ]
 }

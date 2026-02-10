@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-july-mean-temperature-detailed",
+  "metricId": "light-and-thermal-regime-july-mean-temperature",
+  "tier": "detailed",
+  "name": "July Mean Temperature reference curve",
+  "axes": {
+    "xLabel": "July Mean Temperature",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-july-mean-temperature-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-july-mean-temperature-detailed-michigan-sqt-coldwater",
+          "name": "Michigan SQT - Coldwater",
+          "points": [
+            {
+              "x": 59,
+              "y": 1,
+              "description": "Field 59, Index 1"
+            },
+            {
+              "x": 66.2,
+              "y": 0.3,
+              "description": "Field 66.2, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Coldwater",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 214,
+            "fieldValues": [
+              "",
+              "",
+              "66.2",
+              "",
+              "",
+              "59"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-july-mean-temperature-detailed-michigan-sqt-cold-transitional",
+          "name": "Michigan SQT - Cold-transitional",
+          "points": [
+            {
+              "x": 66.2,
+              "y": 1,
+              "description": "Field 66.2, Index 1"
+            },
+            {
+              "x": 69.8,
+              "y": 0.3,
+              "description": "Field 69.8, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Cold-transitional",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 214,
+            "fieldValues": [
+              "",
+              "",
+              "69.8",
+              "",
+              "",
+              "66.2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-light-and-thermal-regime-july-mean-temperature-detailed-michigan-sqt-warm-and-warm-transitional",
+          "name": "Michigan SQT - Warm & Warm-transitional",
+          "points": [
+            {
+              "x": 69.8,
+              "y": 1,
+              "description": "Field 69.8, Index 1"
+            },
+            {
+              "x": 78.8,
+              "y": 0.3,
+              "description": "Field 78.8, Index 0.3"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Warm & Warm-transitional",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 214,
+            "fieldValues": [
+              "",
+              "",
+              "78.8",
+              "",
+              "",
+              "69.8"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-july-mean-temperature-detailed-michigan-sqt-coldwater"
+    }
+  ]
+}

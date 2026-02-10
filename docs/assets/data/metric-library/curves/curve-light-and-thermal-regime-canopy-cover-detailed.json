@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-light-and-thermal-regime-canopy-cover-detailed",
-  "metricId": "light-and-thermal-regime-canopy-cover-detailed",
+  "metricId": "light-and-thermal-regime-canopy-cover",
   "tier": "detailed",
   "name": "Canopy Cover reference curve",
   "axes": {
@@ -18,7 +18,7 @@
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-light-and-thermal-regime-canopy-cover-detailed-minnesota-sqt-woody-vegetation-is-a-natural",
+          "id": "curve-light-and-thermal-regime-canopy-cover-detailed-minnesota-sqt-woody-vegetation-is-a-natural-component-of-riparian-z",
           "name": "Minnesota SQT - Woody vegetation is a natural component of riparian zone",
           "points": [
             {
@@ -34,36 +34,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Woody vegetation is a natural component of riparian zone",
-            "sourceRow": 167,
-            "sourceRows": [
-              167
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 216,
             "fieldValues": [
               "50",
               "",
               "",
               "",
               "",
-              "80",
-              ""
+              "80"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-light-and-thermal-regime-canopy-cover-detailed-minnesota-sqt-woody-vegetation-is-not-a-nat",
+          "id": "curve-light-and-thermal-regime-canopy-cover-detailed-minnesota-sqt-woody-vegetation-is-not-a-natural-component-of-ripari",
           "name": "Minnesota SQT - Woody vegetation is not a natural component of riparian zone",
           "points": [
             {
@@ -79,36 +71,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Woody vegetation is not a natural component of riparian zone",
-            "sourceRow": 168,
-            "sourceRows": [
-              168
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 216,
             "fieldValues": [
               "80",
               "",
               "",
               "",
               "",
-              "50",
-              ""
+              "50"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-light-and-thermal-regime-canopy-cover-detailed-wisconsin-sqt-woody-reference-vegetation-co",
+          "id": "curve-light-and-thermal-regime-canopy-cover-detailed-wisconsin-sqt-woody-reference-vegetation-cover",
           "name": "Wisconsin SQT - Woody Reference Vegetation Cover",
           "points": [
             {
@@ -129,36 +113,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Woody Reference Vegetation Cover",
-            "sourceRow": 177,
-            "sourceRows": [
-              177
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 216,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "50",
-              "87",
-              ""
+              "87"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-light-and-thermal-regime-canopy-cover-detailed-wisconsin-sqt-herbaceous-reference-vegetati",
+          "id": "curve-light-and-thermal-regime-canopy-cover-detailed-wisconsin-sqt-herbaceous-reference-vegetation-cover",
           "name": "Wisconsin SQT - Herbaceous Reference Vegetation Cover",
           "points": [
             {
@@ -173,8 +149,8 @@
             },
             {
               "x": 35,
-              "y": 0.4,
-              "description": "Field 35, Index 0.4"
+              "y": 0.3,
+              "description": "Field 35, Index 0.3"
             },
             {
               "x": 70,
@@ -184,51 +160,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Herbaceous Reference Vegetation Cover",
-            "sourceRow": 178,
-            "sourceRows": [
-              178
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 216,
             "fieldValues": [
               "70",
               "",
               "35",
               "",
               "15",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-light-and-thermal-regime-canopy-cover-detailed-minnesota-sqt-woody-vegetation-is-a-natural"
+      "activeLayerId": "curve-light-and-thermal-regime-canopy-cover-detailed-minnesota-sqt-woody-vegetation-is-a-natural-component-of-riparian-z"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Minnesota SQT; Wisconsin SQT",
-    "sourceCitations": [
-      "Minnesota SQT",
-      "Wisconsin SQT"
-    ],
-    "mappedFunction": "Light & thermal regime",
-    "sourceRows": [
-      167,
-      168,
-      177,
-      178
-    ]
-  }
+  ]
 }

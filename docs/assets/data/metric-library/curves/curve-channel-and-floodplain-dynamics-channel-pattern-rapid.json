@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Planform natural for valley; expected thread count; side channels connected. Criteria: Little/no straightening; side channels carry water near bankfull; pattern matches reference.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Some simplified segments but generally natural. Criteria: Minor realignment or slight thread-count departure; limited side-channel connectivity.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Clear realignment or planform departure; side channels mostly inactive. Criteria: Long straight segments or mismatched thread count; side channels disconnected except larger floods.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Heavily straightened or artificial planform. Criteria: Strongly out of character; side channels absent or blocked by berms/spoil/levees.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-channel-and-floodplain-dynamics-channel-pattern-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-channel-and-floodplain-dynamics-channel-pattern-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-channel-and-floodplain-dynamics-channel-pattern-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-channel-and-floodplain-dynamics-channel-pattern-rapid",
+  "metricId": "channel-and-floodplain-dynamics-channel-pattern",
   "tier": "rapid",
+  "name": "Channel pattern rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "channel-and-floodplain-dynamics-channel-pattern"
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-channel-pattern-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-channel-pattern-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Planform natural for valley; expected thread count; side channels connected. Criteria: Little/no straightening; side channels carry water near bankfull; pattern matches reference."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Some simplified segments but generally natural. Criteria: Minor realignment or slight thread-count departure; limited side-channel connectivity."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Clear realignment or planform departure; side channels mostly inactive. Criteria: Long straight segments or mismatched thread count; side channels disconnected except larger floods."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Heavily straightened or artificial planform. Criteria: Strongly out of character; side channels absent or blocked by berms/spoil/levees."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-channel-pattern-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

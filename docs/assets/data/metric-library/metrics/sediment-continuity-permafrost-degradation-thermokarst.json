@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "metricId": "sediment-continuity-permafrost-degradation-thermokarst",
   "name": "Permafrost Degradation / Thermokarst",
-  "shortName": "",
+  "shortName": "Permafrost Degradation / Thermokarst",
   "discipline": "Geomorphology",
   "function": "Sediment continuity",
-  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, and habitat quality while supporting riparian succession.",
+  "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
   "descriptionMarkdown": "Permafrost condition and evidence of thaw/degradation within the contributing area, which can increase sediment and alter hydrology.",
   "methodContextMarkdown": "Context: Watershed and Channel\n\nMethod: Desktop (GIS/imagery) with field verification where feasible",
   "howToMeasureMarkdown": "Review permafrost maps and recent imagery for evidence of thaw slumps/thermokarst and evaluate per the metric definition; confirm in field where feasible. Assign the condition class using the bin thresholds for this metric.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Areas of permafrost degradation exist within or upstream of the project reach, contributing to hillslope slumping, increased erosion, and/or water quality impacts. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Areas of permafrost degradation exist within or upstream of the project reach, contributing to hillslope slumping, increased erosion, and/or water quality impacts. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-sediment-continuity-permafrost-degradation-thermokarst"
+          "curve-sediment-continuity-permafrost-degradation-thermokarst-screening"
         ]
       }
     }
@@ -67,37 +67,19 @@
     "Sediment continuity",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT",
-    "scsDefaultOn": false,
-    "metricDataSource": "Imagery, Permafrost mapping, & Site data",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Areas of permafrost degradation exist within or upstream of the project reach, contributing to hillslope slumping, increased erosion, and/or water quality impacts.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Areas of permafrost degradation exist within or upstream of the project reach contributing to hillslope slumping or increased erosion but are not resulting in impacts to water quality.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "No areas of permafrost degradation in the catchment area have been observed.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      32
+    ],
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

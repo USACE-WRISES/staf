@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-catchment-hydrology-land-use-coefficient-detailed",
-  "metricId": "catchment-hydrology-land-use-coefficient-detailed",
+  "metricId": "catchment-hydrology-land-use-coefficient",
   "tier": "detailed",
   "name": "Land Use Coefficient reference curve",
   "axes": {
@@ -33,8 +33,8 @@
             },
             {
               "x": 22,
-              "y": 0.4,
-              "description": "Field 22, Index 0.4"
+              "y": 0.3,
+              "description": "Field 22, Index 0.3"
             },
             {
               "x": 86,
@@ -44,31 +44,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 2,
-            "sourceRows": [
-              2
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 156,
             "fieldValues": [
               "86",
               "",
               "22",
               "",
               "16",
-              "9",
-              ""
+              "9"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -89,31 +81,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 5,
-            "sourceRows": [
-              5
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 156,
             "fieldValues": [
               "",
               "",
               "",
               "",
               "62",
-              "55",
-              ""
+              "55"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -139,31 +123,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 8,
-            "sourceRows": [
-              8
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 156,
             "fieldValues": [
               "80",
               "",
               "",
               "",
               "68",
-              "40",
-              ""
+              "40"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -184,31 +160,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 12,
-            "sourceRows": [
-              12
-            ],
             "sourceCitation": "South Carolina SQT",
-            "sourceCitations": [
-              "South Carolina SQT"
-            ],
+            "sourceRow": 156,
             "fieldValues": [
               "",
               "",
               "",
               "",
               "62",
-              "55",
-              ""
+              "55"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -228,8 +196,8 @@
             },
             {
               "x": 75,
-              "y": 0.4,
-              "description": "Field 75, Index 0.4"
+              "y": 0.3,
+              "description": "Field 75, Index 0.3"
             },
             {
               "x": 98,
@@ -239,31 +207,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 13,
-            "sourceRows": [
-              13
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 156,
             "fieldValues": [
               "98",
               "",
               "75",
               "",
               "68",
-              "55",
-              ""
+              "55"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -289,57 +249,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 14,
-            "sourceRows": [
-              14
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 156,
             "fieldValues": [
               "80",
               "",
               "",
               "",
               "62",
-              "45",
-              ""
+              "45"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-catchment-hydrology-land-use-coefficient-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; Colorado SQT; Minnesota SQT; South Carolina SQT; Wisconsin SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Alaska SQT",
-      "Colorado SQT",
-      "Minnesota SQT",
-      "South Carolina SQT",
-      "Wisconsin SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Catchment hydrology",
-    "sourceRows": [
-      2,
-      5,
-      8,
-      12,
-      13,
-      14
-    ]
-  }
+  ]
 }

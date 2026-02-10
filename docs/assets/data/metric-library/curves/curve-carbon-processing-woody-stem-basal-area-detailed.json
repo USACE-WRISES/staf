@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-woody-stem-basal-area-detailed",
-  "metricId": "carbon-processing-woody-stem-basal-area-detailed",
+  "metricId": "carbon-processing-woody-stem-basal-area",
   "tier": "detailed",
   "name": "Woody Stem Basal Area reference curve",
   "axes": {
@@ -34,31 +34,23 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 205,
-            "sourceRows": [
-              205
-            ],
             "sourceCitation": "Minnesota SQT",
-            "sourceCitations": [
-              "Minnesota SQT"
-            ],
+            "sourceRow": 232,
             "fieldValues": [
               "9",
               "",
               "",
               "",
               "",
-              "14",
-              ""
+              "14"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -73,8 +65,8 @@
             },
             {
               "x": 9.2,
-              "y": 0.4,
-              "description": "Field 9.2, Index 0.4"
+              "y": 0.3,
+              "description": "Field 9.2, Index 0.3"
             },
             {
               "x": 13.8,
@@ -84,49 +76,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 243,
-            "sourceRows": [
-              243
-            ],
             "sourceCitation": "Wisconsin SQT",
-            "sourceCitations": [
-              "Wisconsin SQT"
-            ],
+            "sourceRow": 232,
             "fieldValues": [
               "0",
               "",
               "9.2",
               "",
               "",
-              "13.8",
-              ""
+              "13.8"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-carbon-processing-woody-stem-basal-area-detailed-minnesota-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Minnesota SQT; Wisconsin SQT",
-    "sourceCitations": [
-      "Minnesota SQT",
-      "Wisconsin SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      205,
-      243
-    ]
-  }
+  ]
 }

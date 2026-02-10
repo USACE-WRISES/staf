@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "hyporheic-connectivity-channel-complexity-for-exchange",
   "name": "Channel complexity for exchange",
-  "shortName": "",
+  "shortName": "Channel complexity for exchange",
   "discipline": "Hydraulics",
   "function": "Hyporheic connectivity",
   "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
@@ -14,7 +14,8 @@
       "label": "Channel complexity for exchange",
       "type": "field",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -76,8 +77,21 @@
   "tags": [
     "Hydraulics",
     "Hyporheic connectivity",
-    "hydraulics",
-    "sfari",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      95
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

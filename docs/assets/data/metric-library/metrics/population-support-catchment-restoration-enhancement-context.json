@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "population-support-catchment-restoration-enhancement-context",
   "name": "Catchment Restoration/Enhancement Context",
-  "shortName": "",
+  "shortName": "Catchment Restoration/Enhancement Context",
   "discipline": "Biology",
   "function": "Population support",
   "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Less than 40% of the total catchment area is draining to the project reach. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Less than 40% of the total catchment area is draining to the project reach. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-population-support-catchment-restoration-enhancement-context"
+          "curve-population-support-catchment-restoration-enhancement-context-screening"
         ]
       }
     }
@@ -67,37 +67,19 @@
     "Population support",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "North Carolina SQT",
-    "scsDefaultOn": false,
-    "metricDataSource": "State/agency datasets, GIS/imagery, and field observations (as applicable).",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Less than 40% of the total catchment area is draining to the project reach.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "40 to 60% of the total catchment area is draining to the project reach.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Greater than 60% of the total catchment area is draining to the project reach.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      56
+    ],
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

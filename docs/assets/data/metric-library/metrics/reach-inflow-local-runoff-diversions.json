@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "reach-inflow-local-runoff-diversions",
   "name": "Local runoff diversions",
+  "shortName": "Local runoff diversions",
   "discipline": "Hydrology",
-  "function": "Reach Inflow",
+  "function": "Reach inflow",
   "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
   "descriptionMarkdown": "Diversions/returns are minimal, flow remains near natural regime without artificial additions/withdrawals.",
   "methodContextMarkdown": "Context: W\n\nMethod: D",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Local runoff diversions",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "d",
+      "source": "W",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "hydrology"
+    "Hydrology",
+    "Reach inflow",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      74
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-chlorophyll",
+  "name": "Chlorophyll ?",
+  "shortName": "Chlorophyll ?",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (sampling/assay)",
+  "howToMeasureMarkdown": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+  "inputs": [
+    {
+      "label": "Chlorophyll ?",
+      "type": "field (sampling/assay)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field/lab primary production or decomposition measurements; macroinvertebrate functional group counts."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-chlorophyll-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-chlorophyll-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "EPA/USGS periphyton/chlorophyll sampling guidance where applicable",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      224
+    ],
+    "sourceCitations": [
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

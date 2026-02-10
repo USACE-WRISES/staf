@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
   "name": "Nitrogen & Phosphorus Concentrations",
-  "shortName": "",
+  "shortName": "Nitrogen & Phosphorus Concentrations",
   "discipline": "Physicochemistry",
   "function": "Nutrient cycling",
   "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Significantly above guidelines indicating strong nutrient pollution. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Significantly above guidelines indicating strong nutrient pollution. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-nutrient-cycling-nitrogen-and-phosphorus-concentrations"
+          "curve-nutrient-cycling-nitrogen-and-phosphorus-concentrations-screening"
         ]
       }
     }
@@ -68,37 +68,19 @@
     "Nutrient cycling",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Significantly above guidelines indicating strong nutrient pollution.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Slightly elevated N or P. / Marked elevation with likely ecological effects.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Near background or guideline values.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      46
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

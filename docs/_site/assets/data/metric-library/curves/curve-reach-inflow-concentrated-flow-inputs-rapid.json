@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Outfalls or ditches per 100 m Criteria: 0-1",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Outfalls or ditches per 100 m Criteria: 2-3",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Outfalls or ditches per 100 m Criteria: 4-5",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Outfalls or ditches per 100 m Criteria: >5",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-reach-inflow-concentrated-flow-inputs-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-reach-inflow-concentrated-flow-inputs-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-reach-inflow-concentrated-flow-inputs-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-reach-inflow-concentrated-flow-inputs-rapid",
+  "metricId": "reach-inflow-concentrated-flow-inputs",
   "tier": "rapid",
+  "name": "Concentrated flow inputs rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "reach-inflow-concentrated-flow-inputs"
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-concentrated-flow-inputs-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-concentrated-flow-inputs-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Outfalls or ditches per 100 m Criteria: 0-1"
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Outfalls or ditches per 100 m Criteria: 2-3"
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Outfalls or ditches per 100 m Criteria: 4-5"
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Outfalls or ditches per 100 m Criteria: >5"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-concentrated-flow-inputs-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

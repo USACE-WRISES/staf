@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-peak-flow-shear-mismatch-factor",
+  "name": "Peak-Flow Shear Mismatch Factor",
+  "shortName": "Peak-Flow Shear Mismatch Factor",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Mismatch factor for shear/critical shear at bankfull/high flow (lower is better).",
+  "methodContextMarkdown": "Desktop model",
+  "howToMeasureMarkdown": "Compute ?* at target flow; compute mismatch factor relative to ?*crit.",
+  "inputs": [
+    {
+      "label": "Peak-Flow Shear Mismatch Factor",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "HEC-RAS/Excel hydraulics + D50; bankfull/high-flow stage."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-high-flow-dynamics-peak-flow-shear-mismatch-factor-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-peak-flow-shear-mismatch-factor-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "shear stress computation methods."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      185
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

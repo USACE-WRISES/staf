@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "habitat-provision-aquatic-invertebrate-habitat",
   "name": "Aquatic Invertebrate Habitat",
+  "shortName": "Aquatic Invertebrate Habitat",
   "discipline": "Biology",
-  "function": "Habitat Provision",
+  "function": "Habitat provision",
   "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
   "descriptionMarkdown": "Stable substrates (cobble/wood/leaf packs) exist if historically expected, unless ephemeral conditions differ.",
   "methodContextMarkdown": "Context: C\n\nMethod: F",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Aquatic Invertebrate Habitat",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "f",
+      "source": "C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "biology"
+    "Biology",
+    "Habitat provision",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      133
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

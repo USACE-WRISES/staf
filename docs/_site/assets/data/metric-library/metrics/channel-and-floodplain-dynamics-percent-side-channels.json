@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-and-floodplain-dynamics-percent-side-channels",
+  "name": "Percent Side Channels",
+  "shortName": "Percent Side Channels",
+  "discipline": "Geomorphology",
+  "function": "Channel and floodplain dynamics",
+  "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
+  "descriptionMarkdown": "Metric definition and measurement are state SQT-specific.",
+  "methodContextMarkdown": "Context: Varies\n\nMethod: See state SQT protocol",
+  "howToMeasureMarkdown": "Follow the state SQT metric definition and apply the scoring breakpoints for the appropriate stratum.",
+  "inputs": [
+    {
+      "label": "Percent Side Channels",
+      "type": "see state sqt protocol",
+      "source": "Varies",
+      "required": true,
+      "helpMarkdown": "SQT-defined metric; see state protocol."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Colorado SQT",
+    "State SQT protocol",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel and floodplain dynamics",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      202
+    ],
+    "sourceCitations": [
+      "Colorado SQT",
+      "Wyoming SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

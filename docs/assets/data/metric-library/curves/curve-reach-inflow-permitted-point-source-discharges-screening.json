@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-reach-inflow-permitted-point-source-discharges-screening",
+  "metricId": "reach-inflow-permitted-point-source-discharges",
+  "tier": "screening",
+  "name": "Permitted Point-source Discharges screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-reach-inflow-permitted-point-source-discharges-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-reach-inflow-permitted-point-source-discharges-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: No CDPS permitted facilities upstream of the project reach. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: CDPS permitted facilities comprise a low to moderate percentage of the baseflow in the project reach AND no facilities are located within 2 miles upstream of project reach. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: CDPS permitted facilities comprise a high percentage of the baseflow in the project reach OR 1 or more facilities present within 2 miles upstream of project reach have a high potential to threaten aquatic life. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-reach-inflow-permitted-point-source-discharges-screening-multiple-sqts",
+      "indexRange": true
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-low-flow-and-baseflow-dynamics-aufeis-icing-impacts-screening",
+  "metricId": "low-flow-and-baseflow-dynamics-aufeis-icing-impacts",
+  "tier": "screening",
+  "name": "Aufeis / Icing Impacts screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-low-flow-and-baseflow-dynamics-aufeis-icing-impacts-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-aufeis-icing-impacts-screening-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Aufeis formation caused by land disturbance is minor or nonexistent within, extends into the reach from downstream, or is found upstream of the project reach. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Aufeis formation caused by land disturbance is moderate within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Aufeis formation caused by land disturbance is extensive within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-aufeis-icing-impacts-screening-alaska-sqt",
+      "indexRange": true
+    }
+  ]
+}

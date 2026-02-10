@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "bed-composition-and-large-wood-percent-fines-6-35mm",
+  "name": "Percent Fines <6.35mm",
+  "shortName": "Percent Fines <6.35mm",
+  "discipline": "Geomorphology",
+  "function": "Bed composition and large wood",
+  "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+  "descriptionMarkdown": "Streambed substrate size distribution used to infer habitat quality, sediment transport, and embeddedness/fine sediment stress.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+  "inputs": [
+    {
+      "label": "Percent Fines <6.35mm",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field substrate surveys (pebble count/sieve) and/or visual bed material characterization."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-bed-composition-and-large-wood-percent-fines-6-35mm-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-bed-composition-and-large-wood-percent-fines-6-35mm-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Wisconsin SQT",
+    "Wolman/USGS pebble count methods where applicable",
+    "state substrate assessment protocols"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Bed composition and large wood",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      210
+    ],
+    "sourceCitations": [
+      "Wisconsin SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

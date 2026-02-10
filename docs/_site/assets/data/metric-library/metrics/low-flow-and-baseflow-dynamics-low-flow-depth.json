@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "low-flow-and-baseflow-dynamics-low-flow-depth",
   "name": "Low flow depth",
+  "shortName": "Low flow depth",
   "discipline": "Hydraulics",
-  "function": "Low Flow and Baseflow Dynamics",
+  "function": "Low flow and baseflow dynamics",
   "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
   "descriptionMarkdown": "Evaluates whether the reach maintains adequate wetted depth and continuity during low flow by integrating pool depth, wetted length, exposed bed, and Q90/Q10 differences.",
   "methodContextMarkdown": "Context: C\n\nMethod: F",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Low flow depth",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "f",
+      "source": "C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -34,7 +36,7 @@
             {
               "label": "Strongly Disagree",
               "ratingId": "sd",
-              "criteriaMarkdown": "Observation: Disconnected, very shallow pools; bed mostly exposed.<br>Criteria: Wetted length <25% or exposed bed >75%, or Q90/Q10 differ >50%."
+              "criteriaMarkdown": "Observation: Disconnected, very shallow pools; bed mostly exposed.<br>Criteria: Wetted length 75%, or Q90/Q10 differ >50%."
             },
             {
               "label": "Disagree",
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "hydraulics"
+    "Hydraulics",
+    "Low flow and baseflow dynamics",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      83
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

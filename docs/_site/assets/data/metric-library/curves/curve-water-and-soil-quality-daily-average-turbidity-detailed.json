@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-water-and-soil-quality-daily-average-turbidity-detailed",
-  "metricId": "water-and-soil-quality-daily-average-turbidity-detailed",
+  "metricId": "water-and-soil-quality-daily-average-turbidity",
   "tier": "detailed",
   "name": "Daily Average Turbidity reference curve",
   "axes": {
@@ -39,47 +39,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 282,
-            "sourceRows": [
-              282
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 247,
             "fieldValues": [
               "100",
               "",
               "",
               "",
               "10",
-              "3",
-              ""
+              "3"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-water-and-soil-quality-daily-average-turbidity-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT",
-    "sourceCitations": [
-      "Alaska SQT"
-    ],
-    "mappedFunction": "Water & soil quality",
-    "sourceRows": [
-      282
-    ]
-  }
+  ]
 }

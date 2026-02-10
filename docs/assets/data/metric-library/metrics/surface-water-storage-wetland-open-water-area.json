@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-wetland-open-water-area",
+  "name": "Wetland + Open Water Area",
+  "shortName": "Wetland + Open Water Area",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Percent of floodplain area classified as wetland and/or open water. Higher is better.",
+  "methodContextMarkdown": "Desktop GIS",
+  "howToMeasureMarkdown": "Intersect floodplain polygon with NWI and open-water layers; compute % area.",
+  "inputs": [
+    {
+      "label": "Wetland + Open Water Area",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "NWI wetlands + mapped open water/ponds within floodplain polygon."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-wetland-open-water-area-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-wetland-open-water-area-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "National Wetlands Inventory (NWI)",
+    "local hydrography layers."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      170
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

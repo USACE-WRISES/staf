@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-sc-bi-score-detailed",
+  "metricId": "population-support-sc-bi-score",
+  "tier": "detailed",
+  "name": "SC BI Score reference curve",
+  "axes": {
+    "xLabel": "SC BI Score",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-sc-bi-score-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-sc-bi-score-detailed-south-carolina-sqt-bioassessment-class-1",
+          "name": "South Carolina SQT - Bioassessment Class 1",
+          "points": [
+            {
+              "x": -1,
+              "y": 0,
+              "description": "Field -1, Index 0"
+            },
+            {
+              "x": 0.05,
+              "y": 0.7,
+              "description": "Field 0.05, Index 0.7"
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bioassessment Class 1",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 274,
+            "fieldValues": [
+              "-1",
+              "",
+              "",
+              "",
+              "0.05",
+              "1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-sc-bi-score-detailed-south-carolina-sqt-bioassessment-class-2",
+          "name": "South Carolina SQT - Bioassessment Class 2",
+          "points": [
+            {
+              "x": -1,
+              "y": 0,
+              "description": "Field -1, Index 0"
+            },
+            {
+              "x": 0.002,
+              "y": 0.7,
+              "description": "Field 0.002, Index 0.7"
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bioassessment Class 2",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 274,
+            "fieldValues": [
+              "-1",
+              "",
+              "",
+              "",
+              "0.002",
+              "1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-sc-bi-score-detailed-south-carolina-sqt-bioassessment-class-3",
+          "name": "South Carolina SQT - Bioassessment Class 3",
+          "points": [
+            {
+              "x": -1,
+              "y": 0,
+              "description": "Field -1, Index 0"
+            },
+            {
+              "x": 0.005,
+              "y": 0.7,
+              "description": "Field 0.005, Index 0.7"
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bioassessment Class 3",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 274,
+            "fieldValues": [
+              "-1",
+              "",
+              "",
+              "",
+              "0.005",
+              "1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-sc-bi-score-detailed-south-carolina-sqt-bioassessment-class-4",
+          "name": "South Carolina SQT - Bioassessment Class 4",
+          "points": [
+            {
+              "x": -1,
+              "y": 0,
+              "description": "Field -1, Index 0"
+            },
+            {
+              "x": 0.3,
+              "y": 0.7,
+              "description": "Field 0.3, Index 0.7"
+            },
+            {
+              "x": 1,
+              "y": 1,
+              "description": "Field 1, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bioassessment Class 4",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 274,
+            "fieldValues": [
+              "-1",
+              "",
+              "",
+              "",
+              "0.3",
+              "1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-sc-bi-score-detailed-south-carolina-sqt-bioassessment-class-1"
+    }
+  ]
+}

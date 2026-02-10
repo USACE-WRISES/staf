@@ -1,13 +1,12 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-hyporheic-connectivity-bedform-units-per-20-bankfull-widths-detailed",
-  "metricId": "hyporheic-connectivity-bedform-units-per-20-bankfull-widths-detailed",
+  "metricId": "hyporheic-connectivity-bedform-units-per-20-bankfull-widths",
   "tier": "detailed",
-  "name": "Bedform Units per 20 Bankfull Widths (#) reference curve",
+  "name": "Bedform Units per 20 Bankfull Widths reference curve",
   "axes": {
-    "xLabel": "Bedform Units per 20 Bankfull Widths (#)",
+    "xLabel": "Bedform Units per 20 Bankfull Widths",
     "yLabel": "Index score",
-    "xUnit": "#",
     "yUnit": "index"
   },
   "curves": [
@@ -15,11 +14,11 @@
       "curveId": "curve-hyporheic-connectivity-bedform-units-per-20-bankfull-widths-detailed-default",
       "name": "Detailed reference",
       "xType": "quantitative",
-      "units": "#",
+      "units": "",
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-hyporheic-connectivity-bedform-units-per-20-bankfull-widths-detailed-proposed-derived-from",
+          "id": "curve-hyporheic-connectivity-bedform-units-per-20-bankfull-widths-detailed-proposed-derived-from-sfari-rapid-curves-norm",
           "name": "Proposed (derived from SFARI rapid curves) - Normalize reach length by Wbf to compare across stream sizes.",
           "points": [
             {
@@ -29,8 +28,8 @@
             },
             {
               "x": 0.5,
-              "y": 0.4,
-              "description": "Field 0.5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 0.5, Index 0.3"
             },
             {
               "x": 1.5,
@@ -45,47 +44,24 @@
           ],
           "sourceMetadata": {
             "stratification": "Normalize reach length by Wbf to compare across stream sizes.",
-            "sourceRow": 87,
-            "sourceRows": [
-              87
-            ],
             "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-            "sourceCitations": [
-              "Proposed (derived from SFARI rapid curves)"
-            ],
+            "sourceRow": 190,
             "fieldValues": [
               "0",
               "0.5",
               "1.5",
-              "3",
-              "",
-              "",
-              ""
+              "3"
             ],
             "indexValues": [
               "0",
-              "0.4",
+              "0.3",
               "0.7",
-              "1",
-              "",
-              "",
-              ""
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-hyporheic-connectivity-bedform-units-per-20-bankfull-widths-detailed-proposed-derived-from"
+      "activeLayerId": "curve-hyporheic-connectivity-bedform-units-per-20-bankfull-widths-detailed-proposed-derived-from-sfari-rapid-curves-norm"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Proposed (derived from SFARI rapid curves)",
-    "sourceCitations": [
-      "Proposed (derived from SFARI rapid curves)"
-    ],
-    "mappedFunction": "Hyporheic connectivity",
-    "sourceRows": [
-      87
-    ]
-  }
+  ]
 }

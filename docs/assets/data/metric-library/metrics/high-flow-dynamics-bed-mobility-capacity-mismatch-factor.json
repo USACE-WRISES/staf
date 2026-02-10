@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-bed-mobility-capacity-mismatch-factor",
+  "name": "Bed Mobility Capacity Mismatch Factor",
+  "shortName": "Bed Mobility Capacity Mismatch Factor",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Mismatch factor for Shields stress at bankfull: M = max(?*bf/?*crit, ?*crit/?*bf). Lower is better; minimum is 1.",
+  "methodContextMarkdown": "Desktop",
+  "howToMeasureMarkdown": "Compute ?*bf from bankfull R and slope; choose ?*crit; compute mismatch factor M.",
+  "inputs": [
+    {
+      "label": "Bed Mobility Capacity Mismatch Factor",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Bankfull hydraulics (R,S) + D50; optional HEC-RAS or field cross-sections."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-high-flow-dynamics-bed-mobility-capacity-mismatch-factor-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-bed-mobility-capacity-mismatch-factor-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "Shields stress methods",
+    "hydraulic geometry references."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      178
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

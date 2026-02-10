@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "carbon-processing-herbaceous-strata-vegetation-cover",
+  "name": "Herbaceous Strata Vegetation Cover",
+  "shortName": "Herbaceous Strata Vegetation Cover",
+  "discipline": "Physicochemistry",
+  "function": "Carbon processing",
+  "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+  "descriptionMarkdown": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+  "methodContextMarkdown": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+  "howToMeasureMarkdown": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+  "inputs": [
+    {
+      "label": "Herbaceous Strata Vegetation Cover",
+      "type": "field and/or desktop (imagery/gis)",
+      "source": "Riparian/Floodplain",
+      "required": true,
+      "helpMarkdown": "Riparian vegetation field plots and/or GIS/imagery-based corridor metrics."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-carbon-processing-herbaceous-strata-vegetation-cover-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-carbon-processing-herbaceous-strata-vegetation-cover-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Minnesota SQT",
+    "NAIP or high-resolution imagery",
+    "local vegetation plot protocols where applicable"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Carbon processing",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      231
+    ],
+    "sourceCitations": [
+      "Minnesota SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

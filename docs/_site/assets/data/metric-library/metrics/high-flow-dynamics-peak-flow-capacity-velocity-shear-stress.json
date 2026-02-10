@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
   "name": "Peak Flow Capacity (Velocity/ Shear Stress)",
+  "shortName": "Peak Flow Capacity (Velocity/ Shear Stress)",
   "discipline": "Hydraulics",
-  "function": "High Flow Dynamics",
+  "function": "High flow dynamics",
   "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
   "descriptionMarkdown": "Bankfull shear stress fits substrate/banks, indicating stable capacity.",
   "methodContextMarkdown": "Context: C\n\nMethod: D",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Peak Flow Capacity (Velocity/ Shear Stress)",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "d",
+      "source": "C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "hydraulics"
+    "Hydraulics",
+    "High flow dynamics",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      89
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

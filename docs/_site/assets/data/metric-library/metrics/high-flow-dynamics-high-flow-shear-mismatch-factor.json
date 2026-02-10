@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-high-flow-shear-mismatch-factor",
+  "name": "High-Flow Shear Mismatch Factor",
+  "shortName": "High-Flow Shear Mismatch Factor",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Same mismatch factor concept applied to bankfull/high-flow condition; lower is better.",
+  "methodContextMarkdown": "Desktop",
+  "howToMeasureMarkdown": "Compute ?* at bankfull/high-flow design stage; compute mismatch factor relative to ?*crit.",
+  "inputs": [
+    {
+      "label": "High-Flow Shear Mismatch Factor",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Modeled or estimated bankfull hydraulics (R,S) and D50; optional HEC-RAS."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-high-flow-dynamics-high-flow-shear-mismatch-factor-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-high-flow-shear-mismatch-factor-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "hydraulic modeling guidance."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      179
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

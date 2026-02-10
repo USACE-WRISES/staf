@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed",
-  "metricId": "channel-and-floodplain-dynamics-percent-side-channels-detailed",
+  "metricId": "channel-and-floodplain-dynamics-percent-side-channels",
   "tier": "detailed",
   "name": "Percent Side Channels reference curve",
   "axes": {
@@ -18,7 +18,7 @@
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-colorado-sqt-unconfined-all",
+          "id": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-colorado-sqt-unconfined-alluvial",
           "name": "Colorado SQT - Unconfined Alluvial",
           "points": [
             {
@@ -28,8 +28,8 @@
             },
             {
               "x": 10,
-              "y": 0.4,
-              "description": "Field 10, Index 0.4"
+              "y": 0.3,
+              "description": "Field 10, Index 0.3"
             },
             {
               "x": 50,
@@ -44,36 +44,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Unconfined Alluvial",
-            "sourceRow": 104,
-            "sourceRows": [
-              104
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 202,
             "fieldValues": [
               "0",
               "",
               "10",
               "",
               "50",
-              "100",
-              ""
+              "100"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-colorado-sqt-confined-alluv",
+          "id": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-colorado-sqt-confined-alluvial",
           "name": "Colorado SQT - Confined Alluvial",
           "points": [
             {
@@ -83,8 +75,8 @@
             },
             {
               "x": 5,
-              "y": 0.4,
-              "description": "Field 5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 5, Index 0.3"
             },
             {
               "x": 25,
@@ -99,36 +91,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Confined Alluvial",
-            "sourceRow": 105,
-            "sourceRows": [
-              105
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 202,
             "fieldValues": [
               "0",
               "",
               "5",
               "",
               "25",
-              "50",
-              ""
+              "50"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-wyoming-sqt-unconfined-allu",
+          "id": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-wyoming-sqt-unconfined-alluvial",
           "name": "Wyoming SQT - Unconfined Alluvial",
           "points": [
             {
@@ -138,8 +122,8 @@
             },
             {
               "x": 10,
-              "y": 0.4,
-              "description": "Field 10, Index 0.4"
+              "y": 0.3,
+              "description": "Field 10, Index 0.3"
             },
             {
               "x": 50,
@@ -154,36 +138,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Unconfined Alluvial",
-            "sourceRow": 143,
-            "sourceRows": [
-              143
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 202,
             "fieldValues": [
               "0",
               "",
               "10",
               "",
               "50",
-              "100",
-              ""
+              "100"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
         {
-          "id": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-wyoming-sqt-confined-alluvi",
+          "id": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-wyoming-sqt-confined-alluvial",
           "name": "Wyoming SQT - Confined Alluvial",
           "points": [
             {
@@ -193,8 +169,8 @@
             },
             {
               "x": 5,
-              "y": 0.4,
-              "description": "Field 5, Index 0.4"
+              "y": 0.3,
+              "description": "Field 5, Index 0.3"
             },
             {
               "x": 25,
@@ -209,51 +185,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Confined Alluvial",
-            "sourceRow": 144,
-            "sourceRows": [
-              144
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 202,
             "fieldValues": [
               "0",
               "",
               "5",
               "",
               "25",
-              "50",
-              ""
+              "50"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-colorado-sqt-unconfined-all"
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-percent-side-channels-detailed-colorado-sqt-unconfined-alluvial"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Colorado SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Colorado SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Channel and floodplain dynamics",
-    "sourceRows": [
-      104,
-      105,
-      143,
-      144
-    ]
-  }
+  ]
 }

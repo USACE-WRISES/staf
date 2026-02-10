@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-evolution-width-depth-ratio-detailed",
+  "metricId": "channel-evolution-width-depth-ratio",
+  "tier": "detailed",
+  "name": "Width/Depth Ratio reference curve",
+  "axes": {
+    "xLabel": "Width/Depth Ratio",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-evolution-width-depth-ratio-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-evolution-width-depth-ratio-detailed-alaska-sqt",
+          "name": "Alaska SQT",
+          "points": [
+            {
+              "x": 20,
+              "y": 0,
+              "description": "Field 20, Index 0"
+            },
+            {
+              "x": 100,
+              "y": 1,
+              "description": "Field 100, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 195,
+            "fieldValues": [
+              "20",
+              "",
+              "",
+              "",
+              "",
+              "100"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-evolution-width-depth-ratio-detailed-alaska-sqt"
+    }
+  ]
+}

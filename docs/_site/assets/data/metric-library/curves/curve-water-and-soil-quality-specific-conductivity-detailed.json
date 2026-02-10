@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-water-and-soil-quality-specific-conductivity-detailed",
+  "metricId": "water-and-soil-quality-specific-conductivity",
+  "tier": "detailed",
+  "name": "Specific Conductivity reference curve",
+  "axes": {
+    "xLabel": "Specific Conductivity",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-water-and-soil-quality-specific-conductivity-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-water-and-soil-quality-specific-conductivity-detailed-north-carolina-sqt-piedmont",
+          "name": "North Carolina SQT - Piedmont",
+          "points": [
+            {
+              "x": 78,
+              "y": 0.69,
+              "description": "Field 78, Index 0.69"
+            },
+            {
+              "x": 229,
+              "y": 0.3,
+              "description": "Field 229, Index 0.3"
+            },
+            {
+              "x": 342.8846154,
+              "y": 0,
+              "description": "Field 342.8846154, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Piedmont",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 253,
+            "fieldValues": [
+              "342.8846154",
+              "",
+              "229",
+              "78",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-water-and-soil-quality-specific-conductivity-detailed-north-carolina-sqt-mountain-region",
+          "name": "North Carolina SQT - Mountain Region",
+          "points": [
+            {
+              "x": 41,
+              "y": 0.69,
+              "description": "Field 41, Index 0.69"
+            },
+            {
+              "x": 66,
+              "y": 0.3,
+              "description": "Field 66, Index 0.3"
+            },
+            {
+              "x": 85.23076923,
+              "y": 0,
+              "description": "Field 85.23076923, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Mountain Region",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 253,
+            "fieldValues": [
+              "85.23076923",
+              "",
+              "66",
+              "41",
+              "",
+              ""
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-water-and-soil-quality-specific-conductivity-detailed-north-carolina-sqt-piedmont"
+    }
+  ]
+}

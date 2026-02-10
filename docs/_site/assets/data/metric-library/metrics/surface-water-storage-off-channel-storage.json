@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "surface-water-storage-off-channel-storage",
   "name": "Off-channel storage",
-  "shortName": "",
+  "shortName": "Off-channel storage",
   "discipline": "Hydrology",
   "function": "Surface water storage",
   "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
@@ -14,7 +14,8 @@
       "label": "Off-channel storage",
       "type": "field",
       "source": "Floodplain",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -75,8 +76,21 @@
   "tags": [
     "Hydrology",
     "Surface water storage",
-    "hydrology",
-    "sfari",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      71
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

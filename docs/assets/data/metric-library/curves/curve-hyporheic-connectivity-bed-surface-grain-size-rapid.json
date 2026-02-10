@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Pebble count shows clean gravel-cobble with open interstices. Criteria: Fines < 25%. Low embeddedness.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Some fine matrix visible between gravels. Criteria: Fines 25-50%. Moderate embeddedness.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Gravels largely buried by sand/silt. Criteria: Fines 50-75%. High embeddedness.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Bed surface mostly sand, silt, or consolidated fines. Criteria: Fines >75%. Very high embeddedness.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-hyporheic-connectivity-bed-surface-grain-size-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-hyporheic-connectivity-bed-surface-grain-size-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-hyporheic-connectivity-bed-surface-grain-size-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-hyporheic-connectivity-bed-surface-grain-size-rapid",
+  "metricId": "hyporheic-connectivity-bed-surface-grain-size",
   "tier": "rapid",
+  "name": "Bed surface grain size rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "hyporheic-connectivity-bed-surface-grain-size"
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-bed-surface-grain-size-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-bed-surface-grain-size-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Pebble count shows clean gravel-cobble with open interstices. Criteria: Fines < 25%. Low embeddedness."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Some fine matrix visible between gravels. Criteria: Fines 25-50%. Moderate embeddedness."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Gravels largely buried by sand/silt. Criteria: Fines 50-75%. High embeddedness."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Bed surface mostly sand, silt, or consolidated fines. Criteria: Fines >75%. Very high embeddedness."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-bed-surface-grain-size-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

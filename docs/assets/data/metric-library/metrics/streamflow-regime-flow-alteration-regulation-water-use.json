@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
   "name": "Flow Alteration (Regulation / Water Use)",
-  "shortName": "",
+  "shortName": "Flow Alteration (Regulation / Water Use)",
   "discipline": "Hydrology",
   "function": "Streamflow regime",
-  "functionStatement": "Streamflow regime integrates the range of flows experienced by other processes and supports channel form, habitat diversity, and ecological life-cycle cues.\n\"Integrates the range of \"\"typical\"\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).\"",
-  "descriptionMarkdown": "Degree of alteration in flow magnitude, timing, duration, or permanence relative to natural conditions due to regulation, withdrawals/returns, or watershed change.\nCompares current daily-flow pattern to the natural regime, combining IHA metrics with the Richards-Baker flashiness index to screen for alteration from dams, withdrawals, or urbanization.",
+  "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+  "descriptionMarkdown": "\"Degree of alteration in flow magnitude, timing, duration, or permanence relative to natural conditions due to regulation, withdrawals/returns, or watershed change. Compares current daily-flow pattern to the natural regime, combining IHA metrics with the Richards-Baker flashiness index to screen for alteration from dams, withdrawals, or urbanization.\"",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop (gage/records) with field verification where feasible; Desktop",
-  "howToMeasureMarkdown": "Use available flow records (gage data), modeled natural baseline estimates, and/or water-use/rights information to estimate change from expected natural conditions for the metric definition. Assign the condition class using the bin thresholds for this metric.\nCompare current mean annual flow to a natural or historical baseline and report percent difference.",
+  "howToMeasureMarkdown": "\"Use available flow records (gage data), modeled natural baseline estimates, and/or water-use/rights information to estimate change from expected natural conditions for the metric definition. Assign the condition class using the bin thresholds for this metric. Compare current mean annual flow to a natural or historical baseline and report percent difference.\"",
   "inputs": [
     {
       "label": "Flow Alteration (Regulation / Water Use)",
       "type": "desktop (gage/records) with field verification where feasible; desktop",
       "source": "Channel",
       "required": true,
-      "helpMarkdown": "ADNR, ADF&G flow regulation & water rights data\nUSGS NWIS (gage data where available); modeled baseline hydrology; water-use/rights datasets; dam regulation information."
+      "helpMarkdown": "\"ADNR, ADF&G flow regulation & water rights data USGS NWIS (gage data where available); modeled baseline hydrology; water-use/rights datasets; dam regulation information. \""
     }
   ],
   "profiles": [
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: >50% difference. Near dewatering or strong hydropeaking. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: >50% difference. Near dewatering or strong hydropeaking. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-streamflow-regime-flow-alteration-regulation-water-use"
+          "curve-streamflow-regime-flow-alteration-regulation-water-use-screening"
         ]
       }
     }
@@ -62,13 +62,9 @@
   "references": [
     "USGS NWIS / modeled baseline (if used)",
     "Alaska SQT",
-    "USGS NWIS / modeled baseline (if used)",
     "CO SQT 2019",
-    "USGS NWIS / modeled baseline (if used)",
     "WI SQT 2022",
-    "USGS NWIS / modeled baseline (if used)",
     "WY SQT 2019",
-    "USGS NWIS / modeled baseline (if used)",
     "MN SQT 2020",
     "USGS NWIS (current)",
     "USGS StreamStats (natural baseline where available)."
@@ -78,37 +74,24 @@
     "Streamflow regime",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT; Colorado SQT; Wisconsin SQT; Wyoming SQT; Minnesota SQT; ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "ADNR, ADF&G flow regulation & water rights data\nUSGS NWIS (gage data where available); modeled baseline hydrology; water-use/rights datasets; dam regulation information.",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": ">50% difference. Near dewatering or strong hydropeaking.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "10-50% difference.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "<10% difference from baseline.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      15
+    ],
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT",
+      "Minnesota SQT",
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

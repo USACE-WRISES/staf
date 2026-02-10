@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-catchment-hydrology-anthropogenic-land-cover-detailed",
-  "metricId": "catchment-hydrology-anthropogenic-land-cover-detailed",
+  "metricId": "catchment-hydrology-anthropogenic-land-cover",
   "tier": "detailed",
   "name": "Anthropogenic Land Cover reference curve",
   "axes": {
@@ -33,53 +33,34 @@
             },
             {
               "x": 50,
-              "y": 0.4,
-              "description": "Field 50, Index 0.4"
+              "y": 0.3,
+              "description": "Field 50, Index 0.3"
             }
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 4,
-            "sourceRows": [
-              4
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 158,
             "fieldValues": [
               "",
               "",
               "50",
               "",
               "35",
-              "0",
-              ""
+              "0"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-catchment-hydrology-anthropogenic-land-cover-detailed-alaska-sqt"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT",
-    "sourceCitations": [
-      "Alaska SQT"
-    ],
-    "mappedFunction": "Catchment hydrology",
-    "sourceRows": [
-      4
-    ]
-  }
+  ]
 }

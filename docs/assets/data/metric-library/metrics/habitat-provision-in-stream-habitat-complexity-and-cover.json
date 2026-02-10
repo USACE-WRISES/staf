@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
   "name": "In-stream Habitat Complexity & Cover",
-  "shortName": "",
+  "shortName": "In-stream Habitat Complexity & Cover",
   "discipline": "Biology",
   "function": "Habitat provision",
   "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
-  "descriptionMarkdown": "Multiple habitat types (riffles/pools/woody debris) exist if historically expected, not unnaturally uniform.\nVaried substrates (gravel, cobble, wood) provide multiple habitats, unless uniform is normal.\nProvides shelter unless historically minimal in certain ecoregions.",
+  "descriptionMarkdown": "\"Multiple habitat types (riffles/pools/woody debris) exist if historically expected, not unnaturally uniform. Varied substrates (gravel, cobble, wood) provide multiple habitats, unless uniform is normal. Provides shelter unless historically minimal in certain ecoregions.\"",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
-  "howToMeasureMarkdown": "Count distinct habitat types (riffle, run, pool, cover) along the reach. Use imagery as a screening aid where needed.\nCount substrate classes and note presence of wood, leaf packs, and other cover types.\nEstimate percent of bank length with undercut or overhanging cover during a field visit.",
+  "howToMeasureMarkdown": "\"Count distinct habitat types (riffle, run, pool, cover) along the reach. Use imagery as a screening aid where needed. Count substrate classes and note presence of wood, leaf packs, and other cover types. Estimate percent of bank length with undercut or overhanging cover during a field visit.\"",
   "inputs": [
     {
       "label": "In-stream Habitat Complexity & Cover",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Very uniform channel with limited structural diversity. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Very uniform channel with limited structural diversity. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-habitat-provision-in-stream-habitat-complexity-and-cover"
+          "curve-habitat-provision-in-stream-habitat-complexity-and-cover-screening"
         ]
       }
     }
@@ -67,7 +67,6 @@
     "habitat mapping",
     "supporting context from imagery and slope.",
     "Field mapping",
-    "NAIP imagery",
     "canopy and bank metrics where available."
   ],
   "tags": [
@@ -75,37 +74,19 @@
     "Habitat provision",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Very uniform channel with limited structural diversity.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Some variety but key elements are missing. / Mostly uniform with only 1-2 distinct features.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Multiple habitat types well represented.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      53
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

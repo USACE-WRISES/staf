@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-sediment-continuity-sediment-supply-potential-watershed-banks-screening",
+  "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
+  "tier": "screening",
+  "name": "Sediment Supply Potential (watershed/banks) screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-sediment-continuity-sediment-supply-potential-watershed-banks-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-sediment-continuity-sediment-supply-potential-watershed-banks-screening-multiple-sqts",
+          "name": "Multiple SQTs",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-sediment-continuity-sediment-supply-potential-watershed-banks-screening-multiple-sqts",
+      "indexRange": true
+    }
+  ]
+}

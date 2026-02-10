@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "light-and-thermal-regime-algal-growth-light-limited",
   "name": "Algal Growth (light-limited)",
+  "shortName": "Algal Growth (light-limited)",
   "discipline": "Physicochemistry",
-  "function": "Light and Thermal Regime",
+  "function": "Light & thermal regime",
   "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
   "descriptionMarkdown": "Moderate growth matches local light regime, unless historically high/low (e.g., blackwater).",
   "methodContextMarkdown": "Context: C\n\nMethod: F",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Algal Growth (light-limited)",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "f",
+      "source": "C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "physicochemistry"
+    "Physicochemistry",
+    "Light & thermal regime",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      114
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

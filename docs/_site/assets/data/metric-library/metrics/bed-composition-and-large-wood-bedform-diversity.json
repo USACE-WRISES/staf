@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "bed-composition-and-large-wood-bedform-diversity",
   "name": "Bedform diversity",
-  "shortName": "",
+  "shortName": "Bedform diversity",
   "discipline": "Geomorphology",
   "function": "Bed composition and large wood",
   "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
@@ -14,7 +14,8 @@
       "label": "Bedform diversity",
       "type": "field",
       "source": "Channel",
-      "required": true
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -45,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -74,10 +75,23 @@
     "planform metrics (for example sinuosity) as supporting context."
   ],
   "tags": [
-    "Bed composition and large wood",
     "Geomorphology",
-    "geomorphology",
-    "sfari",
+    "Bed composition and large wood",
     "rapid"
-  ]
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      110
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

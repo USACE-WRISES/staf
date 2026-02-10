@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "metricId": "carbon-processing-detrital-processing-cpom-retention-shredders",
   "name": "Detrital Processing (CPOM retention / shredders)",
-  "shortName": "",
+  "shortName": "Detrital Processing (CPOM retention / shredders)",
   "discipline": "Physicochemistry",
   "function": "Carbon processing",
   "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
-  "descriptionMarkdown": "Leaf litter/coarse organic matter are visibly retained, supporting detrital processes per local references.\nQuick checks show these invertebrates, indicating healthy detrital processing (if typical).",
+  "descriptionMarkdown": "\"Leaf litter/coarse organic matter are visibly retained, supporting detrital processes per local references. Quick checks show these invertebrates, indicating healthy detrital processing (if typical).\"",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
-  "howToMeasureMarkdown": "Count leaf packs and small debris dams, or infer retention from wood presence and low-velocity habitat during a field visit.\nConduct a rapid kick sample and note presence of shredder taxa where a CPOM pathway is expected.",
+  "howToMeasureMarkdown": "\"Count leaf packs and small debris dams, or infer retention from wood presence and low-velocity habitat during a field visit. Conduct a rapid kick sample and note presence of shredder taxa where a CPOM pathway is expected.\"",
   "inputs": [
     {
       "label": "Detrital Processing (CPOM retention / shredders)",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Essentially no retained organic matter, or severe overload causing anoxia risk. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Essentially no retained organic matter, or severe overload causing anoxia risk. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-carbon-processing-detrital-processing-cpom-retention-shredders"
+          "curve-carbon-processing-detrital-processing-cpom-retention-shredders-screening"
         ]
       }
     }
@@ -70,37 +70,19 @@
     "Carbon processing",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": true,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Essentially no retained organic matter, or severe overload causing anoxia risk.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Some retention but partially flushed out. / Sparse organic matter and limited retention.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Abundant CPOM retention with stable leaf packs typical for the system.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      41
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

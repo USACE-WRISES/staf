@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-pool-depth-ratio",
+  "name": "Pool Depth Ratio",
+  "shortName": "Pool Depth Ratio",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+  "inputs": [
+    {
+      "label": "Pool Depth Ratio",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-habitat-provision-pool-depth-ratio-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-pool-depth-ratio-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "Rapid habitat assessment/geomorphic unit mapping methods",
+    "Colorado SQT",
+    "Michigan SQT",
+    "Minnesota SQT",
+    "North Carolina SQT",
+    "South Carolina SQT",
+    "Wisconsin SQT",
+    "Wyoming SQT"
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      260
+    ],
+    "sourceCitations": [
+      "Alaska SQT",
+      "Colorado SQT",
+      "Michigan SQT",
+      "Minnesota SQT",
+      "North Carolina SQT",
+      "South Carolina SQT",
+      "Wisconsin SQT",
+      "Wyoming SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

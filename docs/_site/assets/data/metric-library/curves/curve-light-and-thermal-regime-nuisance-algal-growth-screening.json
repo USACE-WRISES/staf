@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-light-and-thermal-regime-nuisance-algal-growth-screening",
+  "metricId": "light-and-thermal-regime-nuisance-algal-growth",
+  "tier": "screening",
+  "name": "Nuisance Algal Growth screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-light-and-thermal-regime-nuisance-algal-growth-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-light-and-thermal-regime-nuisance-algal-growth-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Minimal algae and no nuisance mats. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Slightly elevated algal coverage. / Large mats that partially impair habitat. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Dense bloom or scum that covers substrate. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-light-and-thermal-regime-nuisance-algal-growth-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

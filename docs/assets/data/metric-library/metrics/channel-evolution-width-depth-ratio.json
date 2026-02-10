@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "channel-evolution-width-depth-ratio",
+  "name": "Width/Depth Ratio",
+  "shortName": "Width/Depth Ratio",
+  "discipline": "Geomorphology",
+  "function": "Channel evolution",
+  "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
+  "descriptionMarkdown": "Channel dimension indicator used to infer incision/widening or departure from reference geometry.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (survey)",
+  "howToMeasureMarkdown": "Measure bankfull width and mean depth at representative cross sections; compute W/D and compare to expected (regional curves or SQT reference).",
+  "inputs": [
+    {
+      "label": "Width/Depth Ratio",
+      "type": "field (survey)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field channel geometry (bankfull width/depth) and regional expectations/curves."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-channel-evolution-width-depth-ratio-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-channel-evolution-width-depth-ratio-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "Regional hydraulic geometry/bankfull field guides where available"
+  ],
+  "tags": [
+    "Geomorphology",
+    "Channel evolution",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      195
+    ],
+    "sourceCitations": [
+      "Alaska SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

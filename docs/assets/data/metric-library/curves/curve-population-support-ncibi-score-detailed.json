@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-ncibi-score-detailed",
+  "metricId": "population-support-ncibi-score",
+  "tier": "detailed",
+  "name": "NCIBI Score reference curve",
+  "axes": {
+    "xLabel": "NCIBI Score",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-ncibi-score-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-population-support-ncibi-score-detailed-north-carolina-sqt-french-broad-hiwassee-little-tennessee-new-and-watauga-",
+          "name": "North Carolina SQT - French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+          "points": [
+            {
+              "x": 21.15384615,
+              "y": 0,
+              "description": "Field 21.15384615, Index 0"
+            },
+            {
+              "x": 33,
+              "y": 0.3,
+              "description": "Field 33, Index 0.3"
+            },
+            {
+              "x": 48,
+              "y": 0.7,
+              "description": "Field 48, Index 0.7"
+            },
+            {
+              "x": 60,
+              "y": 1,
+              "description": "Field 60, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "French Broad, Hiwassee, Little Tennessee, New, and Watauga River basins",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 273,
+            "fieldValues": [
+              "21.15384615",
+              "",
+              "33",
+              "",
+              "48",
+              "60"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-ncibi-score-detailed-north-carolina-sqt-broad-catawba-savannah-and-yadkin-river-basins",
+          "name": "North Carolina SQT - Broad, Catawba, Savannah, and Yadkin River basins",
+          "points": [
+            {
+              "x": 26.6,
+              "y": 0,
+              "description": "Field 26.6, Index 0"
+            },
+            {
+              "x": 35,
+              "y": 0.3,
+              "description": "Field 35, Index 0.3"
+            },
+            {
+              "x": 48,
+              "y": 0.7,
+              "description": "Field 48, Index 0.7"
+            },
+            {
+              "x": 60,
+              "y": 1,
+              "description": "Field 60, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Broad, Catawba, Savannah, and Yadkin River basins",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 273,
+            "fieldValues": [
+              "26.6",
+              "",
+              "35",
+              "",
+              "48",
+              "60"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-population-support-ncibi-score-detailed-north-carolina-sqt-cape-fear-neuse-roanoke-and-tar-pamlico-river-basins",
+          "name": "North Carolina SQT - Cape Fear, Neuse, Roanoke, and Tar-Pamlico River basins",
+          "points": [
+            {
+              "x": 25.1,
+              "y": 0,
+              "description": "Field 25.1, Index 0"
+            },
+            {
+              "x": 33,
+              "y": 0.3,
+              "description": "Field 33, Index 0.3"
+            },
+            {
+              "x": 46,
+              "y": 0.7,
+              "description": "Field 46, Index 0.7"
+            },
+            {
+              "x": 60,
+              "y": 1,
+              "description": "Field 60, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Cape Fear, Neuse, Roanoke, and Tar-Pamlico River basins",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 273,
+            "fieldValues": [
+              "25.1",
+              "",
+              "33",
+              "",
+              "46",
+              "60"
+            ],
+            "indexValues": [
+              "0",
+              "0.2",
+              "0.3",
+              "0.6",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-population-support-ncibi-score-detailed-north-carolina-sqt-french-broad-hiwassee-little-tennessee-new-and-watauga-"
+    }
+  ]
+}

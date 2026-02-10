@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-community-dynamics-fish-species-richness-detailed",
-  "metricId": "community-dynamics-fish-species-richness-detailed",
+  "metricId": "community-dynamics-fish-species-richness",
   "tier": "detailed",
   "name": "Fish Species Richness reference curve",
   "axes": {
@@ -39,31 +39,23 @@
           ],
           "sourceMetadata": {
             "stratification": "Anadromous",
-            "sourceRow": 436,
-            "sourceRows": [
-              436
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 281,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "80",
-              "100",
-              ""
+              "100"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -89,48 +81,28 @@
           ],
           "sourceMetadata": {
             "stratification": "Non-anadromous",
-            "sourceRow": 437,
-            "sourceRows": [
-              437
-            ],
             "sourceCitation": "Alaska SQT",
-            "sourceCitations": [
-              "Alaska SQT"
-            ],
+            "sourceRow": 281,
             "fieldValues": [
               "0",
               "",
               "",
               "",
               "60",
-              "100",
-              ""
+              "100"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
       "activeLayerId": "curve-community-dynamics-fish-species-richness-detailed-alaska-sqt-anadromous"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Alaska SQT",
-    "sourceCitations": [
-      "Alaska SQT"
-    ],
-    "mappedFunction": "Community dynamics",
-    "sourceRows": [
-      436,
-      437
-    ]
-  }
+  ]
 }

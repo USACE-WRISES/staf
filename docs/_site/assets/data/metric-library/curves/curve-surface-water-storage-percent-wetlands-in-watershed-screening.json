@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-surface-water-storage-percent-wetlands-in-watershed-screening",
+  "metricId": "surface-water-storage-percent-wetlands-in-watershed",
+  "tier": "screening",
+  "name": "Percent Wetlands in Watershed screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-surface-water-storage-percent-wetlands-in-watershed-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-surface-water-storage-percent-wetlands-in-watershed-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: >5% wetland coverage, or consistent with historical norm. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 1-5% wetland coverage. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: <1% wetland coverage, or heavily drained wetlands. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-surface-water-storage-percent-wetlands-in-watershed-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

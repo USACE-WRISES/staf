@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Gravel-cobble mix with low fines and open pore space. Criteria: <25% embeddedness; little/no crusting or armor.",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Slight fines or coarsening; moderate embeddedness. Criteria: Embeddedness about 25-50%; light crusting/armoring.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Fines blanket bed or strong armor limits pore space. Criteria: Embeddedness about 50-75% or surface locked.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Fine-dominated bed or heavily locked armor. Criteria: Embeddedness >75% or severe armoring; minimal pore space.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-bed-composition-and-large-wood-substrate-composition-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-bed-composition-and-large-wood-substrate-composition-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-bed-composition-and-large-wood-substrate-composition-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-bed-composition-and-large-wood-substrate-composition-rapid",
+  "metricId": "bed-composition-and-large-wood-substrate-composition",
   "tier": "rapid",
+  "name": "Substrate Composition rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "bed-composition-and-large-wood-substrate-composition"
+  "curves": [
+    {
+      "curveId": "curve-bed-composition-and-large-wood-substrate-composition-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-bed-composition-and-large-wood-substrate-composition-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Gravel-cobble mix with low fines and open pore space. Criteria: <25% embeddedness; little/no crusting or armor."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Slight fines or coarsening; moderate embeddedness. Criteria: Embeddedness about 25-50%; light crusting/armoring."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Fines blanket bed or strong armor limits pore space. Criteria: Embeddedness about 50-75% or surface locked."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Fine-dominated bed or heavily locked armor. Criteria: Embeddedness >75% or severe armoring; minimal pore space."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-bed-composition-and-large-wood-substrate-composition-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

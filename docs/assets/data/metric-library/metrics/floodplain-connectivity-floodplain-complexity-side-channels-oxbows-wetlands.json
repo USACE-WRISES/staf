@@ -2,17 +2,17 @@
   "schemaVersion": 1,
   "metricId": "floodplain-connectivity-floodplain-complexity-side-channels-oxbows-wetlands",
   "name": "Floodplain Complexity (side channels/oxbows/wetlands)",
-  "shortName": "",
+  "shortName": "Floodplain Complexity (side channels/oxbows/wetlands)",
   "discipline": "Hydraulics",
   "function": "Floodplain connectivity",
   "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
   "descriptionMarkdown": "Floodplain/off-channel features stay diverse/connected at moderate floods, reflecting minimal loss.",
-  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Delineate side channels, oxbows, and wetlands and assess connectivity during moderate floods using field checks and available mapping.",
   "inputs": [
     {
       "label": "Floodplain Complexity (side channels/oxbows/wetlands)",
-      "type": "field",
+      "type": "desktop",
       "source": "Floodplain",
       "required": true,
       "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Floodplain is simplified or leveed with little or no off-channel function remaining. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Floodplain is simplified or leveed with little or no off-channel function remaining. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-floodplain-connectivity-floodplain-complexity-side-channels-oxbows-wetlands"
+          "curve-floodplain-connectivity-floodplain-complexity-side-channels-oxbows-wetlands-screening"
         ]
       }
     }
@@ -70,37 +70,19 @@
     "Floodplain connectivity",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Floodplain is simplified or leveed with little or no off-channel function remaining.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Partial complexity remains with some features truncated or partially isolated. / Most off-channel features are lost or only minimally connected.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Multiple active features connected during moderate floods and consistent with historical complexity.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      23
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

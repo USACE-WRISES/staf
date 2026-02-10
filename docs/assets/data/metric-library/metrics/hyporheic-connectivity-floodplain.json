@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "hyporheic-connectivity-floodplain",
+  "name": "Floodplain",
+  "shortName": "Floodplain",
+  "discipline": "Hydraulics",
+  "function": "Hyporheic connectivity",
+  "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+  "descriptionMarkdown": "Percent of floodplain area in HSG A or B (higher is better).",
+  "methodContextMarkdown": "Desktop",
+  "howToMeasureMarkdown": "Intersect floodplain polygon with soils HSG; compute % area A/B.",
+  "inputs": [
+    {
+      "label": "Floodplain",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "SSURGO/gSSURGO HSG classes + floodplain polygon."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-hyporheic-connectivity-floodplain-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-hyporheic-connectivity-floodplain-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "NRCS SSURGO/Web Soil Survey."
+  ],
+  "tags": [
+    "Hydraulics",
+    "Hyporheic connectivity",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      192
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

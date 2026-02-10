@@ -1,50 +1,50 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening",
-  "metricId": "watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening",
+  "metricId": "watershed-connectivity-lateral-connectivity-for-riparian-fauna",
   "tier": "screening",
-  "name": "Screening default curve",
+  "name": "Lateral Connectivity for Riparian Fauna screening curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
   "curves": [
     {
-      "indexRange": true,
+      "curveId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
       "layers": [
         {
-          "name": "Screening",
+          "id": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening-erdc",
+          "name": "ERDC",
           "points": [
             {
               "x": "Good",
-              "description": "Good: No major levees or walls and free lateral movement. (Suggested index range 0.70-1.0)",
-              "yMax": 1,
+              "y": 0.85,
               "yMin": 0.7,
-              "y": 0.85
+              "yMax": 1,
+              "description": "Good: No major levees or walls and free lateral movement. (Suggested index range 0.70-1.0)"
             },
             {
               "x": "Fair",
-              "description": "Fair: Some partial barriers with remaining access. / Large levees hamper movement in many areas. (Suggested index range 0.40-0.69)",
-              "yMax": 0.69,
+              "y": 0.545,
               "yMin": 0.4,
-              "y": 0.54
+              "yMax": 0.69,
+              "description": "Fair: Some partial barriers with remaining access. / Large levees hamper movement in many areas. (Suggested index range 0.40-0.69)"
             },
             {
               "x": "Poor",
-              "description": "Poor: Heavily walled or leveed corridor with minimal lateral connectivity. (Suggested index range 0.0-0.29)",
-              "yMax": 0.29,
+              "y": 0.195,
               "yMin": 0,
-              "y": 0.14
+              "yMax": 0.39,
+              "description": "Poor: Heavily walled or leveed corridor with minimal lateral connectivity. (Suggested index range 0.0-0.39)"
             }
-          ],
-          "id": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening-layer"
+          ]
         }
       ],
-      "xType": "categorical",
-      "curveId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening-default",
-      "name": "Screening",
-      "units": "",
-      "activeLayerId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening-layer"
+      "activeLayerId": "curve-watershed-connectivity-lateral-connectivity-for-riparian-fauna-screening-erdc",
+      "indexRange": true
     }
   ]
 }

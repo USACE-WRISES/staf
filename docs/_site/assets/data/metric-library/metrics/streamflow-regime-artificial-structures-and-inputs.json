@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "streamflow-regime-artificial-structures-and-inputs",
   "name": "Artificial structures and inputs",
+  "shortName": "Artificial structures and inputs",
   "discipline": "Hydrology",
-  "function": "Streamflow Regime",
+  "function": "Streamflow regime",
   "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
   "descriptionMarkdown": "Documents dams, weirs, levees, diversions, pumps, and returns that alter hydrograph timing, peaks, baseflow, or floodplain access.",
   "methodContextMarkdown": "Context: C\n\nMethod: D",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Artificial structures and inputs",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "d",
+      "source": "C",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "hydrology"
+    "Hydrology",
+    "Streamflow regime",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      77
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

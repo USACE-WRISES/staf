@@ -1,0 +1,1160 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-pool-spacing-ratio-detailed",
+  "metricId": "habitat-provision-pool-spacing-ratio",
+  "tier": "detailed",
+  "name": "Pool Spacing Ratio reference curve",
+  "axes": {
+    "xLabel": "Pool Spacing Ratio",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-pool-spacing-ratio-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-alaska-sqt-b-and-ba-stream-types",
+          "name": "Alaska SQT - B and Ba Stream Types",
+          "points": [
+            {
+              "x": 2,
+              "y": 1,
+              "description": "Field 2, Index 1"
+            },
+            {
+              "x": 3.9,
+              "y": 0.7,
+              "description": "Field 3.9, Index 0.7"
+            },
+            {
+              "x": 6,
+              "y": 0,
+              "description": "Field 6, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B and Ba Stream Types",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "6",
+              "",
+              "",
+              "",
+              "3.9",
+              "2"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-alaska-sqt-bc-stream-types",
+          "name": "Alaska SQT - Bc Stream Types",
+          "points": [
+            {
+              "x": 3.4,
+              "y": 1,
+              "description": "Field 3.4, Index 1"
+            },
+            {
+              "x": 6,
+              "y": 0.7,
+              "description": "Field 6, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bc Stream Types",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "6",
+              "3.4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-alaska-sqt-c-streams",
+          "name": "Alaska SQT - C Streams",
+          "points": [
+            {
+              "x": 3,
+              "y": 0,
+              "description": "Field 3, Index 0"
+            },
+            {
+              "x": 3.7,
+              "y": 0.7,
+              "description": "Field 3.7, Index 0.7"
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C Streams",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "3",
+              "",
+              "",
+              "",
+              "3.7",
+              "4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-alaska-sqt-e-streams",
+          "name": "Alaska SQT - E Streams",
+          "points": [
+            {
+              "x": 1.8,
+              "y": 0,
+              "description": "Field 1.8, Index 0"
+            },
+            {
+              "x": 3,
+              "y": 0.7,
+              "description": "Field 3, Index 0.7"
+            },
+            {
+              "x": 3.5,
+              "y": 1,
+              "description": "Field 3.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E Streams",
+            "sourceCitation": "Alaska SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "1.8",
+              "",
+              "",
+              "",
+              "3",
+              "3.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-colorado-sqt-c-stream-types",
+          "name": "Colorado SQT - C Stream Types",
+          "points": [
+            {
+              "x": 3,
+              "y": 0,
+              "description": "Field 3, Index 0"
+            },
+            {
+              "x": 3.7,
+              "y": 0.7,
+              "description": "Field 3.7, Index 0.7"
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C Stream Types",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "3",
+              "",
+              "",
+              "",
+              "3.7",
+              "4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-colorado-sqt-cb-stream-types",
+          "name": "Colorado SQT - Cb Stream Types",
+          "points": [
+            {
+              "x": 3,
+              "y": 0.7,
+              "description": "Field 3, Index 0.7"
+            },
+            {
+              "x": 3.7,
+              "y": 1,
+              "description": "Field 3.7, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Cb Stream Types",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "3",
+              "3.7"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-colorado-sqt-b-and-ba-stream-types",
+          "name": "Colorado SQT - B & Ba Stream Types",
+          "points": [
+            {
+              "x": 3,
+              "y": 1,
+              "description": "Field 3, Index 1"
+            },
+            {
+              "x": 4,
+              "y": 0.7,
+              "description": "Field 4, Index 0.7"
+            },
+            {
+              "x": 7.5,
+              "y": 0,
+              "description": "Field 7.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B & Ba Stream Types",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "7.5",
+              "",
+              "",
+              "",
+              "4",
+              "3"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-colorado-sqt-bc-stream-types",
+          "name": "Colorado SQT - Bc Stream Types",
+          "points": [
+            {
+              "x": 3.4,
+              "y": 1,
+              "description": "Field 3.4, Index 1"
+            },
+            {
+              "x": 6,
+              "y": 0.7,
+              "description": "Field 6, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bc Stream Types",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "6",
+              "3.4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-colorado-sqt-e-stream-types",
+          "name": "Colorado SQT - E Stream Types",
+          "points": [
+            {
+              "x": 1.833333333,
+              "y": 0,
+              "description": "Field 1.833333333, Index 0"
+            },
+            {
+              "x": 3,
+              "y": 0.7,
+              "description": "Field 3, Index 0.7"
+            },
+            {
+              "x": 3.5,
+              "y": 1,
+              "description": "Field 3.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E Stream Types",
+            "sourceCitation": "Colorado SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "1.833333333",
+              "",
+              "",
+              "",
+              "3",
+              "3.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-michigan-sqt-c-and-e-streams",
+          "name": "Michigan SQT - C and E Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 3.5,
+              "y": 1,
+              "description": "Field 3.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C and E Streams",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "",
+              "3.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-michigan-sqt-a-and-b-streams",
+          "name": "Michigan SQT - A and B Streams",
+          "points": [
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            },
+            {
+              "x": 5,
+              "y": 0.7,
+              "description": "Field 5, Index 0.7"
+            },
+            {
+              "x": 6.5,
+              "y": 0,
+              "description": "Field 6.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A and B Streams",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "6.5",
+              "",
+              "",
+              "",
+              "5",
+              "4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-michigan-sqt-bc-streams",
+          "name": "Michigan SQT - Bc Streams",
+          "points": [
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            },
+            {
+              "x": 6,
+              "y": 0.7,
+              "description": "Field 6, Index 0.7"
+            },
+            {
+              "x": 8,
+              "y": 0,
+              "description": "Field 8, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bc Streams",
+            "sourceCitation": "Michigan SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "8",
+              "",
+              "",
+              "",
+              "6",
+              "5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-minnesota-sqt-a-and-b-stream-types",
+          "name": "Minnesota SQT - A and B Stream Types",
+          "points": [
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            },
+            {
+              "x": 5,
+              "y": 0.7,
+              "description": "Field 5, Index 0.7"
+            },
+            {
+              "x": 6.5,
+              "y": 0,
+              "description": "Field 6.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A and B Stream Types",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "6.5",
+              "",
+              "",
+              "",
+              "5",
+              "4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-minnesota-sqt-bc-stream-types",
+          "name": "Minnesota SQT - Bc Stream Types",
+          "points": [
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            },
+            {
+              "x": 6,
+              "y": 0.7,
+              "description": "Field 6, Index 0.7"
+            },
+            {
+              "x": 8,
+              "y": 0,
+              "description": "Field 8, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bc Stream Types",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "8",
+              "",
+              "",
+              "",
+              "6",
+              "5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-minnesota-sqt-c-and-e-streams",
+          "name": "Minnesota SQT - C and E Streams",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 3.5,
+              "y": 1,
+              "description": "Field 3.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C and E Streams",
+            "sourceCitation": "Minnesota SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "",
+              "3.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-north-carolina-sqt-slope-4-and-da-10-and-c-or-e-stream-types",
+          "name": "North Carolina SQT - slope < 4% & DA >=10 & C or E stream types",
+          "points": [
+            {
+              "x": 2.9416,
+              "y": 0,
+              "description": "Field 2.9416, Index 0"
+            },
+            {
+              "x": 3.2,
+              "y": 0.29,
+              "description": "Field 3.2, Index 0.29"
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            },
+            {
+              "x": 7.8,
+              "y": 0.3,
+              "description": "Field 7.8, Index 0.3"
+            },
+            {
+              "x": 8.0668,
+              "y": 0,
+              "description": "Field 8.0668, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "slope < 4% & DA >=10 & C or E stream types",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "8.0668",
+              "2.9416",
+              "3.2",
+              "7.8",
+              "",
+              "4"
+            ],
+            "indexValues": [
+              "0",
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-north-carolina-sqt-slope-4-and-da-10-and-c-or-e-stream-types",
+          "name": "North Carolina SQT - slope < 4% & DA <10 & C or E stream types",
+          "points": [
+            {
+              "x": 3,
+              "y": 0.3,
+              "description": "Field 3, Index 0.3"
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "slope < 4% & DA <10 & C or E stream types",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "",
+              "",
+              "3",
+              "",
+              "",
+              "4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-south-carolina-sqt-a-and-b-stream-types",
+          "name": "South Carolina SQT - A and B Stream Types",
+          "points": [
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            },
+            {
+              "x": 5,
+              "y": 0.7,
+              "description": "Field 5, Index 0.7"
+            },
+            {
+              "x": 6.5,
+              "y": 0,
+              "description": "Field 6.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A and B Stream Types",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "6.5",
+              "",
+              "",
+              "",
+              "5",
+              "4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-south-carolina-sqt-bc-stream-types",
+          "name": "South Carolina SQT - Bc Stream Types",
+          "points": [
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            },
+            {
+              "x": 6,
+              "y": 0.7,
+              "description": "Field 6, Index 0.7"
+            },
+            {
+              "x": 8,
+              "y": 0,
+              "description": "Field 8, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bc Stream Types",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "8",
+              "",
+              "",
+              "",
+              "6",
+              "5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-south-carolina-sqt-c-and-e-stream-types",
+          "name": "South Carolina SQT - C and E Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 3.5,
+              "y": 1,
+              "description": "Field 3.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C and E Stream Types",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "",
+              "3.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-wisconsin-sqt-a-and-b-stream-types",
+          "name": "Wisconsin SQT - A and B Stream Types",
+          "points": [
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            },
+            {
+              "x": 5,
+              "y": 0.7,
+              "description": "Field 5, Index 0.7"
+            },
+            {
+              "x": 6.5,
+              "y": 0,
+              "description": "Field 6.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "A and B Stream Types",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "6.5",
+              "",
+              "",
+              "",
+              "5",
+              "4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-wisconsin-sqt-bc-stream-types",
+          "name": "Wisconsin SQT - Bc Stream Types",
+          "points": [
+            {
+              "x": 5,
+              "y": 1,
+              "description": "Field 5, Index 1"
+            },
+            {
+              "x": 6,
+              "y": 0.7,
+              "description": "Field 6, Index 0.7"
+            },
+            {
+              "x": 8,
+              "y": 0,
+              "description": "Field 8, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bc Stream Types",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "8",
+              "",
+              "",
+              "",
+              "6",
+              "5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-wisconsin-sqt-c-and-e-stream-types",
+          "name": "Wisconsin SQT - C and E Stream Types",
+          "points": [
+            {
+              "x": 1,
+              "y": 0,
+              "description": "Field 1, Index 0"
+            },
+            {
+              "x": 3.5,
+              "y": 1,
+              "description": "Field 3.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C and E Stream Types",
+            "sourceCitation": "Wisconsin SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "1",
+              "",
+              "",
+              "",
+              "",
+              "3.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-wyoming-sqt-b-and-ba-stream-types",
+          "name": "Wyoming SQT - B and Ba Stream Types",
+          "points": [
+            {
+              "x": 3,
+              "y": 1,
+              "description": "Field 3, Index 1"
+            },
+            {
+              "x": 4,
+              "y": 0.7,
+              "description": "Field 4, Index 0.7"
+            },
+            {
+              "x": 7.5,
+              "y": 0,
+              "description": "Field 7.5, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "B and Ba Stream Types",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "7.5",
+              "",
+              "",
+              "",
+              "4",
+              "3"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-wyoming-sqt-bc-stream-types",
+          "name": "Wyoming SQT - Bc Stream Types",
+          "points": [
+            {
+              "x": 3.4,
+              "y": 1,
+              "description": "Field 3.4, Index 1"
+            },
+            {
+              "x": 6,
+              "y": 0.7,
+              "description": "Field 6, Index 0.7"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Bc Stream Types",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "6",
+              "3.4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-wyoming-sqt-c-stream-types",
+          "name": "Wyoming SQT - C Stream Types",
+          "points": [
+            {
+              "x": 3,
+              "y": 0,
+              "description": "Field 3, Index 0"
+            },
+            {
+              "x": 3.7,
+              "y": 0.7,
+              "description": "Field 3.7, Index 0.7"
+            },
+            {
+              "x": 4,
+              "y": 1,
+              "description": "Field 4, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "C Stream Types",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "3",
+              "",
+              "",
+              "",
+              "3.7",
+              "4"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-wyoming-sqt-cb-stream-types",
+          "name": "Wyoming SQT - Cb Stream Types",
+          "points": [
+            {
+              "x": 3,
+              "y": 0.7,
+              "description": "Field 3, Index 0.7"
+            },
+            {
+              "x": 3.7,
+              "y": 1,
+              "description": "Field 3.7, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Cb Stream Types",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "",
+              "",
+              "",
+              "",
+              "3",
+              "3.7"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-habitat-provision-pool-spacing-ratio-detailed-wyoming-sqt-e-stream-types",
+          "name": "Wyoming SQT - E Stream Types",
+          "points": [
+            {
+              "x": 1.833333333,
+              "y": 0,
+              "description": "Field 1.833333333, Index 0"
+            },
+            {
+              "x": 3,
+              "y": 0.7,
+              "description": "Field 3, Index 0.7"
+            },
+            {
+              "x": 3.5,
+              "y": 1,
+              "description": "Field 3.5, Index 1"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "E Stream Types",
+            "sourceCitation": "Wyoming SQT",
+            "sourceRow": 257,
+            "fieldValues": [
+              "1.833333333",
+              "",
+              "",
+              "",
+              "3",
+              "3.5"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-pool-spacing-ratio-detailed-alaska-sqt-b-and-ba-stream-types"
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "curveSetId": "curve-carbon-processing-herbaceous-vegetation-cover-detailed",
-  "metricId": "carbon-processing-herbaceous-vegetation-cover-detailed",
+  "metricId": "carbon-processing-herbaceous-vegetation-cover",
   "tier": "detailed",
   "name": "Herbaceous Vegetation Cover reference curve",
   "axes": {
@@ -18,7 +18,7 @@
       "indexRange": false,
       "layers": [
         {
-          "id": "curve-carbon-processing-herbaceous-vegetation-cover-detailed-colorado-sqt-herbaceous-reference-v",
+          "id": "curve-carbon-processing-herbaceous-vegetation-cover-detailed-colorado-sqt-herbaceous-reference-vegetation-cover",
           "name": "Colorado SQT - Herbaceous Reference Vegetation Cover",
           "points": [
             {
@@ -39,31 +39,23 @@
           ],
           "sourceMetadata": {
             "stratification": "Herbaceous Reference Vegetation Cover",
-            "sourceRow": 198,
-            "sourceRows": [
-              198
-            ],
             "sourceCitation": "Colorado SQT",
-            "sourceCitations": [
-              "Colorado SQT"
-            ],
+            "sourceRow": 226,
             "fieldValues": [
               "34",
               "",
               "",
               "",
               "73",
-              "120",
-              ""
+              "120"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         },
@@ -89,49 +81,28 @@
           ],
           "sourceMetadata": {
             "stratification": "",
-            "sourceRow": 247,
-            "sourceRows": [
-              247
-            ],
             "sourceCitation": "Wyoming SQT",
-            "sourceCitations": [
-              "Wyoming SQT"
-            ],
+            "sourceRow": 226,
             "fieldValues": [
               "35",
               "",
               "",
               "",
               "74",
-              "119",
-              ""
+              "119"
             ],
             "indexValues": [
               "0",
-              "0.39",
-              "0.4",
+              "0.29",
+              "0.3",
               "0.69",
               "0.7",
-              "1",
-              ""
+              "1"
             ]
           }
         }
       ],
-      "activeLayerId": "curve-carbon-processing-herbaceous-vegetation-cover-detailed-colorado-sqt-herbaceous-reference-v"
+      "activeLayerId": "curve-carbon-processing-herbaceous-vegetation-cover-detailed-colorado-sqt-herbaceous-reference-vegetation-cover"
     }
-  ],
-  "sourceMetadata": {
-    "importSource": "detailed-metrics-source-rich.tsv",
-    "sourceCitation": "Colorado SQT; Wyoming SQT",
-    "sourceCitations": [
-      "Colorado SQT",
-      "Wyoming SQT"
-    ],
-    "mappedFunction": "Carbon processing",
-    "sourceRows": [
-      198,
-      247
-    ]
-  }
+  ]
 }

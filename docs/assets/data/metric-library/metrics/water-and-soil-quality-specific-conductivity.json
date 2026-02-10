@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "water-and-soil-quality-specific-conductivity",
+  "name": "Specific Conductivity",
+  "shortName": "Specific Conductivity",
+  "discipline": "Physicochemistry",
+  "function": "Water & soil quality",
+  "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+  "descriptionMarkdown": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+  "howToMeasureMarkdown": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+  "inputs": [
+    {
+      "label": "Specific Conductivity",
+      "type": "field (meter/logger) and/or desktop (data compilation)",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "In-situ sensors/meters and/or grab samples with lab analysis; existing monitoring databases."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-water-and-soil-quality-specific-conductivity-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-water-and-soil-quality-specific-conductivity-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "North Carolina SQT",
+    "EPA Water Quality Portal",
+    "USGS NWIS water-quality records where available"
+  ],
+  "tags": [
+    "Physicochemistry",
+    "Water & soil quality",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      253
+    ],
+    "sourceCitations": [
+      "North Carolina SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

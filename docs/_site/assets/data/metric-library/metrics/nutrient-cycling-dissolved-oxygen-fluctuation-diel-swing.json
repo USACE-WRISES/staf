@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "metricId": "nutrient-cycling-dissolved-oxygen-fluctuation-diel-swing",
   "name": "Dissolved Oxygen Fluctuation (diel swing)",
-  "shortName": "",
+  "shortName": "Dissolved Oxygen Fluctuation (diel swing)",
   "discipline": "Physicochemistry",
   "function": "Nutrient cycling",
   "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
   "descriptionMarkdown": "Daily O2 changes are moderate (<2 mg/L), unless larger swings are normal (warm swamp streams).",
-  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "methodContextMarkdown": "Context: Floodplain\n\nMethod: Desktop",
   "howToMeasureMarkdown": "Analyze dissolved oxygen for diurnal swings where continuous data exist. If not, use spot checks and nutrient context as a screening proxy.",
   "inputs": [
     {
       "label": "Dissolved Oxygen Fluctuation (diel swing)",
-      "type": "field",
-      "source": "Channel",
+      "type": "desktop",
+      "source": "Floodplain",
       "required": true,
       "helpMarkdown": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
     }
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: >6 mg/L swing or frequent dips below 3 mg/L. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: >6 mg/L swing or frequent dips below 3 mg/L. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-nutrient-cycling-dissolved-oxygen-fluctuation-diel-swing"
+          "curve-nutrient-cycling-dissolved-oxygen-fluctuation-diel-swing-screening"
         ]
       }
     }
@@ -68,37 +68,19 @@
     "Nutrient cycling",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": ">6 mg/L swing or frequent dips below 3 mg/L.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "2-4 mg/L swing with occasional stress. / 4-6 mg/L swing and borderline low DO at night.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "<2 mg/L diurnal swing and no frequent hypoxia.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      45
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

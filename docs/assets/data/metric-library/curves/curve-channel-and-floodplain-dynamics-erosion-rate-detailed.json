@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-channel-and-floodplain-dynamics-erosion-rate-detailed",
+  "metricId": "channel-and-floodplain-dynamics-erosion-rate",
+  "tier": "detailed",
+  "name": "Erosion Rate reference curve",
+  "axes": {
+    "xLabel": "Erosion Rate",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-channel-and-floodplain-dynamics-erosion-rate-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-channel-and-floodplain-dynamics-erosion-rate-detailed-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": 0.1,
+              "y": 1,
+              "description": "Field 0.1, Index 1"
+            },
+            {
+              "x": 0.19,
+              "y": 0.7,
+              "description": "Field 0.19, Index 0.7"
+            },
+            {
+              "x": 0.4,
+              "y": 0.3,
+              "description": "Field 0.4, Index 0.3"
+            },
+            {
+              "x": 0.4117,
+              "y": 0.29,
+              "description": "Field 0.4117, Index 0.29"
+            },
+            {
+              "x": 0.71,
+              "y": 0,
+              "description": "Field 0.71, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "North Carolina SQT",
+            "sourceRow": 204,
+            "fieldValues": [
+              "0.71",
+              "0.4117",
+              "0.4",
+              "",
+              "0.19",
+              "0.1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        },
+        {
+          "id": "curve-channel-and-floodplain-dynamics-erosion-rate-detailed-south-carolina-sqt",
+          "name": "South Carolina SQT",
+          "points": [
+            {
+              "x": 0.1,
+              "y": 1,
+              "description": "Field 0.1, Index 1"
+            },
+            {
+              "x": 0.2,
+              "y": 0.7,
+              "description": "Field 0.2, Index 0.7"
+            },
+            {
+              "x": 0.4,
+              "y": 0.3,
+              "description": "Field 0.4, Index 0.3"
+            },
+            {
+              "x": 0.71,
+              "y": 0,
+              "description": "Field 0.71, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "",
+            "sourceCitation": "South Carolina SQT",
+            "sourceRow": 204,
+            "fieldValues": [
+              "0.71",
+              "",
+              "0.4",
+              "",
+              "0.2",
+              "0.1"
+            ],
+            "indexValues": [
+              "0",
+              "0.29",
+              "0.3",
+              "0.69",
+              "0.7",
+              "1"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-channel-and-floodplain-dynamics-erosion-rate-detailed-north-carolina-sqt"
+    }
+  ]
+}

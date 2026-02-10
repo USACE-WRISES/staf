@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-population-support-catchment-restoration-enhancement-context-screening",
+  "metricId": "population-support-catchment-restoration-enhancement-context",
+  "tier": "screening",
+  "name": "Catchment Restoration/Enhancement Context screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-population-support-catchment-restoration-enhancement-context-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-population-support-catchment-restoration-enhancement-context-screening-north-carolina-sqt",
+          "name": "North Carolina SQT",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Greater than 60% of the total catchment area is draining to the project reach. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: 40 to 60% of the total catchment area is draining to the project reach. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Less than 40% of the total catchment area is draining to the project reach. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-population-support-catchment-restoration-enhancement-context-screening-north-carolina-sqt",
+      "indexRange": true
+    }
+  ]
+}

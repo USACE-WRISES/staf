@@ -2,8 +2,9 @@
   "schemaVersion": 1,
   "metricId": "surface-water-storage-wetland-coverage",
   "name": "Wetland coverage",
+  "shortName": "Wetland coverage",
   "discipline": "Hydrology",
-  "function": "Surface Water Storage",
+  "function": "Surface water storage",
   "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
   "descriptionMarkdown": "Sufficient wetlands/ponds for flood attenuation/baseflow support, unless minimal wetlands are historically normal.",
   "methodContextMarkdown": "Context: F\n\nMethod: D",
@@ -11,9 +12,10 @@
   "inputs": [
     {
       "label": "Wetland coverage",
-      "type": "rapid indicator",
-      "source": "SFARI rapid assessment",
-      "required": true
+      "type": "d",
+      "source": "F",
+      "required": true,
+      "helpMarkdown": "SFARI rapid scoring"
     }
   ],
   "profiles": [
@@ -44,7 +46,7 @@
             {
               "label": "Neutral",
               "ratingId": "n",
-              "criteriaMarkdown": "Neutral / mixed evidence."
+              "criteriaMarkdown": "Criteria: Neutral / mixed evidence."
             },
             {
               "label": "Agree",
@@ -67,10 +69,25 @@
       }
     }
   ],
+  "references": [],
   "tags": [
-    "rapid",
-    "sfari",
-    "hydrology"
+    "Hydrology",
+    "Surface water storage",
+    "rapid"
   ],
-  "status": "active"
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      72
+    ],
+    "sourceCitations": [
+      "SFARI Rapid"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": true,
+      "detailed": false
+    }
+  }
 }

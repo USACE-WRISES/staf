@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "metricId": "high-flow-dynamics-shields-departure-factor",
+  "name": "Shields Departure Factor",
+  "shortName": "Shields Departure Factor",
+  "discipline": "Hydraulics",
+  "function": "High flow dynamics",
+  "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+  "descriptionMarkdown": "Departure factor from target Shields stress: M = max(?*bf/0.045, 0.045/?*bf). Lower is better.",
+  "methodContextMarkdown": "Desktop",
+  "howToMeasureMarkdown": "Compute ?*bf; compute departure factor from target value.",
+  "inputs": [
+    {
+      "label": "Shields Departure Factor",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Bankfull hydraulics + D50; target ?* (e.g., 0.045) for gravel beds."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-high-flow-dynamics-shields-departure-factor-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-high-flow-dynamics-shields-departure-factor-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "General gravel-bed transport guidance",
+    "SFARI rapid assessment (concept)."
+  ],
+  "tags": [
+    "Hydraulics",
+    "High flow dynamics",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      180
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

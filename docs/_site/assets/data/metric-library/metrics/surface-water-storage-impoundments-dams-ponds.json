@@ -2,20 +2,20 @@
   "schemaVersion": 1,
   "metricId": "surface-water-storage-impoundments-dams-ponds",
   "name": "Impoundments / Dams / Ponds",
-  "shortName": "",
+  "shortName": "Impoundments / Dams / Ponds",
   "discipline": "Hydrology",
   "function": "Surface water storage",
-  "functionStatement": "Wetlands and other water storage features store floodwaters, recharge groundwater, sustain baseflow, and provide low-velocity habitat for aquatic and riparian species.\nWetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
-  "descriptionMarkdown": "Presence and proximity of impoundments (dams/ponds/reservoirs) that can alter flow regime, sediment transport, temperature, and aquatic connectivity.\nSmall beaver-type impoundments aid baseflow/habitat; no major fragmentation unless historically normal.",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "\"Presence and proximity of impoundments (dams/ponds/reservoirs) that can alter flow regime, sediment transport, temperature, and aquatic connectivity. Small beaver-type impoundments aid baseflow/habitat; no major fragmentation unless historically normal.\"",
   "methodContextMarkdown": "Context: Watershed and Floodplain; Channel\n\nMethod: Desktop (GIS/imagery and existing datasets); Field",
-  "howToMeasureMarkdown": "Inventory impoundments upstream (and where specified, downstream) of the project reach using dam/impoundment datasets and imagery. Summarize proximity and/or density per the metric definition. Assign the condition class using the bin thresholds for this metric.\nCount beaver dams or ponded sections per 100 m of channel. Use recent aerial imagery to pre-screen and compare to expected capacity for the setting.",
+  "howToMeasureMarkdown": "\"Inventory impoundments upstream (and where specified, downstream) of the project reach using dam/impoundment datasets and imagery. Summarize proximity and/or density per the metric definition. Assign the condition class using the bin thresholds for this metric. Count beaver dams or ponded sections per 100 m of channel. Use recent aerial imagery to pre-screen and compare to expected capacity for the setting.\"",
   "inputs": [
     {
       "label": "Impoundments / Dams / Ponds",
       "type": "desktop (gis/imagery and existing datasets); field",
       "source": "Watershed and Floodplain; Channel",
       "required": true,
-      "helpMarkdown": "National Inventory of Dams (NID) and/or state dam databases; NHD/NHDPlus waterbodies/flowlines; recent imagery."
+      "helpMarkdown": "\"National Inventory of Dams (NID) and/or state dam databases; NHD/NHDPlus waterbodies/flowlines; recent imagery. \""
     }
   ],
   "profiles": [
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Widespread channel fragmentation or overabundant ponding. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Widespread channel fragmentation or overabundant ponding. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-surface-water-storage-impoundments-dams-ponds"
+          "curve-surface-water-storage-impoundments-dams-ponds-screening"
         ]
       }
     }
@@ -62,9 +62,7 @@
   "references": [
     "National Inventory of Dams (if used)",
     "TN SQT",
-    "National Inventory of Dams (if used)",
     "CO SQT 2019",
-    "National Inventory of Dams (if used)",
     "WY SQT 2019",
     "Field count",
     "NAIP imagery",
@@ -75,37 +73,22 @@
     "Surface water storage",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Tennessee SQT; Colorado SQT; Wyoming SQT; ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "National Inventory of Dams (NID) and/or state dam databases; NHD/NHDPlus waterbodies/flowlines; recent imagery.",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Widespread channel fragmentation or overabundant ponding.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "1-2 small obstructions with minor impacts. / Multiple ponds moderately disrupt connectivity.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Beaver dams or small ponds enhance baseflow and habitat with negligible fragmentation.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      7
+    ],
+    "sourceCitations": [
+      "Tennessee SQT",
+      "Colorado SQT",
+      "Wyoming SQT",
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

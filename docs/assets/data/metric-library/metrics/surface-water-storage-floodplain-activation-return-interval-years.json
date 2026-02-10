@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "metricId": "surface-water-storage-floodplain-activation-return-interval-years",
+  "name": "Floodplain Activation Return Interval (years)",
+  "shortName": "Floodplain Activation Return Interval (years)",
+  "discipline": "Hydrology",
+  "function": "Surface water storage",
+  "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+  "descriptionMarkdown": "Return interval for first meaningful floodplain engagement/retention (lower is better).",
+  "methodContextMarkdown": "Field + desktop",
+  "howToMeasureMarkdown": "Identify bankfull/activation stage; estimate recurrence (gage/regional); report years.",
+  "inputs": [
+    {
+      "label": "Floodplain Activation Return Interval (years)",
+      "type": "desktop",
+      "source": "Unspecified",
+      "required": true,
+      "helpMarkdown": "Field high-water marks + gage/regional flow frequency; optional inundation modeling."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-surface-water-storage-floodplain-activation-return-interval-years-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "SFARI rapid assessment",
+    "USGS gage data (where available)",
+    "bankfull guides."
+  ],
+  "tags": [
+    "Hydrology",
+    "Surface water storage",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      164
+    ],
+    "sourceCitations": [
+      "Proposed (derived from SFARI rapid curves)"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}

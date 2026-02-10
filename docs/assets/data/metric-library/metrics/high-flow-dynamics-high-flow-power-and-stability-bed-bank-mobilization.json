@@ -2,13 +2,13 @@
   "schemaVersion": 1,
   "metricId": "high-flow-dynamics-high-flow-power-and-stability-bed-bank-mobilization",
   "name": "High-flow Power & Stability (bed/bank mobilization)",
-  "shortName": "",
+  "shortName": "High-flow Power & Stability (bed/bank mobilization)",
   "discipline": "Hydraulics",
   "function": "High flow dynamics",
   "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
-  "descriptionMarkdown": "Bed sediments mobilize near bankfull (~1-2 yr), maintaining a stable but dynamic channel.\nBankfull floods do not cause excessive scour/fill; channel handles transport without frequent failures.\nBankfull shear stress fits substrate/banks, indicating stable capacity.",
+  "descriptionMarkdown": "\"Bed sediments mobilize near bankfull (~1-2 yr), maintaining a stable but dynamic channel. Bankfull floods do not cause excessive scour/fill; channel handles transport without frequent failures. Bankfull shear stress fits substrate/banks, indicating stable capacity.\"",
   "methodContextMarkdown": "Context: Channel\n\nMethod: Desktop; Field",
-  "howToMeasureMarkdown": "Estimate critical discharge from Shields using D50 and compare to flood recurrence estimates. Use qualitative checks where data are limited.\nUse imagery change detection to identify fresh bars or scour after moderate floods and confirm in the field where possible.\nCompare bankfull width and depth to regional curves for drainage area and slope and flag large departures.",
+  "howToMeasureMarkdown": "\"Estimate critical discharge from Shields using D50 and compare to flood recurrence estimates. Use qualitative checks where data are limited. Use imagery change detection to identify fresh bars or scour after moderate floods and confirm in the field where possible. Compare bankfull width and depth to regional curves for drainage area and slope and flag large departures.\"",
   "inputs": [
     {
       "label": "High-flow Power & Stability (bed/bank mobilization)",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Extreme mismatch. Bed rarely moves or is reworked by small floods. (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Extreme mismatch. Bed rarely moves or is reworked by small floods. (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-high-flow-dynamics-high-flow-power-and-stability-bed-bank-mobilization"
+          "curve-high-flow-dynamics-high-flow-power-and-stability-bed-bank-mobilization-screening"
         ]
       }
     }
@@ -75,37 +75,19 @@
     "High flow dynamics",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "ERDC",
-    "scsDefaultOn": false,
-    "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Extreme mismatch. Bed rarely moves or is reworked by small floods.",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Slight mismatch. Bed moves below or above expected flows. / Marked mismatch. Bed is often locked or frequently scoured.",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Bed mobilizes at appropriate flows for the channel type, often near bankfull.",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      21
+    ],
+    "sourceCitations": [
+      "ERDC"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

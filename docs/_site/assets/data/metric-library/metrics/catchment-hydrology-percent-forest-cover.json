@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "catchment-hydrology-percent-forest-cover",
   "name": "Percent Forest Cover",
-  "shortName": "",
+  "shortName": "Percent Forest Cover",
   "discipline": "Hydrology",
   "function": "Catchment hydrology",
   "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
@@ -36,7 +36,7 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: ≥ 70% (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Good: >70% (Suggested index range 0.70-1.0)"
             },
             {
               "label": "Fair",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: ≤ 20% (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: <20% (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-catchment-hydrology-percent-forest-cover"
+          "curve-catchment-hydrology-percent-forest-cover-screening"
         ]
       }
     }
@@ -62,14 +62,10 @@
   "references": [
     "NLCD Land Cover (MRLC) (if used)",
     "WI SQT 2022",
-    "NLCD Land Cover (MRLC) (if used)",
     "MI SQT 2019",
     "SC SQT 2021",
-    "NLCD Land Cover (MRLC) (if used)",
     "MN SQT 2020",
-    "NLCD Land Cover (MRLC) (if used)",
     "NC SQT 2019",
-    "NLCD Land Cover (MRLC) (if used)",
     "TN SQT"
   ],
   "tags": [
@@ -77,37 +73,24 @@
     "Catchment hydrology",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Wisconsin SQT; Michigan SQT; South Carolina SQT; Minnesota SQT; North Carolina SQT; Tennessee SQT",
-    "scsDefaultOn": false,
-    "metricDataSource": "Land cover GIS (e.g., NLCD Land Cover or local land use/land cover dataset); watershed boundary.",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "≤ 20%",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": ">20% and <70%",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "≥ 70%",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      3
+    ],
+    "sourceCitations": [
+      "Wisconsin SQT",
+      "Michigan SQT",
+      "South Carolina SQT",
+      "Minnesota SQT",
+      "North Carolina SQT",
+      "Tennessee SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

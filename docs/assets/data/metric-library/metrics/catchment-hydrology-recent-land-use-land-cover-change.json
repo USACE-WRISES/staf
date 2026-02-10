@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "metricId": "catchment-hydrology-recent-land-use-land-cover-change",
   "name": "Recent Land Use / Land Cover Change",
-  "shortName": "",
+  "shortName": "Recent Land Use / Land Cover Change",
   "discipline": "Hydrology",
   "function": "Catchment hydrology",
   "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
@@ -46,7 +46,7 @@
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Rapidly urbanizing/urban (Suggested index range 0.0-0.29)"
+              "criteriaMarkdown": "Poor: Rapidly urbanizing/urban (Suggested index range 0.0-0.39)"
             }
           ]
         }
@@ -54,7 +54,7 @@
       "curveIntegration": {
         "enabled": true,
         "curveSetRefs": [
-          "curve-catchment-hydrology-recent-land-use-land-cover-change"
+          "curve-catchment-hydrology-recent-land-use-land-cover-change-screening"
         ]
       }
     }
@@ -63,9 +63,7 @@
     "NLCD Land Cover time series (MRLC) (if used)",
     "MI SQT 2019",
     "NC SQT 2019",
-    "NLCD Land Cover time series (MRLC) (if used)",
     "MN SQT 2020",
-    "NLCD Land Cover time series (MRLC) (if used)",
     "TN SQT"
   ],
   "tags": [
@@ -73,37 +71,22 @@
     "Catchment hydrology",
     "screening"
   ],
+  "status": "active",
   "sourceMetadata": {
-    "importSource": "screening-metrics-source-rich.tsv",
-    "sourceCitation": "Michigan SQT; North Carolina SQT; Minnesota SQT; Tennessee SQT",
-    "scsDefaultOn": false,
-    "metricDataSource": "Land cover time series (e.g., NLCD); watershed boundary; optional local land use change datasets.",
-    "recommendedTiersRaw": "screening",
-    "originalBins": {
-      "bin1": {
-        "name": "Poor",
-        "desc": "Rapidly urbanizing/urban",
-        "range": {
-          "min": 0,
-          "max": 0.29
-        }
-      },
-      "bin2": {
-        "name": "Fair",
-        "desc": "Single family homes/suburban",
-        "range": {
-          "min": 0.4,
-          "max": 0.69
-        }
-      },
-      "bin3": {
-        "name": "Good",
-        "desc": "Rural communities/slow growth or primarily forested",
-        "range": {
-          "min": 0.7,
-          "max": 1
-        }
-      }
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      4
+    ],
+    "sourceCitations": [
+      "Michigan SQT",
+      "North Carolina SQT",
+      "Minnesota SQT",
+      "Tennessee SQT"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
     }
   }
 }

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-hyporheic-connectivity-bed-surface-fines-detailed",
+  "metricId": "hyporheic-connectivity-bed-surface-fines",
+  "tier": "detailed",
+  "name": "Bed Surface Fines reference curve",
+  "axes": {
+    "xLabel": "Bed Surface Fines",
+    "yLabel": "Index score",
+    "yUnit": "index"
+  },
+  "curves": [
+    {
+      "curveId": "curve-hyporheic-connectivity-bed-surface-fines-detailed-default",
+      "name": "Detailed reference",
+      "xType": "quantitative",
+      "units": "",
+      "indexRange": false,
+      "layers": [
+        {
+          "id": "curve-hyporheic-connectivity-bed-surface-fines-detailed-proposed-derived-from-sfari-rapid-curves-stratify-by-habitat-uni",
+          "name": "Proposed (derived from SFARI rapid curves) - Stratify by habitat unit (riffle/run) and stream type (gravel vs sand bed).",
+          "points": [
+            {
+              "x": 10,
+              "y": 1,
+              "description": "Field 10, Index 1"
+            },
+            {
+              "x": 25,
+              "y": 0.7,
+              "description": "Field 25, Index 0.7"
+            },
+            {
+              "x": 50,
+              "y": 0.3,
+              "description": "Field 50, Index 0.3"
+            },
+            {
+              "x": 75,
+              "y": 0.1,
+              "description": "Field 75, Index 0.1"
+            },
+            {
+              "x": 90,
+              "y": 0,
+              "description": "Field 90, Index 0"
+            }
+          ],
+          "sourceMetadata": {
+            "stratification": "Stratify by habitat unit (riffle/run) and stream type (gravel vs sand bed).",
+            "sourceCitation": "Proposed (derived from SFARI rapid curves)",
+            "sourceRow": 187,
+            "fieldValues": [
+              "10",
+              "25",
+              "50",
+              "75",
+              "90"
+            ],
+            "indexValues": [
+              "1",
+              "0.7",
+              "0.3",
+              "0.1",
+              "0"
+            ]
+          }
+        }
+      ],
+      "activeLayerId": "curve-hyporheic-connectivity-bed-surface-fines-detailed-proposed-derived-from-sfari-rapid-curves-stratify-by-habitat-uni"
+    }
+  ]
+}

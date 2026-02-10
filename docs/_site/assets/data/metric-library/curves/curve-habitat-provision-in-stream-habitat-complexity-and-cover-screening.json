@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "curveSetId": "curve-habitat-provision-in-stream-habitat-complexity-and-cover-screening",
+  "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
+  "tier": "screening",
+  "name": "In-stream Habitat Complexity & Cover screening curve",
+  "axes": {
+    "xLabel": "Metric category",
+    "yLabel": "Index score"
+  },
+  "curves": [
+    {
+      "curveId": "curve-habitat-provision-in-stream-habitat-complexity-and-cover-screening-default",
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-habitat-provision-in-stream-habitat-complexity-and-cover-screening-erdc",
+          "name": "ERDC",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "Good: Multiple habitat types well represented. (Suggested index range 0.70-1.0)"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "Fair: Some variety but key elements are missing. / Mostly uniform with only 1-2 distinct features. (Suggested index range 0.40-0.69)"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": "Poor: Very uniform channel with limited structural diversity. (Suggested index range 0.0-0.39)"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-habitat-provision-in-stream-habitat-complexity-and-cover-screening-erdc",
+      "indexRange": true
+    }
+  ]
+}

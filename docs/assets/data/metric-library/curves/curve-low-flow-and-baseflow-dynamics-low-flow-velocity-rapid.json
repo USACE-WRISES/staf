@@ -1,64 +1,64 @@
 {
-  "curves": [
-    {
-      "indexRange": true,
-      "layers": [
-        {
-          "name": "SFARI rapid scoring",
-          "points": [
-            {
-              "x": "Strongly Agree",
-              "description": "Observation: Measurable low-flow velocity with steady movement; no stagnation. Criteria: Velocity near reference for stream type (e.g., ~0.05-0.10 m/s in higher-gradient streams).",
-              "yMax": 1,
-              "yMin": 0.84,
-              "y": 0.93
-            },
-            {
-              "x": "Agree",
-              "description": "Observation: Slightly reduced velocities with small stagnant pockets. Criteria: Minor reduction in velocity; movement persists through most of reach.",
-              "yMax": 0.83,
-              "yMin": 0.64,
-              "y": 0.73
-            },
-            {
-              "x": "Neutral",
-              "description": "Neutral / mixed evidence.",
-              "yMax": 0.63,
-              "yMin": 0.44,
-              "y": 0.53
-            },
-            {
-              "x": "Disagree",
-              "description": "Observation: Very low or near-stagnant velocities in a normally flowing reach. Criteria: Only slight thalweg movement; debris often stalls in pools or runs.",
-              "yMax": 0.43,
-              "yMin": 0.24,
-              "y": 0.33
-            },
-            {
-              "x": "Strongly Disagree",
-              "description": "Observation: Widespread stagnation or no visible movement. Criteria: Negligible low-flow velocity; scum or odor present.",
-              "yMax": 0.23,
-              "yMin": 0,
-              "y": 0.13
-            }
-          ],
-          "id": "curve-low-flow-and-baseflow-dynamics-low-flow-velocity-rapid-layer"
-        }
-      ],
-      "xType": "categorical",
-      "curveId": "curve-low-flow-and-baseflow-dynamics-low-flow-velocity-rapid-default",
-      "name": "SFARI rapid scoring",
-      "units": "",
-      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-low-flow-velocity-rapid-layer"
-    }
-  ],
   "schemaVersion": 1,
-  "name": "SFARI rapid curve set",
   "curveSetId": "curve-low-flow-and-baseflow-dynamics-low-flow-velocity-rapid",
+  "metricId": "low-flow-and-baseflow-dynamics-low-flow-velocity",
   "tier": "rapid",
+  "name": "Low flow velocity rapid curve",
   "axes": {
     "xLabel": "Metric category",
     "yLabel": "Index score"
   },
-  "metricId": "low-flow-and-baseflow-dynamics-low-flow-velocity"
+  "curves": [
+    {
+      "curveId": "curve-low-flow-and-baseflow-dynamics-low-flow-velocity-rapid-default",
+      "name": "SFARI rapid scoring",
+      "xType": "qualitative",
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-low-flow-and-baseflow-dynamics-low-flow-velocity-rapid-sfari-rapid",
+          "name": "SFARI Rapid",
+          "points": [
+            {
+              "x": "Strongly Agree",
+              "y": 0.92,
+              "yMin": 0.84,
+              "yMax": 1,
+              "description": "Observation: Measurable low-flow velocity with steady movement; no stagnation. Criteria: Velocity near reference for stream type (e.g., ~0.05-0.10 m/s in higher-gradient streams)."
+            },
+            {
+              "x": "Agree",
+              "y": 0.735,
+              "yMin": 0.64,
+              "yMax": 0.83,
+              "description": "Observation: Slightly reduced velocities with small stagnant pockets. Criteria: Minor reduction in velocity; movement persists through most of reach."
+            },
+            {
+              "x": "Neutral",
+              "y": 0.535,
+              "yMin": 0.44,
+              "yMax": 0.63,
+              "description": "Criteria: Neutral / mixed evidence."
+            },
+            {
+              "x": "Disagree",
+              "y": 0.335,
+              "yMin": 0.24,
+              "yMax": 0.43,
+              "description": "Observation: Very low or near-stagnant velocities in a normally flowing reach. Criteria: Only slight thalweg movement; debris often stalls in pools or runs."
+            },
+            {
+              "x": "Strongly Disagree",
+              "y": 0.115,
+              "yMin": 0,
+              "yMax": 0.23,
+              "description": "Observation: Widespread stagnation or no visible movement. Criteria: Negligible low-flow velocity; scum or odor present."
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-low-flow-and-baseflow-dynamics-low-flow-velocity-rapid-sfari-rapid",
+      "indexRange": true
+    }
+  ]
 }

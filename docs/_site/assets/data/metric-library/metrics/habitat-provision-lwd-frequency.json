@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "metricId": "habitat-provision-lwd-frequency",
+  "name": "LWD Frequency",
+  "shortName": "LWD Frequency",
+  "discipline": "Biology",
+  "function": "Habitat provision",
+  "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+  "descriptionMarkdown": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+  "methodContextMarkdown": "Context: Channel\n\nMethod: Field",
+  "howToMeasureMarkdown": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+  "inputs": [
+    {
+      "label": "LWD Frequency",
+      "type": "field",
+      "source": "Channel",
+      "required": true,
+      "helpMarkdown": "Field habitat mapping (riffle/pool units, wood counts) with optional aerial imagery support."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "detailed-default",
+      "tier": "detailed",
+      "status": "active",
+      "recommended": false,
+      "scoring": {
+        "type": "curve",
+        "scoringMethod": "reference-curve",
+        "ratingMapping": "fourBand",
+        "rubric": {
+          "curveSetRefs": [
+            "curve-habitat-provision-lwd-frequency-detailed"
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-habitat-provision-lwd-frequency-detailed"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Alaska SQT",
+    "Large wood field methods",
+    "high-resolution imagery for jam identification where feasible",
+    "Wisconsin SQT"
+  ],
+  "tags": [
+    "Biology",
+    "Habitat provision",
+    "detailed"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      259
+    ],
+    "sourceCitations": [
+      "Alaska SQT",
+      "Wisconsin SQT"
+    ],
+    "profileAvailability": {
+      "screening": false,
+      "rapid": false,
+      "detailed": true
+    }
+  }
+}
