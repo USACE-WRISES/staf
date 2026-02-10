@@ -1,4 +1,4 @@
-﻿(() => {
+(() => {
   const getBaseUrl = () => {
     const el = document.querySelector('[data-baseurl]');
     return el ? el.dataset.baseurl || '' : '';
@@ -45,6 +45,36 @@
     curves: new Map(),
   };
 
+  const normalizeShortName = (name, shortName) => {
+    const full = (name || '').trim();
+    const short = (shortName || '').trim();
+    if (!short) {
+      return '';
+    }
+    return full && full.toLowerCase() === short.toLowerCase() ? '' : short;
+  };
+
+  const normalizeIndexPayload = (data) => {
+    if (!data || !Array.isArray(data.metrics)) {
+      return data;
+    }
+    data.metrics.forEach((entry) => {
+      if (!entry || typeof entry !== 'object') {
+        return;
+      }
+      entry.shortName = normalizeShortName(entry.name, entry.shortName);
+    });
+    return data;
+  };
+
+  const normalizeDetailPayload = (data) => {
+    if (!data || typeof data !== 'object') {
+      return data;
+    }
+    data.shortName = normalizeShortName(data.name, data.shortName);
+    return data;
+  };
+
   const loadMetricIndex = async () => {
     if (cache.index) {
       return cache.index;
@@ -52,8 +82,9 @@
     if (!cache.indexPromise) {
       cache.indexPromise = fetchJson(buildUrl('/assets/data/metric-library/index.json')).then(
         (data) => {
-          cache.index = data;
-          return data;
+          const normalized = normalizeIndexPayload(data);
+          cache.index = normalized;
+          return normalized;
         }
       );
     }
@@ -82,8 +113,9 @@
     }
     const ref = detailsRef || `metrics/${metricId}.json`;
     const promise = fetchJson(buildUrl(`/assets/data/metric-library/${ref}`)).then((data) => {
-      cache.details.set(key, data);
-      return data;
+      const normalized = normalizeDetailPayload(data);
+      cache.details.set(key, normalized);
+      return normalized;
     });
     cache.details.set(key, promise);
     return promise;
@@ -121,4 +153,3 @@
     clearCache,
   };
 })();
-
