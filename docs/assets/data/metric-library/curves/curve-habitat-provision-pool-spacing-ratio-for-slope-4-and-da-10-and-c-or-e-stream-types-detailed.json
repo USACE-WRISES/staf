@@ -28,8 +28,8 @@
             },
             {
               "x": 3.2,
-              "y": 0.29,
-              "description": "Field 3.2, Index 0.29"
+              "y": 0.39,
+              "description": "Field 3.2, Index 0.39"
             },
             {
               "x": 4,
@@ -43,8 +43,8 @@
             },
             {
               "x": 7.8,
-              "y": 0.3,
-              "description": "Field 7.8, Index 0.3"
+              "y": 0.4,
+              "description": "Field 7.8, Index 0.4"
             },
             {
               "x": 8.0668,
@@ -74,8 +74,8 @@
             "indexValues": [
               "0",
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "1",
               "1"
@@ -88,8 +88,8 @@
           "points": [
             {
               "x": 3,
-              "y": 0.3,
-              "description": "Field 3, Index 0.3"
+              "y": 0.4,
+              "description": "Field 3, Index 0.4"
             },
             {
               "x": 4,
@@ -123,8 +123,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",

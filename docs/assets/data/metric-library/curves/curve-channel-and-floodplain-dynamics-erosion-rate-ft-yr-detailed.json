@@ -34,13 +34,13 @@
             },
             {
               "x": 0.4,
-              "y": 0.3,
-              "description": "Field 0.4, Index 0.3"
+              "y": 0.4,
+              "description": "Field 0.4, Index 0.4"
             },
             {
               "x": 0.4117,
-              "y": 0.29,
-              "description": "Field 0.4117, Index 0.29"
+              "y": 0.39,
+              "description": "Field 0.4117, Index 0.39"
             },
             {
               "x": 0.71,
@@ -69,8 +69,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",
@@ -94,8 +94,8 @@
             },
             {
               "x": 0.4,
-              "y": 0.3,
-              "description": "Field 0.4, Index 0.3"
+              "y": 0.4,
+              "description": "Field 0.4, Index 0.4"
             },
             {
               "x": 0.71,
@@ -124,8 +124,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",

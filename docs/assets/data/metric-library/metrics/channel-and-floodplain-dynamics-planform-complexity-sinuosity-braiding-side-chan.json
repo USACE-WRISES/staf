@@ -26,27 +26,22 @@
       "recommended": false,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "threeBand",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "threeBand"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
+              "label": "Good",
+              "ratingId": "good",
               "criteriaMarkdown": "Good: Condition aligns with local reference for the stream type. (Suggested index range 0.70-1.0)"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Fair: Slight departure from reference condition. (Suggested index range 0.50-0.69)"
-            },
-            {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Fair: Moderate braiding where not typical, or loss of braiding where it is typical. (Suggested index range 0.30-0.49)"
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Slight departure from reference condition. / Moderate braiding where not typical, or loss of braiding where it is typical. (Suggested index range 0.40-0.69)"
             },
             {
               "label": "Poor",
@@ -84,7 +79,7 @@
     "sourceCitation": "ERDC",
     "scsDefaultOn": false,
     "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "screening; rapid",
+    "recommendedTiersRaw": "screening",
     "originalBins": {
       "bin1": {
         "name": "Poor",
@@ -98,7 +93,7 @@
         "name": "Fair",
         "desc": "Slight departure from reference condition. / Moderate braiding where not typical, or loss of braiding where it is typical.",
         "range": {
-          "min": 0.3,
+          "min": 0.4,
           "max": 0.69
         }
       },

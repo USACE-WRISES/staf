@@ -26,27 +26,22 @@
       "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "threeBand",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "threeBand"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
+              "label": "Good",
+              "ratingId": "good",
               "criteriaMarkdown": "Good: Abundant CPOM retention with stable leaf packs typical for the system. (Suggested index range 0.70-1.0)"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Fair: Some retention but partially flushed out. (Suggested index range 0.50-0.69)"
-            },
-            {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Fair: Sparse organic matter and limited retention. (Suggested index range 0.30-0.49)"
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Some retention but partially flushed out. / Sparse organic matter and limited retention. (Suggested index range 0.40-0.69)"
             },
             {
               "label": "Poor",
@@ -80,7 +75,7 @@
     "sourceCitation": "ERDC",
     "scsDefaultOn": true,
     "metricDataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence",
-    "recommendedTiersRaw": "rapid; screening",
+    "recommendedTiersRaw": "screening",
     "originalBins": {
       "bin1": {
         "name": "Poor",
@@ -94,7 +89,7 @@
         "name": "Fair",
         "desc": "Some retention but partially flushed out. / Sparse organic matter and limited retention.",
         "range": {
-          "min": 0.3,
+          "min": 0.4,
           "max": 0.69
         }
       },

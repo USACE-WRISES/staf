@@ -26,27 +26,22 @@
       "recommended": false,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "threeBand",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "threeBand"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
+              "label": "Good",
+              "ratingId": "good",
               "criteriaMarkdown": "Good: Balanced growth with no nuisance blooms. (Suggested index range 0.70-1.0)"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Fair: Slightly elevated algae. (Suggested index range 0.50-0.69)"
-            },
-            {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Fair: Frequent moderate nuisance mats. (Suggested index range 0.30-0.49)"
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Slightly elevated algae. / Frequent moderate nuisance mats. (Suggested index range 0.40-0.69)"
             },
             {
               "label": "Poor",
@@ -92,7 +87,7 @@
         "name": "Fair",
         "desc": "Slightly elevated algae. / Frequent moderate nuisance mats.",
         "range": {
-          "min": 0.3,
+          "min": 0.4,
           "max": 0.69
         }
       },

@@ -60,9 +60,8 @@ type DerivedBin = {
 };
 
 type DerivedCriteria = {
-  optimal: DerivedBin;
-  suboptimal: DerivedBin;
-  marginal: DerivedBin;
+  good: DerivedBin;
+  fair: DerivedBin;
   poor: DerivedBin;
   originalBins: {
     bin1: DerivedBin;
@@ -220,41 +219,16 @@ const deriveCriteria = (row: ParsedRow): DerivedCriteria => {
     max: 1,
   };
 
-  const [suboptimalDesc, marginalDesc] = splitFairDescription(bin2Desc);
-  const midpoint = Number(((bin2Range.min + bin2Range.max) / 2).toFixed(2));
-  let marginalRange: Range;
-  let suboptimalRange: Range;
-
-  if (midpoint <= bin2Range.min || midpoint >= bin2Range.max) {
-    marginalRange = { min: bin2Range.min, max: bin2Range.max };
-    suboptimalRange = { min: bin2Range.min, max: bin2Range.max };
-  } else {
-    const upperStart = Number((midpoint + 0.01).toFixed(2));
-    marginalRange = {
-      min: bin2Range.min,
-      max: Number((upperStart - 0.01).toFixed(2)),
-    };
-    suboptimalRange = {
-      min: upperStart,
-      max: bin2Range.max,
-    };
-  }
-
   return {
-    optimal: {
+    good: {
       name: bin3Name,
       desc: bin3Desc,
       range: bin3Range,
     },
-    suboptimal: {
+    fair: {
       name: bin2Name,
-      desc: suboptimalDesc,
-      range: suboptimalRange,
-    },
-    marginal: {
-      name: bin2Name,
-      desc: marginalDesc,
-      range: marginalRange,
+      desc: bin2Desc,
+      range: bin2Range,
     },
     poor: {
       name: bin1Name,
@@ -280,28 +254,21 @@ const buildCurveSet = (curveSetId: string, metricId: string, criteria: DerivedCr
   const midpoint = (min: number, max: number) => Number(((min + max) / 2).toFixed(2));
   const points = [
     {
-      x: 'Optimal',
-      description: formatCriteriaMarkdown(criteria.optimal),
-      yMax: criteria.optimal.range.max,
-      yMin: criteria.optimal.range.min,
-      y: midpoint(criteria.optimal.range.min, criteria.optimal.range.max),
+      x: criteria.good.name || 'Good',
+      description: formatCriteriaMarkdown(criteria.good),
+      yMax: criteria.good.range.max,
+      yMin: criteria.good.range.min,
+      y: midpoint(criteria.good.range.min, criteria.good.range.max),
     },
     {
-      x: 'Suboptimal',
-      description: formatCriteriaMarkdown(criteria.suboptimal),
-      yMax: criteria.suboptimal.range.max,
-      yMin: criteria.suboptimal.range.min,
-      y: midpoint(criteria.suboptimal.range.min, criteria.suboptimal.range.max),
+      x: criteria.fair.name || 'Fair',
+      description: formatCriteriaMarkdown(criteria.fair),
+      yMax: criteria.fair.range.max,
+      yMin: criteria.fair.range.min,
+      y: midpoint(criteria.fair.range.min, criteria.fair.range.max),
     },
     {
-      x: 'Marginal',
-      description: formatCriteriaMarkdown(criteria.marginal),
-      yMax: criteria.marginal.range.max,
-      yMin: criteria.marginal.range.min,
-      y: midpoint(criteria.marginal.range.min, criteria.marginal.range.max),
-    },
-    {
-      x: 'Poor',
+      x: criteria.poor.name || 'Poor',
       description: formatCriteriaMarkdown(criteria.poor),
       yMax: criteria.poor.range.max,
       yMin: criteria.poor.range.min,
@@ -499,9 +466,8 @@ const main = async () => {
     'Context',
     'Method',
     'How to measure',
-    'Optimal',
-    'Suboptimal',
-    'Marginal',
+    'Good',
+    'Fair',
     'Poor',
     'References',
     'Source',
@@ -551,9 +517,8 @@ const main = async () => {
     const curveSetId = `curve-${metricId}`;
     const tierTag = 'screening';
 
-    const optimalText = formatCriteriaMarkdown(criteria.optimal);
-    const suboptimalText = formatCriteriaMarkdown(criteria.suboptimal);
-    const marginalText = formatCriteriaMarkdown(criteria.marginal);
+    const goodText = formatCriteriaMarkdown(criteria.good);
+    const fairText = formatCriteriaMarkdown(criteria.fair);
     const poorText = formatCriteriaMarkdown(criteria.poor);
 
     const detail = {
@@ -584,27 +549,22 @@ const main = async () => {
           recommended: isPredefined,
           scoring: {
             type: 'categorical',
-            ratingScaleId: 'fourBand',
-            output: { kind: 'rating', ratingScaleId: 'fourBand' },
+            ratingScaleId: 'threeBand',
+            output: { kind: 'rating', ratingScaleId: 'threeBand' },
             rubric: {
               levels: [
                 {
-                  label: 'Optimal',
-                  ratingId: 'optimal',
-                  criteriaMarkdown: optimalText,
+                  label: criteria.good.name || 'Good',
+                  ratingId: 'good',
+                  criteriaMarkdown: goodText,
                 },
                 {
-                  label: 'Suboptimal',
-                  ratingId: 'suboptimal',
-                  criteriaMarkdown: suboptimalText,
+                  label: criteria.fair.name || 'Fair',
+                  ratingId: 'fair',
+                  criteriaMarkdown: fairText,
                 },
                 {
-                  label: 'Marginal',
-                  ratingId: 'marginal',
-                  criteriaMarkdown: marginalText,
-                },
-                {
-                  label: 'Poor',
+                  label: criteria.poor.name || 'Poor',
                   ratingId: 'poor',
                   criteriaMarkdown: poorText,
                 },
@@ -650,9 +610,8 @@ const main = async () => {
         methodContext.context,
         methodContext.method,
         howToMeasure,
-        optimalText,
-        suboptimalText,
-        marginalText,
+        goodText,
+        fairText,
         poorText,
         references.join('; '),
         sourceCitation,

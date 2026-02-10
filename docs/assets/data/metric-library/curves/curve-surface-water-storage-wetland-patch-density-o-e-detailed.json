@@ -29,8 +29,8 @@
             },
             {
               "x": 0.4,
-              "y": 0.3,
-              "description": "Field 0.4, Index 0.3"
+              "y": 0.4,
+              "description": "Field 0.4, Index 0.4"
             },
             {
               "x": 0.8,
@@ -44,8 +44,8 @@
             },
             {
               "x": 1.6,
-              "y": 0.3,
-              "description": "Field 1.6, Index 0.3"
+              "y": 0.4,
+              "description": "Field 1.6, Index 0.4"
             }
           ],
           "sourceMetadata": {
@@ -69,10 +69,10 @@
             ],
             "indexValues": [
               "0",
-              "0.3",
+              "0.4",
               "0.7",
               "1",
-              "0.3",
+              "0.4",
               "",
               ""
             ]

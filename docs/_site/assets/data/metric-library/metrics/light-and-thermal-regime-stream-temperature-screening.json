@@ -26,27 +26,22 @@
       "recommended": true,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "threeBand",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "threeBand"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
+              "label": "Good",
+              "ratingId": "good",
               "criteriaMarkdown": "Good: Slightly exceeds thresholds occasionally. (Suggested index range 0.70-1.0)"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Fair: Frequently near or above thresholds. (Suggested index range 0.50-0.69)"
-            },
-            {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Fair: Consistently high or potentially lethal temperatures. (Suggested index range 0.30-0.49)"
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Frequently near or above thresholds. / Consistently high or potentially lethal temperatures. (Suggested index range 0.40-0.69)"
             },
             {
               "label": "Poor",
@@ -78,7 +73,7 @@
     "sourceCitation": "ERDC",
     "scsDefaultOn": true,
     "metricDataSource": "Field",
-    "recommendedTiersRaw": "rapid",
+    "recommendedTiersRaw": "screening",
     "originalBins": {
       "bin1": {
         "name": "Poor",
@@ -92,7 +87,7 @@
         "name": "Fair",
         "desc": "Frequently near or above thresholds. / Consistently high or potentially lethal temperatures.",
         "range": {
-          "min": 0.3,
+          "min": 0.4,
           "max": 0.69
         }
       },

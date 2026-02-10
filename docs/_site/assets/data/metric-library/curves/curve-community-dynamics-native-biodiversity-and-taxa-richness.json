@@ -16,25 +16,18 @@
           "name": "Screening",
           "points": [
             {
-              "x": "Optimal",
+              "x": "Good",
               "description": "Good: Four to five or more distinct major groups. (Suggested index range 0.70-1.0)",
               "yMax": 1,
               "yMin": 0.7,
               "y": 0.85
             },
             {
-              "x": "Suboptimal",
-              "description": "Fair: Two to four distinct major groups. (Suggested index range 0.50-0.69)",
+              "x": "Fair",
+              "description": "Fair: Two to four distinct major groups. / One to two distinct major groups. (Suggested index range 0.40-0.69)",
               "yMax": 0.69,
-              "yMin": 0.5,
-              "y": 0.59
-            },
-            {
-              "x": "Marginal",
-              "description": "Fair: One to two distinct major groups. (Suggested index range 0.30-0.49)",
-              "yMax": 0.49,
-              "yMin": 0.3,
-              "y": 0.4
+              "yMin": 0.4,
+              "y": 0.54
             },
             {
               "x": "Poor",

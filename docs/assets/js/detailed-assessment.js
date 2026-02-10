@@ -211,7 +211,7 @@
   };
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
-  const defaultIndexValues = [0, 0.3, 0.7, 1];
+  const defaultIndexValues = [0, 0.4, 0.7, 1];
   const defaultProfileId = 'detailed-default';
 
   const normalizeCurveType = (value) => {
@@ -1255,7 +1255,7 @@
         '<th class="col-discipline">Discipline</th>' +
         '<th class="col-function">Function</th>' +
         '<th class="col-metric">Metric</th>' +
-        '<th class="col-field">Field value</th>' +
+        '<th class="col-field">Metric Value</th>' +
         '<th class="col-scoring-criteria">Scoring<br>criteria</th>' +
         '<th class="col-index">Metric<br>index</th>' +
         '<th class="col-function-estimate">Function<br>Estimate</th>' +
@@ -1269,6 +1269,16 @@
       table.appendChild(thead);
       table.appendChild(tbody);
       table.appendChild(tfoot);
+
+      const summaryTable = document.createElement('table');
+      summaryTable.className =
+        'screening-table screening-summary-table detailed-summary-table';
+      const summaryColGroup = document.createElement('colgroup');
+      const summaryHead = document.createElement('thead');
+      const summaryBody = document.createElement('tbody');
+      summaryTable.appendChild(summaryColGroup);
+      summaryTable.appendChild(summaryHead);
+      summaryTable.appendChild(summaryBody);
 
       const chartsShell = document.createElement('div');
       chartsShell.className =
@@ -1305,8 +1315,8 @@
         '<div class="legend-bar" aria-hidden="true"></div>' +
         '<div class="legend-labels legend-labels-right">' +
         '<div>0.70 - 1.00</div>' +
-        '<div>0.30 - 0.69</div>' +
-        '<div>0.00 - 0.29</div>' +
+        '<div>0.40 - 0.69</div>' +
+        '<div>0.00 - 0.39</div>' +
         '</div>' +
         '</div>';
       chartsHeader.appendChild(chartsLegend);
@@ -1343,6 +1353,7 @@
       if (tableHost) {
         tableHost.innerHTML = '';
         tableHost.appendChild(table);
+        tableHost.appendChild(summaryTable);
         const parent = tableHost.parentElement;
         if (parent) {
           const existing = parent.querySelector('.detailed-charts-panel');
@@ -1378,7 +1389,7 @@
           '<th class="col-discipline">Discipline</th>' +
           '<th class="col-function">Function</th>' +
           '<th class="col-metric">Metric</th>' +
-          '<th class="col-field">Field value</th>' +
+          '<th class="col-field">Metric Value</th>' +
           '<th class="col-scoring-criteria">Scoring<br>criteria</th>' +
           '<th class="col-index">Metric<br>index</th>' +
           '<th class="col-function-estimate">Function<br>Estimate</th>' +
@@ -1396,22 +1407,37 @@
           { label: 'Condition Sub-Index', rollup: false },
           { label: 'Ecosystem Condition Index', rollup: false },
         ];
-        const visibleColumns = 5 + (showAdvanced ? 3 : 0) + (showMappings ? 3 : 0);
-        const labelSpan = Math.max(1, visibleColumns - 3);
+        const baseLabelSpan = showAdvanced ? 8 : 5;
+        const labelSpan = showMappings ? baseLabelSpan : Math.max(1, baseLabelSpan - 3);
+        const totalSpan = labelSpan + 3;
 
         tfoot.innerHTML = '';
+        summaryColGroup.innerHTML = '';
+        summaryHead.innerHTML = '';
+        summaryBody.innerHTML = '';
         summaryCells.physical = [];
         summaryCells.chemical = [];
         summaryCells.biological = [];
         summaryCells.ecosystem = null;
+        const summaryTarget = showMappings ? tfoot : summaryBody;
+
+        const labelCol = document.createElement('col');
+        labelCol.span = labelSpan;
+        labelCol.className = 'summary-label-col';
+        summaryColGroup.appendChild(labelCol);
+        ['physical', 'chemical', 'biological'].forEach((key) => {
+          const col = document.createElement('col');
+          col.className = `col-${key}`;
+          summaryColGroup.appendChild(col);
+        });
 
         if (!showMappings) {
           const gapRow = document.createElement('tr');
           gapRow.className = 'summary-gap-row';
           const gapCell = document.createElement('td');
-          gapCell.colSpan = visibleColumns;
+          gapCell.colSpan = totalSpan;
           gapRow.appendChild(gapCell);
-          tfoot.appendChild(gapRow);
+          summaryTarget.appendChild(gapRow);
 
           const headerRow = document.createElement('tr');
           const spacer = document.createElement('td');
@@ -1428,7 +1454,7 @@
             cell.textContent = label;
             headerRow.appendChild(cell);
           });
-          tfoot.appendChild(headerRow);
+          summaryTarget.appendChild(headerRow);
         }
 
         labelItems.forEach((item) => {
@@ -1462,14 +1488,14 @@
               row.appendChild(cell);
             });
           }
-          tfoot.appendChild(row);
+          summaryTarget.appendChild(row);
         });
       };
 
       const expandedMetrics = new Set();
 
       const summaryColorForValue = (value) => {
-        if (value <= 0.29) {
+        if (value <= 0.39) {
           return '#f5b5b5';
         }
         if (value <= 0.69) {
@@ -2191,6 +2217,27 @@
         return Number.isInteger(rounded) ? String(rounded) : String(rounded);
       };
 
+      const toFunctionScore = (indexValue) => Math.round(clamp(indexValue, 0, 1) * 15);
+      const toFunctionScoreRange = (minIndex, maxIndex, fallbackIndex = null) => {
+        const minScore = Math.ceil(clamp(minIndex, 0, 1) * 15);
+        const maxScore = Math.floor(clamp(maxIndex, 0, 1) * 15);
+        if (minScore <= maxScore) {
+          return {
+            minScore,
+            maxScore,
+            hasRange: minScore < maxScore,
+          };
+        }
+        const fallbackScore = Number.isFinite(fallbackIndex)
+          ? toFunctionScore(fallbackIndex)
+          : toFunctionScore((clamp(minIndex, 0, 1) + clamp(maxIndex, 0, 1)) / 2);
+        return {
+          minScore: fallbackScore,
+          maxScore: fallbackScore,
+          hasRange: false,
+        };
+      };
+
       const buildDetailedCurveSummaryTable = (curve) => {
         const table = document.createElement('table');
         table.className = 'curve-summary-table';
@@ -2273,9 +2320,10 @@
         table.appendChild(
           buildRow('Function Score', (point) => {
             if (useRange && point.yMin !== null && point.yMax !== null) {
-              return `${Math.round(point.yMin * 15)}-${Math.round(point.yMax * 15)}`;
+              const scoreRange = toFunctionScoreRange(point.yMin, point.yMax, point.y);
+              return `${scoreRange.minScore}-${scoreRange.maxScore}`;
             }
-            return point.y === null ? '-' : String(Math.round(point.y * 15));
+            return point.y === null ? '-' : String(toFunctionScore(point.y));
           })
         );
 
@@ -2287,15 +2335,14 @@
         if (!meta || !Number.isFinite(meta.indexScore)) {
           return '-';
         }
-        const avgScore = Math.round(clamp(meta.indexScore, 0, 1) * 15);
+        const avgScore = toFunctionScore(meta.indexScore);
         if (
           Number.isFinite(meta.minIndex) &&
           Number.isFinite(meta.maxIndex)
         ) {
-          const minScore = Math.round(clamp(meta.minIndex, 0, 1) * 15);
-          const maxScore = Math.round(clamp(meta.maxIndex, 0, 1) * 15);
-          if (minScore !== maxScore) {
-            return `${avgScore} (${minScore}-${maxScore})`;
+          const scoreRange = toFunctionScoreRange(meta.minIndex, meta.maxIndex, meta.indexScore);
+          if (scoreRange.hasRange) {
+            return `${avgScore} (${scoreRange.minScore}-${scoreRange.maxScore})`;
           }
         }
         return String(avgScore);
@@ -2313,6 +2360,9 @@
         table.classList.toggle('show-function-mappings', showMappings);
         table.classList.toggle('show-suggested-function-cues', showSuggestedCue);
         table.classList.toggle('show-function-score-cue-labels', showSliderLabels);
+        summaryTable.classList.toggle('show-advanced-scoring', showAdvanced);
+        summaryTable.classList.toggle('show-function-mappings', showMappings);
+        summaryTable.hidden = showMappings;
         chartsShell.classList.toggle('show-suggested-function-cues', showSuggestedCue);
         chartsShell.classList.toggle('show-function-score-cue-labels', showSliderLabels);
         renderHeader(showMappings, showAdvanced);
@@ -2323,6 +2373,9 @@
         }
         if (!scenario) {
           tfoot.innerHTML = '';
+          summaryHead.innerHTML = '';
+          summaryBody.innerHTML = '';
+          summaryTable.hidden = true;
           if (search) {
             search.disabled = true;
           }
@@ -2360,7 +2413,7 @@
         }
 
         buildSummary(showAdvanced, showMappings);
-        tfoot.hidden = false;
+        tfoot.hidden = !showMappings;
         const term = search.value.trim().toLowerCase();
         const disciplineValue = disciplineFilter.value;
         const selectedMetricIds = new Set(scenario.metricIds || []);
@@ -2452,24 +2505,23 @@
           const avgIndex = indexScores.length
             ? indexScores.reduce((sum, value) => sum + value, 0) / indexScores.length
             : 0;
-          const functionScore = Math.round(avgIndex * 15);
+          const functionScore = toFunctionScore(avgIndex);
           functionScores.set(fn.id, functionScore);
 
           const rangeEntries = metas.map((meta) => {
-            const avgScore = Math.round(clamp(meta.indexScore, 0, 1) * 15);
-            const hasRange =
-              Number.isFinite(meta.minIndex) &&
-              Number.isFinite(meta.maxIndex) &&
-              Math.round(clamp(meta.minIndex, 0, 1) * 15) <
-                Math.round(clamp(meta.maxIndex, 0, 1) * 15);
+            const avgScore = toFunctionScore(meta.indexScore);
+            const scoreRange =
+              Number.isFinite(meta.minIndex) && Number.isFinite(meta.maxIndex)
+                ? toFunctionScoreRange(meta.minIndex, meta.maxIndex, meta.indexScore)
+                : {
+                    minScore: avgScore,
+                    maxScore: avgScore,
+                    hasRange: false,
+                  };
             return {
-              minScore: Number.isFinite(meta.minIndex)
-                ? Math.round(clamp(meta.minIndex, 0, 1) * 15)
-                : avgScore,
-              maxScore: Number.isFinite(meta.maxIndex)
-                ? Math.round(clamp(meta.maxIndex, 0, 1) * 15)
-                : avgScore,
-              hasRange,
+              minScore: scoreRange.minScore,
+              maxScore: scoreRange.maxScore,
+              hasRange: scoreRange.hasRange,
             };
           });
           const minLimit = rangeEntries.length
@@ -2512,23 +2564,146 @@
             continue;
           }
           let span = 1;
+          let hasExpandedCriteria = row.type === 'details';
+          let firstExpandedMetricIndex =
+            row.type === 'metric' && row.metric && expandedMetrics.has(row.metric.id)
+              ? i
+              : null;
           for (let j = i + 1; j < renderRows.length; j += 1) {
             if (renderRows[j].functionId !== row.functionId) {
               break;
             }
             span += 1;
             renderRows[j]._functionSkip = true;
+            if (renderRows[j].type === 'details') {
+              hasExpandedCriteria = true;
+            }
+            if (
+              firstExpandedMetricIndex === null &&
+              renderRows[j].type === 'metric' &&
+              renderRows[j].metric &&
+              expandedMetrics.has(renderRows[j].metric.id)
+            ) {
+              firstExpandedMetricIndex = j;
+            }
           }
           row._functionSpan = span;
+          const functionMeta = {
+            startIndex: i,
+            totalSpan: span,
+            hasExpandedCriteria,
+            sliderOwnerIndex:
+              hasExpandedCriteria && Number.isInteger(firstExpandedMetricIndex)
+                ? firstExpandedMetricIndex
+                : i,
+          };
+          for (let k = i; k < i + span; k += 1) {
+            renderRows[k]._functionMeta = functionMeta;
+          }
         }
 
-        renderRows.forEach((row) => {
+        const buildFunctionScoreCell = (functionId, rowSpan = 1) => {
+          const functionScoreCell = document.createElement('td');
+          functionScoreCell.className = 'col-function-score function-score-cell';
+          functionScoreCell.rowSpan = Math.max(1, rowSpan);
+          const scoreMeta = functionScoreMeta.get(functionId) || {
+            value: 0,
+            minLimit: 0,
+            maxLimit: 15,
+            hasSuggestedRange: false,
+            isOutsideSuggestedRange: false,
+          };
+          const scoreWrap = document.createElement('div');
+          scoreWrap.className = 'score-input function-score-inline';
+          const sliderWrap = document.createElement('div');
+          sliderWrap.className = 'function-score-slider';
+
+          const cueLabels = document.createElement('div');
+          cueLabels.className = 'function-score-cue-labels';
+          [
+            { text: 'NF', left: '16.67%' },
+            { text: 'AR', left: '50%' },
+            { text: 'F', left: '83.33%' },
+          ].forEach(({ text, left }) => {
+            const label = document.createElement('span');
+            label.className = 'function-score-cue-label';
+            label.textContent = text;
+            label.style.left = left;
+            cueLabels.appendChild(label);
+          });
+
+          const cueBar = document.createElement('button');
+          cueBar.type = 'button';
+          cueBar.className = 'function-score-cue-bar';
+          cueBar.setAttribute('aria-label', 'Function score cue ranges');
+          cueBar.tabIndex = -1;
+          [0, 33.33, 66.67, 100].forEach((percent) => {
+            const tick = document.createElement('span');
+            tick.className = 'function-score-cue-tick';
+            tick.style.left = `${percent}%`;
+            cueBar.appendChild(tick);
+          });
+
+          const suggestedBracketLayer = document.createElement('div');
+          suggestedBracketLayer.className = 'function-score-suggested-layer';
+          const suggestedBracket = document.createElement('div');
+          suggestedBracket.className = 'function-score-suggested-bracket';
+          suggestedBracketLayer.appendChild(suggestedBracket);
+
+          const range = document.createElement('input');
+          range.type = 'range';
+          range.min = '0';
+          range.max = '15';
+          range.step = '1';
+          range.value = String(scoreMeta.value);
+          range.disabled = true;
+          updateDetailedFunctionScoreVisual(range, scoreMeta.value);
+
+          const valueLabel = document.createElement('span');
+          valueLabel.className = 'score-value';
+          valueLabel.textContent = String(scoreMeta.value);
+
+          updateDetailedSuggestedBracket(
+            suggestedBracket,
+            scoreMeta.minLimit,
+            scoreMeta.maxLimit,
+            scoreMeta.hasSuggestedRange
+          );
+          const showOutOfRangeCue = Boolean(
+            scoreMeta.isOutsideSuggestedRange && showSuggestedCue
+          );
+          valueLabel.classList.toggle('is-outside-suggested', showOutOfRangeCue);
+          if (showOutOfRangeCue) {
+            valueLabel.title = 'Score is outside suggested range';
+          } else {
+            valueLabel.removeAttribute('title');
+          }
+          suggestedBracket.hidden = !showSuggestedCue || !scoreMeta.hasSuggestedRange;
+
+          sliderWrap.appendChild(cueLabels);
+          sliderWrap.appendChild(cueBar);
+          sliderWrap.appendChild(suggestedBracketLayer);
+          sliderWrap.appendChild(range);
+          scoreWrap.appendChild(sliderWrap);
+          scoreWrap.appendChild(valueLabel);
+          functionScoreCell.appendChild(scoreWrap);
+          return functionScoreCell;
+        };
+
+        renderRows.forEach((row, rowIndex) => {
           const tr = document.createElement('tr');
           tr.classList.add(slugCategory(row.discipline));
           if (row.type === 'placeholder') {
             tr.classList.add('is-empty');
           }
-          let functionScoreCellForRow = null;
+          const functionMeta = row._functionMeta || {
+            startIndex: rowIndex,
+            totalSpan: row._functionSpan || 1,
+            hasExpandedCriteria: false,
+            sliderOwnerIndex: rowIndex,
+          };
+          const functionHasExpandedCriteria = Boolean(functionMeta.hasExpandedCriteria);
+          const isFunctionSliderOwner = functionMeta.sliderOwnerIndex === rowIndex;
 
           if (!row._disciplineSkip) {
             const disciplineCell = document.createElement('td');
@@ -2600,99 +2775,17 @@
             });
             functionCell.appendChild(statementLine);
             tr.appendChild(functionCell);
-
-            const functionScoreCell = document.createElement('td');
-            functionScoreCell.className = 'col-function-score function-score-cell';
-            functionScoreCell.rowSpan = row._functionSpan;
-            const scoreMeta = functionScoreMeta.get(row.functionId) || {
-              value: 0,
-              minLimit: 0,
-              maxLimit: 15,
-              hasSuggestedRange: false,
-              isOutsideSuggestedRange: false,
-            };
-            const scoreWrap = document.createElement('div');
-            scoreWrap.className = 'score-input function-score-inline';
-            const sliderWrap = document.createElement('div');
-            sliderWrap.className = 'function-score-slider';
-
-            const cueLabels = document.createElement('div');
-            cueLabels.className = 'function-score-cue-labels';
-            [
-              { text: 'F', left: '16.67%' },
-              { text: 'AR', left: '50%' },
-              { text: 'NF', left: '83.33%' },
-            ].forEach(({ text, left }) => {
-              const label = document.createElement('span');
-              label.className = 'function-score-cue-label';
-              label.textContent = text;
-              label.style.left = left;
-              cueLabels.appendChild(label);
-            });
-
-            const cueBar = document.createElement('button');
-            cueBar.type = 'button';
-            cueBar.className = 'function-score-cue-bar';
-            cueBar.setAttribute('aria-label', 'Function score cue ranges');
-            cueBar.tabIndex = -1;
-            [0, 33.33, 66.67, 100].forEach((percent) => {
-              const tick = document.createElement('span');
-              tick.className = 'function-score-cue-tick';
-              tick.style.left = `${percent}%`;
-              cueBar.appendChild(tick);
-            });
-
-            const suggestedBracketLayer = document.createElement('div');
-            suggestedBracketLayer.className = 'function-score-suggested-layer';
-            const suggestedBracket = document.createElement('div');
-            suggestedBracket.className = 'function-score-suggested-bracket';
-            suggestedBracketLayer.appendChild(suggestedBracket);
-
-            const range = document.createElement('input');
-            range.type = 'range';
-            range.min = '0';
-            range.max = '15';
-            range.step = '1';
-            range.value = String(scoreMeta.value);
-            range.disabled = true;
-            updateDetailedFunctionScoreVisual(range, scoreMeta.value);
-
-            const valueLabel = document.createElement('span');
-            valueLabel.className = 'score-value';
-            valueLabel.textContent = String(scoreMeta.value);
-
-            updateDetailedSuggestedBracket(
-              suggestedBracket,
-              scoreMeta.minLimit,
-              scoreMeta.maxLimit,
-              scoreMeta.hasSuggestedRange
-            );
-            const showOutOfRangeCue = Boolean(
-              scoreMeta.isOutsideSuggestedRange && showSuggestedCue
-            );
-            valueLabel.classList.toggle('is-outside-suggested', showOutOfRangeCue);
-            if (showOutOfRangeCue) {
-              valueLabel.title = 'Score is outside suggested range';
-            } else {
-              valueLabel.removeAttribute('title');
-            }
-            suggestedBracket.hidden = !showSuggestedCue || !scoreMeta.hasSuggestedRange;
-
-            sliderWrap.appendChild(cueLabels);
-            sliderWrap.appendChild(cueBar);
-            sliderWrap.appendChild(suggestedBracketLayer);
-            sliderWrap.appendChild(range);
-            scoreWrap.appendChild(sliderWrap);
-            scoreWrap.appendChild(valueLabel);
-            functionScoreCell.appendChild(scoreWrap);
-            functionScoreCellForRow = functionScoreCell;
           }
 
           if (row.type === 'details') {
             tr.classList.add('criteria-row');
             tr.id = `detailed-criteria-${row.metric.id}`;
             const detailsCell = document.createElement('td');
-            detailsCell.colSpan = 2 + (showAdvanced ? 3 : 0) + (showMappings ? 3 : 0);
+            detailsCell.colSpan =
+              2 +
+              (showAdvanced ? 3 : 0) +
+              (showMappings ? 3 : 0) +
+              (functionHasExpandedCriteria ? 1 : 0);
             const details = document.createElement('div');
             details.className = 'criteria-details';
             const headerRow = document.createElement('div');
@@ -2847,8 +2940,16 @@
             }
             tr.appendChild(functionEstimateCell);
 
-            if (functionScoreCellForRow) {
-              tr.appendChild(functionScoreCellForRow);
+            if (isFunctionSliderOwner) {
+              const scoreRowSpan = functionHasExpandedCriteria
+                ? 1
+                : functionMeta.totalSpan || row._functionSpan || 1;
+              tr.appendChild(buildFunctionScoreCell(row.functionId, scoreRowSpan));
+            } else if (functionHasExpandedCriteria) {
+              const placeholderScoreCell = document.createElement('td');
+              placeholderScoreCell.className =
+                'col-function-score function-score-cell function-score-cell-empty';
+              tr.appendChild(placeholderScoreCell);
             }
 
             if (showMappings) {

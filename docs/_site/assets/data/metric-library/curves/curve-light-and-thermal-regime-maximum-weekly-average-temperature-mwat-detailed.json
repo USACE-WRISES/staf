@@ -29,8 +29,8 @@
             },
             {
               "x": 18.1,
-              "y": 0.3,
-              "description": "Field 18.1, Index 0.3"
+              "y": 0.4,
+              "description": "Field 18.1, Index 0.4"
             }
           ],
           "sourceMetadata": {
@@ -54,8 +54,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",
@@ -74,8 +74,8 @@
             },
             {
               "x": 19.3,
-              "y": 0.3,
-              "description": "Field 19.3, Index 0.3"
+              "y": 0.4,
+              "description": "Field 19.3, Index 0.4"
             }
           ],
           "sourceMetadata": {
@@ -99,8 +99,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",
@@ -119,8 +119,8 @@
             },
             {
               "x": 22,
-              "y": 0.3,
-              "description": "Field 22, Index 0.3"
+              "y": 0.4,
+              "description": "Field 22, Index 0.4"
             }
           ],
           "sourceMetadata": {
@@ -144,8 +144,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",
@@ -164,8 +164,8 @@
             },
             {
               "x": 26,
-              "y": 0.3,
-              "description": "Field 26, Index 0.3"
+              "y": 0.4,
+              "description": "Field 26, Index 0.4"
             }
           ],
           "sourceMetadata": {
@@ -189,8 +189,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",
@@ -209,8 +209,8 @@
             },
             {
               "x": 29,
-              "y": 0.3,
-              "description": "Field 29, Index 0.3"
+              "y": 0.4,
+              "description": "Field 29, Index 0.4"
             }
           ],
           "sourceMetadata": {
@@ -234,8 +234,8 @@
             ],
             "indexValues": [
               "0",
-              "0.29",
-              "0.3",
+              "0.39",
+              "0.4",
               "0.69",
               "0.7",
               "1",

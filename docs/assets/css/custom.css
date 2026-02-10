@@ -998,29 +998,29 @@ body.modal-open {
 }
 
 .detailed-table .col-discipline {
-  width: 14ch;
-  max-width: 14ch;
+  width: 13ch;
+  max-width: 13ch;
   white-space: nowrap;
 }
 
 .detailed-table .col-function {
-  width: 22ch;
-  max-width: 22ch;
+  width: 20ch;
+  max-width: 20ch;
   word-break: normal;
   overflow-wrap: normal;
 }
 
 .detailed-table .col-metric {
-  width: 28ch;
-  max-width: 28ch;
+  width: 24ch;
+  max-width: 24ch;
   white-space: normal;
   word-break: normal;
   overflow-wrap: normal;
 }
 
 .detailed-table .col-field {
-  width: 12ch;
-  max-width: 12ch;
+  width: 6ch;
+  max-width: 6ch;
 }
 
 .detailed-table .col-scoring-criteria {
@@ -1030,12 +1030,17 @@ body.modal-open {
 
 .detailed-table .col-index,
 .detailed-table .col-function-estimate,
-.detailed-table .col-function-score,
 .detailed-table .col-physical,
 .detailed-table .col-chemical,
 .detailed-table .col-biological {
   width: 9ch;
   max-width: 9ch;
+  text-align: center;
+}
+
+.detailed-table .col-function-score {
+  width: 160px;
+  max-width: 160px;
   text-align: center;
 }
 
@@ -1067,6 +1072,10 @@ body.modal-open {
   color: #a23232;
   font-weight: 600;
   cursor: help;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(162, 50, 50, 0.55);
+  text-underline-offset: 2px;
 }
 
 .detailed-table .metric-inline {
@@ -1854,6 +1863,10 @@ body.modal-open {
   color: #a23232;
   font-weight: 600;
   cursor: help;
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: rgba(162, 50, 50, 0.55);
+  text-underline-offset: 2px;
 }
 
 .screening-table .function-score-slider {
@@ -3555,6 +3568,40 @@ body.modal-open {
   background: #f0f0f0;
 }
 
+.screening-table td.col-function-score.function-score-cell,
+.detailed-table td.col-function-score.function-score-cell {
+  background: #ffffff;
+}
+
+.screening-table tr.category-hydrology td.col-function-score.function-score-cell,
+.detailed-table tr.category-hydrology td.col-function-score.function-score-cell {
+  background: #ecf1f9;
+}
+
+.screening-table tr.category-hydraulics td.col-function-score.function-score-cell,
+.detailed-table tr.category-hydraulics td.col-function-score.function-score-cell {
+  background: #dce5f2;
+}
+
+.screening-table tr.category-geomorphology td.col-function-score.function-score-cell,
+.detailed-table tr.category-geomorphology td.col-function-score.function-score-cell {
+  background: #fbf0e8;
+}
+
+.screening-table tr.category-physicochemistry td.col-function-score.function-score-cell,
+.detailed-table tr.category-physicochemistry td.col-function-score.function-score-cell {
+  background: #f9f4e1;
+}
+
+.screening-table tr.category-biology td.col-function-score.function-score-cell,
+.detailed-table tr.category-biology td.col-function-score.function-score-cell {
+  background: #edf4e9;
+}
+
+.screening-table tr.inactive-row td.col-function-score.function-score-cell {
+  background: #f8f8f8;
+}
+
 .details-caret {
   padding: 0 0.25rem;
   font-size: 0.9rem;
@@ -3945,8 +3992,8 @@ body.modal-open {
 .metric-library-row {
   display: grid;
   grid-template-columns:
-    minmax(210px, 2.6fr)
-    minmax(90px, 0.8fr);
+    minmax(0, 1fr)
+    minmax(1rem, auto);
   gap: 0.5rem;
   align-items: start;
 }
@@ -4124,12 +4171,18 @@ body.modal-open {
   margin-left: 0.1rem;
 }
 
+.metric-origin-icon-user {
+  color: #8a97ac;
+}
+
 .metric-add-btn {
-  padding: 0.2rem 0.45rem;
+  padding: 0.18rem 0.45rem;
   border-radius: 999px;
   border: 1px solid #cfcfcf;
   background: #ffffff;
   font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 2.2rem;
   white-space: nowrap;
 }
 
@@ -4179,6 +4232,7 @@ body.modal-open {
   font-size: 0.8rem;
   font-weight: 600;
   color: #24324a;
+  overflow: visible;
 }
 
 .metric-library-group-main {
@@ -4186,22 +4240,26 @@ body.modal-open {
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
+  flex: 1 1 auto;
+  cursor: pointer;
 }
 
 .metric-library-group-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  position: relative;
 }
 
-.metric-group-add {
-  border: 1px solid #b9c0cf;
-  background: #ffffff;
-  color: #2b3446;
-  width: 1.4rem;
-  height: 1.4rem;
-  border-radius: 999px;
-  font-size: 0.9rem;
-  line-height: 1;
+.metric-group-toggle {
+  border: none;
+  background: transparent;
+  color: #44536e;
+  width: 1.25rem;
+  height: 1.25rem;
+  line-height: 1.1;
+  font-size: 1rem;
+  font-weight: 700;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -4209,8 +4267,67 @@ body.modal-open {
   cursor: pointer;
 }
 
-.metric-group-add:hover {
+.metric-group-toggle:hover {
+  color: #1d2940;
+}
+
+.metric-group-add-trigger {
+  border: 1px solid #b9c0cf;
+  background: #ffffff;
+  color: #2b3446;
+  min-height: 1.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  padding: 0.15rem 0.52rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.metric-group-add-trigger:hover {
   background: #f3f5f9;
+}
+
+.metric-group-add-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  z-index: 8;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 9.5rem;
+  padding: 0.35rem;
+  border: 1px solid #c7cedd;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 6px 20px rgba(15, 22, 35, 0.12);
+}
+
+.metric-group-add-option {
+  border: 1px solid #d6dce8;
+  border-radius: 6px;
+  background: #f8faff;
+  color: #1f2940;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: left;
+  padding: 0.25rem 0.45rem;
+  cursor: pointer;
+}
+
+.metric-group-add-option:hover {
+  background: #edf3ff;
+  border-color: #b8c5df;
+}
+
+.metric-library-group.is-collapsed .metric-library-group-function {
+  opacity: 0.9;
 }
 
 
@@ -4282,10 +4399,11 @@ body.modal-open {
 .metric-tier-cell {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.2rem;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: flex-end;
+  min-height: 1.35rem;
 }
 
 .metric-scoring-main {

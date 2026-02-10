@@ -26,27 +26,22 @@
       "recommended": false,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "threeBand",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "threeBand"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
+              "label": "Good",
+              "ratingId": "good",
               "criteriaMarkdown": "Good: Four to five or more distinct major groups. (Suggested index range 0.70-1.0)"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Fair: Two to four distinct major groups. (Suggested index range 0.50-0.69)"
-            },
-            {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Fair: One to two distinct major groups. (Suggested index range 0.30-0.49)"
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Two to four distinct major groups. / One to two distinct major groups. (Suggested index range 0.40-0.69)"
             },
             {
               "label": "Poor",
@@ -82,7 +77,7 @@
     "sourceCitation": "Minnesota SQT; ERDC",
     "scsDefaultOn": false,
     "metricDataSource": "Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible.",
-    "recommendedTiersRaw": "screening; rapid",
+    "recommendedTiersRaw": "screening",
     "originalBins": {
       "bin1": {
         "name": "Poor",
@@ -96,7 +91,7 @@
         "name": "Fair",
         "desc": "Two to four distinct major groups. / One to two distinct major groups.",
         "range": {
-          "min": 0.3,
+          "min": 0.4,
           "max": 0.69
         }
       },

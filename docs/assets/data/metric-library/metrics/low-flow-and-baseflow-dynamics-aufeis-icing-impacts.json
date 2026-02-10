@@ -26,27 +26,22 @@
       "recommended": false,
       "scoring": {
         "type": "categorical",
-        "ratingScaleId": "fourBand",
+        "ratingScaleId": "threeBand",
         "output": {
           "kind": "rating",
-          "ratingScaleId": "fourBand"
+          "ratingScaleId": "threeBand"
         },
         "rubric": {
           "levels": [
             {
-              "label": "Optimal",
-              "ratingId": "optimal",
+              "label": "Good",
+              "ratingId": "good",
               "criteriaMarkdown": "Good: Aufeis formation caused by land disturbance is minor or nonexistent within, extends into the reach from downstream, or is found upstream of the project reach. (Suggested index range 0.70-1.0)"
             },
             {
-              "label": "Suboptimal",
-              "ratingId": "suboptimal",
-              "criteriaMarkdown": "Fair: Aufeis formation caused by land disturbance is moderate within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.50-0.69)"
-            },
-            {
-              "label": "Marginal",
-              "ratingId": "marginal",
-              "criteriaMarkdown": "Fair: Aufeis formation caused by land disturbance is moderate within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.30-0.49)"
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "Fair: Aufeis formation caused by land disturbance is moderate within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.40-0.69)"
             },
             {
               "label": "Poor",
@@ -91,7 +86,7 @@
         "name": "Fair",
         "desc": "Aufeis formation caused by land disturbance is moderate within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach.",
         "range": {
-          "min": 0.3,
+          "min": 0.4,
           "max": 0.69
         }
       },

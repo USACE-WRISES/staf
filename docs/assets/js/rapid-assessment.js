@@ -35,8 +35,8 @@
   const indicatorIndexRangeByScore = {
     SA: { min: 0.84, max: 1.0, avg: 0.93, hasRange: true },
     A: { min: 0.64, max: 0.83, avg: 0.73, hasRange: true },
-    N: { min: 0.44, max: 0.63, avg: 0.53, hasRange: true },
-    D: { min: 0.24, max: 0.43, avg: 0.33, hasRange: true },
+    N: { min: 0.4, max: 0.63, avg: 0.53, hasRange: true },
+    D: { min: 0.24, max: 0.39, avg: 0.33, hasRange: true },
     SD: { min: 0.0, max: 0.23, avg: 0.13, hasRange: true },
   };
 
@@ -482,8 +482,8 @@
         '<div class="legend-bar" aria-hidden="true"></div>' +
         '<div class="legend-labels legend-labels-right">' +
         '<div>0.70 - 1.00</div>' +
-        '<div>0.30 - 0.69</div>' +
-        '<div>0.00 - 0.29</div>' +
+        '<div>0.40 - 0.69</div>' +
+        '<div>0.00 - 0.39</div>' +
         '</div>' +
         '</div>';
       chartsHeader.appendChild(chartsLegend);
@@ -583,8 +583,8 @@
         if (!range) {
           return null;
         }
-        const minScore = Math.round(range.min * 15);
-        const maxScore = Math.round(range.max * 15);
+        const minScore = Math.ceil(range.min * 15);
+        const maxScore = Math.floor(range.max * 15);
         const avgScore = Math.round(range.avg * 15);
         return {
           indexRange: range,
@@ -647,7 +647,7 @@
       };
 
       const summaryColorForValue = (value) => {
-        if (value <= 0.29) {
+        if (value <= 0.39) {
           return '#f5b5b5';
         }
         if (value <= 0.69) {
@@ -1166,8 +1166,8 @@
             Number.isFinite(range.min) &&
             Number.isFinite(range.max)
           ) {
-            const minScore = Math.round(range.min * 15);
-            const maxScore = Math.round(range.max * 15);
+            const minScore = Math.ceil(range.min * 15);
+            const maxScore = Math.floor(range.max * 15);
             cell.textContent = `${minScore}-${maxScore}`;
           } else {
             const value = indicatorIndexByScore[option.value];
@@ -1527,9 +1527,9 @@
             const cueLabels = document.createElement('div');
             cueLabels.className = 'function-score-cue-labels';
             [
-              { text: 'F', left: '16.67%' },
+              { text: 'NF', left: '16.67%' },
               { text: 'AR', left: '50%' },
-              { text: 'NF', left: '83.33%' },
+              { text: 'F', left: '83.33%' },
             ].forEach(({ text, left }) => {
               const label = document.createElement('span');
               label.className = 'function-score-cue-label';
