@@ -433,7 +433,7 @@
       const table = document.createElement('table');
       table.className = 'screening-table rapid-table show-condensed-view';
       const thead = document.createElement('thead');
-      const tbody = document.createElement('tbody');
+      let tbody = document.createElement('tbody');
       const tfoot = document.createElement('tfoot');
       table.appendChild(thead);
       table.appendChild(tbody);
@@ -1290,11 +1290,15 @@
         return table;
       };
 
-      const renderTable = () => {
-        tbody.innerHTML = '';
+      const renderTable = ({ rebuildHeader = true, rebuildSummary = true } = {}) => {
+        const nextTbody = document.createElement('tbody');
         const { showAdvanced, showCondensed, showMappings } = syncRapidViewState();
-        renderHeader(showMappings, showAdvanced);
-        buildSummary(showAdvanced, showCondensed, showMappings);
+        if (rebuildHeader) {
+          renderHeader(showMappings, showAdvanced);
+        }
+        if (rebuildSummary) {
+          buildSummary(showAdvanced, showCondensed, showMappings);
+        }
 
         const term = search.value.trim().toLowerCase();
         const disciplineValue = disciplineFilter.value;
@@ -1406,9 +1410,11 @@
           emptyCell.className = 'empty-cell';
           emptyCell.textContent = 'No indicators match the current filters.';
           emptyRow.appendChild(emptyCell);
-          tbody.appendChild(emptyRow);
+          nextTbody.appendChild(emptyRow);
           activeFunctionOrder = [];
           updateScores();
+          table.replaceChild(nextTbody, tbody);
+          tbody = nextTbody;
           return;
         }
 
@@ -1765,13 +1771,13 @@
             } else {
               expandedIndicators.add(item.id);
             }
-            renderTable();
+            renderTable({ rebuildHeader: false, rebuildSummary: false });
             if (event.detail > 0) {
               setTimeout(() => criteriaBtn.blur(), 0);
             }
           });
 
-          tbody.appendChild(row);
+          nextTbody.appendChild(row);
           if (criteriaExpanded) {
             const detailsRow = document.createElement('tr');
             detailsRow.id = detailsId;
@@ -1797,11 +1803,13 @@
             details.appendChild(buildRapidCurveSummaryTable(criteriaSet));
             detailsCell.appendChild(details);
             detailsRow.appendChild(detailsCell);
-            tbody.appendChild(detailsRow);
+            nextTbody.appendChild(detailsRow);
           }
         });
 
         updateScores();
+        table.replaceChild(nextTbody, tbody);
+        tbody = nextTbody;
       };
 
       const addMetricFromLibrary = ({ detail }) => {
