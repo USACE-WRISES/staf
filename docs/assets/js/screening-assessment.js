@@ -2268,7 +2268,12 @@
         }
         activeScenario.showAdvancedScoring = advancedToggle.checked;
         store.save();
-        renderTable();
+        updateScreeningToggleView({
+          refreshHeader: true,
+          refreshSummary: true,
+          refreshCriteriaColSpans: true,
+          refreshScores: true,
+        });
       });
 
       rollupToggle.addEventListener('change', () => {
@@ -2277,7 +2282,7 @@
         }
         activeScenario.showRollupComputations = rollupToggle.checked;
         store.save();
-        renderTable();
+        updateScreeningToggleView({ refreshRollupRows: true });
       });
 
       mappingToggle.addEventListener('change', () => {
@@ -2286,7 +2291,12 @@
         }
         activeScenario.showFunctionMappings = mappingToggle.checked;
         store.save();
-        renderTable();
+        updateScreeningToggleView({
+          refreshHeader: true,
+          refreshSummary: true,
+          refreshCriteriaColSpans: true,
+          refreshScores: true,
+        });
       });
 
       suggestedCueToggle.addEventListener('change', () => {
@@ -2295,7 +2305,7 @@
         }
         activeScenario.showSuggestedFunctionScoresCue = suggestedCueToggle.checked;
         store.save();
-        renderTable();
+        updateScreeningToggleView({ refreshScores: true });
       });
 
       sliderLabelsToggle.addEventListener('change', () => {
@@ -2304,7 +2314,7 @@
         }
         activeScenario.showFunctionScoreCueLabels = sliderLabelsToggle.checked;
         store.save();
-        renderTable();
+        updateScreeningToggleView();
       });
 
       const table = document.createElement('table');
@@ -2416,6 +2426,11 @@
         biological: [],
         ecosystem: null,
       };
+      let activeVisibleMetrics = [];
+      let activeIndexRows = [];
+      let activeEstimateRows = [];
+      let activeFunctionScoreControls = [];
+      let activeFunctionOrder = [];
 
       const renderHeader = (showMappings, showAdvanced) => {
         const useAbbrev = showMappings && showAdvanced;
@@ -2506,8 +2521,11 @@
 
         labelItems.forEach((item) => {
           const row = document.createElement('tr');
-          if (item.rollup && !getShowRollupComputations()) {
-            row.hidden = true;
+          if (item.rollup) {
+            row.dataset.rollupRow = 'true';
+            if (!getShowRollupComputations()) {
+              row.hidden = true;
+            }
           }
           const labelCell = document.createElement('td');
           labelCell.colSpan = labelSpan;
@@ -2537,6 +2555,20 @@
           }
           summaryTarget.appendChild(row);
         });
+      };
+
+      const getScreeningCriteriaDetailsColSpan = (
+        showAdvanced,
+        showCondensed,
+        showMappings
+      ) => {
+        const baseSpan = (showAdvanced ? 8 : 5) + (showCondensed ? 1 : 0);
+        return showMappings ? baseSpan : Math.max(1, baseSpan - 3);
+      };
+
+      const getScreeningBaseColumns = (showAdvanced, showCondensed, showMappings) => {
+        const baseColumns = 7 + (showAdvanced ? 3 : 0) + (showCondensed ? 1 : 0);
+        return showMappings ? baseColumns : Math.max(1, baseColumns - 3);
       };
 
       const getShowAdvancedScoring = () => Boolean(activeScenario?.showAdvancedScoring);
@@ -2575,6 +2607,433 @@
           sliderLabelsToggle.checked = getShowFunctionScoreCueLabels();
         }
       // Condensed view is always enabled.
+      };
+
+      const applyScreeningRollupRowsVisibility = () => {
+        const showRollup = getShowRollupComputations();
+        if (table) {
+          table
+            .querySelectorAll('tr[data-rollup-row="true"]')
+            .forEach((row) => {
+              row.hidden = !showRollup;
+            });
+        }
+        if (summaryTable) {
+          summaryTable
+            .querySelectorAll('tr[data-rollup-row="true"]')
+            .forEach((row) => {
+              row.hidden = !showRollup;
+            });
+        }
+      };
+
+      const updateScreeningCriteriaDetailsColSpans = (
+        showAdvanced,
+        showCondensed,
+        showMappings
+      ) => {
+        const detailsSpan = getScreeningCriteriaDetailsColSpan(
+          showAdvanced,
+          showCondensed,
+          showMappings
+        );
+        tbody.querySelectorAll('tr.criteria-row > td').forEach((cell) => {
+          cell.colSpan = detailsSpan;
+        });
+      };
+
+      const updateScreeningEmptyRowColSpan = (
+        showAdvanced,
+        showCondensed,
+        showMappings
+      ) => {
+        const emptyCell = tbody.querySelector('tr td.empty-cell');
+        if (!emptyCell) {
+          return;
+        }
+        emptyCell.colSpan = getScreeningBaseColumns(
+          showAdvanced,
+          showCondensed,
+          showMappings
+        );
+      };
+
+      const updateScreeningCriteriaControlMode = (showAdvanced) => {
+        tbody.querySelectorAll('td.col-scoring-criteria').forEach((cell) => {
+          const criteriaWrap = cell.querySelector('.criteria-override');
+          const criteriaSelect = criteriaWrap?.querySelector('select.criteria-select');
+          const defaultPill = cell.querySelector('.criteria-pill');
+          if (criteriaSelect) {
+            criteriaSelect.hidden = !showAdvanced;
+          }
+          if (criteriaWrap) {
+            criteriaWrap.hidden = !(showAdvanced && criteriaSelect);
+          }
+          if (defaultPill) {
+            defaultPill.hidden = Boolean(showAdvanced && criteriaSelect);
+          }
+        });
+      };
+
+      const syncScreeningViewState = () => {
+        const showAdvanced = getShowAdvancedScoring();
+        const showCondensed = getShowCondensedView();
+        const showMappings = getShowFunctionMappings();
+        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
+        const showSliderLabels = getShowFunctionScoreCueLabels();
+        renderDefaultCriteriaControls();
+        if (table) {
+          table.classList.toggle('show-advanced-scoring', showAdvanced);
+          table.classList.toggle('show-condensed-view', showCondensed);
+          table.classList.toggle('show-function-mappings', showMappings);
+          table.classList.toggle('show-suggested-function-cues', showSuggestedCue);
+          table.classList.toggle('show-function-score-cue-labels', showSliderLabels);
+        }
+        if (summaryTable) {
+          summaryTable.classList.toggle('show-advanced-scoring', showAdvanced);
+          summaryTable.classList.toggle('show-condensed-view', showCondensed);
+          summaryTable.classList.toggle('show-function-mappings', showMappings);
+          summaryTable.hidden = showMappings;
+        }
+        if (chartsShell) {
+          chartsShell.classList.toggle('show-suggested-function-cues', showSuggestedCue);
+          chartsShell.classList.toggle(
+            'show-function-score-cue-labels',
+            showSliderLabels
+          );
+        }
+        updateScreeningCriteriaControlMode(showAdvanced);
+        return {
+          showAdvanced,
+          showCondensed,
+          showMappings,
+          showSuggestedCue,
+          showSliderLabels,
+        };
+      };
+
+      const updateScreeningToggleView = ({
+        refreshHeader = false,
+        refreshSummary = false,
+        refreshCriteriaColSpans = false,
+        refreshRollupRows = false,
+        refreshScores = false,
+      } = {}) => {
+        const { showAdvanced, showCondensed, showMappings } = syncScreeningViewState();
+        if (refreshHeader) {
+          renderHeader(showMappings, showAdvanced);
+        }
+        if (refreshSummary) {
+          buildSummary(showAdvanced, showCondensed, showMappings);
+          refreshScores = true;
+        }
+        if (refreshCriteriaColSpans) {
+          updateScreeningCriteriaDetailsColSpans(
+            showAdvanced,
+            showCondensed,
+            showMappings
+          );
+          updateScreeningEmptyRowColSpan(showAdvanced, showCondensed, showMappings);
+        }
+        if (refreshRollupRows) {
+          applyScreeningRollupRowsVisibility();
+        }
+        if (refreshScores) {
+          updateScores(
+            activeIndexRows,
+            activeEstimateRows,
+            activeFunctionScoreControls,
+            activeFunctionOrder
+          );
+        }
+      };
+
+      const appendScreeningMappingCells = (row, mapping, rowSpan = 0) => {
+        const physicalCell = document.createElement('td');
+        const chemicalCell = document.createElement('td');
+        const biologicalCell = document.createElement('td');
+        physicalCell.className = 'weight-cell col-physical';
+        chemicalCell.className = 'weight-cell col-chemical';
+        biologicalCell.className = 'weight-cell col-biological';
+        physicalCell.textContent = weightLabelFromCode(mapping?.physical || '-');
+        chemicalCell.textContent = weightLabelFromCode(mapping?.chemical || '-');
+        biologicalCell.textContent = weightLabelFromCode(mapping?.biological || '-');
+        if (rowSpan > 1) {
+          physicalCell.rowSpan = rowSpan;
+          chemicalCell.rowSpan = rowSpan;
+          biologicalCell.rowSpan = rowSpan;
+        }
+        row.appendChild(physicalCell);
+        row.appendChild(chemicalCell);
+        row.appendChild(biologicalCell);
+      };
+
+      const buildScreeningCriteriaDetailsRow = (
+        rowItem,
+        showAdvanced,
+        showCondensed,
+        showMappings
+      ) => {
+        const detailsRow = document.createElement('tr');
+        detailsRow.classList.add(slugCategory(rowItem.discipline), 'criteria-row');
+        detailsRow.dataset.rowType = 'criteria';
+        detailsRow.dataset.discipline = rowItem.discipline || '';
+        detailsRow.dataset.functionId = rowItem.functionId || '';
+        const detailsMetric = rowItem.metric || null;
+        if (detailsMetric?.id) {
+          detailsRow.dataset.metricId = String(detailsMetric.id);
+          detailsRow.id = `screening-criteria-${detailsMetric.id}`;
+        }
+        const detailsCell = document.createElement('td');
+        detailsCell.colSpan = getScreeningCriteriaDetailsColSpan(
+          showAdvanced,
+          showCondensed,
+          showMappings
+        );
+        const details = document.createElement('div');
+        details.className = 'criteria-details';
+        if (!detailsMetric) {
+          detailsCell.textContent = 'Details unavailable.';
+          detailsRow.appendChild(detailsCell);
+          return detailsRow;
+        }
+        const curve = ensureCurve(activeScenario, detailsMetric.id);
+        const criteriaLayer = getCriteriaLayerForMetric(detailsMetric.id);
+        if (curve) {
+          const headerRow = document.createElement('div');
+          headerRow.className = 'criteria-summary-header';
+          const headerLabel = document.createElement('span');
+          headerLabel.textContent = 'Scoring Criteria';
+          headerRow.appendChild(headerLabel);
+          details.appendChild(headerRow);
+          details.appendChild(buildCurveSummaryTable(curve, criteriaLayer));
+        }
+        detailsCell.appendChild(details);
+        detailsRow.appendChild(detailsCell);
+        return detailsRow;
+      };
+
+      const syncScreeningFunctionScoreCellVisual = (cell, functionId) => {
+        if (!cell || !functionId) {
+          return;
+        }
+        const rawValue = Number(activeScenario?.functionScores?.[functionId]);
+        const scoreValue = Number.isFinite(rawValue)
+          ? Math.min(15, Math.max(0, rawValue))
+          : 0;
+        const scoreValueText = String(scoreValue);
+        const rangeInput = cell.querySelector('input[type="range"]');
+        if (rangeInput) {
+          if (rangeInput.value !== scoreValueText) {
+            rangeInput.value = scoreValueText;
+          }
+          if (rangeInput.getAttribute('value') !== scoreValueText) {
+            rangeInput.setAttribute('value', scoreValueText);
+          }
+          updateScreeningSliderVisual(rangeInput, scoreValue);
+        }
+        const valueEl = cell.querySelector('.score-value');
+        if (valueEl) {
+          valueEl.textContent = scoreValueText;
+        }
+      };
+
+      const updateScreeningMetricExpansionInPlace = (metricId, wasExpanded) => {
+        const showAdvanced = getShowAdvancedScoring();
+        const showCondensed = getShowCondensedView();
+        const showMappings = getShowFunctionMappings();
+        if (
+          !showCondensed ||
+          !Array.isArray(activeVisibleMetrics) ||
+          !activeVisibleMetrics.length
+        ) {
+          renderTable();
+          return;
+        }
+
+        const targetIndex = activeVisibleMetrics.findIndex(
+          (item) => item.metric?.id === metricId
+        );
+        if (targetIndex === -1) {
+          renderTable();
+          return;
+        }
+
+        const rowByMetricId = new Map();
+        tbody
+          .querySelectorAll('tr[data-row-type="metric"][data-metric-id]')
+          .forEach((row) => {
+            rowByMetricId.set(row.dataset.metricId, row);
+          });
+        if (!rowByMetricId.size) {
+          renderTable();
+          return;
+        }
+
+        const getFunctionKeyAt = (index) =>
+          activeVisibleMetrics[index].functionId ||
+          `metric-${activeVisibleMetrics[index].metric?.id || index}`;
+        const targetFunctionKey = getFunctionKeyAt(targetIndex);
+        let functionStart = targetIndex;
+        while (
+          functionStart > 0 &&
+          getFunctionKeyAt(functionStart - 1) === targetFunctionKey
+        ) {
+          functionStart -= 1;
+        }
+        let functionEnd = targetIndex + 1;
+        while (
+          functionEnd < activeVisibleMetrics.length &&
+          getFunctionKeyAt(functionEnd) === targetFunctionKey
+        ) {
+          functionEnd += 1;
+        }
+
+        const functionItems = activeVisibleMetrics.slice(functionStart, functionEnd);
+        const functionRows = functionItems.map((item) =>
+          rowByMetricId.get(String(item.metric?.id || ''))
+        );
+        if (functionRows.some((row) => !row)) {
+          renderTable();
+          return;
+        }
+
+        const expandedLocalIndices = [];
+        functionItems.forEach((item, localIndex) => {
+          if (expandedMetrics.has(item.metric.id)) {
+            expandedLocalIndices.push(localIndex);
+          }
+        });
+
+        const functionMetricCount = functionItems.length;
+        const functionExpandedCount = expandedLocalIndices.length;
+        const functionHasExpandedCriteria = functionExpandedCount > 0;
+        const functionSliderOwnerLocalIndex = functionHasExpandedCriteria
+          ? expandedLocalIndices[0]
+          : 0;
+
+        const functionCell = functionRows[0].querySelector('td.col-function');
+        if (functionCell) {
+          functionCell.rowSpan = functionMetricCount + functionExpandedCount;
+        }
+
+        const functionMetricIdSet = new Set(
+          functionItems.map((item) => String(item.metric.id))
+        );
+        tbody
+          .querySelectorAll('tr[data-row-type="criteria"][data-metric-id]')
+          .forEach((row) => {
+            if (functionMetricIdSet.has(row.dataset.metricId)) {
+              row.remove();
+            }
+          });
+
+        let functionScoreCell = null;
+        functionRows.forEach((row) => {
+          row.querySelectorAll('td.col-function-score').forEach((cell) => {
+            if (!functionScoreCell && cell.querySelector('.function-score-inline')) {
+              functionScoreCell = cell;
+              return;
+            }
+            cell.remove();
+          });
+        });
+
+        if (showCondensed) {
+          if (!functionScoreCell) {
+            renderTable();
+            return;
+          }
+          functionScoreCell.className = 'col-function-score function-score-cell';
+          functionScoreCell.rowSpan = functionHasExpandedCriteria ? 1 : functionMetricCount;
+          const ownerRow = functionRows[functionSliderOwnerLocalIndex];
+          if (ownerRow && functionScoreCell.parentElement !== ownerRow) {
+            ownerRow.appendChild(functionScoreCell);
+          }
+          const ownerFunctionId = ownerRow?.dataset?.functionId;
+          syncScreeningFunctionScoreCellVisual(functionScoreCell, ownerFunctionId);
+          functionRows.forEach((row, localIndex) => {
+            if (localIndex !== functionSliderOwnerLocalIndex && functionHasExpandedCriteria) {
+              const placeholderScoreCell = document.createElement('td');
+              placeholderScoreCell.className =
+                'col-function-score function-score-cell function-score-cell-empty';
+              row.appendChild(placeholderScoreCell);
+            }
+          });
+        }
+
+        functionRows.forEach((row) => {
+          row
+            .querySelectorAll('td.col-physical, td.col-chemical, td.col-biological')
+            .forEach((cell) => {
+              cell.remove();
+            });
+        });
+        const functionId = functionItems[0].functionId;
+        const mapping = mappingById[functionId] || {
+          physical: '-',
+          chemical: '-',
+          biological: '-',
+        };
+        const mergeMappingCells =
+          functionExpandedCount === 0 && functionMetricCount > 1;
+        functionRows.forEach((row, localIndex) => {
+          if (!mergeMappingCells || localIndex === 0) {
+            appendScreeningMappingCells(
+              row,
+              mapping,
+              mergeMappingCells ? functionMetricCount : 0
+            );
+          }
+        });
+
+        functionRows.forEach((row, localIndex) => {
+          const item = functionItems[localIndex];
+          const isExpanded = expandedMetrics.has(item.metric.id);
+          row.classList.toggle('metric-expanded', isExpanded);
+          const criteriaBtn = row.querySelector('.metric-title .criteria-toggle');
+          if (criteriaBtn) {
+            const detailsId = `screening-criteria-${item.metric.id}`;
+            criteriaBtn.innerHTML = isExpanded ? expandedGlyph : collapsedGlyph;
+            criteriaBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+            criteriaBtn.setAttribute('aria-controls', detailsId);
+          }
+          if (isExpanded) {
+            row.insertAdjacentElement(
+              'afterend',
+              buildScreeningCriteriaDetailsRow(
+                item,
+                showAdvanced,
+                showCondensed,
+                showMappings
+              )
+            );
+          }
+        });
+
+        const rowSpanDelta = wasExpanded ? -1 : 1;
+        const targetDiscipline = functionItems[0].discipline || '';
+        if (targetDiscipline && rowSpanDelta !== 0) {
+          const disciplineCell = Array.from(
+            tbody.querySelectorAll('td.col-discipline')
+          ).find((cell) => cell.parentElement?.dataset?.discipline === targetDiscipline);
+          if (disciplineCell) {
+            const currentSpan = Number(disciplineCell.rowSpan) || 1;
+            disciplineCell.rowSpan = Math.max(1, currentSpan + rowSpanDelta);
+          }
+        }
+
+        updateScreeningCriteriaDetailsColSpans(
+          showAdvanced,
+          showCondensed,
+          showMappings
+        );
+        updateScores(
+          activeIndexRows,
+          activeEstimateRows,
+          activeFunctionScoreControls,
+          activeFunctionOrder
+        );
       };
 
       const summaryColorForValue = (value) => {
@@ -2886,11 +3345,21 @@
               hasSuggestedRange: false,
               isOutsideSuggestedRange: false,
             };
-            rangeInput.min = '0';
-            rangeInput.max = '15';
-            rangeInput.value = String(meta.value);
+            if (rangeInput.min !== '0') {
+              rangeInput.min = '0';
+            }
+            if (rangeInput.max !== '15') {
+              rangeInput.max = '15';
+            }
+            const nextValue = String(meta.value);
+            if (rangeInput.value !== nextValue) {
+              rangeInput.value = nextValue;
+            }
+            if (rangeInput.getAttribute('value') !== nextValue) {
+              rangeInput.setAttribute('value', nextValue);
+            }
             if (valueEl) {
-              valueEl.textContent = String(meta.value);
+              valueEl.textContent = nextValue;
             }
             updateScreeningSliderVisual(rangeInput, meta.value);
             updateScreeningSuggestedBracket(
@@ -3015,27 +3484,9 @@
       const renderTable = () => {
         tbody.innerHTML = '';
         let ratingsDirty = false;
-        const showAdvanced = getShowAdvancedScoring();
-        const showCondensed = getShowCondensedView();
-        const showMappings = getShowFunctionMappings();
-        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
-        const showSliderLabels = getShowFunctionScoreCueLabels();
-        if (table) {
-          table.classList.toggle('show-advanced-scoring', showAdvanced);
-          table.classList.toggle('show-condensed-view', showCondensed);
-          table.classList.toggle('show-function-mappings', showMappings);
-          table.classList.toggle('show-suggested-function-cues', showSuggestedCue);
-          table.classList.toggle('show-function-score-cue-labels', showSliderLabels);
-        }
-        if (summaryTable) {
-          summaryTable.classList.toggle('show-advanced-scoring', showAdvanced);
-          summaryTable.classList.toggle('show-condensed-view', showCondensed);
-          summaryTable.classList.toggle('show-function-mappings', showMappings);
-          summaryTable.hidden = showMappings;
-        }
+        const { showAdvanced, showCondensed, showMappings } = syncScreeningViewState();
         renderHeader(showMappings, showAdvanced);
         buildSummary(showAdvanced, showCondensed, showMappings);
-        renderDefaultCriteriaControls();
 
         const term = search.value.trim().toLowerCase();
         const disciplineValue = disciplineFilter.value;
@@ -3196,6 +3647,7 @@
             discipline: rowItem.discipline,
           });
         });
+        activeVisibleMetrics = rowsToRender.filter((rowItem) => rowItem.type === 'metric');
 
         const renderRows = [];
         rowsToRender.forEach((rowItem) => {
@@ -3230,14 +3682,25 @@
         if (renderRows.length === 0) {
           const emptyRow = document.createElement('tr');
           const emptyCell = document.createElement('td');
-          const baseColumns = 7 + (showAdvanced ? 3 : 0) + (showCondensed ? 1 : 0);
-          const totalColumns = showMappings ? baseColumns : Math.max(1, baseColumns - 3);
-          emptyCell.colSpan = totalColumns;
+          emptyCell.colSpan = getScreeningBaseColumns(
+            showAdvanced,
+            showCondensed,
+            showMappings
+          );
           emptyCell.className = 'empty-cell';
           emptyCell.textContent = 'No metrics selected for this assessment.';
           emptyRow.appendChild(emptyCell);
           tbody.appendChild(emptyRow);
-          updateScores(indexRows, estimateRows, functionScoreControls, functionOrder);
+          activeIndexRows = indexRows;
+          activeEstimateRows = estimateRows;
+          activeFunctionScoreControls = functionScoreControls;
+          activeFunctionOrder = functionOrder;
+          updateScores(
+            activeIndexRows,
+            activeEstimateRows,
+            activeFunctionScoreControls,
+            activeFunctionOrder
+          );
           return;
         }
 
@@ -3341,6 +3804,9 @@
           row.dataset.discipline = rowItem.discipline;
           const rowFunctionId = rowItem.functionId || `row-${index}`;
           row.dataset.functionId = rowFunctionId;
+          if (rowItem.metric?.id) {
+            row.dataset.metricId = String(rowItem.metric.id);
+          }
           if (rowItem.type === 'placeholder') {
             row.classList.add('inactive-row');
           }
@@ -3447,34 +3913,14 @@
             row.appendChild(functionCell);
           }
           if (rowItem.type === 'criteria') {
-            const detailsCell = document.createElement('td');
-            const baseSpan = (showAdvanced ? 8 : 5) + (showCondensed ? 1 : 0);
-            detailsCell.colSpan = showMappings ? baseSpan : Math.max(1, baseSpan - 3);
-            const details = document.createElement('div');
-            details.className = 'criteria-details';
-            const detailsMetric = rowItem.metric || metric;
-            if (!detailsMetric) {
-              detailsCell.textContent = 'Details unavailable.';
-              row.appendChild(detailsCell);
-              tbody.appendChild(row);
-              return;
-            }
-            const curve = ensureCurve(activeScenario, detailsMetric.id);
-            const criteriaLayer = getCriteriaLayerForMetric(detailsMetric.id);
-            if (curve) {
-              const headerRow = document.createElement('div');
-              headerRow.className = 'criteria-summary-header';
-              const headerLabel = document.createElement('span');
-              headerLabel.textContent = 'Scoring Criteria';
-              headerRow.appendChild(headerLabel);
-              details.appendChild(headerRow);
-
-              const summaryTable = buildCurveSummaryTable(curve, criteriaLayer);
-              details.appendChild(summaryTable);
-            }
-            detailsCell.appendChild(details);
-            row.appendChild(detailsCell);
-            tbody.appendChild(row);
+            tbody.appendChild(
+              buildScreeningCriteriaDetailsRow(
+                rowItem,
+                showAdvanced,
+                showCondensed,
+                showMappings
+              )
+            );
             return;
           }
 
@@ -3524,11 +3970,13 @@
             criteriaBtn.type = 'button';
             criteriaBtn.className = 'criteria-toggle';
             const criteriaExpanded = expandedMetrics.has(metric.id);
+            const detailsId = `screening-criteria-${metric.id}`;
             criteriaBtn.innerHTML = criteriaExpanded ? expandedGlyph : collapsedGlyph;
             criteriaBtn.setAttribute(
               'aria-expanded',
               criteriaExpanded ? 'true' : 'false'
             );
+            criteriaBtn.setAttribute('aria-controls', detailsId);
             criteriaBtn.setAttribute('aria-label', 'Toggle criteria details');
             criteriaBtn.addEventListener('mousedown', (event) => {
               if (event.detail > 0) {
@@ -3591,7 +4039,7 @@
             const overrideId = overrides[metric.id];
             const curve = ensureCurve(activeScenario, metric.id);
             const criteriaLayer = getCriteriaLayerForMetric(metric.id);
-            const showAdvanced = getShowAdvancedScoring();
+            const showAdvancedMode = getShowAdvancedScoring();
             const overrideLayer =
               overrideId && curve ? curve.layers.find((layer) => layer.id === overrideId) : null;
             const isDefaultOverride =
@@ -3606,10 +4054,11 @@
                 store.save();
               }
             }
-            if (showAdvanced && curve) {
+            let criteriaSelect = null;
+            if (curve) {
               const criteriaWrap = document.createElement('div');
               criteriaWrap.className = 'criteria-override';
-              const criteriaSelect = document.createElement('select');
+              criteriaSelect = document.createElement('select');
               criteriaSelect.className = 'criteria-select';
               criteriaSelect.setAttribute('aria-label', 'Scoring criteria');
               const defaultOption = document.createElement('option');
@@ -3629,6 +4078,7 @@
                 criteriaSelect.appendChild(option);
               });
               criteriaSelect.value = overrideLayerExists ? overrideId : '';
+              criteriaSelect.hidden = !showAdvancedMode;
               criteriaSelect.addEventListener('change', () => {
                 if (!activeScenario) {
                   return;
@@ -3642,21 +4092,22 @@
                 store.save();
                 renderTable();
               });
+              criteriaWrap.hidden = !showAdvancedMode;
               criteriaWrap.appendChild(criteriaSelect);
               criteriaCell.appendChild(criteriaWrap);
-            } else {
-              const defaultPill = document.createElement('button');
-              defaultPill.type = 'button';
-              defaultPill.className = 'criteria-pill';
-              defaultPill.textContent = fallbackCriteriaName;
-              const defaultCriteriaName = resolveDefaultCriteriaName();
-              defaultPill.title = `Default criteria: ${defaultCriteriaName}`;
-              defaultPill.setAttribute(
-                'aria-label',
-                'Default scoring criteria. Toggle advanced settings to override.'
-              );
-              criteriaCell.appendChild(defaultPill);
             }
+            const defaultPill = document.createElement('button');
+            defaultPill.type = 'button';
+            defaultPill.className = 'criteria-pill';
+            defaultPill.textContent = fallbackCriteriaName;
+            const defaultCriteriaName = resolveDefaultCriteriaName();
+            defaultPill.title = `Default criteria: ${defaultCriteriaName}`;
+            defaultPill.setAttribute(
+              'aria-label',
+              'Default scoring criteria. Toggle advanced settings to override.'
+            );
+            defaultPill.hidden = Boolean(showAdvancedMode && criteriaSelect);
+            criteriaCell.appendChild(defaultPill);
             indexRows.push({ metricId: metric.id, indexCell });
             estimateRows.push({ metricId: metric.id, estimateCell });
           } else {
@@ -3719,6 +4170,7 @@
                 ? activeScenario.functionScores[rowFunctionId]
                 : 0;
               functionScoreRange.value = String(currentFunctionScore);
+              functionScoreRange.setAttribute('value', String(currentFunctionScore));
               updateScreeningSliderVisual(functionScoreRange, currentFunctionScore);
               sliderWrap.appendChild(cueLabels);
               sliderWrap.appendChild(cueBar);
@@ -3774,6 +4226,7 @@
                   activeScenario.functionScores[rowFunctionId] = nextValue;
                   store.save();
                 }
+                functionScoreRange.setAttribute('value', String(nextValue));
                 if (functionScoreValue) {
                   functionScoreValue.textContent = Number.isFinite(nextValue)
                     ? String(nextValue)
@@ -3810,34 +4263,20 @@
             }
             row.appendChild(functionScoreCell);
           }
-          if (showMappings && !rowItem._weightSkip && rowItem.type !== 'criteria') {
-            const physicalCell = document.createElement('td');
-            const chemicalCell = document.createElement('td');
-            const biologicalCell = document.createElement('td');
-            physicalCell.className = 'weight-cell col-physical';
-            chemicalCell.className = 'weight-cell col-chemical';
-            biologicalCell.className = 'weight-cell col-biological';
-            physicalCell.textContent = mapping ? weightLabelFromCode(mapping.physical) : '-';
-            chemicalCell.textContent = mapping ? weightLabelFromCode(mapping.chemical) : '-';
-            biologicalCell.textContent = mapping ? weightLabelFromCode(mapping.biological) : '-';
-            const weightSpan = rowItem._weightSpan || 1;
-            physicalCell.rowSpan = weightSpan;
-            chemicalCell.rowSpan = weightSpan;
-            biologicalCell.rowSpan = weightSpan;
-            row.appendChild(physicalCell);
-            row.appendChild(chemicalCell);
-            row.appendChild(biologicalCell);
+          if (!rowItem._weightSkip && rowItem.type !== 'criteria') {
+            appendScreeningMappingCells(row, mapping, rowItem._weightSpan || 1);
           }
 
           if (rowItem.type === 'metric') {
             criteriaBtn.addEventListener('click', (event) => {
               event.stopPropagation();
-              if (expandedMetrics.has(metric.id)) {
+              const wasExpanded = expandedMetrics.has(metric.id);
+              if (wasExpanded) {
                 expandedMetrics.delete(metric.id);
               } else {
                 expandedMetrics.add(metric.id);
               }
-              renderTable();
+              updateScreeningMetricExpansionInPlace(metric.id, wasExpanded);
               if (event.detail > 0) {
                 setTimeout(() => criteriaBtn.blur(), 0);
               }
@@ -3886,7 +4325,16 @@
           }
         });
 
-        updateScores(indexRows, estimateRows, functionScoreControls, functionOrder);
+        activeIndexRows = indexRows;
+        activeEstimateRows = estimateRows;
+        activeFunctionScoreControls = functionScoreControls;
+        activeFunctionOrder = functionOrder;
+        updateScores(
+          activeIndexRows,
+          activeEstimateRows,
+          activeFunctionScoreControls,
+          activeFunctionOrder
+        );
         if (ratingsDirty && activeScenario) {
           store.save();
         }
