@@ -2,7 +2,7 @@
 title: Quick Overview
 description: "A short overview of STAF."
 ---
-<p class="hero-kicker">Stream Tiered Assessment Framework2</p>
+<p class="hero-kicker">Stream Tiered Assessment Framework3</p>
 
 # Quick Overview
 
