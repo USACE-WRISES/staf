@@ -1370,6 +1370,10 @@
         biological: [],
         ecosystem: null,
       };
+      let activeVisibleMetrics = [];
+      let activeFunctionScores = new Map();
+      let activeFunctionScoreMeta = new Map();
+      let activeFunctionOrder = [];
 
       const renderHeader = (showMappings, showAdvanced) => {
         const useAbbrev = showMappings && showAdvanced;
@@ -1459,8 +1463,11 @@
 
         labelItems.forEach((item) => {
           const row = document.createElement('tr');
-          if (item.rollup && !getShowRollupComputations()) {
-            row.hidden = true;
+          if (item.rollup) {
+            row.dataset.rollupRow = 'true';
+            if (!getShowRollupComputations()) {
+              row.hidden = true;
+            }
           }
           const labelCell = document.createElement('td');
           labelCell.colSpan = labelSpan;
@@ -1491,6 +1498,12 @@
           summaryTarget.appendChild(row);
         });
       };
+
+      const getDetailedCriteriaDetailsColSpan = (showAdvanced, showMappings) =>
+        2 + (showAdvanced ? 3 : 0) + (showMappings ? 3 : 0) + 1;
+
+      const getDetailedBaseColumns = (showAdvanced, showMappings) =>
+        5 + (showAdvanced ? 3 : 0) + (showMappings ? 3 : 0);
 
       const expandedMetrics = new Set();
 
@@ -2208,6 +2221,363 @@
         }
       };
 
+      const applyDetailedRollupRowsVisibility = () => {
+        const showRollup = getShowRollupComputations();
+        if (table) {
+          table
+            .querySelectorAll('tr[data-rollup-row="true"]')
+            .forEach((row) => {
+              row.hidden = !showRollup;
+            });
+        }
+        if (summaryTable) {
+          summaryTable
+            .querySelectorAll('tr[data-rollup-row="true"]')
+            .forEach((row) => {
+              row.hidden = !showRollup;
+            });
+        }
+      };
+
+      const updateDetailedCriteriaDetailsColSpans = (showAdvanced, showMappings) => {
+        const detailsSpan = getDetailedCriteriaDetailsColSpan(showAdvanced, showMappings);
+        tbody.querySelectorAll('tr.criteria-row > td').forEach((cell) => {
+          cell.colSpan = detailsSpan;
+        });
+      };
+
+      const updateDetailedEmptyRowColSpan = (showAdvanced, showMappings) => {
+        const emptyCell = tbody.querySelector('tr.empty-row > td');
+        if (!emptyCell) {
+          return;
+        }
+        emptyCell.colSpan = getDetailedBaseColumns(showAdvanced, showMappings);
+      };
+
+      const updateDetailedFunctionScoreCueState = () => {
+        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
+        tbody.querySelectorAll('.function-score-suggested-bracket').forEach((bracket) => {
+          const hasSuggestedRange = bracket.dataset.hasSuggestedRange === 'true';
+          bracket.hidden = !hasSuggestedRange;
+        });
+        tbody.querySelectorAll('.function-score-cell .score-value').forEach((valueEl) => {
+          const isOutsideSuggestedRange =
+            valueEl.dataset.outsideSuggestedRange === 'true';
+          const showOutOfRangeCue = Boolean(
+            isOutsideSuggestedRange && showSuggestedCue
+          );
+          valueEl.classList.toggle('is-outside-suggested', showOutOfRangeCue);
+          if (showOutOfRangeCue) {
+            valueEl.title = 'Score is outside suggested range';
+          } else {
+            valueEl.removeAttribute('title');
+          }
+        });
+      };
+
+      const syncDetailedViewState = () => {
+        const showAdvanced = getShowAdvancedScoring();
+        const showMappings = getShowFunctionMappings();
+        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
+        const showSliderLabels = getShowFunctionScoreCueLabels();
+        table.classList.toggle('show-advanced-scoring', showAdvanced);
+        table.classList.toggle('show-function-mappings', showMappings);
+        table.classList.toggle('show-suggested-function-cues', showSuggestedCue);
+        table.classList.toggle('show-function-score-cue-labels', showSliderLabels);
+        summaryTable.classList.toggle('show-advanced-scoring', showAdvanced);
+        summaryTable.classList.toggle('show-function-mappings', showMappings);
+        summaryTable.hidden = showMappings;
+        chartsShell.classList.toggle('show-suggested-function-cues', showSuggestedCue);
+        chartsShell.classList.toggle('show-function-score-cue-labels', showSliderLabels);
+        renderViewOptionControls();
+        const abbrevLegend = chartsShell.querySelector('.detailed-legend-abbrev');
+        if (abbrevLegend) {
+          abbrevLegend.hidden = !showSliderLabels;
+        }
+        updateDetailedFunctionScoreCueState();
+        return { showAdvanced, showMappings, showSuggestedCue, showSliderLabels };
+      };
+
+      const updateDetailedToggleView = ({
+        refreshHeader = false,
+        refreshSummary = false,
+        refreshCriteriaColSpans = false,
+        refreshRollupRows = false,
+        refreshScoreCues = false,
+      } = {}) => {
+        const { showAdvanced, showMappings } = syncDetailedViewState();
+        if (refreshHeader) {
+          renderHeader(showMappings, showAdvanced);
+        }
+        if (refreshSummary) {
+          buildSummary(showAdvanced, showMappings);
+          tfoot.hidden = !showMappings;
+          const summaryValues = updateSummary(activeFunctionScores);
+          renderCharts(activeFunctionOrder, activeFunctionScores, summaryValues);
+          refreshRollupRows = true;
+        }
+        if (refreshCriteriaColSpans) {
+          updateDetailedCriteriaDetailsColSpans(showAdvanced, showMappings);
+          updateDetailedEmptyRowColSpan(showAdvanced, showMappings);
+        }
+        if (refreshRollupRows) {
+          applyDetailedRollupRowsVisibility();
+        }
+        if (refreshScoreCues) {
+          updateDetailedFunctionScoreCueState();
+        }
+      };
+
+      const appendDetailedMappingCells = (row, mapping) => {
+        const physicalCell = document.createElement('td');
+        const chemicalCell = document.createElement('td');
+        const biologicalCell = document.createElement('td');
+        physicalCell.className = 'weight-cell col-physical physical-cell';
+        chemicalCell.className = 'weight-cell col-chemical chemical-cell';
+        biologicalCell.className = 'weight-cell col-biological biological-cell';
+        physicalCell.textContent = mapping?.physical || '-';
+        chemicalCell.textContent = mapping?.chemical || '-';
+        biologicalCell.textContent = mapping?.biological || '-';
+        row.appendChild(physicalCell);
+        row.appendChild(chemicalCell);
+        row.appendChild(biologicalCell);
+      };
+
+      const syncDetailedFunctionScoreCellVisual = (cell, functionId) => {
+        if (!cell || !functionId) {
+          return;
+        }
+        const scoreMeta = activeFunctionScoreMeta.get(functionId) || {
+          value: activeFunctionScores.get(functionId) || 0,
+          minLimit: 0,
+          maxLimit: 15,
+          hasSuggestedRange: false,
+          isOutsideSuggestedRange: false,
+        };
+        const nextValue = String(scoreMeta.value);
+        const rangeInput = cell.querySelector('input[type="range"]');
+        if (rangeInput) {
+          if (rangeInput.value !== nextValue) {
+            rangeInput.value = nextValue;
+          }
+          if (rangeInput.getAttribute('value') !== nextValue) {
+            rangeInput.setAttribute('value', nextValue);
+          }
+          updateDetailedFunctionScoreVisual(rangeInput, scoreMeta.value);
+        }
+        const valueEl = cell.querySelector('.score-value');
+        if (valueEl) {
+          valueEl.textContent = nextValue;
+          valueEl.dataset.outsideSuggestedRange = scoreMeta.isOutsideSuggestedRange
+            ? 'true'
+            : 'false';
+        }
+        const suggestedBracket = cell.querySelector('.function-score-suggested-bracket');
+        if (suggestedBracket) {
+          suggestedBracket.dataset.hasSuggestedRange = scoreMeta.hasSuggestedRange
+            ? 'true'
+            : 'false';
+          updateDetailedSuggestedBracket(
+            suggestedBracket,
+            scoreMeta.minLimit,
+            scoreMeta.maxLimit,
+            scoreMeta.hasSuggestedRange
+          );
+        }
+        updateDetailedFunctionScoreCueState();
+      };
+
+      const buildDetailedCriteriaDetailsRow = (
+        rowItem,
+        showAdvanced,
+        showMappings
+      ) => {
+        const tr = document.createElement('tr');
+        tr.classList.add(slugCategory(rowItem.discipline), 'criteria-row');
+        tr.dataset.rowType = 'details';
+        tr.dataset.discipline = rowItem.discipline || '';
+        tr.dataset.functionId = rowItem.functionId || '';
+        if (rowItem.metric?.id) {
+          tr.dataset.metricId = String(rowItem.metric.id);
+          tr.id = `detailed-criteria-${rowItem.metric.id}`;
+        }
+        const detailsCell = document.createElement('td');
+        detailsCell.colSpan = getDetailedCriteriaDetailsColSpan(
+          showAdvanced,
+          showMappings
+        );
+        const details = document.createElement('div');
+        details.className = 'criteria-details';
+        const headerRow = document.createElement('div');
+        headerRow.className = 'criteria-summary-header';
+        const headerLabel = document.createElement('span');
+        headerLabel.textContent = 'Scoring Criteria';
+        headerRow.appendChild(headerLabel);
+        details.appendChild(headerRow);
+        const scenario = getActiveScenario();
+        if (scenario && rowItem.metric?.id) {
+          const curve = ensureCurve(scenario, rowItem.metric.id);
+          details.appendChild(buildDetailedCurveSummaryTable(curve));
+        }
+        detailsCell.appendChild(details);
+        tr.appendChild(detailsCell);
+        return tr;
+      };
+
+      const updateDetailedMetricExpansionInPlace = (metricId, wasExpanded) => {
+        const scenario = getActiveScenario();
+        if (
+          !scenario ||
+          !Array.isArray(activeVisibleMetrics) ||
+          !activeVisibleMetrics.length
+        ) {
+          renderTable();
+          return;
+        }
+        const showAdvanced = getShowAdvancedScoring();
+        const showMappings = getShowFunctionMappings();
+
+        const targetIndex = activeVisibleMetrics.findIndex(
+          (item) => item.metric?.id === metricId
+        );
+        if (targetIndex === -1) {
+          renderTable();
+          return;
+        }
+
+        const rowByMetricId = new Map();
+        tbody
+          .querySelectorAll('tr[data-row-type="metric"][data-metric-id]')
+          .forEach((row) => {
+            rowByMetricId.set(row.dataset.metricId, row);
+          });
+        if (!rowByMetricId.size) {
+          renderTable();
+          return;
+        }
+
+        const getFunctionKeyAt = (index) =>
+          activeVisibleMetrics[index].functionId ||
+          `metric-${activeVisibleMetrics[index].metric?.id || index}`;
+        const targetFunctionKey = getFunctionKeyAt(targetIndex);
+        let functionStart = targetIndex;
+        while (
+          functionStart > 0 &&
+          getFunctionKeyAt(functionStart - 1) === targetFunctionKey
+        ) {
+          functionStart -= 1;
+        }
+        let functionEnd = targetIndex + 1;
+        while (
+          functionEnd < activeVisibleMetrics.length &&
+          getFunctionKeyAt(functionEnd) === targetFunctionKey
+        ) {
+          functionEnd += 1;
+        }
+
+        const functionItems = activeVisibleMetrics.slice(functionStart, functionEnd);
+        const functionRows = functionItems.map((item) =>
+          rowByMetricId.get(String(item.metric?.id || ''))
+        );
+        if (functionRows.some((row) => !row)) {
+          renderTable();
+          return;
+        }
+
+        const expandedLocalIndices = [];
+        functionItems.forEach((item, localIndex) => {
+          if (expandedMetrics.has(item.metric.id)) {
+            expandedLocalIndices.push(localIndex);
+          }
+        });
+        const functionMetricCount = functionItems.length;
+        const functionExpandedCount = expandedLocalIndices.length;
+        const functionHasExpandedCriteria = functionExpandedCount > 0;
+        const functionSliderOwnerLocalIndex = functionHasExpandedCriteria
+          ? expandedLocalIndices[0]
+          : 0;
+
+        const functionCell = functionRows[0].querySelector('td.col-function');
+        if (functionCell) {
+          functionCell.rowSpan = functionMetricCount + functionExpandedCount;
+        }
+
+        const functionMetricIdSet = new Set(
+          functionItems.map((item) => String(item.metric.id))
+        );
+        tbody
+          .querySelectorAll('tr[data-row-type="details"][data-metric-id]')
+          .forEach((row) => {
+            if (functionMetricIdSet.has(row.dataset.metricId)) {
+              row.remove();
+            }
+          });
+
+        let functionScoreCell = null;
+        functionRows.forEach((row) => {
+          row.querySelectorAll('td.col-function-score').forEach((cell) => {
+            if (!functionScoreCell && cell.querySelector('.function-score-inline')) {
+              functionScoreCell = cell;
+              return;
+            }
+            cell.remove();
+          });
+        });
+        if (!functionScoreCell) {
+          renderTable();
+          return;
+        }
+
+        functionScoreCell.className = 'col-function-score function-score-cell';
+        functionScoreCell.rowSpan = functionHasExpandedCriteria ? 1 : functionMetricCount;
+        const ownerRow = functionRows[functionSliderOwnerLocalIndex];
+        if (ownerRow && functionScoreCell.parentElement !== ownerRow) {
+          ownerRow.appendChild(functionScoreCell);
+        }
+        syncDetailedFunctionScoreCellVisual(functionScoreCell, functionItems[0].functionId);
+        functionRows.forEach((row, localIndex) => {
+          if (localIndex !== functionSliderOwnerLocalIndex && functionHasExpandedCriteria) {
+            const placeholderScoreCell = document.createElement('td');
+            placeholderScoreCell.className =
+              'col-function-score function-score-cell function-score-cell-empty';
+            row.appendChild(placeholderScoreCell);
+          }
+        });
+
+        functionRows.forEach((row, localIndex) => {
+          const item = functionItems[localIndex];
+          const isExpanded = expandedMetrics.has(item.metric.id);
+          row.classList.toggle('metric-expanded', isExpanded);
+          const toggleBtn = row.querySelector('.metric-title .criteria-toggle');
+          if (toggleBtn) {
+            const detailsId = `detailed-criteria-${item.metric.id}`;
+            toggleBtn.innerHTML = isExpanded ? expandedGlyph : collapsedGlyph;
+            toggleBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+            toggleBtn.setAttribute('aria-controls', detailsId);
+          }
+          if (isExpanded) {
+            row.insertAdjacentElement(
+              'afterend',
+              buildDetailedCriteriaDetailsRow(item, showAdvanced, showMappings)
+            );
+          }
+        });
+
+        const rowSpanDelta = wasExpanded ? -1 : 1;
+        const targetDiscipline = functionItems[0].discipline || '';
+        if (targetDiscipline && rowSpanDelta !== 0) {
+          const disciplineCell = Array.from(
+            tbody.querySelectorAll('td.col-discipline')
+          ).find((cell) => cell.parentElement?.dataset?.discipline === targetDiscipline);
+          if (disciplineCell) {
+            const currentSpan = Number(disciplineCell.rowSpan) || 1;
+            disciplineCell.rowSpan = Math.max(1, currentSpan + rowSpanDelta);
+          }
+        }
+
+        updateDetailedCriteriaDetailsColSpans(showAdvanced, showMappings);
+      };
+
       const formatCurveNumber = (value, places = 6) => {
         const parsed = parseScore(value);
         if (parsed === null) {
@@ -2352,25 +2722,8 @@
         tbody.innerHTML = '';
         const scenario = getActiveScenario();
         ensureScenarioViewOptions(scenario);
-        const showAdvanced = getShowAdvancedScoring();
-        const showMappings = getShowFunctionMappings();
-        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
-        const showSliderLabels = getShowFunctionScoreCueLabels();
-        table.classList.toggle('show-advanced-scoring', showAdvanced);
-        table.classList.toggle('show-function-mappings', showMappings);
-        table.classList.toggle('show-suggested-function-cues', showSuggestedCue);
-        table.classList.toggle('show-function-score-cue-labels', showSliderLabels);
-        summaryTable.classList.toggle('show-advanced-scoring', showAdvanced);
-        summaryTable.classList.toggle('show-function-mappings', showMappings);
-        summaryTable.hidden = showMappings;
-        chartsShell.classList.toggle('show-suggested-function-cues', showSuggestedCue);
-        chartsShell.classList.toggle('show-function-score-cue-labels', showSliderLabels);
+        const { showAdvanced, showMappings } = syncDetailedViewState();
         renderHeader(showMappings, showAdvanced);
-        renderViewOptionControls();
-        const abbrevLegend = chartsShell.querySelector('.detailed-legend-abbrev');
-        if (abbrevLegend) {
-          abbrevLegend.hidden = !showSliderLabels;
-        }
         if (!scenario) {
           tfoot.innerHTML = '';
           summaryHead.innerHTML = '';
@@ -2399,10 +2752,14 @@
           const emptyRow = document.createElement('tr');
           emptyRow.className = 'empty-row';
           const emptyCell = document.createElement('td');
-          emptyCell.colSpan = 5 + (showAdvanced ? 3 : 0) + (showMappings ? 3 : 0);
+          emptyCell.colSpan = getDetailedBaseColumns(showAdvanced, showMappings);
           emptyCell.textContent = 'No detailed assessments yet. Click + to add one.';
           emptyRow.appendChild(emptyCell);
           tbody.appendChild(emptyRow);
+          activeVisibleMetrics = [];
+          activeFunctionScores = new Map();
+          activeFunctionScoreMeta = new Map();
+          activeFunctionOrder = [];
           return;
         }
         if (search) {
@@ -2489,6 +2846,7 @@
             });
           }
         });
+        activeVisibleMetrics = renderRows.filter((row) => row.type === 'metric');
 
         const functionScores = new Map();
         const functionScoreMeta = new Map();
@@ -2656,12 +3014,16 @@
           range.max = '15';
           range.step = '1';
           range.value = String(scoreMeta.value);
+          range.setAttribute('value', String(scoreMeta.value));
           range.disabled = true;
           updateDetailedFunctionScoreVisual(range, scoreMeta.value);
 
           const valueLabel = document.createElement('span');
           valueLabel.className = 'score-value';
           valueLabel.textContent = String(scoreMeta.value);
+          valueLabel.dataset.outsideSuggestedRange = scoreMeta.isOutsideSuggestedRange
+            ? 'true'
+            : 'false';
 
           updateDetailedSuggestedBracket(
             suggestedBracket,
@@ -2669,16 +3031,10 @@
             scoreMeta.maxLimit,
             scoreMeta.hasSuggestedRange
           );
-          const showOutOfRangeCue = Boolean(
-            scoreMeta.isOutsideSuggestedRange && showSuggestedCue
-          );
-          valueLabel.classList.toggle('is-outside-suggested', showOutOfRangeCue);
-          if (showOutOfRangeCue) {
-            valueLabel.title = 'Score is outside suggested range';
-          } else {
-            valueLabel.removeAttribute('title');
-          }
-          suggestedBracket.hidden = !showSuggestedCue || !scoreMeta.hasSuggestedRange;
+          suggestedBracket.dataset.hasSuggestedRange = scoreMeta.hasSuggestedRange
+            ? 'true'
+            : 'false';
+          suggestedBracket.hidden = !scoreMeta.hasSuggestedRange;
 
           sliderWrap.appendChild(cueLabels);
           sliderWrap.appendChild(cueBar);
@@ -2693,8 +3049,17 @@
         renderRows.forEach((row, rowIndex) => {
           const tr = document.createElement('tr');
           tr.classList.add(slugCategory(row.discipline));
+          tr.dataset.rowType = row.type;
+          tr.dataset.discipline = row.discipline || '';
+          tr.dataset.functionId = row.functionId || '';
+          if (row.metric?.id) {
+            tr.dataset.metricId = String(row.metric.id);
+          }
           if (row.type === 'placeholder') {
             tr.classList.add('is-empty');
+          }
+          if (row.type === 'metric' && row.metric && expandedMetrics.has(row.metric.id)) {
+            tr.classList.add('metric-expanded');
           }
           const functionMeta = row._functionMeta || {
             startIndex: rowIndex,
@@ -2778,27 +3143,10 @@
           }
 
           if (row.type === 'details') {
-            tr.classList.add('criteria-row');
-            tr.id = `detailed-criteria-${row.metric.id}`;
-            const detailsCell = document.createElement('td');
-            detailsCell.colSpan =
-              2 +
-              (showAdvanced ? 3 : 0) +
-              (showMappings ? 3 : 0) +
-              (functionHasExpandedCriteria ? 1 : 0);
-            const details = document.createElement('div');
-            details.className = 'criteria-details';
-            const headerRow = document.createElement('div');
-            headerRow.className = 'criteria-summary-header';
-            const headerLabel = document.createElement('span');
-            headerLabel.textContent = 'Scoring Criteria';
-            headerRow.appendChild(headerLabel);
-            details.appendChild(headerRow);
-            const curve = ensureCurve(scenario, row.metric.id);
-            details.appendChild(buildDetailedCurveSummaryTable(curve));
-
-            detailsCell.appendChild(details);
-            tr.appendChild(detailsCell);
+            tbody.appendChild(
+              buildDetailedCriteriaDetailsRow(row, showAdvanced, showMappings)
+            );
+            return;
           } else {
             const metricCell = document.createElement('td');
             metricCell.className = 'col-metric';
@@ -2842,12 +3190,13 @@
               });
               toggleBtn.addEventListener('click', (event) => {
                 event.stopPropagation();
-                if (expandedMetrics.has(row.metric.id)) {
+                const wasExpanded = expandedMetrics.has(row.metric.id);
+                if (wasExpanded) {
                   expandedMetrics.delete(row.metric.id);
                 } else {
                   expandedMetrics.add(row.metric.id);
                 }
-                renderTable();
+                updateDetailedMetricExpansionInPlace(row.metric.id, wasExpanded);
                 if (event.detail > 0) {
                   setTimeout(() => toggleBtn.blur(), 0);
                 }
@@ -2952,33 +3301,24 @@
               tr.appendChild(placeholderScoreCell);
             }
 
-            if (showMappings) {
-              const mapping =
-                mappingById[row.functionId] || {
-                  physical: '-',
-                  chemical: '-',
-                  biological: '-',
-                };
-              const physicalCell = document.createElement('td');
-              const chemicalCell = document.createElement('td');
-              const biologicalCell = document.createElement('td');
-              physicalCell.className = 'weight-cell col-physical physical-cell';
-              chemicalCell.className = 'weight-cell col-chemical chemical-cell';
-              biologicalCell.className = 'weight-cell col-biological biological-cell';
-              physicalCell.textContent = mapping.physical || '-';
-              chemicalCell.textContent = mapping.chemical || '-';
-              biologicalCell.textContent = mapping.biological || '-';
-              tr.appendChild(physicalCell);
-              tr.appendChild(chemicalCell);
-              tr.appendChild(biologicalCell);
-            }
+            const mapping =
+              mappingById[row.functionId] || {
+                physical: '-',
+                chemical: '-',
+                biological: '-',
+              };
+            appendDetailedMappingCells(tr, mapping);
           }
 
           tbody.appendChild(tr);
         });
 
+        activeFunctionScores = functionScores;
+        activeFunctionScoreMeta = functionScoreMeta;
+        activeFunctionOrder = functionOrder;
         const summaryValues = updateSummary(functionScores);
         renderCharts(functionOrder, functionScores, summaryValues);
+        updateDetailedFunctionScoreCueState();
       };
 
       advancedToggle.addEventListener('change', () => {
@@ -2987,7 +3327,12 @@
           return;
         }
         scenario.showAdvancedScoring = advancedToggle.checked;
-        renderTable();
+        updateDetailedToggleView({
+          refreshHeader: true,
+          refreshSummary: true,
+          refreshCriteriaColSpans: true,
+          refreshScoreCues: true,
+        });
       });
       mappingToggle.addEventListener('change', () => {
         const scenario = getActiveScenario();
@@ -2995,7 +3340,12 @@
           return;
         }
         scenario.showFunctionMappings = mappingToggle.checked;
-        renderTable();
+        updateDetailedToggleView({
+          refreshHeader: true,
+          refreshSummary: true,
+          refreshCriteriaColSpans: true,
+          refreshScoreCues: true,
+        });
       });
       rollupToggle.addEventListener('change', () => {
         const scenario = getActiveScenario();
@@ -3003,7 +3353,7 @@
           return;
         }
         scenario.showRollupComputations = rollupToggle.checked;
-        renderTable();
+        updateDetailedToggleView({ refreshRollupRows: true });
       });
       suggestedCueToggle.addEventListener('change', () => {
         const scenario = getActiveScenario();
@@ -3011,7 +3361,7 @@
           return;
         }
         scenario.showSuggestedFunctionScoresCue = suggestedCueToggle.checked;
-        renderTable();
+        updateDetailedToggleView({ refreshScoreCues: true });
       });
       sliderLabelsToggle.addEventListener('change', () => {
         const scenario = getActiveScenario();
@@ -3019,7 +3369,7 @@
           return;
         }
         scenario.showFunctionScoreCueLabels = sliderLabelsToggle.checked;
-        renderTable();
+        updateDetailedToggleView();
       });
       search.addEventListener('input', renderTable);
       disciplineFilter.addEventListener('change', renderTable);
@@ -3139,4 +3489,3 @@
 
   init();
 })();
-
