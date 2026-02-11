@@ -778,6 +778,100 @@
           '</tr>';
       };
 
+      const getCriteriaDetailsColSpan = (
+        showAdvanced,
+        showCondensed,
+        showMappings
+      ) => {
+        const baseSpan = (showAdvanced ? 8 : 5) + (showCondensed ? 1 : 0);
+        return showMappings ? baseSpan : Math.max(1, baseSpan - 3);
+      };
+
+      const applyRollupRowsVisibility = () => {
+        const showRollup = getShowRollupComputations();
+        if (table) {
+          table
+            .querySelectorAll('tr[data-rollup-row="true"]')
+            .forEach((row) => {
+              row.hidden = !showRollup;
+            });
+        }
+        if (summaryTable) {
+          summaryTable
+            .querySelectorAll('tr[data-rollup-row="true"]')
+            .forEach((row) => {
+              row.hidden = !showRollup;
+            });
+        }
+      };
+
+      const updateCriteriaDetailsColSpans = (
+        showAdvanced,
+        showCondensed,
+        showMappings
+      ) => {
+        const detailsSpan = getCriteriaDetailsColSpan(
+          showAdvanced,
+          showCondensed,
+          showMappings
+        );
+        tbody.querySelectorAll('tr.criteria-row > td').forEach((cell) => {
+          cell.colSpan = detailsSpan;
+        });
+      };
+
+      const syncRapidViewState = () => {
+        const showAdvanced = getShowAdvancedScoring();
+        const showCondensed = getShowCondensedView();
+        const showMappings = getShowFunctionMappings();
+        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
+        const showSliderLabels = getShowFunctionScoreCueLabels();
+        advancedToggle.checked = showAdvanced;
+        mappingToggle.checked = showMappings;
+        rollupToggle.checked = getShowRollupComputations();
+        suggestedCueToggle.checked = showSuggestedCue;
+        sliderLabelsToggle.checked = showSliderLabels;
+        if (table) {
+          table.classList.toggle('show-advanced-scoring', showAdvanced);
+          table.classList.toggle('show-condensed-view', showCondensed);
+          table.classList.toggle('show-function-mappings', showMappings);
+          table.classList.toggle('show-suggested-function-cues', showSuggestedCue);
+          table.classList.toggle('show-function-score-cue-labels', showSliderLabels);
+        }
+        if (summaryTable) {
+          summaryTable.classList.toggle('show-advanced-scoring', showAdvanced);
+          summaryTable.classList.toggle('show-condensed-view', showCondensed);
+          summaryTable.classList.toggle('show-function-mappings', showMappings);
+          summaryTable.hidden = showMappings;
+        }
+        return { showAdvanced, showCondensed, showMappings };
+      };
+
+      const updateRapidToggleView = ({
+        refreshHeader = false,
+        refreshSummary = false,
+        refreshCriteriaColSpans = false,
+        refreshRollupRows = false,
+        refreshScores = false,
+      } = {}) => {
+        const { showAdvanced, showCondensed, showMappings } = syncRapidViewState();
+        if (refreshHeader) {
+          renderHeader(showMappings, showAdvanced);
+        }
+        if (refreshSummary) {
+          buildSummary(showAdvanced, showCondensed, showMappings);
+        }
+        if (refreshCriteriaColSpans) {
+          updateCriteriaDetailsColSpans(showAdvanced, showCondensed, showMappings);
+        }
+        if (refreshRollupRows) {
+          applyRollupRowsVisibility();
+        }
+        if (refreshScores) {
+          updateScores();
+        }
+      };
+
       const buildSummary = (showAdvanced, showCondensed, showMappings) => {
         const labelItems = [
           { label: 'Direct Effect', rollup: true },
@@ -839,8 +933,11 @@
 
         labelItems.forEach((item) => {
           const row = document.createElement('tr');
-          if (item.rollup && !getShowRollupComputations()) {
-            row.hidden = true;
+          if (item.rollup) {
+            row.dataset.rollupRow = 'true';
+            if (!getShowRollupComputations()) {
+              row.hidden = true;
+            }
           }
           const labelCell = document.createElement('td');
           labelCell.colSpan = labelSpan;
@@ -874,23 +971,33 @@
 
       advancedToggle.addEventListener('change', () => {
         viewOptions.showAdvancedScoring = advancedToggle.checked;
-        renderTable();
+        updateRapidToggleView({
+          refreshHeader: true,
+          refreshSummary: true,
+          refreshCriteriaColSpans: true,
+          refreshScores: true,
+        });
       });
       mappingToggle.addEventListener('change', () => {
         viewOptions.showFunctionMappings = mappingToggle.checked;
-        renderTable();
+        updateRapidToggleView({
+          refreshHeader: true,
+          refreshSummary: true,
+          refreshCriteriaColSpans: true,
+          refreshScores: true,
+        });
       });
       rollupToggle.addEventListener('change', () => {
         viewOptions.showRollupComputations = rollupToggle.checked;
-        renderTable();
+        updateRapidToggleView({ refreshRollupRows: true });
       });
       suggestedCueToggle.addEventListener('change', () => {
         viewOptions.showSuggestedFunctionScoresCue = suggestedCueToggle.checked;
-        renderTable();
+        updateRapidToggleView({ refreshScores: true });
       });
       sliderLabelsToggle.addEventListener('change', () => {
         viewOptions.showFunctionScoreCueLabels = sliderLabelsToggle.checked;
-        renderTable();
+        updateRapidToggleView();
       });
 
       const updateScores = () => {
@@ -1185,29 +1292,7 @@
 
       const renderTable = () => {
         tbody.innerHTML = '';
-        const showAdvanced = getShowAdvancedScoring();
-        const showCondensed = getShowCondensedView();
-        const showMappings = getShowFunctionMappings();
-        const showSuggestedCue = getShowSuggestedFunctionScoresCue();
-        const showSliderLabels = getShowFunctionScoreCueLabels();
-        advancedToggle.checked = showAdvanced;
-        mappingToggle.checked = showMappings;
-        rollupToggle.checked = getShowRollupComputations();
-        suggestedCueToggle.checked = showSuggestedCue;
-        sliderLabelsToggle.checked = showSliderLabels;
-        if (table) {
-          table.classList.toggle('show-advanced-scoring', showAdvanced);
-          table.classList.toggle('show-condensed-view', showCondensed);
-          table.classList.toggle('show-function-mappings', showMappings);
-          table.classList.toggle('show-suggested-function-cues', showSuggestedCue);
-          table.classList.toggle('show-function-score-cue-labels', showSliderLabels);
-        }
-        if (summaryTable) {
-          summaryTable.classList.toggle('show-advanced-scoring', showAdvanced);
-          summaryTable.classList.toggle('show-condensed-view', showCondensed);
-          summaryTable.classList.toggle('show-function-mappings', showMappings);
-          summaryTable.hidden = showMappings;
-        }
+        const { showAdvanced, showCondensed, showMappings } = syncRapidViewState();
         renderHeader(showMappings, showAdvanced);
         buildSummary(showAdvanced, showCondensed, showMappings);
 
@@ -1368,7 +1453,7 @@
           );
           const functionTotalSpan = rowFunctionMeta.totalSpan || functionMetricCount;
           const mergeMappingCells =
-            showMappings && functionExpandedCount === 0 && functionMetricCount > 1;
+            functionExpandedCount === 0 && functionMetricCount > 1;
           const isMappingOwner = rowFunctionMeta.startIndex === index;
           const functionSliderOwnerIndex = functionHasExpandedCriteria
             ? rowFunctionMeta.firstExpandedIndex
@@ -1653,7 +1738,7 @@
               chemical: '-',
               biological: '-',
             };
-          if (showMappings && (!mergeMappingCells || isMappingOwner)) {
+          if (!mergeMappingCells || isMappingOwner) {
             const physicalCell = document.createElement('td');
             const chemicalCell = document.createElement('td');
             const biologicalCell = document.createElement('td');
@@ -1695,8 +1780,11 @@
             detailsRow.dataset.functionId = item.functionKey;
             detailsRow.classList.add(slugCategory(item.discipline));
             const detailsCell = document.createElement('td');
-            const baseSpan = (showAdvanced ? 8 : 5) + (showCondensed ? 1 : 0);
-            detailsCell.colSpan = showMappings ? baseSpan : Math.max(1, baseSpan - 3);
+            detailsCell.colSpan = getCriteriaDetailsColSpan(
+              showAdvanced,
+              showCondensed,
+              showMappings
+            );
             const details = document.createElement('div');
             details.className = 'criteria-details';
             const criteriaSet = criteriaMap[item.criteriaKey] || {};
