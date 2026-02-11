@@ -2818,6 +2818,15 @@ body.modal-open {
   display: none;
 }
 
+.rapid-table:not(.show-function-mappings) th.col-physical,
+.rapid-table:not(.show-function-mappings) td.col-physical,
+.rapid-table:not(.show-function-mappings) th.col-chemical,
+.rapid-table:not(.show-function-mappings) td.col-chemical,
+.rapid-table:not(.show-function-mappings) th.col-biological,
+.rapid-table:not(.show-function-mappings) td.col-biological {
+  display: none;
+}
+
 .screening-table th.col-physical,
 .screening-table th.col-chemical,
 .screening-table th.col-biological {
