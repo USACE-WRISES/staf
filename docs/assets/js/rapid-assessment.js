@@ -647,6 +647,34 @@
         bracketEl.hidden = false;
       };
 
+      const syncRapidFunctionScoreCellVisual = (cell, functionName) => {
+        if (!cell || !functionName) {
+          return;
+        }
+        const rawValue = functionScores.get(functionName);
+        const scoreValue = Number.isFinite(rawValue)
+          ? Math.min(15, Math.max(0, rawValue))
+          : defaultFunctionScore;
+        if (scoreValue !== rawValue) {
+          functionScores.set(functionName, scoreValue);
+        }
+        const scoreValueText = String(scoreValue);
+        const rangeInput = cell.querySelector('input[type="range"]');
+        if (rangeInput) {
+          if (rangeInput.value !== scoreValueText) {
+            rangeInput.value = scoreValueText;
+          }
+          if (rangeInput.getAttribute('value') !== scoreValueText) {
+            rangeInput.setAttribute('value', scoreValueText);
+          }
+          updateRapidFunctionScoreVisual(rangeInput, scoreValue);
+        }
+        const valueEl = cell.querySelector('.score-value');
+        if (valueEl) {
+          valueEl.textContent = scoreValueText;
+        }
+      };
+
       const summaryColorForValue = (value) => {
         if (value <= 0.39) {
           return '#f5b5b5';
@@ -1111,6 +1139,9 @@
               if (rangeInput.value !== nextValue) {
                 rangeInput.value = nextValue;
               }
+              if (rangeInput.getAttribute('value') !== nextValue) {
+                rangeInput.setAttribute('value', nextValue);
+              }
               updateRapidFunctionScoreVisual(rangeInput, meta.value);
               updateRapidSuggestedBracket(
                 suggestedBracketEl,
@@ -1454,12 +1485,20 @@
             renderTable({ rebuildHeader: false, rebuildSummary: false });
             return;
           }
+          syncRapidFunctionScoreCellVisual(
+            functionScoreCell,
+            functionItems[0].functionName
+          );
           functionScoreCell.className = 'col-function-score function-score-cell';
           functionScoreCell.rowSpan = functionHasExpandedCriteria ? 1 : functionMetricCount;
           const ownerRow = functionRows[functionSliderOwnerLocalIndex];
           if (ownerRow && functionScoreCell.parentElement !== ownerRow) {
             ownerRow.appendChild(functionScoreCell);
           }
+          syncRapidFunctionScoreCellVisual(
+            functionScoreCell,
+            functionItems[0].functionName
+          );
           functionRows.forEach((row, localIndex) => {
             if (localIndex !== functionSliderOwnerLocalIndex) {
               const placeholderScoreCell = document.createElement('td');
@@ -1919,6 +1958,7 @@
             const currentScore =
               functionScores.get(item.functionName) ?? defaultFunctionScore;
             range.value = String(currentScore);
+            range.setAttribute('value', String(currentScore));
             updateRapidFunctionScoreVisual(range, currentScore);
             const interactionState = { active: false };
             const setDraggingState = (isDragging) => {
@@ -1979,6 +2019,7 @@
             range.addEventListener('input', () => {
               const nextValue = Number(range.value);
               functionScores.set(item.functionName, nextValue);
+              range.setAttribute('value', String(nextValue));
               valueLabel.textContent = String(nextValue);
               updateRapidFunctionScoreVisual(range, nextValue);
               updateScores();
