@@ -3,7 +3,7 @@
 This repository hosts the documentation site for the Tiered Stream Assessment Approach. The site is built with GitHub Pages using Jekyll and the just-the-docs theme, with content in Markdown and lightweight JS widgets.
 
 ## Structure
-- `docs/`: GitHub Pages site source
+- `docs/`: GitHub Pages site source 
 - `docs/assets/`: CSS, JavaScript, and data files
 - `docs/_includes/`: HTML partials for widgets
 
