@@ -546,6 +546,7 @@
       let activeEstimateRows = [];
       let activeFunctionScoreControls = [];
       let activeFunctionOrder = [];
+      let activeVisibleIndicators = [];
 
       const getShowAdvancedScoring = () => Boolean(viewOptions.showAdvancedScoring);
       const getShowRollupComputations = () =>
@@ -1290,6 +1291,265 @@
         return table;
       };
 
+      const buildRapidCriteriaDetailsRow = (
+        item,
+        showAdvanced,
+        showCondensed,
+        showMappings
+      ) => {
+        const detailsRow = document.createElement('tr');
+        detailsRow.id = `rapid-criteria-${item.id}`;
+        detailsRow.className = 'criteria-row';
+        detailsRow.dataset.rowType = 'criteria';
+        detailsRow.dataset.functionId = item.functionKey;
+        detailsRow.dataset.indicatorId = item.id;
+        detailsRow.classList.add(slugCategory(item.discipline));
+        const detailsCell = document.createElement('td');
+        detailsCell.colSpan = getCriteriaDetailsColSpan(
+          showAdvanced,
+          showCondensed,
+          showMappings
+        );
+        const details = document.createElement('div');
+        details.className = 'criteria-details';
+        const criteriaSet = criteriaMap[item.criteriaKey] || {};
+        const headerRow = document.createElement('div');
+        headerRow.className = 'criteria-summary-header';
+        const headerLabel = document.createElement('span');
+        headerLabel.textContent = 'Scoring Criteria';
+        headerRow.appendChild(headerLabel);
+        details.appendChild(headerRow);
+        details.appendChild(buildRapidCurveSummaryTable(criteriaSet));
+        detailsCell.appendChild(details);
+        detailsRow.appendChild(detailsCell);
+        return detailsRow;
+      };
+
+      const appendRapidMappingCells = (row, mapping, rowSpan = 0) => {
+        const physicalCell = document.createElement('td');
+        const chemicalCell = document.createElement('td');
+        const biologicalCell = document.createElement('td');
+        physicalCell.className = 'weight-cell col-physical physical-cell';
+        chemicalCell.className = 'weight-cell col-chemical chemical-cell';
+        biologicalCell.className = 'weight-cell col-biological biological-cell';
+        physicalCell.textContent = mapping.physical || '-';
+        chemicalCell.textContent = mapping.chemical || '-';
+        biologicalCell.textContent = mapping.biological || '-';
+        if (rowSpan > 1) {
+          physicalCell.rowSpan = rowSpan;
+          chemicalCell.rowSpan = rowSpan;
+          biologicalCell.rowSpan = rowSpan;
+        }
+        row.appendChild(physicalCell);
+        row.appendChild(chemicalCell);
+        row.appendChild(biologicalCell);
+      };
+
+      const updateRapidMetricExpansionInPlace = (indicatorId) => {
+        const showAdvanced = getShowAdvancedScoring();
+        const showCondensed = getShowCondensedView();
+        const showMappings = getShowFunctionMappings();
+        if (
+          !showCondensed ||
+          !Array.isArray(activeVisibleIndicators) ||
+          !activeVisibleIndicators.length
+        ) {
+          renderTable({ rebuildHeader: false, rebuildSummary: false });
+          return;
+        }
+
+        const targetIndex = activeVisibleIndicators.findIndex(
+          (item) => item.id === indicatorId
+        );
+        if (targetIndex === -1) {
+          renderTable({ rebuildHeader: false, rebuildSummary: false });
+          return;
+        }
+
+        const rowByIndicatorId = new Map();
+        tbody
+          .querySelectorAll('tr[data-row-type="indicator"][data-indicator-id]')
+          .forEach((row) => {
+            rowByIndicatorId.set(row.dataset.indicatorId, row);
+          });
+        if (!rowByIndicatorId.size) {
+          renderTable({ rebuildHeader: false, rebuildSummary: false });
+          return;
+        }
+
+        const getFunctionKeyAt = (index) =>
+          activeVisibleIndicators[index].functionKey ||
+          normalize(activeVisibleIndicators[index].functionName);
+        const targetFunctionKey = getFunctionKeyAt(targetIndex);
+        let functionStart = targetIndex;
+        while (
+          functionStart > 0 &&
+          getFunctionKeyAt(functionStart - 1) === targetFunctionKey
+        ) {
+          functionStart -= 1;
+        }
+        let functionEnd = targetIndex + 1;
+        while (
+          functionEnd < activeVisibleIndicators.length &&
+          getFunctionKeyAt(functionEnd) === targetFunctionKey
+        ) {
+          functionEnd += 1;
+        }
+
+        const functionItems = activeVisibleIndicators.slice(functionStart, functionEnd);
+        const functionRows = functionItems.map((item) => rowByIndicatorId.get(item.id));
+        if (functionRows.some((row) => !row)) {
+          renderTable({ rebuildHeader: false, rebuildSummary: false });
+          return;
+        }
+
+        const expandedLocalIndices = [];
+        functionItems.forEach((item, localIndex) => {
+          if (expandedIndicators.has(item.id)) {
+            expandedLocalIndices.push(localIndex);
+          }
+        });
+
+        const functionMetricCount = functionItems.length;
+        const functionExpandedCount = expandedLocalIndices.length;
+        const functionHasExpandedCriteria = functionExpandedCount > 0;
+        const functionSliderOwnerLocalIndex = functionHasExpandedCriteria
+          ? expandedLocalIndices[0]
+          : 0;
+
+        const functionCell = functionRows[0].querySelector('td.col-function');
+        if (functionCell) {
+          functionCell.rowSpan = functionMetricCount + functionExpandedCount;
+        }
+
+        const functionIndicatorIdSet = new Set(functionItems.map((item) => item.id));
+        tbody
+          .querySelectorAll('tr[data-row-type="criteria"][data-indicator-id]')
+          .forEach((row) => {
+            if (functionIndicatorIdSet.has(row.dataset.indicatorId)) {
+              row.remove();
+            }
+          });
+
+        let scoreWrap = null;
+        functionRows.forEach((row) => {
+          row.querySelectorAll('td.col-function-score').forEach((cell) => {
+            if (!scoreWrap) {
+              const existingWrap = cell.querySelector('.function-score-inline');
+              if (existingWrap) {
+                scoreWrap = existingWrap;
+              }
+            }
+            cell.remove();
+          });
+        });
+
+        if (showCondensed) {
+          if (!scoreWrap) {
+            renderTable({ rebuildHeader: false, rebuildSummary: false });
+            return;
+          }
+          functionRows.forEach((row, localIndex) => {
+            if (localIndex === functionSliderOwnerLocalIndex) {
+              const functionScoreCell = document.createElement('td');
+              functionScoreCell.className = 'col-function-score function-score-cell';
+              functionScoreCell.rowSpan = functionHasExpandedCriteria
+                ? 1
+                : functionMetricCount;
+              functionScoreCell.appendChild(scoreWrap);
+              row.appendChild(functionScoreCell);
+            } else if (functionHasExpandedCriteria) {
+              const placeholderScoreCell = document.createElement('td');
+              placeholderScoreCell.className =
+                'col-function-score function-score-cell function-score-cell-empty';
+              row.appendChild(placeholderScoreCell);
+            }
+          });
+        }
+
+        functionRows.forEach((row) => {
+          row
+            .querySelectorAll('td.col-physical, td.col-chemical, td.col-biological')
+            .forEach((cell) => {
+              cell.remove();
+            });
+        });
+
+        const mapping =
+          mappingByFunction[functionItems[0].functionKey] || {
+            physical: '-',
+            chemical: '-',
+            biological: '-',
+          };
+        const mergeMappingCells =
+          functionExpandedCount === 0 && functionMetricCount > 1;
+        functionRows.forEach((row, localIndex) => {
+          if (!mergeMappingCells || localIndex === 0) {
+            appendRapidMappingCells(
+              row,
+              mapping,
+              mergeMappingCells ? functionMetricCount : 0
+            );
+          }
+        });
+
+        functionRows.forEach((row, localIndex) => {
+          const item = functionItems[localIndex];
+          const isExpanded = expandedIndicators.has(item.id);
+          const indicatorToggle = row.querySelector('.indicator-cell .criteria-toggle');
+          if (indicatorToggle) {
+            indicatorToggle.innerHTML = isExpanded ? expandedGlyph : collapsedGlyph;
+            indicatorToggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+          }
+          if (isExpanded) {
+            row.insertAdjacentElement(
+              'afterend',
+              buildRapidCriteriaDetailsRow(
+                item,
+                showAdvanced,
+                showCondensed,
+                showMappings
+              )
+            );
+          }
+        });
+
+        const targetDiscipline = activeVisibleIndicators[targetIndex].discipline;
+        let disciplineStart = targetIndex;
+        while (
+          disciplineStart > 0 &&
+          activeVisibleIndicators[disciplineStart - 1].discipline === targetDiscipline
+        ) {
+          disciplineStart -= 1;
+        }
+        let disciplineEnd = targetIndex + 1;
+        while (
+          disciplineEnd < activeVisibleIndicators.length &&
+          activeVisibleIndicators[disciplineEnd].discipline === targetDiscipline
+        ) {
+          disciplineEnd += 1;
+        }
+
+        let disciplineExpandedCount = 0;
+        for (let i = disciplineStart; i < disciplineEnd; i += 1) {
+          if (expandedIndicators.has(activeVisibleIndicators[i].id)) {
+            disciplineExpandedCount += 1;
+          }
+        }
+        const disciplineFirstRow = rowByIndicatorId.get(
+          activeVisibleIndicators[disciplineStart].id
+        );
+        if (disciplineFirstRow) {
+          const disciplineCell = disciplineFirstRow.querySelector('td.col-discipline');
+          if (disciplineCell) {
+            disciplineCell.rowSpan =
+              disciplineEnd - disciplineStart + disciplineExpandedCount;
+          }
+        }
+
+        updateScores();
+      };
+
       const renderTable = ({ rebuildHeader = true, rebuildSummary = true } = {}) => {
         const nextTbody = document.createElement('tbody');
         const { showAdvanced, showCondensed, showMappings } = syncRapidViewState();
@@ -1316,6 +1576,7 @@
           const matchesSearch = !term || haystack.includes(term);
           return matchesDiscipline && matchesSearch;
         });
+        activeVisibleIndicators = visibleIndicators.slice();
 
         const seenFunctions = new Set();
         activeFunctionOrder = [];
@@ -1412,6 +1673,7 @@
           emptyRow.appendChild(emptyCell);
           nextTbody.appendChild(emptyRow);
           activeFunctionOrder = [];
+          activeVisibleIndicators = [];
           updateScores();
           table.replaceChild(nextTbody, tbody);
           tbody = nextTbody;
@@ -1423,6 +1685,7 @@
           row.classList.add(slugCategory(item.discipline));
           row.dataset.rowType = 'indicator';
           row.dataset.functionId = item.functionKey;
+          row.dataset.indicatorId = item.id;
 
           const rowDisciplineMeta = disciplineRowMeta[index] || {
             startIndex: index,
@@ -1745,23 +2008,11 @@
               biological: '-',
             };
           if (!mergeMappingCells || isMappingOwner) {
-            const physicalCell = document.createElement('td');
-            const chemicalCell = document.createElement('td');
-            const biologicalCell = document.createElement('td');
-            physicalCell.className = 'weight-cell col-physical physical-cell';
-            chemicalCell.className = 'weight-cell col-chemical chemical-cell';
-            biologicalCell.className = 'weight-cell col-biological biological-cell';
-            physicalCell.textContent = mapping.physical || '-';
-            chemicalCell.textContent = mapping.chemical || '-';
-            biologicalCell.textContent = mapping.biological || '-';
-            if (mergeMappingCells) {
-              physicalCell.rowSpan = functionMetricCount;
-              chemicalCell.rowSpan = functionMetricCount;
-              biologicalCell.rowSpan = functionMetricCount;
-            }
-            row.appendChild(physicalCell);
-            row.appendChild(chemicalCell);
-            row.appendChild(biologicalCell);
+            appendRapidMappingCells(
+              row,
+              mapping,
+              mergeMappingCells ? functionMetricCount : 0
+            );
           }
 
           criteriaBtn.addEventListener('click', (event) => {
@@ -1771,7 +2022,7 @@
             } else {
               expandedIndicators.add(item.id);
             }
-            renderTable({ rebuildHeader: false, rebuildSummary: false });
+            updateRapidMetricExpansionInPlace(item.id);
             if (event.detail > 0) {
               setTimeout(() => criteriaBtn.blur(), 0);
             }
@@ -1779,31 +2030,14 @@
 
           nextTbody.appendChild(row);
           if (criteriaExpanded) {
-            const detailsRow = document.createElement('tr');
-            detailsRow.id = detailsId;
-            detailsRow.className = 'criteria-row';
-            detailsRow.dataset.rowType = 'criteria';
-            detailsRow.dataset.functionId = item.functionKey;
-            detailsRow.classList.add(slugCategory(item.discipline));
-            const detailsCell = document.createElement('td');
-            detailsCell.colSpan = getCriteriaDetailsColSpan(
-              showAdvanced,
-              showCondensed,
-              showMappings
+            nextTbody.appendChild(
+              buildRapidCriteriaDetailsRow(
+                item,
+                showAdvanced,
+                showCondensed,
+                showMappings
+              )
             );
-            const details = document.createElement('div');
-            details.className = 'criteria-details';
-            const criteriaSet = criteriaMap[item.criteriaKey] || {};
-            const headerRow = document.createElement('div');
-            headerRow.className = 'criteria-summary-header';
-            const headerLabel = document.createElement('span');
-            headerLabel.textContent = 'Scoring Criteria';
-            headerRow.appendChild(headerLabel);
-            details.appendChild(headerRow);
-            details.appendChild(buildRapidCurveSummaryTable(criteriaSet));
-            detailsCell.appendChild(details);
-            detailsRow.appendChild(detailsCell);
-            nextTbody.appendChild(detailsRow);
           }
         });
 
