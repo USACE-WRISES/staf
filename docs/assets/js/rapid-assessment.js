@@ -1101,9 +1101,16 @@
                 hasSuggestedRange: false,
                 isOutsideSuggestedRange: false,
               };
-              rangeInput.min = '0';
-              rangeInput.max = '15';
-              rangeInput.value = String(meta.value);
+              const nextValue = String(meta.value);
+              if (rangeInput.min !== '0') {
+                rangeInput.min = '0';
+              }
+              if (rangeInput.max !== '15') {
+                rangeInput.max = '15';
+              }
+              if (rangeInput.value !== nextValue) {
+                rangeInput.value = nextValue;
+              }
               updateRapidFunctionScoreVisual(rangeInput, meta.value);
               updateRapidSuggestedBracket(
                 suggestedBracketEl,
@@ -1431,38 +1438,36 @@
             }
           });
 
-        let scoreWrap = null;
+        let functionScoreCell = null;
         functionRows.forEach((row) => {
           row.querySelectorAll('td.col-function-score').forEach((cell) => {
-            if (!scoreWrap) {
-              const existingWrap = cell.querySelector('.function-score-inline');
-              if (existingWrap) {
-                scoreWrap = existingWrap;
-              }
+            if (!functionScoreCell && cell.querySelector('.function-score-inline')) {
+              functionScoreCell = cell;
+              return;
             }
             cell.remove();
           });
         });
 
         if (showCondensed) {
-          if (!scoreWrap) {
+          if (!functionScoreCell) {
             renderTable({ rebuildHeader: false, rebuildSummary: false });
             return;
           }
+          functionScoreCell.className = 'col-function-score function-score-cell';
+          functionScoreCell.rowSpan = functionHasExpandedCriteria ? 1 : functionMetricCount;
+          const ownerRow = functionRows[functionSliderOwnerLocalIndex];
+          if (ownerRow && functionScoreCell.parentElement !== ownerRow) {
+            ownerRow.appendChild(functionScoreCell);
+          }
           functionRows.forEach((row, localIndex) => {
-            if (localIndex === functionSliderOwnerLocalIndex) {
-              const functionScoreCell = document.createElement('td');
-              functionScoreCell.className = 'col-function-score function-score-cell';
-              functionScoreCell.rowSpan = functionHasExpandedCriteria
-                ? 1
-                : functionMetricCount;
-              functionScoreCell.appendChild(scoreWrap);
-              row.appendChild(functionScoreCell);
-            } else if (functionHasExpandedCriteria) {
+            if (localIndex !== functionSliderOwnerLocalIndex) {
               const placeholderScoreCell = document.createElement('td');
-              placeholderScoreCell.className =
-                'col-function-score function-score-cell function-score-cell-empty';
-              row.appendChild(placeholderScoreCell);
+              if (functionHasExpandedCriteria) {
+                placeholderScoreCell.className =
+                  'col-function-score function-score-cell function-score-cell-empty';
+                row.appendChild(placeholderScoreCell);
+              }
             }
           });
         }
@@ -1547,7 +1552,6 @@
           }
         }
 
-        updateScores();
       };
 
       const renderTable = ({ rebuildHeader = true, rebuildSummary = true } = {}) => {
