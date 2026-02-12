@@ -25,7 +25,7 @@ If you do not have Jekyll installed, you can rely on GitHub Pages to build the s
 - If your site is hosted at a subpath, set `baseurl` in `_config.yml`.
 
 ## Data files
-Each data file is JSON and feeds one or more widgets. Field definitions are also documented in `docs/contribute/data-dictionary.md`.
+Each data file is JSON format and feeds one or more widgets. Field definitions are also documented in `docs/contribute/data-dictionary.md`.
 
 - `docs/assets/data/functions.json`
   - Purpose: list of stream functions and example metrics by tier.

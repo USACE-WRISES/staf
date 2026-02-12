@@ -209,40 +209,40 @@
     
     "relUrl": "/contribute/editing-guide/"
   },"30": {
-    "doc": "Contribute",
-    "title": "Contribute",
-    "content": "Back to Home This repository is designed to be simple, modular, and transparent. Content is written in Markdown, data tables live in JSON, and widgets use vanilla JavaScript. ",
-    "url": "/staf/contribute/",
+    "doc": "Resources",
+    "title": "Resources",
+    "content": "Back to Home Curated downloads and links are listed below. Replace placeholders with real documents as they become available. ",
+    "url": "/staf/resources/",
     
-    "relUrl": "/contribute/"
+    "relUrl": "/resources/"
   },"31": {
-    "doc": "Contribute",
-    "title": "How to contribute",
-    "content": ". | Start with the page you want to update. | If you need new data, edit the JSON files in docs/assets/data/. | Keep changes small and well documented. | . ",
-    "url": "/staf/contribute/#how-to-contribute",
+    "doc": "Resources",
+    "title": "Rapid Tier (SAFARI)",
+    "content": ". | SAFARI technical report (placeholder) | SAFARI field form (placeholder) | SAFARI scoring workbook (placeholder) | . ",
+    "url": "/staf/resources/#rapid-tier-safari",
     
-    "relUrl": "/contribute/#how-to-contribute"
+    "relUrl": "/resources/#rapid-tier-safari"
   },"32": {
-    "doc": "Contribute",
-    "title": "Adding content",
-    "content": ". | New pages belong under docs/ with clear titles and front matter. | Use existing sections and patterns to keep navigation consistent. | Link to external references instead of duplicating long technical text. | . ",
-    "url": "/staf/contribute/#adding-content",
+    "doc": "Resources",
+    "title": "Screening Tier (Desktop Metrics)",
+    "content": ". | Screening metrics list (placeholder) | GIS workflow scripts (placeholder) | . ",
+    "url": "/staf/resources/#screening-tier-desktop-metrics",
     
-    "relUrl": "/contribute/#adding-content"
+    "relUrl": "/resources/#screening-tier-desktop-metrics"
   },"33": {
-    "doc": "Contribute",
-    "title": "CHANGELOG guidance",
-    "content": "When you update core data files or scoring logic: . | Record the change in your pull request description. | Summarize changes to functions.json, cwa-mapping.json, or scoring-sandbox.js here in this section. | Include the date, a short reason, and any downstream impacts. | . ",
-    "url": "/staf/contribute/#changelog-guidance",
+    "doc": "Resources",
+    "title": "Detailed Tier (Regional Models)",
+    "content": ". | Regional model library (placeholder) | Reference curve templates (placeholder) | . ",
+    "url": "/staf/resources/#detailed-tier-regional-models",
     
-    "relUrl": "/contribute/#changelog-guidance"
+    "relUrl": "/resources/#detailed-tier-regional-models"
   },"34": {
-    "doc": "Contribute",
-    "title": "Start here",
-    "content": ". | Editing guide | Content style guide | Data dictionary | . ",
-    "url": "/staf/contribute/#start-here",
+    "doc": "Resources",
+    "title": "Publications",
+    "content": ". | Tiered approach overview paper (placeholder) | Functions framework paper (placeholder) | Scoring methodology paper (placeholder) | . ",
+    "url": "/staf/resources/#publications",
     
-    "relUrl": "/contribute/#start-here"
+    "relUrl": "/resources/#publications"
   },"35": {
     "doc": "Scoring and Condition",
     "title": "Scoring and Condition",
@@ -300,61 +300,61 @@
     
     "relUrl": "/functions/"
   },"43": {
-    "doc": "Resources",
-    "title": "Resources",
-    "content": "Back to Home Curated downloads and links are listed below. Replace placeholders with real documents as they become available. ",
-    "url": "/staf/resources/",
-    
-    "relUrl": "/resources/"
-  },"44": {
-    "doc": "Resources",
-    "title": "Rapid Tier (SAFARI)",
-    "content": ". | SAFARI technical report (placeholder) | SAFARI field form (placeholder) | SAFARI scoring workbook (placeholder) | . ",
-    "url": "/staf/resources/#rapid-tier-safari",
-    
-    "relUrl": "/resources/#rapid-tier-safari"
-  },"45": {
-    "doc": "Resources",
-    "title": "Screening Tier (Desktop Metrics)",
-    "content": ". | Screening metrics list (placeholder) | GIS workflow scripts (placeholder) | . ",
-    "url": "/staf/resources/#screening-tier-desktop-metrics",
-    
-    "relUrl": "/resources/#screening-tier-desktop-metrics"
-  },"46": {
-    "doc": "Resources",
-    "title": "Detailed Tier (Regional Models)",
-    "content": ". | Regional model library (placeholder) | Reference curve templates (placeholder) | . ",
-    "url": "/staf/resources/#detailed-tier-regional-models",
-    
-    "relUrl": "/resources/#detailed-tier-regional-models"
-  },"47": {
-    "doc": "Resources",
-    "title": "Publications",
-    "content": ". | Tiered approach overview paper (placeholder) | Functions framework paper (placeholder) | Scoring methodology paper (placeholder) | . ",
-    "url": "/staf/resources/#publications",
-    
-    "relUrl": "/resources/#publications"
-  },"48": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Assess stream function at the right level of effort.",
     "content": "A functions-based framework to evaluate stream condition across Screening, Rapid, and Detailed tiers. Use it to compare sites, guide restoration planning, and report outcomes with consistent scoring. Start the tier selector Quick Overview &#10094; &#10095; Stream Functions Scoring and Condition Tier 1 Screening . Desktop snapshot for early planning and prioritization. Tier 2 Rapid . Field-based assessment for alternatives and design support. Tier 3 Detailed . Intensive methods for compliance, crediting, and monitoring. ",
     "url": "/staf/",
     
     "relUrl": "/"
-  },"49": {
+  },"44": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Not sure where to start?",
     "content": "Use the Tier Selector to match your decision context to the right level of effort. Use this quick guide to choose a tier based on effort and decision risk: . | Screening: many sites, low risk, desktop data. | Rapid: moderate risk, field day per site. | Detailed: high risk, intensive data and calibration. | . Screening tier | Rapid tier | Detailed tier . ",
     "url": "/staf/",
     
     "relUrl": "/"
-  },"50": {
+  },"45": {
     "doc": "Stream Tiered Assessment Framework",
     "title": "Stream Tiered Assessment Framework",
     "content": "Stream Tiered Assessment Framework . ",
     "url": "/staf/",
     
     "relUrl": "/"
+  },"46": {
+    "doc": "Contribute",
+    "title": "Contribute",
+    "content": "Back to Home This repository is designed to be simple, modular, and transparent. Content is written in Markdown, data tables live in JSON, and widgets use vanilla JavaScript. ",
+    "url": "/staf/contribute/",
+    
+    "relUrl": "/contribute/"
+  },"47": {
+    "doc": "Contribute",
+    "title": "How to contribute",
+    "content": ". | Start with the page you want to update. | If you need new data, edit the JSON files in docs/assets/data/. | Keep changes small and well documented. | . ",
+    "url": "/staf/contribute/#how-to-contribute",
+    
+    "relUrl": "/contribute/#how-to-contribute"
+  },"48": {
+    "doc": "Contribute",
+    "title": "Adding content",
+    "content": ". | New pages belong under docs/ with clear titles and front matter. | Use existing sections and patterns to keep navigation consistent. | Link to external references instead of duplicating long technical text. | . ",
+    "url": "/staf/contribute/#adding-content",
+    
+    "relUrl": "/contribute/#adding-content"
+  },"49": {
+    "doc": "Contribute",
+    "title": "CHANGELOG guidance",
+    "content": "When you update core data files or scoring logic: . | Record the change in your pull request description. | Summarize changes to functions.json, cwa-mapping.json, or scoring-sandbox.js here in this section. | Include the date, a short reason, and any downstream impacts. | . ",
+    "url": "/staf/contribute/#changelog-guidance",
+    
+    "relUrl": "/contribute/#changelog-guidance"
+  },"50": {
+    "doc": "Contribute",
+    "title": "Start here",
+    "content": ". | Editing guide | Content style guide | Data dictionary | . ",
+    "url": "/staf/contribute/#start-here",
+    
+    "relUrl": "/contribute/#start-here"
   },"51": {
     "doc": "Quick Overview",
     "title": "Quick Overview",
