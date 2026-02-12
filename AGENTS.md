@@ -1,64 +1,54 @@
 # Agent Instructions (Codex)
 
-## Project context
-This repo serves a static JS widget app in `docs/` and may mirror built assets in `docs/_site/`.
-Primary focus is the Rapid Assessment table behavior.
+## Role
+Act as a full-stack developer for the STAF documentation site and its interactive assessment tools.
 
-## Task
-Eliminate UI flicker/refresh in production Chrome/Edge when toggling Rapid table options.
-Do not change column layout or expansion behavior.
+## Purpose
+Maintain and improve a GitHub Pages/Jekyll site that combines:
+- Markdown documentation
+- lightweight front-end widgets
+- JSON/TSV data assets
+- build scripts used to generate metric-library outputs
 
-## Hard constraints (must keep)
-1) Keep existing column layout exactly as currently working.
-2) Metric expand/collapse via expander glyph in the "Metric" column must behave exactly as currently working in Rapid:
-   - expand/collapse must NOT scroll page
-   - no full page reload
-   - no broken column widths or rowspans
-3) No layout regressions in:
-   - Discipline / Function / Metric columns
-   - Function Score column and slider alignment
-   - Mapping columns (Physical/Chemical/Biological)
+## Scope
+Primary working areas:
+- `docs/`: site source (content, includes, layouts, config)
+- `docs/assets/`: JavaScript, CSS, and data files
+- `docs/_includes/`: shared HTML fragments used by widgets/pages
+- `scripts/`: build/transform scripts (for example, metric-library generation)
+- `docs/_site/`: mirrored build artifacts when required by repo workflow
 
-## Likely root cause
-`renderTable()` called for option toggles recreates slider DOM nodes, causing default->restored flash.
-Goal: stable DOM. Prefer show/hide and class toggles over rebuild.
+## Goals
+1) Keep the site stable, readable, and fast for end users.
+2) Preserve existing behavior unless a change request explicitly says otherwise.
+3) Deliver minimal, targeted fixes rather than broad refactors.
+4) Keep source data and generated artifacts consistent.
+5) Ensure contributors can validate changes quickly with repeatable commands.
 
-## Target implementation
-A) Replace full `renderTable()` calls for these toggles with non-destructive updates where feasible:
-   - Show advanced scoring columns
-   - Show Function Mappings
-   - Show roll-up at bottom
-   - Show Suggested Function Scores
-   - Show F/AR/NF labels
-   Approach: toggle CSS classes and show/hide existing columns/sections. Update labels in place.
+## General Working Rules
+1) Prefer surgical edits in the smallest relevant files.
+2) Preserve existing UI structure, table alignment, and responsive behavior unless asked to redesign.
+3) Favor non-destructive UI updates (class toggles/show-hide/in-place updates) over full DOM rebuilds when possible.
+4) Treat `docs/` as the source of truth; mirror to `docs/_site/` when the project expects mirrored assets.
+5) If JS/CSS assets change and cache-busting is used, update the version/tag in the relevant include(s).
+6) Keep changes accessible (keyboard behavior, readable labels, semantic markup where practical).
 
-B) Keep slider/input nodes mounted:
-   - do not recreate range inputs on toggle
-   - update UI via class toggles or existing update logic
+## Data and Build Expectations
+1) Do not manually edit generated outputs when a script is the canonical producer; run the generator.
+2) When data schemas are changed, update related docs and consumers in the same change set.
+3) Keep JSON/TSV outputs deterministic and consistent across `docs/` and mirrored `_site` paths when applicable.
 
-C) If a structural re-render is unavoidable:
-   - snapshot current slider values
-   - restore during construction before first paint (avoid visible flash)
+## Validation Checklist
+Run what applies to the files touched:
+- `node --check <changed-js-file>`
+- `npm test --silent`
+- `npm run build:metric-library` (if metric-library source/scripts changed)
+- optional local preview:
+  - `cd docs`
+  - `bundle exec jekyll serve`
 
-## Files
-- docs/assets/js/rapid-assessment.js
-- docs/assets/css/custom.css
-- docs/_includes/footer_custom.html (cache bust only if JS/CSS changes)
-- docs/_site equivalents must mirror final JS/CSS if site serves them
-
-## Acceptance criteria
-1) Any rapid toggle does NOT scroll page.
-2) Sliders do NOT flash/reset when toggles change.
-3) Metric expand/collapse remains stable and widths stay correct.
-4) No column misalignment with/without advanced/mapping toggles.
-5) Build tag updated so tester can confirm latest script loaded.
-
-## Validation commands
-- node --check docs/assets/js/rapid-assessment.js
-- node --check docs/_site/assets/js/rapid-assessment.js
-- npm test --silent
-
-## Working style
-- Make minimal, surgical changes.
-- Avoid broad refactors.
-- Prefer small commits.
+## Delivery Standard
+1) Summarize what changed and why.
+2) List exact files touched.
+3) Report commands run and their outcomes.
+4) Call out any follow-up risks, assumptions, or manual checks.
