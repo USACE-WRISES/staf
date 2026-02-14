@@ -12,17 +12,7 @@
   const fallback = container.querySelector('.scoring-sandbox-fallback');
   const ui = container.querySelector('.scoring-sandbox-ui');
 
-  const weightFromCode = (code) => {
-    if (code === 'D') {
-      return 1.0;
-    }
-    if (code === 'i') {
-      return 0.1;
-    }
-    return 0.0;
-  };
-
-  const weightLabelFromCode = (code) => {
+  const normalizeMappingCode = (code) => {
     if (code === 'D') {
       return 'D';
     }
@@ -31,6 +21,35 @@
     }
     return '-';
   };
+
+  const clampIndirectMappingWeight = (value, fallback = 0.1) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return fallback;
+    }
+    return Math.max(0, Math.min(1, numeric));
+  };
+
+  const formatMappingWeight = (value) => {
+    if (!Number.isFinite(value)) {
+      return '0';
+    }
+    const rounded = Math.round(value * 1000) / 1000;
+    return String(rounded);
+  };
+
+  const weightFromCode = (code, indirectWeight = 0.1) => {
+    const resolvedCode = normalizeMappingCode(code);
+    if (resolvedCode === 'D') {
+      return 1.0;
+    }
+    if (resolvedCode === 'i') {
+      return clampIndirectMappingWeight(indirectWeight, 0.1);
+    }
+    return 0.0;
+  };
+
+  const weightLabelFromCode = (code) => normalizeMappingCode(code);
 
   const summaryColorForValue = (value) => {
     if (value <= 0.39) {
@@ -110,33 +129,55 @@
       const table = document.createElement('table');
       table.className = 'scoring-table screening-table show-condensed-view show-function-mappings';
       const thead = document.createElement('thead');
-      thead.innerHTML =
-        '<tr>' +
-        '<th>Discipline</th>' +
-        '<th>Function</th>' +
-        '<th class="col-function-score">Function<br>Score</th>' +
-        '<th class="col-physical">Physical</th>' +
-        '<th class="col-chemical">Chemical</th>' +
-        '<th class="col-biological">Biological</th>' +
-        '</tr>';
       const tbody = document.createElement('tbody');
       const tfoot = document.createElement('tfoot');
       table.appendChild(thead);
       table.appendChild(tbody);
       table.appendChild(tfoot);
 
+      const summaryTable = document.createElement('table');
+      summaryTable.className = 'screening-table screening-summary-table';
+      const summaryColGroup = document.createElement('colgroup');
+      summaryTable.appendChild(summaryColGroup);
+      const summaryBody = document.createElement('tbody');
+      summaryTable.appendChild(summaryBody);
+
       const widgetState = {
         showFunctionMappings: true,
         showRollupComputations: false,
-        showFunctionScoreCueLabels: false
+        showFunctionScoreCueLabels: false,
+        enableMappingEditing: false,
+        indirectMappingWeight: 0.1
       };
 
       const inputs = new Map();
       const summaryRows = {
         physical: [],
         chemical: [],
-        biological: []
+        biological: [],
+        ecosystem: null
       };
+
+      const renderHeader = (showMappings) => {
+        const mappingHeaders = showMappings
+          ? '<th class="col-physical">Physical</th>' +
+            '<th class="col-chemical">Chemical</th>' +
+            '<th class="col-biological">Biological</th>'
+          : '';
+        thead.innerHTML =
+          '<tr>' +
+          '<th>Discipline</th>' +
+          '<th>Function</th>' +
+          '<th class="col-function-score">Function<br>Score</th>' +
+          mappingHeaders +
+          '</tr>';
+      };
+
+      const mappingDimensions = [
+        { key: 'physical', className: 'col-physical', label: 'Physical' },
+        { key: 'chemical', className: 'col-chemical', label: 'Chemical' },
+        { key: 'biological', className: 'col-biological', label: 'Biological' }
+      ];
 
       const spans = new Array(functionsList.length).fill(0);
       let i = 0;
@@ -307,26 +348,46 @@
           }
         });
 
-        const physicalCell = document.createElement('td');
-        const chemicalCell = document.createElement('td');
-        const biologicalCell = document.createElement('td');
-        physicalCell.className = 'weight-cell col-physical';
-        chemicalCell.className = 'weight-cell col-chemical';
-        biologicalCell.className = 'weight-cell col-biological';
-
-        const pWeight = weightFromCode(mapping.physical);
-        const cWeight = weightFromCode(mapping.chemical);
-        const bWeight = weightFromCode(mapping.biological);
-
-        physicalCell.textContent = weightLabelFromCode(mapping.physical);
-        chemicalCell.textContent = weightLabelFromCode(mapping.chemical);
-        biologicalCell.textContent = weightLabelFromCode(mapping.biological);
+        const mappingEditors = {};
+        mappingDimensions.forEach(({ key, className, label }) => {
+          const initialCode = normalizeMappingCode(mapping[key]);
+          const cell = document.createElement('td');
+          cell.className = `weight-cell ${className}`;
+          const valueEl = document.createElement('span');
+          valueEl.className = 'mapping-display-value';
+          valueEl.textContent = weightLabelFromCode(initialCode);
+          const select = document.createElement('select');
+          select.className = 'mapping-edit-select';
+          select.setAttribute(
+            'aria-label',
+            `${label} mapping for ${fn.name}`
+          );
+          ['D', 'i', '-'].forEach((optionValue) => {
+            const option = document.createElement('option');
+            option.value = optionValue;
+            option.textContent = optionValue;
+            select.appendChild(option);
+          });
+          select.value = initialCode;
+          select.hidden = true;
+          select.disabled = true;
+          select.addEventListener('change', () => {
+            const nextCode = normalizeMappingCode(select.value);
+            mappingEditors[key].code = nextCode;
+            select.value = nextCode;
+            valueEl.textContent = weightLabelFromCode(nextCode);
+            updateScores();
+          });
+          cell.appendChild(valueEl);
+          cell.appendChild(select);
+          mappingEditors[key] = { code: initialCode, valueEl, select, cell };
+        });
 
         row.appendChild(nameCell);
         row.appendChild(functionScoreCell);
-        row.appendChild(physicalCell);
-        row.appendChild(chemicalCell);
-        row.appendChild(biologicalCell);
+        mappingDimensions.forEach(({ key }) => {
+          row.appendChild(mappingEditors[key].cell);
+        });
 
         tbody.appendChild(row);
         inputs.set(fn.id, {
@@ -334,78 +395,150 @@
           value,
           cueBar,
           sliderWrap,
-          weights: { p: pWeight, c: cWeight, b: bWeight }
+          mappings: mappingEditors
         });
       });
 
-      const labelItems = [
-        { label: 'Direct Effect', rollup: true },
-        { label: 'Indirect Effect', rollup: true },
-        { label: 'Weighted Score Total', rollup: true },
-        { label: 'Max Weighted Score Total', rollup: true },
-        { label: 'Condition Sub-Index', rollup: false },
-        { label: 'Ecosystem Condition Index', rollup: false }
-      ];
+      const buildSummary = (showMappings) => {
+        const labelItems = [
+          { label: 'Direct Effect', rollup: true },
+          { label: 'Indirect Effect', rollup: true },
+          { label: 'Weighted Score Total', rollup: true },
+          { label: 'Max Weighted Score Total', rollup: true },
+          { label: 'Condition Sub-Index', rollup: false },
+          { label: 'Ecosystem Condition Index', rollup: false }
+        ];
+        const baseLabelSpan = 3;
+        const labelSpan = showMappings ? baseLabelSpan : Math.max(1, baseLabelSpan - 3);
+        const totalSpan = labelSpan + 3;
 
-      const buildSummaryStack = (store, count) => {
-        const stack = document.createElement('div');
-        stack.className = 'summary-stack';
-        for (let i = 0; i < count; i += 1) {
-          const div = document.createElement('div');
-          div.textContent = '-';
-          store.push(div);
-          stack.appendChild(div);
+        summaryColGroup.innerHTML = '';
+        const labelCol = document.createElement('col');
+        labelCol.span = labelSpan;
+        labelCol.className = 'summary-label-col';
+        summaryColGroup.appendChild(labelCol);
+        ['physical', 'chemical', 'biological'].forEach((key) => {
+          const col = document.createElement('col');
+          col.className = `col-${key}`;
+          summaryColGroup.appendChild(col);
+        });
+
+        tfoot.innerHTML = '';
+        summaryBody.innerHTML = '';
+        summaryRows.physical = [];
+        summaryRows.chemical = [];
+        summaryRows.biological = [];
+        summaryRows.ecosystem = null;
+        const summaryTarget = showMappings ? tfoot : summaryBody;
+
+        if (!showMappings) {
+          const gapRow = document.createElement('tr');
+          gapRow.className = 'summary-gap-row';
+          const gapCell = document.createElement('td');
+          gapCell.colSpan = totalSpan;
+          gapRow.appendChild(gapCell);
+          summaryTarget.appendChild(gapRow);
+
+          const headerRow = document.createElement('tr');
+          const spacer = document.createElement('td');
+          spacer.colSpan = labelSpan;
+          spacer.className = 'summary-labels summary-spacer';
+          headerRow.appendChild(spacer);
+          [
+            { label: 'Physical', className: 'col-physical' },
+            { label: 'Chemical', className: 'col-chemical' },
+            { label: 'Biological', className: 'col-biological' }
+          ].forEach(({ label, className }) => {
+            const cell = document.createElement('td');
+            cell.className = `summary-mapping-header ${className}`;
+            cell.textContent = label;
+            headerRow.appendChild(cell);
+          });
+          summaryTarget.appendChild(headerRow);
         }
-        return stack;
+
+        labelItems.forEach((item) => {
+          const row = document.createElement('tr');
+          if (item.rollup) {
+            row.dataset.rollupRow = 'true';
+            if (!widgetState.showRollupComputations) {
+              row.hidden = true;
+            }
+          }
+          const labelCell = document.createElement('td');
+          labelCell.colSpan = labelSpan;
+          labelCell.className = 'summary-labels';
+          labelCell.textContent = item.label;
+          row.appendChild(labelCell);
+
+          if (item.label === 'Ecosystem Condition Index') {
+            const mergedCell = document.createElement('td');
+            mergedCell.colSpan = 3;
+            mergedCell.className = 'summary-values summary-merged';
+            const value = document.createElement('div');
+            value.textContent = '-';
+            mergedCell.appendChild(value);
+            summaryRows.ecosystem = value;
+            row.appendChild(mergedCell);
+          } else {
+            ['physical', 'chemical', 'biological'].forEach((key) => {
+              const cell = document.createElement('td');
+              cell.className = `summary-values col-${key}`;
+              const value = document.createElement('div');
+              value.textContent = '-';
+              summaryRows[key].push(value);
+              cell.appendChild(value);
+              row.appendChild(cell);
+            });
+          }
+
+          summaryTarget.appendChild(row);
+        });
       };
-
-      for (let i = 0; i < labelItems.length; i += 1) {
-        const item = labelItems[i];
-        const row = document.createElement('tr');
-        if (item.rollup) {
-          row.dataset.rollupRow = 'true';
-        }
-        const labelCell = document.createElement('td');
-        labelCell.colSpan = 3;
-        labelCell.className = 'summary-labels';
-        labelCell.textContent = item.label;
-        row.appendChild(labelCell);
-
-        if (item.label === 'Ecosystem Condition Index') {
-          const mergedCell = document.createElement('td');
-          mergedCell.colSpan = 3;
-          mergedCell.className = 'summary-values summary-merged';
-          const stack = buildSummaryStack(summaryRows.chemical, 1);
-          mergedCell.appendChild(stack);
-          row.appendChild(mergedCell);
-        } else {
-          const physicalCell = document.createElement('td');
-          physicalCell.className = 'summary-values';
-          const chemicalCell = document.createElement('td');
-          chemicalCell.className = 'summary-values';
-          const biologicalCell = document.createElement('td');
-          biologicalCell.className = 'summary-values';
-
-          const physicalStack = buildSummaryStack(summaryRows.physical, 1);
-          const chemicalStack = buildSummaryStack(summaryRows.chemical, 1);
-          const biologicalStack = buildSummaryStack(summaryRows.biological, 1);
-
-          physicalCell.appendChild(physicalStack);
-          chemicalCell.appendChild(chemicalStack);
-          biologicalCell.appendChild(biologicalStack);
-
-          row.appendChild(physicalCell);
-          row.appendChild(chemicalCell);
-          row.appendChild(biologicalCell);
-        }
-
-        tfoot.appendChild(row);
-      }
 
       const summary = document.createElement('div');
       summary.className = 'outcome-summary';
+      const summaryNote = document.createElement('span');
+      summaryNote.className = 'mapping-summary-text';
+      summary.appendChild(summaryNote);
 
-      summary.textContent = 'Direct mapping (1.0), Indirect Mapping (0.1).';
+      const mappingEditToggleLabel = document.createElement('label');
+      mappingEditToggleLabel.className =
+        'screening-advanced-toggle mapping-edit-toggle-label';
+      const mappingEditToggleInput = document.createElement('input');
+      mappingEditToggleInput.type = 'checkbox';
+      mappingEditToggleInput.className = 'mapping-edit-toggle-input';
+      mappingEditToggleInput.setAttribute(
+        'aria-label',
+        'Enable editing for function mapping linkages'
+      );
+      const mappingEditToggleText = document.createElement('span');
+      mappingEditToggleText.textContent = 'Edit Mappings';
+      mappingEditToggleLabel.appendChild(mappingEditToggleInput);
+      mappingEditToggleLabel.appendChild(mappingEditToggleText);
+      summary.appendChild(mappingEditToggleLabel);
+
+      const mappingWeightField = document.createElement('label');
+      mappingWeightField.className = 'mapping-weight-field';
+      mappingWeightField.hidden = true;
+      const mappingWeightLabel = document.createElement('span');
+      mappingWeightLabel.textContent = 'Indirect Mapping Weight';
+      const mappingWeightInput = document.createElement('input');
+      mappingWeightInput.type = 'number';
+      mappingWeightInput.className = 'mapping-weight-input';
+      mappingWeightInput.min = '0';
+      mappingWeightInput.max = '1';
+      mappingWeightInput.step = '0.01';
+      mappingWeightInput.value = formatMappingWeight(widgetState.indirectMappingWeight);
+      mappingWeightInput.setAttribute('aria-label', 'Indirect Mapping Weight');
+      mappingWeightField.appendChild(mappingWeightLabel);
+      mappingWeightField.appendChild(mappingWeightInput);
+      summary.appendChild(mappingWeightField);
+
+      const updateMappingSummaryNote = () => {
+        summaryNote.textContent =
+          `Direct mapping weight = 1.0, Indirect mapping weight = ${formatMappingWeight(widgetState.indirectMappingWeight)}`;
+      };
 
       const chartsShell = document.createElement('div');
       chartsShell.className = 'screening-settings-panel screening-charts-panel';
@@ -611,22 +744,92 @@
         table.querySelectorAll('tr[data-rollup-row="true"]').forEach((row) => {
           row.hidden = !showRollup;
         });
+        summaryTable.querySelectorAll('tr[data-rollup-row="true"]').forEach((row) => {
+          row.hidden = !showRollup;
+        });
+      };
+
+      const syncMappingEditorMode = () => {
+        const enableEditing = Boolean(widgetState.enableMappingEditing);
+        mappingEditToggleInput.checked = enableEditing;
+        table.classList.toggle('mapping-edit-mode', enableEditing);
+        mappingWeightField.hidden = !enableEditing;
+        inputs.forEach(({ mappings }) => {
+          if (!mappings) {
+            return;
+          }
+          mappingDimensions.forEach(({ key }) => {
+            const editor = mappings[key];
+            if (!editor) {
+              return;
+            }
+            editor.valueEl.hidden = enableEditing;
+            editor.select.hidden = !enableEditing;
+            editor.select.disabled = !enableEditing;
+            if (editor.select.value !== editor.code) {
+              editor.select.value = editor.code;
+            }
+          });
+        });
+      };
+
+      const applyIndirectMappingWeight = (rawValue) => {
+        const parsedValue =
+          typeof rawValue === 'string' && rawValue.trim() === ''
+            ? Number.NaN
+            : Number(rawValue);
+        const nextWeight = clampIndirectMappingWeight(
+          parsedValue,
+          widgetState.indirectMappingWeight
+        );
+        widgetState.indirectMappingWeight = nextWeight;
+        mappingWeightInput.value = formatMappingWeight(nextWeight);
+        updateMappingSummaryNote();
+        updateScores();
       };
 
       const syncViewState = () => {
-        mappingToggle.checked = Boolean(widgetState.showFunctionMappings);
+        const showMappings = Boolean(widgetState.showFunctionMappings);
+        mappingToggle.checked = showMappings;
         rollupToggle.checked = Boolean(widgetState.showRollupComputations);
         sliderLabelsToggle.checked = Boolean(widgetState.showFunctionScoreCueLabels);
-        table.classList.toggle('show-function-mappings', widgetState.showFunctionMappings);
+        table.classList.toggle('show-function-mappings', showMappings);
         table.classList.toggle(
           'show-function-score-cue-labels',
           widgetState.showFunctionScoreCueLabels
         );
+        summaryTable.classList.toggle('show-function-mappings', showMappings);
+        summaryTable.hidden = showMappings;
         chartsShell.classList.toggle(
           'show-function-score-cue-labels',
           widgetState.showFunctionScoreCueLabels
         );
-        applyRollupRowsVisibility();
+        updateMappingSummaryNote();
+        mappingWeightInput.value = formatMappingWeight(widgetState.indirectMappingWeight);
+        syncMappingEditorMode();
+        return showMappings;
+      };
+
+      const updateToggleView = ({
+        refreshHeader = false,
+        refreshSummary = false,
+        refreshRollupRows = false,
+        refreshScores = false
+      } = {}) => {
+        const showMappings = syncViewState();
+        if (refreshHeader) {
+          renderHeader(showMappings);
+        }
+        if (refreshSummary) {
+          buildSummary(showMappings);
+          refreshScores = true;
+        }
+        if (refreshRollupRows) {
+          applyRollupRowsVisibility();
+        }
+        if (refreshScores) {
+          updateScores();
+        }
       };
 
       const updateScores = () => {
@@ -644,28 +847,36 @@
         let bIndirect = 0;
         const functionScores = new Map();
 
-        inputs.forEach(({ input, weights }, functionId) => {
+        const indirectWeight = clampIndirectMappingWeight(widgetState.indirectMappingWeight, 0.1);
+
+        inputs.forEach(({ input, mappings }, functionId) => {
           const score = parseFloat(input.value) || 0;
           functionScores.set(functionId, score);
-          pSum += weights.p;
-          pWeighted += score * weights.p;
-          cSum += weights.c;
-          cWeighted += score * weights.c;
-          bSum += weights.b;
-          bWeighted += score * weights.b;
-          if (weights.p === 1.0) {
+          const pCode = normalizeMappingCode(mappings?.physical?.code);
+          const cCode = normalizeMappingCode(mappings?.chemical?.code);
+          const bCode = normalizeMappingCode(mappings?.biological?.code);
+          const pWeight = weightFromCode(pCode, indirectWeight);
+          const cWeight = weightFromCode(cCode, indirectWeight);
+          const bWeight = weightFromCode(bCode, indirectWeight);
+          pSum += pWeight;
+          pWeighted += score * pWeight;
+          cSum += cWeight;
+          cWeighted += score * cWeight;
+          bSum += bWeight;
+          bWeighted += score * bWeight;
+          if (pCode === 'D') {
             pDirect += 1;
-          } else if (weights.p === 0.1) {
+          } else if (pCode === 'i') {
             pIndirect += 1;
           }
-          if (weights.c === 1.0) {
+          if (cCode === 'D') {
             cDirect += 1;
-          } else if (weights.c === 0.1) {
+          } else if (cCode === 'i') {
             cIndirect += 1;
           }
-          if (weights.b === 1.0) {
+          if (bCode === 'D') {
             bDirect += 1;
-          } else if (weights.b === 0.1) {
+          } else if (bCode === 'i') {
             bIndirect += 1;
           }
         });
@@ -698,7 +909,9 @@
         summaryRows.chemical[2].textContent = formatNumber(cWeighted);
         summaryRows.chemical[3].textContent = formatNumber(cMaxWeighted);
         summaryRows.chemical[4].textContent = formatNumber(chemicalIndex);
-        summaryRows.chemical[5].textContent = formatNumber(ecosystemCondition);
+        if (summaryRows.ecosystem) {
+          summaryRows.ecosystem.textContent = formatNumber(ecosystemCondition);
+        }
 
         summaryRows.biological[0].textContent = formatCount(bDirect);
         summaryRows.biological[1].textContent = formatCount(bIndirect);
@@ -725,17 +938,33 @@
 
       mappingToggle.addEventListener('change', () => {
         widgetState.showFunctionMappings = mappingToggle.checked;
-        syncViewState();
+        updateToggleView({
+          refreshHeader: true,
+          refreshSummary: true
+        });
       });
 
       rollupToggle.addEventListener('change', () => {
         widgetState.showRollupComputations = rollupToggle.checked;
-        syncViewState();
+        updateToggleView({ refreshRollupRows: true });
       });
 
       sliderLabelsToggle.addEventListener('change', () => {
         widgetState.showFunctionScoreCueLabels = sliderLabelsToggle.checked;
-        syncViewState();
+        updateToggleView();
+      });
+
+      mappingEditToggleInput.addEventListener('change', () => {
+        widgetState.enableMappingEditing = mappingEditToggleInput.checked;
+        syncMappingEditorMode();
+      });
+
+      mappingWeightInput.addEventListener('change', () => {
+        applyIndirectMappingWeight(mappingWeightInput.value);
+      });
+
+      mappingWeightInput.addEventListener('blur', () => {
+        applyIndirectMappingWeight(mappingWeightInput.value);
       });
 
       randomizeBtn.addEventListener('click', () => {
@@ -749,13 +978,16 @@
         updateScores();
       });
 
-      syncViewState();
+      updateToggleView({
+        refreshHeader: true,
+        refreshSummary: true,
+        refreshRollupRows: true
+      });
       ui.appendChild(scoringControls);
       ui.appendChild(table);
+      ui.appendChild(summaryTable);
       ui.appendChild(summary);
       ui.appendChild(chartsShell);
-
-      updateScores();
     } catch (error) {
       if (ui) {
         ui.textContent = 'Scoring sandbox failed to load.';
