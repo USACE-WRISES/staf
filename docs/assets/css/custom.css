@@ -3914,6 +3914,45 @@ body.modal-open {
   font-variant-numeric: tabular-nums;
 }
 
+.scoring-table .mapping-display-value {
+  display: inline-block;
+  min-width: 1.1ch;
+}
+
+.scoring-table .mapping-display-value[hidden] {
+  display: none !important;
+}
+
+.scoring-table .mapping-edit-select {
+  width: 2.6rem;
+  max-width: 100%;
+  height: 1.45rem;
+  padding: 0 0.1rem;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1;
+  background: #ffffff;
+  text-align-last: center;
+  vertical-align: middle;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.scoring-table.mapping-edit-mode .mapping-edit-select {
+  width: 2.2rem;
+  height: 1.2rem;
+  padding: 0;
+  font-size: 0.72rem;
+}
+
+.scoring-table.mapping-edit-mode td.col-physical,
+.scoring-table.mapping-edit-mode td.col-chemical,
+.scoring-table.mapping-edit-mode td.col-biological {
+  padding-top: 0.12rem;
+  padding-bottom: 0.12rem;
+}
+
 .scoring-table .discipline-cell {
   font-weight: 600;
   vertical-align: middle;
@@ -4914,7 +4953,35 @@ body.modal-open {
 
 .outcome-summary {
   margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
   font-weight: 600;
+}
+
+.scoring-sandbox .mapping-edit-toggle-label {
+  font-weight: 500;
+}
+
+.scoring-sandbox .mapping-weight-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  margin-left: auto;
+}
+
+.scoring-sandbox .mapping-weight-field[hidden] {
+  display: none !important;
+}
+
+.scoring-sandbox .mapping-weight-input {
+  width: 5.5rem;
+  padding: 0.2rem 0.35rem;
+  border: 1px solid #cfcfcf;
+  border-radius: 8px;
+  font: inherit;
 }
 
 @media (max-width: 700px) {
