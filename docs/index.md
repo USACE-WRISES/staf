@@ -3,12 +3,12 @@ title: Stream Tiered Assessment Framework
 nav_order: 1
 description: "Landing page for the Stream Tiered Assessment Framework."
 ---
+{% include staf_page_chrome.html show_title=false %}
 
 <div class="landing-page">
   <div class="landing-content">
     <section class="landing-hero">
       <div class="hero-text">
-        <p class="hero-kicker reveal">Stream Tiered Assessment Framework</p>
         <h1 class="hero-title reveal">Assess stream function at the right level of effort.</h1>
         <p class="hero-subtitle reveal">
           A functions-based framework to evaluate stream condition across Screening, Rapid, and Detailed tiers.

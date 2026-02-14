@@ -873,28 +873,14 @@
         metricsSheet.columns = [
           { header: 'Metric ID', key: 'metricId', width: 28 },
           { header: 'Metric Name', key: 'name', width: 40 },
-          { header: 'Short Name', key: 'shortName', width: 26 },
-          { header: 'Discipline', key: 'discipline', width: 18 },
           { header: 'Function', key: 'function', width: 26 },
           { header: 'Category', key: 'category', width: 18 },
-          { header: 'Tags', key: 'tags', width: 18 },
-          { header: 'Status', key: 'status', width: 12 },
-          { header: 'Minimum Tier', key: 'minimumTier', width: 14 },
           { header: 'Recommended Tiers', key: 'recommendedTiers', width: 18 },
-          { header: 'Profile Availability', key: 'profileAvailability', width: 30 },
-          { header: 'Profile Summaries', key: 'profileSummaries', width: 40 },
-          { header: 'Curves Summary', key: 'curvesSummary', width: 28 },
-          { header: 'Inputs Summary', key: 'inputsSummary', width: 28 },
           { header: 'Metric Statement', key: 'functionStatement', width: 50 },
           { header: 'Description', key: 'description', width: 60 },
           { header: 'Method/Context', key: 'methodContext', width: 60 },
           { header: 'How To Measure', key: 'howToMeasure', width: 60 },
-          { header: 'Inputs', key: 'inputs', width: 60 },
           { header: 'References', key: 'references', width: 40 },
-          { header: 'Profiles', key: 'profiles', width: 60 },
-          { header: 'Scoring', key: 'scoring', width: 60 },
-          { header: 'Curve Integration', key: 'curveIntegration', width: 60 },
-          { header: 'User Metric', key: 'isUserMetric', width: 12 },
         ];
         metricsSheet.addRows(metricRows);
         metricsSheet.views = [{ state: 'frozen', ySplit: 1 }];
@@ -902,23 +888,15 @@
         const curveColumns = [
           { header: 'Metric ID', key: 'metricId', width: 24 },
           { header: 'Metric Name', key: 'metricName', width: 36 },
-          { header: 'Profile ID', key: 'profileId', width: 24 },
           { header: 'Profile Tier', key: 'profileTier', width: 14 },
-          { header: 'Curve Set ID', key: 'curveSetId', width: 28 },
           { header: 'Curve Set Name', key: 'curveSetName', width: 28 },
-          { header: 'Curve Set Tier', key: 'curveSetTier', width: 14 },
           { header: 'Curve ID', key: 'curveId', width: 28 },
-          { header: 'Curve Name', key: 'curveName', width: 28 },
           { header: 'Units', key: 'units', width: 16 },
           { header: 'Curve Type', key: 'xType', width: 14 },
           { header: 'Index Scores As Range', key: 'indexRange', width: 18 },
           { header: 'Axis X Label', key: 'axesXLabel', width: 18 },
           { header: 'Axis Y Label', key: 'axesYLabel', width: 18 },
-          { header: 'Active Layer ID', key: 'activeLayerId', width: 24 },
-          { header: 'Layer ID', key: 'layerId', width: 24 },
           { header: 'Layer Name', key: 'layerName', width: 24 },
-          { header: 'Is Active Layer', key: 'isActiveLayer', width: 14 },
-          { header: 'User Metric', key: 'isUserMetric', width: 12 },
         ];
 
         for (let i = 1; i <= maxPoints; i += 1) {
@@ -938,23 +916,15 @@
             const nextRow = {
               metricId: row.metricId,
               metricName: row.metricName,
-              profileId: row.profileId,
               profileTier: row.profileTier,
-              curveSetId: row.curveSetId,
               curveSetName: row.curveSetName,
-              curveSetTier: row.curveSetTier,
               curveId: row.curveId,
-              curveName: row.curveName,
               units: row.units,
               xType: row.xType,
               indexRange: row.indexRange,
               axesXLabel: row.axesXLabel,
               axesYLabel: row.axesYLabel,
-              activeLayerId: row.activeLayerId,
-              layerId: row.layerId,
               layerName: row.layerName,
-              isActiveLayer: row.isActiveLayer,
-              isUserMetric: row.isUserMetric,
             };
             (row.points || []).forEach((point, index) => {
               const idx = index + 1;

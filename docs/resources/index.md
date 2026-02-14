@@ -3,12 +3,7 @@ title: Resources
 nav_order: 9
 description: "Downloads and external references for tiered assessment." 
 ---
-
-# Resources
-
-<div class="button-row">
-  <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
-</div>
+{% include staf_page_chrome.html %}
 
 Curated downloads and links are listed below. Replace placeholders with real documents as they become available.
 

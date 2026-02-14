@@ -3,12 +3,7 @@ title: Data Dictionary
 parent: Contribute
 description: "Field definitions for JSON data files used by widgets."
 ---
-
-# Data dictionary
-
-<div class="button-row">
-  <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
-</div>
+{% include staf_page_chrome.html %}
 
 This page defines the fields used by JSON files in `docs/assets/data/`.
 

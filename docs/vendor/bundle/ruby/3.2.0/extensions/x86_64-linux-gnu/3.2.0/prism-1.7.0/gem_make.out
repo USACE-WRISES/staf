@@ -1,15 +1,15 @@
-current directory: /home/gtmenichino/code/staf_codex_fix/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
+current directory: /home/gtmenichino/code/staf/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
 /usr/bin/ruby3.2 -I/usr/lib/ruby/vendor_ruby extconf.rb
-checking for prism.h in /home/gtmenichino/code/staf_codex_fix/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/include... yes
-checking for prism/extension.h in /home/gtmenichino/code/staf_codex_fix/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext... yes
+checking for prism.h in /home/gtmenichino/code/staf/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/include... yes
+checking for prism/extension.h in /home/gtmenichino/code/staf/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext... yes
 checking for whether -fvisibility=hidden is accepted as CFLAGS... yes
 creating Makefile
 
-current directory: /home/gtmenichino/code/staf_codex_fix/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20260211-10830-8oh622 sitelibdir\=./.gem.20260211-10830-8oh622 clean
+current directory: /home/gtmenichino/code/staf/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
+make DESTDIR\= sitearchdir\=./.gem.20260213-19509-duz9wq sitelibdir\=./.gem.20260213-19509-duz9wq clean
 
-current directory: /home/gtmenichino/code/staf_codex_fix/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20260211-10830-8oh622 sitelibdir\=./.gem.20260211-10830-8oh622
+current directory: /home/gtmenichino/code/staf/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
+make DESTDIR\= sitearchdir\=./.gem.20260213-19509-duz9wq sitelibdir\=./.gem.20260213-19509-duz9wq
 compiling api_node.c
 compiling api_pack.c
 compiling ./../../src/diagnostic.c
@@ -36,9 +36,9 @@ compiling ./../../src/static_literals.c
 compiling ./../../src/token_type.c
 linking shared-object prism/prism.so
 
-current directory: /home/gtmenichino/code/staf_codex_fix/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20260211-10830-8oh622 sitelibdir\=./.gem.20260211-10830-8oh622 install
-/usr/bin/install -c -m 0755 prism.so ./.gem.20260211-10830-8oh622/prism
+current directory: /home/gtmenichino/code/staf/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
+make DESTDIR\= sitearchdir\=./.gem.20260213-19509-duz9wq sitelibdir\=./.gem.20260213-19509-duz9wq install
+/usr/bin/install -c -m 0755 prism.so ./.gem.20260213-19509-duz9wq/prism
 
-current directory: /home/gtmenichino/code/staf_codex_fix/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
-make DESTDIR\= sitearchdir\=./.gem.20260211-10830-8oh622 sitelibdir\=./.gem.20260211-10830-8oh622 clean
+current directory: /home/gtmenichino/code/staf/docs/vendor/bundle/ruby/3.2.0/gems/prism-1.7.0/ext/prism
+make DESTDIR\= sitearchdir\=./.gem.20260213-19509-duz9wq sitelibdir\=./.gem.20260213-19509-duz9wq clean

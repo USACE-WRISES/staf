@@ -3,12 +3,7 @@ title: Editing Guide
 parent: Contribute
 description: "Step-by-step instructions for editing content and files."
 ---
-
-# Editing guide
-
-<div class="button-row">
-  <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
-</div>
+{% include staf_page_chrome.html %}
 
 Use this guide for small edits and routine updates.
 

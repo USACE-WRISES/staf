@@ -9,6 +9,10 @@
   const dataUrl = `${baseUrl}/assets/data/functions.json`;
   const fallback = container.querySelector('.functions-explorer-fallback');
   const ui = container.querySelector('.functions-explorer-ui');
+  const functionIdAliases = {
+    'low-flow-baseflow-dynamics': 'baseflow-low-flow-dynamics',
+    'bed-composition-bedform-dynamics': 'bed-composition-bedform-diversity'
+  };
 
   const slugCategory = (category) =>
     `category-${category.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
@@ -61,6 +65,18 @@
     }
   };
 
+  const findFunctionRow = (tableBody, functionId) => {
+    if (!tableBody || !functionId) {
+      return null;
+    }
+    const safeId = String(functionId);
+    return (
+      tableBody.querySelector(`[data-function-id="${safeId}"]`) ||
+      tableBody.querySelector(`[data-function-alias="${safeId}"]`) ||
+      null
+    );
+  };
+
   const renderTable = (functionsList, tableBody) => {
     tableBody.innerHTML = '';
 
@@ -80,6 +96,13 @@
       const row = document.createElement('tr');
       const categoryClass = slugCategory(fn.category);
       row.classList.add(categoryClass);
+      row.classList.add('function-row');
+      row.dataset.functionId = fn.id;
+      const aliasId = functionIdAliases[fn.id];
+      if (aliasId) {
+        row.dataset.functionAlias = aliasId;
+      }
+      row.id = `stream-function-row-${fn.id}`;
 
       if (spans[index] > 0) {
         const categoryCell = document.createElement('td');
@@ -181,6 +204,7 @@
 
       const table = document.createElement('table');
       table.className = 'functions-table';
+      table.id = 'stream-functions-table';
       const thead = document.createElement('thead');
       thead.innerHTML = '<tr><th>Category</th><th>Function</th><th>Description</th></tr>';
       const tbody = document.createElement('tbody');
@@ -204,6 +228,59 @@
         });
         renderTable(filtered, tbody);
       };
+
+      let activeHighlightTimer = null;
+      const applyRowHighlight = (row, { scroll = true } = {}) => {
+        if (!row) {
+          return false;
+        }
+        if (scroll) {
+          const reduceMotion =
+            typeof window.matchMedia === 'function' &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          row.scrollIntoView({
+            behavior: reduceMotion ? 'auto' : 'smooth',
+            block: 'center'
+          });
+        }
+        row.classList.remove('is-highlighted');
+        // Restart highlight transition for repeated selections.
+        void row.offsetWidth;
+        row.classList.add('is-highlighted');
+        if (activeHighlightTimer) {
+          clearTimeout(activeHighlightTimer);
+        }
+        activeHighlightTimer = setTimeout(() => {
+          row.classList.remove('is-highlighted');
+        }, 2000);
+        return true;
+      };
+
+      const focusFunctionRowById = (functionId, { scroll = true } = {}) => {
+        if (!functionId) {
+          return false;
+        }
+        let row = findFunctionRow(tbody, functionId);
+        if (!row && (search.value || category.value !== 'all')) {
+          search.value = '';
+          category.value = 'all';
+          filterAndRender();
+          row = findFunctionRow(tbody, functionId);
+        }
+        return applyRowHighlight(row, { scroll });
+      };
+
+      const onFunctionSelect = (event) => {
+        const functionId = event?.detail?.id;
+        if (!functionId) {
+          return;
+        }
+        const shouldScroll = event?.detail?.scroll !== false;
+        focusFunctionRowById(functionId, { scroll: shouldScroll });
+      };
+
+      window.addEventListener('staf:function-select', onFunctionSelect);
+      window.stafHighlightFunctionRow = focusFunctionRowById;
 
       search.addEventListener('input', filterAndRender);
       category.addEventListener('change', filterAndRender);

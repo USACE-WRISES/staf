@@ -1,109 +1,129 @@
-<h2 id="tier-comparison-matrix">Tier Comparison Matrix</h2>
-<table class="tier-comparison-table" data-tier-comparison="true">
-  <thead>
-    <tr>
-      <th>Section</th>
-      <th>Screening</th>
-      <th>Rapid</th>
-      <th>Detailed</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>When to use</th>
-      <td>
+<section class="tier-comparison-widget" data-tier-comparison="true" aria-label="Tier comparison matrix">
+  <div class="tier-comparison-grid" role="list" aria-label="Tier comparison cards">
+    <article class="tier-comparison-card" data-tier="screening" role="listitem">
+      <h3 class="tier-comparison-card-title">
+        <a class="tier-comparison-tier-link" href="{{ site.baseurl }}/tiers/screening/">Screening</a>
+      </h3>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">When to use</h4>
         <ul>
           <li>Watershed screening and prioritization</li>
           <li>Early project planning across many sites</li>
           <li>Low-risk decisions where higher uncertainty is acceptable</li>
         </ul>
-      </td>
-      <td>
-        <ul>
-          <li>Comparing multiple candidate sites</li>
-          <li>Alternatives evaluation or conceptual design support</li>
-          <li>Validating Screening-tier results with field evidence</li>
-        </ul>
-      </td>
-      <td>
-        <ul>
-          <li>High-risk decisions and regulatory compliance</li>
-          <li>Mitigation crediting or debiting</li>
-          <li>Post-construction monitoring and performance verification</li>
-        </ul>
-      </td>
-    </tr>
-    <tr>
-      <th>What you get (outputs)</th>
-      <td>
+      </section>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">What you get (outputs)</h4>
         <ul>
           <li>Function scores with clear uncertainty notes</li>
           <li>Outcome indices (physical, chemical, biological)</li>
           <li>Ranked list of candidate reaches for follow-on tiers</li>
         </ul>
-      </td>
-      <td>
-        <ul>
-          <li>Semi-quantitative function and outcome scores</li>
-          <li>Structured field observations with photo documentation</li>
-          <li>Clear comparison across reaches and alternatives</li>
-        </ul>
-      </td>
-      <td>
-        <ul>
-          <li>Defensible, lower-uncertainty function scores</li>
-          <li>Calibrated reference curves and thresholds</li>
-          <li>Full documentation suitable for review</li>
-        </ul>
-      </td>
-    </tr>
-    <tr>
-      <th>What it costs (effort/resources)</th>
-      <td>
+      </section>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">What it costs (effort/resources)</h4>
         <ul>
           <li>Minutes to hours per site</li>
           <li>Primarily desktop time with optional field verification</li>
           <li>Minimal specialized equipment or lab analysis</li>
         </ul>
-      </td>
-      <td>
-        <ul>
-          <li>Hours to one day per reach</li>
-          <li>Trained field staff and standard field kit</li>
-          <li>Limited lab analysis</li>
-        </ul>
-      </td>
-      <td>
-        <ul>
-          <li>Multiple days to weeks per site</li>
-          <li>Specialized equipment, lab analysis, and modeling</li>
-          <li>Higher staffing and QA/QC requirements</li>
-        </ul>
-      </td>
-    </tr>
-    <tr>
-      <th>Typical data inputs</th>
-      <td>
+      </section>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">Typical data inputs</h4>
         <ul>
           <li>GIS land cover and impervious surface</li>
           <li>Remote sensing and imagery</li>
           <li>National datasets and existing reports</li>
         </ul>
-      </td>
-      <td>
+      </section>
+    </article>
+
+    <article class="tier-comparison-card" data-tier="rapid" role="listitem">
+      <h3 class="tier-comparison-card-title">
+        <a class="tier-comparison-tier-link" href="{{ site.baseurl }}/tiers/rapid/">Rapid</a>
+      </h3>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">When to use</h4>
+        <ul>
+          <li>Comparing multiple candidate sites</li>
+          <li>Alternatives evaluation or conceptual design support</li>
+          <li>Validating Screening-tier results with field evidence</li>
+        </ul>
+      </section>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">What you get (outputs)</h4>
+        <ul>
+          <li>Semi-quantitative function and outcome scores</li>
+          <li>Structured field observations with photo documentation</li>
+          <li>Clear comparison across reaches and alternatives</li>
+        </ul>
+      </section>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">What it costs (effort/resources)</h4>
+        <ul>
+          <li>Hours to one day per reach</li>
+          <li>Trained field staff and standard field kit</li>
+          <li>Limited lab analysis</li>
+        </ul>
+      </section>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">Typical data inputs</h4>
         <ul>
           <li>Structured field forms and checklists</li>
           <li>Simple channel and habitat measurements</li>
           <li>Screening-tier metrics for context</li>
         </ul>
-      </td>
-      <td>
+      </section>
+    </article>
+
+    <article class="tier-comparison-card" data-tier="detailed" role="listitem">
+      <h3 class="tier-comparison-card-title">
+        <a class="tier-comparison-tier-link" href="{{ site.baseurl }}/tiers/detailed/">Detailed</a>
+      </h3>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">When to use</h4>
+        <ul>
+          <li>High-risk decisions and regulatory compliance</li>
+          <li>Mitigation crediting or debiting</li>
+          <li>Post-construction monitoring and performance verification</li>
+        </ul>
+      </section>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">What you get (outputs)</h4>
+        <ul>
+          <li>Defensible, lower-uncertainty function scores</li>
+          <li>Calibrated reference curves and thresholds</li>
+          <li>Full documentation suitable for review</li>
+        </ul>
+      </section>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">What it costs (effort/resources)</h4>
+        <ul>
+          <li>Multiple days to weeks per site</li>
+          <li>Specialized equipment, lab analysis, and modeling</li>
+          <li>Higher staffing and QA/QC requirements</li>
+        </ul>
+      </section>
+
+      <section class="tier-comparison-block">
+        <h4 class="tier-comparison-block-title">Typical data inputs</h4>
         <ul>
           <li>Intensive field surveys and monitoring</li>
           <li>Water quality and biological sampling</li>
           <li>Regional reference datasets and models</li>
         </ul>
-      </td>
-    </tr>
-  </tbody>
-</table>
+      </section>
+    </article>
+  </div>
+</section>
