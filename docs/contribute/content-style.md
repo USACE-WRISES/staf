@@ -3,12 +3,7 @@ title: Content Style
 parent: Contribute
 description: "Writing conventions for clarity and consistency."
 ---
-
-# Content style
-
-<div class="button-row">
-  <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
-</div>
+{% include staf_page_chrome.html %}
 
 ## Tone and voice
 - Use plain language and short sentences.

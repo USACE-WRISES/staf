@@ -1,0 +1,31 @@
+<section class="tier-selector-page-hero" aria-label="Site navigation">
+  <div class="tier-selector-page-topbar">
+    <a class="tier-selector-page-brand" href="{{ site.baseurl }}/" aria-label="Stream Tiered Assessment Framework home">
+      <img
+        class="tier-selector-page-brand-logo"
+        src="{{ site.baseurl }}/assets/images/STAF_Logo.png"
+        alt="Stream Tiered Assessment Framework logo"
+      >
+    </a>
+
+    <nav class="tier-selector-page-menu" aria-label="Primary menu">
+      <a class="tier-selector-page-link" href="{{ site.baseurl }}/">Home</a>
+      <a class="tier-selector-page-link" href="{{ site.baseurl }}/quick-overview/">Overview</a>
+      <a class="tier-selector-page-link" href="{{ site.baseurl }}/tier-selector/">Tiers</a>
+      <a class="tier-selector-page-link" href="{{ site.baseurl }}/functions/">Functions</a>
+      <a class="tier-selector-page-link" href="{{ site.baseurl }}/scoring/">Scoring</a>
+      <a class="tier-selector-page-link" href="{{ site.baseurl }}/tiers/screening/">Screening</a>
+      <a class="tier-selector-page-link" href="{{ site.baseurl }}/tiers/rapid/">Rapid</a>
+      <a class="tier-selector-page-link" href="{{ site.baseurl }}/tiers/detailed/">Detailed</a>
+    </nav>
+  </div>
+</section>
+
+{% assign staf_page_title = include.title | default: page.title %}
+{% unless include.show_title == false or include.show_title == 'false' %}
+  {% if staf_page_title and staf_page_title != "" %}
+  <section class="tier-selector-page-title-band" aria-label="Page title">
+    <h1 id="{{ staf_page_title | slugify }}" class="tier-selector-page-title">{{ staf_page_title }}</h1>
+  </section>
+  {% endif %}
+{% endunless %}
