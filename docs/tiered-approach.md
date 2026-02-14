@@ -3,14 +3,7 @@ title: Stream Tiered Assessment Framework
 nav_order: 2
 description: "A practical, functions-based, three-tier framework for stream assessment that scales level of effort while preserving comparability."
 ---
-<p class="hero-kicker">Stream Tiered Assessment Framework</p>
-
-
-# Stream Tiered Assessment Framework
-
-<div class="button-row">
-  <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
-</div>
+{% include staf_page_chrome.html %}
 
 **Working draft (for website use).**  
 This guide explains the Stream Tiered Assessment Framework: what it is, why it's useful, what functions it uses, what the tiers are, how scoring works, and how to perform assessments in practice.

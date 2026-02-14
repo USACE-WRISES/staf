@@ -1,0 +1,23 @@
+# =========================
+# Node dependencies
+# =========================
+node_modules/
+
+# =========================
+# Bundler artifacts (OS-specific)
+# =========================
+docs/vendor/
+docs/.bundle/
+.bundle/
+vendor/
+
+# =========================
+# Jekyll build output
+# =========================
+_site/
+
+# =========================
+# Misc
+# =========================
+.DS_Store
+Thumbs.db

@@ -113,23 +113,37 @@
 
   const formatOverlay = (data) => {
     const hasScores = [data.bio, data.phys, data.chem].every(Number.isFinite);
-    const ecosystemCondition = hasScores
-      ? ((data.bio + data.phys + data.chem) / 3).toFixed(2)
-      : 'N/A';
+    const ecosystemCondition = hasScores ? clampScore((data.bio + data.phys + data.chem) / 3) : null;
     const location =
       data.river && data.city && data.state
         ? `${data.river}, ${data.city}, ${data.state}`
         : 'Unknown';
 
-    const formatScore = (value) => (Number.isFinite(value) ? value.toFixed(2) : 'N/A');
+    const formatScore = (value) => ({
+      value: Number.isFinite(value) ? value : null,
+      text: Number.isFinite(value) ? value.toFixed(2) : 'N/A',
+    });
 
     return {
-      ecosystemCondition,
+      ecosystemCondition: formatScore(ecosystemCondition),
       physical: formatScore(data.phys),
       chemical: formatScore(data.chem),
       biological: formatScore(data.bio),
       location: safeDecode(location),
     };
+  };
+
+  const summaryColorForValue = (value) => {
+    if (!Number.isFinite(value)) {
+      return '#c8d9f2';
+    }
+    if (value <= 0.39) {
+      return '#f5b5b5';
+    }
+    if (value <= 0.69) {
+      return '#f5e7a6';
+    }
+    return '#c8d9f2';
   };
 
   const ensureOverlay = (selector, classes) => {
@@ -151,24 +165,66 @@
     const parsed = parseImageFilename(filename);
     const formatted = formatOverlay(parsed);
     topLeftOverlay.innerHTML = '';
+
     const condition = document.createElement('div');
     condition.className = 'overlay-condition';
-    condition.textContent = `Ecosystem Condition: ${formatted.ecosystemCondition}`;
-    const list = document.createElement('ul');
-    list.className = 'overlay-list';
-    const items = [
-      `Physical: ${formatted.physical}`,
-      `Chemical: ${formatted.chemical}`,
-      `Biological: ${formatted.biological}`,
+    condition.textContent = 'Index Scores';
+
+    const metrics = document.createElement('div');
+    metrics.className = 'overlay-metrics';
+    const rows = [
+      { label: 'Ecosystem Condition', score: formatted.ecosystemCondition, ecosystem: true },
+      { label: 'Physical', score: formatted.physical },
+      { label: 'Chemical', score: formatted.chemical },
+      { label: 'Biological', score: formatted.biological },
     ];
-    items.forEach((text) => {
-      const line = document.createElement('li');
-      line.className = 'overlay-line';
-      line.textContent = text;
-      list.appendChild(line);
+
+    rows.forEach((rowData) => {
+      const row = document.createElement('div');
+      row.className = 'overlay-metric';
+      if (rowData.ecosystem) {
+        row.classList.add('is-ecosystem');
+      }
+      if (!Number.isFinite(rowData.score.value)) {
+        row.classList.add('is-na');
+      }
+
+      const header = document.createElement('div');
+      header.className = 'overlay-metric-header';
+
+      const label = document.createElement('span');
+      label.className = 'overlay-metric-label';
+      label.textContent = rowData.label;
+
+      const value = document.createElement('span');
+      value.className = 'overlay-metric-value';
+      value.textContent = rowData.score.text;
+
+      header.appendChild(label);
+      header.appendChild(value);
+
+      const barRow = document.createElement('div');
+      barRow.className = 'overlay-metric-bar-row';
+
+      const bar = document.createElement('div');
+      bar.className = 'overlay-bar';
+      const barFill = document.createElement('span');
+      barFill.className = 'overlay-bar-fill';
+      barFill.style.width = Number.isFinite(rowData.score.value)
+        ? `${(rowData.score.value * 100).toFixed(1)}%`
+        : '0%';
+      barFill.style.background = summaryColorForValue(rowData.score.value);
+      bar.appendChild(barFill);
+
+      barRow.appendChild(bar);
+
+      row.appendChild(header);
+      row.appendChild(barRow);
+      metrics.appendChild(row);
     });
+
     topLeftOverlay.appendChild(condition);
-    topLeftOverlay.appendChild(list);
+    topLeftOverlay.appendChild(metrics);
     bottomRightOverlay.textContent = formatted.location;
   };
 

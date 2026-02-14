@@ -3,12 +3,7 @@ title: Contribute
 nav_order: 10
 description: "How to contribute content and keep the site easy to maintain."
 ---
-
-# Contribute
-
-<div class="button-row">
-  <a class="btn" href="{{ site.baseurl }}/">Back to Home</a>
-</div>
+{% include staf_page_chrome.html %}
 
 This repository is designed to be simple, modular, and transparent. Content is written in Markdown, data tables live in JSON, and widgets use vanilla JavaScript.
 
