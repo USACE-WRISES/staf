@@ -227,6 +227,10 @@ h3,
   gap: 0.14rem;
 }
 
+.overlay-metric.is-subindex {
+  padding-left: 0.72rem;
+}
+
 .overlay-metric-header {
   display: flex;
   align-items: baseline;

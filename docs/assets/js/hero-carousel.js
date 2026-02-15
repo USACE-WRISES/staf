@@ -146,6 +146,64 @@
     return '#c8d9f2';
   };
 
+  const getScoreRows = (formatted) => [
+    {
+      label: 'Ecosystem Condition',
+      score: formatted.ecosystemCondition,
+      ecosystem: true,
+    },
+    { label: 'Physical', score: formatted.physical, subIndex: true },
+    { label: 'Chemical', score: formatted.chemical, subIndex: true },
+    { label: 'Biological', score: formatted.biological, subIndex: true },
+  ];
+
+  const createMetricRow = (rowData, isSubIndex = false) => {
+    const row = document.createElement('div');
+    row.className = 'overlay-metric';
+    if (rowData.ecosystem) {
+      row.classList.add('is-ecosystem');
+    }
+    if (isSubIndex) {
+      row.classList.add('is-subindex');
+    }
+    if (!Number.isFinite(rowData.score.value)) {
+      row.classList.add('is-na');
+    }
+
+    const header = document.createElement('div');
+    header.className = 'overlay-metric-header';
+
+    const label = document.createElement('span');
+    label.className = 'overlay-metric-label';
+    label.textContent = rowData.label;
+
+    const value = document.createElement('span');
+    value.className = 'overlay-metric-value';
+    value.textContent = rowData.score.text;
+
+    header.appendChild(label);
+    header.appendChild(value);
+
+    const barRow = document.createElement('div');
+    barRow.className = 'overlay-metric-bar-row';
+
+    const bar = document.createElement('div');
+    bar.className = 'overlay-bar';
+    const barFill = document.createElement('span');
+    barFill.className = 'overlay-bar-fill';
+    barFill.style.width = Number.isFinite(rowData.score.value)
+      ? `${(rowData.score.value * 100).toFixed(1)}%`
+      : '0%';
+    barFill.style.background = summaryColorForValue(rowData.score.value);
+    bar.appendChild(barFill);
+
+    barRow.appendChild(bar);
+    row.appendChild(header);
+    row.appendChild(barRow);
+
+    return row;
+  };
+
   const ensureOverlay = (selector, classes) => {
     let element = carousel.querySelector(selector);
     if (!element) {
@@ -170,57 +228,11 @@
     condition.className = 'overlay-condition';
     condition.textContent = 'Index Scores';
 
+    const rows = getScoreRows(formatted);
     const metrics = document.createElement('div');
     metrics.className = 'overlay-metrics';
-    const rows = [
-      { label: 'Ecosystem Condition', score: formatted.ecosystemCondition, ecosystem: true },
-      { label: 'Physical', score: formatted.physical },
-      { label: 'Chemical', score: formatted.chemical },
-      { label: 'Biological', score: formatted.biological },
-    ];
-
     rows.forEach((rowData) => {
-      const row = document.createElement('div');
-      row.className = 'overlay-metric';
-      if (rowData.ecosystem) {
-        row.classList.add('is-ecosystem');
-      }
-      if (!Number.isFinite(rowData.score.value)) {
-        row.classList.add('is-na');
-      }
-
-      const header = document.createElement('div');
-      header.className = 'overlay-metric-header';
-
-      const label = document.createElement('span');
-      label.className = 'overlay-metric-label';
-      label.textContent = rowData.label;
-
-      const value = document.createElement('span');
-      value.className = 'overlay-metric-value';
-      value.textContent = rowData.score.text;
-
-      header.appendChild(label);
-      header.appendChild(value);
-
-      const barRow = document.createElement('div');
-      barRow.className = 'overlay-metric-bar-row';
-
-      const bar = document.createElement('div');
-      bar.className = 'overlay-bar';
-      const barFill = document.createElement('span');
-      barFill.className = 'overlay-bar-fill';
-      barFill.style.width = Number.isFinite(rowData.score.value)
-        ? `${(rowData.score.value * 100).toFixed(1)}%`
-        : '0%';
-      barFill.style.background = summaryColorForValue(rowData.score.value);
-      bar.appendChild(barFill);
-
-      barRow.appendChild(bar);
-
-      row.appendChild(header);
-      row.appendChild(barRow);
-      metrics.appendChild(row);
+      metrics.appendChild(createMetricRow(rowData, Boolean(rowData.subIndex)));
     });
 
     topLeftOverlay.appendChild(condition);
