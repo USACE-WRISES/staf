@@ -401,6 +401,302 @@ h3,
   color: #1f2d41;
 }
 
+.factsheet-download-row {
+  justify-content: center;
+  margin: 0.2rem auto 0.9rem;
+}
+
+.quick-overview-factsheet {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.3rem;
+}
+
+.quick-overview-page .factsheet-sheet {
+  background: #ffffff;
+  border: 1px solid #c9d6e0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 14px 28px rgba(25, 48, 76, 0.12);
+}
+
+.quick-overview-page .factsheet-header {
+  background: #2b5a7c;
+  color: #ffffff;
+  padding: 1.2rem 1.35rem 1rem;
+}
+
+.quick-overview-page .factsheet-page-label {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  font-weight: 700;
+}
+
+.quick-overview-page .factsheet-title {
+  margin: 0;
+  color: #ffffff;
+  line-height: 1.2;
+  font-size: clamp(1.2rem, 2.2vw, 1.65rem);
+}
+
+.quick-overview-page .factsheet-subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.95rem;
+  opacity: 0.95;
+}
+
+.quick-overview-page .factsheet-body {
+  padding: 1.1rem 1.35rem 1.25rem;
+}
+
+.quick-overview-page .factsheet-section-label {
+  margin: 0 0 0.55rem;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #2b5a7c;
+  border-bottom: 2px solid #2b5a7c;
+  padding-bottom: 0.2rem;
+}
+
+.quick-overview-page .factsheet-need-text {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: #273546;
+}
+
+.quick-overview-page .factsheet-badge-new {
+  display: inline-block;
+  background: #d4a843;
+  color: #ffffff;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.08rem 0.4rem;
+  border-radius: 3px;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+  letter-spacing: 0.04em;
+}
+
+.quick-overview-page .factsheet-tier-diagram {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.7rem;
+  margin-bottom: 0.65rem;
+}
+
+.quick-overview-page .factsheet-tier-card {
+  border-radius: 8px;
+  padding: 0.72rem 0.8rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.quick-overview-page .factsheet-tier-card.screening {
+  background: #f0f4f7;
+  border: 1.5px solid #b8cdd9;
+}
+
+.quick-overview-page .factsheet-tier-card.rapid {
+  background: #e6e6e6;
+  border: 1.5px solid #aaaaaa;
+}
+
+.quick-overview-page .factsheet-tier-card.detailed {
+  background: #d0d0d0;
+  border: 1.5px solid #888888;
+}
+
+.quick-overview-page .factsheet-tier-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.96rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.quick-overview-page .factsheet-tier-card p {
+  margin: 0 0 0.32rem;
+}
+
+.quick-overview-page .factsheet-tier-card p:last-child {
+  margin-bottom: 0;
+}
+
+.quick-overview-page .factsheet-effort-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.35rem 0 0.1rem;
+  font-size: 0.78rem;
+  color: #505a63;
+}
+
+.quick-overview-page .factsheet-effort-arrow .arrow-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, #b8cdd9, #555555);
+  margin: 0 0.55rem;
+  position: relative;
+}
+
+.quick-overview-page .factsheet-effort-arrow .arrow-line::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: -4px;
+  border-left: 8px solid #555555;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+
+.quick-overview-page .factsheet-effort-caption {
+  margin: 0 0 0.55rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #505a63;
+}
+
+.quick-overview-page .factsheet-callout-row {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.quick-overview-page .factsheet-callout-box {
+  margin: 0;
+  border: 2px solid #2b5a7c;
+  border-radius: 6px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.quick-overview-page .factsheet-purpose-box {
+  background: #f5f8fa;
+  border-left: 4px solid #2b5a7c;
+  padding: 0.72rem 0.85rem;
+  margin-bottom: 0.8rem;
+}
+
+.quick-overview-page .factsheet-purpose-box .factsheet-purpose-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #2b5a7c;
+}
+
+.quick-overview-page .factsheet-purpose-box p {
+  margin: 0 0 0.35rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #273546;
+}
+
+.quick-overview-page .factsheet-objectives-list {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.quick-overview-page .factsheet-objectives-list li {
+  margin-bottom: 0.2rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: #273546;
+}
+
+.quick-overview-page .factsheet-two-col {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.quick-overview-page .factsheet-col .factsheet-col-title {
+  margin: 0 0 0.22rem;
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: #2b5a7c;
+}
+
+.quick-overview-page .factsheet-col p,
+.quick-overview-page .factsheet-col li {
+  font-size: 0.88rem;
+  line-height: 1.48;
+  color: #273546;
+}
+
+.quick-overview-page .factsheet-col ul {
+  margin: 0 0 0.72rem;
+  padding-left: 1rem;
+}
+
+.quick-overview-page .factsheet-col li {
+  margin-bottom: 0.2rem;
+}
+
+.quick-overview-page .factsheet-resources-section {
+  margin-top: 0.15rem;
+}
+
+.quick-overview-page .factsheet-resources-label {
+  margin-top: 0;
+}
+
+.quick-overview-page .factsheet-resource-list {
+  margin: 0.2rem 0 0.8rem;
+  padding-left: 1rem;
+}
+
+.quick-overview-page .factsheet-resource-list li {
+  margin-bottom: 0.32rem;
+  font-size: 0.88rem;
+  line-height: 1.48;
+  color: #273546;
+}
+
+.quick-overview-page .factsheet-resources {
+  margin: 0.15rem 0 0;
+}
+
+.quick-overview-page .factsheet-bottom-summary {
+  margin: 0.2rem 0 0;
+  background: #2b5a7c;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+@media (max-width: 920px) {
+  .quick-overview-page .factsheet-tier-diagram {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-overview-page .factsheet-two-col {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .quick-overview-page {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .quick-overview-page .factsheet-header,
+  .quick-overview-page .factsheet-body {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
 .landing-hero > * {
   position: relative;
   z-index: 2;
