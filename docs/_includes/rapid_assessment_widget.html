@@ -41,24 +41,36 @@
             </div>
             <section class="screening-settings-panel">
               <div class="settings-header settings-header-row">
-                <h3>Settings</h3>
+                <h3 class="settings-heading">
+                  <span>Settings</span>
+                  <span
+                    class="settings-lock-icon"
+                    aria-hidden="true"
+                    title="This assessment is locked and cannot be edited."
+                  >
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <rect x="6.5" y="10.25" width="11" height="9.25" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>
+                      <path d="M9.5 10.25V8a2.5 2.5 0 0 1 5 0v2.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                    </svg>
+                  </span>
+                </h3>
                 <div class="assessment-inline-actions">
                   <button class="btn btn-small rapid-duplicate" type="button" disabled>Duplicate</button>
                   <button class="btn btn-small rapid-delete" type="button" disabled>Delete</button>
                 </div>
               </div>
               <div class="settings-grid">
-                <label class="settings-field">
+                <label class="settings-field is-read-only">
                   <span>Name</span>
-                  <input class="settings-name" type="text" readonly disabled />
+                  <input class="settings-name" type="text" readonly aria-readonly="true" />
                 </label>
-                <label class="settings-field">
+                <label class="settings-field is-read-only">
                   <span>Applicability</span>
-                  <input class="settings-applicability" type="text" readonly disabled />
+                  <input class="settings-applicability" type="text" readonly aria-readonly="true" />
                 </label>
-                <label class="settings-field settings-notes">
+                <label class="settings-field settings-notes is-read-only">
                   <span>Notes</span>
-                  <textarea class="settings-notes-input" rows="2" readonly disabled></textarea>
+                  <textarea class="settings-notes-input" rows="2" readonly aria-readonly="true"></textarea>
                 </label>
               </div>
             </section>

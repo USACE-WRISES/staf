@@ -25,6 +25,10 @@
   const collapsedGlyph = '&#9656;';
   const expandedGlyph = '&#9662;';
   const isReadOnlyAssessment = true;
+  const assessmentLockedTooltip = 'This assessment is locked and cannot be edited.';
+  const rapidAssessmentName = 'Stream Functions Assessment and Rapid Index (SFARI)';
+  const rapidNotesText =
+    'Stream Functions Assessment and Rapid Index (SFARI) is a nationally applicable rapid assessment developed by USACE ERDC, with guidance documents pending publication.';
   const indicatorIndexByScore = {
     SA: 0.93,
     A: 0.73,
@@ -256,31 +260,76 @@
       const nameInput = ui.querySelector('.settings-name');
       const applicabilityInput = ui.querySelector('.settings-applicability');
       const notesInput = ui.querySelector('.settings-notes-input');
+      const settingsHeading = ui.querySelector(
+        '.screening-settings-panel .settings-header h3'
+      );
       const controlsHost = ui.querySelector('.rapid-controls-host');
       const tableHost = ui.querySelector('.rapid-table-wrap');
+
+      if (settingsHeading) {
+        let settingsLockIcon = settingsHeading.querySelector('.settings-lock-icon');
+        if (!settingsLockIcon) {
+          settingsLockIcon = document.createElement('span');
+          settingsLockIcon.className = 'settings-lock-icon';
+          settingsLockIcon.setAttribute('aria-hidden', 'true');
+          settingsLockIcon.innerHTML =
+            '<svg viewBox="0 0 24 24" focusable="false">' +
+            '<rect x="6.5" y="10.25" width="11" height="9.25" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>' +
+            '<path d="M9.5 10.25V8a2.5 2.5 0 0 1 5 0v2.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>' +
+            '</svg>';
+          settingsHeading.appendChild(settingsLockIcon);
+        }
+        settingsLockIcon.setAttribute('title', assessmentLockedTooltip);
+      }
 
       if (tabsHost) {
         const tab = document.createElement('button');
         tab.type = 'button';
         tab.className = 'assessment-tab is-active';
-        tab.textContent = 'Stream Functions Assessment and Rapid Index (SFARI)';
+        tab.classList.add('is-locked');
+        tab.setAttribute('aria-label', `${rapidAssessmentName}. ${assessmentLockedTooltip}`);
+        const tabLabel = document.createElement('span');
+        tabLabel.className = 'assessment-tab-label';
+        tabLabel.textContent = rapidAssessmentName;
+        tab.appendChild(tabLabel);
+        const lockIcon = document.createElement('span');
+        lockIcon.className = 'assessment-tab-lock-icon';
+        lockIcon.setAttribute('aria-hidden', 'true');
+        lockIcon.setAttribute('title', assessmentLockedTooltip);
+        lockIcon.innerHTML =
+          '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+          '<rect x="6.5" y="10.25" width="11" height="9.25" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>' +
+          '<path d="M9.5 10.25V8a2.5 2.5 0 0 1 5 0v2.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>' +
+          '</svg>';
+        tab.appendChild(lockIcon);
         tab.setAttribute('aria-selected', 'true');
         tabsHost.appendChild(tab);
       }
 
+      const setSettingsFieldReadOnly = (input, isReadOnly) => {
+        if (!input) {
+          return;
+        }
+        input.readOnly = isReadOnly;
+        input.disabled = false;
+        input.setAttribute('aria-readonly', isReadOnly ? 'true' : 'false');
+        const field = input.closest('.settings-field');
+        if (field) {
+          field.classList.toggle('is-read-only', isReadOnly);
+        }
+      };
+
       if (nameInput) {
-        nameInput.value = 'Stream Functions Assessment and Rapid Index (SFARI)';
-        nameInput.readOnly = true;
-        nameInput.disabled = true;
+        nameInput.value = rapidAssessmentName;
+        setSettingsFieldReadOnly(nameInput, isReadOnlyAssessment);
       }
       if (applicabilityInput) {
         applicabilityInput.value = 'Nationwide, wide-able streams';
-        applicabilityInput.readOnly = true;
-        applicabilityInput.disabled = true;
+        setSettingsFieldReadOnly(applicabilityInput, isReadOnlyAssessment);
       }
       if (notesInput) {
-        notesInput.readOnly = true;
-        notesInput.disabled = true;
+        notesInput.value = rapidNotesText;
+        setSettingsFieldReadOnly(notesInput, isReadOnlyAssessment);
       }
 
       const indicatorScores = new Map();

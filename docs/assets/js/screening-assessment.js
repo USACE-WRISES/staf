@@ -29,8 +29,11 @@
   const collapsedGlyph = '&#9656;';
   const expandedGlyph = '&#9662;';
   const storageKey = 'staf_screening_assessments_v1';
-  const predefinedName = 'Stream Condition Screening (SCS)';
+  const predefinedName = 'Stream Condition Screening';
   const legacyPredefinedName = 'Predefined Screening Assessment';
+  const assessmentLockedTooltip = 'This assessment is locked and cannot be edited.';
+  const predefinedNotesText =
+    'This is an example assessment that compiles commonly used screening metrics across the United States. This is locked for editing, but you can duplicate the screening to edit it (Duplicate button), or build your own ("+" button).';
   const notifyAssessmentUpdate = () => {
     if (window.dispatchEvent) {
       window.dispatchEvent(
@@ -677,7 +680,7 @@
           name,
           applicability:
             type === 'predefined' ? 'Nationwide, wadeable streams' : '',
-          notes: '',
+          notes: type === 'predefined' ? predefinedNotesText : '',
           metricIds: ids,
           ratings: buildRatings(ids),
           curves: buildCurveMap(ids),
@@ -787,7 +790,10 @@
             type === 'predefined'
               ? scenario.applicability || 'Nationwide, wadeable streams'
               : scenario.applicability || '',
-          notes: scenario.notes || '',
+          notes:
+            type === 'predefined'
+              ? scenario.notes || predefinedNotesText
+              : scenario.notes || '',
           metricIds: ids,
           ratings: buildRatings(ids, scenario.ratings),
           curves,
@@ -838,6 +844,7 @@
       const nameInput = ui.querySelector('.settings-name');
       const applicabilityInput = ui.querySelector('.settings-applicability');
       const notesInput = ui.querySelector('.settings-notes-input');
+      const settingsLockIcon = ui.querySelector('.settings-lock-icon');
       const controlsHost = ui.querySelector('.screening-controls-host');
       const tableHost = ui.querySelector('.screening-table-wrap');
       const libraryModal = ui.querySelector('.screening-library-modal');
@@ -4349,6 +4356,10 @@
           const tab = document.createElement('button');
           tab.type = 'button';
           tab.className = 'assessment-tab';
+          const isPredefinedScenario = scenario.type === 'predefined';
+          if (isPredefinedScenario) {
+            tab.classList.add('is-locked');
+          }
           if (scenario.id === store.activeId) {
             tab.classList.add('is-active');
           }
@@ -4357,7 +4368,31 @@
             'aria-selected',
             scenario.id === store.activeId ? 'true' : 'false'
           );
-          tab.textContent = scenario.name;
+          if (isPredefinedScenario) {
+            tab.setAttribute(
+              'aria-label',
+              `${scenario.name}. ${assessmentLockedTooltip}`
+            );
+          }
+          const tabLabel = document.createElement('span');
+          tabLabel.className = 'assessment-tab-label';
+          tabLabel.textContent = scenario.name;
+          tab.appendChild(tabLabel);
+          if (isPredefinedScenario) {
+            const lockIcon = document.createElement('span');
+            lockIcon.className = 'assessment-tab-lock-icon';
+            lockIcon.setAttribute('aria-hidden', 'true');
+            lockIcon.setAttribute(
+              'title',
+              assessmentLockedTooltip
+            );
+            lockIcon.innerHTML =
+              '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+              '<rect x="6.5" y="10.25" width="11" height="9.25" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>' +
+              '<path d="M9.5 10.25V8a2.5 2.5 0 0 1 5 0v2.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>' +
+              '</svg>';
+            tab.appendChild(lockIcon);
+          }
           tab.addEventListener('click', () => {
             store.activeId = scenario.id;
             store.save();
@@ -4368,11 +4403,26 @@
         });
       };
 
+      const setSettingsFieldReadOnly = (input, isReadOnly) => {
+        if (!input) {
+          return;
+        }
+        input.readOnly = isReadOnly;
+        input.setAttribute('aria-readonly', isReadOnly ? 'true' : 'false');
+        const field = input.closest('.settings-field');
+        if (field) {
+          field.classList.toggle('is-read-only', isReadOnly);
+        }
+      };
+
       const applyScenario = (scenario) => {
         if (!scenario) {
           return;
         }
         activeScenario = scenario;
+        if (scenario.type === 'predefined' && !(scenario.notes || '').trim()) {
+          scenario.notes = predefinedNotesText;
+        }
         const metricIds =
           scenario.type === 'predefined' ? predefinedMetricIds : scenario.metricIds;
         selectedMetricIds = new Set(metricIds);
@@ -4455,15 +4505,13 @@
         if (deleteBtn) {
           deleteBtn.disabled = isPredefined;
         }
-        if (nameInput) {
-          nameInput.readOnly = isPredefined;
+        if (settingsLockIcon) {
+          settingsLockIcon.hidden = !isPredefined;
+          settingsLockIcon.setAttribute('title', assessmentLockedTooltip);
         }
-        if (applicabilityInput) {
-          applicabilityInput.readOnly = isPredefined;
-        }
-        if (notesInput) {
-          notesInput.readOnly = isPredefined;
-        }
+        setSettingsFieldReadOnly(nameInput, isPredefined);
+        setSettingsFieldReadOnly(applicabilityInput, isPredefined);
+        setSettingsFieldReadOnly(notesInput, isPredefined);
 
         renderTable();
         notifyAssessmentUpdate();
@@ -4546,10 +4594,6 @@
           return;
         }
         if (activeScenario.type === 'predefined') {
-          duplicateScenario(activeScenario);
-          activeScenario = store.active();
-        }
-        if (!activeScenario || activeScenario.type === 'predefined') {
           return;
         }
         const metricDetail = detail || null;
