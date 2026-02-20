@@ -8,14 +8,14 @@ description: "Field-based rapid assessment for comparing sites and alternatives.
 ## Workflow steps
 1. User will apply the Stream Functions Assessment and Rapid Index (SFARI) assessment.
 2. Collect desktop metrics to support rapid assessment.
-3. Perform field visit and complete metric scores based on level of agreement with metric statements.
+3. Perform field visit and score metrics on the likert scale based on scoring criteria and agreement with Function statements (see expander glyphs).
 4. User scores functions based on lines of evidence (metric scores) and the Function Statement.
 
 ## How scoring works at this tier
-Combine multiple rapid field metrics per function as needed. User scores functions based on multiple lines of evidence from metric scores.
+At the rapid tier, users should apply SFARI, where function scores are user-assigned based on agreement with Function Statements (see expander glyphs in Function column).  Function scores automatically get rolled up into sub-index scores and an overall ecosystem condition index.
 
 <div class="factsheet-card">
-  <p class="factsheet-card-text">Use the widget to score indicators, set function scores based on agreement with function statement, and see how scores roll up to ecosystem condition index.</p>
+  <p class="factsheet-card-text">Use the widget to try out SFARI, the rapid assessment developed by USACE ERDC.</p>
 </div>
 
 {% include rapid_assessment_widget.html %}

@@ -213,6 +213,9 @@
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const defaultIndexValues = [0, 0.4, 0.7, 1];
   const defaultProfileId = 'detailed-default';
+  const defaultExampleDetailedApplicability = 'No specified region';
+  const defaultExampleDetailedNotes =
+    'This is an fictitious example of a detailed assessment that could be created by combining detailed metrics.  Feel free to duplicate, edit, or create a new assessment';
 
   const normalizeCurveType = (value) => {
     if (!value) {
@@ -872,8 +875,8 @@
         return {
           id: generateId(),
           name: 'Example Detailed Assessment',
-          applicability: '',
-          notes: '',
+          applicability: defaultExampleDetailedApplicability,
+          notes: defaultExampleDetailedNotes,
           fieldValues: {},
           metricIds: state.metricIds,
           curves: state.curves,

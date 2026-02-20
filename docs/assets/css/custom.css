@@ -2480,11 +2480,28 @@ body.modal-open {
   padding: 0.35rem 0.75rem;
   font-size: 0.9rem;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .assessment-tab.is-active {
   background: #ffffff;
   font-weight: 600;
+}
+
+.assessment-tab-lock-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.92rem;
+  height: 0.92rem;
+  color: #7a8391;
+}
+
+.assessment-tab-lock-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .screening-tab-add {
@@ -2522,6 +2539,27 @@ body.modal-open {
   margin-bottom: 1rem;
 }
 
+.settings-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.settings-lock-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.92rem;
+  height: 0.92rem;
+  color: #7a8391;
+}
+
+.settings-lock-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
 .settings-header h3 {
   margin: 0 0 0.5rem;
   font-size: 1rem;
@@ -2551,6 +2589,20 @@ body.modal-open {
   border-radius: 10px;
   font: inherit;
   background: #ffffff;
+}
+
+.settings-field.is-read-only input,
+.settings-field.is-read-only textarea {
+  background: #f3f4f6;
+  border-color: #d4d7dd;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.settings-field.is-read-only input:focus,
+.settings-field.is-read-only textarea:focus {
+  box-shadow: none;
+  outline: none;
 }
 
 .settings-notes-input {
