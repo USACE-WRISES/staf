@@ -12,7 +12,7 @@ description: "Field-based rapid assessment for comparing sites and alternatives.
 4. User scores functions based on lines of evidence (metric scores) and the Function Statement.
 
 ## How scoring works at this tier
-At the rapid tier, users should apply SFARI, where function scores are user-assigned based on agreement with Function Statements (see expander glyphs in Function column).  Function scores automatically get rolled up into sub-index scores and an overall ecosystem condition index.
+At the rapid tier, users should apply SFARI, where function scores are user-assigned based on agreement with Function Statements (see expander glyphs in Function column).  Function scores automatically get rolled up into outcome sub-indices and the Ecosystem Condition Index.
 
 <div class="factsheet-card">
   <p class="factsheet-card-text">Use the widget to try out SFARI, the rapid assessment developed by USACE ERDC.</p>

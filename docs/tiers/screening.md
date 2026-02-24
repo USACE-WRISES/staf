@@ -14,7 +14,7 @@ description: "Desktop-first screening for early planning and prioritization."
 Use a single proxy metric per function. User scores functions based on metric values.
 
 <div class="factsheet-card">
-  <p class="factsheet-card-text">Use the widget to try the default screening assessment or build your own. You can score metrics, and then scores are automatically rolled up into function scores, outcome sub-indices, and an overall ecosystem condition index.</p>
+  <p class="factsheet-card-text">Use the widget to try the default screening assessment or build your own. You can score metrics, and then scores are automatically rolled up into function scores, outcome sub-indices, and the Ecosystem Condition Index.</p>
 </div>
 
 {% include screening_assessment_widget.html %}

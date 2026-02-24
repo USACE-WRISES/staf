@@ -4057,7 +4057,7 @@ body.modal-open {
 
 .scoring-table th,
 .scoring-table td {
-  padding: 0.25rem 0.4rem;
+  padding: 0.35rem 0.5rem;
   word-break: break-word;
   white-space: normal;
 }
@@ -5014,7 +5014,7 @@ body.modal-open {
 
 .scoring-table th,
 .scoring-table td {
-  padding: 0.25rem 0.4rem;
+  padding: 0.35rem 0.5rem;
   word-break: break-word;
   white-space: normal;
 }
