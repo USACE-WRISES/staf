@@ -1411,7 +1411,7 @@
           { label: 'Indirect Effect', rollup: true },
           { label: 'Weighted Score Total', rollup: true },
           { label: 'Max Weighted Score Total', rollup: true },
-          { label: 'Condition Sub-Index', rollup: false },
+          { label: 'Outcome Sub-index', rollup: false },
           { label: 'Ecosystem Condition Index', rollup: false },
         ];
         const baseLabelSpan = showAdvanced ? 8 : 5;
@@ -1645,10 +1645,10 @@
         }
 
         const summaryItems = [
-          { label: 'Physical', value: summaryValues.physical },
-          { label: 'Chemical', value: summaryValues.chemical },
-          { label: 'Biological', value: summaryValues.biological },
-          { label: 'Overall Ecosystem', value: summaryValues.ecosystem },
+          { label: 'Physical Outcome Sub-index', value: summaryValues.physical },
+          { label: 'Chemical Outcome Sub-index', value: summaryValues.chemical },
+          { label: 'Biological Outcome Sub-index', value: summaryValues.biological },
+          { label: 'Ecosystem Condition Index', value: summaryValues.ecosystem },
         ];
         summaryItems.forEach((item) => {
           if (item.value === null || item.value === undefined) {

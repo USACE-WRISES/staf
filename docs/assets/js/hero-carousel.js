@@ -5,7 +5,7 @@
   }
 
   const track = carousel.querySelector('.hero-carousel-track');
-  const images = Array.from(carousel.querySelectorAll('.carousel-image'));
+  let images = Array.from(carousel.querySelectorAll('.carousel-image'));
   const prevButton = carousel.querySelector('.carousel-nav.prev');
   const nextButton = carousel.querySelector('.carousel-nav.next');
   if (!track || images.length === 0) {
@@ -36,8 +36,11 @@
     }
   };
 
+  // Filename metadata format: order=<int>__river=<name>__city=<name>__state=<abbr>__bio=<0-1>__phys=<0-1>__chem=<0-1>.<ext>
+  // order is optional; images without order are shown after ordered images.
   const parseImageFilename = (filename) => {
     const result = {
+      order: null,
       river: null,
       city: null,
       state: null,
@@ -70,6 +73,11 @@
 
         if (key === 'river') {
           result.river = value;
+        } else if (key === 'order') {
+          const orderValue = parseInt(value, 10);
+          if (Number.isFinite(orderValue)) {
+            result.order = orderValue;
+          }
         } else if (key === 'city') {
           result.city = value;
         } else if (key === 'state') {
@@ -131,6 +139,50 @@
       biological: formatScore(data.bio),
       location: safeDecode(location),
     };
+  };
+
+  const getFilenameFromImage = (img) => {
+    if (!img) {
+      return '';
+    }
+    const src = img.getAttribute('src') || '';
+    return src.split('/').pop() || '';
+  };
+
+  const sortImagesByMetadataOrder = () => {
+    if (images.length <= 1) {
+      return;
+    }
+
+    const ranked = images.map((img, originalIndex) => {
+      const parsed = parseImageFilename(getFilenameFromImage(img));
+      const hasOrder = Number.isFinite(parsed.order);
+      return {
+        img,
+        originalIndex,
+        hasOrder,
+        order: hasOrder ? parsed.order : Number.POSITIVE_INFINITY,
+      };
+    });
+
+    ranked.sort((a, b) => {
+      if (a.hasOrder && b.hasOrder) {
+        if (a.order !== b.order) {
+          return a.order - b.order;
+        }
+        return a.originalIndex - b.originalIndex;
+      }
+      if (a.hasOrder !== b.hasOrder) {
+        return a.hasOrder ? -1 : 1;
+      }
+      return a.originalIndex - b.originalIndex;
+    });
+
+    const sorted = ranked.map((entry) => entry.img);
+    sorted.forEach((img) => {
+      track.appendChild(img);
+    });
+    images = sorted;
   };
 
   const summaryColorForValue = (value) => {
@@ -218,8 +270,7 @@
   const bottomRightOverlay = ensureOverlay('.overlay.bottom-right', 'overlay bottom-right');
 
   const updateOverlay = (img) => {
-    const src = img.getAttribute('src') || '';
-    const filename = src.split('/').pop() || '';
+    const filename = getFilenameFromImage(img);
     const parsed = parseImageFilename(filename);
     const formatted = formatOverlay(parsed);
     topLeftOverlay.innerHTML = '';
@@ -239,6 +290,8 @@
     topLeftOverlay.appendChild(metrics);
     bottomRightOverlay.textContent = formatted.location;
   };
+
+  sortImagesByMetadataOrder();
 
   const showImage = (nextIndex) => {
     images.forEach((img, i) => {
@@ -298,6 +351,7 @@
 
   if (DEBUG) {
     const samples = [
+      'order=2__river=Poudre River__city=Windsor__state=CO__bio=0.87__phys=0.87__chem=0.88.jpg',
       'river=StLucie__city=Stuart__state=FL__bio=0.72__phys=0.64__chem=0.58.jpg',
       'RiverX_CityY_ST_Biology0.7_Physical1_Chemical0.3.png',
       'bad_filename.jpg',
