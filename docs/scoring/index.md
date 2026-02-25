@@ -5,23 +5,54 @@ description: "How metrics roll up to functions, outcomes, and overall condition.
 ---
 {% include staf_page_chrome.html %}
 
-## Scoring approach
-1. Metrics are scored on a common scale and rolled up into function scores (metrics are tier-specific; see tier pages for metric guidance).
-2. Function scores (scale: 0 to 15) roll up to outcome sub-indices (Physical Outcome Sub-index, Chemical Outcome Sub-index, Biological Outcome Sub-index).
-3. Physical, Chemical, and Biological Outcome sub-indices are normalized to 0–1 by dividing by 15 (rounded to 2 decimals).
-4. The Ecosystem Condition Index (scale: 0 to 1) is the average of the three outcome indices.
+<details class="tier-how-it-works" open>
+  <summary>How scoring works</summary>
+  <ol>
+    <li>Metrics are scored and rolled up into function scores — the method varies by tier (see table below).</li>
+    <li>Function scores (0–15) roll up to three outcome sub-indices:
+      <ul>
+        <li><strong>Physical</strong> — hydrology, hydraulics, geomorphic functions</li>
+        <li><strong>Chemical</strong> — thermal regime, nutrients, water quality</li>
+        <li><strong>Biological</strong> — habitat, populations, community dynamics</li>
+      </ul>
+    </li>
+    <li>Each sub-index is normalized to 0–1 (÷ 15, rounded to 2 decimals).</li>
+    <li>The <strong>Ecosystem Condition Index</strong> (0–1) is the average of the three sub-indices.</li>
+  </ol>
+  <table class="tier-comparison-table scoring-tier-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Screening</th>
+        <th>Rapid</th>
+        <th>Detailed</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Metrics</th>
+        <td>Qualitative (e.g., Good / Fair / Poor)</td>
+        <td>Semi-quantitative (Likert scale)</td>
+        <td>Quantitative (measured values)</td>
+      </tr>
+      <tr>
+        <th>Function scores</th>
+        <td>User-assigned using recommended ranges</td>
+        <td>User-assigned using lines of evidence</td>
+        <td>Computed via reference curves</td>
+      </tr>
+    </tbody>
+  </table>
+</details>
 
-## Results
-- **Physical Outcome Sub-index** focuses on hydrology, hydraulics, and geomorphic functions.
-- **Chemical Outcome Sub-index** focuses on thermal regime, nutrients, and water quality.
-- **Biological Outcome Sub-index** focuses on habitat, populations, and community dynamics.
-- **Ecosystem Condition Index** is the combined average of the physical, chemical, and biological outcome sub-indices.
-
-<div class="factsheet-card">
-  <p class="factsheet-card-text">Try out the widget below to see how changing Function scores affects roll-up into Outcome Sub-indices and the Ecosystem Condition Index. Beneath the widget is more detail on the scoring approach.</p>
+<div class="widget-collapse" data-tier="scoring">
+  <div class="widget-collapse-header">
+    <div class="widget-collapse-title">Scoring and Condition Sandbox</div>
+  </div>
+  <div class="widget-collapse-body">
+    {% include scoring_sandbox_widget.html %}
+  </div>
 </div>
-
-{% include scoring_sandbox_widget.html %}
 
 ## Downloads
 - Excel Calculator

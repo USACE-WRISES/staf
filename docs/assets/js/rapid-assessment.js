@@ -1852,9 +1852,8 @@
                 event.preventDefault();
               }
             });
-            nameText.appendChild(document.createTextNode('\u00A0'));
-            nameText.appendChild(functionToggle);
             nameLine.appendChild(nameText);
+            nameLine.appendChild(functionToggle);
             functionCell.appendChild(nameLine);
 
             const statementLine = document.createElement('div');
@@ -1943,8 +1942,7 @@
               event.preventDefault();
             }
           });
-          indicatorText.appendChild(document.createTextNode('\u00A0'));
-          indicatorText.appendChild(criteriaBtn);
+          metricTitle.appendChild(criteriaBtn);
 
           row.appendChild(indicatorCell);
           row.appendChild(indicatorScoreCell);
@@ -2197,6 +2195,15 @@
           refresh: renderTable,
         });
       }
+
+      // Listen for pathway chooser events
+      window.addEventListener('staf:pathway-chosen', (event) => {
+        if (!event.detail || event.detail.tier !== 'rapid') {
+          return;
+        }
+        // Rapid only supports the predefined SFARI assessment; re-render table
+        renderTable();
+      });
 
       renderTable();
     } catch (error) {
