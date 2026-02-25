@@ -260,6 +260,11 @@
       const nameInput = ui.querySelector('.settings-name');
       const applicabilityInput = ui.querySelector('.settings-applicability');
       const notesInput = ui.querySelector('.settings-notes-input');
+      const duplicateBtn = ui.querySelector('.rapid-duplicate');
+      const deleteBtn = ui.querySelector('.rapid-delete');
+      const assessmentInlineActions = ui.querySelector(
+        '.screening-settings-panel .assessment-inline-actions'
+      );
       const settingsHeading = ui.querySelector(
         '.screening-settings-panel .settings-header h3'
       );
@@ -331,6 +336,21 @@
         notesInput.value = rapidNotesText;
         setSettingsFieldReadOnly(notesInput, isReadOnlyAssessment);
       }
+
+      const setAssessmentActionVisibility = (isVisible) => {
+        if (duplicateBtn) {
+          duplicateBtn.style.display = isVisible ? '' : 'none';
+          duplicateBtn.disabled = !isVisible;
+        }
+        if (deleteBtn) {
+          deleteBtn.style.display = isVisible ? '' : 'none';
+          deleteBtn.disabled = !isVisible;
+        }
+        if (assessmentInlineActions) {
+          assessmentInlineActions.style.display = isVisible ? '' : 'none';
+        }
+      };
+      setAssessmentActionVisibility(false);
 
       const indicatorScores = new Map();
       const functionScores = new Map();
@@ -2201,6 +2221,8 @@
         if (!event.detail || event.detail.tier !== 'rapid') {
           return;
         }
+        const action = event.detail.action;
+        setAssessmentActionVisibility(action === 'build-custom');
         // Rapid only supports the predefined SFARI assessment; re-render table
         renderTable();
       });

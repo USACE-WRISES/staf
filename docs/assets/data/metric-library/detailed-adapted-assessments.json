@@ -1,0 +1,3044 @@
+{
+  "schemaVersion": 1,
+  "tier": "detailed",
+  "importSource": "Metric Library Complete 2026-02-10.csv",
+  "totalFunctionCount": 20,
+  "assessments": [
+    {
+      "assessmentId": "ak-sqt-adapted",
+      "assessmentName": "AK SQT Adapted",
+      "tier": "detailed",
+      "stateCode": "AK",
+      "stateName": "Alaska",
+      "sourceCitation": "Alaska SQT",
+      "applicability": "Alaska streams",
+      "metricCount": 23,
+      "functionCount": 13,
+      "totalFunctionCount": 20,
+      "metricIds": [
+        "catchment-hydrology-anthropogenic-land-cover",
+        "catchment-hydrology-impervious-cover",
+        "catchment-hydrology-land-use-coefficient",
+        "reach-inflow-concentrated-flow-points-1-000-ft",
+        "floodplain-connectivity-entrenchment-ratio-er",
+        "channel-evolution-width-depth-ratio",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion",
+        "bed-composition-and-large-wood-percent-fines-2mm",
+        "light-and-thermal-regime-daily-maximum-temperature",
+        "carbon-processing-percent-native-cover",
+        "carbon-processing-riparian-extent",
+        "carbon-processing-vegetative-complexity",
+        "nutrient-cycling-diatom-index",
+        "water-and-soil-quality-daily-average-turbidity",
+        "habitat-provision-lwd-frequency",
+        "habitat-provision-percent-riffle",
+        "habitat-provision-pool-depth-ratio",
+        "habitat-provision-pool-spacing-ratio",
+        "population-support-alaskan-interior-mmi",
+        "community-dynamics-fish-species-richness",
+        "community-dynamics-relative-abundance-and-species-biomass-metrics"
+      ],
+      "metricSourceCitationsById": {
+        "catchment-hydrology-anthropogenic-land-cover": "Alaska SQT",
+        "catchment-hydrology-impervious-cover": "Alaska SQT",
+        "catchment-hydrology-land-use-coefficient": "Alaska SQT",
+        "reach-inflow-concentrated-flow-points-1-000-ft": "Alaska SQT",
+        "floodplain-connectivity-entrenchment-ratio-er": "Alaska SQT",
+        "channel-evolution-width-depth-ratio": "Alaska SQT",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr": "Alaska SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring": "Alaska SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion": "Alaska SQT",
+        "bed-composition-and-large-wood-percent-fines-2mm": "Alaska SQT",
+        "light-and-thermal-regime-daily-maximum-temperature": "Alaska SQT",
+        "carbon-processing-percent-native-cover": "Alaska SQT",
+        "carbon-processing-riparian-extent": "Alaska SQT",
+        "carbon-processing-vegetative-complexity": "Alaska SQT",
+        "nutrient-cycling-diatom-index": "Alaska SQT",
+        "water-and-soil-quality-daily-average-turbidity": "Alaska SQT",
+        "habitat-provision-lwd-frequency": "Alaska SQT",
+        "habitat-provision-percent-riffle": "Alaska SQT",
+        "habitat-provision-pool-depth-ratio": "Alaska SQT",
+        "habitat-provision-pool-spacing-ratio": "Alaska SQT",
+        "population-support-alaskan-interior-mmi": "Alaska SQT",
+        "community-dynamics-fish-species-richness": "Alaska SQT",
+        "community-dynamics-relative-abundance-and-species-biomass-metrics": "Alaska SQT"
+      },
+      "metricsByFunction": [
+        {
+          "functionId": "catchment-hydrology",
+          "functionName": "Catchment hydrology",
+          "discipline": "Hydrology",
+          "metricCount": 3,
+          "metricIds": [
+            "catchment-hydrology-anthropogenic-land-cover",
+            "catchment-hydrology-impervious-cover",
+            "catchment-hydrology-land-use-coefficient"
+          ],
+          "metricNames": [
+            "Anthropogenic Land Cover",
+            "Impervious Cover",
+            "Land Use Coefficient"
+          ],
+          "metrics": [
+            {
+              "metricId": "catchment-hydrology-anthropogenic-land-cover",
+              "metricName": "Anthropogenic Land Cover"
+            },
+            {
+              "metricId": "catchment-hydrology-impervious-cover",
+              "metricName": "Impervious Cover"
+            },
+            {
+              "metricId": "catchment-hydrology-land-use-coefficient",
+              "metricName": "Land Use Coefficient"
+            }
+          ]
+        },
+        {
+          "functionId": "reach-inflow",
+          "functionName": "Reach inflow",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "reach-inflow-concentrated-flow-points-1-000-ft"
+          ],
+          "metricNames": [
+            "Concentrated Flow Points / 1,000 ft"
+          ],
+          "metrics": [
+            {
+              "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
+              "metricName": "Concentrated Flow Points / 1,000 ft"
+            }
+          ]
+        },
+        {
+          "functionId": "floodplain-connectivity",
+          "functionName": "Floodplain connectivity",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "floodplain-connectivity-entrenchment-ratio-er"
+          ],
+          "metricNames": [
+            "Entrenchment Ratio (ER)"
+          ],
+          "metrics": [
+            {
+              "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+              "metricName": "Entrenchment Ratio (ER)"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-evolution",
+          "functionName": "Channel evolution",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "channel-evolution-width-depth-ratio"
+          ],
+          "metricNames": [
+            "Width/Depth Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-evolution-width-depth-ratio",
+              "metricName": "Width/Depth Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-floodplain-dynamics",
+          "functionName": "Channel and floodplain dynamics",
+          "discipline": "Geomorphology",
+          "metricCount": 3,
+          "metricIds": [
+            "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+            "channel-and-floodplain-dynamics-percent-streambank-armoring",
+            "channel-and-floodplain-dynamics-percent-streambank-erosion"
+          ],
+          "metricNames": [
+            "Bank Height Ratio (BHR)",
+            "Percent Streambank Armoring",
+            "Percent Streambank Erosion"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+              "metricName": "Bank Height Ratio (BHR)"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+              "metricName": "Percent Streambank Armoring"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+              "metricName": "Percent Streambank Erosion"
+            }
+          ]
+        },
+        {
+          "functionId": "bed-composition-bedform-dynamics",
+          "functionName": "Bed composition and large wood",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "bed-composition-and-large-wood-percent-fines-2mm"
+          ],
+          "metricNames": [
+            "Percent Fines < 2mm"
+          ],
+          "metrics": [
+            {
+              "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+              "metricName": "Percent Fines < 2mm"
+            }
+          ]
+        },
+        {
+          "functionId": "light-thermal-regime",
+          "functionName": "Light & thermal regime",
+          "discipline": "Physicochemistry",
+          "metricCount": 1,
+          "metricIds": [
+            "light-and-thermal-regime-daily-maximum-temperature"
+          ],
+          "metricNames": [
+            "Daily Maximum Temperature"
+          ],
+          "metrics": [
+            {
+              "metricId": "light-and-thermal-regime-daily-maximum-temperature",
+              "metricName": "Daily Maximum Temperature"
+            }
+          ]
+        },
+        {
+          "functionId": "carbon-processing",
+          "functionName": "Carbon processing",
+          "discipline": "Physicochemistry",
+          "metricCount": 3,
+          "metricIds": [
+            "carbon-processing-percent-native-cover",
+            "carbon-processing-riparian-extent",
+            "carbon-processing-vegetative-complexity"
+          ],
+          "metricNames": [
+            "Percent Native Cover",
+            "Riparian Extent",
+            "Vegetative Complexity"
+          ],
+          "metrics": [
+            {
+              "metricId": "carbon-processing-percent-native-cover",
+              "metricName": "Percent Native Cover"
+            },
+            {
+              "metricId": "carbon-processing-riparian-extent",
+              "metricName": "Riparian Extent"
+            },
+            {
+              "metricId": "carbon-processing-vegetative-complexity",
+              "metricName": "Vegetative Complexity"
+            }
+          ]
+        },
+        {
+          "functionId": "nutrient-cycling",
+          "functionName": "Nutrient cycling",
+          "discipline": "Physicochemistry",
+          "metricCount": 1,
+          "metricIds": [
+            "nutrient-cycling-diatom-index"
+          ],
+          "metricNames": [
+            "Diatom Index"
+          ],
+          "metrics": [
+            {
+              "metricId": "nutrient-cycling-diatom-index",
+              "metricName": "Diatom Index"
+            }
+          ]
+        },
+        {
+          "functionId": "water-soil-quality",
+          "functionName": "Water & soil quality",
+          "discipline": "Physicochemistry",
+          "metricCount": 1,
+          "metricIds": [
+            "water-and-soil-quality-daily-average-turbidity"
+          ],
+          "metricNames": [
+            "Daily Average Turbidity"
+          ],
+          "metrics": [
+            {
+              "metricId": "water-and-soil-quality-daily-average-turbidity",
+              "metricName": "Daily Average Turbidity"
+            }
+          ]
+        },
+        {
+          "functionId": "habitat-provision",
+          "functionName": "Habitat provision",
+          "discipline": "Biology",
+          "metricCount": 4,
+          "metricIds": [
+            "habitat-provision-lwd-frequency",
+            "habitat-provision-percent-riffle",
+            "habitat-provision-pool-depth-ratio",
+            "habitat-provision-pool-spacing-ratio"
+          ],
+          "metricNames": [
+            "LWD Frequency",
+            "Percent Riffle",
+            "Pool Depth Ratio",
+            "Pool Spacing Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "habitat-provision-lwd-frequency",
+              "metricName": "LWD Frequency"
+            },
+            {
+              "metricId": "habitat-provision-percent-riffle",
+              "metricName": "Percent Riffle"
+            },
+            {
+              "metricId": "habitat-provision-pool-depth-ratio",
+              "metricName": "Pool Depth Ratio"
+            },
+            {
+              "metricId": "habitat-provision-pool-spacing-ratio",
+              "metricName": "Pool Spacing Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "population-support",
+          "functionName": "Population support",
+          "discipline": "Biology",
+          "metricCount": 1,
+          "metricIds": [
+            "population-support-alaskan-interior-mmi"
+          ],
+          "metricNames": [
+            "Alaskan Interior MMI"
+          ],
+          "metrics": [
+            {
+              "metricId": "population-support-alaskan-interior-mmi",
+              "metricName": "Alaskan Interior MMI"
+            }
+          ]
+        },
+        {
+          "functionId": "community-dynamics",
+          "functionName": "Community dynamics",
+          "discipline": "Biology",
+          "metricCount": 2,
+          "metricIds": [
+            "community-dynamics-fish-species-richness",
+            "community-dynamics-relative-abundance-and-species-biomass-metrics"
+          ],
+          "metricNames": [
+            "Fish Species Richness",
+            "Relative Abundance and Species Biomass metrics"
+          ],
+          "metrics": [
+            {
+              "metricId": "community-dynamics-fish-species-richness",
+              "metricName": "Fish Species Richness"
+            },
+            {
+              "metricId": "community-dynamics-relative-abundance-and-species-biomass-metrics",
+              "metricName": "Relative Abundance and Species Biomass metrics"
+            }
+          ]
+        }
+      ],
+      "missingFunctionIds": [
+        "surface-water-storage",
+        "streamflow-regime",
+        "low-flow-baseflow-dynamics",
+        "high-flow-dynamics",
+        "hyporheic-connectivity",
+        "sediment-continuity",
+        "watershed-connectivity"
+      ],
+      "missingFunctionNames": [
+        "Surface water storage",
+        "Streamflow regime",
+        "Low flow and baseflow dynamics",
+        "High flow dynamics",
+        "Hyporheic connectivity",
+        "Sediment continuity",
+        "Watershed connectivity"
+      ]
+    },
+    {
+      "assessmentId": "co-sqt-adapted",
+      "assessmentName": "CO SQT Adapted",
+      "tier": "detailed",
+      "stateCode": "CO",
+      "stateName": "Colorado",
+      "sourceCitation": "Colorado SQT",
+      "applicability": "Colorado streams",
+      "metricCount": 26,
+      "functionCount": 13,
+      "totalFunctionCount": 20,
+      "metricIds": [
+        "catchment-hydrology-land-use-coefficient",
+        "reach-inflow-concentrated-flow-points",
+        "streamflow-regime-flow-alteration-module",
+        "low-flow-and-baseflow-dynamics-average-depth",
+        "floodplain-connectivity-entrenchment-ratio-er",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+        "channel-and-floodplain-dynamics-greenline-stability-rating",
+        "channel-and-floodplain-dynamics-percent-armoring",
+        "channel-and-floodplain-dynamics-percent-side-channels",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion",
+        "sediment-continuity-aggradation-ratio",
+        "light-and-thermal-regime-mwat",
+        "carbon-processing-chlorophyll",
+        "carbon-processing-herbaceous-vegetation-cover",
+        "carbon-processing-percent-native-cover",
+        "carbon-processing-riparian-extent",
+        "carbon-processing-woody-vegetation-cover",
+        "water-and-soil-quality-dissolved-oxygen-concentration",
+        "habitat-provision-lwd",
+        "habitat-provision-lwd-index",
+        "habitat-provision-percent-riffle",
+        "habitat-provision-pool-depth-ratio",
+        "habitat-provision-pool-spacing-ratio",
+        "population-support-co-mmi",
+        "population-support-wild-trout-biomass",
+        "community-dynamics-native-fish-species-richness"
+      ],
+      "metricSourceCitationsById": {
+        "catchment-hydrology-land-use-coefficient": "Colorado SQT",
+        "reach-inflow-concentrated-flow-points": "Colorado SQT",
+        "streamflow-regime-flow-alteration-module": "Colorado SQT",
+        "low-flow-and-baseflow-dynamics-average-depth": "Colorado SQT",
+        "floodplain-connectivity-entrenchment-ratio-er": "Colorado SQT",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr": "Colorado SQT",
+        "channel-and-floodplain-dynamics-greenline-stability-rating": "Colorado SQT",
+        "channel-and-floodplain-dynamics-percent-armoring": "Colorado SQT",
+        "channel-and-floodplain-dynamics-percent-side-channels": "Colorado SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion": "Colorado SQT",
+        "sediment-continuity-aggradation-ratio": "Colorado SQT",
+        "light-and-thermal-regime-mwat": "Colorado SQT",
+        "carbon-processing-chlorophyll": "Colorado SQT",
+        "carbon-processing-herbaceous-vegetation-cover": "Colorado SQT",
+        "carbon-processing-percent-native-cover": "Colorado SQT",
+        "carbon-processing-riparian-extent": "Colorado SQT",
+        "carbon-processing-woody-vegetation-cover": "Colorado SQT",
+        "water-and-soil-quality-dissolved-oxygen-concentration": "Colorado SQT",
+        "habitat-provision-lwd": "Colorado SQT",
+        "habitat-provision-lwd-index": "Colorado SQT",
+        "habitat-provision-percent-riffle": "Colorado SQT",
+        "habitat-provision-pool-depth-ratio": "Colorado SQT",
+        "habitat-provision-pool-spacing-ratio": "Colorado SQT",
+        "population-support-co-mmi": "Colorado SQT",
+        "population-support-wild-trout-biomass": "Colorado SQT",
+        "community-dynamics-native-fish-species-richness": "Colorado SQT"
+      },
+      "metricsByFunction": [
+        {
+          "functionId": "catchment-hydrology",
+          "functionName": "Catchment hydrology",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "catchment-hydrology-land-use-coefficient"
+          ],
+          "metricNames": [
+            "Land Use Coefficient"
+          ],
+          "metrics": [
+            {
+              "metricId": "catchment-hydrology-land-use-coefficient",
+              "metricName": "Land Use Coefficient"
+            }
+          ]
+        },
+        {
+          "functionId": "reach-inflow",
+          "functionName": "Reach inflow",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "reach-inflow-concentrated-flow-points"
+          ],
+          "metricNames": [
+            "Concentrated Flow Points"
+          ],
+          "metrics": [
+            {
+              "metricId": "reach-inflow-concentrated-flow-points",
+              "metricName": "Concentrated Flow Points"
+            }
+          ]
+        },
+        {
+          "functionId": "streamflow-regime",
+          "functionName": "Streamflow regime",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "streamflow-regime-flow-alteration-module"
+          ],
+          "metricNames": [
+            "Flow Alteration Module"
+          ],
+          "metrics": [
+            {
+              "metricId": "streamflow-regime-flow-alteration-module",
+              "metricName": "Flow Alteration Module"
+            }
+          ]
+        },
+        {
+          "functionId": "low-flow-baseflow-dynamics",
+          "functionName": "Low flow and baseflow dynamics",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "low-flow-and-baseflow-dynamics-average-depth"
+          ],
+          "metricNames": [
+            "Average Depth"
+          ],
+          "metrics": [
+            {
+              "metricId": "low-flow-and-baseflow-dynamics-average-depth",
+              "metricName": "Average Depth"
+            }
+          ]
+        },
+        {
+          "functionId": "floodplain-connectivity",
+          "functionName": "Floodplain connectivity",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "floodplain-connectivity-entrenchment-ratio-er"
+          ],
+          "metricNames": [
+            "Entrenchment Ratio (ER)"
+          ],
+          "metrics": [
+            {
+              "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+              "metricName": "Entrenchment Ratio (ER)"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-floodplain-dynamics",
+          "functionName": "Channel and floodplain dynamics",
+          "discipline": "Geomorphology",
+          "metricCount": 5,
+          "metricIds": [
+            "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+            "channel-and-floodplain-dynamics-greenline-stability-rating",
+            "channel-and-floodplain-dynamics-percent-armoring",
+            "channel-and-floodplain-dynamics-percent-side-channels",
+            "channel-and-floodplain-dynamics-percent-streambank-erosion"
+          ],
+          "metricNames": [
+            "Bank Height Ratio (BHR)",
+            "Greenline Stability Rating",
+            "Percent Armoring",
+            "Percent Side Channels",
+            "Percent Streambank Erosion"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+              "metricName": "Bank Height Ratio (BHR)"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-greenline-stability-rating",
+              "metricName": "Greenline Stability Rating"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-armoring",
+              "metricName": "Percent Armoring"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-side-channels",
+              "metricName": "Percent Side Channels"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+              "metricName": "Percent Streambank Erosion"
+            }
+          ]
+        },
+        {
+          "functionId": "sediment-continuity",
+          "functionName": "Sediment continuity",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "sediment-continuity-aggradation-ratio"
+          ],
+          "metricNames": [
+            "Aggradation Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "sediment-continuity-aggradation-ratio",
+              "metricName": "Aggradation Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "light-thermal-regime",
+          "functionName": "Light & thermal regime",
+          "discipline": "Physicochemistry",
+          "metricCount": 1,
+          "metricIds": [
+            "light-and-thermal-regime-mwat"
+          ],
+          "metricNames": [
+            "MWAT"
+          ],
+          "metrics": [
+            {
+              "metricId": "light-and-thermal-regime-mwat",
+              "metricName": "MWAT"
+            }
+          ]
+        },
+        {
+          "functionId": "carbon-processing",
+          "functionName": "Carbon processing",
+          "discipline": "Physicochemistry",
+          "metricCount": 5,
+          "metricIds": [
+            "carbon-processing-chlorophyll",
+            "carbon-processing-herbaceous-vegetation-cover",
+            "carbon-processing-percent-native-cover",
+            "carbon-processing-riparian-extent",
+            "carbon-processing-woody-vegetation-cover"
+          ],
+          "metricNames": [
+            "Chlorophyll ?",
+            "Herbaceous Vegetation Cover",
+            "Percent Native Cover",
+            "Riparian Extent",
+            "Woody Vegetation Cover"
+          ],
+          "metrics": [
+            {
+              "metricId": "carbon-processing-chlorophyll",
+              "metricName": "Chlorophyll ?"
+            },
+            {
+              "metricId": "carbon-processing-herbaceous-vegetation-cover",
+              "metricName": "Herbaceous Vegetation Cover"
+            },
+            {
+              "metricId": "carbon-processing-percent-native-cover",
+              "metricName": "Percent Native Cover"
+            },
+            {
+              "metricId": "carbon-processing-riparian-extent",
+              "metricName": "Riparian Extent"
+            },
+            {
+              "metricId": "carbon-processing-woody-vegetation-cover",
+              "metricName": "Woody Vegetation Cover"
+            }
+          ]
+        },
+        {
+          "functionId": "water-soil-quality",
+          "functionName": "Water & soil quality",
+          "discipline": "Physicochemistry",
+          "metricCount": 1,
+          "metricIds": [
+            "water-and-soil-quality-dissolved-oxygen-concentration"
+          ],
+          "metricNames": [
+            "Dissolved Oxygen Concentration"
+          ],
+          "metrics": [
+            {
+              "metricId": "water-and-soil-quality-dissolved-oxygen-concentration",
+              "metricName": "Dissolved Oxygen Concentration"
+            }
+          ]
+        },
+        {
+          "functionId": "habitat-provision",
+          "functionName": "Habitat provision",
+          "discipline": "Biology",
+          "metricCount": 5,
+          "metricIds": [
+            "habitat-provision-lwd",
+            "habitat-provision-lwd-index",
+            "habitat-provision-percent-riffle",
+            "habitat-provision-pool-depth-ratio",
+            "habitat-provision-pool-spacing-ratio"
+          ],
+          "metricNames": [
+            "LWD",
+            "LWD Index",
+            "Percent Riffle",
+            "Pool Depth Ratio",
+            "Pool Spacing Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "habitat-provision-lwd",
+              "metricName": "LWD"
+            },
+            {
+              "metricId": "habitat-provision-lwd-index",
+              "metricName": "LWD Index"
+            },
+            {
+              "metricId": "habitat-provision-percent-riffle",
+              "metricName": "Percent Riffle"
+            },
+            {
+              "metricId": "habitat-provision-pool-depth-ratio",
+              "metricName": "Pool Depth Ratio"
+            },
+            {
+              "metricId": "habitat-provision-pool-spacing-ratio",
+              "metricName": "Pool Spacing Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "population-support",
+          "functionName": "Population support",
+          "discipline": "Biology",
+          "metricCount": 2,
+          "metricIds": [
+            "population-support-co-mmi",
+            "population-support-wild-trout-biomass"
+          ],
+          "metricNames": [
+            "CO MMI",
+            "Wild Trout Biomass"
+          ],
+          "metrics": [
+            {
+              "metricId": "population-support-co-mmi",
+              "metricName": "CO MMI"
+            },
+            {
+              "metricId": "population-support-wild-trout-biomass",
+              "metricName": "Wild Trout Biomass"
+            }
+          ]
+        },
+        {
+          "functionId": "community-dynamics",
+          "functionName": "Community dynamics",
+          "discipline": "Biology",
+          "metricCount": 1,
+          "metricIds": [
+            "community-dynamics-native-fish-species-richness"
+          ],
+          "metricNames": [
+            "Native Fish Species Richness"
+          ],
+          "metrics": [
+            {
+              "metricId": "community-dynamics-native-fish-species-richness",
+              "metricName": "Native Fish Species Richness"
+            }
+          ]
+        }
+      ],
+      "missingFunctionIds": [
+        "surface-water-storage",
+        "high-flow-dynamics",
+        "hyporheic-connectivity",
+        "channel-evolution",
+        "bed-composition-bedform-dynamics",
+        "nutrient-cycling",
+        "watershed-connectivity"
+      ],
+      "missingFunctionNames": [
+        "Surface water storage",
+        "High flow dynamics",
+        "Hyporheic connectivity",
+        "Channel evolution",
+        "Bed composition and large wood",
+        "Nutrient cycling",
+        "Watershed connectivity"
+      ]
+    },
+    {
+      "assessmentId": "mi-sqt-adapted",
+      "assessmentName": "MI SQT Adapted",
+      "tier": "detailed",
+      "stateCode": "MI",
+      "stateName": "Michigan",
+      "sourceCitation": "Michigan SQT",
+      "applicability": "Michigan streams",
+      "metricCount": 23,
+      "functionCount": 11,
+      "totalFunctionCount": 20,
+      "metricIds": [
+        "catchment-hydrology-effective-impervious-cover",
+        "catchment-hydrology-land-use-change-coefficient",
+        "reach-inflow-concentrated-flow-points",
+        "floodplain-connectivity-entrenchment-ratio-er",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion",
+        "sediment-continuity-aggradation-ratio",
+        "light-and-thermal-regime-july-mean-temperature",
+        "carbon-processing-average-dbh-in",
+        "carbon-processing-herbaceous-cover",
+        "carbon-processing-native-shrub-density",
+        "carbon-processing-tree-density",
+        "nutrient-cycling-buffer-width",
+        "nutrient-cycling-total-phosphorus",
+        "water-and-soil-quality-dissolved-oxygen",
+        "water-and-soil-quality-e-coli-100ml",
+        "habitat-provision-lwd-index",
+        "habitat-provision-percent-riffle",
+        "habitat-provision-pool-depth-ratio",
+        "habitat-provision-pool-spacing-ratio",
+        "population-support-fish",
+        "population-support-macroinvertebrates"
+      ],
+      "metricSourceCitationsById": {
+        "catchment-hydrology-effective-impervious-cover": "Michigan SQT",
+        "catchment-hydrology-land-use-change-coefficient": "Michigan SQT",
+        "reach-inflow-concentrated-flow-points": "Michigan SQT",
+        "floodplain-connectivity-entrenchment-ratio-er": "Michigan SQT",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr": "Michigan SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring": "Michigan SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion": "Michigan SQT",
+        "sediment-continuity-aggradation-ratio": "Michigan SQT",
+        "light-and-thermal-regime-july-mean-temperature": "Michigan SQT",
+        "carbon-processing-average-dbh-in": "Michigan SQT",
+        "carbon-processing-herbaceous-cover": "Michigan SQT",
+        "carbon-processing-native-shrub-density": "Michigan SQT",
+        "carbon-processing-tree-density": "Michigan SQT",
+        "nutrient-cycling-buffer-width": "Michigan SQT",
+        "nutrient-cycling-total-phosphorus": "Michigan SQT",
+        "water-and-soil-quality-dissolved-oxygen": "Michigan SQT",
+        "water-and-soil-quality-e-coli-100ml": "Michigan SQT",
+        "habitat-provision-lwd-index": "Michigan SQT",
+        "habitat-provision-percent-riffle": "Michigan SQT",
+        "habitat-provision-pool-depth-ratio": "Michigan SQT",
+        "habitat-provision-pool-spacing-ratio": "Michigan SQT",
+        "population-support-fish": "Michigan SQT",
+        "population-support-macroinvertebrates": "Michigan SQT"
+      },
+      "metricsByFunction": [
+        {
+          "functionId": "catchment-hydrology",
+          "functionName": "Catchment hydrology",
+          "discipline": "Hydrology",
+          "metricCount": 2,
+          "metricIds": [
+            "catchment-hydrology-effective-impervious-cover",
+            "catchment-hydrology-land-use-change-coefficient"
+          ],
+          "metricNames": [
+            "Effective Impervious Cover",
+            "Land Use Change Coefficient"
+          ],
+          "metrics": [
+            {
+              "metricId": "catchment-hydrology-effective-impervious-cover",
+              "metricName": "Effective Impervious Cover"
+            },
+            {
+              "metricId": "catchment-hydrology-land-use-change-coefficient",
+              "metricName": "Land Use Change Coefficient"
+            }
+          ]
+        },
+        {
+          "functionId": "reach-inflow",
+          "functionName": "Reach inflow",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "reach-inflow-concentrated-flow-points"
+          ],
+          "metricNames": [
+            "Concentrated Flow Points"
+          ],
+          "metrics": [
+            {
+              "metricId": "reach-inflow-concentrated-flow-points",
+              "metricName": "Concentrated Flow Points"
+            }
+          ]
+        },
+        {
+          "functionId": "floodplain-connectivity",
+          "functionName": "Floodplain connectivity",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "floodplain-connectivity-entrenchment-ratio-er"
+          ],
+          "metricNames": [
+            "Entrenchment Ratio (ER)"
+          ],
+          "metrics": [
+            {
+              "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+              "metricName": "Entrenchment Ratio (ER)"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-floodplain-dynamics",
+          "functionName": "Channel and floodplain dynamics",
+          "discipline": "Geomorphology",
+          "metricCount": 3,
+          "metricIds": [
+            "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+            "channel-and-floodplain-dynamics-percent-streambank-armoring",
+            "channel-and-floodplain-dynamics-percent-streambank-erosion"
+          ],
+          "metricNames": [
+            "Bank Height Ratio (BHR)",
+            "Percent Streambank Armoring",
+            "Percent Streambank Erosion"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+              "metricName": "Bank Height Ratio (BHR)"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+              "metricName": "Percent Streambank Armoring"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+              "metricName": "Percent Streambank Erosion"
+            }
+          ]
+        },
+        {
+          "functionId": "sediment-continuity",
+          "functionName": "Sediment continuity",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "sediment-continuity-aggradation-ratio"
+          ],
+          "metricNames": [
+            "Aggradation Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "sediment-continuity-aggradation-ratio",
+              "metricName": "Aggradation Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "light-thermal-regime",
+          "functionName": "Light & thermal regime",
+          "discipline": "Physicochemistry",
+          "metricCount": 1,
+          "metricIds": [
+            "light-and-thermal-regime-july-mean-temperature"
+          ],
+          "metricNames": [
+            "July Mean Temperature"
+          ],
+          "metrics": [
+            {
+              "metricId": "light-and-thermal-regime-july-mean-temperature",
+              "metricName": "July Mean Temperature"
+            }
+          ]
+        },
+        {
+          "functionId": "carbon-processing",
+          "functionName": "Carbon processing",
+          "discipline": "Physicochemistry",
+          "metricCount": 4,
+          "metricIds": [
+            "carbon-processing-average-dbh-in",
+            "carbon-processing-herbaceous-cover",
+            "carbon-processing-native-shrub-density",
+            "carbon-processing-tree-density"
+          ],
+          "metricNames": [
+            "Average DBH (in)",
+            "Herbaceous Cover",
+            "Native Shrub Density",
+            "Tree Density"
+          ],
+          "metrics": [
+            {
+              "metricId": "carbon-processing-average-dbh-in",
+              "metricName": "Average DBH (in)"
+            },
+            {
+              "metricId": "carbon-processing-herbaceous-cover",
+              "metricName": "Herbaceous Cover"
+            },
+            {
+              "metricId": "carbon-processing-native-shrub-density",
+              "metricName": "Native Shrub Density"
+            },
+            {
+              "metricId": "carbon-processing-tree-density",
+              "metricName": "Tree Density"
+            }
+          ]
+        },
+        {
+          "functionId": "nutrient-cycling",
+          "functionName": "Nutrient cycling",
+          "discipline": "Physicochemistry",
+          "metricCount": 2,
+          "metricIds": [
+            "nutrient-cycling-buffer-width",
+            "nutrient-cycling-total-phosphorus"
+          ],
+          "metricNames": [
+            "Buffer Width",
+            "Total Phosphorus"
+          ],
+          "metrics": [
+            {
+              "metricId": "nutrient-cycling-buffer-width",
+              "metricName": "Buffer Width"
+            },
+            {
+              "metricId": "nutrient-cycling-total-phosphorus",
+              "metricName": "Total Phosphorus"
+            }
+          ]
+        },
+        {
+          "functionId": "water-soil-quality",
+          "functionName": "Water & soil quality",
+          "discipline": "Physicochemistry",
+          "metricCount": 2,
+          "metricIds": [
+            "water-and-soil-quality-dissolved-oxygen",
+            "water-and-soil-quality-e-coli-100ml"
+          ],
+          "metricNames": [
+            "Dissolved oxygen",
+            "E. Coli/100mL"
+          ],
+          "metrics": [
+            {
+              "metricId": "water-and-soil-quality-dissolved-oxygen",
+              "metricName": "Dissolved oxygen"
+            },
+            {
+              "metricId": "water-and-soil-quality-e-coli-100ml",
+              "metricName": "E. Coli/100mL"
+            }
+          ]
+        },
+        {
+          "functionId": "habitat-provision",
+          "functionName": "Habitat provision",
+          "discipline": "Biology",
+          "metricCount": 4,
+          "metricIds": [
+            "habitat-provision-lwd-index",
+            "habitat-provision-percent-riffle",
+            "habitat-provision-pool-depth-ratio",
+            "habitat-provision-pool-spacing-ratio"
+          ],
+          "metricNames": [
+            "LWD Index",
+            "Percent Riffle",
+            "Pool Depth Ratio",
+            "Pool Spacing Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "habitat-provision-lwd-index",
+              "metricName": "LWD Index"
+            },
+            {
+              "metricId": "habitat-provision-percent-riffle",
+              "metricName": "Percent Riffle"
+            },
+            {
+              "metricId": "habitat-provision-pool-depth-ratio",
+              "metricName": "Pool Depth Ratio"
+            },
+            {
+              "metricId": "habitat-provision-pool-spacing-ratio",
+              "metricName": "Pool Spacing Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "population-support",
+          "functionName": "Population support",
+          "discipline": "Biology",
+          "metricCount": 2,
+          "metricIds": [
+            "population-support-fish",
+            "population-support-macroinvertebrates"
+          ],
+          "metricNames": [
+            "Fish",
+            "Macroinvertebrates"
+          ],
+          "metrics": [
+            {
+              "metricId": "population-support-fish",
+              "metricName": "Fish"
+            },
+            {
+              "metricId": "population-support-macroinvertebrates",
+              "metricName": "Macroinvertebrates"
+            }
+          ]
+        }
+      ],
+      "missingFunctionIds": [
+        "surface-water-storage",
+        "streamflow-regime",
+        "low-flow-baseflow-dynamics",
+        "high-flow-dynamics",
+        "hyporheic-connectivity",
+        "channel-evolution",
+        "bed-composition-bedform-dynamics",
+        "community-dynamics",
+        "watershed-connectivity"
+      ],
+      "missingFunctionNames": [
+        "Surface water storage",
+        "Streamflow regime",
+        "Low flow and baseflow dynamics",
+        "High flow dynamics",
+        "Hyporheic connectivity",
+        "Channel evolution",
+        "Bed composition and large wood",
+        "Community dynamics",
+        "Watershed connectivity"
+      ]
+    },
+    {
+      "assessmentId": "mn-sqt-adapted",
+      "assessmentName": "MN SQT Adapted",
+      "tier": "detailed",
+      "stateCode": "MN",
+      "stateName": "Minnesota",
+      "sourceCitation": "Minnesota SQT",
+      "applicability": "Minnesota streams",
+      "metricCount": 22,
+      "functionCount": 10,
+      "totalFunctionCount": 20,
+      "metricIds": [
+        "catchment-hydrology-bmp-mids-rv-coefficient",
+        "catchment-hydrology-land-use-coefficient",
+        "reach-inflow-concentrated-flow-points-1-000-ft",
+        "floodplain-connectivity-entrenchment-ratio-er",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+        "channel-and-floodplain-dynamics-percent-armoring",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion",
+        "sediment-continuity-aggradation-ratio",
+        "light-and-thermal-regime-canopy-cover",
+        "light-and-thermal-regime-summer-average",
+        "carbon-processing-effective-vegetated-riparian-area",
+        "carbon-processing-herbaceous-strata-vegetation-cover",
+        "carbon-processing-woody-stem-basal-area",
+        "water-and-soil-quality-do",
+        "water-and-soil-quality-tss",
+        "habitat-provision-lwd",
+        "habitat-provision-lwd-index",
+        "habitat-provision-percent-riffle",
+        "habitat-provision-pool-depth-ratio",
+        "habitat-provision-pool-spacing-ratio",
+        "population-support-fish-ibi",
+        "population-support-macroinvertebrate-ibi"
+      ],
+      "metricSourceCitationsById": {
+        "catchment-hydrology-bmp-mids-rv-coefficient": "Minnesota SQT",
+        "catchment-hydrology-land-use-coefficient": "Minnesota SQT",
+        "reach-inflow-concentrated-flow-points-1-000-ft": "Minnesota SQT",
+        "floodplain-connectivity-entrenchment-ratio-er": "Minnesota SQT",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr": "Minnesota SQT",
+        "channel-and-floodplain-dynamics-percent-armoring": "Minnesota SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion": "Minnesota SQT",
+        "sediment-continuity-aggradation-ratio": "Minnesota SQT",
+        "light-and-thermal-regime-canopy-cover": "Minnesota SQT",
+        "light-and-thermal-regime-summer-average": "Minnesota SQT",
+        "carbon-processing-effective-vegetated-riparian-area": "Minnesota SQT",
+        "carbon-processing-herbaceous-strata-vegetation-cover": "Minnesota SQT",
+        "carbon-processing-woody-stem-basal-area": "Minnesota SQT",
+        "water-and-soil-quality-do": "Minnesota SQT",
+        "water-and-soil-quality-tss": "Minnesota SQT",
+        "habitat-provision-lwd": "Minnesota SQT",
+        "habitat-provision-lwd-index": "Minnesota SQT",
+        "habitat-provision-percent-riffle": "Minnesota SQT",
+        "habitat-provision-pool-depth-ratio": "Minnesota SQT",
+        "habitat-provision-pool-spacing-ratio": "Minnesota SQT",
+        "population-support-fish-ibi": "Minnesota SQT",
+        "population-support-macroinvertebrate-ibi": "Minnesota SQT"
+      },
+      "metricsByFunction": [
+        {
+          "functionId": "catchment-hydrology",
+          "functionName": "Catchment hydrology",
+          "discipline": "Hydrology",
+          "metricCount": 2,
+          "metricIds": [
+            "catchment-hydrology-bmp-mids-rv-coefficient",
+            "catchment-hydrology-land-use-coefficient"
+          ],
+          "metricNames": [
+            "BMP MIDS Rv Coefficient",
+            "Land Use Coefficient"
+          ],
+          "metrics": [
+            {
+              "metricId": "catchment-hydrology-bmp-mids-rv-coefficient",
+              "metricName": "BMP MIDS Rv Coefficient"
+            },
+            {
+              "metricId": "catchment-hydrology-land-use-coefficient",
+              "metricName": "Land Use Coefficient"
+            }
+          ]
+        },
+        {
+          "functionId": "reach-inflow",
+          "functionName": "Reach inflow",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "reach-inflow-concentrated-flow-points-1-000-ft"
+          ],
+          "metricNames": [
+            "Concentrated Flow Points / 1,000 ft"
+          ],
+          "metrics": [
+            {
+              "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
+              "metricName": "Concentrated Flow Points / 1,000 ft"
+            }
+          ]
+        },
+        {
+          "functionId": "floodplain-connectivity",
+          "functionName": "Floodplain connectivity",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "floodplain-connectivity-entrenchment-ratio-er"
+          ],
+          "metricNames": [
+            "Entrenchment Ratio (ER)"
+          ],
+          "metrics": [
+            {
+              "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+              "metricName": "Entrenchment Ratio (ER)"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-floodplain-dynamics",
+          "functionName": "Channel and floodplain dynamics",
+          "discipline": "Geomorphology",
+          "metricCount": 3,
+          "metricIds": [
+            "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+            "channel-and-floodplain-dynamics-percent-armoring",
+            "channel-and-floodplain-dynamics-percent-streambank-erosion"
+          ],
+          "metricNames": [
+            "Bank Height Ratio (BHR)",
+            "Percent Armoring",
+            "Percent Streambank Erosion"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+              "metricName": "Bank Height Ratio (BHR)"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-armoring",
+              "metricName": "Percent Armoring"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+              "metricName": "Percent Streambank Erosion"
+            }
+          ]
+        },
+        {
+          "functionId": "sediment-continuity",
+          "functionName": "Sediment continuity",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "sediment-continuity-aggradation-ratio"
+          ],
+          "metricNames": [
+            "Aggradation Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "sediment-continuity-aggradation-ratio",
+              "metricName": "Aggradation Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "light-thermal-regime",
+          "functionName": "Light & thermal regime",
+          "discipline": "Physicochemistry",
+          "metricCount": 2,
+          "metricIds": [
+            "light-and-thermal-regime-canopy-cover",
+            "light-and-thermal-regime-summer-average"
+          ],
+          "metricNames": [
+            "Canopy Cover",
+            "Summer Average"
+          ],
+          "metrics": [
+            {
+              "metricId": "light-and-thermal-regime-canopy-cover",
+              "metricName": "Canopy Cover"
+            },
+            {
+              "metricId": "light-and-thermal-regime-summer-average",
+              "metricName": "Summer Average"
+            }
+          ]
+        },
+        {
+          "functionId": "carbon-processing",
+          "functionName": "Carbon processing",
+          "discipline": "Physicochemistry",
+          "metricCount": 3,
+          "metricIds": [
+            "carbon-processing-effective-vegetated-riparian-area",
+            "carbon-processing-herbaceous-strata-vegetation-cover",
+            "carbon-processing-woody-stem-basal-area"
+          ],
+          "metricNames": [
+            "Effective Vegetated Riparian Area",
+            "Herbaceous Strata Vegetation Cover",
+            "Woody Stem Basal Area"
+          ],
+          "metrics": [
+            {
+              "metricId": "carbon-processing-effective-vegetated-riparian-area",
+              "metricName": "Effective Vegetated Riparian Area"
+            },
+            {
+              "metricId": "carbon-processing-herbaceous-strata-vegetation-cover",
+              "metricName": "Herbaceous Strata Vegetation Cover"
+            },
+            {
+              "metricId": "carbon-processing-woody-stem-basal-area",
+              "metricName": "Woody Stem Basal Area"
+            }
+          ]
+        },
+        {
+          "functionId": "water-soil-quality",
+          "functionName": "Water & soil quality",
+          "discipline": "Physicochemistry",
+          "metricCount": 2,
+          "metricIds": [
+            "water-and-soil-quality-do",
+            "water-and-soil-quality-tss"
+          ],
+          "metricNames": [
+            "DO",
+            "TSS"
+          ],
+          "metrics": [
+            {
+              "metricId": "water-and-soil-quality-do",
+              "metricName": "DO"
+            },
+            {
+              "metricId": "water-and-soil-quality-tss",
+              "metricName": "TSS"
+            }
+          ]
+        },
+        {
+          "functionId": "habitat-provision",
+          "functionName": "Habitat provision",
+          "discipline": "Biology",
+          "metricCount": 5,
+          "metricIds": [
+            "habitat-provision-lwd",
+            "habitat-provision-lwd-index",
+            "habitat-provision-percent-riffle",
+            "habitat-provision-pool-depth-ratio",
+            "habitat-provision-pool-spacing-ratio"
+          ],
+          "metricNames": [
+            "LWD",
+            "LWD Index",
+            "Percent Riffle",
+            "Pool Depth Ratio",
+            "Pool Spacing Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "habitat-provision-lwd",
+              "metricName": "LWD"
+            },
+            {
+              "metricId": "habitat-provision-lwd-index",
+              "metricName": "LWD Index"
+            },
+            {
+              "metricId": "habitat-provision-percent-riffle",
+              "metricName": "Percent Riffle"
+            },
+            {
+              "metricId": "habitat-provision-pool-depth-ratio",
+              "metricName": "Pool Depth Ratio"
+            },
+            {
+              "metricId": "habitat-provision-pool-spacing-ratio",
+              "metricName": "Pool Spacing Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "population-support",
+          "functionName": "Population support",
+          "discipline": "Biology",
+          "metricCount": 2,
+          "metricIds": [
+            "population-support-fish-ibi",
+            "population-support-macroinvertebrate-ibi"
+          ],
+          "metricNames": [
+            "Fish IBI",
+            "Macroinvertebrate IBI"
+          ],
+          "metrics": [
+            {
+              "metricId": "population-support-fish-ibi",
+              "metricName": "Fish IBI"
+            },
+            {
+              "metricId": "population-support-macroinvertebrate-ibi",
+              "metricName": "Macroinvertebrate IBI"
+            }
+          ]
+        }
+      ],
+      "missingFunctionIds": [
+        "surface-water-storage",
+        "streamflow-regime",
+        "low-flow-baseflow-dynamics",
+        "high-flow-dynamics",
+        "hyporheic-connectivity",
+        "channel-evolution",
+        "bed-composition-bedform-dynamics",
+        "nutrient-cycling",
+        "community-dynamics",
+        "watershed-connectivity"
+      ],
+      "missingFunctionNames": [
+        "Surface water storage",
+        "Streamflow regime",
+        "Low flow and baseflow dynamics",
+        "High flow dynamics",
+        "Hyporheic connectivity",
+        "Channel evolution",
+        "Bed composition and large wood",
+        "Nutrient cycling",
+        "Community dynamics",
+        "Watershed connectivity"
+      ]
+    },
+    {
+      "assessmentId": "nc-sqt-adapted",
+      "assessmentName": "NC SQT Adapted",
+      "tier": "detailed",
+      "stateCode": "NC",
+      "stateName": "North Carolina",
+      "sourceCitation": "North Carolina SQT",
+      "applicability": "North Carolina streams",
+      "metricCount": 29,
+      "functionCount": 12,
+      "totalFunctionCount": 20,
+      "metricIds": [
+        "catchment-hydrology-curve-number",
+        "catchment-hydrology-percent-impervious-cover",
+        "reach-inflow-concentrated-flow-points",
+        "floodplain-connectivity-entrenchment-ratio-er",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+        "channel-and-floodplain-dynamics-erosion-rate",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion",
+        "channel-and-floodplain-dynamics-sinuosity",
+        "channel-and-floodplain-dynamics-soil-compaction",
+        "sediment-continuity-aggradation-ratio",
+        "bed-composition-and-large-wood-bed-material-characterization",
+        "light-and-thermal-regime-canopy-coverage",
+        "light-and-thermal-regime-summer-daily-maximum",
+        "carbon-processing-basal-area",
+        "carbon-processing-leaf-litter-processing-rate",
+        "carbon-processing-riparian-vegetation-stem-density",
+        "carbon-processing-shredders",
+        "nutrient-cycling-buffer-width",
+        "nutrient-cycling-total-nitrogen",
+        "nutrient-cycling-total-phosphorous",
+        "water-and-soil-quality-fecal-coliform-bacteria",
+        "water-and-soil-quality-specific-conductivity",
+        "habitat-provision-lwd-pieces",
+        "habitat-provision-lwd-index",
+        "habitat-provision-percent-riffle",
+        "habitat-provision-pool-depth-ratio",
+        "habitat-provision-pool-spacing-ratio",
+        "population-support-ept-taxa-present",
+        "population-support-ncibi-score"
+      ],
+      "metricSourceCitationsById": {
+        "catchment-hydrology-curve-number": "North Carolina SQT",
+        "catchment-hydrology-percent-impervious-cover": "North Carolina SQT",
+        "reach-inflow-concentrated-flow-points": "North Carolina SQT",
+        "floodplain-connectivity-entrenchment-ratio-er": "North Carolina SQT",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr": "North Carolina SQT",
+        "channel-and-floodplain-dynamics-erosion-rate": "North Carolina SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion": "North Carolina SQT",
+        "channel-and-floodplain-dynamics-sinuosity": "North Carolina SQT",
+        "channel-and-floodplain-dynamics-soil-compaction": "North Carolina SQT",
+        "sediment-continuity-aggradation-ratio": "North Carolina SQT",
+        "bed-composition-and-large-wood-bed-material-characterization": "North Carolina SQT",
+        "light-and-thermal-regime-canopy-coverage": "North Carolina SQT",
+        "light-and-thermal-regime-summer-daily-maximum": "North Carolina SQT",
+        "carbon-processing-basal-area": "North Carolina SQT",
+        "carbon-processing-leaf-litter-processing-rate": "North Carolina SQT",
+        "carbon-processing-riparian-vegetation-stem-density": "North Carolina SQT",
+        "carbon-processing-shredders": "North Carolina SQT",
+        "nutrient-cycling-buffer-width": "North Carolina SQT",
+        "nutrient-cycling-total-nitrogen": "North Carolina SQT",
+        "nutrient-cycling-total-phosphorous": "North Carolina SQT",
+        "water-and-soil-quality-fecal-coliform-bacteria": "North Carolina SQT",
+        "water-and-soil-quality-specific-conductivity": "North Carolina SQT",
+        "habitat-provision-lwd-pieces": "North Carolina SQT",
+        "habitat-provision-lwd-index": "North Carolina SQT",
+        "habitat-provision-percent-riffle": "North Carolina SQT",
+        "habitat-provision-pool-depth-ratio": "North Carolina SQT",
+        "habitat-provision-pool-spacing-ratio": "North Carolina SQT",
+        "population-support-ept-taxa-present": "North Carolina SQT",
+        "population-support-ncibi-score": "North Carolina SQT"
+      },
+      "metricsByFunction": [
+        {
+          "functionId": "catchment-hydrology",
+          "functionName": "Catchment hydrology",
+          "discipline": "Hydrology",
+          "metricCount": 2,
+          "metricIds": [
+            "catchment-hydrology-curve-number",
+            "catchment-hydrology-percent-impervious-cover"
+          ],
+          "metricNames": [
+            "Curve Number",
+            "Percent Impervious Cover"
+          ],
+          "metrics": [
+            {
+              "metricId": "catchment-hydrology-curve-number",
+              "metricName": "Curve Number"
+            },
+            {
+              "metricId": "catchment-hydrology-percent-impervious-cover",
+              "metricName": "Percent Impervious Cover"
+            }
+          ]
+        },
+        {
+          "functionId": "reach-inflow",
+          "functionName": "Reach inflow",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "reach-inflow-concentrated-flow-points"
+          ],
+          "metricNames": [
+            "Concentrated Flow Points"
+          ],
+          "metrics": [
+            {
+              "metricId": "reach-inflow-concentrated-flow-points",
+              "metricName": "Concentrated Flow Points"
+            }
+          ]
+        },
+        {
+          "functionId": "floodplain-connectivity",
+          "functionName": "Floodplain connectivity",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "floodplain-connectivity-entrenchment-ratio-er"
+          ],
+          "metricNames": [
+            "Entrenchment Ratio (ER)"
+          ],
+          "metrics": [
+            {
+              "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+              "metricName": "Entrenchment Ratio (ER)"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-floodplain-dynamics",
+          "functionName": "Channel and floodplain dynamics",
+          "discipline": "Geomorphology",
+          "metricCount": 5,
+          "metricIds": [
+            "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+            "channel-and-floodplain-dynamics-erosion-rate",
+            "channel-and-floodplain-dynamics-percent-streambank-erosion",
+            "channel-and-floodplain-dynamics-sinuosity",
+            "channel-and-floodplain-dynamics-soil-compaction"
+          ],
+          "metricNames": [
+            "Bank Height Ratio (BHR)",
+            "Erosion Rate",
+            "Percent Streambank Erosion",
+            "Sinuosity",
+            "Soil Compaction"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+              "metricName": "Bank Height Ratio (BHR)"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-erosion-rate",
+              "metricName": "Erosion Rate"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+              "metricName": "Percent Streambank Erosion"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-sinuosity",
+              "metricName": "Sinuosity"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-soil-compaction",
+              "metricName": "Soil Compaction"
+            }
+          ]
+        },
+        {
+          "functionId": "sediment-continuity",
+          "functionName": "Sediment continuity",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "sediment-continuity-aggradation-ratio"
+          ],
+          "metricNames": [
+            "Aggradation Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "sediment-continuity-aggradation-ratio",
+              "metricName": "Aggradation Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "bed-composition-bedform-dynamics",
+          "functionName": "Bed composition and large wood",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "bed-composition-and-large-wood-bed-material-characterization"
+          ],
+          "metricNames": [
+            "Bed Material Characterization"
+          ],
+          "metrics": [
+            {
+              "metricId": "bed-composition-and-large-wood-bed-material-characterization",
+              "metricName": "Bed Material Characterization"
+            }
+          ]
+        },
+        {
+          "functionId": "light-thermal-regime",
+          "functionName": "Light & thermal regime",
+          "discipline": "Physicochemistry",
+          "metricCount": 2,
+          "metricIds": [
+            "light-and-thermal-regime-canopy-coverage",
+            "light-and-thermal-regime-summer-daily-maximum"
+          ],
+          "metricNames": [
+            "Canopy Coverage",
+            "Summer Daily Maximum"
+          ],
+          "metrics": [
+            {
+              "metricId": "light-and-thermal-regime-canopy-coverage",
+              "metricName": "Canopy Coverage"
+            },
+            {
+              "metricId": "light-and-thermal-regime-summer-daily-maximum",
+              "metricName": "Summer Daily Maximum"
+            }
+          ]
+        },
+        {
+          "functionId": "carbon-processing",
+          "functionName": "Carbon processing",
+          "discipline": "Physicochemistry",
+          "metricCount": 4,
+          "metricIds": [
+            "carbon-processing-basal-area",
+            "carbon-processing-leaf-litter-processing-rate",
+            "carbon-processing-riparian-vegetation-stem-density",
+            "carbon-processing-shredders"
+          ],
+          "metricNames": [
+            "Basal Area",
+            "Leaf Litter Processing Rate",
+            "Riparian Vegetation Stem Density",
+            "Shredders"
+          ],
+          "metrics": [
+            {
+              "metricId": "carbon-processing-basal-area",
+              "metricName": "Basal Area"
+            },
+            {
+              "metricId": "carbon-processing-leaf-litter-processing-rate",
+              "metricName": "Leaf Litter Processing Rate"
+            },
+            {
+              "metricId": "carbon-processing-riparian-vegetation-stem-density",
+              "metricName": "Riparian Vegetation Stem Density"
+            },
+            {
+              "metricId": "carbon-processing-shredders",
+              "metricName": "Shredders"
+            }
+          ]
+        },
+        {
+          "functionId": "nutrient-cycling",
+          "functionName": "Nutrient cycling",
+          "discipline": "Physicochemistry",
+          "metricCount": 3,
+          "metricIds": [
+            "nutrient-cycling-buffer-width",
+            "nutrient-cycling-total-nitrogen",
+            "nutrient-cycling-total-phosphorous"
+          ],
+          "metricNames": [
+            "Buffer Width",
+            "Total Nitrogen",
+            "Total Phosphorous"
+          ],
+          "metrics": [
+            {
+              "metricId": "nutrient-cycling-buffer-width",
+              "metricName": "Buffer Width"
+            },
+            {
+              "metricId": "nutrient-cycling-total-nitrogen",
+              "metricName": "Total Nitrogen"
+            },
+            {
+              "metricId": "nutrient-cycling-total-phosphorous",
+              "metricName": "Total Phosphorous"
+            }
+          ]
+        },
+        {
+          "functionId": "water-soil-quality",
+          "functionName": "Water & soil quality",
+          "discipline": "Physicochemistry",
+          "metricCount": 2,
+          "metricIds": [
+            "water-and-soil-quality-fecal-coliform-bacteria",
+            "water-and-soil-quality-specific-conductivity"
+          ],
+          "metricNames": [
+            "Fecal Coliform Bacteria",
+            "Specific Conductivity"
+          ],
+          "metrics": [
+            {
+              "metricId": "water-and-soil-quality-fecal-coliform-bacteria",
+              "metricName": "Fecal Coliform Bacteria"
+            },
+            {
+              "metricId": "water-and-soil-quality-specific-conductivity",
+              "metricName": "Specific Conductivity"
+            }
+          ]
+        },
+        {
+          "functionId": "habitat-provision",
+          "functionName": "Habitat provision",
+          "discipline": "Biology",
+          "metricCount": 5,
+          "metricIds": [
+            "habitat-provision-lwd-pieces",
+            "habitat-provision-lwd-index",
+            "habitat-provision-percent-riffle",
+            "habitat-provision-pool-depth-ratio",
+            "habitat-provision-pool-spacing-ratio"
+          ],
+          "metricNames": [
+            "LWD # Pieces",
+            "LWD Index",
+            "Percent Riffle",
+            "Pool Depth Ratio",
+            "Pool Spacing Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "habitat-provision-lwd-pieces",
+              "metricName": "LWD # Pieces"
+            },
+            {
+              "metricId": "habitat-provision-lwd-index",
+              "metricName": "LWD Index"
+            },
+            {
+              "metricId": "habitat-provision-percent-riffle",
+              "metricName": "Percent Riffle"
+            },
+            {
+              "metricId": "habitat-provision-pool-depth-ratio",
+              "metricName": "Pool Depth Ratio"
+            },
+            {
+              "metricId": "habitat-provision-pool-spacing-ratio",
+              "metricName": "Pool Spacing Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "population-support",
+          "functionName": "Population support",
+          "discipline": "Biology",
+          "metricCount": 2,
+          "metricIds": [
+            "population-support-ept-taxa-present",
+            "population-support-ncibi-score"
+          ],
+          "metricNames": [
+            "EPT Taxa Present",
+            "NCIBI Score"
+          ],
+          "metrics": [
+            {
+              "metricId": "population-support-ept-taxa-present",
+              "metricName": "EPT Taxa Present"
+            },
+            {
+              "metricId": "population-support-ncibi-score",
+              "metricName": "NCIBI Score"
+            }
+          ]
+        }
+      ],
+      "missingFunctionIds": [
+        "surface-water-storage",
+        "streamflow-regime",
+        "low-flow-baseflow-dynamics",
+        "high-flow-dynamics",
+        "hyporheic-connectivity",
+        "channel-evolution",
+        "community-dynamics",
+        "watershed-connectivity"
+      ],
+      "missingFunctionNames": [
+        "Surface water storage",
+        "Streamflow regime",
+        "Low flow and baseflow dynamics",
+        "High flow dynamics",
+        "Hyporheic connectivity",
+        "Channel evolution",
+        "Community dynamics",
+        "Watershed connectivity"
+      ]
+    },
+    {
+      "assessmentId": "sc-sqt-adapted",
+      "assessmentName": "SC SQT Adapted",
+      "tier": "detailed",
+      "stateCode": "SC",
+      "stateName": "South Carolina",
+      "sourceCitation": "South Carolina SQT",
+      "applicability": "South Carolina streams",
+      "metricCount": 26,
+      "functionCount": 11,
+      "totalFunctionCount": 20,
+      "metricIds": [
+        "catchment-hydrology-land-use-coefficient",
+        "reach-inflow-concentrated-flow-points",
+        "floodplain-connectivity-entrenchment-ratio-er",
+        "channel-evolution-width-depth-ratio-state",
+        "channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+        "channel-and-floodplain-dynamics-erosion-rate",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion",
+        "light-and-thermal-regime-summer-daily-maximum",
+        "carbon-processing-monoculture-area",
+        "carbon-processing-native-herbaceous-cover",
+        "carbon-processing-native-shrub-density",
+        "carbon-processing-tree-density",
+        "nutrient-cycling-buffer-width",
+        "nutrient-cycling-total-nitrogen",
+        "nutrient-cycling-total-phosphorous",
+        "water-and-soil-quality-e-coli",
+        "water-and-soil-quality-tss-and-turbidity",
+        "habitat-provision-lwd-index",
+        "habitat-provision-lwd-piece-count",
+        "habitat-provision-percent-riffle",
+        "habitat-provision-pool-depth-ratio",
+        "habitat-provision-pool-spacing-ratio",
+        "population-support-ept-taxa-present",
+        "population-support-sc-bi-score"
+      ],
+      "metricSourceCitationsById": {
+        "catchment-hydrology-land-use-coefficient": "South Carolina SQT",
+        "reach-inflow-concentrated-flow-points": "South Carolina SQT",
+        "floodplain-connectivity-entrenchment-ratio-er": "South Carolina SQT",
+        "channel-evolution-width-depth-ratio-state": "South Carolina SQT",
+        "channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh": "South Carolina SQT",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr": "South Carolina SQT",
+        "channel-and-floodplain-dynamics-erosion-rate": "South Carolina SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring": "South Carolina SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion": "South Carolina SQT",
+        "light-and-thermal-regime-summer-daily-maximum": "South Carolina SQT",
+        "carbon-processing-monoculture-area": "South Carolina SQT",
+        "carbon-processing-native-herbaceous-cover": "South Carolina SQT",
+        "carbon-processing-native-shrub-density": "South Carolina SQT",
+        "carbon-processing-tree-density": "South Carolina SQT",
+        "nutrient-cycling-buffer-width": "South Carolina SQT",
+        "nutrient-cycling-total-nitrogen": "South Carolina SQT",
+        "nutrient-cycling-total-phosphorous": "South Carolina SQT",
+        "water-and-soil-quality-e-coli": "South Carolina SQT",
+        "water-and-soil-quality-tss-and-turbidity": "South Carolina SQT",
+        "habitat-provision-lwd-index": "South Carolina SQT",
+        "habitat-provision-lwd-piece-count": "South Carolina SQT",
+        "habitat-provision-percent-riffle": "South Carolina SQT",
+        "habitat-provision-pool-depth-ratio": "South Carolina SQT",
+        "habitat-provision-pool-spacing-ratio": "South Carolina SQT",
+        "population-support-ept-taxa-present": "South Carolina SQT",
+        "population-support-sc-bi-score": "South Carolina SQT"
+      },
+      "metricsByFunction": [
+        {
+          "functionId": "catchment-hydrology",
+          "functionName": "Catchment hydrology",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "catchment-hydrology-land-use-coefficient"
+          ],
+          "metricNames": [
+            "Land Use Coefficient"
+          ],
+          "metrics": [
+            {
+              "metricId": "catchment-hydrology-land-use-coefficient",
+              "metricName": "Land Use Coefficient"
+            }
+          ]
+        },
+        {
+          "functionId": "reach-inflow",
+          "functionName": "Reach inflow",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "reach-inflow-concentrated-flow-points"
+          ],
+          "metricNames": [
+            "Concentrated Flow Points"
+          ],
+          "metrics": [
+            {
+              "metricId": "reach-inflow-concentrated-flow-points",
+              "metricName": "Concentrated Flow Points"
+            }
+          ]
+        },
+        {
+          "functionId": "floodplain-connectivity",
+          "functionName": "Floodplain connectivity",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "floodplain-connectivity-entrenchment-ratio-er"
+          ],
+          "metricNames": [
+            "Entrenchment Ratio (ER)"
+          ],
+          "metrics": [
+            {
+              "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+              "metricName": "Entrenchment Ratio (ER)"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-evolution",
+          "functionName": "Channel evolution",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "channel-evolution-width-depth-ratio-state"
+          ],
+          "metricNames": [
+            "Width/Depth Ratio State"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-evolution-width-depth-ratio-state",
+              "metricName": "Width/Depth Ratio State"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-floodplain-dynamics",
+          "functionName": "Channel and floodplain dynamics",
+          "discipline": "Geomorphology",
+          "metricCount": 5,
+          "metricIds": [
+            "channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh",
+            "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+            "channel-and-floodplain-dynamics-erosion-rate",
+            "channel-and-floodplain-dynamics-percent-streambank-armoring",
+            "channel-and-floodplain-dynamics-percent-streambank-erosion"
+          ],
+          "metricNames": [
+            "Average Diameter at Breast Height (DBH)",
+            "Bank Height Ratio (BHR)",
+            "Erosion Rate",
+            "Percent Streambank Armoring",
+            "Percent Streambank Erosion"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh",
+              "metricName": "Average Diameter at Breast Height (DBH)"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+              "metricName": "Bank Height Ratio (BHR)"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-erosion-rate",
+              "metricName": "Erosion Rate"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+              "metricName": "Percent Streambank Armoring"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+              "metricName": "Percent Streambank Erosion"
+            }
+          ]
+        },
+        {
+          "functionId": "light-thermal-regime",
+          "functionName": "Light & thermal regime",
+          "discipline": "Physicochemistry",
+          "metricCount": 1,
+          "metricIds": [
+            "light-and-thermal-regime-summer-daily-maximum"
+          ],
+          "metricNames": [
+            "Summer Daily Maximum"
+          ],
+          "metrics": [
+            {
+              "metricId": "light-and-thermal-regime-summer-daily-maximum",
+              "metricName": "Summer Daily Maximum"
+            }
+          ]
+        },
+        {
+          "functionId": "carbon-processing",
+          "functionName": "Carbon processing",
+          "discipline": "Physicochemistry",
+          "metricCount": 4,
+          "metricIds": [
+            "carbon-processing-monoculture-area",
+            "carbon-processing-native-herbaceous-cover",
+            "carbon-processing-native-shrub-density",
+            "carbon-processing-tree-density"
+          ],
+          "metricNames": [
+            "Monoculture Area",
+            "Native Herbaceous Cover",
+            "Native Shrub Density",
+            "Tree Density"
+          ],
+          "metrics": [
+            {
+              "metricId": "carbon-processing-monoculture-area",
+              "metricName": "Monoculture Area"
+            },
+            {
+              "metricId": "carbon-processing-native-herbaceous-cover",
+              "metricName": "Native Herbaceous Cover"
+            },
+            {
+              "metricId": "carbon-processing-native-shrub-density",
+              "metricName": "Native Shrub Density"
+            },
+            {
+              "metricId": "carbon-processing-tree-density",
+              "metricName": "Tree Density"
+            }
+          ]
+        },
+        {
+          "functionId": "nutrient-cycling",
+          "functionName": "Nutrient cycling",
+          "discipline": "Physicochemistry",
+          "metricCount": 3,
+          "metricIds": [
+            "nutrient-cycling-buffer-width",
+            "nutrient-cycling-total-nitrogen",
+            "nutrient-cycling-total-phosphorous"
+          ],
+          "metricNames": [
+            "Buffer Width",
+            "Total Nitrogen",
+            "Total Phosphorous"
+          ],
+          "metrics": [
+            {
+              "metricId": "nutrient-cycling-buffer-width",
+              "metricName": "Buffer Width"
+            },
+            {
+              "metricId": "nutrient-cycling-total-nitrogen",
+              "metricName": "Total Nitrogen"
+            },
+            {
+              "metricId": "nutrient-cycling-total-phosphorous",
+              "metricName": "Total Phosphorous"
+            }
+          ]
+        },
+        {
+          "functionId": "water-soil-quality",
+          "functionName": "Water & soil quality",
+          "discipline": "Physicochemistry",
+          "metricCount": 2,
+          "metricIds": [
+            "water-and-soil-quality-e-coli",
+            "water-and-soil-quality-tss-and-turbidity"
+          ],
+          "metricNames": [
+            "E.Coli",
+            "TSS and Turbidity"
+          ],
+          "metrics": [
+            {
+              "metricId": "water-and-soil-quality-e-coli",
+              "metricName": "E.Coli"
+            },
+            {
+              "metricId": "water-and-soil-quality-tss-and-turbidity",
+              "metricName": "TSS and Turbidity"
+            }
+          ]
+        },
+        {
+          "functionId": "habitat-provision",
+          "functionName": "Habitat provision",
+          "discipline": "Biology",
+          "metricCount": 5,
+          "metricIds": [
+            "habitat-provision-lwd-index",
+            "habitat-provision-lwd-piece-count",
+            "habitat-provision-percent-riffle",
+            "habitat-provision-pool-depth-ratio",
+            "habitat-provision-pool-spacing-ratio"
+          ],
+          "metricNames": [
+            "LWD Index",
+            "LWD Piece Count",
+            "Percent Riffle",
+            "Pool Depth Ratio",
+            "Pool Spacing Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "habitat-provision-lwd-index",
+              "metricName": "LWD Index"
+            },
+            {
+              "metricId": "habitat-provision-lwd-piece-count",
+              "metricName": "LWD Piece Count"
+            },
+            {
+              "metricId": "habitat-provision-percent-riffle",
+              "metricName": "Percent Riffle"
+            },
+            {
+              "metricId": "habitat-provision-pool-depth-ratio",
+              "metricName": "Pool Depth Ratio"
+            },
+            {
+              "metricId": "habitat-provision-pool-spacing-ratio",
+              "metricName": "Pool Spacing Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "population-support",
+          "functionName": "Population support",
+          "discipline": "Biology",
+          "metricCount": 2,
+          "metricIds": [
+            "population-support-ept-taxa-present",
+            "population-support-sc-bi-score"
+          ],
+          "metricNames": [
+            "EPT Taxa Present",
+            "SC BI Score"
+          ],
+          "metrics": [
+            {
+              "metricId": "population-support-ept-taxa-present",
+              "metricName": "EPT Taxa Present"
+            },
+            {
+              "metricId": "population-support-sc-bi-score",
+              "metricName": "SC BI Score"
+            }
+          ]
+        }
+      ],
+      "missingFunctionIds": [
+        "surface-water-storage",
+        "streamflow-regime",
+        "low-flow-baseflow-dynamics",
+        "high-flow-dynamics",
+        "hyporheic-connectivity",
+        "sediment-continuity",
+        "bed-composition-bedform-dynamics",
+        "community-dynamics",
+        "watershed-connectivity"
+      ],
+      "missingFunctionNames": [
+        "Surface water storage",
+        "Streamflow regime",
+        "Low flow and baseflow dynamics",
+        "High flow dynamics",
+        "Hyporheic connectivity",
+        "Sediment continuity",
+        "Bed composition and large wood",
+        "Community dynamics",
+        "Watershed connectivity"
+      ]
+    },
+    {
+      "assessmentId": "wi-sqt-adapted",
+      "assessmentName": "WI SQT Adapted",
+      "tier": "detailed",
+      "stateCode": "WI",
+      "stateName": "Wisconsin",
+      "sourceCitation": "Wisconsin SQT",
+      "applicability": "Wisconsin streams",
+      "metricCount": 26,
+      "functionCount": 11,
+      "totalFunctionCount": 20,
+      "metricIds": [
+        "catchment-hydrology-land-use-coefficient",
+        "reach-inflow-concentrated-flow-point-index",
+        "floodplain-connectivity-entrenchment-ratio-er",
+        "channel-evolution-width-depth-ratio-state",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion",
+        "bed-composition-and-large-wood-median-particle-size",
+        "bed-composition-and-large-wood-percent-fines-2mm",
+        "bed-composition-and-large-wood-percent-fines-6-35mm",
+        "light-and-thermal-regime-canopy-cover",
+        "light-and-thermal-regime-summer-mean-temperature",
+        "carbon-processing-benthic-algal-biomass",
+        "carbon-processing-effective-vegetated-riparian-area",
+        "carbon-processing-herbaceous-cover",
+        "carbon-processing-woody-stem-basal-area",
+        "nutrient-cycling-diatom-phosphorus-index-dpi",
+        "habitat-provision-lwd-frequency",
+        "habitat-provision-lwd-index",
+        "habitat-provision-percent-riffle",
+        "habitat-provision-pool-depth-ratio",
+        "habitat-provision-pool-spacing-ratio",
+        "population-support-fibi",
+        "population-support-fish-abundance",
+        "population-support-hilsenhoff-biotic-index-hbi",
+        "population-support-mibi"
+      ],
+      "metricSourceCitationsById": {
+        "catchment-hydrology-land-use-coefficient": "Wisconsin SQT",
+        "reach-inflow-concentrated-flow-point-index": "Wisconsin SQT",
+        "floodplain-connectivity-entrenchment-ratio-er": "Wisconsin SQT",
+        "channel-evolution-width-depth-ratio-state": "Wisconsin SQT",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr": "Wisconsin SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring": "Wisconsin SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion": "Wisconsin SQT",
+        "bed-composition-and-large-wood-median-particle-size": "Wisconsin SQT",
+        "bed-composition-and-large-wood-percent-fines-2mm": "Wisconsin SQT",
+        "bed-composition-and-large-wood-percent-fines-6-35mm": "Wisconsin SQT",
+        "light-and-thermal-regime-canopy-cover": "Wisconsin SQT",
+        "light-and-thermal-regime-summer-mean-temperature": "Wisconsin SQT",
+        "carbon-processing-benthic-algal-biomass": "Wisconsin SQT",
+        "carbon-processing-effective-vegetated-riparian-area": "Wisconsin SQT",
+        "carbon-processing-herbaceous-cover": "Wisconsin SQT",
+        "carbon-processing-woody-stem-basal-area": "Wisconsin SQT",
+        "nutrient-cycling-diatom-phosphorus-index-dpi": "Wisconsin SQT",
+        "habitat-provision-lwd-frequency": "Wisconsin SQT",
+        "habitat-provision-lwd-index": "Wisconsin SQT",
+        "habitat-provision-percent-riffle": "Wisconsin SQT",
+        "habitat-provision-pool-depth-ratio": "Wisconsin SQT",
+        "habitat-provision-pool-spacing-ratio": "Wisconsin SQT",
+        "population-support-fibi": "Wisconsin SQT",
+        "population-support-fish-abundance": "Wisconsin SQT",
+        "population-support-hilsenhoff-biotic-index-hbi": "Wisconsin SQT",
+        "population-support-mibi": "Wisconsin SQT"
+      },
+      "metricsByFunction": [
+        {
+          "functionId": "catchment-hydrology",
+          "functionName": "Catchment hydrology",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "catchment-hydrology-land-use-coefficient"
+          ],
+          "metricNames": [
+            "Land Use Coefficient"
+          ],
+          "metrics": [
+            {
+              "metricId": "catchment-hydrology-land-use-coefficient",
+              "metricName": "Land Use Coefficient"
+            }
+          ]
+        },
+        {
+          "functionId": "reach-inflow",
+          "functionName": "Reach inflow",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "reach-inflow-concentrated-flow-point-index"
+          ],
+          "metricNames": [
+            "Concentrated Flow Point Index"
+          ],
+          "metrics": [
+            {
+              "metricId": "reach-inflow-concentrated-flow-point-index",
+              "metricName": "Concentrated Flow Point Index"
+            }
+          ]
+        },
+        {
+          "functionId": "floodplain-connectivity",
+          "functionName": "Floodplain connectivity",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "floodplain-connectivity-entrenchment-ratio-er"
+          ],
+          "metricNames": [
+            "Entrenchment Ratio (ER)"
+          ],
+          "metrics": [
+            {
+              "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+              "metricName": "Entrenchment Ratio (ER)"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-evolution",
+          "functionName": "Channel evolution",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "channel-evolution-width-depth-ratio-state"
+          ],
+          "metricNames": [
+            "Width/Depth Ratio State"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-evolution-width-depth-ratio-state",
+              "metricName": "Width/Depth Ratio State"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-floodplain-dynamics",
+          "functionName": "Channel and floodplain dynamics",
+          "discipline": "Geomorphology",
+          "metricCount": 3,
+          "metricIds": [
+            "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+            "channel-and-floodplain-dynamics-percent-streambank-armoring",
+            "channel-and-floodplain-dynamics-percent-streambank-erosion"
+          ],
+          "metricNames": [
+            "Bank Height Ratio (BHR)",
+            "Percent Streambank Armoring",
+            "Percent Streambank Erosion"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+              "metricName": "Bank Height Ratio (BHR)"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+              "metricName": "Percent Streambank Armoring"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+              "metricName": "Percent Streambank Erosion"
+            }
+          ]
+        },
+        {
+          "functionId": "bed-composition-bedform-dynamics",
+          "functionName": "Bed composition and large wood",
+          "discipline": "Geomorphology",
+          "metricCount": 3,
+          "metricIds": [
+            "bed-composition-and-large-wood-median-particle-size",
+            "bed-composition-and-large-wood-percent-fines-2mm",
+            "bed-composition-and-large-wood-percent-fines-6-35mm"
+          ],
+          "metricNames": [
+            "Median Particle Size",
+            "Percent Fines < 2mm",
+            "Percent Fines <6.35mm"
+          ],
+          "metrics": [
+            {
+              "metricId": "bed-composition-and-large-wood-median-particle-size",
+              "metricName": "Median Particle Size"
+            },
+            {
+              "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+              "metricName": "Percent Fines < 2mm"
+            },
+            {
+              "metricId": "bed-composition-and-large-wood-percent-fines-6-35mm",
+              "metricName": "Percent Fines <6.35mm"
+            }
+          ]
+        },
+        {
+          "functionId": "light-thermal-regime",
+          "functionName": "Light & thermal regime",
+          "discipline": "Physicochemistry",
+          "metricCount": 2,
+          "metricIds": [
+            "light-and-thermal-regime-canopy-cover",
+            "light-and-thermal-regime-summer-mean-temperature"
+          ],
+          "metricNames": [
+            "Canopy Cover",
+            "Summer Mean Temperature"
+          ],
+          "metrics": [
+            {
+              "metricId": "light-and-thermal-regime-canopy-cover",
+              "metricName": "Canopy Cover"
+            },
+            {
+              "metricId": "light-and-thermal-regime-summer-mean-temperature",
+              "metricName": "Summer Mean Temperature"
+            }
+          ]
+        },
+        {
+          "functionId": "carbon-processing",
+          "functionName": "Carbon processing",
+          "discipline": "Physicochemistry",
+          "metricCount": 4,
+          "metricIds": [
+            "carbon-processing-benthic-algal-biomass",
+            "carbon-processing-effective-vegetated-riparian-area",
+            "carbon-processing-herbaceous-cover",
+            "carbon-processing-woody-stem-basal-area"
+          ],
+          "metricNames": [
+            "Benthic Algal Biomass",
+            "Effective Vegetated Riparian Area",
+            "Herbaceous Cover",
+            "Woody Stem Basal Area"
+          ],
+          "metrics": [
+            {
+              "metricId": "carbon-processing-benthic-algal-biomass",
+              "metricName": "Benthic Algal Biomass"
+            },
+            {
+              "metricId": "carbon-processing-effective-vegetated-riparian-area",
+              "metricName": "Effective Vegetated Riparian Area"
+            },
+            {
+              "metricId": "carbon-processing-herbaceous-cover",
+              "metricName": "Herbaceous Cover"
+            },
+            {
+              "metricId": "carbon-processing-woody-stem-basal-area",
+              "metricName": "Woody Stem Basal Area"
+            }
+          ]
+        },
+        {
+          "functionId": "nutrient-cycling",
+          "functionName": "Nutrient cycling",
+          "discipline": "Physicochemistry",
+          "metricCount": 1,
+          "metricIds": [
+            "nutrient-cycling-diatom-phosphorus-index-dpi"
+          ],
+          "metricNames": [
+            "Diatom Phosphorus Index (DPI)"
+          ],
+          "metrics": [
+            {
+              "metricId": "nutrient-cycling-diatom-phosphorus-index-dpi",
+              "metricName": "Diatom Phosphorus Index (DPI)"
+            }
+          ]
+        },
+        {
+          "functionId": "habitat-provision",
+          "functionName": "Habitat provision",
+          "discipline": "Biology",
+          "metricCount": 5,
+          "metricIds": [
+            "habitat-provision-lwd-frequency",
+            "habitat-provision-lwd-index",
+            "habitat-provision-percent-riffle",
+            "habitat-provision-pool-depth-ratio",
+            "habitat-provision-pool-spacing-ratio"
+          ],
+          "metricNames": [
+            "LWD Frequency",
+            "LWD Index",
+            "Percent Riffle",
+            "Pool Depth Ratio",
+            "Pool Spacing Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "habitat-provision-lwd-frequency",
+              "metricName": "LWD Frequency"
+            },
+            {
+              "metricId": "habitat-provision-lwd-index",
+              "metricName": "LWD Index"
+            },
+            {
+              "metricId": "habitat-provision-percent-riffle",
+              "metricName": "Percent Riffle"
+            },
+            {
+              "metricId": "habitat-provision-pool-depth-ratio",
+              "metricName": "Pool Depth Ratio"
+            },
+            {
+              "metricId": "habitat-provision-pool-spacing-ratio",
+              "metricName": "Pool Spacing Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "population-support",
+          "functionName": "Population support",
+          "discipline": "Biology",
+          "metricCount": 4,
+          "metricIds": [
+            "population-support-fibi",
+            "population-support-fish-abundance",
+            "population-support-hilsenhoff-biotic-index-hbi",
+            "population-support-mibi"
+          ],
+          "metricNames": [
+            "fIBI",
+            "Fish Abundance",
+            "Hilsenhoff Biotic Index (HBI)",
+            "mIBI"
+          ],
+          "metrics": [
+            {
+              "metricId": "population-support-fibi",
+              "metricName": "fIBI"
+            },
+            {
+              "metricId": "population-support-fish-abundance",
+              "metricName": "Fish Abundance"
+            },
+            {
+              "metricId": "population-support-hilsenhoff-biotic-index-hbi",
+              "metricName": "Hilsenhoff Biotic Index (HBI)"
+            },
+            {
+              "metricId": "population-support-mibi",
+              "metricName": "mIBI"
+            }
+          ]
+        }
+      ],
+      "missingFunctionIds": [
+        "surface-water-storage",
+        "streamflow-regime",
+        "low-flow-baseflow-dynamics",
+        "high-flow-dynamics",
+        "hyporheic-connectivity",
+        "sediment-continuity",
+        "water-soil-quality",
+        "community-dynamics",
+        "watershed-connectivity"
+      ],
+      "missingFunctionNames": [
+        "Surface water storage",
+        "Streamflow regime",
+        "Low flow and baseflow dynamics",
+        "High flow dynamics",
+        "Hyporheic connectivity",
+        "Sediment continuity",
+        "Water & soil quality",
+        "Community dynamics",
+        "Watershed connectivity"
+      ]
+    },
+    {
+      "assessmentId": "wy-sqt-adapted",
+      "assessmentName": "WY SQT Adapted",
+      "tier": "detailed",
+      "stateCode": "WY",
+      "stateName": "Wyoming",
+      "sourceCitation": "Wyoming SQT",
+      "applicability": "Wyoming streams",
+      "metricCount": 25,
+      "functionCount": 13,
+      "totalFunctionCount": 20,
+      "metricIds": [
+        "catchment-hydrology-land-use-coefficient",
+        "reach-inflow-concentrated-flow-points",
+        "streamflow-regime-flow-alteration-module",
+        "low-flow-and-baseflow-dynamics-average-depth",
+        "floodplain-connectivity-entrenchment-ratio-er",
+        "channel-evolution-width-depth-ratio-state",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+        "channel-and-floodplain-dynamics-greenline-stability-rating",
+        "channel-and-floodplain-dynamics-percent-side-channels",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion",
+        "bed-composition-and-large-wood-percent-fines-2mm",
+        "light-and-thermal-regime-maximum-weekly-average-temperature-mwat",
+        "carbon-processing-chlorophyll",
+        "carbon-processing-herbaceous-vegetation-cover",
+        "carbon-processing-percent-native-cover",
+        "carbon-processing-riparian-extent",
+        "carbon-processing-woody-vegetation-cover",
+        "habitat-provision-lwd-index",
+        "habitat-provision-lwd-piece-count",
+        "habitat-provision-percent-riffle",
+        "habitat-provision-pool-depth-ratio",
+        "habitat-provision-pool-spacing-ratio",
+        "population-support-game-species-biomass",
+        "community-dynamics-native-fish-species-richness"
+      ],
+      "metricSourceCitationsById": {
+        "catchment-hydrology-land-use-coefficient": "Wyoming SQT",
+        "reach-inflow-concentrated-flow-points": "Wyoming SQT",
+        "streamflow-regime-flow-alteration-module": "Wyoming SQT",
+        "low-flow-and-baseflow-dynamics-average-depth": "Wyoming SQT",
+        "floodplain-connectivity-entrenchment-ratio-er": "Wyoming SQT",
+        "channel-evolution-width-depth-ratio-state": "Wyoming SQT",
+        "channel-and-floodplain-dynamics-bank-height-ratio-bhr": "Wyoming SQT",
+        "channel-and-floodplain-dynamics-greenline-stability-rating": "Wyoming SQT",
+        "channel-and-floodplain-dynamics-percent-side-channels": "Wyoming SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-armoring": "Wyoming SQT",
+        "channel-and-floodplain-dynamics-percent-streambank-erosion": "Wyoming SQT",
+        "bed-composition-and-large-wood-percent-fines-2mm": "Wyoming SQT",
+        "light-and-thermal-regime-maximum-weekly-average-temperature-mwat": "Wyoming SQT",
+        "carbon-processing-chlorophyll": "Wyoming SQT",
+        "carbon-processing-herbaceous-vegetation-cover": "Wyoming SQT",
+        "carbon-processing-percent-native-cover": "Wyoming SQT",
+        "carbon-processing-riparian-extent": "Wyoming SQT",
+        "carbon-processing-woody-vegetation-cover": "Wyoming SQT",
+        "habitat-provision-lwd-index": "Wyoming SQT",
+        "habitat-provision-lwd-piece-count": "Wyoming SQT",
+        "habitat-provision-percent-riffle": "Wyoming SQT",
+        "habitat-provision-pool-depth-ratio": "Wyoming SQT",
+        "habitat-provision-pool-spacing-ratio": "Wyoming SQT",
+        "population-support-game-species-biomass": "Wyoming SQT",
+        "community-dynamics-native-fish-species-richness": "Wyoming SQT"
+      },
+      "metricsByFunction": [
+        {
+          "functionId": "catchment-hydrology",
+          "functionName": "Catchment hydrology",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "catchment-hydrology-land-use-coefficient"
+          ],
+          "metricNames": [
+            "Land Use Coefficient"
+          ],
+          "metrics": [
+            {
+              "metricId": "catchment-hydrology-land-use-coefficient",
+              "metricName": "Land Use Coefficient"
+            }
+          ]
+        },
+        {
+          "functionId": "reach-inflow",
+          "functionName": "Reach inflow",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "reach-inflow-concentrated-flow-points"
+          ],
+          "metricNames": [
+            "Concentrated Flow Points"
+          ],
+          "metrics": [
+            {
+              "metricId": "reach-inflow-concentrated-flow-points",
+              "metricName": "Concentrated Flow Points"
+            }
+          ]
+        },
+        {
+          "functionId": "streamflow-regime",
+          "functionName": "Streamflow regime",
+          "discipline": "Hydrology",
+          "metricCount": 1,
+          "metricIds": [
+            "streamflow-regime-flow-alteration-module"
+          ],
+          "metricNames": [
+            "Flow Alteration Module"
+          ],
+          "metrics": [
+            {
+              "metricId": "streamflow-regime-flow-alteration-module",
+              "metricName": "Flow Alteration Module"
+            }
+          ]
+        },
+        {
+          "functionId": "low-flow-baseflow-dynamics",
+          "functionName": "Low flow and baseflow dynamics",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "low-flow-and-baseflow-dynamics-average-depth"
+          ],
+          "metricNames": [
+            "Average Depth"
+          ],
+          "metrics": [
+            {
+              "metricId": "low-flow-and-baseflow-dynamics-average-depth",
+              "metricName": "Average Depth"
+            }
+          ]
+        },
+        {
+          "functionId": "floodplain-connectivity",
+          "functionName": "Floodplain connectivity",
+          "discipline": "Hydraulics",
+          "metricCount": 1,
+          "metricIds": [
+            "floodplain-connectivity-entrenchment-ratio-er"
+          ],
+          "metricNames": [
+            "Entrenchment Ratio (ER)"
+          ],
+          "metrics": [
+            {
+              "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+              "metricName": "Entrenchment Ratio (ER)"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-evolution",
+          "functionName": "Channel evolution",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "channel-evolution-width-depth-ratio-state"
+          ],
+          "metricNames": [
+            "Width/Depth Ratio State"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-evolution-width-depth-ratio-state",
+              "metricName": "Width/Depth Ratio State"
+            }
+          ]
+        },
+        {
+          "functionId": "channel-floodplain-dynamics",
+          "functionName": "Channel and floodplain dynamics",
+          "discipline": "Geomorphology",
+          "metricCount": 5,
+          "metricIds": [
+            "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+            "channel-and-floodplain-dynamics-greenline-stability-rating",
+            "channel-and-floodplain-dynamics-percent-side-channels",
+            "channel-and-floodplain-dynamics-percent-streambank-armoring",
+            "channel-and-floodplain-dynamics-percent-streambank-erosion"
+          ],
+          "metricNames": [
+            "Bank Height Ratio (BHR)",
+            "Greenline Stability Rating",
+            "Percent Side Channels",
+            "Percent Streambank Armoring",
+            "Percent Streambank Erosion"
+          ],
+          "metrics": [
+            {
+              "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+              "metricName": "Bank Height Ratio (BHR)"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-greenline-stability-rating",
+              "metricName": "Greenline Stability Rating"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-side-channels",
+              "metricName": "Percent Side Channels"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+              "metricName": "Percent Streambank Armoring"
+            },
+            {
+              "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+              "metricName": "Percent Streambank Erosion"
+            }
+          ]
+        },
+        {
+          "functionId": "bed-composition-bedform-dynamics",
+          "functionName": "Bed composition and large wood",
+          "discipline": "Geomorphology",
+          "metricCount": 1,
+          "metricIds": [
+            "bed-composition-and-large-wood-percent-fines-2mm"
+          ],
+          "metricNames": [
+            "Percent Fines < 2mm"
+          ],
+          "metrics": [
+            {
+              "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+              "metricName": "Percent Fines < 2mm"
+            }
+          ]
+        },
+        {
+          "functionId": "light-thermal-regime",
+          "functionName": "Light & thermal regime",
+          "discipline": "Physicochemistry",
+          "metricCount": 1,
+          "metricIds": [
+            "light-and-thermal-regime-maximum-weekly-average-temperature-mwat"
+          ],
+          "metricNames": [
+            "Maximum Weekly Average Temperature (MWAT)"
+          ],
+          "metrics": [
+            {
+              "metricId": "light-and-thermal-regime-maximum-weekly-average-temperature-mwat",
+              "metricName": "Maximum Weekly Average Temperature (MWAT)"
+            }
+          ]
+        },
+        {
+          "functionId": "carbon-processing",
+          "functionName": "Carbon processing",
+          "discipline": "Physicochemistry",
+          "metricCount": 5,
+          "metricIds": [
+            "carbon-processing-chlorophyll",
+            "carbon-processing-herbaceous-vegetation-cover",
+            "carbon-processing-percent-native-cover",
+            "carbon-processing-riparian-extent",
+            "carbon-processing-woody-vegetation-cover"
+          ],
+          "metricNames": [
+            "Chlorophyll ?",
+            "Herbaceous Vegetation Cover",
+            "Percent Native Cover",
+            "Riparian Extent",
+            "Woody Vegetation Cover"
+          ],
+          "metrics": [
+            {
+              "metricId": "carbon-processing-chlorophyll",
+              "metricName": "Chlorophyll ?"
+            },
+            {
+              "metricId": "carbon-processing-herbaceous-vegetation-cover",
+              "metricName": "Herbaceous Vegetation Cover"
+            },
+            {
+              "metricId": "carbon-processing-percent-native-cover",
+              "metricName": "Percent Native Cover"
+            },
+            {
+              "metricId": "carbon-processing-riparian-extent",
+              "metricName": "Riparian Extent"
+            },
+            {
+              "metricId": "carbon-processing-woody-vegetation-cover",
+              "metricName": "Woody Vegetation Cover"
+            }
+          ]
+        },
+        {
+          "functionId": "habitat-provision",
+          "functionName": "Habitat provision",
+          "discipline": "Biology",
+          "metricCount": 5,
+          "metricIds": [
+            "habitat-provision-lwd-index",
+            "habitat-provision-lwd-piece-count",
+            "habitat-provision-percent-riffle",
+            "habitat-provision-pool-depth-ratio",
+            "habitat-provision-pool-spacing-ratio"
+          ],
+          "metricNames": [
+            "LWD Index",
+            "LWD Piece Count",
+            "Percent Riffle",
+            "Pool Depth Ratio",
+            "Pool Spacing Ratio"
+          ],
+          "metrics": [
+            {
+              "metricId": "habitat-provision-lwd-index",
+              "metricName": "LWD Index"
+            },
+            {
+              "metricId": "habitat-provision-lwd-piece-count",
+              "metricName": "LWD Piece Count"
+            },
+            {
+              "metricId": "habitat-provision-percent-riffle",
+              "metricName": "Percent Riffle"
+            },
+            {
+              "metricId": "habitat-provision-pool-depth-ratio",
+              "metricName": "Pool Depth Ratio"
+            },
+            {
+              "metricId": "habitat-provision-pool-spacing-ratio",
+              "metricName": "Pool Spacing Ratio"
+            }
+          ]
+        },
+        {
+          "functionId": "population-support",
+          "functionName": "Population support",
+          "discipline": "Biology",
+          "metricCount": 1,
+          "metricIds": [
+            "population-support-game-species-biomass"
+          ],
+          "metricNames": [
+            "Game Species Biomass"
+          ],
+          "metrics": [
+            {
+              "metricId": "population-support-game-species-biomass",
+              "metricName": "Game Species Biomass"
+            }
+          ]
+        },
+        {
+          "functionId": "community-dynamics",
+          "functionName": "Community dynamics",
+          "discipline": "Biology",
+          "metricCount": 1,
+          "metricIds": [
+            "community-dynamics-native-fish-species-richness"
+          ],
+          "metricNames": [
+            "Native Fish Species Richness"
+          ],
+          "metrics": [
+            {
+              "metricId": "community-dynamics-native-fish-species-richness",
+              "metricName": "Native Fish Species Richness"
+            }
+          ]
+        }
+      ],
+      "missingFunctionIds": [
+        "surface-water-storage",
+        "high-flow-dynamics",
+        "hyporheic-connectivity",
+        "sediment-continuity",
+        "nutrient-cycling",
+        "water-soil-quality",
+        "watershed-connectivity"
+      ],
+      "missingFunctionNames": [
+        "Surface water storage",
+        "High flow dynamics",
+        "Hyporheic connectivity",
+        "Sediment continuity",
+        "Nutrient cycling",
+        "Water & soil quality",
+        "Watershed connectivity"
+      ]
+    }
+  ]
+}
