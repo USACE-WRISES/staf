@@ -1825,6 +1825,26 @@ h3,
   background: #dbead2 !important;
 }
 
+.detailed-table td.detailed-group-active.category-hydrology {
+  background: #d9e2f3 !important;
+}
+
+.detailed-table td.detailed-group-active.category-hydraulics {
+  background: #b9cbe6 !important;
+}
+
+.detailed-table td.detailed-group-active.category-geomorphology {
+  background: #f7e1d1 !important;
+}
+
+.detailed-table td.detailed-group-active.category-physicochemistry {
+  background: #f3e9c4 !important;
+}
+
+.detailed-table td.detailed-group-active.category-biology {
+  background: #dbead2 !important;
+}
+
 body.modal-open {
   overflow: hidden;
 }

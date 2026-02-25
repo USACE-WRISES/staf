@@ -11,6 +11,8 @@
   const functionsUrl = `${baseUrl}/assets/data/functions.json`;
   const mappingUrl = `${baseUrl}/assets/data/cwa-mapping.json`;
   const metricLibraryIndexUrl = `${baseUrl}/assets/data/metric-library/index.json`;
+  const detailedAdaptedAssessmentsUrl =
+    `${baseUrl}/assets/data/metric-library/detailed-adapted-assessments.json`;
   const fallback = container.querySelector('.detailed-assessment-fallback');
   const ui = container.querySelector('.detailed-assessment-ui');
   const collapsedGlyph = '&#9656;';
@@ -21,6 +23,69 @@
       .toLowerCase()
       .replace(/&/g, 'and')
       .replace(/[^a-z0-9]+/g, '');
+
+  const usStateNameByCode = {
+    AL: 'Alabama',
+    AK: 'Alaska',
+    AZ: 'Arizona',
+    AR: 'Arkansas',
+    CA: 'California',
+    CO: 'Colorado',
+    CT: 'Connecticut',
+    DE: 'Delaware',
+    FL: 'Florida',
+    GA: 'Georgia',
+    HI: 'Hawaii',
+    ID: 'Idaho',
+    IL: 'Illinois',
+    IN: 'Indiana',
+    IA: 'Iowa',
+    KS: 'Kansas',
+    KY: 'Kentucky',
+    LA: 'Louisiana',
+    ME: 'Maine',
+    MD: 'Maryland',
+    MA: 'Massachusetts',
+    MI: 'Michigan',
+    MN: 'Minnesota',
+    MS: 'Mississippi',
+    MO: 'Missouri',
+    MT: 'Montana',
+    NE: 'Nebraska',
+    NV: 'Nevada',
+    NH: 'New Hampshire',
+    NJ: 'New Jersey',
+    NM: 'New Mexico',
+    NY: 'New York',
+    NC: 'North Carolina',
+    ND: 'North Dakota',
+    OH: 'Ohio',
+    OK: 'Oklahoma',
+    OR: 'Oregon',
+    PA: 'Pennsylvania',
+    RI: 'Rhode Island',
+    SC: 'South Carolina',
+    SD: 'South Dakota',
+    TN: 'Tennessee',
+    TX: 'Texas',
+    UT: 'Utah',
+    VT: 'Vermont',
+    VA: 'Virginia',
+    WA: 'Washington',
+    WV: 'West Virginia',
+    WI: 'Wisconsin',
+    WY: 'Wyoming',
+    DC: 'District of Columbia',
+  };
+
+  const usStateCodeByNormalized = Object.entries(usStateNameByCode).reduce((acc, [code, name]) => {
+    acc[normalizeText(name)] = code;
+    acc[normalizeText(code)] = code;
+    return acc;
+  }, {});
+
+  const resolveStateCode = (value) =>
+    usStateCodeByNormalized[normalizeText(value || '')] || null;
 
   const makeMetricLookupKey = (functionName, metricName) =>
     `${normalizeText(functionName || '')}|${normalizeText(metricName || '')}`;
@@ -213,6 +278,7 @@
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const defaultIndexValues = [0, 0.4, 0.7, 1];
   const defaultProfileId = 'detailed-default';
+  const assessmentLockedTooltip = 'This assessment is locked and cannot be edited.';
   const defaultExampleDetailedApplicability = 'No specified region';
   const defaultExampleDetailedNotes =
     'This is an fictitious example of a detailed assessment that could be created by combining detailed metrics.  Feel free to duplicate, edit, or create a new assessment';
@@ -361,11 +427,13 @@
 
   const init = async () => {
     try {
-      const [metricsText, functionsList, mappingList, metricLibraryIndex] = await Promise.all([
+      const [metricsText, functionsList, mappingList, metricLibraryIndex, adaptedAssessments] =
+        await Promise.all([
         fetchText(dataUrl),
         fetchJson(functionsUrl),
         fetchJson(mappingUrl),
         fetchJson(metricLibraryIndexUrl).catch(() => ({ metrics: [] })),
+        fetchJson(detailedAdaptedAssessmentsUrl).catch(() => ({ assessments: [] })),
       ]);
 
       if (fallback) {
@@ -768,6 +836,73 @@
       });
       const defaultMetricIds = Array.from(defaultMetricIdsByFunction.values());
 
+      const normalizedAdaptedAssessments = Array.isArray(adaptedAssessments?.assessments)
+        ? adaptedAssessments.assessments
+            .map((assessment) => {
+              if (!assessment || !assessment.assessmentId) {
+                return null;
+              }
+              const metricIds = Array.isArray(assessment.metricIds)
+                ? assessment.metricIds.filter((metricId) => metricById.has(metricId))
+                : [];
+              if (!metricIds.length) {
+                return null;
+              }
+              const stateCode =
+                (assessment.stateCode || '').toString().trim().toUpperCase() ||
+                resolveStateCode(assessment.stateName || '');
+              const stateName =
+                (stateCode && usStateNameByCode[stateCode]) ||
+                (assessment.stateName || '').toString().trim() ||
+                '';
+              const defaultSourceCitation =
+                (assessment.sourceCitation || '').toString().trim() ||
+                (stateName ? `${stateName} SQT` : '');
+              const rawMetricSourceMap = assessment.metricSourceCitationsById;
+              const metricSourceCitationsById = {};
+              metricIds.forEach((metricId) => {
+                const mappedSource =
+                  rawMetricSourceMap && typeof rawMetricSourceMap === 'object'
+                    ? rawMetricSourceMap[metricId]
+                    : null;
+                metricSourceCitationsById[metricId] =
+                  (mappedSource || defaultSourceCitation || '').toString().trim();
+              });
+              return {
+                assessmentId: assessment.assessmentId,
+                assessmentName:
+                  (assessment.assessmentName || '').toString().trim() ||
+                  `${stateCode || 'State'} SQT Adapted`,
+                stateCode,
+                stateName,
+                sourceCitation: defaultSourceCitation,
+                applicability:
+                  (assessment.applicability || '').toString().trim() ||
+                  (stateName ? `${stateName} streams` : ''),
+                metricIds,
+                metricSourceCitationsById,
+                metricCount: Number.isFinite(assessment.metricCount)
+                  ? assessment.metricCount
+                  : metricIds.length,
+                functionCount: Number.isFinite(assessment.functionCount)
+                  ? assessment.functionCount
+                  : null,
+                totalFunctionCount: Number.isFinite(assessment.totalFunctionCount)
+                  ? assessment.totalFunctionCount
+                  : null,
+                missingFunctionNames: Array.isArray(assessment.missingFunctionNames)
+                  ? assessment.missingFunctionNames
+                      .map((item) => (item || '').toString().trim())
+                      .filter(Boolean)
+                  : [],
+              };
+            })
+            .filter(Boolean)
+        : [];
+      const adaptedAssessmentById = new Map(
+        normalizedAdaptedAssessments.map((assessment) => [assessment.assessmentId, assessment])
+      );
+
       const ensureLibraryMetric = (detail) => {
         if (!detail) {
           return null;
@@ -812,6 +947,29 @@
       const nameInput = container.querySelector('.settings-name');
       const applicabilityInput = container.querySelector('.settings-applicability');
       const notesInput = container.querySelector('.settings-notes-input');
+      const assessmentInlineActions = container.querySelector(
+        '.detailed-settings-panel .assessment-inline-actions'
+      );
+      let settingsLockIcon = container.querySelector('.settings-lock-icon');
+      if (!settingsLockIcon) {
+        const settingsHeading = container.querySelector(
+          '.detailed-settings-panel .settings-header h3'
+        );
+        if (settingsHeading) {
+          settingsHeading.classList.add('settings-heading');
+          settingsLockIcon = document.createElement('span');
+          settingsLockIcon.className = 'settings-lock-icon';
+          settingsLockIcon.hidden = true;
+          settingsLockIcon.setAttribute('aria-hidden', 'true');
+          settingsLockIcon.setAttribute('title', assessmentLockedTooltip);
+          settingsLockIcon.innerHTML =
+            '<svg viewBox="0 0 24 24" focusable="false">' +
+            '<rect x="6.5" y="10.25" width="11" height="9.25" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>' +
+            '<path d="M9.5 10.25V8a2.5 2.5 0 0 1 5 0v2.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>' +
+            '</svg>';
+          settingsHeading.appendChild(settingsLockIcon);
+        }
+      }
       const duplicateButton = container.querySelector('.detailed-duplicate');
       const deleteButton = container.querySelector('.detailed-delete');
       let pathwayLocked = false;
@@ -836,19 +994,89 @@
       let activeScenarioId = null;
       let activeCurveMetricId = null;
 
-      const buildScenarioMetricsState = (metricIds) => {
+      const findPreferredCurveLayerId = (curve, sourceCitation, stateCode) => {
+        if (!curve || !Array.isArray(curve.layers) || !curve.layers.length) {
+          return null;
+        }
+        const source = compactWhitespace(sourceCitation || '');
+        const sourceKey = normalizeText(source);
+        const code = (stateCode || '').toString().trim().toUpperCase();
+        const codePattern = code ? new RegExp(`\\b${escapeRegExp(code)}\\b`, 'i') : null;
+        const stateName = code && usStateNameByCode[code] ? usStateNameByCode[code] : '';
+        const stateNameKey = normalizeText(stateName);
+
+        let bestLayerId = null;
+        let bestScore = 0;
+        curve.layers.forEach((layer) => {
+          const layerName = compactWhitespace(layer?.name || '');
+          const layerNameKey = normalizeText(layerName);
+          const layerSourceName = compactWhitespace(layer?.sourceName || '');
+          const layerSourceKey = normalizeText(layerSourceName);
+          let score = 0;
+
+          if (sourceKey && layerSourceKey && layerSourceKey === sourceKey) {
+            score = Math.max(score, 100);
+          }
+          if (sourceKey && layerNameKey && layerNameKey === sourceKey) {
+            score = Math.max(score, 95);
+          }
+          if (sourceKey && layerSourceKey && layerSourceKey.includes(sourceKey)) {
+            score = Math.max(score, 90);
+          }
+          if (sourceKey && layerNameKey && layerNameKey.includes(sourceKey)) {
+            score = Math.max(score, 85);
+          }
+          if (stateNameKey && layerSourceKey && layerSourceKey.includes(stateNameKey)) {
+            score = Math.max(score, 80);
+          }
+          if (stateNameKey && layerNameKey && layerNameKey.includes(stateNameKey)) {
+            score = Math.max(score, 75);
+          }
+          if (codePattern && layerSourceName && codePattern.test(layerSourceName)) {
+            score = Math.max(score, 70);
+          }
+          if (codePattern && layerName && codePattern.test(layerName)) {
+            score = Math.max(score, 65);
+          }
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestLayerId = layer.id;
+          }
+        });
+        return bestScore > 0 ? bestLayerId : null;
+      };
+
+      const buildScenarioMetricsState = (metricIds, options = {}) => {
         const curves = {};
         const metricProfiles = {};
-        Array.from(metricIds || []).forEach((metricId) => {
+        const normalizedMetricIds = Array.from(new Set(metricIds || [])).filter((metricId) =>
+          metricById.has(metricId)
+        );
+        normalizedMetricIds.forEach((metricId) => {
           const metric = metricById.get(metricId);
-          curves[metricId] =
+          const curve =
             metric && metric.referenceCurve
               ? cloneCurve(metric.referenceCurve)
               : buildDefaultCurve();
+          const preferredSourceCitation =
+            options.metricSourceCitationsById &&
+            options.metricSourceCitationsById[metricId]
+              ? options.metricSourceCitationsById[metricId]
+              : options.defaultSourceCitation || '';
+          const preferredLayerId = findPreferredCurveLayerId(
+            curve,
+            preferredSourceCitation,
+            options.stateCode || ''
+          );
+          if (preferredLayerId) {
+            curve.activeLayerId = preferredLayerId;
+          }
+          curves[metricId] = curve;
           metricProfiles[metricId] = defaultProfileId;
         });
         return {
-          metricIds: Array.from(metricIds || []),
+          metricIds: normalizedMetricIds,
           curves,
           metricProfiles,
         };
@@ -876,8 +1104,47 @@
         return {
           id: generateId(),
           name: 'Example Detailed Assessment',
+          isPredefined: true,
           applicability: defaultExampleDetailedApplicability,
           notes: defaultExampleDetailedNotes,
+          fieldValues: {},
+          metricIds: state.metricIds,
+          curves: state.curves,
+          metricProfiles: state.metricProfiles,
+          showAdvancedScoring: false,
+          showRollupComputations: false,
+          showFunctionMappings: false,
+          showSuggestedFunctionScoresCue: false,
+          showFunctionScoreCueLabels: false,
+        };
+      };
+
+      const createAdaptedScenario = (assessment) => {
+        const state = buildScenarioMetricsState(assessment.metricIds, {
+          stateCode: assessment.stateCode,
+          defaultSourceCitation: assessment.sourceCitation,
+          metricSourceCitationsById: assessment.metricSourceCitationsById || {},
+        });
+        const notes = [
+          `Adapted from ${assessment.sourceCitation || `${assessment.stateName} SQT`}.`,
+          `${assessment.metricCount || state.metricIds.length} detailed metrics mapped across ${
+            assessment.functionCount || 0
+          } of ${assessment.totalFunctionCount || functionsList.length} functions.`,
+        ];
+        if (Array.isArray(assessment.missingFunctionNames) && assessment.missingFunctionNames.length) {
+          notes.push(
+            `Functions without state SQT detailed metrics: ${assessment.missingFunctionNames.join(
+              '; '
+            )}.`
+          );
+        }
+        return {
+          id: generateId(),
+          name: assessment.assessmentName,
+          isPredefined: true,
+          applicability:
+            assessment.applicability || (assessment.stateName ? `${assessment.stateName} streams` : ''),
+          notes: notes.join('\n'),
           fieldValues: {},
           metricIds: state.metricIds,
           curves: state.curves,
@@ -895,6 +1162,7 @@
         return {
           id: generateId(),
           name: getNextCustomScenarioName(),
+          isPredefined: false,
           applicability: '',
           notes: '',
           fieldValues: {},
@@ -1013,11 +1281,33 @@
           const tab = document.createElement('button');
           tab.type = 'button';
           tab.className = 'assessment-tab';
+          const isPredefinedScenario = Boolean(scenario?.isPredefined);
+          if (isPredefinedScenario) {
+            tab.classList.add('is-locked');
+          }
           if (scenario.id === activeScenarioId) {
             tab.classList.add('is-active');
             tab.setAttribute('aria-selected', 'true');
           }
-          tab.textContent = scenario.name || 'Custom Assessment';
+          if (isPredefinedScenario) {
+            tab.setAttribute('aria-label', `${scenario.name}. ${assessmentLockedTooltip}`);
+          }
+          const tabLabel = document.createElement('span');
+          tabLabel.className = 'assessment-tab-label';
+          tabLabel.textContent = scenario.name || 'Custom Assessment';
+          tab.appendChild(tabLabel);
+          if (isPredefinedScenario) {
+            const lockIcon = document.createElement('span');
+            lockIcon.className = 'assessment-tab-lock-icon';
+            lockIcon.setAttribute('aria-hidden', 'true');
+            lockIcon.setAttribute('title', assessmentLockedTooltip);
+            lockIcon.innerHTML =
+              '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+              '<rect x="6.5" y="10.25" width="11" height="9.25" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>' +
+              '<path d="M9.5 10.25V8a2.5 2.5 0 0 1 5 0v2.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>' +
+              '</svg>';
+            tab.appendChild(lockIcon);
+          }
           tab.addEventListener('click', () => {
             activeScenarioId = scenario.id;
             renderAll();
@@ -1026,14 +1316,33 @@
         });
       };
 
+      const setSettingsFieldReadOnly = (input, isReadOnly) => {
+        if (!input) {
+          return;
+        }
+        input.readOnly = isReadOnly;
+        input.setAttribute('aria-readonly', isReadOnly ? 'true' : 'false');
+        const field = input.closest('.settings-field');
+        if (field) {
+          field.classList.toggle('is-read-only', isReadOnly);
+        }
+      };
+
       const renderSettings = () => {
         const scenario = getActiveScenario();
         const hasScenario = Boolean(scenario);
+        const isPredefined = Boolean(scenario?.isPredefined);
+        const hideAssessmentActions = pathwayLocked || (hasScenario && isPredefined);
+        if (settingsLockIcon) {
+          settingsLockIcon.hidden = !(hasScenario && isPredefined);
+          settingsLockIcon.setAttribute('title', assessmentLockedTooltip);
+        }
         if (nameInput) {
           nameInput.value = scenario ? scenario.name || '' : '';
           nameInput.disabled = !hasScenario;
+          setSettingsFieldReadOnly(nameInput, hasScenario && isPredefined);
           nameInput.oninput = (event) => {
-            if (!scenario) {
+            if (!scenario || scenario.isPredefined) {
               return;
             }
             scenario.name = event.target.value;
@@ -1043,8 +1352,9 @@
         if (applicabilityInput) {
           applicabilityInput.value = scenario ? scenario.applicability || '' : '';
           applicabilityInput.disabled = !hasScenario;
+          setSettingsFieldReadOnly(applicabilityInput, hasScenario && isPredefined);
           applicabilityInput.oninput = (event) => {
-            if (!scenario) {
+            if (!scenario || scenario.isPredefined) {
               return;
             }
             scenario.applicability = event.target.value;
@@ -1053,21 +1363,30 @@
         if (notesInput) {
           notesInput.value = scenario ? scenario.notes || '' : '';
           notesInput.disabled = !hasScenario;
+          setSettingsFieldReadOnly(notesInput, hasScenario && isPredefined);
           notesInput.oninput = (event) => {
-            if (!scenario) {
+            if (!scenario || scenario.isPredefined) {
               return;
             }
             scenario.notes = event.target.value;
           };
         }
         if (addTabButton) {
-          addTabButton.disabled = pathwayLocked || !hasScenario;
+          addTabButton.style.display = hideAssessmentActions ? 'none' : '';
+          addTabButton.disabled = hideAssessmentActions || !hasScenario;
         }
         if (duplicateButton) {
-          duplicateButton.disabled = pathwayLocked || !hasScenario;
+          duplicateButton.style.display = hideAssessmentActions ? 'none' : '';
+          duplicateButton.disabled = hideAssessmentActions || !hasScenario;
         }
         if (deleteButton) {
-          deleteButton.disabled = pathwayLocked || !hasScenario;
+          deleteButton.style.display = hideAssessmentActions ? 'none' : '';
+          deleteButton.disabled = hideAssessmentActions || !hasScenario;
+        }
+        if (assessmentInlineActions) {
+          assessmentInlineActions.style.display = hideAssessmentActions
+            ? 'none'
+            : '';
         }
       };
 
@@ -2854,6 +3173,13 @@
           }
         });
         activeVisibleMetrics = renderRows.filter((row) => row.type === 'metric');
+        const disciplineActive = new Map();
+        renderRows.forEach((row) => {
+          if (row.type !== 'metric') {
+            return;
+          }
+          disciplineActive.set(row.discipline, true);
+        });
 
         const functionScores = new Map();
         const functionScoreMeta = new Map();
@@ -3081,6 +3407,12 @@
             const disciplineCell = document.createElement('td');
             disciplineCell.className = 'discipline-cell col-discipline';
             disciplineCell.rowSpan = row._disciplineSpan;
+            if (disciplineActive.get(row.discipline)) {
+              disciplineCell.classList.add(
+                'detailed-group-active',
+                slugCategory(row.discipline)
+              );
+            }
             const disciplineLink = document.createElement('button');
             disciplineLink.type = 'button';
             disciplineLink.className = 'metric-curve-link';
@@ -3476,10 +3808,24 @@
         });
       }
 
+      const createSelectedPredefinedScenario = (selectedAssessmentId) => {
+        if (selectedAssessmentId === 'example') {
+          return createExampleScenario();
+        }
+        const adaptedAssessment =
+          (selectedAssessmentId && adaptedAssessmentById.get(selectedAssessmentId)) ||
+          normalizedAdaptedAssessments[0] ||
+          null;
+        if (adaptedAssessment) {
+          return createAdaptedScenario(adaptedAssessment);
+        }
+        return createExampleScenario();
+      };
+
       if (!scenarios.length) {
-        const exampleScenario = createExampleScenario();
-        scenarios.push(exampleScenario);
-        activeScenarioId = exampleScenario.id;
+        const defaultPredefinedScenario = createSelectedPredefinedScenario('');
+        scenarios.push(defaultPredefinedScenario);
+        activeScenarioId = defaultPredefinedScenario.id;
       }
       scenarios.forEach((scenario) => ensureScenarioViewOptions(scenario));
 
@@ -3489,13 +3835,14 @@
           return;
         }
         const action = event.detail.action;
+        const selectedAssessment = (event.detail.selectedAssessment || '').toString().trim();
         if (action === 'use-predefined') {
           pathwayLocked = true;
-          // Reset to only the example scenario, removing any custom ones
+          // Reset to only the selected predefined scenario, removing any custom ones.
           scenarios.length = 0;
-          const exampleScenario = createExampleScenario();
-          scenarios.push(exampleScenario);
-          activeScenarioId = exampleScenario.id;
+          const predefinedScenario = createSelectedPredefinedScenario(selectedAssessment);
+          scenarios.push(predefinedScenario);
+          activeScenarioId = predefinedScenario.id;
           renderAll();
           // Close metric library sidebar if open
           const workbench = container.querySelector('.assessment-workbench');

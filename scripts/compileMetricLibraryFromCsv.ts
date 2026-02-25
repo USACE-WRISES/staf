@@ -63,6 +63,13 @@ type FunctionMeta = {
   disciplineIndex: number;
 };
 
+type FunctionSummary = {
+  id: string;
+  name: string;
+  discipline: string;
+  functionIndex: number;
+};
+
 type MetricGroup = {
   key: string;
   metricName: string;
@@ -91,6 +98,32 @@ type ScreeningCriteria = {
   poor: ScreeningBand;
 };
 
+type ParsedSqtSource = {
+  rawSourceCitation: string;
+  sourceCitation: string;
+  stateCode: string;
+  stateName: string;
+};
+
+type AdaptedMetricEntry = {
+  metricId: string;
+  metricName: string;
+  functionId: string;
+  functionName: string;
+  discipline: string;
+  sourceCitation: string;
+};
+
+type AdaptedAssessmentAccumulator = {
+  assessmentId: string;
+  assessmentName: string;
+  stateCode: string;
+  stateName: string;
+  sourceCitation: string;
+  metricsById: Map<string, AdaptedMetricEntry>;
+  metricIdsByFunction: Map<string, Set<string>>;
+};
+
 type RapidLevelKey = 'sa' | 'a' | 'n' | 'd' | 'sd';
 
 const root = process.cwd();
@@ -100,6 +133,10 @@ const outputDataDir = path.join(root, 'docs', 'assets', 'data');
 const metricsDir = path.join(metricLibraryDataDir, 'metrics');
 const curvesDir = path.join(metricLibraryDataDir, 'curves');
 const indexPath = path.join(metricLibraryDataDir, 'index.json');
+const detailedAdaptedAssessmentsPath = path.join(
+  metricLibraryDataDir,
+  'detailed-adapted-assessments.json'
+);
 const functionsPath = path.join(outputDataDir, 'functions.json');
 const ratingScalesPath = path.join(metricLibraryDataDir, 'rating-scales.json');
 
@@ -146,6 +183,13 @@ const slugify = (value: string) =>
     .slice(0, 120);
 
 const toBooleanOn = (value: string) => /^(on|yes|true|1|y)$/i.test((value || '').trim());
+
+const screeningRecommendedColumns = [
+  'Ecosystem Assessment Screening Index (EASI) Has it On',
+  'Ecosystem Assessment Screening Index (EASI) Has it "On"',
+  'Stream Condition Screening (SCS) Has it On',
+  'Stream Condition Screening (SCS) Has it "On"',
+];
 
 const formatScore = (value: number) => {
   if (!Number.isFinite(value)) {
@@ -253,6 +297,101 @@ const parseNumberToken = (value: string): number | null => {
   }
   const parsed = Number.parseFloat(match[0]);
   return Number.isFinite(parsed) ? parsed : null;
+};
+
+const usStateNameByCode = new Map<string, string>([
+  ['AL', 'Alabama'],
+  ['AK', 'Alaska'],
+  ['AZ', 'Arizona'],
+  ['AR', 'Arkansas'],
+  ['CA', 'California'],
+  ['CO', 'Colorado'],
+  ['CT', 'Connecticut'],
+  ['DE', 'Delaware'],
+  ['FL', 'Florida'],
+  ['GA', 'Georgia'],
+  ['HI', 'Hawaii'],
+  ['ID', 'Idaho'],
+  ['IL', 'Illinois'],
+  ['IN', 'Indiana'],
+  ['IA', 'Iowa'],
+  ['KS', 'Kansas'],
+  ['KY', 'Kentucky'],
+  ['LA', 'Louisiana'],
+  ['ME', 'Maine'],
+  ['MD', 'Maryland'],
+  ['MA', 'Massachusetts'],
+  ['MI', 'Michigan'],
+  ['MN', 'Minnesota'],
+  ['MS', 'Mississippi'],
+  ['MO', 'Missouri'],
+  ['MT', 'Montana'],
+  ['NE', 'Nebraska'],
+  ['NV', 'Nevada'],
+  ['NH', 'New Hampshire'],
+  ['NJ', 'New Jersey'],
+  ['NM', 'New Mexico'],
+  ['NY', 'New York'],
+  ['NC', 'North Carolina'],
+  ['ND', 'North Dakota'],
+  ['OH', 'Ohio'],
+  ['OK', 'Oklahoma'],
+  ['OR', 'Oregon'],
+  ['PA', 'Pennsylvania'],
+  ['RI', 'Rhode Island'],
+  ['SC', 'South Carolina'],
+  ['SD', 'South Dakota'],
+  ['TN', 'Tennessee'],
+  ['TX', 'Texas'],
+  ['UT', 'Utah'],
+  ['VT', 'Vermont'],
+  ['VA', 'Virginia'],
+  ['WA', 'Washington'],
+  ['WV', 'West Virginia'],
+  ['WI', 'Wisconsin'],
+  ['WY', 'Wyoming'],
+  ['DC', 'District of Columbia'],
+]);
+
+const usStateCodeByNormalizedName = new Map<string, string>();
+usStateNameByCode.forEach((stateName, stateCode) => {
+  usStateCodeByNormalizedName.set(normalizeText(stateName), stateCode);
+  usStateCodeByNormalizedName.set(normalizeText(stateCode), stateCode);
+});
+usStateCodeByNormalizedName.set(normalizeText('Washington DC'), 'DC');
+
+const resolveUsStateCode = (value: string): string | null => {
+  const normalized = normalizeText(value || '');
+  if (!normalized) {
+    return null;
+  }
+  return usStateCodeByNormalizedName.get(normalized) || null;
+};
+
+const parseSqtSourceCitation = (value: string): ParsedSqtSource | null => {
+  const source = compactWhitespace(value);
+  if (!source) {
+    return null;
+  }
+  const match = /^(.+?)\s+SQT(?:\b.*)?$/i.exec(source);
+  if (!match) {
+    return null;
+  }
+  const rawState = compactWhitespace(match[1]);
+  if (!rawState) {
+    return null;
+  }
+  const stateCode = resolveUsStateCode(rawState);
+  if (!stateCode) {
+    return null;
+  }
+  const stateName = usStateNameByCode.get(stateCode) || rawState;
+  return {
+    rawSourceCitation: `${rawState} SQT`,
+    sourceCitation: `${stateName} SQT`,
+    stateCode,
+    stateName,
+  };
 };
 
 const parseIndexRange = (value: string): IndexRange | null => {
@@ -690,6 +829,7 @@ const parseFunctionList = async () => {
   const disciplineOrder: string[] = [];
   const disciplineIndexByName = new Map<string, number>();
   const byLookup = new Map<string, FunctionMeta>();
+  const orderedFunctions: FunctionSummary[] = [];
 
   list.forEach((item, index) => {
     const name = compactWhitespace(String(item.name || ''));
@@ -702,9 +842,10 @@ const parseFunctionList = async () => {
       disciplineIndexByName.set(disciplineKey, disciplineOrder.length);
       disciplineOrder.push(discipline);
     }
+    const resolvedId = compactWhitespace(String(item.id || '')) || slugify(name);
     const meta: FunctionMeta = {
       name,
-      id: compactWhitespace(String(item.id || '')),
+      id: resolvedId,
       discipline,
       functionStatement: compactWhitespace(String(item.function_statement || '')),
       functionIndex: index,
@@ -714,6 +855,12 @@ const parseFunctionList = async () => {
     if (meta.id) {
       byLookup.set(normalizeText(meta.id.replace(/-/g, ' ')), meta);
     }
+    orderedFunctions.push({
+      id: meta.id,
+      name: meta.name,
+      discipline: meta.discipline,
+      functionIndex: index,
+    });
   });
 
   const aliases = new Map<string, string>([
@@ -730,7 +877,7 @@ const parseFunctionList = async () => {
     }
   });
 
-  return { byLookup, disciplineIndexByName };
+  return { byLookup, disciplineIndexByName, orderedFunctions };
 };
 
 const sanitizeTierStratifications = (
@@ -782,7 +929,7 @@ const extractTierRow = (
   const references = splitList(getRowValue(row, 'References'));
   const recommended =
     tier === 'screening'
-      ? toBooleanOn(getRowValue(row, 'Stream Condition Screening (SCS) Has it On'))
+      ? toBooleanOn(getRowValue(row, ...screeningRecommendedColumns))
       : tier === 'rapid'
       ? toBooleanOn(getRowValue(row, 'SFARI Rapid Assessment has it On'))
       : toBooleanOn(
@@ -837,7 +984,14 @@ const buildMetricLibraryFromCsv = async () => {
     throw new Error(`No rows parsed from ${csvPath}`);
   }
 
-  const { byLookup, disciplineIndexByName } = await parseFunctionList();
+  const { byLookup, disciplineIndexByName, orderedFunctions } = await parseFunctionList();
+  const functionById = new Map<string, FunctionSummary>(
+    orderedFunctions.map((item) => [item.id, item])
+  );
+  const functionOrderById = new Map<string, number>(
+    orderedFunctions.map((item, index) => [item.id, index])
+  );
+  const adaptedAssessmentsByState = new Map<string, AdaptedAssessmentAccumulator>();
 
   const metricGroups = new Map<string, MetricGroup>();
 
@@ -959,7 +1113,7 @@ const buildMetricLibraryFromCsv = async () => {
       'Function statement',
       'Metric',
       'Metric statement',
-      'Predefined SCS',
+      'Predefined EASI',
       'Context',
       'Method',
       'How to measure',
@@ -1029,6 +1183,34 @@ const buildMetricLibraryFromCsv = async () => {
       'Index Value 7',
     ],
   ];
+
+  const addAdaptedDetailedMetric = (
+    parsedSource: ParsedSqtSource,
+    entry: AdaptedMetricEntry
+  ) => {
+    const stateKey = parsedSource.stateCode;
+    let assessment = adaptedAssessmentsByState.get(stateKey);
+    if (!assessment) {
+      assessment = {
+        assessmentId: `${parsedSource.stateCode.toLowerCase()}-sqt-adapted`,
+        assessmentName: `${parsedSource.stateCode} SQT Adapted`,
+        stateCode: parsedSource.stateCode,
+        stateName: parsedSource.stateName,
+        sourceCitation: parsedSource.sourceCitation,
+        metricsById: new Map<string, AdaptedMetricEntry>(),
+        metricIdsByFunction: new Map<string, Set<string>>(),
+      };
+      adaptedAssessmentsByState.set(stateKey, assessment);
+    }
+
+    if (!assessment.metricsById.has(entry.metricId)) {
+      assessment.metricsById.set(entry.metricId, entry);
+    }
+    if (!assessment.metricIdsByFunction.has(entry.functionId)) {
+      assessment.metricIdsByFunction.set(entry.functionId, new Set<string>());
+    }
+    assessment.metricIdsByFunction.get(entry.functionId)?.add(entry.metricId);
+  };
 
   for (const group of sortedGroups) {
     const metricId = allocateMetricId(group, usedMetricIds);
@@ -1466,6 +1648,32 @@ const buildMetricLibraryFromCsv = async () => {
         },
       });
 
+      const stateSourcesForMetric = new Map<string, ParsedSqtSource>();
+      const registerStateSource = (sourceName: string) => {
+        const parsedSource = parseSqtSourceCitation(sourceName);
+        if (!parsedSource) {
+          return;
+        }
+        if (!stateSourcesForMetric.has(parsedSource.stateCode)) {
+          stateSourcesForMetric.set(parsedSource.stateCode, parsedSource);
+        }
+      };
+
+      layers.forEach((strat) => registerStateSource(strat.sourceName));
+      if (!stateSourcesForMetric.size) {
+        detailedTier.sourceList.forEach((sourceName) => registerStateSource(sourceName));
+      }
+      stateSourcesForMetric.forEach((parsedSource) => {
+        addAdaptedDetailedMetric(parsedSource, {
+          metricId,
+          metricName: group.metricName,
+          functionId: group.functionId,
+          functionName: group.functionName,
+          discipline: group.discipline,
+          sourceCitation: parsedSource.sourceCitation,
+        });
+      });
+
       layers.forEach((strat) => {
         const fieldValues = new Array<string>(7).fill('');
         const indexValues = new Array<string>(7).fill('');
@@ -1597,6 +1805,112 @@ const buildMetricLibraryFromCsv = async () => {
     'utf8'
   );
 
+  const adaptedAssessments = Array.from(adaptedAssessmentsByState.values())
+    .map((assessment) => {
+      const sortedMetrics = Array.from(assessment.metricsById.values()).sort((a, b) => {
+        const functionOrderA = functionOrderById.get(a.functionId) ?? 9999;
+        const functionOrderB = functionOrderById.get(b.functionId) ?? 9999;
+        if (functionOrderA !== functionOrderB) {
+          return functionOrderA - functionOrderB;
+        }
+        const functionNameCompare = a.functionName.localeCompare(b.functionName);
+        if (functionNameCompare !== 0) {
+          return functionNameCompare;
+        }
+        return a.metricName.localeCompare(b.metricName);
+      });
+
+      const metricsByFunctionId = new Map<string, AdaptedMetricEntry[]>();
+      sortedMetrics.forEach((metric) => {
+        if (!metricsByFunctionId.has(metric.functionId)) {
+          metricsByFunctionId.set(metric.functionId, []);
+        }
+        metricsByFunctionId.get(metric.functionId)?.push(metric);
+      });
+
+      const orderedFunctionIds = Array.from(metricsByFunctionId.keys()).sort((a, b) => {
+        const orderA = functionOrderById.get(a) ?? 9999;
+        const orderB = functionOrderById.get(b) ?? 9999;
+        if (orderA !== orderB) {
+          return orderA - orderB;
+        }
+        const functionNameA =
+          functionById.get(a)?.name || metricsByFunctionId.get(a)?.[0]?.functionName || a;
+        const functionNameB =
+          functionById.get(b)?.name || metricsByFunctionId.get(b)?.[0]?.functionName || b;
+        return functionNameA.localeCompare(functionNameB);
+      });
+
+      const metricsByFunction = orderedFunctionIds.map((functionId) => {
+        const metricEntries = metricsByFunctionId.get(functionId) || [];
+        const functionMeta = functionById.get(functionId);
+        return {
+          functionId,
+          functionName: functionMeta?.name || metricEntries[0]?.functionName || functionId,
+          discipline: functionMeta?.discipline || metricEntries[0]?.discipline || '',
+          metricCount: metricEntries.length,
+          metricIds: metricEntries.map((metric) => metric.metricId),
+          metricNames: metricEntries.map((metric) => metric.metricName),
+          metrics: metricEntries.map((metric) => ({
+            metricId: metric.metricId,
+            metricName: metric.metricName,
+          })),
+        };
+      });
+
+      const coveredFunctionIds = new Set(metricsByFunction.map((item) => item.functionId));
+      const missingFunctionIds = orderedFunctions
+        .filter((fn) => !coveredFunctionIds.has(fn.id))
+        .map((fn) => fn.id);
+      const missingFunctionNames = orderedFunctions
+        .filter((fn) => !coveredFunctionIds.has(fn.id))
+        .map((fn) => fn.name);
+
+      const metricIds = sortedMetrics.map((metric) => metric.metricId);
+      const metricSourceCitationsById = sortedMetrics.reduce(
+        (acc, metric) => {
+          acc[metric.metricId] = metric.sourceCitation;
+          return acc;
+        },
+        {} as Record<string, string>
+      );
+
+      return {
+        assessmentId: assessment.assessmentId,
+        assessmentName: assessment.assessmentName,
+        tier: 'detailed',
+        stateCode: assessment.stateCode,
+        stateName: assessment.stateName,
+        sourceCitation: assessment.sourceCitation,
+        applicability: `${assessment.stateName} streams`,
+        metricCount: metricIds.length,
+        functionCount: metricsByFunction.length,
+        totalFunctionCount: orderedFunctions.length,
+        metricIds,
+        metricSourceCitationsById,
+        metricsByFunction,
+        missingFunctionIds,
+        missingFunctionNames,
+      };
+    })
+    .sort((a, b) => a.stateName.localeCompare(b.stateName));
+
+  await fs.writeFile(
+    detailedAdaptedAssessmentsPath,
+    `${JSON.stringify(
+      {
+        schemaVersion: 1,
+        tier: 'detailed',
+        importSource: path.basename(csvPath),
+        totalFunctionCount: orderedFunctions.length,
+        assessments: adaptedAssessments,
+      },
+      null,
+      2
+    )}\n`,
+    'utf8'
+  );
+
   const index = buildMetricIndex(metricDetailsForIndex, curveSetsById);
   await fs.writeFile(indexPath, `${JSON.stringify(index, null, 2)}\n`, 'utf8');
 
@@ -1611,7 +1925,9 @@ const buildMetricLibraryFromCsv = async () => {
     `Screening rows: ${Math.max(0, screeningRows.length - 1)}, Rapid rows: ${Math.max(
       0,
       rapidIndicatorRows.length - 1
-    )}, Detailed rows: ${Math.max(0, detailedRows.length - 1)}`
+    )}, Detailed rows: ${Math.max(0, detailedRows.length - 1)}, Adapted detailed SQTs: ${
+      adaptedAssessments.length
+    }`
   );
 };
 
@@ -1830,6 +2146,12 @@ const mirrorToSite = async () => {
   );
 
   await fs.copyFile(indexPath, path.join(siteMetricLibraryDir, 'index.json'));
+  if (await pathExists(detailedAdaptedAssessmentsPath)) {
+    await fs.copyFile(
+      detailedAdaptedAssessmentsPath,
+      path.join(siteMetricLibraryDir, 'detailed-adapted-assessments.json')
+    );
+  }
   if (await pathExists(ratingScalesPath)) {
     await fs.copyFile(ratingScalesPath, path.join(siteMetricLibraryDir, 'rating-scales.json'));
   }

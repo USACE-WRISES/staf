@@ -29,8 +29,12 @@
   const collapsedGlyph = '&#9656;';
   const expandedGlyph = '&#9662;';
   const storageKey = 'staf_screening_assessments_v1';
-  const predefinedName = 'Stream Condition Screening';
-  const legacyPredefinedName = 'Predefined Screening Assessment';
+  const predefinedName = 'Ecosystem Assessment Screening Index (EASI)';
+  const legacyPredefinedNames = [
+    'Predefined Screening Assessment',
+    'Stream Condition Screening',
+    'Stream Condition Screening (SCS)',
+  ];
   const assessmentLockedTooltip = 'This assessment is locked and cannot be edited.';
   const predefinedNotesText =
     'Compiles commonly used screening metrics across the United States.\nIncludes broadly applicable and comprehensive screening metrics.';
@@ -47,6 +51,11 @@
       .toLowerCase()
       .replace(/&/g, 'and')
       .replace(/[^a-z0-9]+/g, '');
+
+  const isLegacyPredefinedName = (value) =>
+    legacyPredefinedNames.some(
+      (legacyName) => normalizeText(value || '') === normalizeText(legacyName)
+    );
 
   const slugify = (value) =>
     value
@@ -328,7 +337,13 @@
             row.metric_statement ||
             row.metricStatement ||
             '',
-          isPredefined: isPredefinedFlag(row['Predefined SCS'] || row.predefined_scs || ''),
+          isPredefined: isPredefinedFlag(
+            row['Predefined EASI'] ||
+              row.predefined_easi ||
+              row['Predefined SCS'] ||
+              row.predefined_scs ||
+              ''
+          ),
           context: row.Context || row.context || '',
           method: row.Method || row.method || '',
           howToMeasure: row['How to measure'] || row.how_to_measure || '',
@@ -782,7 +797,7 @@
           type,
           name:
             type === 'predefined'
-              ? scenario.name && scenario.name !== legacyPredefinedName
+              ? scenario.name && !isLegacyPredefinedName(scenario.name)
                 ? scenario.name
                 : predefinedName
               : scenario.name || 'Custom Assessment',
@@ -841,6 +856,9 @@
       const addTabBtn = ui.querySelector('.screening-tab-add');
       const duplicateBtn = ui.querySelector('.screening-duplicate');
       const deleteBtn = ui.querySelector('.screening-delete');
+      const assessmentInlineActions = ui.querySelector(
+        '.screening-settings-panel .assessment-inline-actions'
+      );
       let pathwayLocked = false;
       const nameInput = ui.querySelector('.settings-name');
       const applicabilityInput = ui.querySelector('.settings-applicability');
@@ -4401,14 +4419,26 @@
           tabsList.appendChild(tab);
         });
 
+        const activeOrStoredScenario = activeScenario || store.active();
+        const hideAssessmentActions =
+          pathwayLocked ||
+          Boolean(activeOrStoredScenario && activeOrStoredScenario.type === 'predefined');
         if (addTabBtn) {
-          addTabBtn.disabled = pathwayLocked;
+          addTabBtn.style.display = hideAssessmentActions ? 'none' : '';
+          addTabBtn.disabled = hideAssessmentActions;
         }
         if (duplicateBtn) {
-          duplicateBtn.disabled = pathwayLocked;
+          duplicateBtn.style.display = hideAssessmentActions ? 'none' : '';
+          duplicateBtn.disabled = hideAssessmentActions;
         }
         if (deleteBtn) {
-          deleteBtn.disabled = pathwayLocked;
+          deleteBtn.style.display = hideAssessmentActions ? 'none' : '';
+          deleteBtn.disabled = hideAssessmentActions;
+        }
+        if (assessmentInlineActions) {
+          assessmentInlineActions.style.display = hideAssessmentActions
+            ? 'none'
+            : '';
         }
       };
 

@@ -14,10 +14,10 @@ description: "Desktop-first screening for early planning and prioritization."
       </div>
       <div class="pathway-card-title">Use Pre-defined Assessment</div>
       <select class="pathway-card-select"
-        ><option value="scs"
+        ><option value="easi"
           data-notes="Compiles commonly used screening metrics across the United States.&#10;Includes broadly applicable and comprehensive screening metrics."
           data-applicability="Nationwide, wadeable streams"
-        >Stream Condition Screening (SCS)</option
+        >Ecosystem Assessment Screening Index (EASI)</option
       ></select>
       <ul class="pathway-card-details"></ul>
       <button type="button" class="pathway-card-action btn btn-primary">Get Started</button>

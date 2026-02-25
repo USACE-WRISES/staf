@@ -42,7 +42,20 @@
             </div>
             <section class="detailed-settings-panel">
               <div class="settings-header settings-header-row">
-                <h3>Settings</h3>
+                <h3 class="settings-heading">
+                  <span>Settings</span>
+                  <span
+                    class="settings-lock-icon"
+                    hidden
+                    aria-hidden="true"
+                    title="This assessment is locked and cannot be edited."
+                  >
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <rect x="6.5" y="10.25" width="11" height="9.25" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="1.8"></rect>
+                      <path d="M9.5 10.25V8a2.5 2.5 0 0 1 5 0v2.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+                    </svg>
+                  </span>
+                </h3>
                 <div class="assessment-inline-actions">
                   <button class="btn btn-small detailed-duplicate" type="button">Duplicate</button>
                   <button class="btn btn-small detailed-delete" type="button">Delete</button>

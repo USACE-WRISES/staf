@@ -49,6 +49,13 @@ const toYesNo = (value: string) =>
 const toBool = (value: string) => toYesNo(value) === 'Yes';
 const formatScore = (value: number) => value.toFixed(2).replace(/\.00$/, '.0');
 
+const screeningRecommendedColumns = [
+  'Ecosystem Assessment Screening Index (EASI) Has it On',
+  'Ecosystem Assessment Screening Index (EASI) Has it "On"',
+  'Stream Condition Screening (SCS) Has it On',
+  'Stream Condition Screening (SCS) Has it "On"',
+];
+
 type ParsedRow = Record<string, string>;
 
 type Range = { min: number; max: number };
@@ -129,7 +136,15 @@ const parseQuotedTsv = (text: string): ParsedRow[] => {
   });
 };
 
-const getValue = (row: ParsedRow, column: string) => row[normalizeHeader(column)] || '';
+const getValue = (row: ParsedRow, ...columns: string[]) => {
+  for (const column of columns) {
+    const value = row[normalizeHeader(column)];
+    if (value !== undefined && value !== null && String(value).trim() !== '') {
+      return String(value).trim();
+    }
+  }
+  return '';
+};
 
 const parseRange = (value: string): Range | null => {
   // Range fields use hyphen separators (e.g., "0.70-1.0"), so parse only numeric tokens.
@@ -462,7 +477,7 @@ const main = async () => {
     'Function statement',
     'Metric',
     'Metric statement',
-    'Predefined SCS',
+    'Predefined EASI',
     'Context',
     'Method',
     'How to measure',
@@ -497,10 +512,8 @@ const main = async () => {
 
     const functionStatement = compactWhitespace(getValue(row, 'Metric Statement'));
     const metricStatement = compactWhitespace(getValue(row, 'Description'));
-    const scsDefaultRaw =
-      getValue(row, 'Stream Condition Screening (SCS) Has it On') ||
-      getValue(row, 'Stream Condition Screening (SCS) Has it "On"');
-    const isPredefined = toBool(scsDefaultRaw);
+    const screeningDefaultRaw = getValue(row, ...screeningRecommendedColumns);
+    const isPredefined = toBool(screeningDefaultRaw);
     const sourceCitation = compactWhitespace(getValue(row, 'Source'));
     const metricDataSource = compactWhitespace(getValue(row, 'Metric Data Source'));
     const recommendedTiersRaw = compactWhitespace(getValue(row, 'Recommended Tiers'));

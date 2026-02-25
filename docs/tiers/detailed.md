@@ -13,11 +13,11 @@ description: "Intensive assessment for compliance, crediting, and monitoring."
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2f4b7c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </div>
       <div class="pathway-card-title">Use Pre-defined Assessment</div>
-      <select class="pathway-card-select"
+      <select class="pathway-card-select" data-adapted-assessments-url="{{ '/assets/data/metric-library/detailed-adapted-assessments.json' | relative_url }}"
         ><option value="example"
-          data-notes="This is a fictitious example of a detailed assessment that could be created by combining detailed metrics.&#10;Feel free to duplicate, edit, or create a new assessment."
-          data-applicability="No specified region"
-        >Example Assessment</option
+          data-notes="State-adapted SQT assessments are loading.&#10;If loading fails, use Build Your Own Assessment to continue."
+          data-applicability="State-specific detailed assessments"
+        >Loading adapted SQT assessments...</option
       ></select>
       <ul class="pathway-card-details"></ul>
       <button type="button" class="pathway-card-action btn btn-primary">Get Started</button>
