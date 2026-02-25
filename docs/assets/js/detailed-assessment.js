@@ -814,6 +814,7 @@
       const notesInput = container.querySelector('.settings-notes-input');
       const duplicateButton = container.querySelector('.detailed-duplicate');
       const deleteButton = container.querySelector('.detailed-delete');
+      let pathwayLocked = false;
       const controlsHost = container.querySelector('.detailed-controls-host');
       const tableHost = container.querySelector('.detailed-table-wrap');
 
@@ -1059,11 +1060,14 @@
             scenario.notes = event.target.value;
           };
         }
+        if (addTabButton) {
+          addTabButton.disabled = pathwayLocked || !hasScenario;
+        }
         if (duplicateButton) {
-          duplicateButton.disabled = !hasScenario;
+          duplicateButton.disabled = pathwayLocked || !hasScenario;
         }
         if (deleteButton) {
-          deleteButton.disabled = !hasScenario;
+          deleteButton.disabled = pathwayLocked || !hasScenario;
         }
       };
 
@@ -3059,7 +3063,7 @@
             tr.dataset.metricId = String(row.metric.id);
           }
           if (row.type === 'placeholder') {
-            tr.classList.add('is-empty');
+            tr.classList.add('inactive-row');
           }
           if (row.type === 'metric' && row.metric && expandedMetrics.has(row.metric.id)) {
             tr.classList.add('metric-expanded');
@@ -3120,9 +3124,8 @@
                 event.preventDefault();
               }
             });
-            functionText.appendChild(document.createTextNode('\u00A0'));
-            functionText.appendChild(functionToggle);
             nameLine.appendChild(functionText);
+            nameLine.appendChild(functionToggle);
             functionCell.appendChild(nameLine);
             const statementLine = document.createElement('div');
             statementLine.className = 'function-statement';
@@ -3204,9 +3207,8 @@
                   setTimeout(() => toggleBtn.blur(), 0);
                 }
               });
-              metricText.appendChild(document.createTextNode('\u00A0'));
-              metricText.appendChild(toggleBtn);
               metricTitle.appendChild(metricText);
+              metricTitle.appendChild(toggleBtn);
               metricCell.appendChild(metricTitle);
               tr.appendChild(metricCell);
             }
@@ -3292,7 +3294,7 @@
             }
             tr.appendChild(functionEstimateCell);
 
-            if (isFunctionSliderOwner) {
+            if (isFunctionSliderOwner && row.type !== 'placeholder') {
               const scoreRowSpan = functionHasExpandedCriteria
                 ? 1
                 : functionMeta.totalSpan || row._functionSpan || 1;
@@ -3480,6 +3482,37 @@
         activeScenarioId = exampleScenario.id;
       }
       scenarios.forEach((scenario) => ensureScenarioViewOptions(scenario));
+
+      // Listen for pathway chooser events
+      window.addEventListener('staf:pathway-chosen', (event) => {
+        if (!event.detail || event.detail.tier !== 'detailed') {
+          return;
+        }
+        const action = event.detail.action;
+        if (action === 'use-predefined') {
+          pathwayLocked = true;
+          // Reset to only the example scenario, removing any custom ones
+          scenarios.length = 0;
+          const exampleScenario = createExampleScenario();
+          scenarios.push(exampleScenario);
+          activeScenarioId = exampleScenario.id;
+          renderAll();
+          // Close metric library sidebar if open
+          const workbench = container.querySelector('.assessment-workbench');
+          const leftSidebar = workbench?.querySelector('.metric-library-sidebar');
+          if (leftSidebar && !leftSidebar.classList.contains('is-collapsed')) {
+            leftSidebar.classList.add('is-collapsed');
+            workbench.classList.add('is-left-collapsed');
+          }
+        } else if (action === 'build-custom') {
+          pathwayLocked = false;
+          scenarios.length = 0;
+          const scenario = createBlankScenario();
+          scenarios.push(scenario);
+          activeScenarioId = scenario.id;
+          renderAll();
+        }
+      });
 
       renderAll();
     } catch (error) {

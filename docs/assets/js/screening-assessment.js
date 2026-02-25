@@ -33,7 +33,7 @@
   const legacyPredefinedName = 'Predefined Screening Assessment';
   const assessmentLockedTooltip = 'This assessment is locked and cannot be edited.';
   const predefinedNotesText =
-    'This is an example assessment that compiles commonly used screening metrics across the United States. This is locked for editing, but you can duplicate the screening to edit it (Duplicate button), or build your own ("+" button).';
+    'Compiles commonly used screening metrics across the United States.\nIncludes broadly applicable and comprehensive screening metrics.';
   const notifyAssessmentUpdate = () => {
     if (window.dispatchEvent) {
       window.dispatchEvent(
@@ -841,6 +841,7 @@
       const addTabBtn = ui.querySelector('.screening-tab-add');
       const duplicateBtn = ui.querySelector('.screening-duplicate');
       const deleteBtn = ui.querySelector('.screening-delete');
+      let pathwayLocked = false;
       const nameInput = ui.querySelector('.settings-name');
       const applicabilityInput = ui.querySelector('.settings-applicability');
       const notesInput = ui.querySelector('.settings-notes-input');
@@ -3888,9 +3889,8 @@
                 event.preventDefault();
               }
             });
-            functionNameText.appendChild(document.createTextNode('\u00A0'));
-            functionNameText.appendChild(functionToggle);
             functionNameLine.appendChild(functionNameText);
+            functionNameLine.appendChild(functionToggle);
             functionCell.appendChild(functionNameLine);
             const statementLine = document.createElement('div');
             statementLine.className = 'function-statement';
@@ -3990,8 +3990,7 @@
                 event.preventDefault();
               }
             });
-            metricNameText.appendChild(document.createTextNode('\u00A0'));
-            metricNameText.appendChild(criteriaBtn);
+            metricTitle.appendChild(criteriaBtn);
           }
 
 
@@ -4401,6 +4400,16 @@
           });
           tabsList.appendChild(tab);
         });
+
+        if (addTabBtn) {
+          addTabBtn.disabled = pathwayLocked;
+        }
+        if (duplicateBtn) {
+          duplicateBtn.disabled = pathwayLocked;
+        }
+        if (deleteBtn) {
+          deleteBtn.disabled = pathwayLocked;
+        }
       };
 
       const setSettingsFieldReadOnly = (input, isReadOnly) => {
@@ -4499,12 +4508,6 @@
         }
 
         const isPredefined = scenario.type === 'predefined';
-        if (duplicateBtn) {
-          duplicateBtn.disabled = false;
-        }
-        if (deleteBtn) {
-          deleteBtn.disabled = isPredefined;
-        }
         if (settingsLockIcon) {
           settingsLockIcon.hidden = !isPredefined;
           settingsLockIcon.setAttribute('title', assessmentLockedTooltip);
@@ -4713,6 +4716,43 @@
           },
         });
       }
+
+      // Listen for pathway chooser events
+      window.addEventListener('staf:pathway-chosen', (event) => {
+        if (!event.detail || event.detail.tier !== 'screening') {
+          return;
+        }
+        const action = event.detail.action;
+        if (action === 'use-predefined') {
+          pathwayLocked = true;
+          // Reset to only the predefined scenario, removing any custom ones
+          store.scenarios = [];
+          const predefined = createScenario('predefined', predefinedName, predefinedMetricIds);
+          store.scenarios.push(predefined);
+          store.activeId = predefined.id;
+          store.save();
+          applyScenario(predefined);
+          renderTabs();
+          // Close metric library sidebar if open
+          const workbench = container.querySelector('.assessment-workbench');
+          const leftSidebar = workbench?.querySelector('.metric-library-sidebar');
+          if (leftSidebar && !leftSidebar.classList.contains('is-collapsed')) {
+            leftSidebar.classList.add('is-collapsed');
+            workbench.classList.add('is-left-collapsed');
+          }
+        } else if (action === 'build-custom') {
+          pathwayLocked = false;
+          store.scenarios = store.scenarios.filter((s) => s.type !== 'predefined');
+          const customCount = store.scenarios.filter((s) => s.type === 'custom').length;
+          const name = `Custom Assessment ${customCount + 1}`;
+          const scenario = createScenario('custom', name, []);
+          store.scenarios.push(scenario);
+          store.activeId = scenario.id;
+          store.save();
+          applyScenario(scenario);
+          renderTabs();
+        }
+      });
 
       requestAnimationFrame(() => {
         renderTabs();

@@ -2064,12 +2064,14 @@ body.modal-open {
 .detailed-table .discipline-cell .metric-curve-link:hover,
 .detailed-table .discipline-cell .metric-curve-link:focus-visible {
   background: #eef2fb;
-  text-decoration: none;
+  text-decoration: underline solid #1d1d1d;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
 .detailed-table .function-title .criteria-toggle,
 .detailed-table .metric-title .criteria-toggle {
-  margin-left: 0;
+  margin-left: 0.3em;
   vertical-align: baseline;
   display: inline-block;
 }
@@ -4010,13 +4012,13 @@ body.modal-open {
 }
 
 .screening-table .function-title .criteria-toggle {
-  margin-left: 0;
+  margin-left: 0.3em;
   vertical-align: baseline;
   display: inline-block;
 }
 
 .screening-table .metric-title .criteria-toggle {
-  margin-left: 0;
+  margin-left: 0.3em;
   vertical-align: baseline;
   display: inline-block;
 }
@@ -4094,7 +4096,7 @@ body.modal-open {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-left: 0;
+  margin-left: 0.3em;
   padding: 0;
   font-size: 1rem;
   line-height: 1;
@@ -4896,26 +4898,6 @@ body.modal-open {
   background: #fafafa;
 }
 
-.factsheet-card {
-  background: #f8f9fb;
-  border: 1px solid #dedede;
-  border-radius: 10px;
-  padding: 0.75rem 0.9rem;
-  margin: 0.6rem 0 1rem;
-}
-
-.factsheet-card p:first-child,
-.factsheet-card h2:first-child {
-  margin-top: 0;
-}
-
-.factsheet-card-text {
-  margin: 0;
-}
-
-.factsheet-card ul {
-  margin: 0.4rem 0 0.4rem 1rem;
-}
 
 .tier-comparison-table.tier-focus-screening thead th:nth-child(3),
 .tier-comparison-table.tier-focus-screening thead th:nth-child(4),
@@ -5227,8 +5209,13 @@ body.modal-open {
   background: #edf4e9;
 }
 
-.screening-table tr.inactive-row td.col-function-score.function-score-cell {
+.screening-table tr.inactive-row td.col-function-score.function-score-cell,
+.detailed-table tr.inactive-row td.col-function-score.function-score-cell {
   background: #f8f8f8;
+}
+
+.detailed-table tr.inactive-row td {
+  background: #f0f0f0;
 }
 
 .details-caret {
@@ -6106,6 +6093,7 @@ body.modal-open {
   font: inherit;
   color: #1f4f9c;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .screening-table .metric-curve-link {
@@ -6118,7 +6106,24 @@ body.modal-open {
 .screening-table .metric-curve-link:hover,
 .screening-table .metric-curve-link:focus-visible {
   background: #eef2fb;
+  text-decoration: underline solid #1d1d1d;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.rapid-table .metric-curve-link {
+  color: #1d1d1d;
   text-decoration: none;
+  padding: 0.1rem 0.2rem;
+  border-radius: 6px;
+}
+
+.rapid-table .metric-curve-link:hover,
+.rapid-table .metric-curve-link:focus-visible {
+  background: #eef2fb;
+  text-decoration: underline solid #1d1d1d;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
 .metric-details-btn {
@@ -6591,4 +6596,251 @@ body.modal-open {
     top: auto;
     right: auto;
   }
+}
+
+/* ── Pathway Chooser ────────────────────────────────────────────── */
+
+.pathway-chooser {
+  background: #f8f9fb;
+  border: 1px solid #dedede;
+  border-radius: 10px;
+  padding: 0.75rem 0.9rem;
+  margin: 0.6rem 0 1rem;
+}
+
+.pathway-chooser summary {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f3f6e;
+  cursor: pointer;
+  user-select: none;
+}
+
+.pathway-chooser-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 0.6rem;
+}
+
+.pathway-card {
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 10px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.pathway-card:hover {
+  border-color: #a0b4d0;
+  box-shadow: 0 2px 8px rgba(47, 75, 124, 0.08);
+}
+
+.pathway-card.is-selected {
+  border-color: #2f4b7c;
+  background: #eef3fb;
+}
+
+.pathway-card-icon {
+  color: #2f4b7c;
+  line-height: 0;
+}
+
+.pathway-card-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-weight: 600;
+  color: #1f3f6e;
+}
+
+.pathway-card-details {
+  margin: 0.2rem 0 0.4rem 1.1rem;
+  padding: 0;
+  font-size: 0.85rem;
+  color: #333;
+  line-height: 1.45;
+}
+
+.pathway-card-details li {
+  margin: 0.15rem 0;
+}
+
+.pathway-card-action {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+@media (max-width: 680px) {
+  .pathway-chooser-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Widget Collapse ────────────────────────────────────────────── */
+
+.widget-collapse {
+  margin: 0.6rem 0 1rem;
+}
+
+.widget-collapse-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  background: #f0f2f5;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  user-select: none;
+}
+
+.widget-collapse-title {
+  margin: 0;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #1f3f6e;
+}
+
+.widget-collapse-info {
+  flex-shrink: 0;
+  color: #888;
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+}
+
+.widget-collapse-info svg {
+  display: block;
+}
+
+.widget-collapse:not(.is-collapsed) .widget-collapse-info {
+  display: none;
+}
+
+.widget-collapse.is-collapsed .widget-collapse-body {
+  display: none;
+}
+
+.widget-collapse:not(.is-collapsed) .widget-collapse-header {
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+}
+
+.widget-collapse:not(.is-collapsed) .widget-collapse-body > .widget {
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Pathway card dropdown */
+.pathway-card-select {
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #c0c0c0;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  background: #fff;
+  margin-top: 0.25rem;
+}
+
+/* ── Disabled pathway card + unavailable overlay ──────────────── */
+
+.pathway-card.is-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  position: relative;
+}
+
+.pathway-card.is-disabled .pathway-card-unavailable {
+  pointer-events: auto;
+}
+
+.pathway-card-unavailable {
+  text-align: center;
+  margin-top: 0.25rem;
+}
+
+.pathway-card-unavailable-label {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #777;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pathway-card-unavailable-details {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.pathway-card-unavailable-details summary {
+  cursor: pointer;
+  color: #2f4b7c;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.pathway-card-unavailable-details p {
+  margin: 0.3rem 0 0;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* ── Tier "How it works" collapsible ─────────────────────────── */
+
+.tier-how-it-works {
+  margin: 0.75rem 0 0.5rem;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  background: #f8f9fb;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.tier-how-it-works summary {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1f3f6e;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tier-how-it-works ol,
+.tier-how-it-works ul {
+  margin: 0.4rem 0 0.3rem 1.2rem;
+  padding: 0;
+  line-height: 1.5;
+}
+
+.tier-how-it-works p {
+  margin: 0.3rem 0 0;
+  line-height: 1.5;
+}
+
+.scoring-tier-table {
+  margin: 0.5rem 0 0.2rem;
+  font-size: 0.85rem;
+}
+
+.scoring-tier-table th,
+.scoring-tier-table td {
+  padding: 0.35rem 0.55rem;
+}
+
+/* Disabled add-tab buttons */
+.screening-tab-add:disabled,
+.detailed-tab-add:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
 }
