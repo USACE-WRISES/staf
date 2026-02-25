@@ -9,14 +9,14 @@
     </a>
 
     <nav class="tier-selector-page-menu" aria-label="Primary menu">
-      <a class="tier-selector-page-link" href="{{ site.baseurl }}/">Home</a>
-      <a class="tier-selector-page-link" href="{{ site.baseurl }}/quick-overview/">Overview</a>
-      <a class="tier-selector-page-link" href="{{ site.baseurl }}/tier-selector/">Tiers</a>
-      <a class="tier-selector-page-link" href="{{ site.baseurl }}/functions/">Functions</a>
-      <a class="tier-selector-page-link" href="{{ site.baseurl }}/scoring/">Scoring</a>
-      <a class="tier-selector-page-link" href="{{ site.baseurl }}/tiers/screening/">Screening</a>
-      <a class="tier-selector-page-link" href="{{ site.baseurl }}/tiers/rapid/">Rapid</a>
-      <a class="tier-selector-page-link" href="{{ site.baseurl }}/tiers/detailed/">Detailed</a>
+      <a class="tier-selector-page-link{% if page.url == '/' %} is-active{% endif %}" href="{{ site.baseurl }}/">Home</a>
+      <a class="tier-selector-page-link{% if page.url == '/quick-overview/' %} is-active{% endif %}" href="{{ site.baseurl }}/quick-overview/">Overview</a>
+      <a class="tier-selector-page-link{% if page.url == '/tier-selector/' %} is-active{% endif %}" href="{{ site.baseurl }}/tier-selector/">Tiers</a>
+      <a class="tier-selector-page-link{% if page.url == '/functions/' %} is-active{% endif %}" href="{{ site.baseurl }}/functions/">Functions</a>
+      <a class="tier-selector-page-link{% if page.url == '/scoring/' %} is-active{% endif %}" href="{{ site.baseurl }}/scoring/">Scoring</a>
+      <a class="tier-selector-page-link{% if page.url == '/tiers/screening/' %} is-active{% endif %}" href="{{ site.baseurl }}/tiers/screening/">Screening</a>
+      <a class="tier-selector-page-link{% if page.url == '/tiers/rapid/' %} is-active{% endif %}" href="{{ site.baseurl }}/tiers/rapid/">Rapid</a>
+      <a class="tier-selector-page-link{% if page.url == '/tiers/detailed/' %} is-active{% endif %}" href="{{ site.baseurl }}/tiers/detailed/">Detailed</a>
     </nav>
   </div>
 </section>

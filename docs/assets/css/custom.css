@@ -577,6 +577,96 @@ h3,
   line-height: 1.45;
 }
 
+/* Outcome cards inside factsheet callout */
+.quick-overview-page .factsheet-outcomes-box {
+  display: block;
+}
+
+.quick-overview-page .factsheet-outcomes-heading {
+  margin: 0 0 0.3rem;
+  font-size: 0.92rem;
+}
+
+.quick-overview-page .factsheet-outcomes-intro {
+  margin: 0 0 0.45rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.quick-overview-page .outcome-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0 0 0.4rem;
+}
+
+.quick-overview-page .outcome-card {
+  background: #ffffff;
+  border: 1px solid #d5deea;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem 0.55rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.quick-overview-page .outcome-card.physical { border-top: 3px solid #4a7fb5; }
+.quick-overview-page .outcome-card.chemical { border-top: 3px solid #b5873a; }
+.quick-overview-page .outcome-card.biological { border-top: 3px solid #3a8a5c; }
+
+.quick-overview-page .outcome-card .outcome-card-title {
+  margin: 0 0 0.2rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.quick-overview-page .outcome-card.physical .outcome-card-title { color: #3b6d9c; }
+.quick-overview-page .outcome-card.chemical .outcome-card-title { color: #9a7332; }
+.quick-overview-page .outcome-card.biological .outcome-card-title { color: #327a50; }
+
+.quick-overview-page .outcome-card .outcome-card-def {
+  margin: 0 0 0.2rem;
+}
+
+.quick-overview-page .outcome-card .outcome-card-examples {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #555;
+  border-top: 1px solid #eee;
+  padding-top: 0.2rem;
+  margin-top: 0.2rem;
+}
+
+.quick-overview-page .ecosystem-condition-card {
+  margin: 0;
+  background: #ffffff;
+  border: 1px solid #d5deea;
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem 0.55rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  border-top: 3px solid;
+  border-image: linear-gradient(to right, #4a7fb5, #b5873a, #3a8a5c) 1;
+  border-image-slice: 1;
+}
+
+.quick-overview-page .ecosystem-condition-card .outcome-card-title {
+  margin: 0 0 0.2rem;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.quick-overview-page .ecosystem-condition-card .outcome-card-def {
+  margin: 0;
+}
+
+@media (max-width: 920px) {
+  .quick-overview-page .outcome-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
 .quick-overview-page .factsheet-purpose-box {
   background: #f5f8fa;
   border-left: 4px solid #2b5a7c;
@@ -794,6 +884,11 @@ h3,
   outline: 2px solid #111111;
   outline-offset: 2px;
   border-radius: 2px;
+}
+
+.tier-selector-page-link.is-active {
+  color: #176297;
+  border-bottom-color: #176297;
 }
 
 .main-content h1.tier-selector-page-title,
@@ -6847,14 +6942,106 @@ body.modal-open {
   line-height: 1.5;
 }
 
+/* ── Outcome category cards ──────────────────────────────── */
+
+.tier-how-it-works .outcome-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0.5rem 0 0.4rem;
+}
+
+.tier-how-it-works .outcome-card {
+  background: #ffffff;
+  border: 1px solid #d5deea;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem 0.7rem;
+  font-size: 0.84rem;
+  line-height: 1.48;
+}
+
+.tier-how-it-works .outcome-card.physical  { border-top: 3px solid #4a7fb5; }
+.tier-how-it-works .outcome-card.chemical  { border-top: 3px solid #b5873a; }
+.tier-how-it-works .outcome-card.biological { border-top: 3px solid #3a8a5c; }
+
+.tier-how-it-works .outcome-card-title {
+  margin: 0 0 0.35rem;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.tier-how-it-works .outcome-card.physical .outcome-card-title  { color: #3a6a9a; }
+.tier-how-it-works .outcome-card.chemical .outcome-card-title  { color: #96712e; }
+.tier-how-it-works .outcome-card.biological .outcome-card-title { color: #2e7049; }
+
+.tier-how-it-works .outcome-card-def {
+  margin: 0 0 0.3rem;
+}
+
+.tier-how-it-works .outcome-card-examples {
+  margin: 0;
+  padding-top: 0.3rem;
+  border-top: 1px solid #e8ecf2;
+  font-size: 0.8rem;
+  color: #555;
+}
+
+/* ── Ecosystem Condition synthesis card ──────────────────── */
+
+.tier-how-it-works .ecosystem-condition-card {
+  margin: 0.1rem 0 0;
+  background: #ffffff;
+  border: 1px solid #d5deea;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem 0.7rem;
+  font-size: 0.84rem;
+  line-height: 1.48;
+  border-top: 3px solid;
+  border-image: linear-gradient(to right, #4a7fb5, #b5873a, #3a8a5c) 1;
+  border-image-slice: 1;
+}
+
+.tier-how-it-works .ecosystem-condition-card .outcome-card-title {
+  color: #1f3f6e;
+}
+
+@media (max-width: 920px) {
+  .tier-how-it-works .outcome-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
 .scoring-tier-table {
   margin: 0.5rem 0 0.2rem;
   font-size: 0.85rem;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
 }
 
 .scoring-tier-table th,
 .scoring-tier-table td {
-  padding: 0.35rem 0.55rem;
+  padding: 0.45rem 0.6rem;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  background: transparent;
+}
+
+.scoring-tier-table thead th {
+  background: transparent;
+  border-bottom: 2px solid #c0c0c0;
+}
+
+.scoring-tier-table tbody tr:last-child th,
+.scoring-tier-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.scoring-tier-table tbody tr:nth-child(even) td,
+.scoring-tier-table tbody tr:nth-child(even) th {
+  background: transparent;
 }
 
 /* Disabled add-tab buttons */
