@@ -1,15 +1,17 @@
-﻿{
+{
   "name": "staf",
   "private": true,
   "type": "module",
   "scripts": {
     "build:metric-index": "ts-node scripts/buildMetricIndex.ts",
+    "build:factsheet": "ts-node scripts/generateFactsheet.ts",
     "build:metric-library": "ts-node scripts/compileMetricLibraryFromCsv.ts",
     "migrate:detailed-metrics": "ts-node scripts/migrateDetailedMetrics.ts",
     "migrate:screening-metrics": "ts-node scripts/migrateScreeningMetrics.ts",
     "test": "ts-node scripts/runMetricLibraryTests.ts"
   },
   "dependencies": {
+    "docx": "^9.6.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {
@@ -17,4 +19,3 @@
     "typescript": "^5.3.3"
   }
 }
-

@@ -1,5 +1,5 @@
 ---
-title: Quick Overview
+title: Overview
 description: "A short overview of STAF."
 ---
 {% include staf_page_chrome.html %}
@@ -17,7 +17,7 @@ description: "A short overview of STAF."
         <section>
           <p class="factsheet-section-label" role="heading" aria-level="3">Background and Need</p>
           <p class="factsheet-need-text">
-            USACE planners, engineers, and regulators need tools for holistically assessing stream structure, function, and dynamic processes. Existing approaches have often relied on species-specific habitat models that focus narrowly on single taxa and do not capture ecosystem-scale outcomes. At the same time, the Civil Works planning process (SMART Planning) imposes different modeling needs as projects progress, from rapid site screening with sparse data (1-3 months) through conceptual design (12-20 months) to final design and post-construction monitoring. There is no standardized, nationally applicable framework that scales assessment effort to project phase while keeping results comparable.
+            USACE planners, engineers, and practitioners need tools for holistically assessing stream structure, function, and dynamic processes. Existing approaches have often relied on species-specific habitat models that focus narrowly on single taxa and do not capture ecosystem-scale outcomes. At the same time, the Civil Works planning process (SMART Planning) imposes different modeling needs as projects progress, from rapid site screening with sparse data (1-3 months) through conceptual design (12-20 months) to final design and post-construction monitoring. There is no standardized, nationally applicable framework that scales assessment effort to project phase while keeping results comparable.
           </p>
           <p class="factsheet-need-text">
             A review of 188 stream assessment methods in the U.S. found that most methods do not evaluate the full range of ecosystem functions, there is limited guidance on matching effort to project phase, and results are difficult to compare across methods, projects, and regions.
@@ -61,11 +61,34 @@ description: "A short overview of STAF."
           <p class="factsheet-effort-caption">Effort, data needs, confidence</p>
 
           <div class="factsheet-callout-row">
-            <p class="factsheet-callout-box"><strong>Common foundation:</strong> Stream functions are consistent across all tiers.</p>
-            <p class="factsheet-callout-box">
-              <strong>Comparable results: Scoring and Ecosystem Condition Index</strong><br>
-              Function results align to physical, chemical, and biological condition. Sub-indices are rolled into an overall ecosystem condition index. Higher tiers use more direct evidence and provide greater confidence in results.
-            </p>
+            <p class="factsheet-callout-box"><strong>Common foundation:</strong> Stream functions are consistent across all tiers. The functions are comprehensive and broadly applicable to a wide range of streams.</p>
+            <div class="factsheet-callout-box factsheet-outcomes-box">
+              <p class="factsheet-outcomes-heading"><strong>Comparable results: Outcomes and Ecosystem Condition</strong></p>
+              <p class="factsheet-outcomes-intro"><strong>Outcomes</strong> are observable or quantifiable results that are linked to how one or more stream functions operate.</p>
+
+              <div class="outcome-cards">
+                <article class="outcome-card physical">
+                  <p class="outcome-card-title">Physical Outcomes</p>
+                  <p class="outcome-card-def">Physical outcomes are measurable results of hydrologic, hydraulic, geomorphic, and habitat-forming processes. They describe the physical structure of the stream and how water and sediment move through the system.</p>
+                  <p class="outcome-card-examples"><strong>Examples:</strong> floodplain inundation frequency, channel stability, sediment transport balance, habitat unit distribution, substrate composition, and large wood abundance.</p>
+                </article>
+                <article class="outcome-card chemical">
+                  <p class="outcome-card-title">Chemical Outcomes</p>
+                  <p class="outcome-card-def">Chemical outcomes are measurable results of water chemistry and biogeochemical processes. They describe how chemical conditions support or limit aquatic life and ecosystem processes.</p>
+                  <p class="outcome-card-examples"><strong>Examples:</strong> dissolved oxygen, nutrient concentrations, temperature regime, pH, contaminant levels, and organic matter decomposition rates.</p>
+                </article>
+                <article class="outcome-card biological">
+                  <p class="outcome-card-title">Biological Outcomes</p>
+                  <p class="outcome-card-def">Biological outcomes are measurable characteristics of aquatic and riparian communities. They describe the presence, abundance, diversity, and functional roles of organisms in the system.</p>
+                  <p class="outcome-card-examples"><strong>Examples:</strong> fish assemblage composition, macroinvertebrate diversity, species richness, presence of sensitive taxa, and functional feeding group distribution.</p>
+                </article>
+              </div>
+
+              <article class="ecosystem-condition-card">
+                <p class="outcome-card-title">Ecosystem Condition</p>
+                <p class="outcome-card-def">The overall state of a stream system, based on the combined performance of physical, chemical, and biological outcomes relative to expected or reference conditions. It indicates how well the system sustains ecological function and resilience over time.</p>
+              </article>
+            </div>
           </div>
         </section>
       </div>
@@ -103,10 +126,10 @@ description: "A short overview of STAF."
 
             <p class="factsheet-col-title" role="heading" aria-level="3">Scoring Approach</p>
             <ul>
-              <li>STAF uses a scoring approach that summarizes function-based results into condition outcomes.</li>
-              <li>Each stream function is evaluated using tier-appropriate evidence.</li>
-              <li>Function results are summarized to show overall performance and key limitations.</li>
-              <li>Results are aligned to physical, chemical, and biological condition to support interpretation and decision-making.</li>
+              <li>Each stream function is evaluated using tier-appropriate evidence and scored on a 0–15 scale.</li>
+              <li>Function scores are grouped into three outcome categories: <strong>physical</strong> (hydrology, hydraulics, geomorphology), <strong>chemical</strong> (water chemistry, biogeochemical processes), and <strong>biological</strong> (aquatic and riparian communities).</li>
+              <li>Each outcome category produces a normalized sub-index (0–1). The three sub-indices are averaged to produce an <strong>Ecosystem Condition Index</strong>.</li>
+              <li>This structured rollup supports interpretation, comparison across sites, and decision-making.</li>
             </ul>
           </section>
 
@@ -141,13 +164,13 @@ description: "A short overview of STAF."
         </section>
 
         <p class="factsheet-bottom-summary">
-          STAF provides a clear tiered pathway, a consistent set of stream functions, and a scoring concept that links functions to physical, chemical, and biological condition. It helps teams scale effort to need, keep evaluations comparable, and communicate results clearly.
+          STAF provides a clear tiered pathway, a consistent set of stream functions, and a structured scoring approach that rolls function results into physical, chemical, and biological outcomes and an overall Ecosystem Condition Index. It helps teams scale effort to need, keep evaluations comparable, and communicate results clearly.
         </p>
       </div>
     </section>
   </div>
 
   <div class="button-row factsheet-download-row">
-    <a class="btn btn-primary" href="{{ '/assets/docs/STAF_Factsheet_Revised.pdf' | relative_url | uri_escape }}">Download STAF Factsheet (PDF)</a>
+    <a class="btn btn-primary" href="{{ '/assets/docs/STAF_Factsheet.pdf' | relative_url | uri_escape }}">Download STAF Factsheet (PDF)</a>
   </div>
 </div>

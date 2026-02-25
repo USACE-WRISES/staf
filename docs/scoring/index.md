@@ -5,7 +5,7 @@ description: "How metrics roll up to functions, outcomes, and overall condition.
 ---
 {% include staf_page_chrome.html %}
 
-<details class="tier-how-it-works" open>
+<details class="tier-how-it-works">
   <summary>How scoring works</summary>
   <ol>
     <li>Metrics are scored and rolled up into function scores — the method varies by tier (see table below).</li>
@@ -30,7 +30,7 @@ description: "How metrics roll up to functions, outcomes, and overall condition.
     </thead>
     <tbody>
       <tr>
-        <th>Metrics</th>
+        <th>Metric Scores</th>
         <td>Qualitative (e.g., Good / Fair / Poor)</td>
         <td>Semi-quantitative (Likert scale)</td>
         <td>Quantitative (measured values)</td>
@@ -43,6 +43,37 @@ description: "How metrics roll up to functions, outcomes, and overall condition.
       </tr>
     </tbody>
   </table>
+</details>
+
+<details class="tier-how-it-works">
+  <summary>Understanding outcomes and ecosystem condition</summary>
+
+  <p><strong>Outcomes</strong> are observable or quantifiable results that are linked to how one or more stream functions operate.</p>
+
+  <div class="outcome-cards">
+    <article class="outcome-card physical">
+      <p class="outcome-card-title">Physical Outcomes</p>
+      <p class="outcome-card-def">Physical outcomes are measurable results of hydrologic, hydraulic, geomorphic, and habitat-forming processes. They describe the physical structure of the stream and how water and sediment move through the system.</p>
+      <p class="outcome-card-examples"><strong>Examples:</strong> floodplain inundation frequency, channel stability, sediment transport balance, habitat unit distribution, substrate composition, and large wood abundance.</p>
+    </article>
+
+    <article class="outcome-card chemical">
+      <p class="outcome-card-title">Chemical Outcomes</p>
+      <p class="outcome-card-def">Chemical outcomes are measurable results of water chemistry and biogeochemical processes. They describe how chemical conditions support or limit aquatic life and ecosystem processes.</p>
+      <p class="outcome-card-examples"><strong>Examples:</strong> dissolved oxygen, nutrient concentrations, temperature regime, pH, contaminant levels, and organic matter decomposition rates.</p>
+    </article>
+
+    <article class="outcome-card biological">
+      <p class="outcome-card-title">Biological Outcomes</p>
+      <p class="outcome-card-def">Biological outcomes are measurable characteristics of aquatic and riparian communities. They describe the presence, abundance, diversity, and functional roles of organisms in the system.</p>
+      <p class="outcome-card-examples"><strong>Examples:</strong> fish assemblage composition, macroinvertebrate diversity, species richness, presence of sensitive taxa, and functional feeding group distribution.</p>
+    </article>
+  </div>
+
+  <article class="ecosystem-condition-card">
+    <p class="outcome-card-title">Ecosystem Condition</p>
+    <p class="outcome-card-def">The overall state of a stream system, based on the combined performance of physical, chemical, and biological outcomes relative to expected or reference conditions. It indicates how well the system sustains ecological function and resilience over time.</p>
+  </article>
 </details>
 
 <div class="widget-collapse" data-tier="scoring">
