@@ -3829,6 +3829,240 @@
       }
       scenarios.forEach((scenario) => ensureScenarioViewOptions(scenario));
 
+      // ---- Assessment Excel export ----
+      const collectDetailedExportData = () => {
+        const scenario = getActiveScenario();
+        if (!scenario) return null;
+
+        const columns = [
+          { key: 'discipline', header: 'Discipline', width: 16 },
+          { key: 'function', header: 'Function', width: 22 },
+          { key: 'metric', header: 'Metric', width: 24 },
+          { key: 'metricValue', header: 'Metric Value', width: 14 },
+          { key: 'scoringCriteria', header: 'Scoring Criteria', width: 16 },
+          { key: 'metricIndex', header: 'Metric Index', width: 13 },
+          { key: 'functionEstimate', header: 'Function Estimate', width: 17 },
+          { key: 'functionScore', header: 'Function Score', width: 14 },
+          { key: 'suggestedRange', header: 'Suggested Range', width: 16 },
+          { key: 'functionScoreLabel', header: 'F/AR/NF', width: 16 },
+          { key: 'physical', header: 'Physical', width: 10 },
+          { key: 'chemical', header: 'Chemical', width: 10 },
+          { key: 'biological', header: 'Biological', width: 10 },
+        ];
+
+        const selectedMetricIdSet = new Set(scenario.metricIds || []);
+        const metricsByFn = new Map();
+        metrics.forEach((metric) => {
+          if (!selectedMetricIdSet.has(metric.id) || !metric.functionId) return;
+          if (!metricsByFn.has(metric.functionId)) {
+            metricsByFn.set(metric.functionId, []);
+          }
+          metricsByFn.get(metric.functionId).push(metric);
+        });
+
+        // Compute function scores (mirrors renderTable logic)
+        const fnScoresMap = new Map();
+        const fnScoreMetaMap = new Map();
+        functionsList.forEach((fn) => {
+          const fnMetrics = metricsByFn.get(fn.id) || [];
+          const metas = fnMetrics
+            .map((metric) => {
+              const value = Number.parseFloat(scenario.fieldValues[metric.id]);
+              const curve = ensureCurve(scenario, metric.id);
+              return resolveDetailedIndexMeta(curve, value);
+            })
+            .filter((meta) => meta && Number.isFinite(meta.indexScore));
+          const indexScores = metas.map((meta) => clamp(meta.indexScore, 0, 1));
+          const avgIndex = indexScores.length
+            ? indexScores.reduce((sum, v) => sum + v, 0) / indexScores.length
+            : 0;
+          const functionScore = toFunctionScore(avgIndex);
+          fnScoresMap.set(fn.id, functionScore);
+
+          const rangeEntries = metas.map((meta) => {
+            const avgScore = toFunctionScore(meta.indexScore);
+            const scoreRange =
+              Number.isFinite(meta.minIndex) && Number.isFinite(meta.maxIndex)
+                ? toFunctionScoreRange(meta.minIndex, meta.maxIndex, meta.indexScore)
+                : { minScore: avgScore, maxScore: avgScore, hasRange: false };
+            return scoreRange;
+          });
+          const minLimit = rangeEntries.length
+            ? Math.min(...rangeEntries.map((r) => r.minScore)) : 0;
+          const maxLimit = rangeEntries.length
+            ? Math.max(...rangeEntries.map((r) => r.maxScore)) : 15;
+          const hasSuggested = rangeEntries.some((r) => r.hasRange) && minLimit < maxLimit;
+          fnScoreMetaMap.set(fn.id, { value: functionScore, minLimit, maxLimit, hasSuggested });
+        });
+
+        const rows = [];
+        const fnOrderForChart = [];
+        functionsList.forEach((fn) => {
+          const discipline = fn.category || '';
+          const fnMetrics = metricsByFn.get(fn.id) || [];
+          if (!fnMetrics.length) return;
+          const mapping = mappingById[fn.id] || { physical: '-', chemical: '-', biological: '-' };
+          const meta = fnScoreMetaMap.get(fn.id) || { value: 0, minLimit: 0, maxLimit: 15, hasSuggested: false };
+
+          fnOrderForChart.push({
+            name: fn.name,
+            discipline,
+            score: meta.value,
+          });
+
+          fnMetrics.forEach((metric) => {
+            const rawValue = scenario.fieldValues[metric.id];
+            const numVal = Number.parseFloat(rawValue);
+            const curve = ensureCurve(scenario, metric.id);
+            const activeLayer = Array.isArray(curve?.layers)
+              ? curve.layers.find((layer) => layer.id === curve.activeLayerId) ||
+                curve.layers[0] ||
+                null
+              : null;
+            const layerName = activeLayer?.name || 'Reference Curve';
+            const indexMeta = resolveDetailedIndexMeta(curve, numVal);
+            const indexScore = indexMeta ? indexMeta.indexScore : null;
+            const points = Array.isArray(activeLayer?.points)
+              ? activeLayer.points.map((point) => ({
+                  x: point?.x ?? '',
+                  y: point?.y ?? '',
+                  yMin: point?.yMin ?? point?.y_min ?? '',
+                  yMax: point?.yMax ?? point?.y_max ?? '',
+                  description: point?.description ?? '',
+                }))
+              : [];
+            const profileId = scenario.metricProfiles?.[metric.id] || defaultProfileId;
+
+            rows.push({
+              discipline,
+              function: fn.name,
+              metric: metric.metric,
+              metricValue: Number.isFinite(numVal) ? numVal : (rawValue || ''),
+              scoringCriteria: layerName,
+              metricIndex: indexScore !== null ? Math.round(indexScore * 100) / 100 : '',
+              functionEstimate: meta.hasSuggested
+                ? `${meta.value} (${meta.minLimit}-${meta.maxLimit})`
+                : String(meta.value),
+              functionScore: meta.value,
+              suggestedRange: meta.hasSuggested ? `${meta.minLimit}-${meta.maxLimit}` : '',
+              functionScoreLabel: window.STAFAssessmentExport
+                ? window.STAFAssessmentExport.labelForFunctionScore(meta.value) : '',
+              physical: mapping.physical || '-',
+              chemical: mapping.chemical || '-',
+              biological: mapping.biological || '-',
+              _exportMeta: {
+                metricId: metric.id,
+                metricName: metric.metric,
+                functionName: fn.name,
+                category: discipline,
+                recommendedTiers: ['Detailed'],
+                functionStatement: metric.functionStatement || '',
+                description: metric.metricDataSource || metric.source || '',
+                methodContext: [metric.context, metric.method, metric.methodMarkdown]
+                  .filter(Boolean)
+                  .join(' | '),
+                howToMeasure: metric.howToMeasure || '',
+                references: metric.references || '',
+                profileTier: profileId || 'detailed',
+                curveSetName: curve?.name || 'Reference Curve',
+                curveId: curve?.curveId || `${metric.id}-reference`,
+                curveType: normalizeCurveType(curve?.xType || 'quantitative'),
+                indexRange: Boolean(curve?.indexRange),
+                units: curve?.units || '',
+                axesXLabel: metric.metric || 'Metric Value',
+                axesYLabel: 'Metric Index',
+                layerName,
+                points,
+              },
+            });
+          });
+        });
+
+        // Compute roll-up
+        const outcomeTotals = {
+          physical: { weighted: 0, max: 0, direct: 0, indirect: 0 },
+          chemical: { weighted: 0, max: 0, direct: 0, indirect: 0 },
+          biological: { weighted: 0, max: 0, direct: 0, indirect: 0 },
+        };
+        functionsList.forEach((fn) => {
+          const functionScore = fnScoresMap.get(fn.id) ?? 0;
+          const mapping = mappingById[fn.id] || { physical: '-', chemical: '-', biological: '-' };
+          const applyWeight = (key, code) => {
+            let weight = 0;
+            if (code === 'D') { weight = 1.0; outcomeTotals[key].direct += 1; }
+            else if (code === 'i') { weight = 0.1; outcomeTotals[key].indirect += 1; }
+            outcomeTotals[key].weighted += functionScore * weight;
+            outcomeTotals[key].max += 15 * weight;
+          };
+          applyWeight('physical', mapping.physical);
+          applyWeight('chemical', mapping.chemical);
+          applyWeight('biological', mapping.biological);
+        });
+        ['physical', 'chemical', 'biological'].forEach((key) => {
+          const t = outcomeTotals[key];
+          t.subIndex = t.max > 0 ? t.weighted / t.max : 0;
+        });
+        const ecoIndex = (outcomeTotals.physical.subIndex + outcomeTotals.chemical.subIndex + outcomeTotals.biological.subIndex) / 3;
+
+        return {
+          tier: 'detailed',
+          assessmentName: scenario.name || 'Detailed Assessment',
+          baseUrl,
+          columns,
+          rows,
+          functionScoreData: fnOrderForChart.map((fn) => ({
+            name: fn.name,
+            discipline: fn.discipline,
+            score: fn.score,
+            label: window.STAFAssessmentExport
+              ? window.STAFAssessmentExport.labelForFunctionScore(fn.score) : '',
+          })),
+          rollupData: {
+            physical: outcomeTotals.physical,
+            chemical: outcomeTotals.chemical,
+            biological: outcomeTotals.biological,
+            ecosystemConditionIndex: Math.round(ecoIndex * 100) / 100,
+          },
+          summaryData: [
+            { label: 'Physical Sub-index', value: Math.round(outcomeTotals.physical.subIndex * 100) / 100 },
+            { label: 'Chemical Sub-index', value: Math.round(outcomeTotals.chemical.subIndex * 100) / 100 },
+            { label: 'Biological Sub-index', value: Math.round(outcomeTotals.biological.subIndex * 100) / 100 },
+            { label: 'Ecosystem Condition Index', value: Math.round(ecoIndex * 100) / 100 },
+          ],
+        };
+      };
+
+      const downloadBtn = container
+        .closest('.widget-collapse')
+        ?.querySelector('.widget-collapse-download');
+      const downloadLink = document.querySelector('[data-tier-download-trigger="detailed"]');
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', async () => {
+          if (downloadBtn.disabled) return;
+          downloadBtn.disabled = true;
+          downloadBtn.classList.add('is-loading');
+          downloadBtn.setAttribute('aria-busy', 'true');
+          try {
+            const config = collectDetailedExportData();
+            if (!config) throw new Error('No active assessment to export.');
+            await window.STAFAssessmentExport.downloadAssessmentWorkbook(config);
+          } catch (err) {
+            console.error('Detailed assessment export failed.', err);
+            window.alert('Assessment export failed. Please try again.');
+          } finally {
+            downloadBtn.disabled = false;
+            downloadBtn.classList.remove('is-loading');
+            downloadBtn.removeAttribute('aria-busy');
+          }
+        });
+      }
+      if (downloadBtn && downloadLink) {
+        downloadLink.addEventListener('click', (event) => {
+          event.preventDefault();
+          downloadBtn.click();
+        });
+      }
+
       // Listen for pathway chooser events
       window.addEventListener('staf:pathway-chosen', (event) => {
         if (!event.detail || event.detail.tier !== 'detailed') {

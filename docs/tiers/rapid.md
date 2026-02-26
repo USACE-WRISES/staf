@@ -38,7 +38,7 @@ description: "Field-based rapid assessment for comparing sites and alternatives.
   </div>
 </details>
 
-<details class="tier-how-it-works" open>
+<details class="tier-how-it-works">
   <summary>How to perform the assessment</summary>
   <ol>
     <li>User will apply the Stream Functions Assessment and Rapid Index (SFARI) assessment.</li>
@@ -51,9 +51,15 @@ description: "Field-based rapid assessment for comparing sites and alternatives.
 <div class="widget-collapse is-collapsed" data-tier="rapid">
   <div class="widget-collapse-header">
     <div class="widget-collapse-title">Rapid Assessment</div>
-    <span class="widget-collapse-info" title="Select a workflow above to get started">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-    </span>
+    <button class="widget-collapse-download" type="button"
+            aria-label="Download assessment as Excel"
+            title="Download assessment as Excel (.xlsx)">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 4v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+        <path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+      </svg>
+    </button>
   </div>
   <div class="widget-collapse-body">
     {% include rapid_assessment_widget.html %}
@@ -62,7 +68,7 @@ description: "Field-based rapid assessment for comparing sites and alternatives.
 
 ## Downloads
 - SFARI Field Form
-- SFARI Excel Calculator
+- <a href="#" class="assessment-widget-download-link" data-tier-download-trigger="rapid">SFARI Excel Calculator</a>
 
 ## References
 - David, G. C., Stepchinski, L. M., Wiest, S. R., & Menichino, G. T. (In review). Stream Functions Assessment and Rapid Index (SFARI): A nationally applicable, rapid, function-based stream assessment. ERDC/EMRRP Technical Report. Vicksburg, MS: U.S. Army Engineer Research and Development Center.

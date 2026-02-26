@@ -85,8 +85,5 @@ description: "How metrics roll up to functions, outcomes, and overall condition.
   </div>
 </div>
 
-## Downloads
-- Excel Calculator
-
 ## References
 - Stepchinski, L. M., McKay, S. K., & Menichino, G. T. (In review). Synthesis and inventory of stream functions. Manuscript submitted for publication.
