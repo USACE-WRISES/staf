@@ -6838,6 +6838,43 @@ body.modal-open {
   display: none;
 }
 
+.widget-collapse-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  color: #8b8f94;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.widget-collapse-download svg {
+  width: 16px;
+  height: 16px;
+}
+
+.widget-collapse-download:hover {
+  color: #6f747a;
+}
+
+.widget-collapse-download:focus-visible {
+  outline: 2px solid rgba(122, 167, 255, 0.75);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.widget-collapse-download.is-loading,
+.widget-collapse-download:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.widget-collapse.is-collapsed .widget-collapse-download {
+  display: none;
+}
+
 .widget-collapse.is-collapsed .widget-collapse-body {
   display: none;
 }

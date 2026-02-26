@@ -4747,6 +4747,278 @@
         });
       }
 
+      // ---- Assessment Excel export ----
+      const collectScreeningExportData = () => {
+        const columns = [
+          { key: 'discipline', header: 'Discipline', width: 16 },
+          { key: 'function', header: 'Function', width: 22 },
+          { key: 'metric', header: 'Metric', width: 24 },
+          { key: 'metricValue', header: 'Metric Value', width: 14 },
+          { key: 'scoringCriteria', header: 'Scoring Criteria', width: 16 },
+          { key: 'metricIndex', header: 'Metric Index', width: 13 },
+          { key: 'functionEstimate', header: 'Function Estimate', width: 17 },
+          { key: 'functionScore', header: 'Function Score', width: 14 },
+          { key: 'suggestedRange', header: 'Suggested Range', width: 16 },
+          { key: 'functionScoreLabel', header: 'F/AR/NF', width: 16 },
+          { key: 'physical', header: 'Physical', width: 10 },
+          { key: 'chemical', header: 'Chemical', width: 10 },
+          { key: 'biological', header: 'Biological', width: 10 },
+        ];
+
+        const rows = [];
+        const fnBuckets = new Map();
+        const fnRangeBuckets = new Map();
+        const sortedMetrics = metrics
+          .filter((m) => selectedMetricIds.has(m.id))
+          .sort(sortMetricsForDisplay);
+
+        sortedMetrics.forEach((metric) => {
+          if (!metric.functionId) return;
+          const rating = metricRatings.get(metric.id) || defaultRating;
+          const indexScore = getMetricIndexScore(metric.id);
+          const indexRange = getMetricIndexRange(metric.id);
+          const curve = ensureCurve(activeScenario, metric.id);
+          const criteriaLayer = getCriteriaLayerForMetric(metric.id);
+          const criteriaName =
+            criteriaLayer?.name ||
+            activeScenario?.defaultCriteriaName ||
+            fallbackCriteriaName;
+          const profileId = activeScenario?.metricProfiles?.[metric.id] || defaultProfileId;
+          let metricScoreRange = null;
+          if (indexRange) {
+            metricScoreRange = {
+              minScore: Math.ceil(indexRange.min * 15),
+              maxScore: Math.floor(indexRange.max * 15),
+              avgScore: Math.round(indexRange.avg * 15),
+              hasRange: indexRange.hasRange,
+            };
+          } else {
+            const ratingMatch = ratingOptions.find((opt) => opt.label === rating);
+            const score = ratingMatch ? ratingMatch.score : 0;
+            metricScoreRange = { minScore: score, maxScore: score, avgScore: score, hasRange: false };
+          }
+
+          if (!fnBuckets.has(metric.functionId)) {
+            fnBuckets.set(metric.functionId, []);
+            fnRangeBuckets.set(metric.functionId, []);
+          }
+          fnBuckets.get(metric.functionId).push(metricScoreRange.avgScore);
+          fnRangeBuckets.get(metric.functionId).push(metricScoreRange);
+
+          const mapping = mappingById[metric.functionId] || { physical: '-', chemical: '-', biological: '-' };
+          const points = Array.isArray(criteriaLayer?.points)
+            ? criteriaLayer.points.map((point) => ({
+                x: point?.x ?? '',
+                y: point?.y ?? '',
+                yMin: point?.yMin ?? point?.y_min ?? '',
+                yMax: point?.yMax ?? point?.y_max ?? '',
+                description: point?.description ?? '',
+              }))
+            : [];
+          const methodParts = [metric.context, metric.method]
+            .map((value) => String(value || '').trim())
+            .filter(Boolean);
+
+          rows.push({
+            discipline: metric.discipline,
+            function: metric.functionName,
+            metric: metric.metric,
+            metricValue: rating,
+            scoringCriteria: criteriaName,
+            metricIndex: indexScore !== null ? Math.round(indexScore * 100) / 100 : '',
+            functionEstimate: '',
+            functionScore: 0,
+            suggestedRange: '',
+            functionScoreLabel: '',
+            physical: mapping.physical || '-',
+            chemical: mapping.chemical || '-',
+            biological: mapping.biological || '-',
+            _functionId: metric.functionId,
+            _exportMeta: {
+              metricId: metric.libraryId || metric.id,
+              metricName: metric.metric,
+              functionName: metric.functionName,
+              category: metric.discipline,
+              recommendedTiers: ['Screening'],
+              functionStatement: metric.functionStatement || '',
+              description: metric.metricStatement || '',
+              methodContext: methodParts.join(' | '),
+              howToMeasure: metric.howToMeasure || '',
+              references: metric.references || '',
+              profileTier: profileId || 'screening',
+              curveSetName: curve?.name || fallbackCriteriaName,
+              curveId: curve?.activeLayerId || `${metric.libraryId || metric.id}-screening`,
+              curveType: curve?.xType || 'categorical',
+              indexRange: Boolean(curve?.indexRange),
+              units: curve?.units || '',
+              axesXLabel: metric.metric || 'Metric Value',
+              axesYLabel: 'Metric Index',
+              layerName: criteriaName,
+              points,
+            },
+          });
+        });
+
+        // Compute function scores + ranges
+        const fnScoresMap = new Map();
+        const fnRangesMap = new Map();
+        fnBuckets.forEach((scores, functionId) => {
+          const avg = scores.length > 0
+            ? scores.reduce((s, v) => s + v, 0) / scores.length : 0;
+          fnScoresMap.set(functionId, avg);
+        });
+        fnRangeBuckets.forEach((ranges, functionId) => {
+          if (!ranges.length) return;
+          const min = Math.min(...ranges.map((r) => r.minScore));
+          const max = Math.max(...ranges.map((r) => r.maxScore));
+          const hasSuggested = ranges.some((r) => r.hasRange);
+          fnRangesMap.set(functionId, { min, max, hasSuggested });
+        });
+
+        const functionScoresResolved = new Map();
+        const seenFunctions = new Set();
+        const functionOrderForChart = [];
+
+        rows.forEach((row) => {
+          const fId = row._functionId;
+          if (!fId) return;
+          if (!functionScoresResolved.has(fId)) {
+            const suggestion = fnScoresMap.get(fId) ?? 0;
+            const range = fnRangesMap.get(fId);
+            const minLimit = range ? Math.floor(range.min) : 0;
+            const maxLimit = range ? Math.ceil(range.max) : 15;
+            const hasStored = Number.isFinite(activeScenario?.functionScores?.[fId]);
+            let value = hasStored ? activeScenario.functionScores[fId] : Math.round(suggestion);
+            value = Math.min(15, Math.max(0, value));
+            functionScoresResolved.set(fId, {
+              value,
+              minLimit,
+              maxLimit,
+              hasSuggested: Boolean(range?.hasSuggested),
+              suggestion,
+            });
+          }
+          const meta = functionScoresResolved.get(fId);
+          row.functionScore = meta.value;
+          row.functionEstimate = `${Math.round(meta.suggestion)} (${meta.minLimit}-${meta.maxLimit})`;
+          row.suggestedRange = meta.hasSuggested ? `${meta.minLimit}-${meta.maxLimit}` : '';
+          row.functionScoreLabel = window.STAFAssessmentExport
+            ? window.STAFAssessmentExport.labelForFunctionScore(meta.value) : '';
+
+          if (!seenFunctions.has(fId)) {
+            seenFunctions.add(fId);
+            const fnMatch = functionById.get(fId);
+            functionOrderForChart.push({
+              functionId: fId,
+              name: fnMatch ? fnMatch.name : row.function,
+              discipline: row.discipline,
+              score: meta.value,
+            });
+          }
+          delete row._functionId;
+        });
+
+        // Compute roll-up
+        const outcomeTotals = {
+          physical: { weighted: 0, max: 0, direct: 0, indirect: 0 },
+          chemical: { weighted: 0, max: 0, direct: 0, indirect: 0 },
+          biological: { weighted: 0, max: 0, direct: 0, indirect: 0 },
+        };
+        functionScoresResolved.forEach((meta, functionId) => {
+          const mapping = mappingById[functionId] || { physical: '-', chemical: '-', biological: '-' };
+          const applyWeight = (key, code) => {
+            let weight = 0;
+            if (code === 'D') { weight = 1.0; outcomeTotals[key].direct += 1; }
+            else if (code === 'i') { weight = 0.1; outcomeTotals[key].indirect += 1; }
+            outcomeTotals[key].weighted += meta.value * weight;
+            outcomeTotals[key].max += 15 * weight;
+          };
+          applyWeight('physical', mapping.physical);
+          applyWeight('chemical', mapping.chemical);
+          applyWeight('biological', mapping.biological);
+        });
+        ['physical', 'chemical', 'biological'].forEach((key) => {
+          const t = outcomeTotals[key];
+          t.subIndex = t.max > 0 ? t.weighted / t.max : 0;
+        });
+        const ecoIndex = (
+          outcomeTotals.physical.subIndex +
+          outcomeTotals.chemical.subIndex +
+          outcomeTotals.biological.subIndex
+        ) / 3;
+
+        const functionScoreData = functionOrderForChart.map((fn) => ({
+          name: fn.name,
+          discipline: fn.discipline,
+          score: fn.score,
+          label: window.STAFAssessmentExport
+            ? window.STAFAssessmentExport.labelForFunctionScore(fn.score) : '',
+        }));
+
+        const summaryData = [
+          { label: 'Physical Sub-index', value: Math.round(outcomeTotals.physical.subIndex * 100) / 100 },
+          { label: 'Chemical Sub-index', value: Math.round(outcomeTotals.chemical.subIndex * 100) / 100 },
+          { label: 'Biological Sub-index', value: Math.round(outcomeTotals.biological.subIndex * 100) / 100 },
+          { label: 'Ecosystem Condition Index', value: Math.round(ecoIndex * 100) / 100 },
+        ];
+
+        return {
+          tier: 'screening',
+          assessmentName: activeScenario?.name || predefinedName,
+          baseUrl,
+          columns,
+          rows,
+          functionScoreData,
+          rollupData: {
+            physical: outcomeTotals.physical,
+            chemical: outcomeTotals.chemical,
+            biological: outcomeTotals.biological,
+            ecosystemConditionIndex: Math.round(ecoIndex * 100) / 100,
+          },
+          summaryData,
+        };
+      };
+
+      const downloadBtn = container
+        .closest('.widget-collapse')
+        ?.querySelector('.widget-collapse-download');
+      const downloadLink = document.querySelector('[data-tier-download-trigger="screening"]');
+      const metricLibraryDownloadBtn = container.querySelector('.metric-library-download');
+      const metricToolboxLink = document.querySelector(
+        '[data-tier-metric-library-download-trigger="screening"]'
+      );
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', async () => {
+          if (downloadBtn.disabled) return;
+          downloadBtn.disabled = true;
+          downloadBtn.classList.add('is-loading');
+          downloadBtn.setAttribute('aria-busy', 'true');
+          try {
+            const config = collectScreeningExportData();
+            await window.STAFAssessmentExport.downloadAssessmentWorkbook(config);
+          } catch (err) {
+            console.error('Screening assessment export failed.', err);
+            window.alert('Assessment export failed. Please try again.');
+          } finally {
+            downloadBtn.disabled = false;
+            downloadBtn.classList.remove('is-loading');
+            downloadBtn.removeAttribute('aria-busy');
+          }
+        });
+      }
+      if (downloadBtn && downloadLink) {
+        downloadLink.addEventListener('click', (event) => {
+          event.preventDefault();
+          downloadBtn.click();
+        });
+      }
+      if (metricLibraryDownloadBtn && metricToolboxLink) {
+        metricToolboxLink.addEventListener('click', (event) => {
+          event.preventDefault();
+          metricLibraryDownloadBtn.click();
+        });
+      }
+
       // Listen for pathway chooser events
       window.addEventListener('staf:pathway-chosen', (event) => {
         if (!event.detail || event.detail.tier !== 'screening') {

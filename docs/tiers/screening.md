@@ -38,7 +38,7 @@ description: "Desktop-first screening for early planning and prioritization."
   </div>
 </details>
 
-<details class="tier-how-it-works" open>
+<details class="tier-how-it-works">
   <summary>How to perform the assessment</summary>
   <ol>
     <li>Delineate reaches and catchments.</li>
@@ -50,9 +50,15 @@ description: "Desktop-first screening for early planning and prioritization."
 <div class="widget-collapse is-collapsed" data-tier="screening">
   <div class="widget-collapse-header">
     <div class="widget-collapse-title">Screening Assessment</div>
-    <span class="widget-collapse-info" title="Select a workflow above to get started">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-    </span>
+    <button class="widget-collapse-download" type="button"
+            aria-label="Download assessment as Excel"
+            title="Download assessment as Excel (.xlsx)">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 4v10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+        <path d="M8 10l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="M5 20h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+      </svg>
+    </button>
   </div>
   <div class="widget-collapse-body">
     {% include screening_assessment_widget.html %}
@@ -60,8 +66,8 @@ description: "Desktop-first screening for early planning and prioritization."
 </div>
 
 ## Downloads / resources
-- Metric Toolbox
-- Excel Calculator
+- <a href="#" class="metric-library-download-link" data-tier-metric-library-download-trigger="screening">Metric Toolbox</a>
+- <a href="#" class="assessment-widget-download-link" data-tier-download-trigger="screening">Excel Calculator</a>
 
 ## References
 - Stepchinski, L. M., McKay, S. K., Harris, A. E., & Menichino, G. T. (2025). A Review of Stream Assessment Methods in the United States. JAWRA Journal of the American Water Resources Association, 61(6), e70056.

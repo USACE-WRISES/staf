@@ -2216,6 +2216,235 @@
         });
       }
 
+      // ---- Assessment Excel export ----
+      const collectRapidExportData = () => {
+        const columns = [
+          { key: 'discipline', header: 'Discipline', width: 16 },
+          { key: 'function', header: 'Function', width: 22 },
+          { key: 'metric', header: 'Metric', width: 24 },
+          { key: 'metricValue', header: 'Metric Value', width: 14 },
+          { key: 'scoringCriteria', header: 'Scoring Criteria', width: 16 },
+          { key: 'metricIndex', header: 'Metric Index', width: 13 },
+          { key: 'functionEstimate', header: 'Function Estimate', width: 17 },
+          { key: 'functionScore', header: 'Function Score', width: 14 },
+          { key: 'suggestedRange', header: 'Suggested Range', width: 16 },
+          { key: 'functionScoreLabel', header: 'F/AR/NF', width: 16 },
+          { key: 'physical', header: 'Physical', width: 10 },
+          { key: 'chemical', header: 'Chemical', width: 10 },
+          { key: 'biological', header: 'Biological', width: 10 },
+        ];
+
+        const rows = [];
+        const fnEstBuckets = new Map();
+        const fnEstRangeBuckets = new Map();
+
+        indicators.forEach((item) => {
+          const scoreKey = indicatorScores.get(item.id) || defaultIndicatorScore;
+          const scoreOption = indicatorScoreOptions.find((o) => o.value === scoreKey);
+          const indexScore = getIndicatorIndexScore(item.id);
+          const estimateMeta = getFunctionEstimateMeta(item.id);
+          const criteriaBySentiment = criteriaMap[item.criteriaKey] || {};
+          const points = indicatorScoreOptions
+            .map((option) => {
+              const ranged = indicatorIndexRangeByScore[option.value];
+              const fallback = indicatorIndexByScore[option.value];
+              const y = ranged ? ranged.avg : fallback;
+              if (!Number.isFinite(y)) {
+                return null;
+              }
+              const desc = criteriaBySentiment[option.value];
+              return {
+                x: option.label,
+                description: desc?.criteria || desc?.observation || option.title || '',
+                y,
+                yMin: ranged ? ranged.min : y,
+                yMax: ranged ? ranged.max : y,
+              };
+            })
+            .filter(Boolean);
+
+          if (estimateMeta) {
+            if (!fnEstBuckets.has(item.functionName)) {
+              fnEstBuckets.set(item.functionName, []);
+              fnEstRangeBuckets.set(item.functionName, []);
+            }
+            fnEstBuckets.get(item.functionName).push(estimateMeta.scoreRange.avgScore);
+            fnEstRangeBuckets.get(item.functionName).push(estimateMeta.scoreRange);
+          }
+
+          const mapping = mappingByFunction[normalize(item.functionName)] || {
+            physical: '-', chemical: '-', biological: '-',
+          };
+
+          rows.push({
+            discipline: item.discipline,
+            function: item.functionName,
+            metric: item.indicator,
+            metricValue: scoreOption ? scoreOption.label : scoreKey,
+            scoringCriteria: 'SFARI',
+            metricIndex: indexScore !== null ? Math.round(indexScore * 100) / 100 : '',
+            functionEstimate: estimateMeta
+              ? (estimateMeta.scoreRange.hasRange
+                ? `${estimateMeta.scoreRange.avgScore} (${estimateMeta.scoreRange.minScore}-${estimateMeta.scoreRange.maxScore})`
+                : String(estimateMeta.scoreRange.avgScore))
+              : '-',
+            functionScore: 0,
+            suggestedRange: '',
+            functionScoreLabel: '',
+            physical: mapping.physical || '-',
+            chemical: mapping.chemical || '-',
+            biological: mapping.biological || '-',
+            _functionName: item.functionName,
+            _exportMeta: {
+              metricId: item.libraryMetricId || item.id,
+              metricName: item.indicator,
+              functionName: item.functionName,
+              category: item.discipline,
+              recommendedTiers: ['Rapid'],
+              functionStatement: item.functionStatement || '',
+              description: item.indicatorStatement || '',
+              methodContext: [item.context, item.method].filter(Boolean).join(' | '),
+              howToMeasure: item.howToMeasure || '',
+              references: '',
+              profileTier: item.libraryProfileId || 'rapid',
+              curveSetName: 'SFARI',
+              curveId: `${item.id}-sfari`,
+              curveType: 'categorical',
+              indexRange: true,
+              units: '',
+              axesXLabel: item.indicator || 'Metric Value',
+              axesYLabel: 'Metric Index',
+              layerName: 'SFARI',
+              points,
+            },
+          });
+        });
+
+        // Resolve function scores and ranges
+        const functionMetaMap = new Map();
+        const functionOrderForChart = [];
+        const seenFunctions = new Set();
+
+        functionScores.forEach((rawScore, functionName) => {
+          const value = Number.isFinite(rawScore) ? Math.min(15, Math.max(0, rawScore)) : defaultFunctionScore;
+          const ranges = fnEstRangeBuckets.get(functionName) || [];
+          const estimates = fnEstBuckets.get(functionName) || [];
+          const minLimit = ranges.length
+            ? Math.min(...ranges.map((r) => r.minScore))
+            : estimates.length ? Math.round(Math.min(...estimates)) : 0;
+          const maxLimit = ranges.length
+            ? Math.max(...ranges.map((r) => r.maxScore))
+            : estimates.length ? Math.round(Math.max(...estimates)) : 15;
+          const hasSuggested = ranges.some((r) => r.hasRange) && minLimit < maxLimit;
+          functionMetaMap.set(functionName, { value, minLimit, maxLimit, hasSuggested });
+        });
+
+        rows.forEach((row) => {
+          const fn = row._functionName;
+          if (!fn) return;
+          const meta = functionMetaMap.get(fn) || { value: defaultFunctionScore, minLimit: 0, maxLimit: 15, hasSuggested: false };
+          row.functionScore = meta.value;
+          row.suggestedRange = meta.hasSuggested ? `${meta.minLimit}-${meta.maxLimit}` : '';
+          row.functionScoreLabel = window.STAFAssessmentExport
+            ? window.STAFAssessmentExport.labelForFunctionScore(meta.value) : '';
+
+          if (!seenFunctions.has(fn)) {
+            seenFunctions.add(fn);
+            functionOrderForChart.push({
+              name: fn,
+              discipline: row.discipline,
+              score: meta.value,
+            });
+          }
+          delete row._functionName;
+        });
+
+        // Compute roll-up
+        const outcomeTotals = {
+          physical: { weighted: 0, max: 0, direct: 0, indirect: 0 },
+          chemical: { weighted: 0, max: 0, direct: 0, indirect: 0 },
+          biological: { weighted: 0, max: 0, direct: 0, indirect: 0 },
+        };
+        functionScores.forEach((score, functionName) => {
+          const mapping = mappingByFunction[normalize(functionName)] || {
+            physical: '-', chemical: '-', biological: '-',
+          };
+          const normalizedScore = Number.isFinite(score) ? Math.min(15, Math.max(0, score)) : defaultFunctionScore;
+          const applyWeight = (key, code) => {
+            let weight = 0;
+            if (code === 'D') { weight = 1.0; outcomeTotals[key].direct += 1; }
+            else if (code === 'i') { weight = 0.1; outcomeTotals[key].indirect += 1; }
+            outcomeTotals[key].weighted += normalizedScore * weight;
+            outcomeTotals[key].max += 15 * weight;
+          };
+          applyWeight('physical', mapping.physical);
+          applyWeight('chemical', mapping.chemical);
+          applyWeight('biological', mapping.biological);
+        });
+        ['physical', 'chemical', 'biological'].forEach((key) => {
+          const t = outcomeTotals[key];
+          t.subIndex = t.max > 0 ? t.weighted / t.max : 0;
+        });
+        const ecoIndex = (outcomeTotals.physical.subIndex + outcomeTotals.chemical.subIndex + outcomeTotals.biological.subIndex) / 3;
+
+        return {
+          tier: 'rapid',
+          assessmentName: rapidAssessmentName,
+          baseUrl,
+          columns,
+          rows,
+          functionScoreData: functionOrderForChart.map((fn) => ({
+            name: fn.name,
+            discipline: fn.discipline,
+            score: fn.score,
+            label: window.STAFAssessmentExport
+              ? window.STAFAssessmentExport.labelForFunctionScore(fn.score) : '',
+          })),
+          rollupData: {
+            physical: outcomeTotals.physical,
+            chemical: outcomeTotals.chemical,
+            biological: outcomeTotals.biological,
+            ecosystemConditionIndex: Math.round(ecoIndex * 100) / 100,
+          },
+          summaryData: [
+            { label: 'Physical Sub-index', value: Math.round(outcomeTotals.physical.subIndex * 100) / 100 },
+            { label: 'Chemical Sub-index', value: Math.round(outcomeTotals.chemical.subIndex * 100) / 100 },
+            { label: 'Biological Sub-index', value: Math.round(outcomeTotals.biological.subIndex * 100) / 100 },
+            { label: 'Ecosystem Condition Index', value: Math.round(ecoIndex * 100) / 100 },
+          ],
+        };
+      };
+
+      const downloadBtn = container
+        .closest('.widget-collapse')
+        ?.querySelector('.widget-collapse-download');
+      const downloadLink = document.querySelector('[data-tier-download-trigger="rapid"]');
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', async () => {
+          if (downloadBtn.disabled) return;
+          downloadBtn.disabled = true;
+          downloadBtn.classList.add('is-loading');
+          downloadBtn.setAttribute('aria-busy', 'true');
+          try {
+            const config = collectRapidExportData();
+            await window.STAFAssessmentExport.downloadAssessmentWorkbook(config);
+          } catch (err) {
+            console.error('Rapid assessment export failed.', err);
+            window.alert('Assessment export failed. Please try again.');
+          } finally {
+            downloadBtn.disabled = false;
+            downloadBtn.classList.remove('is-loading');
+            downloadBtn.removeAttribute('aria-busy');
+          }
+        });
+      }
+      if (downloadBtn && downloadLink) {
+        downloadLink.addEventListener('click', (event) => {
+          event.preventDefault();
+          downloadBtn.click();
+        });
+      }
+
       // Listen for pathway chooser events
       window.addEventListener('staf:pathway-chosen', (event) => {
         if (!event.detail || event.detail.tier !== 'rapid') {
