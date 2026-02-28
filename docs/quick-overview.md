@@ -8,8 +8,20 @@ description: "A short overview of STAF."
   <div class="quick-overview-factsheet">
     <section class="factsheet-sheet" aria-labelledby="factsheet-page-1-title">
       <header class="factsheet-header">
-        <p class="factsheet-page-label">Page 1 of 2</p>
+        <p class="factsheet-page-label">Page 1 of 3</p>
         <p id="factsheet-page-1-title" class="factsheet-title" role="heading" aria-level="2">Stream Tiered Assessment Framework (STAF)</p>
+        <p class="factsheet-subtitle">Function, Outcome, and Ecosystem Condition Relationship Map</p>
+      </header>
+
+      <div class="factsheet-body">
+        <img class="factsheet-pentagon-graphic" src="{{ '/assets/images/STAF_Pentagon_Final.svg' | relative_url }}" alt="STAF Pentagon diagram showing function categories, outcome sub-indices, and ecosystem condition index">
+      </div>
+    </section>
+
+    <section class="factsheet-sheet" aria-labelledby="factsheet-page-2-title">
+      <header class="factsheet-header">
+        <p class="factsheet-page-label">Page 2 of 3</p>
+        <p id="factsheet-page-2-title" class="factsheet-title" role="heading" aria-level="2">Stream Tiered Assessment Framework (STAF)</p>
         <p class="factsheet-subtitle">A structured approach to assessing stream ecosystem condition</p>
       </header>
 
@@ -94,10 +106,10 @@ description: "A short overview of STAF."
       </div>
     </section>
 
-    <section class="factsheet-sheet" aria-labelledby="factsheet-page-2-title">
+    <section class="factsheet-sheet" aria-labelledby="factsheet-page-3-title">
       <header class="factsheet-header">
-        <p class="factsheet-page-label">Page 2 of 2</p>
-        <p id="factsheet-page-2-title" class="factsheet-title" role="heading" aria-level="2">Stream Tiered Assessment Framework (STAF)</p>
+        <p class="factsheet-page-label">Page 3 of 3</p>
+        <p id="factsheet-page-3-title" class="factsheet-title" role="heading" aria-level="2">Stream Tiered Assessment Framework (STAF)</p>
         <p class="factsheet-subtitle">Purpose, Functions, Scoring, and Uses</p>
       </header>
 
