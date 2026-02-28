@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: 0-1 outfall per 100 m, and no noticeable discharge effects. (Suggested index range 0.70-1.0)"
+              "description": "0-1 outfall per 100 m, and no noticeable discharge effects."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: 2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering. / 4-5 outfalls per 100 m, with noticeable sediment or pollutant inputs. (Suggested index range 0.40-0.69)"
+              "description": "2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering. / 4-5 outfalls per 100 m, with noticeable sediment or pollutant inputs."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: More than 5 outfalls per 100 m, or major highway drains with concentrated discharge. (Suggested index range 0.0-0.39)"
+              "description": "More than 5 outfalls per 100 m, or major highway drains with concentrated discharge."
             }
           ]
         }

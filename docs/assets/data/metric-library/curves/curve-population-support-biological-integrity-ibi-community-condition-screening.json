@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: Multiple observations where historically expected. (Suggested index range 0.70-1.0)"
+              "description": "Multiple observations where historically expected."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: Some presence but limited. / Rare or single individuals. (Suggested index range 0.40-0.69)"
+              "description": "Some presence but limited. / Rare or single individuals."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: Absent where historically expected. (Suggested index range 0.0-0.39)"
+              "description": "Absent where historically expected."
             }
           ]
         }

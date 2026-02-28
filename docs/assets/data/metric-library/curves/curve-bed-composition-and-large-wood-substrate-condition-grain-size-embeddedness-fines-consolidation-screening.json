@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: Open interstitial coarse bed with minimal fines. (Suggested index range 0.70-1.0)"
+              "description": "Open interstitial coarse bed with minimal fines."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: Mild embedding or partial fine coverage. / Strong embedding or siltation limiting infiltration. (Suggested index range 0.40-0.69)"
+              "description": "Mild embedding or partial fine coverage. / Strong embedding or siltation limiting infiltration."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: Predominantly fine or consolidated bed with little interstitial space. (Suggested index range 0.0-0.39)"
+              "description": "Predominantly fine or consolidated bed with little interstitial space."
             }
           ]
         }

@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: Natural soils with no contamination indicators. (Suggested index range 0.70-1.0)"
+              "description": "Natural soils with no contamination indicators."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: Minor dumping or moderate manure presence. / Known moderate contamination risk. (Suggested index range 0.40-0.69)"
+              "description": "Minor dumping or moderate manure presence. / Known moderate contamination risk."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: Highly contaminated soils with strong odor or toxicity indicators. (Suggested index range 0.0-0.39)"
+              "description": "Highly contaminated soils with strong odor or toxicity indicators."
             }
           ]
         }

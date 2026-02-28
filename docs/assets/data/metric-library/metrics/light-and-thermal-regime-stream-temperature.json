@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Rarely surpasses local standard or typical seasonal maxima for the stream type. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Rarely surpasses local standard or typical seasonal maxima for the stream type."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Slightly exceeds thresholds occasionally. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Slightly exceeds thresholds occasionally."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Frequently near or above thresholds. / Consistently high or potentially lethal temperatures. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Frequently near or above thresholds. / Consistently high or potentially lethal temperatures."
             }
           ]
         }

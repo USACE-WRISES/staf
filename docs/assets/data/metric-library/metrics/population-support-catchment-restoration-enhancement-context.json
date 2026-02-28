@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Greater than 60% of the total catchment area is draining to the project reach. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Greater than 60% of the total catchment area is draining to the project reach."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 40 to 60% of the total catchment area is draining to the project reach. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "40 to 60% of the total catchment area is draining to the project reach."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Less than 40% of the total catchment area is draining to the project reach. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Less than 40% of the total catchment area is draining to the project reach."
             }
           ]
         }

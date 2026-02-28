@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Predominantly natural banks with deeply rooted cover. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Predominantly natural banks with deeply rooted cover."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Some armoring or partial vegetation coverage. / Large portion of banks is armored or vegetation is sparse. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Some armoring or partial vegetation coverage. / Large portion of banks is armored or vegetation is sparse."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Failing armoring or widespread bare banks with severe instability. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Failing armoring or widespread bare banks with severe instability."
             }
           ]
         }

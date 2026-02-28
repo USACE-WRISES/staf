@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: No barrier within watershed OR barriers provide beneficial effect on project area and allows for aquatic organism passage. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "No barrier within watershed OR barriers provide beneficial effect on project area and allows for aquatic organism passage."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists that is creating a minor fish passage barrier. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists that is creating a minor fish passage barrier."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Aquatic organism barriers (including impoundment(s)) located within 1 mile upstream or downstream of project area has a negative effect on aquatic organism passage. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Aquatic organism barriers (including impoundment(s)) located within 1 mile upstream or downstream of project area has a negative effect on aquatic organism passage."
             }
           ]
         }

@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: No active downcutting. Bed elevation is stable. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "No active downcutting. Bed elevation is stable."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Minor localized incision. / Noticeable incision or one or two moderate headcuts that reduce floodplain access. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Minor localized incision. / Noticeable incision or one or two moderate headcuts that reduce floodplain access."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Severe channel-wide incision with multiple major headcuts. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Severe channel-wide incision with multiple major headcuts."
             }
           ]
         }

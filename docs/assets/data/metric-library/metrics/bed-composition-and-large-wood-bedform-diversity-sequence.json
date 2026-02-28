@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Clear riffle-pool or step-pool sequence with robust variety. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Clear riffle-pool or step-pool sequence with robust variety."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Some diversity but partially uniform. / Mostly homogeneous bed with faint or missing sequences. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Some diversity but partially uniform. / Mostly homogeneous bed with faint or missing sequences."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Flattened or artificially uniform bed. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Flattened or artificially uniform bed."
             }
           ]
         }

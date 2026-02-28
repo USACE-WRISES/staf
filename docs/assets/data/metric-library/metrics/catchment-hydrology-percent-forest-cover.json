@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: >70% (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": ">70%"
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: >20% and <70% (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": ">20% and <70%"
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: <20% (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "<20%"
             }
           ]
         }

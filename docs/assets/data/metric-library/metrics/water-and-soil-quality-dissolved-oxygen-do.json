@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: >6 mg/L and no hypoxia. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": ">6 mg/L and no hypoxia."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 5-6 mg/L. Borderline. / 3-5 mg/L. Frequent stress. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "5-6 mg/L. Borderline. / 3-5 mg/L. Frequent stress."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: <3 mg/L. High risk of acute impacts. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "<3 mg/L. High risk of acute impacts."
             }
           ]
         }

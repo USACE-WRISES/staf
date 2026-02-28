@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: No significant withdrawals or returns. Flows remain near natural. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "No significant withdrawals or returns. Flows remain near natural."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Minor ditches or returns with limited effect. / Moderate diversions or returns causing seasonal stress. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Minor ditches or returns with limited effect. / Moderate diversions or returns causing seasonal stress."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Large or chronic diversions or returns that drastically alter the flow regime. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Large or chronic diversions or returns that drastically alter the flow regime."
             }
           ]
         }

@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: No development or no potential for impacts. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "No development or no potential for impacts."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Moderate development or moderate potential for impacts, but none within 1 mile of project reach. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Moderate development or moderate potential for impacts, but none within 1 mile of project reach."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: High development or potential for impacts in contributing watershed or within 1 mile of project reach, or high potential of impacts >1 mile away from project reach. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "High development or potential for impacts in contributing watershed or within 1 mile of project reach, or high potential of impacts >1 mile away from project reach."
             }
           ]
         }

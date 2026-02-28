@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: No artificial dryness and natural connectivity is maintained. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "No artificial dryness and natural connectivity is maintained."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Minor dryness in small segments. / Notable dryness or disconnection in key reaches. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Minor dryness in small segments. / Notable dryness or disconnection in key reaches."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Chronic or large-scale dewatering causing major fragmentation. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Chronic or large-scale dewatering causing major fragmentation."
             }
           ]
         }

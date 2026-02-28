@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Four to five or more distinct major groups. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Four to five or more distinct major groups."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Two to four distinct major groups. / One to two distinct major groups. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Two to four distinct major groups. / One to two distinct major groups."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Zero, or only one extremely tolerant group. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Zero, or only one extremely tolerant group."
             }
           ]
         }

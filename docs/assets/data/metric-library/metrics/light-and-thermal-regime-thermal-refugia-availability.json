@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Multiple cooler pockets or deeper pools provide refugia during warm periods. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Multiple cooler pockets or deeper pools provide refugia during warm periods."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: One or two minor refuges. / Rare or minimal cooler zones. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "One or two minor refuges. / Rare or minimal cooler zones."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: No refugia where expected. High thermal stress risk. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "No refugia where expected. High thermal stress risk."
             }
           ]
         }

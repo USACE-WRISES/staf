@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Minimal algae and no nuisance mats. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Minimal algae and no nuisance mats."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Slightly elevated algal coverage. / Large mats that partially impair habitat. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Slightly elevated algal coverage. / Large mats that partially impair habitat."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Dense bloom or scum that covers substrate. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Dense bloom or scum that covers substrate."
             }
           ]
         }

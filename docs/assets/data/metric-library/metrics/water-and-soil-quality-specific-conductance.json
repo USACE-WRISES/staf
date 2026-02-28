@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Piedmont = <78; Blue Ridge = <41 (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Piedmont = <78; Blue Ridge = <41"
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Piedmont = 78-229; Blue Ridge = 41-66 (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Piedmont = 78-229; Blue Ridge = 41-66"
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Piedmont = >229; Blue Ridge = >66 (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Piedmont = >229; Blue Ridge = >66"
             }
           ]
         }

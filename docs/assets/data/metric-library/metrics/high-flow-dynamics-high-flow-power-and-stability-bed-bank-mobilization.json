@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Bed mobilizes at appropriate flows for the channel type, often near bankfull. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Bed mobilizes at appropriate flows for the channel type, often near bankfull."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Slight mismatch. Bed moves below or above expected flows. / Marked mismatch. Bed is often locked or frequently scoured. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Slight mismatch. Bed moves below or above expected flows. / Marked mismatch. Bed is often locked or frequently scoured."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Extreme mismatch. Bed rarely moves or is reworked by small floods. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Extreme mismatch. Bed rarely moves or is reworked by small floods."
             }
           ]
         }

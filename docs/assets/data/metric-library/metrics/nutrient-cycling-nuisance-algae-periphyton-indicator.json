@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: No nuisance algae and <10% cover, or normal for region. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "No nuisance algae and <10% cover, or normal for region."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 10-30% cover or mild filaments. / 30-50% cover with partial blooms. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "10-30% cover or mild filaments. / 30-50% cover with partial blooms."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: >50% cover or thick scums. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": ">50% cover or thick scums."
             }
           ]
         }

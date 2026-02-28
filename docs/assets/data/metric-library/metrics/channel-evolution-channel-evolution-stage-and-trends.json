@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Stable or re-stabilized channel (Stage I or VI). (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Stable or re-stabilized channel (Stage I or VI)."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Partially recovered channel (often Stage V). / Actively widening or incising (often Stage III-IV). (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Partially recovered channel (often Stage V). / Actively widening or incising (often Stage III-IV)."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Severe incision or destructive phases (often Stage II or severe III-IV). (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Severe incision or destructive phases (often Stage II or severe III-IV)."
             }
           ]
         }

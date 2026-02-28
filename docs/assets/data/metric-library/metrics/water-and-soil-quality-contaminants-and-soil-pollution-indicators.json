@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Natural soils with no contamination indicators. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Natural soils with no contamination indicators."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Minor dumping or moderate manure presence. / Known moderate contamination risk. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Minor dumping or moderate manure presence. / Known moderate contamination risk."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Highly contaminated soils with strong odor or toxicity indicators. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Highly contaminated soils with strong odor or toxicity indicators."
             }
           ]
         }

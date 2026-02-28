@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Multiple off-channel features connect in moderate floods. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Multiple off-channel features connect in moderate floods."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Partial connection or fewer off-channel areas. / Only large floods access these areas, or off-channel areas are minimal. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Partial connection or fewer off-channel areas. / Only large floods access these areas, or off-channel areas are minimal."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Off-channel features are mostly gone or permanently cut off. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Off-channel features are mostly gone or permanently cut off."
             }
           ]
         }

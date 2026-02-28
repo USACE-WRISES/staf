@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Near background or guideline values. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Near background or guideline values."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Slightly elevated N or P. / Marked elevation with likely ecological effects. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Slightly elevated N or P. / Marked elevation with likely ecological effects."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Significantly above guidelines indicating strong nutrient pollution. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Significantly above guidelines indicating strong nutrient pollution."
             }
           ]
         }

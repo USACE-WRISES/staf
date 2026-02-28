@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Low chronic turbidity and minimal fines, or regionally normal conditions. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Low chronic turbidity and minimal fines, or regionally normal conditions."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Minor silt layers or partial turbidity. / High turbidity or moderate silt coverage. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Minor silt layers or partial turbidity. / High turbidity or moderate silt coverage."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Severe siltation or turbidity that smothers substrate. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Severe siltation or turbidity that smothers substrate."
             }
           ]
         }

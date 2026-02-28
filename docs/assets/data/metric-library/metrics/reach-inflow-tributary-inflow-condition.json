@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Tributaries are mostly natural with stable flows and sediment loads consistent with reference conditions."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 1-2 tributaries are moderately altered or somewhat polluted. / Multiple tributaries are significantly altered and deliver high sediment or pollutants. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "1-2 tributaries are moderately altered or somewhat polluted. / Multiple tributaries are significantly altered and deliver high sediment or pollutants."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Widespread severe tributary impacts that overwhelm the mainstem. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Widespread severe tributary impacts that overwhelm the mainstem."
             }
           ]
         }

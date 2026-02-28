@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Multiple active features connected during moderate floods and consistent with historical complexity. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Multiple active features connected during moderate floods and consistent with historical complexity."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Partial complexity remains with some features truncated or partially isolated. / Most off-channel features are lost or only minimally connected. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Partial complexity remains with some features truncated or partially isolated. / Most off-channel features are lost or only minimally connected."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Floodplain is simplified or leveed with little or no off-channel function remaining. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Floodplain is simplified or leveed with little or no off-channel function remaining."
             }
           ]
         }
