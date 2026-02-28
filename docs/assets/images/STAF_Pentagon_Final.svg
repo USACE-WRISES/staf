@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 816 693" width="816" height="693">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+    <filter id="shadowSm" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.10"/>
+    </filter>
+    <!-- Clip paths for two-tone card headers -->
+    <clipPath id="clipHydro"><rect x="323" y="175" width="170" height="88" rx="12"/></clipPath>
+    <clipPath id="clipHydra"><rect x="561" y="348" width="170" height="88" rx="12"/></clipPath>
+    <clipPath id="clipGeo"><rect x="470" y="627" width="170" height="88" rx="12"/></clipPath>
+    <clipPath id="clipPhys"><rect x="176" y="627" width="170" height="88" rx="12"/></clipPath>
+    <clipPath id="clipBio"><rect x="85" y="348" width="170" height="88" rx="12"/></clipPath>
+    <!-- Gradient arcs for ECI ring -->
+    <linearGradient id="grad1" gradientUnits="userSpaceOnUse" x1="408" y1="348" x2="524" y2="432.3">
+      <stop offset="0%" stop-color="#8A9EC8"/>
+      <stop offset="100%" stop-color="#6B82B8"/>
+    </linearGradient>
+    <linearGradient id="grad2" gradientUnits="userSpaceOnUse" x1="524" y1="432.3" x2="479.7" y2="568.7">
+      <stop offset="0%" stop-color="#6B82B8"/>
+      <stop offset="100%" stop-color="#C49A78"/>
+    </linearGradient>
+    <linearGradient id="grad3" gradientUnits="userSpaceOnUse" x1="479.7" y1="568.7" x2="336.3" y2="568.7">
+      <stop offset="0%" stop-color="#C49A78"/>
+      <stop offset="100%" stop-color="#B8A86A"/>
+    </linearGradient>
+    <linearGradient id="grad4" gradientUnits="userSpaceOnUse" x1="336.3" y1="568.7" x2="292" y2="432.3">
+      <stop offset="0%" stop-color="#B8A86A"/>
+      <stop offset="100%" stop-color="#82B572"/>
+    </linearGradient>
+    <linearGradient id="grad5" gradientUnits="userSpaceOnUse" x1="292" y1="432.3" x2="408" y2="348">
+      <stop offset="0%" stop-color="#82B572"/>
+      <stop offset="100%" stop-color="#8A9EC8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="816" height="785" fill="#FFFFFF"/>
+
+  <!-- Subtitle -->
+  <text x="408" y="24" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#4B5563" text-anchor="middle">5 Function Categories  ·  3 Outcome Sub-indices  ·  Ecosystem Condition Index</text>
+
+  <g transform="translate(0,-140)">
+  <!-- Pentagon filled background -->
+  <polygon points="408,220 646,393 555,672 261,672 170,393"
+           fill="#F3F2F1" stroke="none"/>
+
+  <!-- ============ CONNECTION LINES ============ -->
+
+  <!-- Hydrology connections -->
+  <path d="M 418.5 263.0 Q 440.6 309.5 433.4 350.7" fill="none" stroke="#8A9EC8" stroke-width="3.5" opacity="0.8"/>
+  <path d="M 440 263.0 C 555 300 560 520 498.7 551.6" fill="none" stroke="#8A9EC8" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+  <path d="M 397.5 263.0 Q 375.4 309.5 382.6 350.7" fill="none" stroke="#8A9EC8" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+
+  <!-- Hydraulics connections -->
+  <path d="M 561 400.0 Q 540 406.8 524.0 432.3" fill="none" stroke="#6B82B8" stroke-width="3.5" opacity="0.8"/>
+  <path d="M 610 436.0 Q 598.7 510.5 498.7 551.6" fill="none" stroke="#6B82B8" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+  <path d="M 580 351.0 Q 505.5 301.1 382.6 350.7" fill="none" stroke="#6B82B8" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+
+  <!-- Geomorphology connections -->
+  <path d="M 544.8 630.0 Q 549.2 560.0 524.0 507.7" fill="none" stroke="#C49A78" stroke-width="3.5" opacity="0.8"/>
+  <path d="M 510 630.0 Q 489.0 607.0 479.7 568.7" fill="none" stroke="#C49A78" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+  <path d="M 470 665.0 C 421 680 274 632 292.0 507.7" fill="none" stroke="#C49A78" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+
+  <!-- Physicochemistry connections -->
+  <path d="M 346 665.0 C 395 680 542 632 524.0 507.7" fill="none" stroke="#B8A86A" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+  <path d="M 300 630.0 Q 327.0 607.0 336.3 568.7" fill="none" stroke="#B8A86A" stroke-width="3.5" opacity="0.8"/>
+  <path d="M 265 630.0 Q 266.8 560.0 292.0 507.7" fill="none" stroke="#B8A86A" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+
+  <!-- Biology connections -->
+  <path d="M 240 351.0 Q 310.5 301.1 433.4 350.7" fill="none" stroke="#82B572" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+  <path d="M 210 436.0 Q 217.3 510.5 317.3 551.6" fill="none" stroke="#82B572" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+  <path d="M 255 400.0 Q 270 406.8 292.0 432.3" fill="none" stroke="#82B572" stroke-width="3.5" opacity="0.8"/>
+
+  <!-- ============ ECOSYSTEM CONDITION INDEX ============ -->
+
+  <!-- Multi-color gradient ring -->
+  <path d="M 408 348 A 122 122 0 0 1 524 432.3" fill="none" stroke="url(#grad1)" stroke-width="5"/>
+  <path d="M 524 432.3 A 122 122 0 0 1 479.7 568.7" fill="none" stroke="url(#grad2)" stroke-width="5"/>
+  <path d="M 479.7 568.7 A 122 122 0 0 1 336.3 568.7" fill="none" stroke="url(#grad3)" stroke-width="5"/>
+  <path d="M 336.3 568.7 A 122 122 0 0 1 292 432.3" fill="none" stroke="url(#grad4)" stroke-width="5"/>
+  <path d="M 292 432.3 A 122 122 0 0 1 408 348" fill="none" stroke="url(#grad5)" stroke-width="5"/>
+
+  <!-- Pie slices -->
+  <path d="M 408 470 L 408 350 A 120 120 0 0 1 511.9 530 Z" fill="#4472C4"/>
+  <path d="M 408 470 L 511.9 530 A 120 120 0 0 1 304.1 530 Z" fill="#ED7D31"/>
+  <path d="M 408 470 L 304.1 530 A 120 120 0 0 1 408 350 Z" fill="#70AD47"/>
+
+  <!-- Slice divider lines -->
+  <line x1="408" y1="470" x2="408" y2="350" stroke="white" stroke-width="2.5"/>
+  <line x1="408" y1="470" x2="511.9" y2="530" stroke="white" stroke-width="2.5"/>
+  <line x1="408" y1="470" x2="304.1" y2="530" stroke="white" stroke-width="2.5"/>
+
+  <!-- Slice labels -->
+  <text x="473" y="421" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">Physical</text>
+  <text x="473" y="436" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">Outcomes</text>
+  <text x="473" y="451" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">Sub-index</text>
+  <text x="408" y="531" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">Chemical</text>
+  <text x="408" y="546" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">Outcomes</text>
+  <text x="408" y="561" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">Sub-index</text>
+  <text x="343" y="421" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">Biological</text>
+  <text x="343" y="436" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">Outcomes</text>
+  <text x="343" y="451" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="white" text-anchor="middle">Sub-index</text>
+
+  <!-- ECI label at center -->
+  <circle cx="408" cy="470" r="38" fill="white"/>
+  <text x="408" y="460" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#1B4D5C" text-anchor="middle">Ecosystem</text>
+  <text x="408" y="475" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#1B4D5C" text-anchor="middle">Condition</text>
+  <text x="408" y="490" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#1B4D5C" text-anchor="middle">Index</text>
+
+  <!-- ============ DISCIPLINE CARDS (two-tone: colored header + white body) ============ -->
+
+  <!-- Hydrology (top) -->
+  <rect x="323" y="175" width="170" height="88" rx="12" fill="white" filter="url(#shadowSm)"/>
+  <path d="M 335 175 H 481 Q 493 175 493 187 V 203 H 323 V 187 Q 323 175 335 175 Z" fill="#DAE2F4"/>
+  <rect x="323" y="175" width="170" height="88" rx="12" fill="none" stroke="#A0B0D0" stroke-width="1.2" opacity="0.5"/>
+  <text x="408" y="195" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#2D3748" text-anchor="middle">Hydrology</text>
+  <text x="408" y="215" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Catchment hydrology</text>
+  <text x="408" y="227" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Surface water storage</text>
+  <text x="408" y="239" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Reach inflow</text>
+  <text x="408" y="251" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Streamflow regime</text>
+
+  <!-- Hydraulics (upper-right) -->
+  <rect x="561" y="348" width="170" height="88" rx="12" fill="white" filter="url(#shadowSm)"/>
+  <path d="M 573 348 H 719 Q 731 348 731 360 V 376 H 561 V 360 Q 561 348 573 348 Z" fill="#BBCBE7"/>
+  <rect x="561" y="348" width="170" height="88" rx="12" fill="none" stroke="#8A9DC0" stroke-width="1.2" opacity="0.5"/>
+  <text x="646" y="368" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#2D3748" text-anchor="middle">Hydraulics</text>
+  <text x="646" y="388" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Low flow and baseflow dynamics</text>
+  <text x="646" y="400" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">High flow dynamics</text>
+  <text x="646" y="412" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Floodplain connectivity</text>
+  <text x="646" y="424" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Hyporheic connectivity</text>
+
+  <!-- Geomorphology (lower-right) -->
+  <rect x="470" y="627" width="170" height="88" rx="12" fill="white" filter="url(#shadowSm)"/>
+  <path d="M 482 627 H 628 Q 640 627 640 639 V 655 H 470 V 639 Q 470 627 482 627 Z" fill="#F5E1D0"/>
+  <rect x="470" y="627" width="170" height="88" rx="12" fill="none" stroke="#D0B090" stroke-width="1.2" opacity="0.5"/>
+  <text x="555" y="647" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#2D3748" text-anchor="middle">Geomorphology</text>
+  <text x="555" y="667" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Channel evolution</text>
+  <text x="555" y="679" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Channel and floodplain dynamics</text>
+  <text x="555" y="691" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Sediment continuity</text>
+  <text x="555" y="703" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Bed composition and large wood</text>
+
+  <!-- Physicochemistry (lower-left) -->
+  <rect x="176" y="627" width="170" height="88" rx="12" fill="white" filter="url(#shadowSm)"/>
+  <path d="M 188 627 H 334 Q 346 627 346 639 V 655 H 176 V 639 Q 176 627 188 627 Z" fill="#F2E9C2"/>
+  <rect x="176" y="627" width="170" height="88" rx="12" fill="none" stroke="#C8BC88" stroke-width="1.2" opacity="0.5"/>
+  <text x="261" y="647" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#2D3748" text-anchor="middle">Physicochemistry</text>
+  <text x="261" y="667" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Light and thermal regime</text>
+  <text x="261" y="679" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Carbon processing</text>
+  <text x="261" y="691" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Nutrient cycling</text>
+  <text x="261" y="703" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Water and soil quality</text>
+
+  <!-- Biology (upper-left) -->
+  <rect x="85" y="348" width="170" height="88" rx="12" fill="white" filter="url(#shadowSm)"/>
+  <path d="M 97 348 H 243 Q 255 348 255 360 V 376 H 85 V 360 Q 85 348 97 348 Z" fill="#DCEAD1"/>
+  <rect x="85" y="348" width="170" height="88" rx="12" fill="none" stroke="#A0C090" stroke-width="1.2" opacity="0.5"/>
+  <text x="170" y="368" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#2D3748" text-anchor="middle">Biology</text>
+  <text x="170" y="388" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Habitat provision</text>
+  <text x="170" y="400" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Population support</text>
+  <text x="170" y="412" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Community dynamics</text>
+  <text x="170" y="424" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#4B5563" text-anchor="middle">Watershed connectivity</text>
+
+  <!-- ============ LEGEND ============ -->
+  <rect x="540" y="207" width="128" height="62" rx="6" fill="white" stroke="#E5E7EB" stroke-width="1" filter="url(#shadowSm)"/>
+  <text x="604" y="224" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="700" fill="#1B4D5C" text-anchor="middle">Legend</text>
+  <line x1="550" y1="239" x2="578" y2="239" stroke="#4B5563" stroke-width="3.5"/>
+  <text x="584" y="243" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#4B5563">Direct effect</text>
+  <line x1="550" y1="257" x2="578" y2="257" stroke="#4B5563" stroke-width="2.5" opacity="0.7" stroke-dasharray="6,4"/>
+  <text x="584" y="261" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#4B5563">Indirect effect</text>
+  </g>
+
+  <!-- ============ DEFINITIONS CARD ============ -->
+  <rect x="168" y="595" width="480" height="80" rx="8" fill="white" stroke="#E5E7EB" stroke-width="1" filter="url(#shadowSm)"/>
+  <text x="182" y="615" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#2D3748">Stream Functions:</text>
+  <text x="284" y="615" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#2D3748">Represent capacity and performance through structure and processes.</text>
+  <text x="182" y="633" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#2D3748">Outcomes:</text>
+  <text x="241" y="633" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#2D3748">Observable or realized results from one or more functions operating together.</text>
+  <text x="182" y="651" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#2D3748">Ecosystem Condition:</text>
+  <text x="302" y="651" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#2D3748">The overall state of a stream system as reflected by Physical, Chemical,</text>
+  <text x="182" y="665" font-family="'Segoe UI', Arial, sans-serif" font-size="11" fill="#2D3748">and Biological Outcomes. Interpreted relative to expected or reference conditions.</text>
+
+</svg>

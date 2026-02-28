@@ -764,6 +764,13 @@ h3,
   text-align: center;
 }
 
+.quick-overview-page .factsheet-pentagon-graphic {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
 @media (max-width: 920px) {
   .quick-overview-page .factsheet-tier-diagram {
     grid-template-columns: 1fr;
