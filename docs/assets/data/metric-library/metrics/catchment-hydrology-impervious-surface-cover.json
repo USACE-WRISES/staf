@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: IC Index score of 71% or greater. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "<10%"
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: IC Index Score Between 41% and 70%. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "10%-25%"
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Impervious Cover (IC) Index Score of 40% or less. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": ">25%"
             }
           ]
         }

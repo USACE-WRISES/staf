@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: Clean or appropriate substrate with minimal silt. (Suggested index range 0.70-1.0)"
+              "description": "Clean or appropriate substrate with minimal silt."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: Some silt but still feasible for spawning. / Heavily silted with limited spawning success expected. (Suggested index range 0.40-0.69)"
+              "description": "Some silt but still feasible for spawning. / Heavily silted with limited spawning success expected."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: No suitable substrate. High embeddedness, bedrock, or other limiting condition. (Suggested index range 0.0-0.39)"
+              "description": "No suitable substrate. High embeddedness, bedrock, or other limiting condition."
             }
           ]
         }

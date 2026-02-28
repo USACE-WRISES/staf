@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: <2 mg/L diurnal swing and no frequent hypoxia. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "<2 mg/L diurnal swing and no frequent hypoxia."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 2-4 mg/L swing with occasional stress. / 4-6 mg/L swing and borderline low DO at night. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "2-4 mg/L swing with occasional stress. / 4-6 mg/L swing and borderline low DO at night."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: >6 mg/L swing or frequent dips below 3 mg/L. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": ">6 mg/L swing or frequent dips below 3 mg/L."
             }
           ]
         }

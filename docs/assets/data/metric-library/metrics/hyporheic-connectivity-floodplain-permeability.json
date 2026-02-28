@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Permeable floodplain soils that support subsurface flow. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Permeable floodplain soils that support subsurface flow."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Partially permeable soils or some clogging. / Mostly fine fill or bedrock that limits infiltration. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Partially permeable soils or some clogging. / Mostly fine fill or bedrock that limits infiltration."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Heavily compacted or lined soils with minimal subsurface exchange. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Heavily compacted or lined soils with minimal subsurface exchange."
             }
           ]
         }

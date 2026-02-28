@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: More than 40% of reach has adequate juvenile cover. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "More than 40% of reach has adequate juvenile cover."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 5-40% cover. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "5-40% cover."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: <5% cover or none. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "<5% cover or none."
             }
           ]
         }

@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: No CDPS permitted facilities upstream of the project reach. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "No CDPS permitted facilities upstream of the project reach."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: CDPS permitted facilities comprise a low to moderate percentage of the baseflow in the project reach AND no facilities are located within 2 miles upstream of project reach. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "CDPS permitted facilities comprise a low to moderate percentage of the baseflow in the project reach AND no facilities are located within 2 miles upstream of project reach."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: CDPS permitted facilities comprise a high percentage of the baseflow in the project reach OR 1 or more facilities present within 2 miles upstream of project reach have a high potential to threaten aquatic life. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "CDPS permitted facilities comprise a high percentage of the baseflow in the project reach OR 1 or more facilities present within 2 miles upstream of project reach have a high potential to threaten aquatic life."
             }
           ]
         }

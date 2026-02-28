@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: BFI closely matches the region's baseline. (Suggested index range 0.70-1.0)"
+              "description": "BFI closely matches the region's baseline."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: About 10-20% difference from baseline. / About 20-40% difference from baseline. (Suggested index range 0.40-0.69)"
+              "description": "About 10-20% difference from baseline. / About 20-40% difference from baseline."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: More than 40% difference from baseline, indicating extreme baseflow alteration. (Suggested index range 0.0-0.39)"
+              "description": "More than 40% difference from baseline, indicating extreme baseflow alteration."
             }
           ]
         }

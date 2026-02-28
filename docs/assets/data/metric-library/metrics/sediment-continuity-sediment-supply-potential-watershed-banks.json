@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff."
             }
           ]
         }

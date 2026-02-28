@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: No areas of permafrost degradation in the catchment area have been observed. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "No areas of permafrost degradation in the catchment area have been observed."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Areas of permafrost degradation exist within or upstream of the project reach contributing to hillslope slumping or increased erosion but are not resulting in impacts to water quality. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Areas of permafrost degradation exist within or upstream of the project reach contributing to hillslope slumping or increased erosion but are not resulting in impacts to water quality."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Areas of permafrost degradation exist within or upstream of the project reach, contributing to hillslope slumping, increased erosion, and/or water quality impacts. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Areas of permafrost degradation exist within or upstream of the project reach, contributing to hillslope slumping, increased erosion, and/or water quality impacts."
             }
           ]
         }

@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: <2 mg/L diurnal swing and no frequent hypoxia. (Suggested index range 0.70-1.0)"
+              "description": "<2 mg/L diurnal swing and no frequent hypoxia."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: 2-4 mg/L swing with occasional stress. / 4-6 mg/L swing and borderline low DO at night. (Suggested index range 0.40-0.69)"
+              "description": "2-4 mg/L swing with occasional stress. / 4-6 mg/L swing and borderline low DO at night."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: >6 mg/L swing or frequent dips below 3 mg/L. (Suggested index range 0.0-0.39)"
+              "description": ">6 mg/L swing or frequent dips below 3 mg/L."
             }
           ]
         }

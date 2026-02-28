@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Rural communities/slow growth or primarily forested (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Rural communities/slow growth or primarily forested"
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Single family homes/suburban (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Single family homes/suburban"
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Rapidly urbanizing/urban (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Rapidly urbanizing/urban"
             }
           ]
         }

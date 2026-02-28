@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: RBI ? 25% quartile value and ?75% quartile value. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "RBI ? 25% quartile value and ?75% quartile value."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: RBI declining over time and approaching 25% quartile value, or increasing and approaching the 75% quartile value. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "RBI declining over time and approaching 25% quartile value, or increasing and approaching the 75% quartile value."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: RBI <25% quartile value or >75% quartile value. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "RBI <25% quartile value or >75% quartile value."
             }
           ]
         }

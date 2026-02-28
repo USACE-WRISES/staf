@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Open interstitial coarse bed with minimal fines. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Open interstitial coarse bed with minimal fines."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Mild embedding or partial fine coverage. / Strong embedding or siltation limiting infiltration. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Mild embedding or partial fine coverage. / Strong embedding or siltation limiting infiltration."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Predominantly fine or consolidated bed with little interstitial space. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Predominantly fine or consolidated bed with little interstitial space."
             }
           ]
         }

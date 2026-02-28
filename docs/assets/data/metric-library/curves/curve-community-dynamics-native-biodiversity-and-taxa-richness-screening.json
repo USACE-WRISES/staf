@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: Four to five or more distinct major groups. (Suggested index range 0.70-1.0)"
+              "description": "Four to five or more distinct major groups."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: Two to four distinct major groups. / One to two distinct major groups. (Suggested index range 0.40-0.69)"
+              "description": "Two to four distinct major groups. / One to two distinct major groups."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: Zero, or only one extremely tolerant group. (Suggested index range 0.0-0.39)"
+              "description": "Zero, or only one extremely tolerant group."
             }
           ]
         }

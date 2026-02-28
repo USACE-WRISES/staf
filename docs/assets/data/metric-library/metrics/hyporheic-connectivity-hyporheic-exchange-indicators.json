@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Well developed bedforms and strong potential for exchange. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Well developed bedforms and strong potential for exchange."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Some bedform variety but partially uniform. / Mostly uniform run with limited exchange. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Some bedform variety but partially uniform. / Mostly uniform run with limited exchange."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Featureless or silted bed with negligible exchange. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Featureless or silted bed with negligible exchange."
             }
           ]
         }

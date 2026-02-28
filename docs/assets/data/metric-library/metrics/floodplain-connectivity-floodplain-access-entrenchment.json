@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Stable channel that is not incised or dredged with frequent floodplain access. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Stable channel that is not incised or dredged with frequent floodplain access."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Slight channelization or partial dredging. / Heavily modified or incised channel with limited floodplain access. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Slight channelization or partial dredging. / Heavily modified or incised channel with limited floodplain access."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Deeply dredged or channelized reach with little functional floodplain. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Deeply dredged or channelized reach with little functional floodplain."
             }
           ]
         }

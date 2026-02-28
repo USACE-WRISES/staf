@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Multiple habitat types well represented. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Multiple habitat types well represented."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Some variety but key elements are missing. / Mostly uniform with only 1-2 distinct features. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Some variety but key elements are missing. / Mostly uniform with only 1-2 distinct features."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Very uniform channel with limited structural diversity. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Very uniform channel with limited structural diversity."
             }
           ]
         }

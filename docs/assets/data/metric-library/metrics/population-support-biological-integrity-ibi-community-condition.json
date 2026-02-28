@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Multiple observations where historically expected. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Multiple observations where historically expected."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Some presence but limited. / Rare or single individuals. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Some presence but limited. / Rare or single individuals."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Absent where historically expected. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Absent where historically expected."
             }
           ]
         }

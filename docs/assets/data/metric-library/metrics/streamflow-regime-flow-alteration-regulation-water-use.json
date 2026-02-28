@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: <10% difference from baseline. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "<10% difference from baseline."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 10-50% difference. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "10-50% difference."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: >50% difference. Near dewatering or strong hydropeaking. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": ">50% difference. Near dewatering or strong hydropeaking."
             }
           ]
         }

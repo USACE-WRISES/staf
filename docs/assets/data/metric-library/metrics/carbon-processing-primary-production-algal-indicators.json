@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Balanced growth with no nuisance blooms. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Balanced growth with no nuisance blooms."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Slightly elevated algae. / Frequent moderate nuisance mats. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Slightly elevated algae. / Frequent moderate nuisance mats."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Thick blooms or scums that cover substrate. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Thick blooms or scums that cover substrate."
             }
           ]
         }

@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Never had them, or no remaining evidence. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Never had them, or no remaining evidence."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: May have occurred but effects ameliorated. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "May have occurred but effects ameliorated."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Occurred and effects persist. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Occurred and effects persist."
             }
           ]
         }

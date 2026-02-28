@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Mostly clear and consistent with reference. No obvious pollution. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Mostly clear and consistent with reference. No obvious pollution."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Slight turbidity or discoloration. / Persistent cloudiness with habitat impacts. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Slight turbidity or discoloration. / Persistent cloudiness with habitat impacts."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Persistently muddy water or visible sheen indicating severe pollution. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Persistently muddy water or visible sheen indicating severe pollution."
             }
           ]
         }

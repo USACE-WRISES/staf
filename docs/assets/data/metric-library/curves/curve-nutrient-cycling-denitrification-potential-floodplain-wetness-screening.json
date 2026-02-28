@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: Strong potential with connected wet areas and soils. (Suggested index range 0.70-1.0)"
+              "description": "Strong potential with connected wet areas and soils."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: Some wet zones but partially disconnected. / Limited wetland area and moderate export risk. (Suggested index range 0.40-0.69)"
+              "description": "Some wet zones but partially disconnected. / Limited wetland area and moderate export risk."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: No wetlands or heavily drained soils with low denitrification potential. (Suggested index range 0.0-0.39)"
+              "description": "No wetlands or heavily drained soils with low denitrification potential."
             }
           ]
         }

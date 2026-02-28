@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: IC Index score of 71% or greater. (Suggested index range 0.70-1.0)"
+              "description": "<10%"
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: IC Index Score Between 41% and 70%. (Suggested index range 0.40-0.69)"
+              "description": "10%-25%"
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: Impervious Cover (IC) Index Score of 40% or less. (Suggested index range 0.0-0.39)"
+              "description": ">25%"
             }
           ]
         }

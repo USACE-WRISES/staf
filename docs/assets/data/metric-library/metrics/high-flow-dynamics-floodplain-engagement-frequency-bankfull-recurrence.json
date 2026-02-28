@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: About 1-2 yr floods engage the floodplain. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "About 1-2 yr floods engage the floodplain."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: About 3-5 yr floods are needed. / About 5-10 yr floods are needed. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "About 3-5 yr floods are needed. / About 5-10 yr floods are needed."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Floodplain is rarely inundated except during extreme events. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Floodplain is rarely inundated except during extreme events."
             }
           ]
         }

@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Aufeis formation caused by land disturbance is minor or nonexistent within, extends into the reach from downstream, or is found upstream of the project reach. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Aufeis formation caused by land disturbance is minor or nonexistent within, extends into the reach from downstream, or is found upstream of the project reach."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Aufeis formation caused by land disturbance is moderate within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Aufeis formation caused by land disturbance is moderate within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Aufeis formation caused by land disturbance is extensive within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Aufeis formation caused by land disturbance is extensive within, extends into the reach from downstream, or is found within 1 kilometer (0.62 miles) upstream of the project reach."
             }
           ]
         }

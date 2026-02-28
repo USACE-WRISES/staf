@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: >80% of contributing streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": ">80% of contributing streams (including tributaries) within catchment has > 25 feet corridor width."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 50-80% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "50-80% of streams (including tributaries) within catchment has > 25 feet corridor width."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: <50% of streams (including tributaries) within catchment has > 25 feet corridor width. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "<50% of streams (including tributaries) within catchment has > 25 feet corridor width."
             }
           ]
         }

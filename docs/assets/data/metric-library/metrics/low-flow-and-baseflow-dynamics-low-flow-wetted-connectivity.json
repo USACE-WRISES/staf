@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: >75% of channel wetted at normal low flow (or dryness is normal if ephemeral). (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": ">75% of channel wetted at normal low flow (or dryness is normal if ephemeral)."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 25-75% wetted. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "25-75% wetted."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: <25% wetted, or mostly disconnected pools in a historically perennial reach. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "<25% wetted, or mostly disconnected pools in a historically perennial reach."
             }
           ]
         }

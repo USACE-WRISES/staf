@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Abundant CPOM retention with stable leaf packs typical for the system. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Abundant CPOM retention with stable leaf packs typical for the system."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Some retention but partially flushed out. / Sparse organic matter and limited retention. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Some retention but partially flushed out. / Sparse organic matter and limited retention."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Essentially no retained organic matter, or severe overload causing anoxia risk. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Essentially no retained organic matter, or severe overload causing anoxia risk."
             }
           ]
         }

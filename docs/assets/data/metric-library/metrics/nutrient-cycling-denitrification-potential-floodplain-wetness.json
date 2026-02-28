@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Strong potential with connected wet areas and soils. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Strong potential with connected wet areas and soils."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Some wet zones but partially disconnected. / Limited wetland area and moderate export risk. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Some wet zones but partially disconnected. / Limited wetland area and moderate export risk."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: No wetlands or heavily drained soils with low denitrification potential. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "No wetlands or heavily drained soils with low denitrification potential."
             }
           ]
         }

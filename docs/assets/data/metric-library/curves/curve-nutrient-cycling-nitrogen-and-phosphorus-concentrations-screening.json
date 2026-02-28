@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: Near background or guideline values. (Suggested index range 0.70-1.0)"
+              "description": "Near background or guideline values."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: Slightly elevated N or P. / Marked elevation with likely ecological effects. (Suggested index range 0.40-0.69)"
+              "description": "Slightly elevated N or P. / Marked elevation with likely ecological effects."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: Significantly above guidelines indicating strong nutrient pollution. (Suggested index range 0.0-0.39)"
+              "description": "Significantly above guidelines indicating strong nutrient pollution."
             }
           ]
         }

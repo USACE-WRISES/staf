@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Beaver dams or small ponds enhance baseflow and habitat with negligible fragmentation. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Beaver dams or small ponds enhance baseflow and habitat with negligible fragmentation."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 1-2 small obstructions with minor impacts. / Multiple ponds moderately disrupt connectivity. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "1-2 small obstructions with minor impacts. / Multiple ponds moderately disrupt connectivity."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Widespread channel fragmentation or overabundant ponding. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Widespread channel fragmentation or overabundant ponding."
             }
           ]
         }

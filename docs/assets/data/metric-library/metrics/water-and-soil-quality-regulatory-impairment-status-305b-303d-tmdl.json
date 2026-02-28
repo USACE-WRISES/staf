@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: In category 1, 2, or 3 or aquatic life uses not evaluated. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "In category 1, 2, or 3 or aquatic life uses not evaluated."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: In Category 5 due to nonsupport of aquatic life uses OR in Category 4 and aquatic life impairment not actively being mitigated. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "In Category 5 due to nonsupport of aquatic life uses OR in Category 4 and aquatic life impairment not actively being mitigated."
             }
           ]
         }

@@ -970,9 +970,7 @@ const asTsvLine = (values: string[]) =>
     .join('\t');
 
 const buildScreeningCriteriaMarkdown = (band: ScreeningBand) =>
-  `${band.label}: ${band.desc}${band.desc ? ' ' : ''}(Suggested index range ${formatScore(
-    band.range.min
-  )}-${formatScore(band.range.max)})`.trim();
+  band.desc.trim();
 
 const ensureRange = (range: IndexRange | null, fallback: IndexRange) => range || fallback;
 

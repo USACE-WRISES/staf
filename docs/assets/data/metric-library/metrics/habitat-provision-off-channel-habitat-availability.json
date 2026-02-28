@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Well connected off-channel areas provide refuge or spawning habitat. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Well connected off-channel areas provide refuge or spawning habitat."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Some partial connection. / Rare or only episodic off-channel use. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Some partial connection. / Rare or only episodic off-channel use."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: No side or backwaters remain despite suitable valley setting. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "No side or backwaters remain despite suitable valley setting."
             }
           ]
         }

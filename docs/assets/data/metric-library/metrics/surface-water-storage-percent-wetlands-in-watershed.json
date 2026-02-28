@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: >5% wetland coverage, or consistent with historical norm. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": ">5% wetland coverage, or consistent with historical norm."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: 1-5% wetland coverage. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "1-5% wetland coverage."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: <1% wetland coverage, or heavily drained wetlands. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "<1% wetland coverage, or heavily drained wetlands."
             }
           ]
         }

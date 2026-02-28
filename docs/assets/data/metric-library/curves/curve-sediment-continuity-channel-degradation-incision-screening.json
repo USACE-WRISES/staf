@@ -24,21 +24,21 @@
               "y": 0.85,
               "yMin": 0.7,
               "yMax": 1,
-              "description": "Good: No active downcutting. Bed elevation is stable. (Suggested index range 0.70-1.0)"
+              "description": "No active downcutting. Bed elevation is stable."
             },
             {
               "x": "Fair",
               "y": 0.545,
               "yMin": 0.4,
               "yMax": 0.69,
-              "description": "Fair: Minor localized incision. / Noticeable incision or one or two moderate headcuts that reduce floodplain access. (Suggested index range 0.40-0.69)"
+              "description": "Minor localized incision. / Noticeable incision or one or two moderate headcuts that reduce floodplain access."
             },
             {
               "x": "Poor",
               "y": 0.195,
               "yMin": 0,
               "yMax": 0.39,
-              "description": "Poor: Severe channel-wide incision with multiple major headcuts. (Suggested index range 0.0-0.39)"
+              "description": "Severe channel-wide incision with multiple major headcuts."
             }
           ]
         }

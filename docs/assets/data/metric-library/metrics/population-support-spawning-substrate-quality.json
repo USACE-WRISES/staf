@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Clean or appropriate substrate with minimal silt. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Clean or appropriate substrate with minimal silt."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Some silt but still feasible for spawning. / Heavily silted with limited spawning success expected. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Some silt but still feasible for spawning. / Heavily silted with limited spawning success expected."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: No suitable substrate. High embeddedness, bedrock, or other limiting condition. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "No suitable substrate. High embeddedness, bedrock, or other limiting condition."
             }
           ]
         }

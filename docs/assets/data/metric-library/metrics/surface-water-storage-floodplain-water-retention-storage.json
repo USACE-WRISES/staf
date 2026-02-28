@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: Floodplain is actively engaged at the local moderate-flood standard (often about 1-2 yr or 2-5 yr). (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "Floodplain is actively engaged at the local moderate-flood standard (often about 1-2 yr or 2-5 yr)."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Overbanking requires flows slightly larger than typical bankfull, but still not rare. / Overbanking requires 5-10 yr floods. Partial disconnection. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Overbanking requires flows slightly larger than typical bankfull, but still not rare. / Overbanking requires 5-10 yr floods. Partial disconnection."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Rarely or never overbanking below about 10+ yr events. Deep incision or levees block moderate floods."
             }
           ]
         }

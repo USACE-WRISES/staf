@@ -36,17 +36,17 @@
             {
               "label": "Good",
               "ratingId": "good",
-              "criteriaMarkdown": "Good: There is little to no agricultural land uses or the livestock or cropland is far enough away from project reach to cause no impact to water quality or biology. (Suggested index range 0.70-1.0)"
+              "criteriaMarkdown": "There is little to no agricultural land uses or the livestock or cropland is far enough away from project reach to cause no impact to water quality or biology."
             },
             {
               "label": "Fair",
               "ratingId": "fair",
-              "criteriaMarkdown": "Fair: Livestock access to stream and/or intensive cropland upstream of project reach. A sufficient reach of stream is between Ag. land use and project reach. (Suggested index range 0.40-0.69)"
+              "criteriaMarkdown": "Livestock access to stream and/or intensive cropland upstream of project reach. A sufficient reach of stream is between Ag. land use and project reach."
             },
             {
               "label": "Poor",
               "ratingId": "poor",
-              "criteriaMarkdown": "Poor: Livestock access to stream and/or intensive cropland immediately upstream of project reach. (Suggested index range 0.0-0.39)"
+              "criteriaMarkdown": "Livestock access to stream and/or intensive cropland immediately upstream of project reach."
             }
           ]
         }
