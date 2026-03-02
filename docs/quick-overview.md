@@ -183,6 +183,6 @@ description: "A short overview of STAF."
   </div>
 
   <div class="button-row factsheet-download-row">
-    <a class="btn btn-primary" href="{{ '/assets/docs/STAF_Factsheet.pdf' | relative_url | uri_escape }}">Download STAF Factsheet (PDF)</a>
+    <a class="btn btn-primary" href="{{ '/assets/docs/STAF_Factsheet.pdf' | relative_url }}?v=20260302" download="STAF_Factsheet.pdf">Download STAF Factsheet (PDF)</a>
   </div>
 </div>
