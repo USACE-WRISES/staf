@@ -136,6 +136,9 @@
     // Handle card button clicks
     cards.forEach((card) => {
       const action = card.getAttribute('data-action');
+      if (action === 'launch-app') {
+        return; // Launch cards are plain external links — nothing to wire up.
+      }
       const button = card.querySelector('.pathway-card-action');
       if (!button || !action) {
         return;
