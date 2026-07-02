@@ -1,3 +1,6 @@
+{% assign easi = site.data.apps | where: "id", "easi" | first %}
+{% assign sfari = site.data.apps | where: "id", "sfari" | first %}
+{% assign deep = site.data.apps | where: "id", "deep" | first %}
 <div class="tier-selector widget" data-baseurl="{{ site.baseurl }}">
   <div class="tier-selector-fallback">
     <p>Use this quick guide to choose a tier based on effort and decision risk:</p>
@@ -7,9 +10,9 @@
       <li><strong>Detailed</strong>: high risk, intensive data and calibration.</li>
     </ul>
     <p>
-      <a href="{{ site.baseurl }}/tiers/screening/">Screening tier</a> |
-      <a href="{{ site.baseurl }}/tiers/rapid/">Rapid tier</a> |
-      <a href="{{ site.baseurl }}/tiers/detailed/">Detailed tier</a>
+      <a href="{{ easi.url }}" target="_blank" rel="noopener">Screening tier</a> |
+      <a href="{{ sfari.url }}" target="_blank" rel="noopener">Rapid tier</a> |
+      <a href="{{ deep.url }}" target="_blank" rel="noopener">Detailed tier</a>
     </p>
   </div>
   <div class="tier-selector-ui" hidden></div>

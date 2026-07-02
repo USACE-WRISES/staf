@@ -55,18 +55,21 @@ description: "Landing page for the Stream Tiered Assessment Framework."
         <a class="link-chip" href="{{ site.baseurl }}/scoring/">Scoring and Condition</a>
       </div>
 
+      {% assign easi = site.data.apps | where: "id", "easi" | first %}
+      {% assign sfari = site.data.apps | where: "id", "sfari" | first %}
+      {% assign deep = site.data.apps | where: "id", "deep" | first %}
       <div class="card-strip">
-        <a class="card reveal" href="{{ site.baseurl }}/tiers/screening/">
+        <a class="card reveal" href="{{ easi.url }}" target="_blank" rel="noopener">
           <div class="card-tag">Tier 1</div>
           <h3>Screening</h3>
           <p>Desktop snapshot for early planning and prioritization.</p>
         </a>
-        <a class="card reveal" href="{{ site.baseurl }}/tiers/rapid/">
+        <a class="card reveal" href="{{ sfari.url }}" target="_blank" rel="noopener">
           <div class="card-tag">Tier 2</div>
           <h3>Rapid</h3>
           <p>Field-based assessment for alternatives and design support.</p>
         </a>
-        <a class="card reveal" href="{{ site.baseurl }}/tiers/detailed/">
+        <a class="card reveal" href="{{ deep.url }}" target="_blank" rel="noopener">
           <div class="card-tag">Tier 3</div>
           <h3>Detailed</h3>
           <p>Intensive methods for compliance, crediting, and monitoring.</p>

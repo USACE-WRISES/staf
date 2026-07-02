@@ -6987,16 +6987,17 @@ body.modal-open {
 
 .apps-hub-card-head {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.5rem;
-  flex-wrap: wrap;
 }
 
 .apps-hub-card-head h3 {
   margin: 0;
   font-size: 1.1rem;
   color: #1f3f6e;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .tier-badge {
@@ -7010,6 +7011,7 @@ body.modal-open {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .apps-hub-fullname {
@@ -7030,6 +7032,25 @@ body.modal-open {
 .apps-hub-launch {
   align-self: flex-start;
   margin-top: 0.3rem;
+}
+
+.tools-downloads {
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
+}
+
+.tools-downloads > li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+  flex-wrap: wrap;
+}
+
+.tools-download-note {
+  font-size: 0.88rem;
+  color: #444;
 }
 
 /* ── Widget Collapse ────────────────────────────────────────────── */
