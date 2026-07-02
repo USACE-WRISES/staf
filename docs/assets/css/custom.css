@@ -2161,13 +2161,44 @@ body.modal-open {
 }
 
 .detailed-table .function-title {
-  display: inline;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
   white-space: normal;
 }
 
 .detailed-table .metric-title {
   display: inline;
   white-space: normal;
+}
+
+.detailed-table .function-add-metric-btn {
+  padding: 0.14rem 0.5rem;
+  border: 1px solid #b6c4d8;
+  border-radius: 999px;
+  background: #f5f8fc;
+  color: #27496b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.detailed-table .function-add-metric-btn:hover,
+.detailed-table .function-add-metric-btn:focus-visible {
+  background: #e8eff8;
+}
+
+.detailed-table .metric-assignment-badge {
+  display: inline-flex;
+  margin-top: 0.28rem;
+  padding: 0.14rem 0.48rem;
+  border-radius: 999px;
+  background: #edf4ea;
+  border: 1px solid #bed4b9;
+  color: #345e31;
+  font-size: 0.72rem;
+  line-height: 1.2;
 }
 
 .detailed-table .function-title .metric-curve-link,
@@ -2653,6 +2684,43 @@ body.modal-open {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.predefined-edit-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.predefined-edit-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.9rem;
+  padding: 0 0.65rem;
+  border-radius: 999px;
+  background: #fff1c2;
+  color: #6a5200;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.predefined-edit-actions .detailed-predefined-save {
+  border-color: #2f4b7c;
+  color: #2f4b7c;
+}
+
+.predefined-edit-actions .detailed-predefined-save:hover,
+.predefined-edit-actions .detailed-predefined-save:focus-visible {
+  background: #eef3fb;
+}
+
+.predefined-edit-hint {
+  margin: 0.55rem 0 0;
+  color: #5a5f68;
+  font-size: 0.84rem;
 }
 
 .screening-settings-panel {
@@ -6132,6 +6200,39 @@ body.modal-open {
   flex-wrap: wrap;
 }
 
+.metric-library-target-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid #c7d7eb;
+  border-radius: 10px;
+  background: #f5f9ff;
+}
+
+.metric-library-target-label {
+  color: #27496b;
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.metric-library-target-clear {
+  border: 1px solid #b6c4d8;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #27496b;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.14rem 0.5rem;
+  white-space: nowrap;
+}
+
+.metric-library-target-clear:hover,
+.metric-library-target-clear:focus-visible {
+  background: #edf4fb;
+}
+
 .metric-library-filter {
   flex: 1 1 140px;
   min-width: 0;
@@ -6801,6 +6902,134 @@ body.modal-open {
   .pathway-chooser-cards {
     grid-template-columns: 1fr;
   }
+}
+
+/* ── Launch / workflow pathway cards (link out to the Posit apps) ── */
+.pathway-card-launch-action {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+.pathway-workflow-steps {
+  list-style: none;
+  margin: 0.4rem 0 0.2rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.pathway-workflow-steps > li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--landing-accent-soft);
+}
+
+.workflow-step-label {
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1f3f6e;
+}
+
+.workflow-step-note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #444;
+  line-height: 1.4;
+}
+
+.pathway-sqt-fallback {
+  margin-top: 0.6rem;
+  border-top: 1px solid #e2e2e2;
+  padding-top: 0.5rem;
+}
+
+.pathway-sqt-fallback summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #2f4b7c;
+}
+
+.pathway-sqt-note {
+  margin: 0.4rem 0;
+  font-size: 0.82rem;
+  color: #444;
+}
+
+/* ── Tools hub (app launcher cards) ─────────────────────────────── */
+.apps-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.1rem;
+  margin: 1.4rem 0;
+}
+
+.apps-hub-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 10px;
+  padding: 1.1rem 1.2rem;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.apps-hub-card:hover {
+  border-color: #a0b4d0;
+  box-shadow: 0 6px 18px rgba(47, 75, 124, 0.1);
+  transform: translateY(-3px);
+}
+
+.apps-hub-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.apps-hub-card-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1f3f6e;
+}
+
+.tier-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--landing-accent-soft);
+  background: #eef3fb;
+  color: #2f4b7c;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.apps-hub-fullname {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.apps-hub-desc {
+  margin: 0;
+  font-size: 0.86rem;
+  color: #444;
+  line-height: 1.45;
+  flex: 1 1 auto;
+}
+
+.apps-hub-launch {
+  align-self: flex-start;
+  margin-top: 0.3rem;
 }
 
 /* ── Widget Collapse ────────────────────────────────────────────── */

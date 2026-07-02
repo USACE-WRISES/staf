@@ -1,0 +1,13 @@
+<div class="apps-hub-grid">
+  {% for app in site.data.apps %}
+  <div class="apps-hub-card" data-app="{{ app.id }}">
+    <div class="apps-hub-card-head">
+      <h3>{{ app.name }}</h3>
+      <span class="tier-badge tier-{{ app.tier_num }}">Tier {{ app.tier_num }} &middot; {{ app.tier }}</span>
+    </div>
+    <p class="apps-hub-fullname">{{ app.full_name }}</p>
+    <p class="apps-hub-desc">{{ app.description }}</p>
+    <a class="btn btn-primary apps-hub-launch" href="{{ app.url }}" target="_blank" rel="noopener">Launch {{ app.name }} &#8599;</a>
+  </div>
+  {% endfor %}
+</div>

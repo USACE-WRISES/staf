@@ -1,0 +1,43 @@
+# Canonical list of the STAF assessment web apps (hosted on Posit Connect Cloud).
+# Consumed at build time by the tier pages, the Tools hub, and the site nav bar.
+# This is the single source of truth for the site — when an app is re-homed
+# (e.g., a USACE-WRISES org account or a custom domain), update its `url` here.
+# NOTE: each app also carries its own copy of these URLs for its in-app STAF nav
+# bar (there is no shared build step between this site and the Connect apps), so
+# a URL change must also be mirrored in each app until a shared package exists.
+- id: easi
+  name: EASI
+  full_name: Ecosystem Assessment Screening Index
+  tier: Screening
+  tier_num: 1
+  role: Screening-tier assessment app
+  description: Automated desktop screening from a map click, across commonly used, nationally applicable metrics.
+  url: https://gtmenichino-easi.share.connect.posit.cloud/
+  status: live
+- id: sfari
+  name: SFARI
+  full_name: Stream Functions Assessment and Rapid Index
+  tier: Rapid
+  tier_num: 2
+  role: Rapid-tier field assessment app
+  description: Nationally applicable rapid, function-based field assessment with desktop evidence support.
+  url: https://gtmenichino-sfari.share.connect.posit.cloud/
+  status: live
+- id: curves
+  name: stream-curves
+  full_name: Reference & Regional Curve Builder
+  tier: Detailed
+  tier_num: 3
+  role: Detailed-tier reference-curve builder (exports a .deep.json bundle for DEEP)
+  description: Develop regional reference curves from your data, then export an assessment bundle for DEEP.
+  url: https://gtmenichino-stream-curves.share.connect.posit.cloud/
+  status: live
+- id: deep
+  name: DEEP
+  full_name: Detailed Evaluation of Ecosystem Processes
+  tier: Detailed
+  tier_num: 3
+  role: Detailed-tier site assessment executor (consumes a stream-curves bundle)
+  description: Run a detailed site assessment — enter measured values and score them against reference curves.
+  url: https://gtmenichino-deep.share.connect.posit.cloud/
+  status: live
