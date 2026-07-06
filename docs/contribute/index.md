@@ -1,6 +1,6 @@
 ---
 title: Contribute
-nav_order: 10
+nav_order: 9
 description: "How to contribute content and keep the site easy to maintain."
 ---
 {% include staf_page_chrome.html %}

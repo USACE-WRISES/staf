@@ -1,6 +1,6 @@
 ---
 title: Scoring and Condition
-nav_order: 8
+nav_order: 6
 description: "How metrics roll up to functions, outcomes, and overall condition."
 ---
 {% include staf_page_chrome.html %}

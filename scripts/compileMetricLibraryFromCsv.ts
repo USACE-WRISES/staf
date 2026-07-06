@@ -128,7 +128,6 @@ type RapidLevelKey = 'sa' | 'a' | 'n' | 'd' | 'sd';
 
 const root = process.cwd();
 const metricLibraryDataDir = path.join(root, 'docs', 'assets', 'data', 'metric-library');
-const siteDataDir = path.join(root, 'docs', '_site', 'assets', 'data');
 const outputDataDir = path.join(root, 'docs', 'assets', 'data');
 const metricsDir = path.join(metricLibraryDataDir, 'metrics');
 const curvesDir = path.join(metricLibraryDataDir, 'curves');
@@ -1912,8 +1911,6 @@ const buildMetricLibraryFromCsv = async () => {
   const index = buildMetricIndex(metricDetailsForIndex, curveSetsById);
   await fs.writeFile(indexPath, `${JSON.stringify(index, null, 2)}\n`, 'utf8');
 
-  await mirrorToSite();
-
   // eslint-disable-next-line no-console
   console.log(
     `Built metric library from ${path.basename(csvPath)}: ${metricDetailsForIndex.length} metrics, ${curveSetsById.size} curve sets.`
@@ -2115,61 +2112,6 @@ const resolveCsvPath = async () => {
   );
   withStats.sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs);
   return withStats[0].fullPath;
-};
-
-const mirrorToSite = async () => {
-  if (!(await pathExists(siteDataDir))) {
-    return;
-  }
-  const siteMetricLibraryDir = path.join(siteDataDir, 'metric-library');
-  const siteMetricsDir = path.join(siteMetricLibraryDir, 'metrics');
-  const siteCurvesDir = path.join(siteMetricLibraryDir, 'curves');
-  await fs.mkdir(siteMetricLibraryDir, { recursive: true });
-  await fs.mkdir(siteMetricsDir, { recursive: true });
-  await fs.mkdir(siteCurvesDir, { recursive: true });
-  await cleanJsonDirectory(siteMetricsDir);
-  await cleanJsonDirectory(siteCurvesDir);
-
-  const sourceFiles = await fs.readdir(metricsDir);
-  await Promise.all(
-    sourceFiles
-      .filter((name) => name.toLowerCase().endsWith('.json'))
-      .map((name) => fs.copyFile(path.join(metricsDir, name), path.join(siteMetricsDir, name)))
-  );
-  const curveFiles = await fs.readdir(curvesDir);
-  await Promise.all(
-    curveFiles
-      .filter((name) => name.toLowerCase().endsWith('.json'))
-      .map((name) => fs.copyFile(path.join(curvesDir, name), path.join(siteCurvesDir, name)))
-  );
-
-  await fs.copyFile(indexPath, path.join(siteMetricLibraryDir, 'index.json'));
-  if (await pathExists(detailedAdaptedAssessmentsPath)) {
-    await fs.copyFile(
-      detailedAdaptedAssessmentsPath,
-      path.join(siteMetricLibraryDir, 'detailed-adapted-assessments.json')
-    );
-  }
-  if (await pathExists(ratingScalesPath)) {
-    await fs.copyFile(ratingScalesPath, path.join(siteMetricLibraryDir, 'rating-scales.json'));
-  }
-
-  await fs.copyFile(screeningTsvPath, path.join(siteDataDir, 'screening-metrics.tsv'));
-  await fs.copyFile(
-    screeningReferenceCurvesPath,
-    path.join(siteDataDir, 'screening-reference-curves.json')
-  );
-  await fs.copyFile(rapidIndicatorsPath, path.join(siteDataDir, 'rapid-indicators.tsv'));
-  await fs.copyFile(rapidCriteriaPath, path.join(siteDataDir, 'rapid-criteria.tsv'));
-  await fs.copyFile(detailedMetricsPath, path.join(siteDataDir, 'detailed-metrics.tsv'));
-  await fs.copyFile(
-    screeningSourceRichPath,
-    path.join(siteDataDir, 'screening-metrics-source-rich.tsv')
-  );
-  await fs.copyFile(
-    detailedSourceRichPath,
-    path.join(siteDataDir, 'detailed-metrics-source-rich.tsv')
-  );
 };
 
 buildMetricLibraryFromCsv().catch((error: unknown) => {

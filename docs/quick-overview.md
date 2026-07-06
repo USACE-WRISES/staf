@@ -1,5 +1,6 @@
 ---
 title: Overview
+nav_order: 4
 description: "A short overview of STAF."
 ---
 {% include staf_page_chrome.html %}

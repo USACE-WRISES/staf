@@ -28,8 +28,6 @@ just_the_docs:
     - assets/js/functions-explorer.js
     - assets/js/scoring-sandbox.js
 
-footer_content: "Last updated: 2025-01-01"
-
 gh_edit_link: false
 gh_edit_link_text: "Edit this page on GitHub"
 gh_edit_repository: "https://github.com/USACE-WRISES/staf"

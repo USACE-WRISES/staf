@@ -1,6 +1,6 @@
 ---
-title: Tools
-nav_order: 8
+title: Launch the Apps
+nav_order: 7
 description: "Launch the STAF assessment web applications."
 ---
 {% include staf_page_chrome.html %}

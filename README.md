@@ -77,7 +77,6 @@ npm test
 Generated outputs include:
 - Canonical JSON metric library (`docs/assets/data/metric-library/index.json`, `metrics/*.json`, `curves/*.json`)
 - Tier datasets (`screening-metrics.tsv`, `rapid-indicators.tsv`, `rapid-criteria.tsv`, `detailed-metrics.tsv`)
-- Mirrored `_site` copies for local/docs rendering.
 
 ### Metric library download (XLSX)
 The in-app **Metric Library download** (left sidebar button) exports an `.xlsx` with:

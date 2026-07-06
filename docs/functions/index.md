@@ -1,6 +1,6 @@
 ---
 title: Stream Functions
-nav_order: 7
+nav_order: 5
 description: "Explore the 20 core stream functions used across tiers."
 ---
 {% include staf_page_chrome.html %}
