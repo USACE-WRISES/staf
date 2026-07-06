@@ -1,6 +1,6 @@
 ---
 title: Resources
-nav_order: 9
+nav_order: 8
 description: "Downloads and external references for tiered assessment." 
 ---
 {% include staf_page_chrome.html %}

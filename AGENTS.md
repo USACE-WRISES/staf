@@ -16,7 +16,6 @@ Primary working areas:
 - `docs/assets/`: JavaScript, CSS, and data files
 - `docs/_includes/`: shared HTML fragments used by widgets/pages
 - `scripts/`: build/transform scripts (for example, metric-library generation)
-- `docs/_site/`: mirrored build artifacts when required by repo workflow
 
 ## Goals
 1) Keep the site stable, readable, and fast for end users.
@@ -29,14 +28,14 @@ Primary working areas:
 1) Prefer surgical edits in the smallest relevant files.
 2) Preserve existing UI structure, table alignment, and responsive behavior unless asked to redesign.
 3) Favor non-destructive UI updates (class toggles/show-hide/in-place updates) over full DOM rebuilds when possible.
-4) Treat `docs/` as the source of truth; mirror to `docs/_site/` when the project expects mirrored assets.
+4) Treat `docs/` as the source of truth; `docs/_site/` is untracked Jekyll build output — never commit or write to it.
 5) If JS/CSS assets change and cache-busting is used, update the version/tag in the relevant include(s).
 6) Keep changes accessible (keyboard behavior, readable labels, semantic markup where practical).
 
 ## Data and Build Expectations
 1) Do not manually edit generated outputs when a script is the canonical producer; run the generator.
 2) When data schemas are changed, update related docs and consumers in the same change set.
-3) Keep JSON/TSV outputs deterministic and consistent across `docs/` and mirrored `_site` paths when applicable.
+3) Keep JSON/TSV outputs deterministic; the generator writes only under `docs/assets/data/`.
 
 ## Validation Checklist
 Run what applies to the files touched:

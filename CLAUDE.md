@@ -17,7 +17,7 @@ STAF (Stream Tiered Assessment Framework) is a GitHub Pages/Jekyll documentation
 |---|---|
 | Documentation pages | Reference material for the tiered assessment approach |
 | Tier selector widget | Questionnaire that recommends a screening/rapid/detailed tier |
-| Assessment widgets | Screening, rapid, and detailed assessment tools |
+| App portal (Tools page) | Launch cards for the four live Shiny apps (EASI, SFARI, DEEP, stream-curves); URLs in `docs/_data/apps.yml` |
 | Metric library workbench | Browse, filter, and export the full metric library |
 | Scoring sandbox | Experiment with example function scores |
 | Functions explorer | Explore stream functions and CWA mappings |
@@ -51,19 +51,18 @@ docs/assets/data/metric-library/   Generated metric library:
   ├── curves/*.json                  reference curve sets
   └── rating-scales.json             rating scale definitions
 docs/_includes/                    HTML partials for widget components
-docs/_site/                        Mirrored build artifacts (keep in sync with docs/)
 
 src/lib/metricLibrary/             TypeScript source:
   ├── types.ts                       type definitions
   ├── schemas.ts                     Zod validation schemas
   └── data.ts                        data loaders
 
-scripts/                           Build & migration scripts (TypeScript):
+scripts/                           Build scripts (TypeScript):
   ├── compileMetricLibraryFromCsv.ts   CSV → JSON/TSV generator
   ├── buildMetricIndex.ts              index builder
-  ├── runMetricLibraryTests.ts         schema validation tests
-  ├── migrateScreeningMetrics.ts       one-time migration
-  └── migrateDetailedMetrics.ts        one-time migration
+  └── runMetricLibraryTests.ts         schema validation tests
+
+notes/                             Internal dev notes (not published to the site)
 ```
 
 ## Coding Conventions
@@ -81,6 +80,6 @@ These complement the detailed rules in `AGENTS.md`:
 
 1. **Never manually edit generated outputs** — run `npm run build:metric-library` instead
 2. **Update cache-bust versions** when JS or CSS assets change (in the relevant `_includes/` file)
-3. **Keep `docs/` and `_site/` mirrors in sync** — the repo expects mirrored copies of data assets
+3. **Never commit or write to `docs/_site/`** — it is untracked Jekyll build output; the build pipeline writes only under `docs/assets/data/`
 4. **Use surgical edits** — prefer small, targeted changes over broad refactors
 5. **Validate after changes** — run the applicable commands from the AGENTS.md validation checklist

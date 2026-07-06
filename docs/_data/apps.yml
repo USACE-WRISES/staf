@@ -38,6 +38,6 @@
   tier: Detailed
   tier_num: 3
   role: Builds new detailed assessments for DEEP
-  description: Builds new detailed assessments (reference curves) for use in DEEP. Developing an assessment is time-intensive.
+  description: Builder tool — creates the reference-curve assessments that DEEP runs. For assessment developers rather than day-to-day users.
   url: https://gtmenichino-stream-curves.share.connect.posit.cloud/
   status: live
