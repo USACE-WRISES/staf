@@ -1,0 +1,183 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# metric_map.yaml — SFARI function-based default metric set
+# ─────────────────────────────────────────────────────────────────────────────
+# Maps the 20 SFARI functions (5 disciplines × 4) to the best available metrics
+# across the app's data sources, and decides which metrics the import wizard
+# (Step 4, "Choose metrics") PRE-CHECKS by default.
+#
+# Starting point: SFARI technical report Table 35 (Validation) maps the
+# Geomorphology + Physicochemistry functions to NRSA metrics. This table extends
+# that crosswalk to all 20 functions, picking the best 1–2 metrics per function
+# (3 only where genuinely distinct processes exist, e.g. bed grain-size vs.
+# embeddedness vs. wood; sensitivity vs. diversity vs. tolerance; the three
+# distinct water-quality signals).
+#
+# Each metric entry:
+#   code             exact catalog/wizard code (NRSA namespaced chem_/phab_/bent_/
+#                    fish_/land_; StreamCAT lower-case; StreamStats UPPER; MMW mmw_*)
+#   source           nrsa | streamcat | streamstats | mmw
+#   label            human label shown in the picker
+#   default_selected true  -> checked by default (ONLY fast, all-site sources:
+#                            NRSA field/lab + EPA StreamCAT)
+#                    false -> mapped + labelled but unchecked (StreamStats & MMW
+#                            are pulled per-site — slow — so they are opt-in)
+#   role             metric | predictor | both — seeds the "Classify columns"
+#                    wizard step's Role checkboxes (via metric_map_role_for() ->
+#                    suggest_roles() in app/helpers/data_profiler.R). NRSA measured
+#                    indicators are `metric`; StreamCAT/MMW land-cover & human-
+#                    influence variables are `both` (usable as a metric AND a
+#                    predictor); pure scaling predictors (drainage area, elevation)
+#                    are `predictor`. Edit freely; unset defaults to metric (nrsa)
+#                    or both (streamcat/streamstats/mmw).
+#
+# A metric that serves several functions is listed once under each function it
+# informs (e.g. bfi, runoff, pctimp2019, damdens, PCT_SAFN, XEMBED). Editing:
+# flip default_selected, swap a code, or add rows — validated at app start by
+# metric_map_validate() (warns, never blocks). Codes must exist in their source
+# catalog (data/nrsa_metric_catalog.csv, data/streamcat_metrics.csv,
+# ss_core_bcs(), mmw_core_metrics()).
+#
+# Notes:
+#  - Hydrology/Hydraulics lean on StreamCAT because NRSA landscape metrics only
+#    exist at NRSA sites, while StreamCAT covers every site via COMID.
+#  - Nutrient cycling uses dissolved N + total P (chem_PTL_DISS is the dissolved-P
+#    alternative from Table 35 if you prefer to match it exactly).
+#  - "Computed" (NLDI drainage area / Bieger regional bankfull / 3DEP elevation)
+#    is intentionally NOT defaulted here; those three toggles default OFF.
+# ─────────────────────────────────────────────────────────────────────────────
+
+disciplines: [Hydrology, Hydraulics, Geomorphology, Physicochemistry, Biology]
+
+functions:
+
+  # ── Hydrology ───────────────────────────────────────────────────────────────
+  - discipline: Hydrology
+    function: Catchment hydrology
+    metrics:
+      - {code: pctimp2019,        source: streamcat,    label: "Impervious surface (%)",       default_selected: true,  role: both}
+      - {code: pctcrop2019,       source: streamcat,    label: "Cultivated crops (%)",         default_selected: true,  role: both}
+      - {code: mmw_developed_pct, source: mmw,          label: "Developed land (%)",           default_selected: false, role: both}
+
+  - discipline: Hydrology
+    function: Surface water storage
+    metrics:
+      - {code: pctwdwet2019,      source: streamcat,    label: "Woody wetland (%)",            default_selected: true,  role: both}
+      - {code: pcthbwet2019,      source: streamcat,    label: "Herbaceous wetland (%)",       default_selected: true,  role: both}
+      - {code: mmw_wetland_pct,   source: mmw,          label: "Wetland (%)",                  default_selected: false, role: both}
+
+  - discipline: Hydrology
+    function: Reach inflow
+    metrics:
+      - {code: runoff,            source: streamcat,    label: "Mean annual runoff (mm)",      default_selected: true,  role: both}
+      - {code: precip8110,        source: streamcat,    label: "Mean annual precipitation (mm)", default_selected: true, role: both}
+      - {code: DRNAREA,           source: streamstats,  label: "Drainage area (sq mi)",        default_selected: false, role: predictor}
+
+  - discipline: Hydrology
+    function: Streamflow regime
+    metrics:
+      - {code: bfi,               source: streamcat,    label: "Base-flow index (%)",          default_selected: true,  role: both}
+      - {code: damdens,           source: streamcat,    label: "Dam density (per sq km)",      default_selected: true,  role: both}
+
+  # ── Hydraulics ──────────────────────────────────────────────────────────────
+  - discipline: Hydraulics
+    function: Low flow and baseflow dynamics
+    metrics:
+      - {code: bfi,               source: streamcat,    label: "Base-flow index (%)",          default_selected: true,  role: both}
+      - {code: phab_RP100_cm,     source: nrsa,         label: "Residual pool depth (cm)",     default_selected: true,  role: metric}
+
+  - discipline: Hydraulics
+    function: High flow dynamics
+    metrics:
+      - {code: runoff,            source: streamcat,    label: "Mean annual runoff (mm)",      default_selected: true,  role: both}
+      - {code: pctimp2019,        source: streamcat,    label: "Impervious surface (%)",       default_selected: true,  role: both}
+
+  - discipline: Hydraulics
+    function: Floodplain connectivity
+    metrics:
+      - {code: phab_XBKF_H,       source: nrsa,         label: "Bankfull height above channel (m)", default_selected: true, role: metric}
+      - {code: phab_BFWD_RAT,     source: nrsa,         label: "Bankfull width:depth ratio",   default_selected: true,  role: metric}
+
+  - discipline: Hydraulics
+    function: Hyporheic connectivity
+    metrics:
+      - {code: phab_XEMBED,       source: nrsa,         label: "Embeddedness (%)",             default_selected: true,  role: metric}
+      - {code: phab_PCT_SAFN,     source: nrsa,         label: "Sand + fines (%)",             default_selected: true,  role: metric}
+
+  # ── Geomorphology (Table 35 anchored) ───────────────────────────────────────
+  - discipline: Geomorphology
+    function: Channel evolution
+    metrics:
+      - {code: phab_BFWD_RAT,     source: nrsa,         label: "Bankfull width:depth ratio",   default_selected: true,  role: metric}
+      - {code: phab_XBKF_H,       source: nrsa,         label: "Bankfull height / incision (m)", default_selected: true, role: metric}
+
+  - discipline: Geomorphology
+    function: Channel and floodplain dynamics
+    metrics:
+      - {code: phab_XBKA,         source: nrsa,         label: "Bank angle (degrees)",         default_selected: true,  role: metric}
+      - {code: phab_SINU,         source: nrsa,         label: "Sinuosity",                    default_selected: true,  role: metric}
+
+  - discipline: Geomorphology
+    function: Sediment continuity
+    metrics:
+      - {code: phab_LRBS_use,     source: nrsa,         label: "Relative bed stability (log)", default_selected: true,  role: metric}
+      - {code: phab_PCT_SAFN,     source: nrsa,         label: "Sand + fines (%)",             default_selected: true,  role: metric}
+
+  - discipline: Geomorphology
+    function: Bed composition and bedform dynamics
+    metrics:
+      - {code: phab_LSUB_DMM,     source: nrsa,         label: "Substrate size (log mm)",      default_selected: true,  role: metric}
+      - {code: phab_XEMBED,       source: nrsa,         label: "Embeddedness (%)",             default_selected: true,  role: metric}
+      - {code: phab_LWDeqVolM100, source: nrsa,         label: "Large wood volume (m3/100m)",  default_selected: true,  role: metric}
+
+  # ── Physicochemistry (Table 35 anchored) ────────────────────────────────────
+  - discipline: Physicochemistry
+    function: Light and thermal regime
+    metrics:
+      - {code: phab_XCDENMID,     source: nrsa,         label: "Canopy density, mid-channel (%)", default_selected: true, role: metric}
+      - {code: chem_CHLA,         source: nrsa,         label: "Chlorophyll a (ug/L)",         default_selected: true,  role: metric}
+      - {code: elev,              source: streamcat,    label: "Mean watershed elevation (m)", default_selected: true,  role: predictor}
+
+  - discipline: Physicochemistry
+    function: Carbon processing
+    metrics:
+      - {code: chem_DOC,          source: nrsa,         label: "Dissolved organic carbon (mg/L)", default_selected: true, role: metric}
+      - {code: phab_XCMGW,        source: nrsa,         label: "Riparian veg cover, woody (frac)", default_selected: true, role: metric}
+
+  - discipline: Physicochemistry
+    function: Nutrient cycling
+    metrics:
+      - {code: chem_NTL_DISS,     source: nrsa,         label: "Dissolved nitrogen (mg N/L)",  default_selected: true,  role: metric}
+      - {code: chem_PTL,          source: nrsa,         label: "Total phosphorus (ug/L)",      default_selected: true,  role: metric}
+
+  - discipline: Physicochemistry
+    function: Water and soil quality
+    metrics:
+      - {code: chem_TURB,         source: nrsa,         label: "Turbidity (NTU)",              default_selected: true,  role: metric}
+      - {code: chem_COND,         source: nrsa,         label: "Specific conductivity (uS/cm)", default_selected: true, role: metric}
+      - {code: chem_PH,           source: nrsa,         label: "pH (std units)",               default_selected: true,  role: metric}
+
+  # ── Biology (prose-validated: HBI, Shannon, fish MMI) ───────────────────────
+  - discipline: Biology
+    function: Habitat provision
+    metrics:
+      - {code: phab_XFC_NAT,      source: nrsa,         label: "Natural fish cover (frac)",    default_selected: true,  role: metric}
+      - {code: phab_PCT_FAST,     source: nrsa,         label: "Fast-water / riffle habitat (%)", default_selected: true, role: metric}
+
+  - discipline: Biology
+    function: Population support
+    metrics:
+      - {code: fish_NAT_TOTLNTAX, source: nrsa,         label: "Native fish taxa richness",    default_selected: true,  role: metric}
+      - {code: bent_TOTLNTAX,     source: nrsa,         label: "Benthic total taxa richness",  default_selected: true,  role: metric}
+
+  - discipline: Biology
+    function: Community dynamics
+    metrics:
+      - {code: bent_EPT_NTAX,     source: nrsa,         label: "EPT taxa richness",            default_selected: true,  role: metric}
+      - {code: bent_HPRIME,       source: nrsa,         label: "Shannon diversity (H')",       default_selected: true,  role: metric}
+      - {code: bent_TOLRPIND,     source: nrsa,         label: "Tolerant individuals (%) ~ HBI", default_selected: true, role: metric}
+
+  - discipline: Biology
+    function: Watershed connectivity
+    metrics:
+      - {code: damdens,           source: streamcat,    label: "Dam density (per sq km)",      default_selected: true,  role: both}
+      - {code: rdcrs,             source: streamcat,    label: "Road-stream crossings (per sq km)", default_selected: true, role: both}

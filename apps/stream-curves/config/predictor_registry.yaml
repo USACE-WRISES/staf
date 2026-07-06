@@ -1,0 +1,161 @@
+# ── Predictor Registry ──────────────────────────────────────────────────────
+# Defines predictor variables available for model building.
+# Each entry specifies the variable properties and data quality notes.
+
+DA_km2:
+  display_name: "Drainage Area (km²)"
+  column_name: "DA_km2"
+  type: continuous
+  derived: true
+  derivation: "DA_mi2 * 2.58999"
+  source_columns:
+    - DA_mi2
+  expected_range: [0, null]
+  missing_data_rule: error
+  notes: "Converted from DA_mi2"
+
+Slope_per:
+  display_name: "Channel Slope (%)"
+  column_name: "Slope_per"
+  type: continuous
+  derived: false
+  expected_range: [0, null]
+  missing_data_rule: error
+  notes: ""
+
+Slope_unitless:
+  display_name: "Channel Slope (unitless)"
+  column_name: "Slope_unitless"
+  type: continuous
+  derived: true
+  derivation: "Slope_per / 100"
+  source_columns:
+    - Slope_per
+  expected_range: [0, 1]
+  missing_data_rule: error
+  notes: ""
+
+streampower:
+  display_name: "Stream Power Index"
+  column_name: "streampower"
+  type: continuous
+  derived: true
+  derivation: "DA_km2 * Slope_unitless"
+  source_columns:
+    - DA_km2
+    - Slope_unitless
+  expected_range: [0, null]
+  missing_data_rule: error
+  notes: "Unit stream power proxy"
+
+LWD_frequency:
+  display_name: "Large Woody Debris Frequency"
+  column_name: "LWD_frequency"
+  type: continuous
+  derived: false
+  expected_range: [0, null]
+  missing_data_rule: error
+  notes: "Also used as a response metric (count)"
+
+L_Bufferwidth:
+  display_name: "Left Buffer Width"
+  column_name: "L_Bufferwidth"
+  type: continuous
+  derived: false
+  expected_range: [0, null]
+  missing_data_rule: error
+  notes: ""
+
+R_Bufferwidth:
+  display_name: "Right Buffer Width"
+  column_name: "R_Bufferwidth"
+  type: continuous
+  derived: false
+  expected_range: [0, null]
+  missing_data_rule: error
+  notes: ""
+
+bufferwidth:
+  display_name: "Total Buffer Width"
+  column_name: "bufferwidth"
+  type: continuous
+  derived: true
+  derivation: "L_Bufferwidth + R_Bufferwidth"
+  source_columns:
+    - L_Bufferwidth
+    - R_Bufferwidth
+  expected_range: [0, null]
+  missing_data_rule: error
+  notes: "Sum of left and right buffer widths"
+
+Per_erodingbank:
+  display_name: "Percent Eroding Bank"
+  column_name: "Per_erodingbank"
+  type: continuous
+  derived: false
+  expected_range: [0, 100]
+  missing_data_rule: error
+  notes: ""
+
+d50:
+  display_name: "Median Grain Size (d50)"
+  column_name: "d50"
+  type: continuous
+  derived: false
+  expected_range: [0, null]
+  missing_data_rule: warn
+  notes: "4-7 NAs in dataset; models using d50 have reduced effective n"
+
+d84:
+  display_name: "Coarse Grain Size (d84)"
+  column_name: "d84"
+  type: continuous
+  derived: false
+  expected_range: [0, null]
+  missing_data_rule: warn
+  notes: "4-7 NAs in dataset"
+
+D16:
+  display_name: "Fine Grain Size (D16)"
+  column_name: "D16"
+  type: continuous
+  derived: false
+  expected_range: [0, null]
+  missing_data_rule: warn
+  notes: "4-7 NAs in dataset"
+
+imperviouscover:
+  display_name: "Impervious Cover"
+  column_name: "imperviouscover"
+  type: continuous
+  derived: false
+  expected_range: [0, 100]
+  missing_data_rule: warn
+  notes: "NA for all Region_C sites"
+
+weightedavgrunoff:
+  display_name: "Weighted Average Runoff"
+  column_name: "weightedavgrunoff"
+  type: continuous
+  derived: false
+  expected_range: [0, null]
+  missing_data_rule: warn
+  notes: "NA for all Region_C sites"
+
+avgBasalarea:
+  display_name: "Average Basal Area"
+  column_name: "avgBasalarea"
+  type: continuous
+  derived: false
+  expected_range: [0, null]
+  missing_data_rule: error
+  notes: "Used as both response metric and predictor for some metrics"
+
+avgcanopy:
+  display_name: "Average Canopy Cover"
+  column_name: "avgcanopy"
+  type: continuous
+  derived: false
+  expected_range: [0, 100]
+  missing_data_rule: error
+  notes: "Used as both response metric and predictor for some metrics"

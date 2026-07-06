@@ -1,0 +1,22 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# App/session artifacts
+outputs/
+*.streamcurves.json
+
+# Posit Publisher: keep the deploy CONFIG (.posit/publish/*.toml) in git, but ignore
+# the account-specific deployment RECORDS (content GUIDs / URLs, written on first deploy).
+.posit/publish/deployments/
+
+# Internal data — never publish (regenerate via scripts/export_golden.R)
+tests/fixtures/OSAM_summarydata.xlsx
+tests/golden/
+
+# OS / editor
+Thumbs.db
+.DS_Store

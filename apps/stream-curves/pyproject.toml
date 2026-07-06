@@ -1,0 +1,15 @@
+[project]
+name = "stream-curves"
+version = "0.1.0"
+description = "StreamCurves — reference & regional curve development (Python Shiny port of the R app)"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "live: tests that hit live external web services (deselect with '-m \"not live\"')",
+]
+
+[tool.ruff]
+line-length = 100

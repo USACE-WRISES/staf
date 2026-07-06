@@ -1,0 +1,105 @@
+# ── Output Registry ─────────────────────────────────────────────────────────
+# Defines which outputs to generate per metric and for summary analyses.
+
+per_metric_outputs:
+  precheck:
+    enabled: true
+    files:
+      - "{metric}_precheck.csv"
+  stratification:
+    enabled: true
+    files:
+      - "{metric}_stratification_screening.csv"
+      - "{metric}_stratification_pairwise.csv"
+      - "{metric}_stratification_decision.csv"
+    plots:
+      - "{metric}_boxplot_{strat_var}.png"
+  model_candidates:
+    enabled: true
+    files:
+      - "{metric}_model_candidates.csv"
+      - "{metric}_predictor_importance.csv"
+    plots:
+      - "{metric}_bic_vs_npred.png"
+      - "{metric}_adjr2_vs_npred.png"
+      - "{metric}_model_heatmap.png"
+      - "{metric}_predictor_importance.png"
+  model_selection:
+    enabled: true
+    files:
+      - "{metric}_model_selection.csv"
+  diagnostics:
+    enabled: true
+    files:
+      - "{metric}_diagnostics.csv"
+    plots:
+      - "{metric}_diagnostic_4panel.png"
+  reference_curves:
+    enabled: true
+    files:
+      - "{metric}_reference_curve.csv"
+    plots:
+      - "{metric}_reference_bar_chart.png"
+      - "{metric}_reference_curve.png"
+  rds_objects:
+    enabled: true
+    files:
+      - "{metric}_model_object.rds"
+
+summary_outputs:
+  thresholds:
+    enabled: true
+    files:
+      - reference_curve_thresholds.csv
+  metric_status:
+    enabled: true
+    files:
+      - metric_status.csv
+  stratification_decisions:
+    enabled: true
+    files:
+      - stratification_decisions.csv
+  decision_history:
+    enabled: true
+    files:
+      - decision_history.csv
+  regional_curves:
+    enabled: true
+    files:
+      - regional_curves.csv
+  results_bundle:
+    enabled: true
+    files:
+      - results_bundle.zip
+
+report_products:
+  dashboard:
+    enabled: true
+    file: "reports/dashboard.qmd"
+    format: html
+    tier: 1
+  summary:
+    enabled: true
+    file: "reports/summary.qmd"
+    format: pdf
+    tier: 2
+  appendix:
+    enabled: true
+    file: "reports/appendix.qmd"
+    format: pdf
+    tier: 3
+  list_of_metrics:
+    enabled: true
+    file: "docs/templates/OH/MN-List-of-Metricsv2.0.xlsx"
+    format: xlsx
+    tier: 1
+  sqt_workbook:
+    enabled: true
+    file: "docs/templates/OH/WISQT_Reference_Curves.xlsx"
+    format: xlsx
+    tier: 1
+  science_support:
+    enabled: true
+    file: "reports/science_support.qmd"
+    format: html
+    tier: 1

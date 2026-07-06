@@ -1,0 +1,626 @@
+# ── Metric Registry ─────────────────────────────────────────────────────────
+# Defines all metrics for the StreamCurves geomorphic reference-curve analysis.
+# Each entry specifies metric properties, allowed predictors/stratifications,
+# and analysis configuration.
+
+perRiffle:
+  display_name: "Percent Riffle"
+  column_name: "perRiffle"
+  units: "%"
+  metric_family: proportion
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - LWD_frequency
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - Per_erodingbank
+    - d50
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: "Proof-of-concept metric; prototype already exists"
+
+WDR:
+  display_name: "Bankfull Width/Depth Ratio"
+  column_name: "WDR"
+  units: "ratio"
+  metric_family: continuous
+  higher_is_better: false
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - LWD_frequency
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - Per_erodingbank
+    - d50
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+wBHR:
+  display_name: "Bank Height Ratio"
+  column_name: "wBHR"
+  units: "ratio"
+  metric_family: continuous
+  higher_is_better: false
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - LWD_frequency
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - Per_erodingbank
+    - d50
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+    - BEHIcombined
+    - BEHIeroding
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: "Weighted bank height ratio"
+
+ER:
+  display_name: "Entrenchment Ratio"
+  column_name: "ER"
+  units: "ratio"
+  metric_family: continuous
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - d50
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+wER:
+  display_name: "Weighted Entrenchment Ratio"
+  column_name: "wER"
+  units: "ratio"
+  metric_family: continuous
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - d50
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: "Weighted entrenchment ratio"
+
+median_PSR:
+  display_name: "Pool to Pool Spacing Ratio"
+  column_name: "median_PSR"
+  units: "ratio"
+  metric_family: continuous
+  higher_is_better: false
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - LWD_frequency
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - Per_erodingbank
+    - d50
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+avg_PDR:
+  display_name: "Pool Depth Ratio"
+  column_name: "avg_PDR"
+  units: "ratio"
+  metric_family: continuous
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - LWD_frequency
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - Per_erodingbank
+    - d50
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+LWD_frequency:
+  display_name: "LWD Frequency"
+  column_name: "LWD_frequency"
+  units: "count/reach"
+  metric_family: count
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - bufferwidth
+    - Per_erodingbank
+    - avgBasalarea
+    - avgcanopy
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: false
+  count_model: true
+  stratification_mode: subset
+  include_in_summary: true
+  notes: "Count metric — use Poisson/NB GLM"
+
+L_Bufferwidth:
+  display_name: "Left Riparian Buffer Width"
+  column_name: "L_Bufferwidth"
+  units: "ft"
+  metric_family: continuous
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - imperviouscover
+    - weightedavgrunoff
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+R_Bufferwidth:
+  display_name: "Right Riparian Buffer Width"
+  column_name: "R_Bufferwidth"
+  units: "ft"
+  metric_family: continuous
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - imperviouscover
+    - weightedavgrunoff
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+bufferwidth:
+  display_name: "Total Riparian Buffer Width"
+  column_name: "bufferwidth"
+  units: "ft"
+  metric_family: continuous
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - imperviouscover
+    - weightedavgrunoff
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: "Derived: L_Bufferwidth + R_Bufferwidth"
+
+Per_erodingbank:
+  display_name: "Percent Streambank Erosion"
+  column_name: "Per_erodingbank"
+  units: "%"
+  metric_family: proportion
+  higher_is_better: false
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - LWD_frequency
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - bufferwidth
+    - d50
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+    - BEHIcombined
+    - BEHIeroding
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+avgBasalarea:
+  display_name: "Woody Stem Basal Area"
+  column_name: "avgBasalarea"
+  units: "sq ft/acre"
+  metric_family: continuous
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - bufferwidth
+    - avgcanopy
+    - imperviouscover
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+avgcanopy:
+  display_name: "Canopy Cover"
+  column_name: "avgcanopy"
+  units: "%"
+  metric_family: proportion
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - bufferwidth
+    - avgBasalarea
+    - imperviouscover
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+Avgherbcover:
+  display_name: "Native Herbaceous Cover"
+  column_name: "Avgherbcover"
+  units: "%"
+  metric_family: proportion
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - bufferwidth
+    - avgcanopy
+    - imperviouscover
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+invasive_non:
+  display_name: "Invasive Cover"
+  column_name: "invasive_non"
+  units: "%"
+  metric_family: proportion
+  higher_is_better: false
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - bufferwidth
+    - imperviouscover
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+avgshrub:
+  display_name: "Native Shrub Cover"
+  column_name: "avgshrub"
+  units: "%"
+  metric_family: proportion
+  higher_is_better: true
+  monotonic_linear: true
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - L_Bufferwidth
+    - R_Bufferwidth
+    - bufferwidth
+    - avgcanopy
+    - imperviouscover
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: ""
+
+CFPs:
+  display_name: "Concentrated Flow Points"
+  column_name: "CFPs"
+  units: "Y/N"
+  metric_family: categorical
+  higher_is_better: false
+  monotonic_linear: false
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - imperviouscover
+    - weightedavgrunoff
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - valleytype
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: false
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: "Categorical Y/N — NOT a count metric despite CLAUDE.md listing"
+
+BEHI_NBS:
+  display_name: "BEHI / NBS"
+  column_name: "BEHI_NBS"
+  units: "category"
+  metric_family: categorical
+  higher_is_better: false
+  monotonic_linear: false
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - Per_erodingbank
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: none
+  min_sample_size: 10
+  best_subsets_allowed: false
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  notes: "Ordinal categorical; also source for BEHIcombined and BEHIeroding derived factors"
+
+d50:
+  display_name: "Median Grain Size (d50)"
+  column_name: "d50"
+  units: "mm"
+  metric_family: continuous
+  higher_is_better: null
+  monotonic_linear: false
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: log
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  missing_data_rule: warn
+  notes: "4-7 NAs in dataset; reduced n for models using this"
+
+d84:
+  display_name: "Coarse Grain Size (d84)"
+  column_name: "d84"
+  units: "mm"
+  metric_family: continuous
+  higher_is_better: null
+  monotonic_linear: false
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: log
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  missing_data_rule: warn
+  notes: "4-7 NAs in dataset"
+
+D16:
+  display_name: "Fine Grain Size (D16)"
+  column_name: "D16"
+  units: "mm"
+  metric_family: continuous
+  higher_is_better: null
+  monotonic_linear: false
+  allowed_predictors:
+    - DA_km2
+    - Slope_per
+    - streampower
+  allowed_stratifications:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+  preferred_transform: log
+  min_sample_size: 10
+  best_subsets_allowed: true
+  count_model: false
+  stratification_mode: subset
+  include_in_summary: true
+  missing_data_rule: warn
+  notes: "4-7 NAs in dataset"

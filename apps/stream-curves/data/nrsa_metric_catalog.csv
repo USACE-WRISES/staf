@@ -1,0 +1,789 @@
+"name","raw_name","category","label","units","core"
+"chem_AMMONIA_N","AMMONIA_N_RESULT","Water chemistry","AMMONIA_N","mg N/L",FALSE
+"chem_ANC","ANC_RESULT","Water chemistry","ANC","uEQ/L",TRUE
+"chem_CALCIUM","CALCIUM_RESULT","Water chemistry","CALCIUM","mg/L",FALSE
+"chem_CHLORIDE","CHLORIDE_RESULT","Water chemistry","CHLORIDE","mg/L",TRUE
+"chem_COLOR","COLOR_RESULT","Water chemistry","COLOR","APHA PT-CO",FALSE
+"chem_COND","COND_RESULT","Water chemistry","COND","uS/cm",TRUE
+"chem_DOC","DOC_RESULT","Water chemistry","DOC","mg/L",TRUE
+"chem_MAGNESIUM","MAGNESIUM_RESULT","Water chemistry","MAGNESIUM","mg/L",FALSE
+"chem_NITRATE_N","NITRATE_N_RESULT","Water chemistry","NITRATE_N","mg N/L",FALSE
+"chem_NITRATE_NITRITE_N","NITRATE_NITRITE_N_RESULT","Water chemistry","NITRATE_NITRITE_N","mg N/L",FALSE
+"chem_NITRITE_N","NITRITE_N_RESULT","Water chemistry","NITRITE_N","mg N/L",FALSE
+"chem_NTL_DISS","NTL_DISS_RESULT","Water chemistry","NTL_DISS","mg N/L",FALSE
+"chem_NTL","NTL_RESULT","Water chemistry","NTL","mg N/L",TRUE
+"chem_PH","PH_RESULT","Water chemistry","PH","Std. Units",TRUE
+"chem_POTASSIUM","POTASSIUM_RESULT","Water chemistry","POTASSIUM","mg/L",FALSE
+"chem_PTL_DISS","PTL_DISS_RESULT","Water chemistry","PTL_DISS","ug/L",FALSE
+"chem_PTL","PTL_RESULT","Water chemistry","PTL","ug/L",TRUE
+"chem_SILICA","SILICA_RESULT","Water chemistry","SILICA","mg/L",FALSE
+"chem_SODIUM","SODIUM_RESULT","Water chemistry","SODIUM","mg/L",FALSE
+"chem_SULFATE","SULFATE_RESULT","Water chemistry","SULFATE","mg/L",FALSE
+"chem_TKN","TKN_RESULT","Water chemistry","TKN","mg N/L",FALSE
+"chem_TSS","TSS_RESULT","Water chemistry","TSS","mg/L",FALSE
+"chem_TURB","TURB_RESULT","Water chemistry","TURB","NTU",TRUE
+"chem_CHLA","CHLA_RESULT","Water chemistry","CHLA","ug/L",TRUE
+"chem_PHEO","PHEO_RESULT","Water chemistry","PHEO","",FALSE
+"phab_XBKA","XBKA","Physical habitat","XBKA","",FALSE
+"phab_MEDBK_A","MEDBK_A","Physical habitat","MEDBK_A","",TRUE
+"phab_XUN","XUN","Physical habitat","XUN","",FALSE
+"phab_MEDBKUN","MEDBKUN","Physical habitat","MEDBKUN","",FALSE
+"phab_LTEST","LTEST","Physical habitat","LTEST","",FALSE
+"phab_LRBS_TST","LRBS_TST","Physical habitat","LRBS_TST","",FALSE
+"phab_LDMB_BW5","LDMB_BW5","Physical habitat","LDMB_BW5","",FALSE
+"phab_LRBS_BW5","LRBS_BW5","Physical habitat","LRBS_BW5","",FALSE
+"phab_LDCBF_G08","LDCBF_G08","Physical habitat","LDCBF_G08","",FALSE
+"phab_LRBS_G08","LRBS_G08","Physical habitat","LRBS_G08","",FALSE
+"phab_XCDENMID","XCDENMID","Physical habitat","XCDENMID","",FALSE
+"phab_XCDENBK","XCDENBK","Physical habitat","XCDENBK","",FALSE
+"phab_CONPERCENT","CONPERCENT","Physical habitat","CONPERCENT","",FALSE
+"phab_PCT_FA","PCT_FA","Physical habitat","PCT_FA","",FALSE
+"phab_PCT_GL","PCT_GL","Physical habitat","PCT_GL","",FALSE
+"phab_PCT_POOL","PCT_POOL","Physical habitat","PCT_POOL","",TRUE
+"phab_PCT_DR","PCT_DR","Physical habitat","PCT_DR","",FALSE
+"phab_PCT_FAST","PCT_FAST","Physical habitat","PCT_FAST","",TRUE
+"phab_PCT_SLOW","PCT_SLOW","Physical habitat","PCT_SLOW","",FALSE
+"phab_XWIDTH","XWIDTH","Physical habitat","XWIDTH","",TRUE
+"phab_SDWIDTH","SDWIDTH","Physical habitat","SDWIDTH","",FALSE
+"phab_XBKF_W","XBKF_W","Physical habitat","XBKF_W","",FALSE
+"phab_XBKF_H","XBKF_H","Physical habitat","XBKF_H","",FALSE
+"phab_XINC_H","XINC_H","Physical habitat","XINC_H","",FALSE
+"phab_SDINC_H","SDINC_H","Physical habitat","SDINC_H","",FALSE
+"phab_BFWD_RAT","BFWD_RAT","Physical habitat","BFWD_RAT","",FALSE
+"phab_XWXD","XWXD","Physical habitat","XWXD","",TRUE
+"phab_XWD_RAT","XWD_RAT","Physical habitat","XWD_RAT","",FALSE
+"phab_SDWXD","SDWXD","Physical habitat","SDWXD","",FALSE
+"phab_SDWD_RAT","SDWD_RAT","Physical habitat","SDWD_RAT","",FALSE
+"phab_XDEPTH","XDEPTH","Physical habitat","XDEPTH","",FALSE
+"phab_SDDEPTH","SDDEPTH","Physical habitat","SDDEPTH","",FALSE
+"phab_XDEPTH_CM","XDEPTH_CM","Physical habitat","XDEPTH_CM","",TRUE
+"phab_SDDEPTH_CM","SDDEPTH_CM","Physical habitat","SDDEPTH_CM","",FALSE
+"phab_XFC_ALG","XFC_ALG","Physical habitat","XFC_ALG","",FALSE
+"phab_XFC_RCK","XFC_RCK","Physical habitat","XFC_RCK","",FALSE
+"phab_XFC_BRS","XFC_BRS","Physical habitat","XFC_BRS","",FALSE
+"phab_XFC_LVT","XFC_LVT","Physical habitat","XFC_LVT","",FALSE
+"phab_XFC_AQM","XFC_AQM","Physical habitat","XFC_AQM","",FALSE
+"phab_XFC_OHV","XFC_OHV","Physical habitat","XFC_OHV","",FALSE
+"phab_XFC_HUM","XFC_HUM","Physical habitat","XFC_HUM","",FALSE
+"phab_XFC_UCB","XFC_UCB","Physical habitat","XFC_UCB","",FALSE
+"phab_XFC_LWD","XFC_LWD","Physical habitat","XFC_LWD","",FALSE
+"phab_XFC_NAT","XFC_NAT","Physical habitat","XFC_NAT","",FALSE
+"phab_XFC_BIG","XFC_BIG","Physical habitat","XFC_BIG","",FALSE
+"phab_XFC_ALL","XFC_ALL","Physical habitat","XFC_ALL","",FALSE
+"phab_PCT_SIDE","PCT_SIDE","Physical habitat","PCT_SIDE","",FALSE
+"phab_REACHLEN","REACHLEN","Physical habitat","REACHLEN","",FALSE
+"phab_W1_HAG","W1_HAG","Physical habitat","W1_HAG","",FALSE
+"phab_W1_HNOAG","W1_HNOAG","Physical habitat","W1_HNOAG","",FALSE
+"phab_W1_HALL","W1_HALL","Physical habitat","W1_HALL","",FALSE
+"phab_W1H_BLDG","W1H_BLDG","Physical habitat","W1H_BLDG","",FALSE
+"phab_W1H_LDFL","W1H_LDFL","Physical habitat","W1H_LDFL","",FALSE
+"phab_W1H_LOG","W1H_LOG","Physical habitat","W1H_LOG","",FALSE
+"phab_W1H_MINE","W1H_MINE","Physical habitat","W1H_MINE","",FALSE
+"phab_W1H_PARK","W1H_PARK","Physical habitat","W1H_PARK","",FALSE
+"phab_W1H_PSTR","W1H_PSTR","Physical habitat","W1H_PSTR","",FALSE
+"phab_W1H_PVMT","W1H_PVMT","Physical habitat","W1H_PVMT","",FALSE
+"phab_W1H_PIPE","W1H_PIPE","Physical habitat","W1H_PIPE","",FALSE
+"phab_W1H_ROAD","W1H_ROAD","Physical habitat","W1H_ROAD","",FALSE
+"phab_W1H_CROP","W1H_CROP","Physical habitat","W1H_CROP","",FALSE
+"phab_W1H_WALL","W1H_WALL","Physical habitat","W1H_WALL","",FALSE
+"phab_C1TM100","C1TM100","Physical habitat","C1TM100","",FALSE
+"phab_C1WM100","C1WM100","Physical habitat","C1WM100","",FALSE
+"phab_C2TM100","C2TM100","Physical habitat","C2TM100","",FALSE
+"phab_C2WM100","C2WM100","Physical habitat","C2WM100","",FALSE
+"phab_C4TM100","C4TM100","Physical habitat","C4TM100","",FALSE
+"phab_C4WM100","C4WM100","Physical habitat","C4WM100","",FALSE
+"phab_V1WM100","V1WM100","Physical habitat","V1WM100","",FALSE
+"phab_V1W_MSQ","V1W_MSQ","Physical habitat","V1W_MSQ","",FALSE
+"phab_V2WM100","V2WM100","Physical habitat","V2WM100","",FALSE
+"phab_V2W_MSQ","V2W_MSQ","Physical habitat","V2W_MSQ","",FALSE
+"phab_V4WM100","V4WM100","Physical habitat","V4WM100","",FALSE
+"phab_V4W_MSQ","V4W_MSQ","Physical habitat","V4W_MSQ","",FALSE
+"phab_RPXDEP","RPXDEP","Physical habitat","RPXDEP","",FALSE
+"phab_RPMXDEP","RPMXDEP","Physical habitat","RPMXDEP","",FALSE
+"phab_RPGT50","RPGT50","Physical habitat","RPGT50","",FALSE
+"phab_RPGT75","RPGT75","Physical habitat","RPGT75","",FALSE
+"phab_RPXDEP_CM","RPXDEP_CM","Physical habitat","RPXDEP_CM","",FALSE
+"phab_RPMXDEP_CM","RPMXDEP_CM","Physical habitat","RPMXDEP_CM","",FALSE
+"phab_RP100","RP100","Physical habitat","RP100","",FALSE
+"phab_PCAN_C","PCAN_C","Physical habitat","PCAN_C","",FALSE
+"phab_PCAN_D","PCAN_D","Physical habitat","PCAN_D","",FALSE
+"phab_PCAN_E","PCAN_E","Physical habitat","PCAN_E","",FALSE
+"phab_PCAN_M","PCAN_M","Physical habitat","PCAN_M","",FALSE
+"phab_PCAN_N","PCAN_N","Physical habitat","PCAN_N","",FALSE
+"phab_XCL","XCL","Physical habitat","XCL","",FALSE
+"phab_XCS","XCS","Physical habitat","XCS","",FALSE
+"phab_XMW","XMW","Physical habitat","XMW","",FALSE
+"phab_XMH","XMH","Physical habitat","XMH","",FALSE
+"phab_XGW","XGW","Physical habitat","XGW","",FALSE
+"phab_XGH","XGH","Physical habitat","XGH","",FALSE
+"phab_XGB","XGB","Physical habitat","XGB","",FALSE
+"phab_XC","XC","Physical habitat","XC","",FALSE
+"phab_XM","XM","Physical habitat","XM","",FALSE
+"phab_XCMW","XCMW","Physical habitat","XCMW","",FALSE
+"phab_XCM","XCM","Physical habitat","XCM","",FALSE
+"phab_XG","XG","Physical habitat","XG","",FALSE
+"phab_XCMGW","XCMGW","Physical habitat","XCMGW","",FALSE
+"phab_XCMG","XCMG","Physical habitat","XCMG","",FALSE
+"phab_XPCAN","XPCAN","Physical habitat","XPCAN","",FALSE
+"phab_XPMID","XPMID","Physical habitat","XPMID","",FALSE
+"phab_XPMGW","XPMGW","Physical habitat","XPMGW","",FALSE
+"phab_XPCM","XPCM","Physical habitat","XPCM","",FALSE
+"phab_XPCMG","XPCMG","Physical habitat","XPCMG","",FALSE
+"phab_PCTCLINOMETER","PCTCLINOMETER","Physical habitat","PCTCLINOMETER","",FALSE
+"phab_SINU","SINU","Physical habitat","SINU","",TRUE
+"phab_XBEARING","XBEARING","Physical habitat","XBEARING","",FALSE
+"phab_XSLOPE","XSLOPE","Physical habitat","XSLOPE","",FALSE
+"phab_XSLOPE_FIELD","XSLOPE_FIELD","Physical habitat","XSLOPE_FIELD","",FALSE
+"phab_XSLOPE_MAP","XSLOPE_MAP","Physical habitat","XSLOPE_MAP","",FALSE
+"phab_LSUB_DMM","LSUB_DMM","Physical habitat","LSUB_DMM","",TRUE
+"phab_LSUBD_SD","LSUBD_SD","Physical habitat","LSUBD_SD","",FALSE
+"phab_LSUB_DMM_NOR","LSUB_DMM_NOR","Physical habitat","LSUB_DMM_NOR","",FALSE
+"phab_PCT_BL","PCT_BL","Physical habitat","PCT_BL","",FALSE
+"phab_PCT_CB","PCT_CB","Physical habitat","PCT_CB","",TRUE
+"phab_PCT_FN","PCT_FN","Physical habitat","PCT_FN","",FALSE
+"phab_PCT_GC","PCT_GC","Physical habitat","PCT_GC","",FALSE
+"phab_PCT_GF","PCT_GF","Physical habitat","PCT_GF","",FALSE
+"phab_PCT_HP","PCT_HP","Physical habitat","PCT_HP","",FALSE
+"phab_PCT_OT","PCT_OT","Physical habitat","PCT_OT","",FALSE
+"phab_PCT_OM","PCT_OM","Physical habitat","PCT_OM","",FALSE
+"phab_PCT_RC","PCT_RC","Physical habitat","PCT_RC","",FALSE
+"phab_PCT_RR","PCT_RR","Physical habitat","PCT_RR","",FALSE
+"phab_PCT_RS","PCT_RS","Physical habitat","PCT_RS","",FALSE
+"phab_PCT_SA","PCT_SA","Physical habitat","PCT_SA","",FALSE
+"phab_PCT_SB","PCT_SB","Physical habitat","PCT_SB","",FALSE
+"phab_PCT_WD","PCT_WD","Physical habitat","PCT_WD","",FALSE
+"phab_PCT_XB","PCT_XB","Physical habitat","PCT_XB","",FALSE
+"phab_PCT_BIGR","PCT_BIGR","Physical habitat","PCT_BIGR","",FALSE
+"phab_PCT_BDRK","PCT_BDRK","Physical habitat","PCT_BDRK","",FALSE
+"phab_PCT_SAFN","PCT_SAFN","Physical habitat","PCT_SAFN","",TRUE
+"phab_PCT_SFGF","PCT_SFGF","Physical habitat","PCT_SFGF","",FALSE
+"phab_PCT_ORG","PCT_ORG","Physical habitat","PCT_ORG","",FALSE
+"phab_PCT_BH","PCT_BH","Physical habitat","PCT_BH","",FALSE
+"phab_PCT_GR","PCT_GR","Physical habitat","PCT_GR","",TRUE
+"phab_XEMBED","XEMBED","Physical habitat","XEMBED","",TRUE
+"phab_XCEMBED","XCEMBED","Physical habitat","XCEMBED","",FALSE
+"phab_SURVEY_YRS","SURVEY_YRS","Physical habitat","SURVEY_YRS","",FALSE
+"phab_XSLOPE_use","XSLOPE_use","Physical habitat","XSLOPE_use","",TRUE
+"phab_LRBS_use","LRBS_use","Physical habitat","LRBS_use","",FALSE
+"phab_RP100_cm","RP100_cm","Physical habitat","RP100_cm","",TRUE
+"phab_PCT_SFG","PCT_SFG","Physical habitat","PCT_SFG","",FALSE
+"phab_XGveg","XGveg","Physical habitat","XGveg","",FALSE
+"phab_LWDeqVol_msq","LWDeqVol_msq","Physical habitat","LWDeqVol_msq","",FALSE
+"phab_LWDeqVolM100","LWDeqVolM100","Physical habitat","LWDeqVolM100","",TRUE
+"phab_QRVeg1","QRVeg1","Physical habitat","QRVeg1","",FALSE
+"phab_QRVeg2","QRVeg2","Physical habitat","QRVeg2","",FALSE
+"phab_RDIST1","RDIST1","Physical habitat","RDIST1","",FALSE
+"phab_QRDIST1","QRDIST1","Physical habitat","QRDIST1","",FALSE
+"phab_QR1","QR1","Physical habitat","QR1","",TRUE
+"phab_CVdth","CVdth","Physical habitat","CVdth","",FALSE
+"phab_RpRat","RpRat","Physical habitat","RpRat","",FALSE
+"phab_CVWIDTH","CVWIDTH","Physical habitat","CVWIDTH","",FALSE
+"phab_CVWXD","CVWXD","Physical habitat","CVWXD","",FALSE
+"bent_AMPHNTAX","AMPHNTAX","Benthic macroinvertebrates","AMPHNTAX","",FALSE
+"bent_AMPHPIND","AMPHPIND","Benthic macroinvertebrates","AMPHPIND","",FALSE
+"bent_AMPHPTAX","AMPHPTAX","Benthic macroinvertebrates","AMPHPTAX","",FALSE
+"bent_BURRNTAX","BURRNTAX","Benthic macroinvertebrates","BURRNTAX","",FALSE
+"bent_BURRPIND","BURRPIND","Benthic macroinvertebrates","BURRPIND","",FALSE
+"bent_BURRPTAX","BURRPTAX","Benthic macroinvertebrates","BURRPTAX","",FALSE
+"bent_CHIRDOM1PIND","CHIRDOM1PIND","Benthic macroinvertebrates","CHIRDOM1PIND","",FALSE
+"bent_CHIRDOM3PIND","CHIRDOM3PIND","Benthic macroinvertebrates","CHIRDOM3PIND","",FALSE
+"bent_CHIRDOM5PIND","CHIRDOM5PIND","Benthic macroinvertebrates","CHIRDOM5PIND","",FALSE
+"bent_CHIRNTAX","CHIRNTAX","Benthic macroinvertebrates","CHIRNTAX","",FALSE
+"bent_CHIRPIND","CHIRPIND","Benthic macroinvertebrates","CHIRPIND","",FALSE
+"bent_CHIRPTAX","CHIRPTAX","Benthic macroinvertebrates","CHIRPTAX","",FALSE
+"bent_CLMBNTAX","CLMBNTAX","Benthic macroinvertebrates","CLMBNTAX","",FALSE
+"bent_CLMBPIND","CLMBPIND","Benthic macroinvertebrates","CLMBPIND","",FALSE
+"bent_CLMBPTAX","CLMBPTAX","Benthic macroinvertebrates","CLMBPTAX","",FALSE
+"bent_CLNGNTAX","CLNGNTAX","Benthic macroinvertebrates","CLNGNTAX","",FALSE
+"bent_CLNGPIND","CLNGPIND","Benthic macroinvertebrates","CLNGPIND","",FALSE
+"bent_CLNGPTAX","CLNGPTAX","Benthic macroinvertebrates","CLNGPTAX","",FALSE
+"bent_COFINTAX","COFINTAX","Benthic macroinvertebrates","COFINTAX","",FALSE
+"bent_COFIPIND","COFIPIND","Benthic macroinvertebrates","COFIPIND","",FALSE
+"bent_COFIPTAX","COFIPTAX","Benthic macroinvertebrates","COFIPTAX","",FALSE
+"bent_COFITRICNTAX","COFITRICNTAX","Benthic macroinvertebrates","COFITRICNTAX","",FALSE
+"bent_COFITRICPIND","COFITRICPIND","Benthic macroinvertebrates","COFITRICPIND","",FALSE
+"bent_COFITRICPTAX","COFITRICPTAX","Benthic macroinvertebrates","COFITRICPTAX","",FALSE
+"bent_COGANTAX","COGANTAX","Benthic macroinvertebrates","COGANTAX","",FALSE
+"bent_COGAPIND","COGAPIND","Benthic macroinvertebrates","COGAPIND","",FALSE
+"bent_COGAPTAX","COGAPTAX","Benthic macroinvertebrates","COGAPTAX","",FALSE
+"bent_CRUSNTAX","CRUSNTAX","Benthic macroinvertebrates","CRUSNTAX","",FALSE
+"bent_CRUSPIND","CRUSPIND","Benthic macroinvertebrates","CRUSPIND","",FALSE
+"bent_CRUSPTAX","CRUSPTAX","Benthic macroinvertebrates","CRUSPTAX","",FALSE
+"bent_DIPTNTAX","DIPTNTAX","Benthic macroinvertebrates","DIPTNTAX","",FALSE
+"bent_DIPTPIND","DIPTPIND","Benthic macroinvertebrates","DIPTPIND","",FALSE
+"bent_DIPTPTAX","DIPTPTAX","Benthic macroinvertebrates","DIPTPTAX","",FALSE
+"bent_DOM1PIND","DOM1PIND","Benthic macroinvertebrates","DOM1PIND","",FALSE
+"bent_DOM3PIND","DOM3PIND","Benthic macroinvertebrates","DOM3PIND","",FALSE
+"bent_DOM5PIND","DOM5PIND","Benthic macroinvertebrates","DOM5PIND","",FALSE
+"bent_EPHENTAX","EPHENTAX","Benthic macroinvertebrates","EPHENTAX","",FALSE
+"bent_EPHEPIND","EPHEPIND","Benthic macroinvertebrates","EPHEPIND","",FALSE
+"bent_EPHEPTAX","EPHEPTAX","Benthic macroinvertebrates","EPHEPTAX","",FALSE
+"bent_EPOTNTAX","EPOTNTAX","Benthic macroinvertebrates","EPOTNTAX","",FALSE
+"bent_EPOTPIND","EPOTPIND","Benthic macroinvertebrates","EPOTPIND","",FALSE
+"bent_EPOTPTAX","EPOTPTAX","Benthic macroinvertebrates","EPOTPTAX","",FALSE
+"bent_EPT_NTAX","EPT_NTAX","Benthic macroinvertebrates","EPT_NTAX","",TRUE
+"bent_EPT_PIND","EPT_PIND","Benthic macroinvertebrates","EPT_PIND","",TRUE
+"bent_EPT_PTAX","EPT_PTAX","Benthic macroinvertebrates","EPT_PTAX","",FALSE
+"bent_FACLNTAX","FACLNTAX","Benthic macroinvertebrates","FACLNTAX","",FALSE
+"bent_FACLPIND","FACLPIND","Benthic macroinvertebrates","FACLPIND","",FALSE
+"bent_FACLPTAX","FACLPTAX","Benthic macroinvertebrates","FACLPTAX","",FALSE
+"bent_HEMINTAX","HEMINTAX","Benthic macroinvertebrates","HEMINTAX","",FALSE
+"bent_HEMIPIND","HEMIPIND","Benthic macroinvertebrates","HEMIPIND","",FALSE
+"bent_HEMIPTAX","HEMIPTAX","Benthic macroinvertebrates","HEMIPTAX","",FALSE
+"bent_HPRIME","HPRIME","Benthic macroinvertebrates","HPRIME","",TRUE
+"bent_INTLNTAX","INTLNTAX","Benthic macroinvertebrates","INTLNTAX","",TRUE
+"bent_INTLPIND","INTLPIND","Benthic macroinvertebrates","INTLPIND","",FALSE
+"bent_INTLPTAX","INTLPTAX","Benthic macroinvertebrates","INTLPTAX","",FALSE
+"bent_MITENTAX","MITENTAX","Benthic macroinvertebrates","MITENTAX","",FALSE
+"bent_MITEPIND","MITEPIND","Benthic macroinvertebrates","MITEPIND","",FALSE
+"bent_MITEPTAX","MITEPTAX","Benthic macroinvertebrates","MITEPTAX","",FALSE
+"bent_MOLLNTAX","MOLLNTAX","Benthic macroinvertebrates","MOLLNTAX","",FALSE
+"bent_MOLLPIND","MOLLPIND","Benthic macroinvertebrates","MOLLPIND","",FALSE
+"bent_MOLLPTAX","MOLLPTAX","Benthic macroinvertebrates","MOLLPTAX","",FALSE
+"bent_NOINNTAX","NOINNTAX","Benthic macroinvertebrates","NOINNTAX","",FALSE
+"bent_NOINPIND","NOINPIND","Benthic macroinvertebrates","NOINPIND","",FALSE
+"bent_NOINPTAX","NOINPTAX","Benthic macroinvertebrates","NOINPTAX","",FALSE
+"bent_NTOLNTAX","NTOLNTAX","Benthic macroinvertebrates","NTOLNTAX","",FALSE
+"bent_NTOLPIND","NTOLPIND","Benthic macroinvertebrates","NTOLPIND","",FALSE
+"bent_NTOLPTAX","NTOLPTAX","Benthic macroinvertebrates","NTOLPTAX","",FALSE
+"bent_ODONNTAX","ODONNTAX","Benthic macroinvertebrates","ODONNTAX","",FALSE
+"bent_ODONPIND","ODONPIND","Benthic macroinvertebrates","ODONPIND","",FALSE
+"bent_ODONPTAX","ODONPTAX","Benthic macroinvertebrates","ODONPTAX","",FALSE
+"bent_OLLENTAX","OLLENTAX","Benthic macroinvertebrates","OLLENTAX","",FALSE
+"bent_OLLEPIND","OLLEPIND","Benthic macroinvertebrates","OLLEPIND","",FALSE
+"bent_OLLEPTAX","OLLEPTAX","Benthic macroinvertebrates","OLLEPTAX","",FALSE
+"bent_ORTHCHIRPIND","ORTHCHIRPIND","Benthic macroinvertebrates","ORTHCHIRPIND","",FALSE
+"bent_ORTHNTAX","ORTHNTAX","Benthic macroinvertebrates","ORTHNTAX","",FALSE
+"bent_ORTHPIND","ORTHPIND","Benthic macroinvertebrates","ORTHPIND","",FALSE
+"bent_ORTHPTAX","ORTHPTAX","Benthic macroinvertebrates","ORTHPTAX","",FALSE
+"bent_PLECNTAX","PLECNTAX","Benthic macroinvertebrates","PLECNTAX","",FALSE
+"bent_PLECPIND","PLECPIND","Benthic macroinvertebrates","PLECPIND","",FALSE
+"bent_PLECPTAX","PLECPTAX","Benthic macroinvertebrates","PLECPTAX","",FALSE
+"bent_PREDNTAX","PREDNTAX","Benthic macroinvertebrates","PREDNTAX","",FALSE
+"bent_PREDPIND","PREDPIND","Benthic macroinvertebrates","PREDPIND","",FALSE
+"bent_PREDPTAX","PREDPTAX","Benthic macroinvertebrates","PREDPTAX","",FALSE
+"bent_SCRPNTAX","SCRPNTAX","Benthic macroinvertebrates","SCRPNTAX","",FALSE
+"bent_SCRPPIND","SCRPPIND","Benthic macroinvertebrates","SCRPPIND","",FALSE
+"bent_SCRPPTAX","SCRPPTAX","Benthic macroinvertebrates","SCRPPTAX","",FALSE
+"bent_SHRDNTAX","SHRDNTAX","Benthic macroinvertebrates","SHRDNTAX","",FALSE
+"bent_SHRDPIND","SHRDPIND","Benthic macroinvertebrates","SHRDPIND","",FALSE
+"bent_SHRDPTAX","SHRDPTAX","Benthic macroinvertebrates","SHRDPTAX","",FALSE
+"bent_SPWLNTAX","SPWLNTAX","Benthic macroinvertebrates","SPWLNTAX","",FALSE
+"bent_SPWLPIND","SPWLPIND","Benthic macroinvertebrates","SPWLPIND","",FALSE
+"bent_SPWLPTAX","SPWLPTAX","Benthic macroinvertebrates","SPWLPTAX","",FALSE
+"bent_STOLNTAX","STOLNTAX","Benthic macroinvertebrates","STOLNTAX","",FALSE
+"bent_STOLPIND","STOLPIND","Benthic macroinvertebrates","STOLPIND","",FALSE
+"bent_STOLPTAX","STOLPTAX","Benthic macroinvertebrates","STOLPTAX","",FALSE
+"bent_SWIMNTAX","SWIMNTAX","Benthic macroinvertebrates","SWIMNTAX","",FALSE
+"bent_SWIMPIND","SWIMPIND","Benthic macroinvertebrates","SWIMPIND","",FALSE
+"bent_SWIMPTAX","SWIMPTAX","Benthic macroinvertebrates","SWIMPTAX","",FALSE
+"bent_TANYNTAX","TANYNTAX","Benthic macroinvertebrates","TANYNTAX","",FALSE
+"bent_TANYPIND","TANYPIND","Benthic macroinvertebrates","TANYPIND","",FALSE
+"bent_TANYPTAX","TANYPTAX","Benthic macroinvertebrates","TANYPTAX","",FALSE
+"bent_TL01NTAX","TL01NTAX","Benthic macroinvertebrates","TL01NTAX","",FALSE
+"bent_TL01PIND","TL01PIND","Benthic macroinvertebrates","TL01PIND","",FALSE
+"bent_TL01PTAX","TL01PTAX","Benthic macroinvertebrates","TL01PTAX","",FALSE
+"bent_TL23NTAX","TL23NTAX","Benthic macroinvertebrates","TL23NTAX","",FALSE
+"bent_TL23PIND","TL23PIND","Benthic macroinvertebrates","TL23PIND","",FALSE
+"bent_TL23PTAX","TL23PTAX","Benthic macroinvertebrates","TL23PTAX","",FALSE
+"bent_TL45NTAX","TL45NTAX","Benthic macroinvertebrates","TL45NTAX","",FALSE
+"bent_TL45PIND","TL45PIND","Benthic macroinvertebrates","TL45PIND","",FALSE
+"bent_TL45PTAX","TL45PTAX","Benthic macroinvertebrates","TL45PTAX","",FALSE
+"bent_TL67NTAX","TL67NTAX","Benthic macroinvertebrates","TL67NTAX","",FALSE
+"bent_TL67PIND","TL67PIND","Benthic macroinvertebrates","TL67PIND","",FALSE
+"bent_TL67PTAX","TL67PTAX","Benthic macroinvertebrates","TL67PTAX","",FALSE
+"bent_TOLRNTAX","TOLRNTAX","Benthic macroinvertebrates","TOLRNTAX","",FALSE
+"bent_TOLRPIND","TOLRPIND","Benthic macroinvertebrates","TOLRPIND","",TRUE
+"bent_TOLRPTAX","TOLRPTAX","Benthic macroinvertebrates","TOLRPTAX","",FALSE
+"bent_TOTLNIND","TOTLNIND","Benthic macroinvertebrates","TOTLNIND","",FALSE
+"bent_TOTLNTAX","TOTLNTAX","Benthic macroinvertebrates","TOTLNTAX","",TRUE
+"bent_TRICNTAX","TRICNTAX","Benthic macroinvertebrates","TRICNTAX","",FALSE
+"bent_TRICPIND","TRICPIND","Benthic macroinvertebrates","TRICPIND","",FALSE
+"bent_TRICPTAX","TRICPTAX","Benthic macroinvertebrates","TRICPTAX","",FALSE
+"bent_TUBINAIDNTAX","TUBINAIDNTAX","Benthic macroinvertebrates","TUBINAIDNTAX","",FALSE
+"bent_TUBINAIDPIND","TUBINAIDPIND","Benthic macroinvertebrates","TUBINAIDPIND","",FALSE
+"bent_TUBINAIDPTAX","TUBINAIDPTAX","Benthic macroinvertebrates","TUBINAIDPTAX","",FALSE
+"bent_WTD_TV","WTD_TV","Benthic macroinvertebrates","WTD_TV","",FALSE
+"fish_ALIENNTAX","ALIENNTAX","Fish","ALIENNTAX","",FALSE
+"fish_ALIENPIND","ALIENPIND","Fish","ALIENPIND","",FALSE
+"fish_ALIENPTAX","ALIENPTAX","Fish","ALIENPTAX","",TRUE
+"fish_ANOMPIND","ANOMPIND","Fish","ANOMPIND","",TRUE
+"fish_BENTINVNTAX","BENTINVNTAX","Fish","BENTINVNTAX","",FALSE
+"fish_BENTINVPIND","BENTINVPIND","Fish","BENTINVPIND","",FALSE
+"fish_BENTINVPTAX","BENTINVPTAX","Fish","BENTINVPTAX","",FALSE
+"fish_CARNNTAX","CARNNTAX","Fish","CARNNTAX","",FALSE
+"fish_CARNPIND","CARNPIND","Fish","CARNPIND","",FALSE
+"fish_CARNPTAX","CARNPTAX","Fish","CARNPTAX","",FALSE
+"fish_CATONTAX","CATONTAX","Fish","CATONTAX","",FALSE
+"fish_CATOPIND","CATOPIND","Fish","CATOPIND","",FALSE
+"fish_CATOPTAX","CATOPTAX","Fish","CATOPTAX","",FALSE
+"fish_CENTNTAX","CENTNTAX","Fish","CENTNTAX","",FALSE
+"fish_CENTPIND","CENTPIND","Fish","CENTPIND","",FALSE
+"fish_CENTPTAX","CENTPTAX","Fish","CENTPTAX","",FALSE
+"fish_COLDNTAX","COLDNTAX","Fish","COLDNTAX","",TRUE
+"fish_COLDPIND","COLDPIND","Fish","COLDPIND","",FALSE
+"fish_COLDPTAX","COLDPTAX","Fish","COLDPTAX","",FALSE
+"fish_CYPRNTAX","CYPRNTAX","Fish","CYPRNTAX","",FALSE
+"fish_CYPRPIND","CYPRPIND","Fish","CYPRPIND","",FALSE
+"fish_CYPRPTAX","CYPRPTAX","Fish","CYPRPTAX","",FALSE
+"fish_HERBNTAX","HERBNTAX","Fish","HERBNTAX","",FALSE
+"fish_HERBPIND","HERBPIND","Fish","HERBPIND","",FALSE
+"fish_HERBPTAX","HERBPTAX","Fish","HERBPTAX","",FALSE
+"fish_ICTANTAX","ICTANTAX","Fish","ICTANTAX","",FALSE
+"fish_ICTAPIND","ICTAPIND","Fish","ICTAPIND","",FALSE
+"fish_ICTAPTAX","ICTAPTAX","Fish","ICTAPTAX","",FALSE
+"fish_INTLCARNNTAX","INTLCARNNTAX","Fish","INTLCARNNTAX","",FALSE
+"fish_INTLCARNPIND","INTLCARNPIND","Fish","INTLCARNPIND","",FALSE
+"fish_INTLCARNPTAX","INTLCARNPTAX","Fish","INTLCARNPTAX","",FALSE
+"fish_INTLINVNTAX","INTLINVNTAX","Fish","INTLINVNTAX","",FALSE
+"fish_INTLINVPIND","INTLINVPIND","Fish","INTLINVPIND","",FALSE
+"fish_INTLINVPTAX","INTLINVPTAX","Fish","INTLINVPTAX","",FALSE
+"fish_INTLLOTNTAX","INTLLOTNTAX","Fish","INTLLOTNTAX","",FALSE
+"fish_INTLLOTPIND","INTLLOTPIND","Fish","INTLLOTPIND","",FALSE
+"fish_INTLLOTPTAX","INTLLOTPTAX","Fish","INTLLOTPTAX","",FALSE
+"fish_INTLMIGRNTAX","INTLMIGRNTAX","Fish","INTLMIGRNTAX","",FALSE
+"fish_INTLMIGRPIND","INTLMIGRPIND","Fish","INTLMIGRPIND","",FALSE
+"fish_INTLMIGRPTAX","INTLMIGRPTAX","Fish","INTLMIGRPTAX","",FALSE
+"fish_INTLNTAX","INTLNTAX","Fish","INTLNTAX","",FALSE
+"fish_INTLPIND","INTLPIND","Fish","INTLPIND","",TRUE
+"fish_INTLPTAX","INTLPTAX","Fish","INTLPTAX","",FALSE
+"fish_INTLRHEONTAX","INTLRHEONTAX","Fish","INTLRHEONTAX","",FALSE
+"fish_INTLRHEOPIND","INTLRHEOPIND","Fish","INTLRHEOPIND","",FALSE
+"fish_INTLRHEOPTAX","INTLRHEOPTAX","Fish","INTLRHEOPTAX","",FALSE
+"fish_INVNTAX","INVNTAX","Fish","INVNTAX","",FALSE
+"fish_INVPIND","INVPIND","Fish","INVPIND","",FALSE
+"fish_INVPTAX","INVPTAX","Fish","INVPTAX","",FALSE
+"fish_LITHNTAX","LITHNTAX","Fish","LITHNTAX","",FALSE
+"fish_LITHPIND","LITHPIND","Fish","LITHPIND","",FALSE
+"fish_LITHPTAX","LITHPTAX","Fish","LITHPTAX","",FALSE
+"fish_LOTNTAX","LOTNTAX","Fish","LOTNTAX","",FALSE
+"fish_LOTPIND","LOTPIND","Fish","LOTPIND","",FALSE
+"fish_LOTPTAX","LOTPTAX","Fish","LOTPTAX","",FALSE
+"fish_MIGRNTAX","MIGRNTAX","Fish","MIGRNTAX","",FALSE
+"fish_MIGRPIND","MIGRPIND","Fish","MIGRPIND","",FALSE
+"fish_MIGRPTAX","MIGRPTAX","Fish","MIGRPTAX","",FALSE
+"fish_MTOLNTAX","MTOLNTAX","Fish","MTOLNTAX","",FALSE
+"fish_MTOLPIND","MTOLPIND","Fish","MTOLPIND","",FALSE
+"fish_MTOLPTAX","MTOLPTAX","Fish","MTOLPTAX","",FALSE
+"fish_NAT_BENTINVNTAX","NAT_BENTINVNTAX","Fish","NAT_BENTINVNTAX","",FALSE
+"fish_NAT_BENTINVPIND","NAT_BENTINVPIND","Fish","NAT_BENTINVPIND","",FALSE
+"fish_NAT_BENTINVPTAX","NAT_BENTINVPTAX","Fish","NAT_BENTINVPTAX","",FALSE
+"fish_NAT_CARNNTAX","NAT_CARNNTAX","Fish","NAT_CARNNTAX","",FALSE
+"fish_NAT_CARNPIND","NAT_CARNPIND","Fish","NAT_CARNPIND","",FALSE
+"fish_NAT_CARNPTAX","NAT_CARNPTAX","Fish","NAT_CARNPTAX","",FALSE
+"fish_NAT_CATONTAX","NAT_CATONTAX","Fish","NAT_CATONTAX","",FALSE
+"fish_NAT_CATOPIND","NAT_CATOPIND","Fish","NAT_CATOPIND","",FALSE
+"fish_NAT_CATOPTAX","NAT_CATOPTAX","Fish","NAT_CATOPTAX","",FALSE
+"fish_NAT_CENTNTAX","NAT_CENTNTAX","Fish","NAT_CENTNTAX","",FALSE
+"fish_NAT_CENTPIND","NAT_CENTPIND","Fish","NAT_CENTPIND","",FALSE
+"fish_NAT_CENTPTAX","NAT_CENTPTAX","Fish","NAT_CENTPTAX","",FALSE
+"fish_NAT_COLDNTAX","NAT_COLDNTAX","Fish","NAT_COLDNTAX","",FALSE
+"fish_NAT_COLDPIND","NAT_COLDPIND","Fish","NAT_COLDPIND","",FALSE
+"fish_NAT_COLDPTAX","NAT_COLDPTAX","Fish","NAT_COLDPTAX","",FALSE
+"fish_NAT_CYPRNTAX","NAT_CYPRNTAX","Fish","NAT_CYPRNTAX","",FALSE
+"fish_NAT_CYPRPIND","NAT_CYPRPIND","Fish","NAT_CYPRPIND","",FALSE
+"fish_NAT_CYPRPTAX","NAT_CYPRPTAX","Fish","NAT_CYPRPTAX","",FALSE
+"fish_NAT_HERBNTAX","NAT_HERBNTAX","Fish","NAT_HERBNTAX","",FALSE
+"fish_NAT_HERBPIND","NAT_HERBPIND","Fish","NAT_HERBPIND","",FALSE
+"fish_NAT_HERBPTAX","NAT_HERBPTAX","Fish","NAT_HERBPTAX","",FALSE
+"fish_NAT_ICTANTAX","NAT_ICTANTAX","Fish","NAT_ICTANTAX","",FALSE
+"fish_NAT_ICTAPIND","NAT_ICTAPIND","Fish","NAT_ICTAPIND","",FALSE
+"fish_NAT_ICTAPTAX","NAT_ICTAPTAX","Fish","NAT_ICTAPTAX","",FALSE
+"fish_NAT_INTLCARNNTAX","NAT_INTLCARNNTAX","Fish","NAT_INTLCARNNTAX","",FALSE
+"fish_NAT_INTLCARNPIND","NAT_INTLCARNPIND","Fish","NAT_INTLCARNPIND","",FALSE
+"fish_NAT_INTLCARNPTAX","NAT_INTLCARNPTAX","Fish","NAT_INTLCARNPTAX","",FALSE
+"fish_NAT_INTLINVNTAX","NAT_INTLINVNTAX","Fish","NAT_INTLINVNTAX","",FALSE
+"fish_NAT_INTLINVPIND","NAT_INTLINVPIND","Fish","NAT_INTLINVPIND","",FALSE
+"fish_NAT_INTLINVPTAX","NAT_INTLINVPTAX","Fish","NAT_INTLINVPTAX","",FALSE
+"fish_NAT_INTLLOTNTAX","NAT_INTLLOTNTAX","Fish","NAT_INTLLOTNTAX","",FALSE
+"fish_NAT_INTLLOTPIND","NAT_INTLLOTPIND","Fish","NAT_INTLLOTPIND","",FALSE
+"fish_NAT_INTLLOTPTAX","NAT_INTLLOTPTAX","Fish","NAT_INTLLOTPTAX","",FALSE
+"fish_NAT_INTLMIGRNTAX","NAT_INTLMIGRNTAX","Fish","NAT_INTLMIGRNTAX","",FALSE
+"fish_NAT_INTLMIGRPIND","NAT_INTLMIGRPIND","Fish","NAT_INTLMIGRPIND","",FALSE
+"fish_NAT_INTLMIGRPTAX","NAT_INTLMIGRPTAX","Fish","NAT_INTLMIGRPTAX","",FALSE
+"fish_NAT_INTLNTAX","NAT_INTLNTAX","Fish","NAT_INTLNTAX","",FALSE
+"fish_NAT_INTLPIND","NAT_INTLPIND","Fish","NAT_INTLPIND","",FALSE
+"fish_NAT_INTLPTAX","NAT_INTLPTAX","Fish","NAT_INTLPTAX","",FALSE
+"fish_NAT_INTLRHEONTAX","NAT_INTLRHEONTAX","Fish","NAT_INTLRHEONTAX","",FALSE
+"fish_NAT_INTLRHEOPIND","NAT_INTLRHEOPIND","Fish","NAT_INTLRHEOPIND","",FALSE
+"fish_NAT_INTLRHEOPTAX","NAT_INTLRHEOPTAX","Fish","NAT_INTLRHEOPTAX","",FALSE
+"fish_NAT_INVNTAX","NAT_INVNTAX","Fish","NAT_INVNTAX","",FALSE
+"fish_NAT_INVPIND","NAT_INVPIND","Fish","NAT_INVPIND","",FALSE
+"fish_NAT_INVPTAX","NAT_INVPTAX","Fish","NAT_INVPTAX","",FALSE
+"fish_NAT_LITHNTAX","NAT_LITHNTAX","Fish","NAT_LITHNTAX","",FALSE
+"fish_NAT_LITHPIND","NAT_LITHPIND","Fish","NAT_LITHPIND","",FALSE
+"fish_NAT_LITHPTAX","NAT_LITHPTAX","Fish","NAT_LITHPTAX","",FALSE
+"fish_NAT_LOTNTAX","NAT_LOTNTAX","Fish","NAT_LOTNTAX","",FALSE
+"fish_NAT_LOTPIND","NAT_LOTPIND","Fish","NAT_LOTPIND","",FALSE
+"fish_NAT_LOTPTAX","NAT_LOTPTAX","Fish","NAT_LOTPTAX","",FALSE
+"fish_NAT_MIGRNTAX","NAT_MIGRNTAX","Fish","NAT_MIGRNTAX","",FALSE
+"fish_NAT_MIGRPIND","NAT_MIGRPIND","Fish","NAT_MIGRPIND","",FALSE
+"fish_NAT_MIGRPTAX","NAT_MIGRPTAX","Fish","NAT_MIGRPTAX","",FALSE
+"fish_NAT_MTOLNTAX","NAT_MTOLNTAX","Fish","NAT_MTOLNTAX","",FALSE
+"fish_NAT_MTOLPIND","NAT_MTOLPIND","Fish","NAT_MTOLPIND","",FALSE
+"fish_NAT_MTOLPTAX","NAT_MTOLPTAX","Fish","NAT_MTOLPTAX","",FALSE
+"fish_NAT_NTOLBENTNTAX","NAT_NTOLBENTNTAX","Fish","NAT_NTOLBENTNTAX","",FALSE
+"fish_NAT_NTOLBENTPIND","NAT_NTOLBENTPIND","Fish","NAT_NTOLBENTPIND","",FALSE
+"fish_NAT_NTOLBENTPTAX","NAT_NTOLBENTPTAX","Fish","NAT_NTOLBENTPTAX","",FALSE
+"fish_NAT_NTOLCARNNTAX","NAT_NTOLCARNNTAX","Fish","NAT_NTOLCARNNTAX","",FALSE
+"fish_NAT_NTOLCARNPIND","NAT_NTOLCARNPIND","Fish","NAT_NTOLCARNPIND","",FALSE
+"fish_NAT_NTOLCARNPTAX","NAT_NTOLCARNPTAX","Fish","NAT_NTOLCARNPTAX","",FALSE
+"fish_NAT_NTOLINVNTAX","NAT_NTOLINVNTAX","Fish","NAT_NTOLINVNTAX","",FALSE
+"fish_NAT_NTOLINVPIND","NAT_NTOLINVPIND","Fish","NAT_NTOLINVPIND","",FALSE
+"fish_NAT_NTOLINVPTAX","NAT_NTOLINVPTAX","Fish","NAT_NTOLINVPTAX","",FALSE
+"fish_NAT_NTOLNTAX","NAT_NTOLNTAX","Fish","NAT_NTOLNTAX","",FALSE
+"fish_NAT_NTOLPIND","NAT_NTOLPIND","Fish","NAT_NTOLPIND","",FALSE
+"fish_NAT_NTOLPTAX","NAT_NTOLPTAX","Fish","NAT_NTOLPTAX","",FALSE
+"fish_NAT_OMNINTAX","NAT_OMNINTAX","Fish","NAT_OMNINTAX","",FALSE
+"fish_NAT_OMNIPIND","NAT_OMNIPIND","Fish","NAT_OMNIPIND","",FALSE
+"fish_NAT_OMNIPTAX","NAT_OMNIPTAX","Fish","NAT_OMNIPTAX","",FALSE
+"fish_NAT_PIND","NAT_PIND","Fish","NAT_PIND","",FALSE
+"fish_NAT_PTAX","NAT_PTAX","Fish","NAT_PTAX","",FALSE
+"fish_NAT_RBCATONTAX","NAT_RBCATONTAX","Fish","NAT_RBCATONTAX","",FALSE
+"fish_NAT_RBCATOPIND","NAT_RBCATOPIND","Fish","NAT_RBCATOPIND","",FALSE
+"fish_NAT_RBCATOPTAX","NAT_RBCATOPTAX","Fish","NAT_RBCATOPTAX","",FALSE
+"fish_NAT_RHEONTAX","NAT_RHEONTAX","Fish","NAT_RHEONTAX","",FALSE
+"fish_NAT_RHEOPIND","NAT_RHEOPIND","Fish","NAT_RHEOPIND","",FALSE
+"fish_NAT_RHEOPTAX","NAT_RHEOPTAX","Fish","NAT_RHEOPTAX","",FALSE
+"fish_NAT_SALMNTAX","NAT_SALMNTAX","Fish","NAT_SALMNTAX","",FALSE
+"fish_NAT_SALMPIND","NAT_SALMPIND","Fish","NAT_SALMPIND","",FALSE
+"fish_NAT_SALMPTAX","NAT_SALMPTAX","Fish","NAT_SALMPTAX","",FALSE
+"fish_NAT_TOLRNTAX","NAT_TOLRNTAX","Fish","NAT_TOLRNTAX","",FALSE
+"fish_NAT_TOLRPIND","NAT_TOLRPIND","Fish","NAT_TOLRPIND","",FALSE
+"fish_NAT_TOLRPTAX","NAT_TOLRPTAX","Fish","NAT_TOLRPTAX","",FALSE
+"fish_NAT_TOTLNIND","NAT_TOTLNIND","Fish","NAT_TOTLNIND","",FALSE
+"fish_NAT_TOTLNTAX","NAT_TOTLNTAX","Fish","NAT_TOTLNTAX","",TRUE
+"fish_NAT_WTD_TV","NAT_WTD_TV","Fish","NAT_WTD_TV","",FALSE
+"fish_NTOLBENTNTAX","NTOLBENTNTAX","Fish","NTOLBENTNTAX","",FALSE
+"fish_NTOLBENTPIND","NTOLBENTPIND","Fish","NTOLBENTPIND","",FALSE
+"fish_NTOLBENTPTAX","NTOLBENTPTAX","Fish","NTOLBENTPTAX","",FALSE
+"fish_NTOLCARNNTAX","NTOLCARNNTAX","Fish","NTOLCARNNTAX","",FALSE
+"fish_NTOLCARNPIND","NTOLCARNPIND","Fish","NTOLCARNPIND","",FALSE
+"fish_NTOLCARNPTAX","NTOLCARNPTAX","Fish","NTOLCARNPTAX","",FALSE
+"fish_NTOLINVNTAX","NTOLINVNTAX","Fish","NTOLINVNTAX","",FALSE
+"fish_NTOLINVPIND","NTOLINVPIND","Fish","NTOLINVPIND","",FALSE
+"fish_NTOLINVPTAX","NTOLINVPTAX","Fish","NTOLINVPTAX","",FALSE
+"fish_NTOLNTAX","NTOLNTAX","Fish","NTOLNTAX","",FALSE
+"fish_NTOLPIND","NTOLPIND","Fish","NTOLPIND","",FALSE
+"fish_NTOLPTAX","NTOLPTAX","Fish","NTOLPTAX","",FALSE
+"fish_OMNINTAX","OMNINTAX","Fish","OMNINTAX","",FALSE
+"fish_OMNIPIND","OMNIPIND","Fish","OMNIPIND","",FALSE
+"fish_OMNIPTAX","OMNIPTAX","Fish","OMNIPTAX","",FALSE
+"fish_RBCATONTAX","RBCATONTAX","Fish","RBCATONTAX","",FALSE
+"fish_RBCATOPIND","RBCATOPIND","Fish","RBCATOPIND","",FALSE
+"fish_RBCATOPTAX","RBCATOPTAX","Fish","RBCATOPTAX","",FALSE
+"fish_RHEONTAX","RHEONTAX","Fish","RHEONTAX","",FALSE
+"fish_RHEOPIND","RHEOPIND","Fish","RHEOPIND","",FALSE
+"fish_RHEOPTAX","RHEOPTAX","Fish","RHEOPTAX","",FALSE
+"fish_SALMNTAX","SALMNTAX","Fish","SALMNTAX","",FALSE
+"fish_SALMPIND","SALMPIND","Fish","SALMPIND","",FALSE
+"fish_SALMPTAX","SALMPTAX","Fish","SALMPTAX","",FALSE
+"fish_TOLRNTAX","TOLRNTAX","Fish","TOLRNTAX","",FALSE
+"fish_TOLRPIND","TOLRPIND","Fish","TOLRPIND","",FALSE
+"fish_TOLRPTAX","TOLRPTAX","Fish","TOLRPTAX","",FALSE
+"fish_TOTLNIND","TOTLNIND","Fish","TOTLNIND","",FALSE
+"fish_TOTLNTAX","TOTLNTAX","Fish","TOTLNTAX","",TRUE
+"fish_WTD_TV","WTD_TV","Fish","WTD_TV","",FALSE
+"land_AGKFFACTWS","AGKFFACTWS","Landscape","AGKFFACTWS","",FALSE
+"land_AL2O3WS","AL2O3WS","Landscape","AL2O3WS","",FALSE
+"land_AWCHWS","AWCHWS","Landscape","AWCHWS","",FALSE
+"land_BDHWS","BDHWS","Landscape","BDHWS","",FALSE
+"land_BFIWS","BFIWS","Landscape","BFIWS","",TRUE
+"land_CANALDENSWS","CANALDENSWS","Landscape","CANALDENSWS","",FALSE
+"land_CAOWS","CAOWS","Landscape","CAOWS","",FALSE
+"land_CBNFWS","CBNFWS","Landscape","CBNFWS","",FALSE
+"land_CLAYWS","CLAYWS","Landscape","CLAYWS","",TRUE
+"land_COALMINEDENSWS","COALMINEDENSWS","Landscape","COALMINEDENSWS","",FALSE
+"land_COMPSTRGTHWS","COMPSTRGTHWS","Landscape","COMPSTRGTHWS","",FALSE
+"land_DAMDENSWS","DAMDENSWS","Landscape","DAMDENSWS","",FALSE
+"land_DAMNIDSTORWS","DAMNIDSTORWS","Landscape","DAMNIDSTORWS","",FALSE
+"land_DAMNRMSTORWS","DAMNRMSTORWS","Landscape","DAMNRMSTORWS","",FALSE
+"land_ELEVWS","ELEVWS","Landscape","ELEVWS","",TRUE
+"land_ETWS","ETWS","Landscape","ETWS","",FALSE
+"land_FE2O3WS","FE2O3WS","Landscape","FE2O3WS","",FALSE
+"land_FERTWS","FERTWS","Landscape","FERTWS","",FALSE
+"land_FSTFRZWS","FSTFRZWS","Landscape","FSTFRZWS","",FALSE
+"land_GEOL_HUNT_DOM_PCT_WS","GEOL_HUNT_DOM_PCT_WS","Landscape","GEOL_HUNT_DOM_PCT_WS","",FALSE
+"land_GEOL_REEDBUSH_DOM_PCT_WS","GEOL_REEDBUSH_DOM_PCT_WS","Landscape","GEOL_REEDBUSH_DOM_PCT_WS","",FALSE
+"land_HUDEN2010WS","HUDEN2010WS","Landscape","HUDEN2010WS","",FALSE
+"land_HYDRLCONDWS","HYDRLCONDWS","Landscape","HYDRLCONDWS","",FALSE
+"land_INORGNWETDEP_2008WS","INORGNWETDEP_2008WS","Landscape","INORGNWETDEP_2008WS","",FALSE
+"land_K2OWS","K2OWS","Landscape","K2OWS","",FALSE
+"land_KFFACTWS","KFFACTWS","Landscape","KFFACTWS","",FALSE
+"land_LSTFRZWS","LSTFRZWS","Landscape","LSTFRZWS","",FALSE
+"land_MANUREWS","MANUREWS","Landscape","MANUREWS","",FALSE
+"land_MGOWS","MGOWS","Landscape","MGOWS","",FALSE
+"land_MINEDENSWS","MINEDENSWS","Landscape","MINEDENSWS","",FALSE
+"land_NA2OWS","NA2OWS","Landscape","NA2OWS","",FALSE
+"land_NABD_DENSWS","NABD_DENSWS","Landscape","NABD_DENSWS","",FALSE
+"land_NABD_NIDSTORWS","NABD_NIDSTORWS","Landscape","NABD_NIDSTORWS","",FALSE
+"land_NABD_NRMSTORWS","NABD_NRMSTORWS","Landscape","NABD_NRMSTORWS","",FALSE
+"land_NH4_2008WS","NH4_2008WS","Landscape","NH4_2008WS","",FALSE
+"land_NO3_2008WS","NO3_2008WS","Landscape","NO3_2008WS","",FALSE
+"land_NPDESDENSWS","NPDESDENSWS","Landscape","NPDESDENSWS","",FALSE
+"land_NWS","NWS","Landscape","NWS","",FALSE
+"land_OMHWS","OMHWS","Landscape","OMHWS","",FALSE
+"land_OMWS","OMWS","Landscape","OMWS","",FALSE
+"land_P2O5WS","P2O5WS","Landscape","P2O5WS","",FALSE
+"land_PCTAG2006SLP10WS","PCTAG2006SLP10WS","Landscape","PCTAG2006SLP10WS","",FALSE
+"land_PCTAG2006SLP20WS","PCTAG2006SLP20WS","Landscape","PCTAG2006SLP20WS","",FALSE
+"land_PCTALKINTRUVOLWS","PCTALKINTRUVOLWS","Landscape","PCTALKINTRUVOLWS","",FALSE
+"land_PCTALLUVCOASTWS","PCTALLUVCOASTWS","Landscape","PCTALLUVCOASTWS","",FALSE
+"land_PCTBL2001WS","PCTBL2001WS","Landscape","PCTBL2001WS","",FALSE
+"land_PCTBL2004WS","PCTBL2004WS","Landscape","PCTBL2004WS","",FALSE
+"land_PCTBL2006WS","PCTBL2006WS","Landscape","PCTBL2006WS","",FALSE
+"land_PCTBL2008WS","PCTBL2008WS","Landscape","PCTBL2008WS","",FALSE
+"land_PCTBL2011WS","PCTBL2011WS","Landscape","PCTBL2011WS","",FALSE
+"land_PCTBL2013WS","PCTBL2013WS","Landscape","PCTBL2013WS","",FALSE
+"land_PCTBL2016WS","PCTBL2016WS","Landscape","PCTBL2016WS","",FALSE
+"land_PCTBL2019WS","PCTBL2019WS","Landscape","PCTBL2019WS","",FALSE
+"land_PCTCARBONATEWS","PCTCARBONATEWS","Landscape","PCTCARBONATEWS","",FALSE
+"land_PCTCARBRESIDWS","PCTCARBRESIDWS","Landscape","PCTCARBRESIDWS","",FALSE
+"land_PCTCOASTCRSWS","PCTCOASTCRSWS","Landscape","PCTCOASTCRSWS","",FALSE
+"land_PCTCOLLUVSEDWS","PCTCOLLUVSEDWS","Landscape","PCTCOLLUVSEDWS","",FALSE
+"land_PCTCONIF2001WS","PCTCONIF2001WS","Landscape","PCTCONIF2001WS","",FALSE
+"land_PCTCONIF2004WS","PCTCONIF2004WS","Landscape","PCTCONIF2004WS","",FALSE
+"land_PCTCONIF2006WS","PCTCONIF2006WS","Landscape","PCTCONIF2006WS","",FALSE
+"land_PCTCONIF2008WS","PCTCONIF2008WS","Landscape","PCTCONIF2008WS","",FALSE
+"land_PCTCONIF2011WS","PCTCONIF2011WS","Landscape","PCTCONIF2011WS","",FALSE
+"land_PCTCONIF2013WS","PCTCONIF2013WS","Landscape","PCTCONIF2013WS","",FALSE
+"land_PCTCONIF2016WS","PCTCONIF2016WS","Landscape","PCTCONIF2016WS","",FALSE
+"land_PCTCONIF2019WS","PCTCONIF2019WS","Landscape","PCTCONIF2019WS","",TRUE
+"land_PCTCROP2001WS","PCTCROP2001WS","Landscape","PCTCROP2001WS","",FALSE
+"land_PCTCROP2004WS","PCTCROP2004WS","Landscape","PCTCROP2004WS","",FALSE
+"land_PCTCROP2006WS","PCTCROP2006WS","Landscape","PCTCROP2006WS","",FALSE
+"land_PCTCROP2008WS","PCTCROP2008WS","Landscape","PCTCROP2008WS","",FALSE
+"land_PCTCROP2011WS","PCTCROP2011WS","Landscape","PCTCROP2011WS","",FALSE
+"land_PCTCROP2013WS","PCTCROP2013WS","Landscape","PCTCROP2013WS","",FALSE
+"land_PCTCROP2016WS","PCTCROP2016WS","Landscape","PCTCROP2016WS","",FALSE
+"land_PCTCROP2019WS","PCTCROP2019WS","Landscape","PCTCROP2019WS","",TRUE
+"land_PCTDECID2001WS","PCTDECID2001WS","Landscape","PCTDECID2001WS","",FALSE
+"land_PCTDECID2004WS","PCTDECID2004WS","Landscape","PCTDECID2004WS","",FALSE
+"land_PCTDECID2006WS","PCTDECID2006WS","Landscape","PCTDECID2006WS","",FALSE
+"land_PCTDECID2008WS","PCTDECID2008WS","Landscape","PCTDECID2008WS","",FALSE
+"land_PCTDECID2011WS","PCTDECID2011WS","Landscape","PCTDECID2011WS","",FALSE
+"land_PCTDECID2013WS","PCTDECID2013WS","Landscape","PCTDECID2013WS","",FALSE
+"land_PCTDECID2016WS","PCTDECID2016WS","Landscape","PCTDECID2016WS","",FALSE
+"land_PCTDECID2019WS","PCTDECID2019WS","Landscape","PCTDECID2019WS","",TRUE
+"land_PCTEOLCRSWS","PCTEOLCRSWS","Landscape","PCTEOLCRSWS","",FALSE
+"land_PCTEOLFINEWS","PCTEOLFINEWS","Landscape","PCTEOLFINEWS","",FALSE
+"land_PCTEXTRUVOLWS","PCTEXTRUVOLWS","Landscape","PCTEXTRUVOLWS","",FALSE
+"land_PCTFIRE2000WS","PCTFIRE2000WS","Landscape","PCTFIRE2000WS","",FALSE
+"land_PCTFIRE2001WS","PCTFIRE2001WS","Landscape","PCTFIRE2001WS","",FALSE
+"land_PCTFIRE2002WS","PCTFIRE2002WS","Landscape","PCTFIRE2002WS","",FALSE
+"land_PCTFIRE2003WS","PCTFIRE2003WS","Landscape","PCTFIRE2003WS","",FALSE
+"land_PCTFIRE2004WS","PCTFIRE2004WS","Landscape","PCTFIRE2004WS","",FALSE
+"land_PCTFIRE2005WS","PCTFIRE2005WS","Landscape","PCTFIRE2005WS","",FALSE
+"land_PCTFIRE2006WS","PCTFIRE2006WS","Landscape","PCTFIRE2006WS","",FALSE
+"land_PCTFIRE2007WS","PCTFIRE2007WS","Landscape","PCTFIRE2007WS","",FALSE
+"land_PCTFIRE2008WS","PCTFIRE2008WS","Landscape","PCTFIRE2008WS","",FALSE
+"land_PCTFIRE2009WS","PCTFIRE2009WS","Landscape","PCTFIRE2009WS","",FALSE
+"land_PCTFIRE2010WS","PCTFIRE2010WS","Landscape","PCTFIRE2010WS","",FALSE
+"land_PCTFRSTLOSS2001WS","PCTFRSTLOSS2001WS","Landscape","PCTFRSTLOSS2001WS","",FALSE
+"land_PCTFRSTLOSS2002WS","PCTFRSTLOSS2002WS","Landscape","PCTFRSTLOSS2002WS","",FALSE
+"land_PCTFRSTLOSS2003WS","PCTFRSTLOSS2003WS","Landscape","PCTFRSTLOSS2003WS","",FALSE
+"land_PCTFRSTLOSS2004WS","PCTFRSTLOSS2004WS","Landscape","PCTFRSTLOSS2004WS","",FALSE
+"land_PCTFRSTLOSS2005WS","PCTFRSTLOSS2005WS","Landscape","PCTFRSTLOSS2005WS","",FALSE
+"land_PCTFRSTLOSS2006WS","PCTFRSTLOSS2006WS","Landscape","PCTFRSTLOSS2006WS","",FALSE
+"land_PCTFRSTLOSS2007WS","PCTFRSTLOSS2007WS","Landscape","PCTFRSTLOSS2007WS","",FALSE
+"land_PCTFRSTLOSS2008WS","PCTFRSTLOSS2008WS","Landscape","PCTFRSTLOSS2008WS","",FALSE
+"land_PCTFRSTLOSS2009WS","PCTFRSTLOSS2009WS","Landscape","PCTFRSTLOSS2009WS","",FALSE
+"land_PCTFRSTLOSS2010WS","PCTFRSTLOSS2010WS","Landscape","PCTFRSTLOSS2010WS","",FALSE
+"land_PCTFRSTLOSS2011WS","PCTFRSTLOSS2011WS","Landscape","PCTFRSTLOSS2011WS","",FALSE
+"land_PCTFRSTLOSS2012WS","PCTFRSTLOSS2012WS","Landscape","PCTFRSTLOSS2012WS","",FALSE
+"land_PCTFRSTLOSS2013WS","PCTFRSTLOSS2013WS","Landscape","PCTFRSTLOSS2013WS","",FALSE
+"land_PCTGLACLAKECRSWS","PCTGLACLAKECRSWS","Landscape","PCTGLACLAKECRSWS","",FALSE
+"land_PCTGLACLAKEFINEWS","PCTGLACLAKEFINEWS","Landscape","PCTGLACLAKEFINEWS","",FALSE
+"land_PCTGLACTILCLAYWS","PCTGLACTILCLAYWS","Landscape","PCTGLACTILCLAYWS","",FALSE
+"land_PCTGLACTILCRSWS","PCTGLACTILCRSWS","Landscape","PCTGLACTILCRSWS","",FALSE
+"land_PCTGLACTILLOAMWS","PCTGLACTILLOAMWS","Landscape","PCTGLACTILLOAMWS","",FALSE
+"land_PCTGRS2001WS","PCTGRS2001WS","Landscape","PCTGRS2001WS","",FALSE
+"land_PCTGRS2004WS","PCTGRS2004WS","Landscape","PCTGRS2004WS","",FALSE
+"land_PCTGRS2006WS","PCTGRS2006WS","Landscape","PCTGRS2006WS","",FALSE
+"land_PCTGRS2008WS","PCTGRS2008WS","Landscape","PCTGRS2008WS","",FALSE
+"land_PCTGRS2011WS","PCTGRS2011WS","Landscape","PCTGRS2011WS","",FALSE
+"land_PCTGRS2013WS","PCTGRS2013WS","Landscape","PCTGRS2013WS","",FALSE
+"land_PCTGRS2016WS","PCTGRS2016WS","Landscape","PCTGRS2016WS","",FALSE
+"land_PCTGRS2019WS","PCTGRS2019WS","Landscape","PCTGRS2019WS","",TRUE
+"land_PCTHAY2001WS","PCTHAY2001WS","Landscape","PCTHAY2001WS","",FALSE
+"land_PCTHAY2004WS","PCTHAY2004WS","Landscape","PCTHAY2004WS","",FALSE
+"land_PCTHAY2006WS","PCTHAY2006WS","Landscape","PCTHAY2006WS","",FALSE
+"land_PCTHAY2008WS","PCTHAY2008WS","Landscape","PCTHAY2008WS","",FALSE
+"land_PCTHAY2011WS","PCTHAY2011WS","Landscape","PCTHAY2011WS","",FALSE
+"land_PCTHAY2013WS","PCTHAY2013WS","Landscape","PCTHAY2013WS","",FALSE
+"land_PCTHAY2016WS","PCTHAY2016WS","Landscape","PCTHAY2016WS","",FALSE
+"land_PCTHAY2019WS","PCTHAY2019WS","Landscape","PCTHAY2019WS","",FALSE
+"land_PCTHBWET2001WS","PCTHBWET2001WS","Landscape","PCTHBWET2001WS","",FALSE
+"land_PCTHBWET2004WS","PCTHBWET2004WS","Landscape","PCTHBWET2004WS","",FALSE
+"land_PCTHBWET2006WS","PCTHBWET2006WS","Landscape","PCTHBWET2006WS","",FALSE
+"land_PCTHBWET2008WS","PCTHBWET2008WS","Landscape","PCTHBWET2008WS","",FALSE
+"land_PCTHBWET2011WS","PCTHBWET2011WS","Landscape","PCTHBWET2011WS","",FALSE
+"land_PCTHBWET2013WS","PCTHBWET2013WS","Landscape","PCTHBWET2013WS","",FALSE
+"land_PCTHBWET2016WS","PCTHBWET2016WS","Landscape","PCTHBWET2016WS","",FALSE
+"land_PCTHBWET2019WS","PCTHBWET2019WS","Landscape","PCTHBWET2019WS","",FALSE
+"land_PCTHYDRICWS","PCTHYDRICWS","Landscape","PCTHYDRICWS","",FALSE
+"land_PCTICE2001WS","PCTICE2001WS","Landscape","PCTICE2001WS","",FALSE
+"land_PCTICE2004WS","PCTICE2004WS","Landscape","PCTICE2004WS","",FALSE
+"land_PCTICE2006WS","PCTICE2006WS","Landscape","PCTICE2006WS","",FALSE
+"land_PCTICE2008WS","PCTICE2008WS","Landscape","PCTICE2008WS","",FALSE
+"land_PCTICE2011WS","PCTICE2011WS","Landscape","PCTICE2011WS","",FALSE
+"land_PCTICE2013WS","PCTICE2013WS","Landscape","PCTICE2013WS","",FALSE
+"land_PCTICE2016WS","PCTICE2016WS","Landscape","PCTICE2016WS","",FALSE
+"land_PCTICE2019WS","PCTICE2019WS","Landscape","PCTICE2019WS","",FALSE
+"land_PCTIMP2001WS","PCTIMP2001WS","Landscape","PCTIMP2001WS","",FALSE
+"land_PCTIMP2004WS","PCTIMP2004WS","Landscape","PCTIMP2004WS","",FALSE
+"land_PCTIMP2006WS","PCTIMP2006WS","Landscape","PCTIMP2006WS","",FALSE
+"land_PCTIMP2008WS","PCTIMP2008WS","Landscape","PCTIMP2008WS","",FALSE
+"land_PCTIMP2011WS","PCTIMP2011WS","Landscape","PCTIMP2011WS","",FALSE
+"land_PCTIMP2013WS","PCTIMP2013WS","Landscape","PCTIMP2013WS","",FALSE
+"land_PCTIMP2016WS","PCTIMP2016WS","Landscape","PCTIMP2016WS","",FALSE
+"land_PCTIMP2019WS","PCTIMP2019WS","Landscape","PCTIMP2019WS","",TRUE
+"land_PCTMXFST2001WS","PCTMXFST2001WS","Landscape","PCTMXFST2001WS","",FALSE
+"land_PCTMXFST2004WS","PCTMXFST2004WS","Landscape","PCTMXFST2004WS","",FALSE
+"land_PCTMXFST2006WS","PCTMXFST2006WS","Landscape","PCTMXFST2006WS","",FALSE
+"land_PCTMXFST2008WS","PCTMXFST2008WS","Landscape","PCTMXFST2008WS","",FALSE
+"land_PCTMXFST2011WS","PCTMXFST2011WS","Landscape","PCTMXFST2011WS","",FALSE
+"land_PCTMXFST2013WS","PCTMXFST2013WS","Landscape","PCTMXFST2013WS","",FALSE
+"land_PCTMXFST2016WS","PCTMXFST2016WS","Landscape","PCTMXFST2016WS","",FALSE
+"land_PCTMXFST2019WS","PCTMXFST2019WS","Landscape","PCTMXFST2019WS","",FALSE
+"land_PCTNONAGINTRODMANAGVEGWS","PCTNONAGINTRODMANAGVEGWS","Landscape","PCTNONAGINTRODMANAGVEGWS","",FALSE
+"land_PCTNONCARBRESIDWS","PCTNONCARBRESIDWS","Landscape","PCTNONCARBRESIDWS","",FALSE
+"land_PCTNOT_PRINCIPLEWS","PCTNOT_PRINCIPLEWS","Landscape","PCTNOT_PRINCIPLEWS","",FALSE
+"land_PCTOW2001WS","PCTOW2001WS","Landscape","PCTOW2001WS","",FALSE
+"land_PCTOW2004WS","PCTOW2004WS","Landscape","PCTOW2004WS","",FALSE
+"land_PCTOW2006WS","PCTOW2006WS","Landscape","PCTOW2006WS","",FALSE
+"land_PCTOW2008WS","PCTOW2008WS","Landscape","PCTOW2008WS","",FALSE
+"land_PCTOW2011WS","PCTOW2011WS","Landscape","PCTOW2011WS","",FALSE
+"land_PCTOW2013WS","PCTOW2013WS","Landscape","PCTOW2013WS","",FALSE
+"land_PCTOW2016WS","PCTOW2016WS","Landscape","PCTOW2016WS","",FALSE
+"land_PCTOW2019WS","PCTOW2019WS","Landscape","PCTOW2019WS","",FALSE
+"land_PCTSALLAKEWS","PCTSALLAKEWS","Landscape","PCTSALLAKEWS","",FALSE
+"land_PCTSANDSTONE_CARBONATEWS","PCTSANDSTONE_CARBONATEWS","Landscape","PCTSANDSTONE_CARBONATEWS","",FALSE
+"land_PCTSANDSTONEWS","PCTSANDSTONEWS","Landscape","PCTSANDSTONEWS","",FALSE
+"land_PCTSEMICONSOL_SANDWS","PCTSEMICONSOL_SANDWS","Landscape","PCTSEMICONSOL_SANDWS","",FALSE
+"land_PCTSHRB2001WS","PCTSHRB2001WS","Landscape","PCTSHRB2001WS","",FALSE
+"land_PCTSHRB2004WS","PCTSHRB2004WS","Landscape","PCTSHRB2004WS","",FALSE
+"land_PCTSHRB2006WS","PCTSHRB2006WS","Landscape","PCTSHRB2006WS","",FALSE
+"land_PCTSHRB2008WS","PCTSHRB2008WS","Landscape","PCTSHRB2008WS","",FALSE
+"land_PCTSHRB2011WS","PCTSHRB2011WS","Landscape","PCTSHRB2011WS","",FALSE
+"land_PCTSHRB2013WS","PCTSHRB2013WS","Landscape","PCTSHRB2013WS","",FALSE
+"land_PCTSHRB2016WS","PCTSHRB2016WS","Landscape","PCTSHRB2016WS","",FALSE
+"land_PCTSHRB2019WS","PCTSHRB2019WS","Landscape","PCTSHRB2019WS","",FALSE
+"land_PCTSILICICWS","PCTSILICICWS","Landscape","PCTSILICICWS","",FALSE
+"land_PCTUNCONSOL_SAND_GRAVELWS","PCTUNCONSOL_SAND_GRAVELWS","Landscape","PCTUNCONSOL_SAND_GRAVELWS","",FALSE
+"land_PCTURBHI2001WS","PCTURBHI2001WS","Landscape","PCTURBHI2001WS","",FALSE
+"land_PCTURBHI2004WS","PCTURBHI2004WS","Landscape","PCTURBHI2004WS","",FALSE
+"land_PCTURBHI2006WS","PCTURBHI2006WS","Landscape","PCTURBHI2006WS","",FALSE
+"land_PCTURBHI2008WS","PCTURBHI2008WS","Landscape","PCTURBHI2008WS","",FALSE
+"land_PCTURBHI2011WS","PCTURBHI2011WS","Landscape","PCTURBHI2011WS","",FALSE
+"land_PCTURBHI2013WS","PCTURBHI2013WS","Landscape","PCTURBHI2013WS","",FALSE
+"land_PCTURBHI2016WS","PCTURBHI2016WS","Landscape","PCTURBHI2016WS","",FALSE
+"land_PCTURBHI2019WS","PCTURBHI2019WS","Landscape","PCTURBHI2019WS","",FALSE
+"land_PCTURBLO2001WS","PCTURBLO2001WS","Landscape","PCTURBLO2001WS","",FALSE
+"land_PCTURBLO2004WS","PCTURBLO2004WS","Landscape","PCTURBLO2004WS","",FALSE
+"land_PCTURBLO2006WS","PCTURBLO2006WS","Landscape","PCTURBLO2006WS","",FALSE
+"land_PCTURBLO2008WS","PCTURBLO2008WS","Landscape","PCTURBLO2008WS","",FALSE
+"land_PCTURBLO2011WS","PCTURBLO2011WS","Landscape","PCTURBLO2011WS","",FALSE
+"land_PCTURBLO2013WS","PCTURBLO2013WS","Landscape","PCTURBLO2013WS","",FALSE
+"land_PCTURBLO2016WS","PCTURBLO2016WS","Landscape","PCTURBLO2016WS","",FALSE
+"land_PCTURBLO2019WS","PCTURBLO2019WS","Landscape","PCTURBLO2019WS","",FALSE
+"land_PCTURBMD2001WS","PCTURBMD2001WS","Landscape","PCTURBMD2001WS","",FALSE
+"land_PCTURBMD2004WS","PCTURBMD2004WS","Landscape","PCTURBMD2004WS","",FALSE
+"land_PCTURBMD2006WS","PCTURBMD2006WS","Landscape","PCTURBMD2006WS","",FALSE
+"land_PCTURBMD2008WS","PCTURBMD2008WS","Landscape","PCTURBMD2008WS","",FALSE
+"land_PCTURBMD2011WS","PCTURBMD2011WS","Landscape","PCTURBMD2011WS","",FALSE
+"land_PCTURBMD2013WS","PCTURBMD2013WS","Landscape","PCTURBMD2013WS","",FALSE
+"land_PCTURBMD2016WS","PCTURBMD2016WS","Landscape","PCTURBMD2016WS","",FALSE
+"land_PCTURBMD2019WS","PCTURBMD2019WS","Landscape","PCTURBMD2019WS","",FALSE
+"land_PCTURBOP2001WS","PCTURBOP2001WS","Landscape","PCTURBOP2001WS","",FALSE
+"land_PCTURBOP2004WS","PCTURBOP2004WS","Landscape","PCTURBOP2004WS","",FALSE
+"land_PCTURBOP2006WS","PCTURBOP2006WS","Landscape","PCTURBOP2006WS","",FALSE
+"land_PCTURBOP2008WS","PCTURBOP2008WS","Landscape","PCTURBOP2008WS","",FALSE
+"land_PCTURBOP2011WS","PCTURBOP2011WS","Landscape","PCTURBOP2011WS","",FALSE
+"land_PCTURBOP2013WS","PCTURBOP2013WS","Landscape","PCTURBOP2013WS","",FALSE
+"land_PCTURBOP2016WS","PCTURBOP2016WS","Landscape","PCTURBOP2016WS","",FALSE
+"land_PCTURBOP2019WS","PCTURBOP2019WS","Landscape","PCTURBOP2019WS","",FALSE
+"land_PCTVOLCANICWS","PCTVOLCANICWS","Landscape","PCTVOLCANICWS","",FALSE
+"land_PCTWATERWS","PCTWATERWS","Landscape","PCTWATERWS","",FALSE
+"land_PCTWDWET2001WS","PCTWDWET2001WS","Landscape","PCTWDWET2001WS","",FALSE
+"land_PCTWDWET2004WS","PCTWDWET2004WS","Landscape","PCTWDWET2004WS","",FALSE
+"land_PCTWDWET2006WS","PCTWDWET2006WS","Landscape","PCTWDWET2006WS","",FALSE
+"land_PCTWDWET2008WS","PCTWDWET2008WS","Landscape","PCTWDWET2008WS","",FALSE
+"land_PCTWDWET2011WS","PCTWDWET2011WS","Landscape","PCTWDWET2011WS","",FALSE
+"land_PCTWDWET2013WS","PCTWDWET2013WS","Landscape","PCTWDWET2013WS","",FALSE
+"land_PCTWDWET2016WS","PCTWDWET2016WS","Landscape","PCTWDWET2016WS","",FALSE
+"land_PCTWDWET2019WS","PCTWDWET2019WS","Landscape","PCTWDWET2019WS","",FALSE
+"land_PERDUNWS","PERDUNWS","Landscape","PERDUNWS","",FALSE
+"land_PERHORWS","PERHORWS","Landscape","PERHORWS","",FALSE
+"land_PERMHWS","PERMHWS","Landscape","PERMHWS","",FALSE
+"land_PERMWS","PERMWS","Landscape","PERMWS","",FALSE
+"land_PESTIC97WS","PESTIC97WS","Landscape","PESTIC97WS","",FALSE
+"land_PMAXWS","PMAXWS","Landscape","PMAXWS","",FALSE
+"land_PMINWS","PMINWS","Landscape","PMINWS","",FALSE
+"land_POPDEN2010WS","POPDEN2010WS","Landscape","POPDEN2010WS","",TRUE
+"land_PRECIP08WS","PRECIP08WS","Landscape","PRECIP08WS","",TRUE
+"land_PRECIP09WS","PRECIP09WS","Landscape","PRECIP09WS","",FALSE
+"land_PRECIP8110WS","PRECIP8110WS","Landscape","PRECIP8110WS","",FALSE
+"land_PSUMPY_2004WS","PSUMPY_2004WS","Landscape","PSUMPY_2004WS","",FALSE
+"land_PSUMPY_2005WS","PSUMPY_2005WS","Landscape","PSUMPY_2005WS","",FALSE
+"land_PSUMPY_2008WS","PSUMPY_2008WS","Landscape","PSUMPY_2008WS","",FALSE
+"land_PSUMPY_2009WS","PSUMPY_2009WS","Landscape","PSUMPY_2009WS","",FALSE
+"land_PSUMPY_2013WS","PSUMPY_2013WS","Landscape","PSUMPY_2013WS","",FALSE
+"land_PSUMPY_2014WS","PSUMPY_2014WS","Landscape","PSUMPY_2014WS","",FALSE
+"land_PSUMPY_2018WS","PSUMPY_2018WS","Landscape","PSUMPY_2018WS","",FALSE
+"land_PSUMPY_2019WS","PSUMPY_2019WS","Landscape","PSUMPY_2019WS","",FALSE
+"land_RCKDEPWS","RCKDEPWS","Landscape","RCKDEPWS","",FALSE
+"land_RDCRSSLPWTDWS","RDCRSSLPWTDWS","Landscape","RDCRSSLPWTDWS","",FALSE
+"land_RDCRSWS","RDCRSWS","Landscape","RDCRSWS","",FALSE
+"land_RDDENSWS","RDDENSWS","Landscape","RDDENSWS","",TRUE
+"land_RDHWS","RDHWS","Landscape","RDHWS","",FALSE
+"land_RHMEANWS","RHMEANWS","Landscape","RHMEANWS","",FALSE
+"land_RUNOFFWS","RUNOFFWS","Landscape","RUNOFFWS","",TRUE
+"land_SANDWS","SANDWS","Landscape","SANDWS","",TRUE
+"land_SIO2WS","SIO2WS","Landscape","SIO2WS","",FALSE
+"land_SN_2008WS","SN_2008WS","Landscape","SN_2008WS","",FALSE
+"land_SUPERFUNDDENSWS","SUPERFUNDDENSWS","Landscape","SUPERFUNDDENSWS","",FALSE
+"land_SWS","SWS","Landscape","SWS","",FALSE
+"land_TMAX8110WS","TMAX8110WS","Landscape","TMAX8110WS","",FALSE
+"land_TMEAN_PW_2004WS","TMEAN_PW_2004WS","Landscape","TMEAN_PW_2004WS","",FALSE
+"land_TMEAN_PW_2005WS","TMEAN_PW_2005WS","Landscape","TMEAN_PW_2005WS","",FALSE
+"land_TMEAN_PW_2008WS","TMEAN_PW_2008WS","Landscape","TMEAN_PW_2008WS","",FALSE
+"land_TMEAN_PW_2009WS","TMEAN_PW_2009WS","Landscape","TMEAN_PW_2009WS","",FALSE
+"land_TMEAN_PW_2013WS","TMEAN_PW_2013WS","Landscape","TMEAN_PW_2013WS","",FALSE
+"land_TMEAN_PW_2014WS","TMEAN_PW_2014WS","Landscape","TMEAN_PW_2014WS","",FALSE
+"land_TMEAN_PW_2018WS","TMEAN_PW_2018WS","Landscape","TMEAN_PW_2018WS","",FALSE
+"land_TMEAN_PW_2019WS","TMEAN_PW_2019WS","Landscape","TMEAN_PW_2019WS","",FALSE
+"land_TMEAN_S_2004WS","TMEAN_S_2004WS","Landscape","TMEAN_S_2004WS","",FALSE
+"land_TMEAN_S_2005WS","TMEAN_S_2005WS","Landscape","TMEAN_S_2005WS","",FALSE
+"land_TMEAN_S_2008WS","TMEAN_S_2008WS","Landscape","TMEAN_S_2008WS","",FALSE
+"land_TMEAN_S_2009WS","TMEAN_S_2009WS","Landscape","TMEAN_S_2009WS","",FALSE
+"land_TMEAN_S_2013WS","TMEAN_S_2013WS","Landscape","TMEAN_S_2013WS","",FALSE
+"land_TMEAN_S_2014WS","TMEAN_S_2014WS","Landscape","TMEAN_S_2014WS","",FALSE
+"land_TMEAN_S_2018WS","TMEAN_S_2018WS","Landscape","TMEAN_S_2018WS","",FALSE
+"land_TMEAN_S_2019WS","TMEAN_S_2019WS","Landscape","TMEAN_S_2019WS","",FALSE
+"land_TMEAN_SY_2004WS","TMEAN_SY_2004WS","Landscape","TMEAN_SY_2004WS","",FALSE
+"land_TMEAN_SY_2005WS","TMEAN_SY_2005WS","Landscape","TMEAN_SY_2005WS","",FALSE
+"land_TMEAN_SY_2008WS","TMEAN_SY_2008WS","Landscape","TMEAN_SY_2008WS","",FALSE
+"land_TMEAN_SY_2009WS","TMEAN_SY_2009WS","Landscape","TMEAN_SY_2009WS","",FALSE
+"land_TMEAN_SY_2013WS","TMEAN_SY_2013WS","Landscape","TMEAN_SY_2013WS","",FALSE
+"land_TMEAN_SY_2014WS","TMEAN_SY_2014WS","Landscape","TMEAN_SY_2014WS","",FALSE
+"land_TMEAN_SY_2018WS","TMEAN_SY_2018WS","Landscape","TMEAN_SY_2018WS","",FALSE
+"land_TMEAN_SY_2019WS","TMEAN_SY_2019WS","Landscape","TMEAN_SY_2019WS","",FALSE
+"land_TMEAN_W_2004WS","TMEAN_W_2004WS","Landscape","TMEAN_W_2004WS","",FALSE
+"land_TMEAN_W_2005WS","TMEAN_W_2005WS","Landscape","TMEAN_W_2005WS","",FALSE
+"land_TMEAN_W_2008WS","TMEAN_W_2008WS","Landscape","TMEAN_W_2008WS","",FALSE
+"land_TMEAN_W_2009WS","TMEAN_W_2009WS","Landscape","TMEAN_W_2009WS","",FALSE
+"land_TMEAN_W_2013WS","TMEAN_W_2013WS","Landscape","TMEAN_W_2013WS","",FALSE
+"land_TMEAN_W_2014WS","TMEAN_W_2014WS","Landscape","TMEAN_W_2014WS","",FALSE
+"land_TMEAN_W_2018WS","TMEAN_W_2018WS","Landscape","TMEAN_W_2018WS","",FALSE
+"land_TMEAN_W_2019WS","TMEAN_W_2019WS","Landscape","TMEAN_W_2019WS","",FALSE
+"land_TMEAN8110WS","TMEAN8110WS","Landscape","TMEAN8110WS","",TRUE
+"land_TMIN8110WS","TMIN8110WS","Landscape","TMIN8110WS","",FALSE
+"land_TRIDENSWS","TRIDENSWS","Landscape","TRIDENSWS","",FALSE
+"land_WDMAXWS","WDMAXWS","Landscape","WDMAXWS","",FALSE
+"land_WDMINWS","WDMINWS","Landscape","WDMINWS","",FALSE
+"land_WDSUMWS","WDSUMWS","Landscape","WDSUMWS","",FALSE
+"land_WETINDEXWS","WETINDEXWS","Landscape","WETINDEXWS","",FALSE
+"land_WTDEPWS","WTDEPWS","Landscape","WTDEPWS","",FALSE
+"land_CATAREASQKM","CATAREASQKM","Landscape","CATAREASQKM","",TRUE
+"land_WSAREASQKM","WSAREASQKM","Landscape","WSAREASQKM","",FALSE

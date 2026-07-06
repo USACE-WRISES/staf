@@ -1,0 +1,36 @@
+name,label,domain,default
+pctimp2019,Impervious surface (%),Land cover,TRUE
+pcturbop2019,Developed open space (%),Land cover,FALSE
+pcturblo2019,Developed low intensity (%),Land cover,FALSE
+pcturbmd2019,Developed medium intensity (%),Land cover,FALSE
+pcturbhi2019,Developed high intensity (%),Land cover,FALSE
+pctdecid2019,Deciduous forest (%),Land cover,FALSE
+pctconif2019,Coniferous forest (%),Land cover,FALSE
+pctmxfst2019,Mixed forest (%),Land cover,FALSE
+pctshrb2019,Shrub/scrub (%),Land cover,FALSE
+pctgrs2019,Grassland (%),Land cover,FALSE
+pcthay2019,Hay/pasture (%),Land cover,FALSE
+pctcrop2019,Cultivated crops (%),Land cover,TRUE
+pctwdwet2019,Woody wetland (%),Land cover,TRUE
+pcthbwet2019,Herbaceous wetland (%),Land cover,TRUE
+pctow2019,Open water (%),Land cover,FALSE
+pctbl2019,Barren land (%),Land cover,FALSE
+clay,Clay content (%),Soils,FALSE
+sand,Sand content (%),Soils,FALSE
+om,Soil organic matter (%),Soils,FALSE
+perm,Soil permeability (cm/hr),Soils,FALSE
+rckdep,Depth to bedrock (cm),Soils,FALSE
+wtdep,Water table depth (cm),Soils,FALSE
+kffact,Soil erodibility (K-factor),Soils,FALSE
+bfi,Base flow index (%),Hydrology & climate,TRUE
+runoff,Mean annual runoff (mm),Hydrology & climate,TRUE
+precip8110,Mean annual precipitation (mm),Hydrology & climate,TRUE
+tmean8110,Mean annual air temperature (C),Hydrology & climate,FALSE
+elev,Mean watershed elevation (m),Hydrology & climate,TRUE
+rddens,Road density (km/sq km),Human influence,FALSE
+rdcrs,Road-stream crossings (per sq km),Human influence,TRUE
+fert,Fertilizer nitrogen (kg N/ha/yr),Human influence,FALSE
+manure,Manure nitrogen (kg N/ha/yr),Human influence,FALSE
+popden2010,Population density (per sq km),Human influence,FALSE
+damdens,Dam density (per sq km),Human influence,TRUE
+npdesdens,NPDES discharge density (per sq km),Human influence,FALSE

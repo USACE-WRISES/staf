@@ -1,0 +1,24 @@
+# Posit Connect Cloud publishing configuration.
+# Full runtime bundle + Python 3.12 (Cloud defaults to 3.11, but the pinned
+# scipy/pandas/numpy stack requires >=3.12 — same fix as sfari 8d4a303 / deep f5b012f).
+"$schema" = "https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json"
+type = "python-shiny"
+entrypoint = "app.py"
+title = "stream-curves"
+files = [
+    "/.python-version",
+    "/app.py",
+    "/requirements.txt",
+    "/streamcurves/",
+    "/views/",
+    "/www/",
+    "/data/",
+    "/config/",
+    "/.posit/publish/stream-curves-7GI5.toml",
+    "/.posit/publish/deployments/deployment-9AON.toml",
+]
+validate = true
+product_type = "connect_cloud"
+
+[python]
+version = "3.12"

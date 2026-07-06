@@ -1,0 +1,29 @@
+# stream-curves (Python Shiny) — runtime dependencies
+# Pinned for reproducible Posit Connect Cloud deploys.
+# Shared pins mirror the sister app DEEP (D:\Code\Work\deep) where applicable.
+
+# App framework + widgets
+shiny[theme]==1.6.3
+shinywidgets==0.8.1
+shinyswatch==0.11.0
+faicons==0.2.2
+ipyleaflet==0.20.0
+anyio==4.13.0
+
+# Data + stats
+pandas==3.0.3
+numpy==2.4.6
+scipy==1.18.0
+statsmodels==0.14.6
+scikit-misc==0.5.2
+pyarrow==24.0.0
+
+# Plotting
+matplotlib==3.11.0
+plotnine==0.15.7
+plotly==6.8.0
+
+# IO + config + HTTP
+openpyxl==3.1.5
+PyYAML==6.0.3
+requests==2.34.2

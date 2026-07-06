@@ -1,0 +1,25 @@
+{
+  "_comment": "Canonical STAF 20-function crosswalk used by the DEEP-bundle exporter (R/2x_staf_export.R) to map this app's function labels to the STAF/DEEP canonical function ids. Mirrors staf/docs/assets/data/functions.json (id, name, category). 'aliases' capture known label divergences so the exporter matches robustly at deploy time without a sibling staf checkout. Regenerate from functions.json if STAF changes.",
+  "functions": [
+    {"id": "catchment-hydrology", "name": "Catchment hydrology", "category": "Hydrology", "aliases": []},
+    {"id": "surface-water-storage", "name": "Surface water storage", "category": "Hydrology", "aliases": []},
+    {"id": "reach-inflow", "name": "Reach inflow", "category": "Hydrology", "aliases": []},
+    {"id": "streamflow-regime", "name": "Streamflow regime", "category": "Hydrology", "aliases": []},
+    {"id": "low-flow-baseflow-dynamics", "name": "Low flow and baseflow dynamics", "category": "Hydraulics", "aliases": ["Low flow & baseflow dynamics", "Low flow and baseflow"]},
+    {"id": "high-flow-dynamics", "name": "High flow dynamics", "category": "Hydraulics", "aliases": []},
+    {"id": "floodplain-connectivity", "name": "Floodplain connectivity", "category": "Hydraulics", "aliases": []},
+    {"id": "hyporheic-connectivity", "name": "Hyporheic connectivity", "category": "Hydraulics", "aliases": []},
+    {"id": "channel-evolution", "name": "Channel evolution", "category": "Geomorphology", "aliases": []},
+    {"id": "channel-floodplain-dynamics", "name": "Channel and floodplain dynamics", "category": "Geomorphology", "aliases": ["Channel & floodplain dynamics"]},
+    {"id": "sediment-continuity", "name": "Sediment continuity", "category": "Geomorphology", "aliases": []},
+    {"id": "bed-composition-bedform-dynamics", "name": "Bed composition and bedform dynamics", "category": "Geomorphology", "aliases": ["Bed composition and large wood", "Bed composition & bedform dynamics", "Bed material and bedform dynamics"]},
+    {"id": "light-thermal-regime", "name": "Light & thermal regime", "category": "Physicochemistry", "aliases": ["Light and thermal regime", "Light and thermal", "Thermal regime"]},
+    {"id": "carbon-processing", "name": "Carbon processing", "category": "Physicochemistry", "aliases": []},
+    {"id": "nutrient-cycling", "name": "Nutrient cycling", "category": "Physicochemistry", "aliases": []},
+    {"id": "water-soil-quality", "name": "Water & soil quality", "category": "Physicochemistry", "aliases": ["Water and soil quality", "Water quality"]},
+    {"id": "habitat-provision", "name": "Habitat provision", "category": "Biology", "aliases": []},
+    {"id": "population-support", "name": "Population support", "category": "Biology", "aliases": []},
+    {"id": "community-dynamics", "name": "Community dynamics", "category": "Biology", "aliases": []},
+    {"id": "watershed-connectivity", "name": "Watershed connectivity", "category": "Biology", "aliases": []}
+  ]
+}

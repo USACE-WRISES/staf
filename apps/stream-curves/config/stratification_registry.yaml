@@ -1,0 +1,139 @@
+# ── Stratification Registry ─────────────────────────────────────────────────
+# Defines stratification variables for StreamCurves analysis.
+# Each entry specifies the variable properties and screening parameters.
+
+Ecoregion:
+  display_name: "Ecoregion"
+  column_name: "Ecoregion"
+  type: single
+  levels:
+    - Region_A
+    - Region_B
+    - Region_C
+  min_group_size: 5
+  pairwise_comparisons:
+    - ["Region_A", "Region_C"]
+    - ["Region_B", "Region_C"]
+    - ["Region_A", "Region_B"]
+  notes: "Region_C has fewer sites"
+
+DACAT:
+  display_name: "Drainage Area Category"
+  column_name: "DACAT"
+  type: single
+  levels:
+    - "1"
+    - "2"
+    - "3"
+  min_group_size: 5
+  pairwise_comparisons:
+    - ["1", "2"]
+    - ["2", "3"]
+    - ["1", "3"]
+  notes: "DACAT=3 has few sites"
+
+Ecoregion_x_DACAT:
+  display_name: "Ecoregion x Drainage Area Category"
+  column_name: null
+  type: paired
+  primary: Ecoregion
+  secondary: DACAT
+  min_group_size: 5
+  notes: "Faceted: x=DACAT, facet=Ecoregion. Many cells will have n < 5"
+
+StreamType2:
+  display_name: "Rosgen Stream Type (Collapsed)"
+  column_name: "StreamType2"
+  type: single
+  levels:
+    - B
+    - C
+    - E
+    - F
+  min_group_size: 5
+  pairwise_comparisons:
+    - ["B", "C"]
+    - ["B", "E"]
+    - ["B", "F"]
+    - ["C", "E"]
+    - ["C", "F"]
+    - ["E", "F"]
+  notes: "Derived from StreamType via factor collapsing"
+
+valleytype:
+  display_name: "Valley Type"
+  column_name: "valleytype"
+  type: single
+  levels:
+    - "confined alluvial"
+    - "unconfined alluvial"
+    - "colluvial"
+  min_group_size: 5
+  pairwise_comparisons:
+    - ["confined alluvial", "unconfined alluvial"]
+    - ["confined alluvial", "colluvial"]
+    - ["unconfined alluvial", "colluvial"]
+  notes: ""
+
+Bedmaterial:
+  display_name: "Bed Material"
+  column_name: "Bedmaterial"
+  type: single
+  levels:
+    - Bedrock
+    - Cobble
+    - "Cobble/Bedrock"
+    - Gravel
+    - "Shale Gravel"
+    - "Silt/clay"
+  min_group_size: 3
+  pairwise_comparisons:
+    - ["Gravel", "Bedrock"]
+    - ["Gravel", "Cobble"]
+    - ["Gravel", "Cobble/Bedrock"]
+    - ["Cobble", "Bedrock"]
+    - ["Cobble", "Cobble/Bedrock"]
+    - ["Gravel", "Shale Gravel"]
+    - ["Gravel", "Silt/clay"]
+    - ["Cobble", "Shale Gravel"]
+    - ["Cobble", "Silt/clay"]
+  notes: "Many small groups; trailing space in raw CSV must be trimmed"
+
+FlowRegime:
+  display_name: "Flow Regime"
+  column_name: "FlowRegime"
+  type: single
+  levels:
+    - Perennial
+    - Intermittent
+  min_group_size: 5
+  pairwise_comparisons:
+    - ["Perennial", "Intermittent"]
+  notes: "Binary; Wilcoxon rank-sum instead of Kruskal-Wallis"
+
+BEHIcombined:
+  display_name: "BEHI/NBS Stability (Collapsed)"
+  column_name: "BEHIcombined"
+  type: single
+  levels:
+    - Stable
+    - "Moderately unstable"
+    - Unstable
+  min_group_size: 5
+  pairwise_comparisons:
+    - ["Stable", "Moderately unstable"]
+    - ["Stable", "Unstable"]
+    - ["Moderately unstable", "Unstable"]
+  notes: "Derived from BEHI_NBS via factor collapsing"
+
+BEHIeroding:
+  display_name: "Bank Erosion Status (Collapsed)"
+  column_name: "BEHIeroding"
+  type: single
+  levels:
+    - "Non-eroding Bank"
+    - "Actively eroding"
+  min_group_size: 5
+  pairwise_comparisons:
+    - ["Non-eroding Bank", "Actively eroding"]
+  notes: "Derived from BEHI_NBS via factor collapsing; binary"
