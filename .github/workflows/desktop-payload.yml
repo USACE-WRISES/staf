@@ -38,20 +38,11 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
-      - name: Lock freshness gate
-        shell: pwsh
-        run: |
-          uv pip compile apps/easi/requirements.txt apps/sfari/requirements.txt `
-            apps/deep/requirements.txt apps/stream-curves/requirements.txt `
-            --python-version 3.12 --python-platform windows --no-header -o "$env:TEMP\env.lock.fresh"
-          $fresh = (Get-Content "$env:TEMP\env.lock.fresh" -Raw) -replace "`r`n", "`n"
-          $committed = (Get-Content desktop\payload\env.lock -Raw) -replace "`r`n", "`n"
-          if ($fresh -ne $committed) {
-            Write-Host '::error::desktop/payload/env.lock is stale. Regenerate with:'
-            Write-Host '::error::  uv pip compile apps/*/requirements.txt --python-version 3.12 --python-platform windows --no-header -o desktop/payload/env.lock'
-            exit 1
-          }
-          Write-Host 'env.lock is fresh'
+      # Deterministic: every DIRECT pin in the apps' requirements must appear identically in
+      # env.lock. (A full re-compile diff would fail spuriously as PyPI's transitive versions
+      # drift between lock time and tag time.)
+      - name: Lock consistency gate
+        run: uv run python desktop/scripts/check_lock_consistency.py .
 
       - name: Compute versions and release tag
         id: ver
