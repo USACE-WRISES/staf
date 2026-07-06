@@ -63,12 +63,16 @@ jobs:
         id: prev
         shell: pwsh
         run: |
+          # gh exits nonzero (without throwing) when the release doesn't exist - first run ever.
           $found = 'false'
-          try {
-            gh release download desktop-current --pattern latest-desktop.json --output previous-latest.json
-            if (Test-Path previous-latest.json) { $found = 'true' }
-          } catch { Write-Host 'no previous desktop-current manifest (first payload release)' }
+          gh release download desktop-current --pattern latest-desktop.json --output previous-latest.json
+          if ($LASTEXITCODE -eq 0 -and (Test-Path previous-latest.json)) {
+            $found = 'true'
+          } else {
+            Write-Host 'no previous desktop-current manifest (first payload release)'
+          }
           "found=$found" >> $env:GITHUB_OUTPUT
+          exit 0
 
       - name: Decide whether the env component must be rebuilt
         id: envplan
@@ -137,9 +141,8 @@ jobs:
       - name: Refresh rolling desktop-current manifest
         shell: pwsh
         run: |
-          $exists = 'true'
-          try { gh release view desktop-current | Out-Null } catch { $exists = 'false' }
-          if ($exists -eq 'false') {
+          gh release view desktop-current *> $null
+          if ($LASTEXITCODE -ne 0) {
             gh release create desktop-current --prerelease `
               --title 'desktop-current (rolling payload manifest)' `
               --notes 'Machine-read by STAF Desktop to discover payload updates. Not for humans - install the app from the latest v* release.'

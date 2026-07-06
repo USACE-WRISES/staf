@@ -78,9 +78,8 @@ jobs:
       - name: Update shell block on the rolling desktop-current manifest
         shell: pwsh
         run: |
-          $found = $true
-          try { gh release download desktop-current --pattern latest-desktop.json --output latest-desktop.json } catch { $found = $false }
-          if (-not $found -or -not (Test-Path latest-desktop.json)) {
+          gh release download desktop-current --pattern latest-desktop.json --output latest-desktop.json
+          if ($LASTEXITCODE -ne 0 -or -not (Test-Path latest-desktop.json)) {
             Write-Host 'no desktop-current manifest yet (payload workflow has not run) - skipping shell block update'
             exit 0
           }
