@@ -20,8 +20,8 @@ New-Item -ItemType Directory -Force $OutDir | Out-Null
 if (Test-Path $buildDir) { Remove-Item $buildDir -Recurse -Force }
 New-Item -ItemType Directory -Force $buildDir | Out-Null
 
-# ── 1. Fetch python-build-standalone (latest release, 3.12 x64 windows install_only) ──
-Write-Host '[mini] resolving python-build-standalone release…'
+# -- 1. Fetch python-build-standalone (latest release, 3.12 x64 windows install_only) --
+Write-Host '[mini] resolving python-build-standalone release...'
 $release = Invoke-RestMethod 'https://api.github.com/repos/astral-sh/python-build-standalone/releases/latest'
 $asset = $release.assets |
     Where-Object { $_.name -match '^cpython-3\.12\.\d+\+\d+-x86_64-pc-windows-msvc-install_only_stripped\.tar\.gz$' } |
@@ -41,17 +41,17 @@ if ($LASTEXITCODE -ne 0) { throw "tar extraction failed ($LASTEXITCODE)" }
 $py = Join-Path $buildDir 'python\python.exe'
 if (-not (Test-Path $py)) { throw "python.exe not found after extraction" }
 
-# ── 2. Install shiny into the standalone interpreter (no venv → relocatable) ──
-Write-Host '[mini] pip install shiny…'
+# -- 2. Install shiny into the standalone interpreter (no venv -> relocatable) --
+Write-Host '[mini] pip install shiny...'
 & $py -m pip install --quiet --no-warn-script-location shiny
 if ($LASTEXITCODE -ne 0) { throw "pip install failed ($LASTEXITCODE)" }
 
-# pip's Scripts\*.exe trampolines embed this machine's absolute path — the shell only ever runs
-# `python.exe -m …`, so drop them (same fixup as the real env build).
+# pip's Scripts\*.exe trampolines embed this machine's absolute path - the shell only ever runs
+# `python.exe -m ...`, so drop them (same fixup as the real env build).
 Get-ChildItem (Join-Path $buildDir 'python\Scripts') -Filter '*.exe' -ErrorAction SilentlyContinue | Remove-Item -Force
 
-# ── 3. Stub apps payload ──
-Write-Host '[mini] staging stub app…'
+# -- 3. Stub apps payload --
+Write-Host '[mini] staging stub app...'
 $appsStage = Join-Path $buildDir 'apps-stage'
 New-Item -ItemType Directory -Force (Join-Path $appsStage 'stub') | Out-Null
 @'
@@ -83,15 +83,15 @@ $manifest = [ordered]@{
 }
 $manifest | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $appsStage 'desktop-manifest.json')
 
-# ── 4. Zip both components (zip ROOT = payload dir contents) ──
-Write-Host '[mini] zipping…'
+# -- 4. Zip both components (zip ROOT = payload dir contents) --
+Write-Host '[mini] zipping...'
 $envZip = Join-Path $OutDir "staf-$EnvVersion.zip"
 $appsZip = Join-Path $OutDir "staf-$AppsVersion.zip"
 Remove-Item $envZip, $appsZip -Force -ErrorAction SilentlyContinue
 Compress-Archive -Path (Join-Path $buildDir 'python') -DestinationPath $envZip -CompressionLevel Optimal
 Compress-Archive -Path (Join-Path $appsStage '*') -DestinationPath $appsZip -CompressionLevel Optimal
 
-# ── 5. latest-desktop.json ──
+# -- 5. latest-desktop.json --
 function Get-Meta([string]$path) {
     $item = Get-Item $path
     [ordered]@{
@@ -122,5 +122,5 @@ $latest = [ordered]@{
 }
 $latest | ConvertTo-Json -Depth 5 | Set-Content -Encoding utf8 (Join-Path $OutDir 'latest-desktop.json')
 
-Write-Host "[mini] done → $OutDir"
+Write-Host "[mini] done -> $OutDir"
 Get-ChildItem $OutDir | Format-Table Name, @{n='MB';e={[math]::Round($_.Length/1MB,1)}} -AutoSize

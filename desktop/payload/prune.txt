@@ -1,0 +1,10 @@
+# Delete-globs applied to the env payload after install, relative to the python\ root.
+# Conservative by design: every addition must survive the relocation smoke gate (all four apps
+# boot) before it ships. One glob per line; # starts a comment.
+Lib/site-packages/**/__pycache__
+Lib/site-packages/**/tests/**
+Lib/site-packages/**/test/**
+# JupyterLab/notebook integration assets — Shiny/shinywidgets never serves these, and their
+# webpack chunk filenames overflow Windows path limits inside the payload.
+share/jupyter
+etc/jupyter

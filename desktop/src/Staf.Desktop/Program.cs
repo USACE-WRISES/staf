@@ -16,6 +16,10 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        // Velopack lifecycle hooks (install/update/uninstall) must run first — the call exits the
+        // process for those invocations and is a no-op otherwise.
+        Velopack.VelopackApp.Build().Run();
+
         // Helper mode: `StafDesktop.exe --stop-helper <pid>` delivers Ctrl+C to a child server.
         // Must run before any WinForms/UI initialization.
         if (args is ["--stop-helper", var pidArg] && int.TryParse(pidArg, out var pid))
