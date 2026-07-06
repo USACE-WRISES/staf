@@ -1,6 +1,7 @@
 # Stream Tiered Assessment Framework (STAF)
 
-Monorepo for the STAF documentation site and the four Shiny-for-Python assessment apps.
+Monorepo for the STAF documentation site, the four Shiny-for-Python assessment apps, and the
+STAF Desktop shell that runs those same apps locally.
 
 | Part | Path | Where it runs |
 |---|---|---|
@@ -9,11 +10,13 @@ Monorepo for the STAF documentation site and the four Shiny-for-Python assessmen
 | SFARI — Rapid tier | `apps/sfari` | [gtmenichino-sfari.share.connect.posit.cloud](https://gtmenichino-sfari.share.connect.posit.cloud/) |
 | DEEP — Detailed tier | `apps/deep` | [gtmenichino-deep.share.connect.posit.cloud](https://gtmenichino-deep.share.connect.posit.cloud/) |
 | stream-curves — curve builder for DEEP | `apps/stream-curves` | [gtmenichino-stream-curves.share.connect.posit.cloud](https://gtmenichino-stream-curves.share.connect.posit.cloud/) |
+| STAF Desktop — the same four apps on your own machine | `desktop/` | Windows app (installer + portable zip on [Releases](https://github.com/USACE-WRISES/staf/releases)) |
 
 ## Repository layout
 
 - `docs/` — Jekyll site source (GitHub Pages builds this folder; just-the-docs remote theme). The Tools page (`docs/tools/`) is the launch portal for the four apps; app URLs live in `docs/_data/apps.yml`.
 - `apps/` — the four Shiny for Python apps. Each folder is self-contained (own `requirements.txt`, `www/`, `data/`, tests, and Posit Publisher config) and deploys to its own Posit Connect Cloud content item.
+- `desktop/` — STAF Desktop: a C#/.NET 10 WebView2 shell that supervises the same four apps as local processes on a self-managed Python runtime (downloaded on first run, auto-updated from this repo's GitHub Releases). `dotnet test desktop\Staf.Desktop.slnx` runs its suite; launching a dev build from a checkout runs the apps from the repo `.venv`. Release model: `desktop/RELEASING.md`.
 - `libs/` — reserved for `staf-core`, the future shared package for code duplicated across the apps.
 - `scripts/`, `src/` — TypeScript build pipeline for the metric library (see below).
 - `notes/` — internal working notes; anything outside `docs/` is not published.
