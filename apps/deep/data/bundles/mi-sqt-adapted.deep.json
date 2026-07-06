@@ -1,0 +1,1123 @@
+{
+  "schemaVersion": 1,
+  "tier": "detailed",
+  "assessmentId": "mi-sqt-adapted",
+  "assessmentName": "MI SQT Adapted",
+  "stateCode": "MI",
+  "stateName": "Michigan",
+  "sourceCitation": "Michigan SQT",
+  "applicability": "Michigan streams",
+  "functionCount": 11,
+  "metricsByFunction": [
+    {
+      "functionId": "catchment-hydrology",
+      "functionName": "Catchment hydrology",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "catchment-hydrology-effective-impervious-cover",
+          "metricName": "Effective Impervious Cover",
+          "discipline": "Hydrology",
+          "inputType": "desktop (gis)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Effective Impervious Cover",
+          "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+          "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+          "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 5,
+                "y": 0.7
+              },
+              {
+                "x": 20,
+                "y": 0.3
+              },
+              {
+                "x": 60,
+                "y": 0.01
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "catchment-hydrology-land-use-change-coefficient",
+          "metricName": "Land Use Change Coefficient",
+          "discipline": "Hydrology",
+          "inputType": "desktop (gis)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Land Use Change Coefficient",
+          "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+          "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+          "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 30,
+                "y": 1
+              },
+              {
+                "x": 55,
+                "y": 0.7
+              },
+              {
+                "x": 70,
+                "y": 0.3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "reach-inflow",
+      "functionName": "Reach inflow",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "reach-inflow-concentrated-flow-points",
+          "metricName": "Concentrated Flow Points",
+          "discipline": "Hydrology",
+          "inputType": "field (with desktop pre-screen)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Concentrated Flow Points",
+          "metricStatement": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+          "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+          "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 0.7
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "floodplain-connectivity",
+      "functionName": "Floodplain connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+          "metricName": "Entrenchment Ratio (ER)",
+          "discipline": "Hydraulics",
+          "inputType": "field (survey) or desktop (lidar cross sections)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Entrenchment Ratio (ER)",
+          "metricStatement": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+          "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+          "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT - C and E Streams",
+            "stratification": "C and E Streams",
+            "points": [
+              {
+                "x": 2,
+                "y": 0.3
+              },
+              {
+                "x": 2.4,
+                "y": 0.7
+              },
+              {
+                "x": 5,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "C and E Streams",
+              "layerName": "Michigan SQT - C and E Streams",
+              "points": [
+                {
+                  "x": 2,
+                  "y": 0.3
+                },
+                {
+                  "x": 2.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 5,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "A, B and Bc Streams",
+              "layerName": "Michigan SQT - A, B and Bc Streams",
+              "points": [
+                {
+                  "x": 1.2,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 2.2,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "C and E Streams"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "functionName": "Channel and floodplain dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+          "metricName": "Bank Height Ratio (BHR)",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Bank Height Ratio (BHR)",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1.5,
+                "y": 0.3
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+          "metricName": "Percent Streambank Armoring",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Percent Streambank Armoring",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 9,
+                "y": 0.7
+              },
+              {
+                "x": 21,
+                "y": 0.3
+              },
+              {
+                "x": 30,
+                "y": 0
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+          "metricName": "Percent Streambank Erosion",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Percent Streambank Erosion",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 5,
+                "y": 1
+              },
+              {
+                "x": 10,
+                "y": 0.7
+              },
+              {
+                "x": 75,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "sediment-continuity",
+      "functionName": "Sediment continuity",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "sediment-continuity-aggradation-ratio",
+          "metricName": "Aggradation Ratio",
+          "discipline": "Geomorphology",
+          "inputType": "field or desktop (repeat elevation data)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Aggradation Ratio",
+          "metricStatement": "Indicator of net sediment deposition/aggradation relative to reference condition.",
+          "howToMeasure": "Measure bed and bankfull indicators at repeat cross sections (or compare elevation datasets) to compute aggradation ratio per SQT definition.",
+          "methodContext": "Context: Channel\n\nMethod: Field or Desktop (repeat elevation data)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1.2,
+                "y": 0.69
+              },
+              {
+                "x": 1.4,
+                "y": 0.3
+              },
+              {
+                "x": 1.6,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "light-thermal-regime",
+      "functionName": "Light & thermal regime",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "light-and-thermal-regime-july-mean-temperature",
+          "metricName": "July Mean Temperature",
+          "discipline": "Physicochemistry",
+          "inputType": "field (logger) and/or desktop (data compilation)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "July Mean Temperature",
+          "metricStatement": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+          "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT - Coldwater",
+            "stratification": "Coldwater",
+            "points": [
+              {
+                "x": 59,
+                "y": 1
+              },
+              {
+                "x": 66.2,
+                "y": 0.3
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Coldwater",
+              "layerName": "Michigan SQT - Coldwater",
+              "points": [
+                {
+                  "x": 59,
+                  "y": 1
+                },
+                {
+                  "x": 66.2,
+                  "y": 0.3
+                }
+              ]
+            },
+            {
+              "stratum": "Cold-transitional",
+              "layerName": "Michigan SQT - Cold-transitional",
+              "points": [
+                {
+                  "x": 66.2,
+                  "y": 1
+                },
+                {
+                  "x": 69.8,
+                  "y": 0.3
+                }
+              ]
+            },
+            {
+              "stratum": "Warm & Warm-transitional",
+              "layerName": "Michigan SQT - Warm & Warm-transitional",
+              "points": [
+                {
+                  "x": 69.8,
+                  "y": 1
+                },
+                {
+                  "x": 78.8,
+                  "y": 0.3
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Coldwater"
+        }
+      ]
+    },
+    {
+      "functionId": "carbon-processing",
+      "functionName": "Carbon processing",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "carbon-processing-average-dbh-in",
+          "metricName": "Average DBH (in)",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Average DBH (in)",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 12,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "carbon-processing-herbaceous-cover",
+          "metricName": "Herbaceous Cover",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Herbaceous Cover",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 80,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "carbon-processing-native-shrub-density",
+          "metricName": "Native Shrub Density",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Native Shrub Density",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT - Forested",
+            "stratification": "Forested",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 100,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Forested",
+              "layerName": "Michigan SQT - Forested",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 100,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Scrub-shrub",
+              "layerName": "Michigan SQT - Scrub-shrub",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 470,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Forested"
+        },
+        {
+          "metricId": "carbon-processing-tree-density",
+          "metricName": "Tree Density",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Tree Density",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 95,
+                "y": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "nutrient-cycling",
+      "functionName": "Nutrient cycling",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "nutrient-cycling-buffer-width",
+          "metricName": "Buffer Width",
+          "discipline": "Physicochemistry",
+          "inputType": "desktop (gis) and/or field",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Buffer Width",
+          "metricStatement": "Width of vegetated riparian buffer that filters nutrients/sediment and moderates temperature and organic matter inputs.",
+          "howToMeasure": "Measure average buffer width along the reach by land use/valley setting; apply slope- or stream-type-stratified SQT thresholds.",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Desktop (GIS) and/or Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 25,
+                "y": 0.3
+              },
+              {
+                "x": 75,
+                "y": 0.7
+              },
+              {
+                "x": 150,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "nutrient-cycling-total-phosphorus",
+          "metricName": "Total Phosphorus",
+          "discipline": "Physicochemistry",
+          "inputType": "field (sampling) and/or desktop (data compilation)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Total Phosphorus",
+          "metricStatement": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+          "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+          "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT - Northern Lakes and Forests & North Central Hardwood Forests - Forests and Drift Plains",
+            "stratification": "Northern Lakes and Forests & North Central Hardwood Forests - Forests and Drift Plains",
+            "points": [
+              {
+                "x": 3.9,
+                "y": 1
+              },
+              {
+                "x": 12,
+                "y": 0.7
+              },
+              {
+                "x": 50,
+                "y": 0.3
+              },
+              {
+                "x": 151,
+                "y": 0
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Northern Lakes and Forests & North Central Hardwood Forests - Forests and Drift Plains",
+              "layerName": "Michigan SQT - Northern Lakes and Forests & North Central Hardwood Forests - Forests and Drift Plains",
+              "points": [
+                {
+                  "x": 3.9,
+                  "y": 1
+                },
+                {
+                  "x": 12,
+                  "y": 0.7
+                },
+                {
+                  "x": 50,
+                  "y": 0.3
+                },
+                {
+                  "x": 151,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "stratum": "Southern Michigan/ Northern Indiana Drift Plains - Forests and Drift Plains",
+              "layerName": "Michigan SQT - Southern Michigan/ Northern Indiana Drift Plains - Forests and Drift Plains",
+              "points": [
+                {
+                  "x": 12.5,
+                  "y": 1
+                },
+                {
+                  "x": 30,
+                  "y": 0.7
+                },
+                {
+                  "x": 90,
+                  "y": 0.3
+                },
+                {
+                  "x": 186,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "stratum": "Huron Erie Lake Plains & Eastern Corn Belt Plains - Huron Erie Lake Plains & Eastern Corn Belt Plains",
+              "layerName": "Michigan SQT - Huron Erie Lake Plains & Eastern Corn Belt Plains - Huron Erie Lake Plains & Eastern Corn Belt Plains",
+              "points": [
+                {
+                  "x": 29,
+                  "y": 1
+                },
+                {
+                  "x": 70,
+                  "y": 0.7
+                },
+                {
+                  "x": 160,
+                  "y": 0.3
+                },
+                {
+                  "x": 550,
+                  "y": 0
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Northern Lakes and Forests & North Central Hardwood Forests - Forests and Drift Plains"
+        }
+      ]
+    },
+    {
+      "functionId": "water-soil-quality",
+      "functionName": "Water & soil quality",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "water-and-soil-quality-dissolved-oxygen",
+          "metricName": "Dissolved oxygen",
+          "discipline": "Physicochemistry",
+          "inputType": "field",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Dissolved oxygen",
+          "metricStatement": "DO is high enough (>5-6 mg/L) for aquatic life, unless naturally lower in warm/boggy streams.",
+          "howToMeasure": "Collect spot DO readings and compile minima from time series where available.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT - Coldwater & Cold-Transitional",
+            "stratification": "Coldwater & Cold-Transitional",
+            "points": [
+              {
+                "x": 6,
+                "y": 0.3
+              },
+              {
+                "x": 7,
+                "y": 0.7
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Coldwater & Cold-Transitional",
+              "layerName": "Michigan SQT - Coldwater & Cold-Transitional",
+              "points": [
+                {
+                  "x": 6,
+                  "y": 0.3
+                },
+                {
+                  "x": 7,
+                  "y": 0.7
+                }
+              ]
+            },
+            {
+              "stratum": "Warm & Warm-transitional",
+              "layerName": "Michigan SQT - Warm & Warm-transitional",
+              "points": [
+                {
+                  "x": 4,
+                  "y": 0.3
+                },
+                {
+                  "x": 5,
+                  "y": 0.7
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Coldwater & Cold-Transitional"
+        },
+        {
+          "metricId": "water-and-soil-quality-e-coli-100ml",
+          "metricName": "E. Coli/100mL",
+          "discipline": "Physicochemistry",
+          "inputType": "field (meter/logger) and/or desktop (data compilation)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "E. Coli/100mL",
+          "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+          "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 10,
+                "y": 1
+              },
+              {
+                "x": 300,
+                "y": 0.7
+              },
+              {
+                "x": 1000,
+                "y": 0.3
+              },
+              {
+                "x": 4500,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "habitat-provision",
+      "functionName": "Habitat provision",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "habitat-provision-lwd-index",
+          "metricName": "LWD Index",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "LWD Index",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 1350,
+                "y": 0.7
+              },
+              {
+                "x": 2825,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "habitat-provision-percent-riffle",
+          "metricName": "Percent Riffle",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Percent Riffle",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT - A and B Streams",
+            "stratification": "A and B Streams",
+            "points": [
+              {
+                "x": 20,
+                "y": 0
+              },
+              {
+                "x": 50,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "A and B Streams",
+              "layerName": "Michigan SQT - A and B Streams",
+              "points": [
+                {
+                  "x": 20,
+                  "y": 0
+                },
+                {
+                  "x": 50,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "C and E Stream Types",
+              "layerName": "Michigan SQT - C and E Stream Types",
+              "points": [
+                {
+                  "x": 20,
+                  "y": 0
+                },
+                {
+                  "x": 45,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "A and B Streams"
+        },
+        {
+          "metricId": "habitat-provision-pool-depth-ratio",
+          "metricName": "Pool Depth Ratio",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Pool Depth Ratio",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 1.1,
+                "y": 0
+              },
+              {
+                "x": 1.5,
+                "y": 0.3
+              },
+              {
+                "x": 2,
+                "y": 0.7
+              },
+              {
+                "x": 3,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "habitat-provision-pool-spacing-ratio",
+          "metricName": "Pool Spacing Ratio",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Pool Spacing Ratio",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT - C and E Streams",
+            "stratification": "C and E Streams",
+            "points": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 3.5,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "C and E Streams",
+              "layerName": "Michigan SQT - C and E Streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 3.5,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "A and B Streams",
+              "layerName": "Michigan SQT - A and B Streams",
+              "points": [
+                {
+                  "x": 4,
+                  "y": 1
+                },
+                {
+                  "x": 5,
+                  "y": 0.7
+                },
+                {
+                  "x": 6.5,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "stratum": "Bc Streams",
+              "layerName": "Michigan SQT - Bc Streams",
+              "points": [
+                {
+                  "x": 5,
+                  "y": 1
+                },
+                {
+                  "x": 6,
+                  "y": 0.7
+                },
+                {
+                  "x": 8,
+                  "y": 0
+                }
+              ]
+            }
+          ],
+          "activeStratum": "C and E Streams"
+        }
+      ]
+    },
+    {
+      "functionId": "population-support",
+      "functionName": "Population support",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "population-support-fish",
+          "metricName": "Fish",
+          "discipline": "Biology",
+          "inputType": "field (bioassessment) and/or desktop (existing scores)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Fish",
+          "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+          "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+          "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT - P51 Wadeable & Warm and Warm-transitional Water",
+            "stratification": "P51 Wadeable & Warm and Warm-transitional Water",
+            "points": [
+              {
+                "x": -10,
+                "y": 0
+              },
+              {
+                "x": -4,
+                "y": 0.3
+              },
+              {
+                "x": 4,
+                "y": 0.69
+              },
+              {
+                "x": 10,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "population-support-macroinvertebrates",
+          "metricName": "Macroinvertebrates",
+          "discipline": "Biology",
+          "inputType": "field (bioassessment) and/or desktop (existing scores)",
+          "sourceCitation": "Michigan SQT",
+          "xLabel": "Macroinvertebrates",
+          "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+          "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+          "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Michigan SQT - P51 Wadeable",
+            "stratification": "P51 Wadeable",
+            "points": [
+              {
+                "x": -9,
+                "y": 0
+              },
+              {
+                "x": -4,
+                "y": 0.3
+              },
+              {
+                "x": 4,
+                "y": 0.69
+              },
+              {
+                "x": 9,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "P51 Wadeable",
+              "layerName": "Michigan SQT - P51 Wadeable",
+              "points": [
+                {
+                  "x": -9,
+                  "y": 0
+                },
+                {
+                  "x": -4,
+                  "y": 0.3
+                },
+                {
+                  "x": 4,
+                  "y": 0.69
+                },
+                {
+                  "x": 9,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "P22 Non-Wadeable",
+              "layerName": "Michigan SQT - P22 Non-Wadeable",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 25,
+                  "y": 0.3
+                },
+                {
+                  "x": 75,
+                  "y": 0.69
+                },
+                {
+                  "x": 100,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "P51 Wadeable"
+        }
+      ]
+    }
+  ],
+  "unresolvedMetrics": []
+}

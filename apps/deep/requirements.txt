@@ -1,0 +1,39 @@
+# DEEP — runtime dependencies, pinned for reproducible deploys (matches EASI/SFARI).
+#
+# Posit Connect Cloud installs from this file (pip only; manylinux wheels for
+# Python 3.12). No API keys required at runtime. Reportlab powers the PDF export;
+# the delineation/datasource stack is the shared HyRiver set. matplotlib/plotly
+# are intentionally omitted (DEEP has no server-side plots — the cross-section
+# tool from SFARI is a Phase 3+ addition).
+
+# --- App framework + interactive map ---
+shiny==1.6.3
+shinywidgets==0.8.1
+ipyleaflet==0.20.0
+anyio==4.13.0
+
+# --- HyRiver geospatial/hydrology stack (delineation + Phase 3 auto-compute) ---
+pynhd==0.19.4
+py3dep==0.19.0
+pygeohydro==0.19.4
+pygeoutils==0.19.5
+pygeoogc==0.19.4
+async-retriever==0.19.3
+hydrosignatures==0.19.3
+
+# --- Geospatial core (binary wheels bundle GDAL/GEOS/PROJ) ---
+geopandas==1.1.3
+pyogrio==0.12.1
+shapely==2.1.2
+pyproj==3.7.2
+rasterio==1.5.0
+rioxarray==0.22.0
+xarray==2026.4.0
+numpy==2.4.6
+pandas==3.0.3
+
+# --- PDF export ---
+reportlab==4.5.1
+
+# --- HTTP (keyless national data services) ---
+requests==2.34.2

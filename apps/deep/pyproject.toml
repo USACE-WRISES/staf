@@ -1,0 +1,15 @@
+[project]
+name = "deep-staf"
+version = "0.1.0"
+description = "DEEP — Detailed Evaluation of Ecosystem Processes (STAF detailed-tier assessment tool)"
+requires-python = ">=3.11"
+# Phase 1 (headless scoring core) needs only the standard library.
+# The interactive app (Phase 2+) will add shiny, shinywidgets, ipyleaflet, and
+# the shared HyRiver / datasource stack, mirroring EASI/SFARI.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

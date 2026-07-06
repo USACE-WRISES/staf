@@ -1,0 +1,177 @@
+/* DEEP measure-worksheet interactions.
+ *
+ * Metric values are raw numeric inputs. Each edit updates that metric's index
+ * chip and the computed function score CLIENT-SIDE (no round-trip flicker) using
+ * the reference-curve points embedded on the metric block, and notifies the
+ * server via Shiny.setInputValue so the live rollup + report recompute
+ * authoritatively. Mirrors the non-binding shadow-copy pattern EASI/SFARI use.
+ */
+(function () {
+  function send(id, payload) {
+    if (window.Shiny && Shiny.setInputValue) {
+      payload._t = Date.now();
+      Shiny.setInputValue(id, payload, { priority: "event" });
+    }
+  }
+  function clamp01(y) { return y < 0 ? 0 : (y > 1 ? 1 : y); }
+
+  // Piecewise-linear interpolation — mirror of deep/curves.interp_curve.
+  function interp(points, x) {
+    if (!points || !points.length) return null;
+    var p = points.slice().sort(function (a, b) { return a.x - b.x; });
+    if (p.length === 1 || x <= p[0].x) return clamp01(p[0].y);
+    if (x >= p[p.length - 1].x) return clamp01(p[p.length - 1].y);
+    for (var i = 0; i < p.length - 1; i++) {
+      if (p[i].x <= x && x <= p[i + 1].x) {
+        var s = p[i + 1].x - p[i].x;
+        if (s <= 0) return clamp01(p[i + 1].y);
+        var t = (x - p[i].x) / s;
+        return clamp01(p[i].y + t * (p[i + 1].y - p[i].y));
+      }
+    }
+    return clamp01(p[p.length - 1].y);
+  }
+  function idxColor(v) {
+    if (v == null) return "#eef1f6";
+    if (v <= 0.39) return "#f5b5b5";
+    if (v <= 0.69) return "#f5e7a6";
+    return "#c8d9f2";
+  }
+  function fnBand(v) {
+    if (v <= 5) return { l: "Non-Functioning", c: "#f5b5b5" };
+    if (v <= 10) return { l: "Functioning-at-Risk", c: "#f5e7a6" };
+    return { l: "Functioning", c: "#c8d9f2" };
+  }
+  function pointsOf(metricEl) {
+    try { return JSON.parse(metricEl.getAttribute("data-points") || "[]"); }
+    catch (e) { return []; }
+  }
+  function metricIndex(metricEl) {
+    var input = metricEl.querySelector(".deep-metric-input");
+    var na = metricEl.querySelector(".deep-na");
+    if (na && na.checked) return null;
+    if (!input || input.value === "" || input.value == null) return null;
+    var v = parseFloat(input.value);
+    if (isNaN(v)) return null;
+    return interp(pointsOf(metricEl), v);
+  }
+  function idxLabel(v) {
+    if (v == null) return "—";
+    if (v <= 0.39) return "Non-Functioning";
+    if (v <= 0.69) return "Functioning-at-Risk";
+    return "Functioning";
+  }
+  function fmtNum(v) {
+    if (v == null || isNaN(v)) return "—";
+    return (v === Math.round(v)) ? String(Math.round(v)) : parseFloat(v.toFixed(2)).toString();
+  }
+  function rawValue(metricEl) {
+    var input = metricEl.querySelector(".deep-metric-input");
+    var na = metricEl.querySelector(".deep-na");
+    if (na && na.checked) return null;
+    if (!input || input.value === "" || input.value == null) return null;
+    var v = parseFloat(input.value);
+    return isNaN(v) ? null : v;
+  }
+  // Reposition the plot's site marker from the geometry embedded on the SVG.
+  function updateMarker(metricEl, val, idx) {
+    var svg = metricEl.querySelector(".deep-curve");
+    if (!svg) return;
+    var v = svg.querySelector(".deep-mk-v"), hh = svg.querySelector(".deep-mk-h"), dot = svg.querySelector(".deep-mk-dot");
+    if (val == null || idx == null) {
+      [v, hh, dot].forEach(function (el) { if (el) el.setAttribute("visibility", "hidden"); });
+      return;
+    }
+    var x0 = parseFloat(svg.getAttribute("data-x0")), x1 = parseFloat(svg.getAttribute("data-x1"));
+    var y0 = parseFloat(svg.getAttribute("data-y0")), y1 = parseFloat(svg.getAttribute("data-y1"));
+    var xmin = parseFloat(svg.getAttribute("data-xmin")), xmax = parseFloat(svg.getAttribute("data-xmax"));
+    var dx = (xmax - xmin) || 1;
+    var vx = val < xmin ? xmin : (val > xmax ? xmax : val);
+    var px = x0 + (vx - xmin) / dx * (x1 - x0);
+    var py = y1 - clamp01(idx) * (y1 - y0);
+    if (v) { v.setAttribute("x1", px.toFixed(1)); v.setAttribute("x2", px.toFixed(1));
+             v.setAttribute("y1", y1.toFixed(1)); v.setAttribute("y2", py.toFixed(1)); v.removeAttribute("visibility"); }
+    if (hh) { hh.setAttribute("x1", x0.toFixed(1)); hh.setAttribute("x2", px.toFixed(1));
+              hh.setAttribute("y1", py.toFixed(1)); hh.setAttribute("y2", py.toFixed(1)); hh.removeAttribute("visibility"); }
+    if (dot) { dot.setAttribute("cx", px.toFixed(1)); dot.setAttribute("cy", py.toFixed(1)); dot.removeAttribute("visibility"); }
+  }
+  // Update the scoring table's highlighted "Your value" row.
+  function updateHereRow(metricEl, val, idx) {
+    var row = metricEl.querySelector(".deep-criteria-table .is-here");
+    if (!row) return;
+    var xc = row.querySelector(".deep-here-x"), ic = row.querySelector(".deep-here-idx"), bc = row.querySelector(".deep-here-band");
+    if (val == null || idx == null) {
+      if (xc) xc.textContent = "—";
+      if (ic) ic.textContent = "—";
+      if (bc) bc.innerHTML = '<span class="deep-band-dot" style="background:#e7ebf1;"></span>—';
+      return;
+    }
+    if (xc) xc.textContent = fmtNum(val);
+    if (ic) ic.textContent = idx.toFixed(2);
+    if (bc) bc.innerHTML = '<span class="deep-band-dot" style="background:' + idxColor(idx) + ';"></span>' + idxLabel(idx);
+  }
+  function updateMetric(metricEl) {
+    var val = rawValue(metricEl);
+    var idx = (val == null) ? null : interp(pointsOf(metricEl), val);
+    var chip = metricEl.querySelector(".deep-metric-index");
+    if (chip) { chip.textContent = (idx == null ? "—" : idx.toFixed(2)); chip.style.background = idxColor(idx); }
+    updateMarker(metricEl, val, idx);
+    updateHereRow(metricEl, val, idx);
+  }
+  function updateFunction() {
+    var card = document.querySelector(".deep-scorecard");
+    var panel = document.querySelector(".sfari-fnpanel-inner");
+    if (!card || !panel) return;
+    var vals = [];
+    panel.querySelectorAll(".deep-metric").forEach(function (mEl) {
+      var i = metricIndex(mEl); if (i != null) vals.push(i);
+    });
+    var num = card.querySelector(".deep-fscore-num");
+    var band = card.querySelector(".deep-fscore-band");
+    if (!vals.length) {
+      if (num) num.textContent = "–";
+      if (band) { band.textContent = "Not scored yet"; band.style.background = "#e7ebf1"; }
+      return;
+    }
+    var score = (vals.reduce(function (a, b) { return a + b; }, 0) / vals.length) * 15;
+    var b = fnBand(score);
+    if (num) num.textContent = score.toFixed(1);
+    if (band) { band.textContent = b.l; band.style.background = b.c; }
+  }
+
+  document.addEventListener("input", function (e) {
+    var mi = e.target.closest(".deep-metric-input");
+    if (mi) {
+      var mEl = mi.closest(".deep-metric");
+      if (mEl) { updateMetric(mEl); updateFunction(); send("measure_set", { mid: mEl.getAttribute("data-metric"), value: mi.value }); }
+      return;
+    }
+    var note = e.target.closest(".sfari-metric-note");
+    if (note) { debounce(note, function () { send("measure_note", { mid: note.dataset.midNote, note: note.value }); }); return; }
+  });
+
+  document.addEventListener("change", function (e) {
+    var strat = e.target.closest(".deep-stratum-select");
+    if (strat) { send("measure_stratum", { mid: strat.dataset.midStratum, stratum: strat.value }); return; }
+    var na = e.target.closest(".deep-na");
+    if (na) {
+      var mEl = na.closest(".deep-metric");
+      var input = mEl ? mEl.querySelector(".deep-metric-input") : null;
+      if (input) input.disabled = na.checked;
+      if (mEl) { updateMetric(mEl); updateFunction(); }
+      send("measure_na", { mid: na.dataset.midNa, na: na.checked });
+      return;
+    }
+  });
+
+  document.addEventListener("click", function (e) {
+    var rep = e.target.closest("[data-report]");
+    if (rep) { send("open_report_evt", {}); return; }
+    var nav = e.target.closest("[data-nav]");
+    if (nav) { send("nav_move", { d: parseInt(nav.dataset.nav, 10) }); return; }
+    var jump = e.target.closest(".sfari-nav-fn");
+    if (jump && jump.dataset.idx !== undefined) { send("nav_jump", { i: parseInt(jump.dataset.idx, 10) }); return; }
+  });
+
+  function debounce(el, fn) { clearTimeout(el._deb); el._deb = setTimeout(fn, 350); }
+})();

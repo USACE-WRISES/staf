@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 1,
+  "tier": "detailed",
+  "assessmentId": "spring-demo-willamette",
+  "assessmentName": "SPRING Demo — Willamette Lowland (synthetic)",
+  "stateCode": "OR",
+  "stateName": "Oregon",
+  "sourceCitation": "SPRING synthetic demo — NOT for real assessments",
+  "applicability": "Demonstration of a SPRING-built assessment bundle for DEEP.",
+  "metricsByFunction": [
+    {
+      "functionId": "catchment-hydrology",
+      "functionName": "Catchment hydrology",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-catchment-hydrology-percent-impervious-cover",
+          "metricName": "Percent Impervious Cover",
+          "discipline": "Hydrology",
+          "inputType": "desktop (gis)",
+          "sourceCitation": "SPRING synthetic",
+          "xLabel": "Impervious cover (%)",
+          "howToMeasure": "Delineate the watershed and compute percent impervious cover from NLCD.",
+          "methodContext": "Context: Watershed | Method: Desktop (GIS)",
+          "assignmentOrigin": "canonical",
+          "curve": {
+            "layerName": "SPRING synthetic",
+            "stratification": "",
+            "points": [{"x": 0, "y": 1}, {"x": 9, "y": 0.7}, {"x": 25, "y": 0.3}, {"x": 75, "y": 0}]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "floodplain-connectivity",
+      "functionName": "Floodplain connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-floodplain-connectivity-entrenchment-ratio",
+          "metricName": "Entrenchment Ratio (ER)",
+          "discipline": "Hydraulics",
+          "inputType": "field (survey) or desktop (lidar cross sections)",
+          "sourceCitation": "SPRING synthetic",
+          "xLabel": "Entrenchment ratio",
+          "howToMeasure": "Survey a representative cross-section; ER = flood-prone width / bankfull width.",
+          "methodContext": "Context: Channel/Floodplain | Method: Field or desktop",
+          "assignmentOrigin": "canonical",
+          "curve": {
+            "layerName": "SPRING synthetic",
+            "stratification": "",
+            "points": [{"x": 1.0, "y": 0}, {"x": 1.4, "y": 0.3}, {"x": 2.2, "y": 0.7}, {"x": 3.0, "y": 1}]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "channel-evolution",
+      "functionName": "Channel evolution",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-channel-evolution-bank-height-ratio",
+          "metricName": "Bank Height Ratio (BHR)",
+          "discipline": "Geomorphology",
+          "inputType": "field (survey) or desktop (lidar cross sections)",
+          "sourceCitation": "SPRING synthetic",
+          "xLabel": "Bank height ratio",
+          "howToMeasure": "BHR = lowest bank height / max bankfull depth from the surveyed section.",
+          "methodContext": "Context: Channel | Method: Field or desktop",
+          "assignmentOrigin": "canonical",
+          "curve": {
+            "layerName": "SPRING synthetic",
+            "stratification": "",
+            "points": [{"x": 1.0, "y": 1}, {"x": 1.2, "y": 0.7}, {"x": 1.5, "y": 0.3}, {"x": 2.0, "y": 0}]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "nutrient-cycling",
+      "functionName": "Nutrient cycling",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-nutrient-cycling-total-phosphorus",
+          "metricName": "Total Phosphorus",
+          "discipline": "Physicochemistry",
+          "inputType": "field (lab)",
+          "sourceCitation": "SPRING synthetic",
+          "xLabel": "Total P (mg/L)",
+          "howToMeasure": "Collect a water sample; analyze total phosphorus at an accredited lab.",
+          "methodContext": "Context: Channel | Method: Field + lab",
+          "assignmentOrigin": "canonical",
+          "curve": {
+            "layerName": "SPRING synthetic",
+            "stratification": "",
+            "points": [{"x": 0, "y": 1}, {"x": 0.05, "y": 0.7}, {"x": 0.1, "y": 0.3}, {"x": 0.3, "y": 0}]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "habitat-provision",
+      "functionName": "Habitat provision",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-habitat-provision-percent-riffle",
+          "metricName": "Percent Riffle",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "SPRING synthetic",
+          "xLabel": "Riffle (%)",
+          "howToMeasure": "Walk the reach; estimate the percent of channel length in riffle habitat.",
+          "methodContext": "Context: Channel | Method: Field",
+          "assignmentOrigin": "canonical",
+          "curve": {
+            "layerName": "SPRING synthetic",
+            "stratification": "",
+            "points": [{"x": 0, "y": 0}, {"x": 20, "y": 0.3}, {"x": 40, "y": 0.7}, {"x": 60, "y": 1}]
+          }
+        }
+      ]
+    }
+  ]
+}
