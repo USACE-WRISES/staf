@@ -1,0 +1,462 @@
+[
+  {
+    "id": "catchment-hydrology",
+    "category": "Hydrology",
+    "order": 1,
+    "name": "Catchment hydrology",
+    "shortDescription": "Land uses alter water quantity and quality delivered to the stream.",
+    "definition": "Represents watershed-scale drivers that change runoff, infiltration, and pollutant delivery. It reflects how land cover and management shape the volume and timing of water entering the stream network.",
+    "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "surface-water-storage",
+    "category": "Hydrology",
+    "order": 2,
+    "name": "Surface water storage",
+    "shortDescription": "Natural or artificial storage attenuates flows and increases residence time.",
+    "definition": "Represents the capacity of wetlands, ponds, and floodplain features to store water. Storage moderates peak flows and supports baseflow by slowing runoff.",
+    "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "reach-inflow",
+    "category": "Hydrology",
+    "order": 3,
+    "name": "Reach inflow",
+    "shortDescription": "Local inputs alter magnitude, timing, and quality of flow.",
+    "definition": "Captures tributaries, ditches, pipes, and other local inflows that change discharge or water quality at the reach scale.",
+    "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "streamflow-regime",
+    "category": "Hydrology",
+    "order": 4,
+    "name": "Streamflow regime",
+    "shortDescription": "Characteristic flow pattern that shapes habitat and transport.",
+    "definition": "Represents the timing, magnitude, frequency, and duration of flow events that structure physical and ecological processes.",
+    "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "low-flow-baseflow-dynamics",
+    "category": "Hydraulics",
+    "order": 5,
+    "name": "Low flow and baseflow dynamics",
+    "shortDescription": "Maintains wetted habitat and moderates conditions during low water.",
+    "definition": "Represents how low flows sustain habitat, temperature moderation, and water quality during dry periods.",
+    "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "high-flow-dynamics",
+    "category": "Hydraulics",
+    "order": 6,
+    "name": "High flow dynamics",
+    "shortDescription": "Drives erosion and channel maintenance during peaks.",
+    "definition": "Represents the energy of high flows that mobilize sediment, shape channels, and connect to floodplains.",
+    "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "floodplain-connectivity",
+    "category": "Hydraulics",
+    "order": 7,
+    "name": "Floodplain connectivity",
+    "shortDescription": "Lateral exchange supports nutrient cycling and habitat.",
+    "definition": "Represents how often and how effectively the channel connects with its floodplain to exchange water, sediment, and organic matter.",
+    "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "hyporheic-connectivity",
+    "category": "Hydraulics",
+    "order": 8,
+    "name": "Hyporheic connectivity",
+    "shortDescription": "Surface-subsurface exchange supports temperature and nutrient regulation.",
+    "definition": "Represents exchange between surface water and shallow subsurface flow paths that influence temperature, nutrients, and habitat.",
+    "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "channel-evolution",
+    "category": "Geomorphology",
+    "order": 9,
+    "name": "Channel evolution",
+    "shortDescription": "Changes in channel dimensions and slope reflecting adjustment.",
+    "definition": "Represents the stage of channel adjustment driven by legacy impacts, altered flows, or sediment imbalance.",
+    "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "channel-floodplain-dynamics",
+    "category": "Geomorphology",
+    "order": 10,
+    "name": "Channel and floodplain dynamics",
+    "shortDescription": "Bank processes and planform dynamics that affect complexity.",
+    "definition": "Represents lateral migration, bar formation, and floodplain building that create channel complexity.",
+    "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "sediment-continuity",
+    "category": "Geomorphology",
+    "order": 11,
+    "name": "Sediment continuity",
+    "shortDescription": "Balanced sediment supply and transport maintaining form and habitat.",
+    "definition": "Represents whether sediment supply, transport, and storage are in balance for the reach and watershed.",
+    "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "bed-composition-bedform-dynamics",
+    "category": "Geomorphology",
+    "order": 12,
+    "name": "Bed composition and bedform dynamics",
+    "shortDescription": "Substrate and bedforms (and wood effects) supporting habitat and exchange.",
+    "definition": "Represents the size, sorting, and structure of bed materials and bedforms that support habitat and hyporheic exchange.",
+    "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "light-thermal-regime",
+    "category": "Physicochemistry",
+    "order": 13,
+    "name": "Light and thermal regime",
+    "shortDescription": "Regulates temperature and energy inputs shaping chemistry.",
+    "definition": "Represents shading, solar input, and thermal buffering that influence water temperature and ecosystem metabolism.",
+    "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "carbon-processing",
+    "category": "Physicochemistry",
+    "order": 14,
+    "name": "Carbon processing",
+    "shortDescription": "Organic matter dynamics supporting food webs and metabolism.",
+    "definition": "Represents inputs, storage, and breakdown of organic matter that drive ecosystem respiration and production.",
+    "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "nutrient-cycling",
+    "category": "Physicochemistry",
+    "order": 15,
+    "name": "Nutrient cycling",
+    "shortDescription": "N and P transformations controlling productivity and water quality.",
+    "definition": "Represents uptake, retention, and transformation of nutrients within the stream corridor.",
+    "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "water-soil-quality",
+    "category": "Physicochemistry",
+    "order": 16,
+    "name": "Water and soil quality",
+    "shortDescription": "Contaminants and constituents influencing chemical condition.",
+    "definition": "Represents chemical stressors in water and soils that affect aquatic life and system health.",
+    "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "habitat-provision",
+    "category": "Biology",
+    "order": 17,
+    "name": "Habitat provision",
+    "shortDescription": "Physical habitat diversity supporting life stages and taxa.",
+    "definition": "Represents the variety and quality of physical habitats that support organisms across life stages.",
+    "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "population-support",
+    "category": "Biology",
+    "order": 18,
+    "name": "Population support",
+    "shortDescription": "Survival, reproduction, and movement of key taxa.",
+    "definition": "Represents the capacity of the reach to sustain populations, including access to spawning and rearing areas.",
+    "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "community-dynamics",
+    "category": "Biology",
+    "order": 19,
+    "name": "Community dynamics",
+    "shortDescription": "Balanced assemblages of native taxa and resilience.",
+    "definition": "Represents community composition, diversity, and invasive pressure within the reach.",
+    "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  },
+  {
+    "id": "watershed-connectivity",
+    "category": "Biology",
+    "order": 20,
+    "name": "Watershed connectivity",
+    "shortDescription": "Longitudinal and lateral connectivity enabling recovery.",
+    "definition": "Represents connectivity that enables recolonization, gene flow, and recovery after disturbance.",
+    "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+    "scoreBand": {
+      "functioning": [
+        11,
+        15
+      ],
+      "atRisk": [
+        6,
+        10
+      ],
+      "nonFunctioning": [
+        0,
+        5
+      ]
+    }
+  }
+]

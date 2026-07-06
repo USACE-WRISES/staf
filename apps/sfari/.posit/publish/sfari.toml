@@ -1,0 +1,27 @@
+# Posit Publisher configuration — deploy this app to Posit Connect Cloud.
+#
+# In VS Code: install the "Posit Publisher" extension, open this folder, open the
+# Posit Publisher panel, pick the "sfari" configuration, select your Connect Cloud
+# credential, and click Deploy. Docs:
+# https://github.com/posit-dev/publisher/blob/main/docs/configuration.md
+"$schema" = "https://cdn.posit.co/publisher/schemas/posit-publishing-schema-v3.json"
+type = "python-shiny"
+entrypoint = "app.py"
+title = "sfari"
+files = [
+    "/app.py",
+    "/requirements.txt",
+    "/.python-version",
+    "/sfari/",
+    "/www/",
+    "/data/",
+    "/.posit/publish/sfari.toml",
+]
+validate = true
+product_type = "connect_cloud"
+
+# Python 3.12 is required — rasterio 1.5.0 (and the pinned numpy/pandas/HyRiver stack)
+# need >=3.12. The bundled /.python-version pins uv to 3.12 so Connect Cloud's resolver
+# does not fall back to its 3.11 default.
+[python]
+version = "3.12"

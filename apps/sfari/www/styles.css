@@ -1,0 +1,760 @@
+/* EASI — StreamStats-style app chrome + STAF-style screening report.
+   Mirrors the STAF design tokens (docs/assets/css/custom.css) so the EASI report
+   popup reads like the STAF screening summary. Served automatically from www/. */
+
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+:root {
+  --easi-accent: #2f4b7c;
+  --easi-accent-dark: #243a61;
+  /* outcome borders / titles (STAF) */
+  --phys-border: #4a7fb5; --phys-title: #3b6d9c;
+  --chem-border: #b5873a; --chem-title: #9a7332;
+  --bio-border:  #3a8a5c; --bio-title:  #327a50;
+  --eci-title:   #1f3f6e;
+  /* Good / Fair / Poor band colors (STAF) */
+  --band-poor: #f5b5b5; --band-fair: #f5e7a6; --band-good: #c8d9f2;
+  /* surfaces */
+  --card-border: #d5deea; --rule: #e5e8ee; --surface-soft: #f6f8fb;
+  --font-head: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+}
+
+body { font-family: var(--font-body); }
+h1, h2, h3, h4, h5, h6, .card-header { font-family: var(--font-head); }
+
+/* --------------------------------------------------------------------------- */
+/* StreamStats-style chrome                                                     */
+/* --------------------------------------------------------------------------- */
+.bslib-sidebar-layout > .sidebar { background: var(--surface-soft); }
+.sidebar h4 { color: var(--eci-title); font-weight: 700; }
+.btn-primary { background: var(--easi-accent); border-color: var(--easi-accent); }
+.btn-primary:hover, .btn-primary:focus {
+  background: var(--easi-accent-dark); border-color: var(--easi-accent-dark);
+}
+.card-header { color: var(--eci-title); font-weight: 600; }
+.leaflet-container { border-radius: 6px; }
+.easi-snap-note { font-size: 12px; margin: 4px 0 0; }
+.easi-snap-note.warn { color: #9a6a00; }
+.easi-snap-note.ok { color: #1a7f37; }
+
+/* --------------------------------------------------------------------------- */
+/* Report tables / chips / bars (migrated from app.py inline CSS)               */
+/* --------------------------------------------------------------------------- */
+.easi-tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.easi-tbl th, .easi-tbl td {
+  border-bottom: 1px solid var(--rule); padding: 4px 7px;
+  text-align: left; vertical-align: top;
+}
+.easi-tbl th { background: #fafbfd; font-weight: 600; border-bottom: 2px solid #d7dce5; }
+.easi-disc td { background: #f3f5f9; font-weight: 600; color: var(--easi-accent); }
+.easi-chip { padding: 2px 8px; border-radius: 10px; font-size: 11.5px; font-weight: 600; }
+.easi-bar-row { display: flex; gap: 8px; align-items: center; margin: 3px 0; }
+.easi-bar-row.indent { margin-left: 18px; }
+.easi-bar-label { width: 184px; flex: none; font-size: 12px; line-height: 1.2; }
+.easi-bar-track { flex: 1; background: #edeef2; border-radius: 3px; height: 15px; }
+.easi-bar-fill { height: 15px; border-radius: 3px; }
+.easi-bar-val { width: 34px; flex: none; text-align: right; font-size: 12px; font-weight: 600; }
+/* in-table rating override (chip-styled native <select>) + per-metric notes */
+.easi-rate-sel {
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  border: 1px solid rgba(0, 0, 0, .22); border-radius: 10px;
+  padding: 2px 19px 2px 9px; font-weight: 600; font-size: 11.5px; cursor: pointer;
+  width: fit-content; min-width: 58px; white-space: nowrap;   /* snug to the rating word */
+  transition: border-color .12s, box-shadow .12s;
+  background-repeat: no-repeat; background-position: right 6px center; background-size: 10px 6px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23334155'/%3E%3C/svg%3E");
+}
+.easi-rate-sel.rate-Good { background-color: var(--band-good); color: #1f3f6e; }
+.easi-rate-sel.rate-Fair { background-color: var(--band-fair); color: #6b5310; }
+.easi-rate-sel.rate-Poor { background-color: var(--band-poor); color: #7a2e2e; }
+.easi-rate-sel.rate-auto { background-color: #eef2f8; color: #55607a; }
+/* the closed chip is colored, but the expanded option list stays neutral white */
+.easi-rate-sel option { background-color: #fff; color: #2a3344; }
+.easi-rate-cell { display: flex; align-items: center; gap: 5px; }
+.easi-rate-sel:hover, .easi-rate-sel:focus {
+  border-color: var(--easi-accent); box-shadow: 0 1px 5px rgba(20, 40, 80, .18); outline: none;
+}
+/* manually overridden row: accent stripe + faint tint. Cross-section-derived rows are
+   intentionally NOT tinted (they aren't manual overrides — see _metric_table). */
+.easi-row-ovr td { background: #f3f7fd; }
+.easi-row-ovr td:first-child { box-shadow: inset 3px 0 0 var(--easi-accent); }
+/* per-metric note: icon button + expandable textarea sub-row */
+.easi-note-cell { width: 46px; text-align: center; }
+.easi-note-btn {
+  cursor: pointer; padding: 1px 6px; line-height: 1.2; font-size: 12px;
+  color: #5b6b85; background: #fff; border: 1px solid var(--card-border); border-radius: 5px;
+  transition: border-color .12s, color .12s, background .12s;
+}
+.easi-note-btn:hover { color: var(--easi-accent); border-color: var(--easi-accent); background: #eef2f8; }
+.easi-note-btn.has-note { color: #fff; background: var(--easi-accent); border-color: var(--easi-accent); }
+.easi-note-row { display: none; }
+.easi-note-row.open { display: table-row; }
+.easi-note-row td { background: #f8fafc; padding: 6px 10px; }
+.easi-note-ta {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 38px;
+  border: 1px solid var(--card-border); border-radius: 6px; padding: 6px 8px;
+  font-size: 12px; color: #2a3344; background: #fff;
+}
+.easi-note-ta:focus {
+  outline: none; border-color: var(--easi-accent); box-shadow: 0 0 0 2px rgba(47, 75, 124, .12);
+}
+
+/* --------------------------------------------------------------------------- */
+/* Metric-table display toggles (STAF "screening" controls; www/report-controls.js) */
+/* Detail columns/rows/badges are always rendered but hidden until the matching     */
+/* checkbox flips a class on #easi-report — purely client-side, so a toggle never    */
+/* re-renders a Shiny output (no flicker / no .recalculating spinner).               */
+/* --------------------------------------------------------------------------- */
+.easi-metric-toolbar {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
+  margin: 2px 0 8px; padding: 7px 10px;
+  background: #f6f8fc; border: 1px solid var(--card-border); border-radius: 8px;
+}
+.easi-toggle-item {
+  display: inline-flex; align-items: center; gap: 5px; margin: 0; font-weight: 500;
+  font-size: 12px; color: #33415c; cursor: pointer; user-select: none;
+}
+.easi-toggle-item input { cursor: pointer; margin: 0; }
+
+/* default-hidden detail (revealed by the wrapper classes below) */
+.easi-col-adv, .easi-col-map { display: none; }
+.easi-fnf-badge, .easi-auto-cue { display: none; }
+.easi-rollup-row { display: none; }
+
+#easi-report.show-adv .easi-col-adv { display: table-cell; }
+#easi-report.show-map .easi-col-map { display: table-cell; }
+#easi-report.show-rollup .easi-rollup-row { display: table-row; }
+#easi-report.show-fnf .easi-fnf-badge { display: inline-block; }
+#easi-report.show-suggested .easi-auto-cue { display: inline; }
+
+/* mapping cells (D / i / –) read as compact centered codes */
+.easi-col-map { text-align: center; font-weight: 600; color: #46536e; }
+
+/* function-score cell: score + band badge + auto cue on one line */
+.easi-fs-cell { white-space: nowrap; }
+.easi-fnf-badge {
+  margin-left: 6px; padding: 0 6px; border-radius: 9px; vertical-align: middle;
+  font-size: 10px; font-weight: 700; color: #2a3344;
+}
+.easi-auto-cue { margin-left: 6px; font-size: 11px; color: #8791a6; font-style: italic; }
+
+/* Function Score: read-only STAF-style slider vs the plain number, chosen by the
+   "show-slider" toggle (wrapper ships .show-slider, so the slider is the default). Both are
+   emitted in the cell; CSS shows one — flipping is instant, no re-render. */
+#easi-report.show-slider .easi-fscore-plain { display: none; }
+.easi-fslider { display: none; align-items: center; gap: 8px; vertical-align: middle; }
+#easi-report.show-slider .easi-fslider { display: inline-flex; }
+.easi-fslider-bars { width: 108px; }
+.easi-fslider-labels { display: none; }              /* NF/AR/F above the track (Show F/AR/NF) */
+#easi-report.show-slider.show-fnf .easi-fslider-labels { display: flex; margin-bottom: 2px; }
+.easi-fslider-labels span {
+  flex: 1; text-align: center; font-size: 8px; font-weight: 700; color: #6b7280; line-height: 1;
+}
+.easi-fslider-track {
+  position: relative; height: 6px; border-radius: 3px;
+  background: linear-gradient(to right, #f5b5b5 0 33.33%, #f5e7a6 33.33% 66.66%,
+                              #c8d9f2 66.66% 100%);
+}
+.easi-fslider-knob {
+  position: absolute; top: 50%; width: 11px; height: 11px; border-radius: 50%;
+  background: #fff; border: 2px solid #33415c; transform: translate(-50%, -50%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+}
+.easi-fslider-num { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* integrated outcome rollup: two renderings toggled purely by the mappings state (no
+   re-render). Aligned <tfoot> — values sit under the P/C/B columns — shows when mappings
+   are ON; the right-justified standalone table shows when mappings are OFF. */
+.easi-metrics-block { margin: 0 0 6px; }
+#easi-report:not(.show-map) .easi-rollup-foot { display: none; }
+#easi-report.show-map .easi-rollup-standalone { display: none; }
+/* center the mapping column (header, D/i/– codes, and the aligned rollup values) so they
+   line up in-column — beats the base left-aligned .easi-tbl th/td */
+.easi-tbl th.easi-col-map, .easi-tbl td.easi-col-map { text-align: center; }
+.easi-tbl th.easi-rollup-lbl { text-align: right; font-weight: 700; color: var(--easi-accent); }
+.easi-rollup-foot td, .easi-tbl.easi-rollup-standalone td { font-variant-numeric: tabular-nums; }
+.easi-tbl.easi-rollup-standalone td { text-align: center; min-width: 3.4rem; }
+.easi-tbl.easi-rollup-standalone thead th { text-align: center; }
+/* full-width: the label column stretches so the values sit at the right; the label text is
+   right-justified (like the mappings-on footer) so it hugs the values */
+.easi-tbl.easi-rollup-standalone th.easi-rollup-lbl { text-align: right; width: 100%; }
+.easi-rollup-foot td.easi-band, .easi-rollup-standalone td.easi-band {
+  font-weight: 700; color: #26324a;
+}
+/* standalone (mappings hidden): full-width block — label far left, values on the right
+   under its own P/C/B header (the aligned tfoot uses the table's headers instead) */
+.easi-rollup-standalone { width: 100%; margin: 6px 0 0; }
+
+/* --------------------------------------------------------------------------- */
+/* STAF screening-summary layout (report modal)                                */
+/* --------------------------------------------------------------------------- */
+.easi-summary-head { margin-bottom: 0.7rem; }
+.easi-summary-head h3 { margin: 0 0 0.45rem; color: var(--eci-title); font-weight: 700; }
+.easi-facts { display: flex; flex-wrap: wrap; gap: 6px; }
+.easi-fact {
+  background: #eef2f8; border: 1px solid var(--card-border); border-radius: 12px;
+  padding: 2px 10px; font-size: 12px; color: #33415c;
+}
+.easi-fact b { color: var(--eci-title); font-weight: 600; }
+
+/* two-panel summary plots: function scores (grouped by category) | condition indices */
+.easi-summary-plots {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 18px;
+  align-items: start; margin: 6px 0 14px;
+}
+@media (max-width: 760px) { .easi-summary-plots { grid-template-columns: 1fr; } }
+.easi-plot-panel { min-width: 0; }
+.easi-plot-title {
+  font-family: var(--font-head); font-weight: 700; font-size: 0.95rem;
+  color: var(--eci-title); margin: 0 0 4px;
+}
+.easi-plot-legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 0 0 8px; }
+.easi-leg-item { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #556; }
+.easi-leg-sw {
+  width: 11px; height: 11px; border-radius: 2px; display: inline-block;
+  border: 1px solid rgba(0, 0, 0, .18);
+}
+.easi-fn-block { margin-bottom: 7px; }
+.easi-fn-group {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: #3a6ea5; margin: 4px 0 2px;
+}
+
+/* cross-section block: summary table + editable inputs (left) beside the plot (right) */
+.easi-xsection-wrap {
+  display: grid; grid-template-columns: 300px 1fr; gap: 10px;
+  align-items: stretch; margin: 12px 0;   /* plot column matches the left card's height */
+}
+.easi-xsection {
+  border: 1px solid var(--card-border); border-radius: 8px; padding: 8px;
+  background: #fff; text-align: center; min-width: 0;
+  display: flex; flex-direction: column; justify-content: flex-start;
+  flex: 1; min-height: 300px;              /* fill the column height (safety floor 300px) */
+}
+.easi-xsection img { max-width: 100%; height: auto; }
+.easi-xsection-cap { font-size: 11px; color: #667; margin: 4px 0 0; }
+
+.easi-xs-panel {
+  border: 1px solid var(--card-border); border-radius: 8px; padding: 8px 10px 10px;
+  background: #f7f9fc; display: flex; flex-direction: column; min-width: 0;
+}
+.easi-xs-panel-title {
+  font-family: var(--font-head); font-weight: 600; color: var(--eci-title);
+  font-size: 0.9rem; margin-bottom: 6px;
+}
+.easi-xs-tbl { margin-bottom: 8px; }
+.easi-xs-tbl th { background: transparent; font-weight: 600; white-space: nowrap; }
+.easi-xs-tbl td { text-align: right; }
+.easi-xs-foot { font-size: 10.5px; color: #993366; margin: 0 0 8px; }
+.easi-xs-fields { display: flex; gap: 10px; }
+.easi-xs-fields .shiny-input-container { flex: 1; margin-bottom: 6px; }
+.easi-xs-panel label { font-size: 11.5px; font-weight: 600; color: #33415c; }
+.easi-xs-panel .form-control { padding: 3px 8px; height: auto; }
+.easi-xs-panel .shiny-options-group { font-size: 12px; }
+.easi-xs-panel .btn { margin-top: 2px; align-self: flex-start; }
+
+/* plot column: a header row (title + candidate selector) sits above the Plotly plot,
+   clear of the modebar (which stays top-right inside the plot). */
+.easi-xs-right { display: flex; flex-direction: column; min-width: 0; }
+.easi-xs-plot-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 2px;
+}
+.easi-xs-plot-title {
+  font-family: var(--font-head); font-weight: 600; color: var(--eci-title);
+  font-size: 0.95rem;
+}
+.easi-xs-switch {
+  display: flex; align-items: center; gap: 2px; flex: none;
+  background: rgba(255, 255, 255, .9); border: 1px solid var(--card-border);
+  border-radius: 7px; padding: 1px 3px; box-shadow: 0 1px 3px rgba(16, 24, 40, .08);
+}
+.easi-xs-arrow {
+  border: none; background: transparent; cursor: pointer;
+  padding: 0 5px; font-size: 12px; line-height: 1.4; color: var(--easi-accent);
+}
+.easi-xs-arrow:hover { color: var(--eci-title); }
+.easi-xs-switch-lbl { font-size: 11px; color: #33415c; min-width: 92px; text-align: center; }
+
+@media (max-width: 640px) {
+  .easi-xsection-wrap { grid-template-columns: 1fr; }
+}
+
+.easi-section-title {
+  font-family: var(--font-head); font-weight: 600; color: var(--eci-title);
+  margin: 16px 0 6px; font-size: 0.98rem;
+}
+
+/* collapsible "Outcome rollup" (native <details>/<summary>), collapsed by default */
+.easi-rollup { margin: 16px 0 6px; }
+summary.easi-rollup-sum {
+  cursor: pointer; list-style: none; user-select: none;
+  display: flex; align-items: center; gap: 6px; margin: 0;
+}
+summary.easi-rollup-sum::-webkit-details-marker { display: none; }
+summary.easi-rollup-sum::before {
+  content: ""; flex: none; width: 0; height: 0;
+  border-left: 5px solid var(--easi-accent);
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  transition: transform .15s ease;
+}
+details.easi-rollup[open] > summary.easi-rollup-sum::before { transform: rotate(90deg); }
+.easi-disclaimer { color: #667; font-size: 11.5px; margin-top: 12px; }
+
+/* --------------------------------------------------------------------------- */
+/* Report modal sizing (target Bootstrap classes — robust across Shiny vers.)   */
+/* --------------------------------------------------------------------------- */
+/* The report (the only size="xl" modal) fills the viewport height and scrolls ONLY in its
+   body. The background page is already locked (html, body overflow:hidden), so this removes
+   the outer modal scrollbar and the wasted space above the popup. */
+.modal-dialog.modal-xl {
+  max-width: min(1180px, 96vw);
+  height: calc(100vh - 1.5rem);     /* fill the viewport, ~0.75rem gap top + bottom */
+  margin: 0.75rem auto;
+}
+.modal-xl .modal-content { max-height: 100%; overflow: hidden; }   /* no outer scroll */
+.modal-xl .modal-body   { overflow-y: auto; }                      /* the only scroll region */
+/* The report must sit ABOVE the absolutely-positioned header (1200) and left pane
+   (1100) so it's fully visible; its backdrop covers them too, so the user has to
+   close the report (✕ or click-outside) before interacting with the map/pane. */
+.modal-backdrop { z-index: 1290 !important; }
+.modal { z-index: 1300 !important; }
+.easi-modal-footer {
+  display: flex; gap: 8px; justify-content: flex-end;
+  border-top: 1px solid var(--rule); margin-top: 14px; padding-top: 10px;
+}
+
+@media (max-width: 920px) {
+  .outcome-cards { grid-template-columns: 1fr; }
+}
+
+/* ========================================================================== */
+/* StreamStats-style full-screen shell                                         */
+/* ========================================================================== */
+html, body { height: 100%; margin: 0; overflow: hidden; }
+.bslib-page-fillable { height: 100vh !important; }
+.bslib-page-fillable, .bslib-page-fillable > .container-fluid { padding: 0 !important; gap: 0 !important; margin: 0 !important; }
+.easi-shell { position: absolute; inset: 0; overflow: hidden; }
+
+/* top header bar */
+.easi-header {
+  position: absolute; top: 0; left: 0; right: 0; height: 50px; z-index: 1200;
+  background: var(--easi-accent-dark); color: #fff;
+  display: flex; align-items: center; padding: 0 16px;
+}
+.easi-header .easi-brand { font-family: var(--font-head); font-weight: 700; font-size: 1.05rem; }
+.easi-header .easi-brand small { font-weight: 400; opacity: .8; font-size: .8rem; margin-left: 8px; }
+.easi-header .easi-nav { margin-left: auto; display: flex; gap: 18px; }
+.easi-header .easi-nav a { color: #cdd8ec; text-decoration: none; font-size: 13px; cursor: pointer; }
+.easi-header .easi-nav a:hover { color: #fff; }
+
+/* Shared STAF cross-app nav — links to the other STAF tier apps + STAF home. */
+.easi-header .staf-topnav {
+  display: flex; align-items: center; gap: 14px;
+  margin-left: 22px; padding-left: 20px;
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+}
+.easi-header .staf-topnav-link {
+  color: #cdd8ec; text-decoration: none; font-size: 12px;
+  white-space: nowrap; cursor: pointer;
+}
+.easi-header .staf-topnav-link:hover { color: #fff; }
+.easi-header .staf-topnav-link.is-current { color: #fff; font-weight: 700; cursor: default; }
+
+/* map fills everything below the header */
+.easi-map-wrap { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 0; }
+.easi-map-wrap > div, .easi-map-wrap .shiny-html-output,
+.easi-map-wrap .jupyter-widgets { height: 100% !important; width: 100% !important; }
+.easi-map-wrap .leaflet-container { height: 100% !important; width: 100% !important; border-radius: 0; }
+.easi-map-wrap .leaflet-top { margin-top: 4px; }
+
+/* left workflow pane, overlaying the map's left edge */
+.easi-leftpane {
+  position: absolute; top: 62px; left: 12px; width: 352px; max-height: calc(100vh - 86px);
+  z-index: 1100; background: #fff; border: 1px solid var(--card-border); border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .18); overflow-y: auto;
+}
+.easi-pane-head {
+  background: var(--easi-accent); color: #fff; padding: 9px 14px;
+  font-family: var(--font-head); font-weight: 600; border-radius: 8px 8px 0 0;
+}
+.easi-pane-body { padding: 12px 14px 16px; }
+.easi-instr {
+  background: #f5f8fb; border-left: 3px solid var(--easi-accent); padding: 8px 10px;
+  font-size: 12.5px; color: #33415c; margin-bottom: 10px; border-radius: 0 4px 4px 0;
+}
+
+/* stepper */
+.easi-steps { display: flex; gap: 4px; margin-bottom: 12px; }
+.easi-step {
+  flex: 1; text-align: center; font-size: 10px; color: #8a93a3;
+  padding: 5px 2px 6px; border-top: 3px solid #e2e7ef;
+  text-decoration: none; cursor: pointer; border-radius: 0 0 3px 3px;
+}
+.easi-step:hover { background: #eef2f8; color: var(--easi-accent); text-decoration: none; }
+.easi-step.active { color: var(--easi-accent); font-weight: 700; border-top-color: var(--easi-accent); }
+.easi-step.done { color: var(--bio-title); border-top-color: var(--bio-border); }
+
+/* basin summary card */
+.easi-basin-card {
+  background: #fbfdff; border: 1px solid var(--card-border); border-radius: 6px;
+  padding: 10px 12px; font-size: 13px; margin-bottom: 10px;
+}
+.easi-basin-card h5 { font-family: var(--font-head); color: var(--eci-title); font-size: 0.95rem; margin: 0 0 6px; }
+.easi-basin-card .b-row { display: flex; justify-content: space-between; padding: 2px 0; }
+.easi-basin-card .b-row b { color: var(--eci-title); font-weight: 600; }
+
+/* configure panel */
+.easi-cfg-group {
+  font-family: var(--font-head); font-weight: 700; color: var(--easi-accent);
+  font-size: 12.5px; margin: 12px 0 2px; border-bottom: 1px solid var(--rule); padding-bottom: 2px;
+}
+.easi-cfg-row { padding: 3px 0; border-bottom: 1px solid #eef1f6; }
+.easi-cfg-row .form-group, .easi-cfg-row .shiny-input-container { margin-bottom: 0; }
+.easi-cfg-row .shiny-input-container { margin-top: 2px; }       /* dropdown sits just below the name */
+/* metric name (replaces the old checkbox label) — its own line; keep it in the 12-13px
+   scale so it doesn't dwarf the discipline (12.5) / function (12) headers above it */
+.easi-metric-name { display: block; font-size: 13px; font-weight: 500; color: #2a3344; line-height: 1.35; }
+.easi-cfg-row select, .easi-cfg-row .shiny-input-container select { font-size: 12.5px; }
+/* small circled-"i" info button — sits inline right after each name (function name
+   or metric name); custom tooltip on hover. */
+.easi-info {
+  margin-left: 5px; flex: none; cursor: help; vertical-align: middle;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #eef3fb; border: 1px solid #b9c8e0; color: var(--easi-accent);
+  font: italic 700 10.5px/1 Georgia, "Times New Roman", serif; user-select: none;
+}
+.easi-info:hover { background: var(--easi-accent); border-color: var(--easi-accent); color: #fff; }
+/* light floating tooltip box (positioned on <body> by www/tooltip.js) */
+.easi-tip {
+  position: absolute; z-index: 1400; max-width: 270px;
+  background: #fff; color: #33415c;
+  border: 1px solid var(--card-border); border-radius: 7px;
+  box-shadow: 0 6px 22px rgba(20, 40, 80, .16);
+  padding: 8px 11px; font-size: 11.5px; line-height: 1.5;
+  white-space: pre-line; pointer-events: none;
+}
+
+/* rich metric tooltip card (data-tip-html): definition / calculation / scoring */
+.easi-tip--html { max-width: 340px; white-space: normal; }
+.easi-tip-title { font-weight: 700; font-size: 12px; color: #22304d; margin-bottom: 5px; }
+.easi-tip-sec { margin-top: 7px; }
+.easi-tip-sec:first-of-type { margin-top: 0; }
+.easi-tip-lbl {
+  display: block; font-size: 9.5px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: #3a6ea5; margin-bottom: 1px;
+}
+.easi-tip-sub { color: #6b7689; font-size: 10.5px; margin-top: 2px; }
+.easi-tip-default { color: #6b7689; font-size: 10.5px; font-style: italic; margin-left: 5px; }
+.easi-tip-crit { display: flex; align-items: baseline; gap: 5px; margin-top: 3px; }
+.easi-tip-dot {
+  flex: none; width: 9px; height: 9px; border-radius: 2px; margin-top: 1px;
+  border: 1px solid rgba(0, 0, 0, .18);
+}
+.easi-tip-dot.good { background: var(--band-good); }
+.easi-tip-dot.fair { background: var(--band-fair); }
+.easi-tip-dot.poor { background: var(--band-poor); }
+
+/* collapsible disciplines (native <details>/<summary>) */
+.easi-disc { margin: 0; }
+summary.easi-cfg-group {
+  cursor: pointer; list-style: none; user-select: none;
+  display: flex; align-items: center; gap: 6px;
+}
+summary.easi-cfg-group::-webkit-details-marker { display: none; }
+summary.easi-cfg-group::before {
+  content: ""; flex: none; width: 0; height: 0;
+  border-left: 5px solid var(--easi-accent);
+  border-top: 4px solid transparent; border-bottom: 4px solid transparent;
+  transition: transform .15s ease;
+}
+details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
+.easi-disc-body { padding-left: 2px; }
+/* function sub-header (name + ⓘ statement tooltip) with its metric(s) indented beneath */
+.easi-fn-group { display: flex; align-items: center; gap: 6px; margin: 6px 0 1px; }
+.easi-fn-name { font-size: 12px; font-weight: 600; color: #2a3344; }
+.easi-fn-block { margin-bottom: 3px; }
+.easi-fn-block .easi-cfg-row { padding-left: 10px; margin-left: 2px; border-left: 2px solid #e7ebf2; }
+
+/* place/stream search type-ahead dropdown (Photon) */
+.easi-ac-credit { font-size: 10px; color: #97a0b0; margin: 2px 0 0; }
+.easi-ac-menu {
+  position: absolute; z-index: 1300; background: #fff;
+  border: 1px solid var(--card-border); border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .16);
+  max-height: 280px; overflow-y: auto; padding: 4px 0;
+  font-family: var(--font-body, system-ui);
+}
+.easi-ac-item {
+  display: flex; flex-direction: column; gap: 1px;
+  padding: 6px 10px; cursor: pointer; border-bottom: 1px solid #f1f4f9;
+}
+.easi-ac-item:last-child { border-bottom: none; }
+.easi-ac-item:hover { background: #eef3fb; }
+.easi-ac-name { font-size: 12.5px; color: #2a3344; font-weight: 600; }
+.easi-ac-meta { font-size: 10.5px; color: #8a93a3; }
+
+/* lat/lon + zoom readout, bottom-left */
+.easi-readout {
+  position: absolute; left: 12px; bottom: 12px; z-index: 1100;
+  background: rgba(255, 255, 255, .92); border: 1px solid var(--card-border); border-radius: 5px;
+  padding: 4px 9px; font-size: 11px; color: #33415c; font-variant-numeric: tabular-nums;
+}
+
+/* "Loading streams…" cue while NHD vectors fetch (bottom-center, identify step) */
+.easi-flow-loading {
+  position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 1100;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255, 255, 255, .96); border: 1px solid var(--card-border); border-radius: 16px;
+  box-shadow: 0 2px 11px rgba(20, 40, 80, .15);
+  padding: 5px 14px 5px 11px; font-size: 12px; font-weight: 500; color: var(--easi-accent);
+}
+
+/* busy/stage indicator — a TEXT output (#busy_text) updated in place; the spinner is
+   a ::before on this persistent element so it spins smoothly. It collapses to nothing
+   when idle (:empty). */
+#busy_text:not(:empty) {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--easi-accent); font-size: 13px; margin-top: 10px;
+}
+#busy_text:not(:empty)::before {
+  content: ""; width: 15px; height: 15px; flex: none;
+  border: 2px solid #cdd8ec; border-top-color: var(--easi-accent);
+  border-radius: 50%; animation: easi-spin .8s linear infinite;
+}
+/* Suppress Shiny's automatic "recalculating" spinner overlay on this output. Shiny
+   stamps every output with .recalculating while it recomputes, which adds min-height:
+   32px + a 32px ::after spinner + opacity:0.3. The progress label recomputes ~3x/s, so
+   that overlay flickered the row height (the jitter) and dimmed it. We have our own
+   spinner, so neutralize Shiny's here only. */
+#busy_text.recalculating { min-height: 0 !important; opacity: 1 !important; }
+#busy_text.recalculating::after { display: none !important; }
+/* Same overlay, same fix, inside the report modal. Every in-modal recompute (candidate
+   switch, rating/note edit) is an instant, cached operation, so Shiny's .recalculating
+   overlay (opacity:0.3 + min-height:32px + ::after spinner) only turns those swaps into a
+   full-report flash. Neutralize it so the numbers just update in place. */
+.modal-body .recalculating { min-height: 0 !important; opacity: 1 !important; }
+.modal-body .recalculating::after { display: none !important; }
+.easi-spinner {
+  width: 15px; height: 15px; border: 2px solid #cdd8ec; border-top-color: var(--easi-accent);
+  border-radius: 50%; animation: easi-spin .8s linear infinite; flex: none;
+}
+@keyframes easi-spin { to { transform: rotate(360deg); } }
+
+/* row of pane action buttons */
+.easi-pane-actions { display: flex; gap: 8px; margin-top: 12px; }
+/* keep labels on one line so a narrow button (e.g. "Compute & report") does not
+   wrap to two lines and stretch the whole row taller via align-items: stretch;
+   trim the vertical padding so the single-line buttons stay compact */
+.easi-pane-actions .btn { flex: 1; white-space: nowrap; padding-top: 7px; padding-bottom: 7px; }
+
+/* bottom-right toasts (StreamStats placement) */
+#shiny-notification-panel { top: auto !important; bottom: 14px !important; right: 14px !important; left: auto !important; width: 330px; }
+
+/* modal close X (Shiny Core doesn't render one, so we inject our own) */
+.modal-header { border-bottom: 1px solid var(--rule); }
+.modal-content { position: relative; }
+.easi-modal-x {
+  position: absolute; top: 7px; right: 12px; z-index: 5;
+  border: none; background: transparent; font-size: 21px; line-height: 1;
+  color: #66708a; padding: 2px 9px; cursor: pointer;
+}
+.easi-modal-x:hover { color: var(--eci-title); }
+
+/* --------------------------------------------------------------------------- */
+/* SFARI field-review worksheet (Phase 2)                                       */
+/* --------------------------------------------------------------------------- */
+.sfari-worksheet { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 1080;
+  background: var(--surface-soft); display: flex; overflow: hidden; }
+.sfari-nav { width: 240px; flex: none; background: #fff; border-right: 1px solid var(--card-border);
+  overflow-y: auto; padding: 6px 0 14px; }
+.sfari-nav-cat { font-family: var(--font-head); font-size: 10.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em; color: #8a93a3; padding: 10px 14px 3px; }
+.sfari-nav-fn { display: flex; align-items: center; gap: 7px; padding: 5px 14px; font-size: 12.5px;
+  color: #33415c; cursor: pointer; border-left: 3px solid transparent; }
+.sfari-nav-fn:hover { background: #eef2f8; }
+.sfari-nav-fn.active { background: #eaf0f9; border-left-color: var(--easi-accent);
+  font-weight: 600; color: var(--easi-accent); }
+.sfari-nav-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: #dfe4ec;
+  border: 1px solid rgba(0,0,0,.12); }
+.sfari-fnpanel { flex: 1; overflow-y: auto; padding: 14px 20px 6px; }
+.sfari-fnpanel-inner { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100%; }
+.sfari-fn-title { font-family: var(--font-head); color: var(--eci-title); font-size: 1.18rem;
+  font-weight: 700; margin: 0 0 3px; display: flex; align-items: center; gap: 8px; }
+.sfari-fn-counter { font-size: 12px; color: #8a93a3; font-weight: 500; margin-left: auto; }
+.sfari-fn-statement { font-size: 12.5px; color: #55607a; margin: 0 0 10px; line-height: 1.45; }
+.sfari-sec-lbl { font-family: var(--font-head); font-size: 11px; font-weight: 700; color: #8a93a3;
+  text-transform: uppercase; letter-spacing: .04em; margin: 4px 0 3px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.sfari-sec-count { font-size: 10.5px; font-weight: 600; color: #aeb6c4; text-transform: none; letter-spacing: 0; }
+.sfari-likert-legend { font-size: 10.5px; color: #8a93a3; line-height: 1.5; margin: 0 0 9px; }
+.sfari-likert-legend b { color: #55607a; font-weight: 700; }
+.sfari-metric { background: #fff; border: 1px solid var(--card-border); border-radius: 8px;
+  padding: 8px 11px; margin-bottom: 8px; }
+.sfari-metric-name { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+.sfari-metric-title { font-size: 13px; font-weight: 600; color: #2a3344; }
+.sfari-metric-scale { font-size: 9.5px; font-weight: 700; color: #98a1b1; cursor: help; flex: none;
+  border: 1px solid #dfe4ec; border-radius: 4px; padding: 0 4px; }
+.sfari-metric-actions { margin-left: auto; display: flex; gap: 2px; flex: none; }
+.sfari-metric-toggle { border: 1px solid transparent; background: none; border-radius: 5px;
+  padding: 1px 5px; font-size: 12px; line-height: 1.35; color: #98a1b1; cursor: pointer; }
+.sfari-metric-toggle:hover { background: #eef2f8; color: var(--easi-accent); }
+.sfari-metric-toggle.on { color: var(--easi-accent); background: #eef2f8; border-color: #d3e0f2; }
+.sfari-metric-statement { font-size: 11.5px; color: #6b7689; line-height: 1.4; margin: 0 0 6px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sfari-evidence { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 11.5px; color: #45506a; background: var(--surface-soft);
+  border: 1px solid #eaeef4; border-radius: 5px; padding: 4px 8px; margin-bottom: 6px; }
+.sfari-evidence .src { color: #8a93a3; }
+.sfari-evidence .easi-info { margin-left: 0; }
+.sfari-ev-tag { font-size: 8.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: #5a7fb0; background: #eaf1fb; border: 1px solid #d3e0f2; border-radius: 4px; padding: 1px 5px; flex: none; }
+.sfari-ev-tag.field { color: #7a869a; background: #f0f2f6; border-color: #e2e6ee; }
+.sfari-ev-val { font-weight: 700; color: #2f3a52; }
+.sfari-ev-val.muted { font-weight: 500; color: #8a93a3; font-style: italic; }
+.sfari-suggest-chip { display: inline-block; background: #eef2f8; color: #3b6d9c;
+  border: 1px solid #cdd8ec; border-radius: 9px; padding: 1px 9px; font-size: 11px;
+  font-weight: 600; cursor: pointer; margin-left: auto; flex: none; }
+.sfari-suggest-chip:hover { background: #e2eaf6; }
+.sfari-likert { display: flex; align-items: stretch; margin: 0; }
+.sfari-likert-btn { flex: 1 1 0; border: 1px solid var(--card-border); background: #fff; border-radius: 0;
+  margin-left: -1px; padding: 5px 4px; font-size: 11.5px; font-weight: 600; color: #55607a;
+  cursor: pointer; text-align: center; transition: border-color .12s, background .12s; }
+.sfari-likert-btn:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
+.sfari-likert-btn:nth-child(5) { border-radius: 0 6px 6px 0; }
+.sfari-likert-btn:hover { border-color: var(--easi-accent); z-index: 2; }
+.sfari-likert-btn.sel { z-index: 2; }
+.sfari-likert-btn.sel[data-val="Strongly Agree"], .sfari-likert-btn.sel[data-val="Agree"] {
+  background: var(--band-good); color: #1f3f6e; border-color: #9fbce0; }
+.sfari-likert-btn.sel[data-val="Neutral"] { background: #e7ebf1; color: #40495a; border-color: #c7cede; }
+.sfari-likert-btn.sel[data-val="Disagree"], .sfari-likert-btn.sel[data-val="Strongly Disagree"] {
+  background: var(--band-poor); color: #7a2e2e; border-color: #e0a3a3; }
+.sfari-likert-btn[data-val="Not Applicable"] { flex: 0 0 auto; margin-left: 12px; padding: 5px 11px;
+  border-radius: 6px; color: #8a93a3; }
+.sfari-likert-btn.sel[data-val="Not Applicable"] { background: #33415c; color: #fff; border-color: #33415c; }
+.sfari-metric-note { width: 100%; box-sizing: border-box; resize: vertical; height: 30px;
+  border: 1px solid var(--card-border); border-radius: 6px; padding: 4px 8px; font-size: 12px;
+  color: #2a3344; margin-top: 7px; }
+.sfari-metric-note:focus, .sfari-fn-note:focus { outline: none; border-color: var(--easi-accent);
+  box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
+/* optional fields stay collapsed until toggled (auto-shown when they already hold content) */
+.sfari-metric .sfari-metric-note, .sfari-metric .sfari-photos { display: none; }
+.sfari-metric.show-note .sfari-metric-note { display: block; }
+.sfari-metric.show-photo .sfari-photos { display: flex; }
+.sfari-scorecard .sfari-fn-note { display: none; }
+.sfari-scorecard.show-fnnote .sfari-fn-note { display: block; }
+/* sticky compact score + navigation footer — always reachable without scrolling the metrics */
+.sfari-fn-footer { position: sticky; bottom: 0; z-index: 5; margin-top: auto;
+  background: var(--surface-soft); padding-top: 9px;
+  box-shadow: 0 -10px 14px -10px rgba(20, 40, 80, .16); }
+.sfari-scorecard { background: #fff; border: 1px solid var(--easi-accent); border-radius: 8px; padding: 9px 13px; }
+.sfari-scorecard.unset .sfari-fscore-num { color: #b6becb; }
+.sfari-scorecard.na { opacity: .55; }
+.sfari-fscore-row { display: flex; align-items: center; gap: 12px; }
+.sfari-fscore-lbl { font-family: var(--font-head); font-size: 12.5px; font-weight: 700; color: var(--eci-title); flex: none; }
+.sfari-fscore { flex: 1; accent-color: var(--easi-accent); height: 6px; min-width: 90px; }
+.sfari-fscore-num { font-family: var(--font-head); font-weight: 700; font-size: 1.4rem; color: var(--eci-title);
+  width: 30px; text-align: center; font-variant-numeric: tabular-nums; flex: none; }
+.sfari-fscore-band { padding: 3px 11px; border-radius: 11px; font-size: 11px; font-weight: 600;
+  color: #33415c; flex: none; white-space: nowrap; }
+.sfari-fna-lbl { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: #55607a; cursor: pointer; flex: none; }
+.sfari-suggest-line { font-size: 11.5px; color: #55607a; margin: 6px 0 0; }
+.sfari-accept { background: #eef2f8; color: var(--easi-accent); border: 1px solid #cdd8ec;
+  border-radius: 6px; padding: 2px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer; margin-left: 8px; }
+.sfari-accept:hover { background: #e2eaf6; }
+.sfari-fn-note { width: 100%; box-sizing: border-box; resize: vertical; height: 34px;
+  border: 1px solid var(--card-border); border-radius: 6px; padding: 5px 8px; font-size: 12px;
+  color: #2a3344; margin-top: 8px; }
+.sfari-nav-actions { display: flex; gap: 8px; margin-top: 9px; flex-wrap: wrap; }
+.sfari-btn { border: 1px solid var(--card-border); background: #fff; border-radius: 7px;
+  padding: 6px 14px; font-size: 12.5px; font-weight: 600; color: #33415c; cursor: pointer; }
+.sfari-btn:hover { border-color: var(--easi-accent); color: var(--easi-accent); }
+.sfari-btn.primary { background: var(--easi-accent); color: #fff; border-color: var(--easi-accent); }
+.sfari-btn.primary:hover { background: var(--easi-accent-dark); color: #fff; }
+.sfari-btn[disabled] { opacity: .5; cursor: default; }
+/* rollup rail */
+.sfari-rollup { width: 302px; flex: none; background: #fff; border-left: 1px solid var(--card-border);
+  overflow-y: auto; padding: 15px 17px; }
+.sfari-rollup h4 { font-family: var(--font-head); color: var(--eci-title); font-size: 13px; margin: 0 0 6px; }
+.sfari-rollup .stepper-wrap { margin-bottom: 14px; }
+.sfari-eci-box { text-align: center; background: var(--surface-soft); border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 10px; margin-bottom: 14px; }
+.sfari-eci { font-family: var(--font-head); font-size: 2.1rem; font-weight: 700; color: var(--eci-title); line-height: 1; }
+.sfari-eci-lbl { font-size: 10.5px; color: #8a93a3; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+.sfari-cat-chips { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+.sfari-cat-chip { display: flex; justify-content: space-between; align-items: center; font-size: 11.5px;
+  font-weight: 600; padding: 4px 9px; border-radius: 7px; background: var(--surface-soft); }
+.sfari-cat-chip .lab { color: #45506a; font-weight: 600; }
+.sfari-cat-chip .val { padding: 1px 8px; border-radius: 9px; font-size: 10.5px; }
+.sfari-progress { font-size: 11.5px; color: #8a93a3; margin-top: 12px; text-align: center; }
+
+/* --------------------------------------------------------------------------- */
+/* Polish pass: responsive, photos, progress, sticky report headers            */
+/* --------------------------------------------------------------------------- */
+
+/* header Save (download) button blends into the dark nav */
+.easi-nav .easi-nav-btn.btn { background: transparent; border: 1px solid #6b82ad; color: #cdd8ec;
+  font-size: 12px; font-weight: 500; padding: 2px 10px; border-radius: 5px; line-height: 1.5; }
+.easi-nav .easi-nav-btn.btn:hover { background: #33517f; color: #fff; border-color: #8ba0c8; }
+
+/* per-metric site photos */
+.sfari-photos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 7px; }
+.sfari-thumb-wrap { position: relative; width: 54px; height: 54px; border-radius: 5px;
+  overflow: hidden; border: 1px solid var(--card-border); background: #f2f4f8; }
+.sfari-thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sfari-photo-rm { position: absolute; top: 1px; right: 1px; width: 16px; height: 16px;
+  line-height: 13px; text-align: center; border-radius: 50%; border: none; cursor: pointer;
+  background: rgba(20,30,50,.72); color: #fff; font-size: 12px; padding: 0; }
+.sfari-photo-rm:hover { background: #b23b3b; }
+.sfari-photo-btn { display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+  font-size: 11.5px; font-weight: 600; color: var(--easi-accent); border: 1px dashed #b9c6da;
+  border-radius: 6px; padding: 5px 10px; background: #fff; }
+.sfari-photo-btn:hover { background: #eef2f8; border-color: var(--easi-accent); }
+.sfari-photo-btn input { display: none; }
+
+/* progress + empty / loading states */
+.sfari-progress-bar { height: 6px; background: #edeef2; border-radius: 3px; overflow: hidden; margin: 10px 0 3px; }
+.sfari-progress-bar > span { display: block; height: 100%; background: var(--easi-accent); border-radius: 3px; transition: width .25s; }
+.sfari-nav-empty { font-size: 11px; color: #8a93a3; padding: 9px 14px; font-style: italic; line-height: 1.4; }
+.sfari-evidence.pending { color: #8a93a3; font-style: italic; }
+
+/* N/A control sits beside the score, subtle box */
+.sfari-na-row { justify-content: flex-end; }
+
+/* report modal: sticky column + category headers while scrolling the 82-row table */
+#sfari-report .easi-tbl thead th { position: sticky; top: 0; z-index: 3; }
+#sfari-report .easi-tbl tr.easi-disc td { position: sticky; top: 27px; z-index: 2; }
+#sfari-report .sfari-report-photos { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+#sfari-report .sfari-report-photos img { width: 46px; height: 46px; object-fit: cover;
+  border-radius: 4px; border: 1px solid var(--card-border); }
+.sfari-minimap { border: 1px solid var(--card-border); border-radius: 6px; background: #fbfcfe; }
+
+/* --- Responsive: tablet / narrow windows --- */
+@media (max-width: 1024px) {
+  .sfari-nav { width: 200px; }
+  .sfari-rollup { width: 264px; padding: 13px 14px; }
+  .sfari-fnpanel { padding: 14px 16px 6px; }
+  .easi-leftpane { width: 322px; }
+}
+@media (max-width: 820px) {
+  .sfari-worksheet { flex-direction: column; }
+  .sfari-nav { width: 100%; max-height: 138px; order: 1; overflow-y: auto;
+    display: flex; flex-wrap: wrap; align-content: flex-start;
+    border-right: none; border-bottom: 1px solid var(--card-border); padding: 4px 6px 8px; }
+  .sfari-nav-cat { width: 100%; padding: 7px 8px 1px; }
+  .sfari-nav-fn { flex: 0 0 auto; border-left: none; border: 1px solid transparent;
+    border-radius: 6px; margin: 2px 3px; padding: 4px 9px; }
+  .sfari-nav-fn.active { border-color: var(--easi-accent); background: #eaf0f9; }
+  .sfari-fnpanel { order: 2; padding: 12px 14px 6px; }
+  .sfari-fnpanel-inner { max-width: 100%; }
+  .sfari-fscore-row { flex-wrap: wrap; }
+  .sfari-likert-btn { padding: 5px 2px; }
+  .sfari-likert-btn[data-val="Not Applicable"] { margin-left: 8px; padding: 5px 9px; }
+  .sfari-rollup { width: 100%; order: 3; max-height: 230px; border-left: none;
+    border-top: 1px solid var(--card-border); }
+  .sfari-rollup .stepper-wrap { display: none; }              /* stepper already in the header flow */
+  .easi-leftpane { width: auto; left: 8px; right: 8px; max-width: calc(100vw - 16px); }
+  .easi-header .easi-nav { gap: 10px 12px; flex-wrap: wrap; }
+}
