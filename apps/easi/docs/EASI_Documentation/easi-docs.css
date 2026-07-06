@@ -1,0 +1,70 @@
+/* EASI documentation styling — palette and type mirror the EASI app
+   (www/styles.css) so the scrollable doc reads as part of EASI. */
+@import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+:root {
+  --easi-accent: #2f4b7c;
+  --easi-accent-dark: #243a61;
+  --phys: #3b6d9c; --chem: #9a7332; --bio: #327a50; --eci: #1f3f6e;
+  --band-poor: #f5b5b5; --band-fair: #f5e7a6; --band-good: #c8d9f2;
+}
+
+body { font-family: "Instrument Sans", system-ui, sans-serif; color: #27313f; }
+h1, h2, h3, h4, h5, .title, .quarto-title .title {
+  font-family: "Space Grotesk", system-ui, sans-serif; color: var(--easi-accent-dark);
+}
+a { color: var(--easi-accent); }
+
+/* title banner */
+#title-block-header.quarto-title-block { border-bottom: 3px solid var(--easi-accent);
+  padding-bottom: .6rem; margin-bottom: 1.2rem; }
+.quarto-title .subtitle { color: #4a566b; font-weight: 400; }
+
+/* sidebar table of contents */
+nav[role=doc-toc] { font-size: .85rem; }
+nav[role=doc-toc] ul > li > a.active,
+nav[role=doc-toc] ul > li > ul > li > a.active {
+  border-left: 2px solid var(--easi-accent); color: var(--easi-accent); font-weight: 600;
+}
+
+/* figures and tables */
+.quarto-figure figcaption, figure figcaption, .figure-caption {
+  color: #5b6675; font-size: .85rem;
+}
+table { font-size: .9rem; }
+thead th { background: #eef2f8; color: var(--easi-accent-dark); }
+caption, .table caption { caption-side: top; font-weight: 600; color: var(--easi-accent-dark); }
+
+/* Metric tables (Hydrology through Biology): each metric is a four-row block
+   (Function, Definition, How EASI computes it, Scoring) with the bold metric name
+   on the first row. Markdown tables cannot merge that name cell across its rows, so
+   a heavier rule before each new block (rows 5, 9, 13) restores the grouped look of
+   the technical note. The metric name is pinned to the top of its block. */
+#tbl-metrics-hydrology tbody tr:nth-child(4n+1):not(:first-child) td,
+#tbl-metrics-hydraulics tbody tr:nth-child(4n+1):not(:first-child) td,
+#tbl-metrics-geomorphology tbody tr:nth-child(4n+1):not(:first-child) td,
+#tbl-metrics-physicochemistry tbody tr:nth-child(4n+1):not(:first-child) td,
+#tbl-metrics-biology tbody tr:nth-child(4n+1):not(:first-child) td {
+  border-top: 2px solid var(--easi-accent);
+}
+#tbl-metrics-hydrology tbody td:first-child,
+#tbl-metrics-hydraulics tbody td:first-child,
+#tbl-metrics-geomorphology tbody td:first-child,
+#tbl-metrics-physicochemistry tbody td:first-child,
+#tbl-metrics-biology tbody td:first-child { vertical-align: top; }
+
+/* inline condition pills (Good / Fair / Poor) */
+.pill { display: inline-block; padding: 1px 8px; border-radius: 10px;
+  font-size: .8rem; font-weight: 600; color: #27313f; }
+.pill.good { background: var(--band-good); }
+.pill.fair { background: var(--band-fair); }
+.pill.poor { background: var(--band-poor); }
+
+/* outcome name colors */
+.phys { color: var(--phys); font-weight: 600; }
+.chem { color: var(--chem); font-weight: 600; }
+.bio  { color: var(--bio);  font-weight: 600; }
+
+/* a soft callout for the scope/limitations notes */
+.callout-note-soft { background: #f6f8fb; border-left: 3px solid var(--easi-accent);
+  padding: .6rem .9rem; border-radius: 4px; margin: 1rem 0; }

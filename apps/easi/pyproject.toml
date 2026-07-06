@@ -1,0 +1,10 @@
+[project]
+name = "easi"
+version = "0.0.1"
+description = "Automated Ecosystem Assessment Screening Index (EASI) web app"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"

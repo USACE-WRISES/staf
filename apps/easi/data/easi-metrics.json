@@ -1,0 +1,793 @@
+{
+  "schemaVersion": 1,
+  "method": "Ecosystem Assessment Screening Index (EASI)",
+  "generatedFrom": "data/source/screening-metrics.tsv",
+  "count": 20,
+  "ratingIndexDefault": {
+    "Good": 0.85,
+    "Fair": 0.545,
+    "Poor": 0.195
+  },
+  "metrics": [
+    {
+      "metricId": "catchment-hydrology-impervious-surface-cover",
+      "name": "Impervious Surface Cover",
+      "discipline": "Hydrology",
+      "functionName": "Catchment hydrology",
+      "functionId": "catchment-hydrology",
+      "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+      "metricStatement": "Percent impervious surface in the contributing watershed (and/or specified buffer). Higher imperviousness generally increases runoff/flashiness and can degrade water quality and habitat.",
+      "context": "Watershed",
+      "method": "Desktop (GIS/imagery and existing datasets)",
+      "howToMeasure": "Delineate the contributing watershed (or specified buffer) and compute percent impervious area using an impervious-surface dataset (e.g., NLCD Impervious Surface or a local impervious layer). Assign the condition class using the bin thresholds for this metric.",
+      "criteria": {
+        "Good": "<10%",
+        "Fair": "10%-25%",
+        "Poor": ">25%"
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "NLCD Impervious Surface (MRLC) (if used); MN SQT 2020; NLCD Impervious Surface (MRLC) (if used); MI SQT 2019; NC SQT 2019; NLCD Impervious Surface (MRLC) (if used); SC SQT 2021; NLCD Impervious Surface (MRLC) (if used); TN SQT",
+      "source": "Minnesota SQT; Michigan SQT; North Carolina SQT; South Carolina SQT; Tennessee SQT",
+      "dataSource": "Impervious-surface GIS (e.g., NLCD Impervious Surface or local impervious dataset); watershed boundary."
+    },
+    {
+      "metricId": "surface-water-storage-percent-wetlands-in-watershed",
+      "name": "Percent Wetlands in Watershed",
+      "discipline": "Hydrology",
+      "functionName": "Surface water storage",
+      "functionId": "surface-water-storage",
+      "functionStatement": "Wetlands and storage features store floodwater, recharge groundwater, sustain baseflow, and provide low-velocity habitat.",
+      "metricStatement": "Sufficient wetlands/ponds for flood attenuation/baseflow support, unless minimal wetlands are historically normal.",
+      "context": "Watershed",
+      "method": "Desktop",
+      "howToMeasure": "Calculate the percent area classified as wetlands using a land cover or wetlands layer. Where possible, compute within the mapped floodplain or valley bottom to better reflect storage.",
+      "criteria": {
+        "Good": ">5% wetland coverage, or consistent with historical norm.",
+        "Fair": "1-5% wetland coverage.",
+        "Poor": "<1% wetland coverage, or heavily drained wetlands."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "MN SQT 2020; WI SQT 2022; SC SQT 2021; NLCD Land Cover and/or USFWS National Wetlands Inventory (NWI).",
+      "source": "ERDC",
+      "dataSource": "Watershed"
+    },
+    {
+      "metricId": "reach-inflow-concentrated-runoff-stormwater-inputs",
+      "name": "Concentrated Runoff / Stormwater Inputs",
+      "discipline": "Hydrology",
+      "functionName": "Reach inflow",
+      "functionId": "reach-inflow",
+      "functionStatement": "Quantity + quality of inflow (tributaries, ditches, and pipes) does not provide harmful peaks or pollution, and supports diverse habitat conditions.",
+      "metricStatement": "\"Screening metric used to evaluate Reach inflow based on the definition and bin thresholds provided for this metric. Runoff is minimal or well-managed, causing no significant direct inflows or pollutant pulses.\"",
+      "context": "Watershed and Channel; Channel",
+      "method": "Desktop (permit/layer review) with field verification where feasible; Field",
+      "howToMeasure": "\"Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds. Count road or highway drainage outfalls per 100 m and note erosion or sediment plumes. Corroborate with available transportation layers if present.\"",
+      "criteria": {
+        "Good": "0-1 outfall per 100 m, and no noticeable discharge effects.",
+        "Fair": "2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering. / 4-5 outfalls per 100 m, with noticeable sediment or pollutant inputs.",
+        "Poor": "More than 5 outfalls per 100 m, or major highway drains with concentrated discharge."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "MI SQT 2019; NC SQT 2019; SC SQT 2021; Field count; DOT drainage or as-built plans (where available); road drainage GIS layers.",
+      "source": "Michigan SQT; North Carolina SQT; South Carolina SQT; ERDC",
+      "dataSource": "\"State/agency datasets, GIS/imagery, and field observations (as applicable). \""
+    },
+    {
+      "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
+      "name": "Flow Alteration (Regulation / Water Use)",
+      "discipline": "Hydrology",
+      "functionName": "Streamflow regime",
+      "functionId": "streamflow-regime",
+      "functionStatement": "Integrates the range of \"typical\" flows experienced by other processes. Examines the degree to which upstream infrastructure or land uses have fundamentally altered flow regimes (e.g., hydropeaking, dams, withdrawals).",
+      "metricStatement": "\"Degree of alteration in flow magnitude, timing, duration, or permanence relative to natural conditions due to regulation, withdrawals/returns, or watershed change. Compares current daily-flow pattern to the natural regime, combining IHA metrics with the Richards-Baker flashiness index to screen for alteration from dams, withdrawals, or urbanization.\"",
+      "context": "Channel",
+      "method": "Desktop (gage/records) with field verification where feasible; Desktop",
+      "howToMeasure": "\"Use available flow records (gage data), modeled natural baseline estimates, and/or water-use/rights information to estimate change from expected natural conditions for the metric definition. Assign the condition class using the bin thresholds for this metric. Compare current mean annual flow to a natural or historical baseline and report percent difference.\"",
+      "criteria": {
+        "Good": "<10% difference from baseline.",
+        "Fair": "10-50% difference.",
+        "Poor": ">50% difference. Near dewatering or strong hydropeaking."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "USGS NWIS / modeled baseline (if used); Alaska SQT; USGS NWIS / modeled baseline (if used); CO SQT 2019; USGS NWIS / modeled baseline (if used); WI SQT 2022; USGS NWIS / modeled baseline (if used); WY SQT 2019; USGS NWIS / modeled baseline (if used); MN SQT 2020; USGS NWIS (current); USGS StreamStats (natural baseline where available).",
+      "source": "Alaska SQT; Colorado SQT; Wisconsin SQT; Wyoming SQT; Minnesota SQT; ERDC",
+      "dataSource": "\"ADNR, ADF&G flow regulation & water rights data USGS NWIS (gage data where available); modeled baseline hydrology; water-use/rights datasets; dam regulation information. \""
+    },
+    {
+      "metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
+      "name": "Low-flow Wetted Connectivity",
+      "discipline": "Hydraulics",
+      "functionName": "Low flow and baseflow dynamics",
+      "functionId": "low-flow-baseflow-dynamics",
+      "functionStatement": "Ensures habitat availability and water quality during low water levels, and indicates non-storm conditions experienced the majority of the time.",
+      "metricStatement": "\"Evaluates whether the reach maintains adequate wetted depth and continuity during low flow by integrating pool depth, wetted length, exposed bed, and Q90/Q10 differences. Extent to which water remains in contact with both banks and low benches during low flow, sustaining edge habitat and exchange.\"",
+      "context": "Channel",
+      "method": "Field",
+      "howToMeasure": "\"Estimate percent of channel length wetted at typical low-flow conditions and document with photos where feasible. Count pools that remain connected versus isolated at low flow and note dominant disconnection causes. Estimate percent of bed exposed during low flow using field photos or dry-season imagery where available.\"",
+      "criteria": {
+        "Good": ">75% of channel wetted at normal low flow (or dryness is normal if ephemeral).",
+        "Fair": "25-75% wetted.",
+        "Poor": "<25% wetted, or mostly disconnected pools in a historically perennial reach."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "Field observation and photos; NAIP imagery; NHDPlus HR flowline codes; USGS NWIS zero-flow days (where available).; Field verification; NAIP dry-season imagery; optional HEC-RAS 2D at low flow; LiDAR longitudinal profile (where available).; Field photos; NAIP dry-season imagery; LiDAR with estimated low-flow water surface (where available).",
+      "source": "ERDC",
+      "dataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    },
+    {
+      "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
+      "name": "Floodplain Engagement Frequency (bankfull recurrence)",
+      "discipline": "Hydraulics",
+      "functionName": "High flow dynamics",
+      "functionId": "high-flow-dynamics",
+      "functionStatement": "Peak flows reshape channel without chronic instability, redistribute wood and sediment, reset habitats, and supply nutrients to floodplains.",
+      "metricStatement": "Moderate floods (~1-2 yr) overtop banks unless valley is naturally confined.",
+      "context": "Floodplain and Channel",
+      "method": "Desktop",
+      "howToMeasure": "Relate bankfull stage to flood-frequency analysis to estimate recurrence of floodplain engagement. Use gage analysis where available or regional regressions as a screening proxy.",
+      "criteria": {
+        "Good": "About 1-2 yr floods engage the floodplain.",
+        "Fair": "About 3-5 yr floods are needed. / About 5-10 yr floods are needed.",
+        "Poor": "Floodplain is rarely inundated except during extreme events."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "NRCS TR-55 (1986); USGS StreamStats; USGS PeakFQ (where available); state SQT manuals.",
+      "source": "ERDC",
+      "dataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    },
+    {
+      "metricId": "floodplain-connectivity-floodplain-access-entrenchment",
+      "name": "Floodplain Access / Entrenchment",
+      "discipline": "Hydraulics",
+      "functionName": "Floodplain connectivity",
+      "functionId": "floodplain-connectivity",
+      "functionStatement": "Frequent overbank flows reduce flood peaks, support riparian vegetation, create off-channel refugia, and extend nutrient processing time.",
+      "metricStatement": "\"Stable, not heavily dredged/incised, allowing normal overbank flows/meanders unless dredging is historical. Channel is not deeply incised; moderate floods access a broad floodplain, matching reference conditions. 1-2 yr floods routinely access the floodplain, matching reference inundation patterns.\"",
+      "context": "Channel; Floodplain",
+      "method": "Field; Desktop",
+      "howToMeasure": "\"Identify incision, dredging, levees, and spoil banks from imagery and confirm in the field or with historical sources where feasible. Compute entrenchment ratio as flood-prone width (often about 2x bankfull depth) divided by bankfull width using DEM or LiDAR cross sections and bankfull indicators. Map bankfull inundation extent using a DEM and bankfull flow estimate and compare to mapped floodplain layers as a proxy for moderate-flood access.\"",
+      "criteria": {
+        "Good": "Stable channel that is not incised or dredged with frequent floodplain access.",
+        "Fair": "Slight channelization or partial dredging. / Heavily modified or incised channel with limited floodplain access.",
+        "Poor": "Deeply dredged or channelized reach with little functional floodplain."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "NAIP imagery and historical aerials/topos; National Levee Database (NLD) and FEMA floodplain layers (where available).; NRCS National Engineering Handbook (2007); Rosgen (2006); USGS 3DEP LiDAR/DEM cross sections.; HEC-RAS 2D with USGS 3DEP DEM; bankfull flow estimate; FEMA floodplain layers (where available).",
+      "source": "ERDC",
+      "dataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    },
+    {
+      "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
+      "name": "Hyporheic Exchange Indicators",
+      "discipline": "Hydraulics",
+      "functionName": "Hyporheic connectivity",
+      "functionId": "hyporheic-connectivity",
+      "functionStatement": "Surface water-groundwater exchange moderates temperature, transforms nutrients, supplies oxygen, and supports aquatic life.",
+      "metricStatement": "\"Diverse bedforms enhance surface-subsurface exchange, matching reference morphology. Springs/seeps/subsurface flow show active hyporheic exchange, matching local reference.\"",
+      "context": "Channel",
+      "method": "Field",
+      "howToMeasure": "\"Count riffle-pool or other bedform features per 100 m using imagery and a field check. Count active upwelling spots, springs, seeps, or other infiltration indicators during a field visit.\"",
+      "criteria": {
+        "Good": "Well developed bedforms and strong potential for exchange.",
+        "Fair": "Some bedform variety but partially uniform. / Mostly uniform run with limited exchange.",
+        "Poor": "Featureless or silted bed with negligible exchange."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "High-resolution imagery and LiDAR hillshade (where available); longitudinal profile in GIS; field confirmation.; Field observation; mapped springs/seeps; thermal IR imagery (where available).",
+      "source": "ERDC",
+      "dataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    },
+    {
+      "metricId": "channel-evolution-channel-evolution-stage-and-trends",
+      "name": "Channel Evolution Stage & Trends",
+      "discipline": "Geomorphology",
+      "functionName": "Channel evolution",
+      "functionId": "channel-evolution",
+      "functionStatement": "Long-term changes in channel size and slope maintain dynamic equilibrium and diverse habitats while interacting with the floodplain.",
+      "metricStatement": "\"Channel is stable/recovered (Stage I/VI or 0,1,6,8), not actively degrading, unless partial evolution is normal. No active headcuts or fully stabilized ones; no ongoing incision or bank widening. Channel shows vegetated benches/floodplain formation, indicating recovery from incision/widening. Bank erosion/migration rates match natural reference; no excessive widening unless historically typical.\"",
+      "context": "Channel",
+      "method": "Field",
+      "howToMeasure": "\"Assess channel evolution stage using field indicators or recent geomorphic reports. Use desktop review only for coarse screening. Locate headcuts or knickpoints and estimate migration using multi-date elevation or imagery. Confirm in the field. Identify vegetated benches or inset floodplains and track their extent using imagery and elevation profiles where available. Map active channel edges across years and compute width change using imagery and field indicators where feasible.\"",
+      "criteria": {
+        "Good": "Stable or re-stabilized channel (Stage I or VI).",
+        "Fair": "Partially recovered channel (often Stage V). / Actively widening or incising (often Stage III-IV).",
+        "Poor": "Severe incision or destructive phases (often Stage II or severe III-IV)."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "Barbour et al. (1999); SVAP v2 (2018).; USGS 3DEP LiDAR hillshade; repeat LiDAR for DEM of Difference (where available); NAIP or Google Earth time series.; USGS 3DEP LiDAR cross sections and elevation profiles; NAIP or orthophotos for benches and bars.; NAIP or Google Earth historical imagery; RivWidthCloud or RivMAP (where available).",
+      "source": "ERDC",
+      "dataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    },
+    {
+      "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
+      "name": "Bank Erosion & Armoring Condition",
+      "discipline": "Geomorphology",
+      "functionName": "Channel and floodplain dynamics",
+      "functionId": "channel-floodplain-dynamics",
+      "functionStatement": "Examines the role of bank processes and erosion in channel change. Observes patterns in sinuosity and curvature affecting habitat complexity.",
+      "metricStatement": "\"Integrates bank geometry, rooting, surface protection, raw or failing banks, and hardening to summarize erosion risk and sediment delivery. Compares meander migration rates and cutoff frequency to reference behavior; excessive migration or avulsions indicate instability.\"",
+      "context": "Channel",
+      "method": "Field",
+      "howToMeasure": "\"Map hardened versus natural or vegetated bank lengths and compute percent by type. Measure raw or eroding bank length and divide by total bank length across both banks.\"",
+      "criteria": {
+        "Good": "Predominantly natural banks with deeply rooted cover.",
+        "Fair": "Some armoring or partial vegetation coverage. / Large portion of banks is armored or vegetation is sparse.",
+        "Poor": "Failing armoring or widespread bare banks with severe instability."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "NAIP or orthophotos; local infrastructure layers (where available).; Field tape/RTK survey; GIS digitization of raw bank segments from imagery.",
+      "source": "ERDC",
+      "dataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    },
+    {
+      "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
+      "name": "Sediment Supply Potential (watershed/banks)",
+      "discipline": "Geomorphology",
+      "functionName": "Sediment continuity",
+      "functionId": "sediment-continuity",
+      "functionStatement": "Balanced sediment supply and transport preserves bed elevations, substrate sizes, spawning/benthic habitats, and supports riparian succession.",
+      "metricStatement": "Relative sediment supply from the watershed and near-channel sources. Excessive sediment supply can increase turbidity, embed substrates, and degrade habitat.",
+      "context": "Watershed and Channel",
+      "method": "Desktop (GIS/imagery) with field verification where feasible",
+      "howToMeasure": "Use available GIS layers and imagery (land cover, soils, slopes, roads) and local knowledge to rate potential sediment supply per the metric definition. Assign the condition class using the bin thresholds for this metric.",
+      "criteria": {
+        "Good": "Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal.",
+        "Fair": "Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff.",
+        "Poor": "High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "NLCD/SSURGO/DEM (if used); Alaska SQT; NLCD/SSURGO/DEM (if used); CO SQT 2019; WY SQT 2019; NLCD/SSURGO/DEM (if used); MI SQT 2019; NC SQT 2019; NLCD/SSURGO/DEM (if used); MN SQT 2020; NLCD/SSURGO/DEM (if used); SC SQT 2021",
+      "source": "Alaska SQT; Colorado SQT; Wyoming SQT; Michigan SQT; North Carolina SQT; Minnesota SQT; South Carolina SQT",
+      "dataSource": "\"Imagery & Site data Land cover and soils (e.g., NLCD, SSURGO), DEM/slope, roads layers, and recent imagery.\""
+    },
+    {
+      "metricId": "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation",
+      "name": "Substrate Condition (grain size/embeddedness/fines/consolidation)",
+      "discipline": "Geomorphology",
+      "functionName": "Bed composition and large wood",
+      "functionId": "bed-composition-bedform-dynamics",
+      "functionStatement": "Supports aquatic habitats through streambed material and bedform dynamics. Enhances habitat complexity and streambank stability.",
+      "metricStatement": "\"Fine sediment deposition/embeddedness as an indicator of sediment imbalance and habitat condition for benthic organisms and fish spawning. Presence and clarity of expected bedform sequence (riffle-run-pool or step-pool) indicate organized transport and habitat variety. Combines substrate size distribution, embeddedness, and consolidation or armoring to assess pore space and habitat quality.\"",
+      "context": "Channel",
+      "method": "Field screening; Field",
+      "howToMeasure": "\"Conduct a field screening to visually estimate fine sediment deposition or embeddedness in representative riffles/runs, or use an approved protocol referenced by the applicable SQT. Assign the condition class using the bin thresholds for this metric. Perform a pebble count to estimate percent gravel and cobble versus fines. Estimate percent of coarse grains buried by fines during a field visit. Use a pick test or visual checks to identify surface crusting, cementing, or heavy armoring. Visually classify dominant substrate along the reach (bedrock, boulder, cobble, gravel, sand, silt or clay) and note the relative amount of fines and embedding.\"",
+      "criteria": {
+        "Good": "Open interstitial coarse bed with minimal fines.",
+        "Fair": "Mild embedding or partial fine coverage. / Strong embedding or siltation limiting infiltration.",
+        "Poor": "Predominantly fine or consolidated bed with little interstitial space."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "TN SQT; Field pebble count; USGS or state surficial geology; high-resolution imagery for bar texture classes (where available).; Field embeddedness estimate; EPA Water Quality Portal (turbidity/TSS); assessment listings for sediment (where available).; Field pick test or visual checks; document as data gap where field access is limited.; Barbour et al. (1999); SVAP v2 (2018).",
+      "source": "Tennessee SQT; ERDC",
+      "dataSource": "\"Field observations (pebble counts/visual estimates) and/or existing habitat survey data. \""
+    },
+    {
+      "metricId": "light-and-thermal-regime-stream-temperature",
+      "name": "Stream Temperature",
+      "discipline": "Physicochemistry",
+      "functionName": "Light & thermal regime",
+      "functionId": "light-thermal-regime",
+      "functionStatement": "Shade, solar input, and groundwater keep temperature and light within natural ranges for stream metabolism and dissolved oxygen.",
+      "metricStatement": "Stays within acceptable bounds for local aquatic life, rarely exceeding stress thresholds.",
+      "context": "Floodplain",
+      "method": "Desktop",
+      "howToMeasure": "Pull historical evidence or GIS data from public sources on temperature data such as USGS NWIS and EPA Water Quality Portal. In absence of data sources, use riparian shading as a surrograte based on GIS data and aerial photogrammetry",
+      "criteria": {
+        "Good": "Rarely surpasses local standard or typical seasonal maxima for the stream type.",
+        "Fair": "Slightly exceeds thresholds occasionally.",
+        "Poor": "Frequently near or above thresholds. / Consistently high or potentially lethal temperatures."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled stream temperature products (where available).",
+      "source": "ERDC",
+      "dataSource": "USGS NWIS and/or EPA Water Quality Portal water temperature data (where available); NorWeST modeled temperatures (where available); Riparian shading proxy in absence of data sources"
+    },
+    {
+      "metricId": "carbon-processing-detrital-processing-cpom-retention-shredders",
+      "name": "Detrital Processing (CPOM retention / shredders)",
+      "discipline": "Physicochemistry",
+      "functionName": "Carbon processing",
+      "functionId": "carbon-processing",
+      "functionStatement": "Organic matter is captured and broken down, fueling food webs, balancing production/ respiration, moderating pH/ redox, and supplying nutrients.",
+      "metricStatement": "\"Leaf litter/coarse organic matter are visibly retained, supporting detrital processes per local references. Quick checks show these invertebrates, indicating healthy detrital processing (if typical).\"",
+      "context": "Channel",
+      "method": "Field",
+      "howToMeasure": "\"Count leaf packs and small debris dams, or infer retention from wood presence and low-velocity habitat during a field visit. Conduct a rapid kick sample and note presence of shredder taxa where a CPOM pathway is expected.\"",
+      "criteria": {
+        "Good": "Abundant CPOM retention with stable leaf packs typical for the system.",
+        "Fair": "Some retention but partially flushed out. / Sparse organic matter and limited retention.",
+        "Poor": "Essentially no retained organic matter, or severe overload causing anoxia risk."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "Field observation; wood and habitat assessments; planform complexity from imagery as supporting context.; State biomonitoring portals and/or EPA Water Quality Portal biological results (where available).",
+      "source": "ERDC",
+      "dataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    },
+    {
+      "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
+      "name": "Nitrogen & Phosphorus Concentrations",
+      "discipline": "Physicochemistry",
+      "functionName": "Nutrient cycling",
+      "functionId": "nutrient-cycling",
+      "functionStatement": "Nitrogen and phosphorus transformations feed primary production, regulate excess loads, and store or release nutrients.",
+      "metricStatement": "Nutrients near natural/guidelines unless higher levels are normal (e.g., blackwater).",
+      "context": "Channel",
+      "method": "Field",
+      "howToMeasure": "Compile recent total nitrogen and total phosphorus data and compare to regional guidelines. Where data are absent, use watershed export models for context.",
+      "criteria": {
+        "Good": "Near background or guideline values.",
+        "Fair": "Slightly elevated N or P. / Marked elevation with likely ecological effects.",
+        "Poor": "Significantly above guidelines indicating strong nutrient pollution."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "EPA Water Quality Portal (TN/TP); USGS SPARROW nutrient maps (where available).",
+      "source": "ERDC",
+      "dataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    },
+    {
+      "metricId": "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl",
+      "name": "Regulatory Impairment Status (305b/303d/TMDL)",
+      "discipline": "Physicochemistry",
+      "functionName": "Water & soil quality",
+      "functionId": "water-soil-quality",
+      "functionStatement": "Physical and chemical processes limit pollutants, retain beneficial constituents, and protect ecological and human uses.",
+      "metricStatement": "\"Regulatory assessment status for aquatic life/designated use support (e.g., 305(b)/303(d) categories, TMDL status) for the assessment unit containing the project reach. Screening metric used to evaluate Water & soil quality based on the definition and bin thresholds provided for this metric.\"",
+      "context": "Watershed and Channel",
+      "method": "Desktop (listings/monitoring) and/or Field screening",
+      "howToMeasure": "\"Identify the assessment unit for the project reach and consult the state integrated report and/or EPA ATTAINS database for use-support and impairment listings. Assign the condition class using the bin thresholds for this metric. Use available GIS layers/imagery and/or a field screening (as applicable) to quantify or rate the metric according to the provided bin thresholds.\"",
+      "criteria": {
+        "Good": "In category 1, 2, or 3 or aquatic life uses not evaluated.",
+        "Fair": "In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated.",
+        "Poor": "In Category 5 due to nonsupport of aquatic life uses OR in Category 4 and aquatic life impairment not actively being mitigated."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "EPA ATTAINS/state integrated report (if used); Alaska SQT; EPA ATTAINS/state integrated report (if used); CO SQT 2019; EPA ATTAINS/state integrated report (if used); NC SQT 2019; EPA ATTAINS/state integrated report (if used); MI SQT 2019; EPA ATTAINS/state integrated report (if used); MN SQT 2020; EPA ATTAINS/state integrated report (if used); SC SQT 2021; EPA ATTAINS/state integrated report (if used); TN SQT; WI SQT 2022; EPA ATTAINS/state integrated report (if used); WY SQT 2019",
+      "source": "Alaska SQT; Colorado SQT; North Carolina SQT; Michigan SQT; Minnesota SQT; South Carolina SQT; Tennessee SQT; Wisconsin SQT; Wyoming SQT",
+      "dataSource": "\"ADEC database EPA ATTAINS; state integrated report tables/GIS; optional local water quality monitoring summaries. State/agency datasets, GIS/imagery, and field observations (as applicable).\""
+    },
+    {
+      "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
+      "name": "In-stream Habitat Complexity & Cover",
+      "discipline": "Biology",
+      "functionName": "Habitat provision",
+      "functionId": "habitat-provision",
+      "functionStatement": "Channel and floodplain structure supply depth, velocity, substrate diversity, and vegetation to support native organisms through all life stages.",
+      "metricStatement": "\"Multiple habitat types (riffles/pools/woody debris) exist if historically expected, not unnaturally uniform. Varied substrates (gravel, cobble, wood) provide multiple habitats, unless uniform is normal. Provides shelter unless historically minimal in certain ecoregions.\"",
+      "context": "Channel",
+      "method": "Field",
+      "howToMeasure": "\"Count distinct habitat types (riffle, run, pool, cover) along the reach. Use imagery as a screening aid where needed. Count substrate classes and note presence of wood, leaf packs, and other cover types. Estimate percent of bank length with undercut or overhanging cover during a field visit.\"",
+      "criteria": {
+        "Good": "Multiple habitat types well represented.",
+        "Fair": "Some variety but key elements are missing. / Mostly uniform with only 1-2 distinct features.",
+        "Poor": "Very uniform channel with limited structural diversity."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "EPA Rapid Bioassessment Protocols (RBP); NAIP imagery; USGS 3DEP LiDAR (where available).; USGS NAWQA pebble-count method; habitat mapping; supporting context from imagery and slope.; Field mapping; NAIP imagery; canopy and bank metrics where available.",
+      "source": "ERDC",
+      "dataSource": "High resolution aerial imagery; Field photos; Brief field recon; Historical evidence"
+    },
+    {
+      "metricId": "population-support-biological-integrity-ibi-community-condition",
+      "name": "Biological Integrity (IBI / community condition)",
+      "discipline": "Biology",
+      "functionName": "Population support",
+      "functionId": "population-support",
+      "functionStatement": "Physical and chemical conditions enable spawning, juvenile growth, migration, and stress survival of target taxa.",
+      "metricStatement": "\"Healthy numbers if historically supported, unless ephemeral dryness naturally excludes them. IBI/multi-metric shows high integrity if historically expected, unless ephemeral dryness limits it. Diverse macroinvertebrates (incl. EPT) if historically expected, unless ephemeral dryness limits.\"",
+      "context": "Channel",
+      "method": "Field; Field screening and/or Desktop (biomonitoring databases); Desktop",
+      "howToMeasure": "\"Conduct a brief visual or dipnet survey and record presence where expected. Standard IBI score from sampling Compile the most recent macroinvertebrate or fish IBI score or class from state or local databases for the reach or nearest station.\"",
+      "criteria": {
+        "Good": "Multiple observations where historically expected.",
+        "Fair": "Some presence but limited. / Rare or single individuals.",
+        "Poor": "Absent where historically expected."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "State Natural Heritage Program records; Herp Atlas or similar; BISON and/or iNaturalist as supporting context.; State biomonitoring protocols; USGS BioData and/or EPA Water Quality Portal biological results (where available).; CO SQT 2019; MI SQT 2019; MN SQT 2020; NC SQT 2019; WI SQT 2022; WY SQT 2019; state biomonitoring databases.",
+      "source": "ERDC",
+      "dataSource": "State agency datasets, brief field recon"
+    },
+    {
+      "metricId": "community-dynamics-invasive-non-native-species-presence",
+      "name": "Invasive / Non-native Species Presence",
+      "discipline": "Biology",
+      "functionName": "Community dynamics",
+      "functionId": "community-dynamics",
+      "functionStatement": "Species interactions sustain biodiversity, restrain invasives, and build resilience to disturbance.",
+      "metricStatement": "Invasives don't dominate if historically native-dominated, unless naturalized species cause minimal impact.",
+      "context": "Channel",
+      "method": "Field",
+      "howToMeasure": "Query available invasive species databases and summarize presence within the watershed or reach. Confirm key species during a field visit where feasible.",
+      "criteria": {
+        "Good": "<5% invasive presence.",
+        "Fair": "5-50% invasive presence.",
+        "Poor": ">50% invasive presence or one invasive dominates."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "USGS Nonindigenous Aquatic Species (NAS); EDDMapS; state invasive species lists.",
+      "source": "ERDC",
+      "dataSource": "Channel"
+    },
+    {
+      "metricId": "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity",
+      "name": "Fish Passage & Barrier Effects (longitudinal connectivity)",
+      "discipline": "Biology",
+      "functionName": "Watershed connectivity",
+      "functionId": "watershed-connectivity",
+      "functionStatement": "Continuous pathways for free movement of water, sediment, and organisms supporting recolonization, maintaining species diversity, and enabling recovery.",
+      "metricStatement": "\"Longitudinal connectivity and aquatic organism passage; barriers can limit recolonization, migration, and gene flow. Presence and proximity of impoundments (dams/ponds/reservoirs) that can alter flow regime, sediment transport, temperature, and aquatic connectivity.\"",
+      "context": "Channel and Watershed",
+      "method": "Desktop (barrier inventory/imagery) with field verification where feasible",
+      "howToMeasure": "\"Inventory potential barriers (culverts, dams, grade controls) within the specified upstream/downstream distance using barrier datasets and imagery; confirm passability where feasible. Assign the condition class using the bin thresholds for this metric. Inventory impoundments upstream (and where specified, downstream) of the project reach using dam/impoundment datasets and imagery. Summarize proximity and/or density per the metric definition. Assign the condition class using the bin thresholds for this metric.\"",
+      "criteria": {
+        "Good": "No barrier within watershed OR barriers provide beneficial effect on project area and allows for aquatic organism passage.",
+        "Fair": "Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists that is creating a minor fish passage barrier.",
+        "Poor": "Aquatic organism barriers (including impoundment(s)) located within 1 mile upstream or downstream of project area has a negative effect on aquatic organism passage."
+      },
+      "indexRanges": {
+        "Poor": [
+          0.0,
+          0.39
+        ],
+        "Fair": [
+          0.4,
+          0.69
+        ],
+        "Good": [
+          0.7,
+          1.0
+        ]
+      },
+      "indexMidpoints": {
+        "Poor": 0.195,
+        "Fair": 0.545,
+        "Good": 0.85
+      },
+      "references": "Barrier inventory (if used); WI SQT 2022; Barrier inventory (if used); TN SQT; Barrier inventory (if used); Alaska SQT; Barrier inventory (if used); CO SQT 2019; Barrier inventory (if used); WY SQT 2019; National Inventory of Dams (if used); MI SQT 2019; National Inventory of Dams (if used); SC SQT 2021; Barrier inventory (if used); MN SQT 2020; National Inventory of Dams (if used); NC SQT 2019",
+      "source": "Wisconsin SQT; Tennessee SQT; Alaska SQT; Colorado SQT; Wyoming SQT; Michigan SQT; South Carolina SQT; Minnesota SQT; North Carolina SQT",
+      "dataSource": "\"Barrier inventories (state/federal/NGO), NHD/NHDPlus hydrography, recent imagery, and field verification where feasible. ADF&G Web Mapper & Imagery National Inventory of Dams (NID) and/or state dam databases; NHD/NHDPlus waterbodies/flowlines; recent imagery.\""
+    }
+  ]
+}

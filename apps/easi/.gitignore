@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# HyRiver / request caches
+cache/
+*.sqlite
+.hyriver_cache/
+
+# Local Claude Code tooling (not for publishing)
+.claude/
+
+# Posit Publisher: keep the deploy CONFIG (.posit/publish/*.toml) in git, but ignore
+# the account-specific deployment RECORDS (content GUIDs / URLs, written on first deploy).
+.posit/publish/deployments/
+
+# Internal implementation plans (not for publishing)
+plan.md
+docs/plan.md
+
+# Internal / confidential docs (in-review manuscripts, TN drafts) — never publish
+docs/ERDC-TN/
+# SFARI report and TN drafts (.docx, incl. Word ~$ lock files), the copyrighted style
+# PDF, and the raw field data (SFARI xlsx, site photos, EASI report PDFs).
+docs/*.docx
+docs/EASI_Documentation/*.docx
+docs/Writing Style/
+docs/Verification Sites/
+
+# V&V documentation build inputs: cached EASI/SFARI data and CSVs (per-function field
+# scores). Rebuilt locally from the private SFARI xlsx, not published.
+docs/EASI_Documentation/data/
+
+# Redundant Quarto resource copy (www/documentation.html is self-contained)
+www/figures/
+
+# Dev-only one-off scripts (not for the public repo)
+scripts/revise_tn*.py
+
+# MMW comparison harness — local API key + generated overlays (never publish)
+scripts/.mmw_api_key
+out/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local secrets (never commit API keys)
+.env
