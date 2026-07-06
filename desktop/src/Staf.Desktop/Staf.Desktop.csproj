@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>StafDesktop</AssemblyName>
+    <RootNamespace>Staf.Desktop</RootNamespace>
+    <Product>STAF Desktop</Product>
+    <Company>USACE WRISES</Company>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Staf.Desktop.Core\Staf.Desktop.Core.csproj" />
+  </ItemGroup>
+
+</Project>
