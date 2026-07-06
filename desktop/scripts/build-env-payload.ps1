@@ -29,16 +29,19 @@ $pruneFile = Join-Path $payloadDir 'prune.txt'
 
 function Get-EnvVersion {
     # Content hash over ALL env-build inputs (locks + prune recipe) so any change triggers a
-    # rebuild in CI. Line endings must not change the version: normalize CRLF->LF so a Windows
-    # working tree and a CI checkout agree.
-    $envText = (Get-Content $envLock -Raw) -replace "`r`n", "`n"
-    $pbsText = (Get-Content $pbsLock -Raw) -replace "`r`n", "`n"
-    $pruneText = (Get-Content $pruneFile -Raw) -replace "`r`n", "`n"
-    $bytes = [Text.Encoding]::UTF8.GetBytes($envText + $pbsText + $pruneText)
+    # rebuild in CI. Operates on RAW BYTES with CR (0x0D) stripped: text decoding here would tie
+    # the version to the PowerShell edition (5.1 reads BOM-less UTF-8 as CP-1252, pwsh 7 as
+    # UTF-8), and eol normalization keeps working trees and CI checkouts in agreement.
+    $stream = New-Object IO.MemoryStream
+    foreach ($file in @($envLock, $pbsLock, $pruneFile)) {
+        foreach ($byte in [IO.File]::ReadAllBytes($file)) {
+            if ($byte -ne 13) { $stream.WriteByte($byte) }
+        }
+    }
     $sha = [Security.Cryptography.SHA256]::Create()
     try {
-        $hex = -join ($sha.ComputeHash($bytes) | ForEach-Object { $_.ToString('x2') })
-    } finally { $sha.Dispose() }
+        $hex = -join ($sha.ComputeHash($stream.ToArray()) | ForEach-Object { $_.ToString('x2') })
+    } finally { $sha.Dispose(); $stream.Dispose() }
     "env-cp312-$($hex.Substring(0, 8))"
 }
 
