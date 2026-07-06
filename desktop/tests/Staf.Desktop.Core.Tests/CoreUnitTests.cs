@@ -100,6 +100,31 @@ public sealed class RollingLogWriterTests
         Assert.True(new FileInfo(path).Length <= 400);
         Directory.Delete(dir, recursive: true);
     }
+
+    [Fact]
+    public void SharesTheLiveLogWithSiblings()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "staf-desktop-tests", Guid.NewGuid().ToString("N"));
+        var path = Path.Combine(dir, "shell.log");
+        using (var log = new RollingLogWriter(path))
+        {
+            log.WriteLine("shell line");
+            // A sibling handle (--stop-helper, a log viewer opened for read/write) must not be
+            // locked out while the shell holds the log — with FileShare.Read this open threw.
+            // No byte-interleaving guarantee: only that the open succeeds and the shell's own
+            // lines keep landing.
+            using (var sibling = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+            {
+                sibling.Write("sibling line\n"u8);
+            }
+            log.WriteLine("shell line after sibling");
+        }
+
+        var content = File.ReadAllText(path);
+        Assert.Contains("shell line", content);
+        Assert.Contains("shell line after sibling", content);
+        Directory.Delete(dir, recursive: true);
+    }
 }
 
 public sealed class StateStoreTests

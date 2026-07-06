@@ -323,8 +323,15 @@ internal sealed class LauncherForm : Form, IShellHub
 
     private async Task ApplyPendingUpdateAsync()
     {
-        if (_services.PayloadManager is not { } manager || _pendingUpdate is not { } pending || _payloadBusy)
+        if (_services.PayloadManager is not { } manager || _payloadBusy)
         {
+            return;
+        }
+        if (_pendingUpdate is not { } pending)
+        {
+            // Stale chip (update already applied, or the page and shell disagree) — resolve it
+            // visibly rather than ignoring the click.
+            Post(new { type = "updateDone", message = "You're up to date." });
             return;
         }
         _payloadBusy = true;
