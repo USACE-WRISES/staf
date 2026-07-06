@@ -216,6 +216,42 @@ public sealed class PayloadManagerTests : IDisposable
     }
 
     [Fact]
+    public async Task InstallFromDirectory_ResolvesGithubUrlsToLocalFilenames()
+    {
+        // The realistic offline bundle: the ONLINE manifest (GitHub URLs) + its zips in one folder.
+        var env = MakeZip("env-cp312-off77777", Path.Combine("python", "python.exe"), "p");
+        var apps = MakeZip("apps-2026.07.12-off8888", Path.Combine("easi", "app.py"), "a");
+        var json = JsonSerializer.Serialize(new
+        {
+            schemaVersion = 1,
+            minShellVersion = "1.0.0",
+            components = new
+            {
+                env = new
+                {
+                    version = "env-cp312-off77777",
+                    url = $"https://github.com/USACE-WRISES/staf/releases/download/x/{env.FileName}",
+                    sha256 = env.Sha256, sizeBytes = env.Size, installedSizeBytes = env.Size * 3, python = "3.12",
+                },
+                apps = new
+                {
+                    version = "apps-2026.07.12-off8888",
+                    url = $"https://github.com/USACE-WRISES/staf/releases/download/x/{apps.FileName}",
+                    sha256 = apps.Sha256, sizeBytes = apps.Size, installedSizeBytes = apps.Size * 3,
+                    requiresEnv = "env-cp312-off77777",
+                },
+            },
+        }, DesktopJson.Options);
+        File.WriteAllText(Path.Combine(_releaseDir, "latest-desktop.json"), json);
+
+        var manager = CreateManager();
+        await manager.InstallFromDirectoryAsync(_releaseDir, CancellationToken.None);
+
+        Assert.Equal("env-cp312-off77777", _state.Load()!.Env!.Version);
+        Assert.True(File.Exists(Path.Combine(_state.DirFor("apps-2026.07.12-off8888"), "easi", "app.py")));
+    }
+
+    [Fact]
     public async Task Prune_SkipsInUseDirs_DuringApply()
     {
         await FirstRun_InstallsBothComponents_AndCommits();

@@ -46,6 +46,7 @@ internal sealed class LauncherForm : Form, IShellHub
         // Tall enough that the four cards (two rows at this width) fit without a scrollbar.
         Size = new Size(1120, 830);
         MinimumSize = new Size(780, 500);
+        ShellIcon.Apply(this);
 
         _webView = new WebView2 { Dock = DockStyle.Fill };
         Controls.Add(_webView);
@@ -165,6 +166,96 @@ internal sealed class LauncherForm : Form, IShellHub
             case "openLogsFolder":
                 OpenInShell("explorer.exe", Config.LogsDir);
                 break;
+
+            case "clearCaches":
+                await ClearCachesAsync();
+                break;
+
+            case "revertPayload":
+                await RevertPayloadAsync();
+                break;
+        }
+    }
+
+    private async Task ClearCachesAsync()
+    {
+        var answer = MessageBox.Show(this,
+            "Clear cached map/data downloads?\n\nAny running apps will be stopped first. Caches rebuild automatically as you work.",
+            "STAF Desktop", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        if (answer != DialogResult.Yes)
+        {
+            return;
+        }
+
+        foreach (var window in _appWindows.Values.ToList())
+        {
+            if (!window.IsDisposed)
+            {
+                window.SuppressStopOnClose = true;
+                window.Close();
+            }
+        }
+        _appWindows.Clear();
+        if (_supervisor is { } supervisor)
+        {
+            await supervisor.StopAllAsync();
+        }
+
+        try
+        {
+            if (Directory.Exists(Config.CacheDir))
+            {
+                Directory.Delete(Config.CacheDir, recursive: true);
+            }
+            Directory.CreateDirectory(Config.CacheDir);
+            _services.ShellLog.WriteLine("[shell] caches cleared");
+            Post(new { type = "updateDone", message = "Caches cleared." });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _services.ShellLog.WriteLine($"[shell] cache clear failed: {ex.Message}");
+            Post(new { type = "updateError", message = $"Could not clear caches: {ex.Message}" });
+        }
+    }
+
+    private async Task RevertPayloadAsync()
+    {
+        if (_services.PayloadManager is not { } manager)
+        {
+            return; // dev mode — nothing to revert
+        }
+        var answer = MessageBox.Show(this,
+            "Switch back to the previous runtime/app version?\n\nRunning apps will be stopped, then STAF Desktop restarts.",
+            "STAF Desktop", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+        if (answer != DialogResult.Yes)
+        {
+            return;
+        }
+
+        foreach (var window in _appWindows.Values.ToList())
+        {
+            if (!window.IsDisposed)
+            {
+                window.SuppressStopOnClose = true;
+                window.Close();
+            }
+        }
+        _appWindows.Clear();
+        if (_supervisor is { } supervisor)
+        {
+            await supervisor.StopAllAsync();
+        }
+
+        if (manager.RevertToPrevious())
+        {
+            _services.ShellLog.WriteLine("[shell] payload reverted — restarting");
+            _shutdownComplete = true; // skip the stop-all closing handler; everything is stopped
+            Application.Restart();
+        }
+        else
+        {
+            MessageBox.Show(this, "No previous version is available to revert to.",
+                "STAF Desktop", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 

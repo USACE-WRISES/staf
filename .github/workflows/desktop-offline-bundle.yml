@@ -1,0 +1,72 @@
+# Assembles the sneakernet/IT-distribution artifact: one zip containing the shell installer,
+# the portable build, both current payload zips, and latest-desktop.json. On a machine with no
+# GitHub egress: install (or extract) the shell, then in the app use
+# Troubleshooting -> "Install from file..." and point it at the extracted bundle folder
+# (the payload manager resolves the manifest's GitHub URLs to the local zip filenames).
+#
+# Run manually from the Actions tab after a shell release exists. The bundle is attached to
+# that shell release.
+name: desktop-offline-bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      shell_tag:
+        description: Shell release tag to bundle (e.g. v0.1.0); defaults to the latest release
+        type: string
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Resolve shell tag
+        id: tag
+        run: |
+          TAG='${{ inputs.shell_tag }}'
+          if [ -z "$TAG" ]; then
+            TAG=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "bundling shell release $TAG"
+
+      - name: Download shell + manifest + payload assets
+        run: |
+          mkdir -p bundle
+          gh release download '${{ steps.tag.outputs.tag }}' --repo "$GITHUB_REPOSITORY" \
+            --pattern 'StafDesktop-win-Setup.exe' --pattern 'StafDesktop-win-Portable.zip' --dir bundle
+          gh release download desktop-current --repo "$GITHUB_REPOSITORY" \
+            --pattern latest-desktop.json --dir bundle
+
+          ENV_URL=$(jq -r .components.env.url bundle/latest-desktop.json)
+          APPS_URL=$(jq -r .components.apps.url bundle/latest-desktop.json)
+          curl -fL --retry 3 -o "bundle/$(basename "$ENV_URL")" "$ENV_URL"
+          curl -fL --retry 3 -o "bundle/$(basename "$APPS_URL")" "$APPS_URL"
+
+          cat > bundle/README.txt <<'EOF'
+          STAF Desktop offline bundle
+          ===========================
+          For machines that cannot reach github.com.
+
+          1. Run StafDesktop-win-Setup.exe (per-user, no admin needed), or extract
+             StafDesktop-win-Portable.zip anywhere and run "STAF Desktop.exe".
+             Windows SmartScreen may warn (the app is unsigned): More info -> Run anyway.
+          2. If first-run setup cannot download, click "Install from file..." (also under
+             Troubleshooting in the footer) and select THIS folder.
+          3. The assessments still need internet access to USGS/EPA data services at runtime.
+          EOF
+          ls -lh bundle
+
+      - name: Zip and attach to the shell release
+        run: |
+          VER='${{ steps.tag.outputs.tag }}'
+          ZIP="staf-desktop-offline-${VER}.zip"
+          (cd bundle && zip -q -r "../$ZIP" .)
+          ls -lh "$ZIP"
+          gh release upload '${{ steps.tag.outputs.tag }}' "$ZIP" --repo "$GITHUB_REPOSITORY" --clobber

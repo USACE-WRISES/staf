@@ -11,6 +11,7 @@
     <Version>0.1.0</Version>
     <!-- English-only: drops the cs/de/es/... satellite resource folders from publish output. -->
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <ApplicationIcon>..\..\resources\icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

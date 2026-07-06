@@ -166,6 +166,17 @@ public sealed class PayloadManager(
         var json = await File.ReadAllTextAsync(manifestPath, ct).ConfigureAwait(false);
         var manifest = LatestManifest.Parse(json, allowedUrlPrefixes: [""], manifestPath);
 
+        // An offline bundle is usually just the ONLINE manifest plus its zips dropped into one
+        // folder — component URLs still point at GitHub. Resolve each to its local filename.
+        manifest = manifest with
+        {
+            Components = new ManifestComponents
+            {
+                Env = manifest.Components.Env with { Url = LocalAssetName(manifest.Components.Env.Url) },
+                Apps = manifest.Components.Apps with { Url = LocalAssetName(manifest.Components.Apps.Url) },
+            },
+        };
+
         var current = state.Load();
         var plan = new UpdatePlan(
             current?.Env?.Version != manifest.Components.Env.Version ? manifest.Components.Env : null,
@@ -179,6 +190,11 @@ public sealed class PayloadManager(
     }
 
     public bool RevertToPrevious() => state.RevertToPrevious(_time.GetUtcNow());
+
+    private static string LocalAssetName(string url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var uri) && uri.Scheme is "http" or "https"
+            ? Path.GetFileName(uri.LocalPath)
+            : url;
 
     public void StartupSweep()
     {
