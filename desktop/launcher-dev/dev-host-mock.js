@@ -47,6 +47,33 @@
     listeners.forEach(function (cb) { cb({ data: json }); });
   }
 
+  function emitRaw(msg) {
+    var json = JSON.stringify(msg);
+    listeners.forEach(function (cb) { cb({ data: json }); });
+  }
+
+  // Dev-banner buttons: drive the setup/update UI states without a shell.
+  window.__mockScenario = function (name) {
+    if (name === "firstRun") {
+      emitRaw({ type: "setup", message: "Downloading the assessment runtime (431 MB)…", percent: 0, detail: "env · 0 / 431 MB" });
+      var pct = 0;
+      var timer = setInterval(function () {
+        pct += 7;
+        if (pct >= 100) {
+          clearInterval(timer);
+          emitRaw({ type: "setupDone" });
+          emitRaw(snapshot());
+          return;
+        }
+        emitRaw({ type: "setup", message: "Downloading the assessment runtime (431 MB)…", percent: pct, detail: "env · " + Math.round(431 * pct / 100) + " / 431 MB" });
+      }, 250);
+    } else if (name === "setupError") {
+      emitRaw({ type: "setupError", message: "Could not download the STAF runtime: the update server is unreachable.", canRetry: true });
+    } else if (name === "updateAvailable") {
+      emitRaw({ type: "updateAvailable", message: "Update available (26 MB)" });
+    }
+  };
+
   window.__mockCommands = [];
 
   window.chrome = window.chrome || {};
@@ -62,6 +89,15 @@
       switch (cmd.type) {
         case "ready":
           emit();
+          break;
+        case "setupRetry":
+          window.__mockScenario("firstRun");
+          break;
+        case "applyUpdate":
+          emitRaw({ type: "updateProgress", message: "Downloading the STAF apps (26 MB)…", percent: 40 });
+          setTimeout(function () {
+            emitRaw({ type: "updateDone", message: "Update installed — apps use it the next time they start." });
+          }, 900);
           break;
         case "launch":
           if (!app) { return; }

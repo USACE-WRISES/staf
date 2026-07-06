@@ -12,6 +12,35 @@ public interface IPayloadLocator
     PayloadPaths Resolve();
 }
 
+/// <summary>Resolves against the installed payload pointed at by payloads\current.json.</summary>
+public sealed class InstalledPayloadLocator(ShellConfig config) : IPayloadLocator
+{
+    public PayloadPaths Resolve()
+    {
+        var state = new Payload.LocalState(config.PayloadsDir);
+        var pointer = state.Load();
+        if (pointer is not { Env: { } env, Apps: { } apps })
+        {
+            throw new ShellException("The STAF runtime is not installed yet — complete first-run setup.");
+        }
+
+        var python = Path.Combine(state.DirFor(env.Dir), "python", "python.exe");
+        if (!File.Exists(python))
+        {
+            throw new ShellException(
+                $"The installed runtime is missing ({python}). Use Troubleshooting → reinstall, or run first-run setup again.");
+        }
+        var appsRoot = state.DirFor(apps.Dir);
+        var manifest = Path.Combine(appsRoot, "desktop-manifest.json");
+        if (!File.Exists(manifest))
+        {
+            throw new ShellException($"The installed apps payload is missing its manifest ({manifest}).");
+        }
+
+        return new PayloadPaths(python, appsRoot, manifest);
+    }
+}
+
 /// <summary>Runs the apps from the repo's shared .venv — the developer loop, no payload required.</summary>
 public sealed class DevPayloadLocator(ShellConfig config) : IPayloadLocator
 {

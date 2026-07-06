@@ -1,6 +1,6 @@
 // STAF Desktop launcher page. Vanilla JS, same idiom as the site's widgets.
-// Protocol: the shell pushes full snapshots; we render from scratch each time.
-// Outbound commands: { type: "launch"|"stop"|"viewLogs"|"openWebsite"|"openWeb"|"openLogsFolder"|"ready", appId? }
+// Protocol: the shell pushes full snapshots (card grid) plus setup/update events; we render from
+// scratch on every snapshot. Outbound commands: { type, appId? } — see LauncherProtocol.cs.
 (function () {
   "use strict";
 
@@ -18,6 +18,17 @@
 
   var grid = document.getElementById("apps-grid");
   var footerMode = document.getElementById("footer-mode");
+  var appsView = document.getElementById("apps-view");
+  var setupView = document.getElementById("setup-view");
+  var setupMessage = document.getElementById("setup-message");
+  var setupBar = document.getElementById("setup-bar");
+  var setupProgress = document.getElementById("setup-progress");
+  var setupDetail = document.getElementById("setup-detail");
+  var setupActions = document.getElementById("setup-actions");
+  var setupRetry = document.getElementById("setup-retry");
+  var updateChip = document.getElementById("update-chip");
+  var updateText = document.getElementById("update-text");
+  var updateInstall = document.getElementById("update-install");
 
   var STATUS_LABEL = {
     stopped: "Not running",
@@ -27,7 +38,9 @@
     crashed: "Stopped unexpectedly",
   };
 
-  function render(snapshot) {
+  // ── Card grid ──────────────────────────────────────────────────────────
+
+  function renderSnapshot(snapshot) {
     grid.textContent = "";
     snapshot.apps.forEach(function (app) {
       var card = document.createElement("div");
@@ -127,12 +140,93 @@
       "  ·  data: " + snapshot.shell.dataRoot;
   }
 
+  // ── First-run setup view ───────────────────────────────────────────────
+
+  function showSetup(msg) {
+    appsView.hidden = true;
+    setupView.hidden = false;
+    setupView.classList.remove("error");
+    setupMessage.textContent = msg.message || "";
+    setupDetail.textContent = msg.detail || "";
+    setupActions.hidden = true;
+    if (typeof msg.percent === "number" && msg.percent >= 0) {
+      setupProgress.hidden = false;
+      setupBar.style.width = msg.percent + "%";
+    } else {
+      setupProgress.hidden = true;
+    }
+  }
+
+  function showSetupError(msg) {
+    appsView.hidden = true;
+    setupView.hidden = false;
+    setupView.classList.add("error");
+    setupMessage.textContent = msg.message || "Setup failed.";
+    setupDetail.textContent = "";
+    setupProgress.hidden = true;
+    setupActions.hidden = false;
+    setupRetry.hidden = msg.canRetry === false;
+  }
+
+  function hideSetup() {
+    setupView.hidden = true;
+    setupView.classList.remove("error");
+    appsView.hidden = false;
+  }
+
+  // ── Footer update chip ─────────────────────────────────────────────────
+
+  var updateChipTimer = null;
+
+  function showUpdateChip(text, opts) {
+    opts = opts || {};
+    if (updateChipTimer) { clearTimeout(updateChipTimer); updateChipTimer = null; }
+    updateChip.hidden = false;
+    updateChip.classList.toggle("error", !!opts.error);
+    updateText.textContent = text;
+    updateInstall.hidden = !!opts.hideButton;
+    updateInstall.disabled = !!opts.disableButton;
+    updateInstall.textContent = opts.buttonLabel || "Install";
+    if (opts.autoHideMs) {
+      updateChipTimer = setTimeout(function () { updateChip.hidden = true; }, opts.autoHideMs);
+    }
+  }
+
+  // ── Shell → page ───────────────────────────────────────────────────────
+
   host.addEventListener("message", function (event) {
     var msg = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-    if (msg && msg.type === "snapshot") {
-      render(msg);
+    if (!msg || !msg.type) { return; }
+    switch (msg.type) {
+      case "snapshot":
+        renderSnapshot(msg);
+        break;
+      case "setup":
+        showSetup(msg);
+        break;
+      case "setupError":
+        showSetupError(msg);
+        break;
+      case "setupDone":
+        hideSetup();
+        break;
+      case "updateAvailable":
+        showUpdateChip(msg.message, {});
+        break;
+      case "updateProgress":
+        showUpdateChip(msg.message + (typeof msg.percent === "number" && msg.percent >= 0 ? " (" + msg.percent + "%)" : ""),
+          { disableButton: true, buttonLabel: "Installing…" });
+        break;
+      case "updateDone":
+        showUpdateChip(msg.message, { hideButton: true, autoHideMs: 10000 });
+        break;
+      case "updateError":
+        showUpdateChip(msg.message, { error: true, buttonLabel: "Retry" });
+        break;
     }
   });
+
+  // ── Page → shell ───────────────────────────────────────────────────────
 
   document.getElementById("open-website").addEventListener("click", function () {
     send("openWebsite");
@@ -140,6 +234,16 @@
   document.getElementById("open-logs").addEventListener("click", function (e) {
     e.preventDefault();
     send("openLogsFolder");
+  });
+  setupRetry.addEventListener("click", function () {
+    showSetup({ message: "Retrying…", percent: -1 });
+    send("setupRetry");
+  });
+  document.getElementById("setup-from-file").addEventListener("click", function () {
+    send("installFromFile");
+  });
+  updateInstall.addEventListener("click", function () {
+    send("applyUpdate");
   });
 
   send("ready");
