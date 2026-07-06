@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "version": "dev",
+  "builtFromCommit": "dev",
+  "requiresEnv": "dev",
+  "apps": [
+    {
+      "id": "easi",
+      "dir": "easi",
+      "entry": "app.py",
+      "name": "EASI",
+      "fullName": "Ecosystem Assessment Screening Index",
+      "tier": "Screening",
+      "tierNum": 1,
+      "role": "Screening-tier assessment app",
+      "description": "Automated desktop screening using commonly used, nationally applicable metrics.",
+      "status": "live",
+      "webUrl": "https://gtmenichino-easi.share.connect.posit.cloud/"
+    },
+    {
+      "id": "sfari",
+      "dir": "sfari",
+      "entry": "app.py",
+      "name": "SFARI",
+      "fullName": "Stream Functions Assessment and Rapid Index",
+      "tier": "Rapid",
+      "tierNum": 2,
+      "role": "Rapid-tier field assessment app",
+      "description": "Nationally applicable, function-based rapid field assessment with desktop evidence support.",
+      "status": "live",
+      "webUrl": "https://gtmenichino-sfari.share.connect.posit.cloud/"
+    },
+    {
+      "id": "deep",
+      "dir": "deep",
+      "entry": "app.py",
+      "name": "DEEP",
+      "fullName": "Detailed Evaluation of Ecosystem Processes",
+      "tier": "Detailed",
+      "tierNum": 3,
+      "role": "Detailed-tier assessment app (predefined assessments included)",
+      "description": "Runs detailed, curve-based site assessments. Comes with a limited number of predefined assessments out of the box.",
+      "status": "live",
+      "webUrl": "https://gtmenichino-deep.share.connect.posit.cloud/"
+    },
+    {
+      "id": "curves",
+      "dir": "stream-curves",
+      "entry": "app.py",
+      "name": "stream-curves",
+      "fullName": "Reference and Regional Curve Builder",
+      "tier": "Detailed",
+      "tierNum": 3,
+      "role": "Builds new detailed assessments for DEEP",
+      "description": "Builder tool — creates the reference-curve assessments that DEEP runs. For assessment developers rather than day-to-day users.",
+      "status": "live",
+      "webUrl": "https://gtmenichino-stream-curves.share.connect.posit.cloud/"
+    }
+  ]
+}
