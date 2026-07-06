@@ -1,0 +1,225 @@
+# ── SQT Parameter Map ─────────────────────────────────────────────────────
+# Maps each metric (metric_key from metric_registry.yaml) to the
+# Function-Based Framework categories used in MN/WI Science Support docs.
+#
+# Fields per metric:
+#   functional_category       — Hydrology | Hydraulics | Geomorphology | Physicochemistry | Biology
+#                               (surfaced in the app UI as the metric's "Discipline")
+#   function_based_parameter  — Sub-category (e.g., "Bedform Diversity")
+#                               (surfaced in the app UI as the metric's "Function"; the
+#                                Discipline→Function→Metric mapping UI edits this at runtime)
+#   units_display             — Units string as shown in docs (supersedes registry units when set)
+#   reference_notes           — Short functional statement for the Science Support Document
+#   data_sources              — List of dataset/citation strings for the List of Metrics "References" sheet
+#   wi_block                  — Optional: anchor cell of matching WI SQT Reference Curves block (null if uncovered)
+#
+# category_order controls the default order of Functional Category groups in the List of Metrics.
+# The Shiny app may override functional_category / function_based_parameter per session via
+# rv$discipline_function_mapping; this file supplies the fallback defaults.
+
+category_order:
+  - Hydrology
+  - Hydraulics
+  - Geomorphology
+  - Physicochemistry
+  - Biology
+
+metrics:
+  perRiffle:
+    functional_category: Geomorphology
+    function_based_parameter: Bedform Diversity
+    units_display: "%"
+    reference_notes: "Percent of reach length occupied by riffle habitat; indicator of bedform and hydraulic diversity."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: T435
+
+  WDR:
+    functional_category: Hydraulics
+    function_based_parameter: Width/Depth Ratio
+    units_display: "ratio"
+    reference_notes: "Bankfull width divided by bankfull mean depth; indicator of channel cross-section geometry and sediment transport competence."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: K144
+
+  wBHR:
+    functional_category: Hydraulics
+    function_based_parameter: Floodplain Connectivity
+    units_display: "ratio"
+    reference_notes: "Weighted Bank Height Ratio; low-bank height divided by bankfull maximum depth, weighted across the reach. Indicator of floodplain access."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: K9
+
+  ER:
+    functional_category: Hydraulics
+    function_based_parameter: Floodplain Connectivity
+    units_display: "ratio"
+    reference_notes: "Entrenchment Ratio; flood-prone width divided by bankfull width. Higher values indicate better floodplain connection."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: K43
+
+  wER:
+    functional_category: Hydraulics
+    function_based_parameter: Floodplain Connectivity
+    units_display: "ratio"
+    reference_notes: "Weighted Entrenchment Ratio; reach-averaged ER weighted by representative cross-section lengths."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: null
+
+  median_PSR:
+    functional_category: Geomorphology
+    function_based_parameter: Bedform Diversity
+    units_display: "ratio"
+    reference_notes: "Median pool-to-pool spacing divided by bankfull width; indicator of bedform regularity."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: T290
+
+  avg_PDR:
+    functional_category: Geomorphology
+    function_based_parameter: Bedform Diversity
+    units_display: "ratio"
+    reference_notes: "Reach-average pool depth divided by bankfull mean depth; indicator of pool quality."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: T400
+
+  LWD_frequency:
+    functional_category: Geomorphology
+    function_based_parameter: Large Woody Debris
+    units_display: "count/reach"
+    reference_notes: "Count of qualifying LWD pieces per standard reach length; indicator of in-stream habitat complexity."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: T43
+
+  L_Bufferwidth:
+    functional_category: Geomorphology
+    function_based_parameter: Riparian Vegetation Extent
+    units_display: "ft"
+    reference_notes: "Width of continuous riparian buffer measured from the left (facing downstream) top-of-bank."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: null
+
+  R_Bufferwidth:
+    functional_category: Geomorphology
+    function_based_parameter: Riparian Vegetation Extent
+    units_display: "ft"
+    reference_notes: "Width of continuous riparian buffer measured from the right (facing downstream) top-of-bank."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: null
+
+  bufferwidth:
+    functional_category: Geomorphology
+    function_based_parameter: Riparian Vegetation Extent
+    units_display: "ft"
+    reference_notes: "Sum of left and right riparian buffer widths; total vegetated corridor available to the reach."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: null
+
+  Per_erodingbank:
+    functional_category: Geomorphology
+    function_based_parameter: Lateral Migration
+    units_display: "%"
+    reference_notes: "Percent of total bank length actively eroding; indicator of bank stability."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: T78
+
+  avgBasalarea:
+    functional_category: Geomorphology
+    function_based_parameter: Riparian Vegetation Composition
+    units_display: "sq ft/acre"
+    reference_notes: "Reach-averaged woody stem basal area; indicator of mature riparian forest."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: T255
+
+  avgcanopy:
+    functional_category: Geomorphology
+    function_based_parameter: Riparian Vegetation Composition
+    units_display: "%"
+    reference_notes: "Reach-averaged canopy cover; indicator of thermal and light regime."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: null
+
+  Avgherbcover:
+    functional_category: Geomorphology
+    function_based_parameter: Riparian Vegetation Composition
+    units_display: "%"
+    reference_notes: "Reach-averaged native herbaceous cover."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: T221
+
+  invasive_non:
+    functional_category: Geomorphology
+    function_based_parameter: Riparian Vegetation Composition
+    units_display: "%"
+    reference_notes: "Reach-averaged invasive and non-native vegetation cover; inverse indicator of riparian quality."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: null
+
+  avgshrub:
+    functional_category: Geomorphology
+    function_based_parameter: Riparian Vegetation Composition
+    units_display: "%"
+    reference_notes: "Reach-averaged native shrub cover."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: null
+
+  CFPs:
+    functional_category: Hydrology
+    function_based_parameter: Reach Runoff
+    units_display: "Y/N"
+    reference_notes: "Presence or absence of concentrated flow points entering the reach; Y/N categorical indicator."
+    data_sources:
+      - "OSAM reference-stream dataset"
+    wi_block: null
+
+  BEHI_NBS:
+    functional_category: Geomorphology
+    function_based_parameter: Lateral Migration
+    units_display: "category"
+    reference_notes: "Rosgen Bank Erosion Hazard Index / Near-Bank Stress combined category; ordinal indicator of bank stability."
+    data_sources:
+      - "Rosgen, D.L. (2001) BEHI/NBS methodology"
+      - "OSAM reference-stream dataset"
+    wi_block: null
+
+  d50:
+    functional_category: Geomorphology
+    function_based_parameter: Bed Material Characterization
+    units_display: "mm"
+    reference_notes: "Median particle size from bed pebble count; indicator of substrate composition."
+    data_sources:
+      - "OSAM reference-stream dataset (Wolman pebble counts)"
+    wi_block: T576
+
+  d84:
+    functional_category: Geomorphology
+    function_based_parameter: Bed Material Characterization
+    units_display: "mm"
+    reference_notes: "84th percentile particle size from bed pebble count; indicator of coarse-fraction roughness."
+    data_sources:
+      - "OSAM reference-stream dataset (Wolman pebble counts)"
+    wi_block: null
+
+  D16:
+    functional_category: Geomorphology
+    function_based_parameter: Bed Material Characterization
+    units_display: "mm"
+    reference_notes: "16th percentile particle size from bed pebble count; indicator of fine-fraction substrate."
+    data_sources:
+      - "OSAM reference-stream dataset (Wolman pebble counts)"
+    wi_block: null

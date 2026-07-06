@@ -1,0 +1,1525 @@
+/* ── Reference & Regional Curve Development — Custom CSS ────────────────── */
+
+/* Metric info card in sidebar */
+.metric-info-card {
+  font-size: 0.85rem;
+}
+.metric-info-card .info-label {
+  font-weight: 600;
+  color: #6c757d;
+}
+.metric-info-card .info-value {
+  color: #2c3e50;
+}
+
+/* Step explanation cards */
+.card.border-info .card-header {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Formula preview blocks */
+.formula-preview {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+/* Top model highlight in tables */
+.top-model-row {
+  background-color: rgba(52, 152, 219, 0.08) !important;
+}
+
+/* Status badges spacing */
+.badge {
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.3em 0.6em;
+}
+
+/* Sidebar step tracker (legacy) */
+.step-tracker .step-item {
+  transition: background-color 0.15s ease;
+}
+.step-tracker .step-item:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 0.25rem;
+}
+
+/* ── Phase tracker — horizontal progress dots ────────────────────────────── */
+.phase-tracker {
+  padding: 0.5rem 0;
+}
+.phase-dot {
+  transition: all 0.2s ease;
+}
+.phase-dot.completed {
+  color: var(--bs-success);
+  border-color: var(--bs-success) !important;
+  background-color: rgba(25, 135, 84, 0.1);
+}
+.phase-dot.current {
+  color: var(--bs-primary);
+  border-color: var(--bs-primary) !important;
+  background-color: rgba(13, 110, 253, 0.1);
+}
+.phase-dot.pending {
+  color: var(--bs-secondary);
+  border-color: var(--bs-secondary) !important;
+  opacity: 0.4;
+}
+
+/* ── Phase 1 candidate marking ───────────────────────────────────────────── */
+.candidate-promising {
+  background-color: rgba(39, 174, 96, 0.1);
+}
+.candidate-possible {
+  background-color: rgba(243, 156, 18, 0.1);
+}
+.candidate-not-promising {
+  background-color: rgba(231, 76, 60, 0.1);
+}
+
+/* ── Phase 3 verification badges ─────────────────────────────────────────── */
+.verification-verified {
+  border-left: 4px solid #198754;
+  padding-left: 0.75rem;
+}
+.verification-caution {
+  border-left: 4px solid #ffc107;
+  padding-left: 0.75rem;
+}
+.verification-not-recommended {
+  border-left: 4px solid #dc3545;
+  padding-left: 0.75rem;
+}
+
+/* ── Phase 2 heatmap responsive container ────────────────────────────────── */
+.heatmap-container {
+  overflow-x: auto;
+}
+
+.phase2-consistency-shell-output.recalculating,
+.phase2-consistency-shell-output .recalculating,
+.phase2-consistency-results-output.recalculating,
+.phase2-consistency-results-output .recalculating {
+  opacity: 1;
+}
+
+/* Card spacing consistency */
+.bslib-card {
+  margin-bottom: 1rem;
+}
+
+/* Plot output containers */
+.shiny-plot-output {
+  border-radius: 0.375rem;
+}
+
+/* Compact DT tables */
+.dataTables_wrapper {
+  font-size: 0.85rem;
+}
+
+/* Action buttons in workflow */
+.btn-proceed {
+  min-width: 200px;
+}
+
+/* ── Landing page workflow roadmap ────────────────────────────────────────── */
+.workflow-roadmap {
+  max-width: 600px;
+}
+
+.workflow-step {
+  padding: 6px 10px;
+  border-radius: 0.375rem;
+  transition: background-color 0.15s ease;
+}
+
+.workflow-step:hover {
+  background-color: rgba(13, 110, 253, 0.04);
+}
+
+.workflow-number {
+  min-width: 36px;
+  min-height: 36px;
+}
+
+/* ── Layer module consistent styling ──────────────────────────────────────── */
+
+/* Reviewer assessment forms */
+.form-label {
+  font-size: 0.88rem;
+  color: #495057;
+}
+
+/* Likert slider ticks */
+.irs--shiny .irs-bar {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Decision matrix cells */
+.decision-matrix-cell {
+  border-radius: 4px;
+  padding: 4px 8px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Inline radio buttons in reviewer forms */
+.shiny-input-radiogroup .radio-inline {
+  margin-right: 12px;
+  font-size: 0.85rem;
+}
+
+/* Compact checkbox groups in feasibility */
+.shiny-input-checkboxgroup .checkbox {
+  margin-bottom: 2px;
+  font-size: 0.85rem;
+}
+
+/* Alert styling for validation */
+.alert {
+  font-size: 0.85rem;
+}
+
+/* Session management inputs */
+.session-controls .form-control {
+  font-size: 0.85rem;
+}
+
+/* ── Config editor modal ───────────────────────────────────────────────── */
+.config-editor-modal .nav-pills {
+  margin-bottom: 1rem;
+  gap: 0.25rem;
+}
+.config-editor-modal .nav-pills .nav-link {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+}
+.config-editor-modal .form-group {
+  margin-bottom: 0.6rem;
+}
+.config-editor-modal .form-label,
+.config-editor-modal .control-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #495057;
+}
+.config-readonly {
+  background-color: #f1f3f5;
+  border: 1px solid #dee2e6;
+  border-radius: 0.25rem;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+.badge-available {
+  background-color: #198754;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.2em 0.5em;
+  border-radius: 0.25rem;
+}
+.badge-unavailable {
+  background-color: #dc3545;
+  color: white;
+  font-size: 0.75rem;
+  padding: 0.2em 0.5em;
+  border-radius: 0.25rem;
+}
+.config-editor-modal .accordion-button {
+  font-size: 0.88rem;
+  padding: 0.6rem 0.8rem;
+}
+.config-editor-modal .accordion-body {
+  padding: 0.75rem;
+}
+
+/* Shared STAF cross-app nav strip (sits just below the app navbar) */
+.staf-topnav-strip {
+  display: flex;
+  align-items: center;
+  background: #2f4b7c;
+  padding: 5px 16px;
+}
+.staf-topnav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.staf-topnav-link {
+  color: #cdd8ec;
+  text-decoration: none;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.staf-topnav-link:hover {
+  color: #fff;
+}
+.staf-topnav-link.is-current {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Data & Setup layout */
+.data-setup-shell {
+  --app-navbar-offset: 4.5rem;
+  padding-bottom: 1rem;
+}
+
+.data-setup-controls-card .card-body {
+  padding: 0.75rem 0.85rem;
+}
+
+.data-setup-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.data-setup-card-header > .shiny-html-output {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.data-setup-card-header > .shiny-html-output .btn {
+  width: auto;
+}
+
+.data-setup-control-panel {
+  height: 100%;
+  padding: 0.75rem 0.8rem;
+  border: 1px solid #d8e2ec;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+}
+
+.data-setup-panel-title {
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.save-session-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.save-session-name {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.save-session-name .shiny-input-container,
+.save-session-name .form-group {
+  margin-bottom: 0;
+}
+
+.save-session-download {
+  display: flex;
+  align-items: flex-end;
+  flex: 0 0 auto;
+}
+
+.save-session-download .shiny-download-link,
+.save-session-download .btn {
+  width: auto;
+  min-width: 10rem;
+  padding-left: 0.7rem;
+  padding-right: 0.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.save-session-help {
+  margin-top: 0.35rem;
+}
+
+.data-setup-control-panel .shiny-input-container,
+.data-setup-control-panel .form-group,
+.data-setup-control-panel .btn {
+  margin-bottom: 0.45rem;
+}
+
+.data-setup-control-panel .shiny-input-container:last-child,
+.data-setup-control-panel .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.data-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.upload-format-help {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 1px solid #aeb9c4;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #5f6b76;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+}
+
+.upload-format-help:hover,
+.upload-format-help:focus-visible {
+  border-color: #0d6efd;
+  color: #0d6efd;
+  outline: none;
+}
+
+.upload-format-tooltip {
+  max-width: 320px;
+  font-size: 0.82rem;
+}
+
+.upload-format-row + .upload-format-row {
+  margin-top: 0.35rem;
+}
+
+.upload-format-row strong {
+  display: block;
+  margin-bottom: 0.05rem;
+  color: #2c3e50;
+}
+
+/* Light tooltips (like the EASI app) instead of the dark Bootstrap default. bslib
+   tooltips render on <body>, so this global rule is the way to restyle them. */
+.tooltip {
+  --bs-tooltip-bg: #ffffff;
+  --bs-tooltip-color: #33415c;
+  --bs-tooltip-opacity: 1;
+}
+.tooltip .tooltip-inner {
+  border: 1px solid #d7dee8;
+  border-radius: 7px;
+  box-shadow: 0 6px 22px rgba(20, 40, 80, 0.16);
+  text-align: left;
+  max-width: 300px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  padding: 8px 11px;
+}
+
+.metadata-editor-table th {
+  white-space: normal !important;
+  line-height: 1.1;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.metadata-editor-table td {
+  white-space: normal !important;
+  vertical-align: top;
+}
+
+.metadata-editor-table .dataTables_scrollBody {
+  border-bottom: 1px solid #dee2e6;
+  height: auto !important;
+  max-height: none !important;
+}
+
+.metadata-accordion-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.metadata-editor-shell,
+.metadata-editor-shell > .bslib-card,
+.metadata-editor-shell .tab-content,
+.metadata-editor-shell .tab-pane {
+  width: 100%;
+  height: auto;
+}
+
+.metadata-editor-shell .tab-pane {
+  overflow: visible;
+}
+
+.metadata-column-picker {
+  min-width: 320px;
+  max-width: 480px;
+  flex: 1 1 340px;
+}
+
+.metadata-column-picker .bootstrap-select,
+.metadata-column-picker .bootstrap-select > .dropdown-toggle {
+  width: 100% !important;
+}
+
+.metadata-row-editor-modal .modal-dialog {
+  width: min(960px, 92vw);
+  max-width: min(960px, 92vw);
+}
+
+.metadata-row-editor-modal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Summary page */
+.summary-shell {
+  border: 1px solid #d8e2ec;
+}
+
+.summary-table-wrapper {
+  overflow-x: auto;
+}
+
+.summary-progress-table {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.summary-progress-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f7f9fb;
+  z-index: 1;
+  font-size: 0.82rem;
+  white-space: normal;
+  border-bottom-width: 2px;
+}
+
+/* Compact per-row action buttons (Open analysis / Recompute) + direction arrow. */
+.summary-col-actions { white-space: nowrap; }
+.summary-col-actions .summary-action-btn { padding: 2px 8px; }
+.summary-col-direction { text-align: center; }
+.summary-direction-icon { color: #5f6b76; }
+
+.summary-progress-table td {
+  vertical-align: top;
+  font-size: 0.82rem;
+}
+
+.summary-col-status {
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+}
+
+.summary-main-row:nth-child(4n + 1),
+.summary-main-row:nth-child(4n + 2) {
+  background-color: #fcfdfe;
+}
+
+.summary-cell-expand {
+  width: 54px;
+  text-align: center;
+}
+
+.summary-expand-btn {
+  min-width: 40px;
+}
+
+.summary-select-cell {
+  min-width: 135px;
+}
+
+.summary-select-cell .form-group,
+.summary-select-cell .shiny-input-container {
+  margin-bottom: 0;
+}
+
+.summary-select-cell .bootstrap-select,
+.summary-select-cell .bootstrap-select > .dropdown-toggle,
+.summary-select-cell .selectize-control,
+.summary-select-cell .form-control {
+  font-size: 0.8rem;
+}
+
+.summary-status-text {
+  display: inline-block;
+  line-height: 1.2;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: normal;
+}
+
+.summary-status-run {
+  color: #3b5368;
+}
+
+.summary-status-run-warnings {
+  color: #5f6b76;
+}
+
+.summary-status-failed {
+  color: #6b4b4b;
+}
+
+.summary-status-not-run {
+  color: #6c757d;
+}
+
+.summary-col-available,
+.summary-col-curve {
+  width: 135px;
+  min-width: 135px;
+  max-width: 135px;
+}
+
+/* Available-stratifications multiselect: py-shiny renders a selectize (R used a
+   pickerInput that collapsed to "N selected"). In a 135px column its selected
+   pills stack vertically and can make each summary row 500px+ tall; cap the
+   pill area and scroll it so rows stay compact. */
+.summary-col-available .selectize-input {
+  max-height: 4.75rem;
+  overflow-y: auto;
+}
+
+.summary-select-cell-compact .bootstrap-select {
+  width: 100% !important;
+}
+
+.summary-select-cell-compact .bootstrap-select > .dropdown-toggle {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #c8d3df;
+  color: #23384d;
+  box-shadow: none;
+}
+
+.summary-select-cell-compact .bootstrap-select > .dropdown-toggle:hover,
+.summary-select-cell-compact .bootstrap-select > .dropdown-toggle:focus,
+.summary-select-cell-compact .bootstrap-select > .dropdown-toggle:active,
+.summary-select-cell-compact .bootstrap-select.show > .dropdown-toggle {
+  background: #ffffff;
+  border-color: #7ea8d1;
+  color: #23384d;
+  box-shadow: 0 0 0 0.12rem rgba(73, 132, 189, 0.12);
+}
+
+.summary-select-cell-compact .bootstrap-select > .dropdown-toggle.bs-placeholder,
+.summary-select-cell-compact .bootstrap-select > .dropdown-toggle.bs-placeholder:hover,
+.summary-select-cell-compact .bootstrap-select > .dropdown-toggle.bs-placeholder:focus,
+.summary-select-cell-compact .bootstrap-select > .dropdown-toggle.bs-placeholder:active {
+  background: #ffffff;
+  color: #5a6b7c;
+  opacity: 1;
+}
+
+.summary-select-cell-compact .bootstrap-select .filter-option-inner-inner {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summary-text-cell {
+  min-width: 220px;
+  white-space: normal;
+}
+
+.summary-detail-row td {
+  padding: 0.75rem;
+  background: #f8fbfd;
+  border-top: 0;
+}
+
+.summary-detail-card {
+  border: 1px solid #dce7ef;
+}
+
+.summary-detail-table {
+  margin-bottom: 0;
+}
+
+.summary-note-group h6 {
+  font-size: 0.85rem;
+  margin-bottom: 0;
+}
+
+.summary-note-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.summary-phase-open {
+  white-space: nowrap;
+  font-size: 0.72rem;
+  padding: 0.2rem 0.45rem;
+}
+
+.summary-note-list {
+  padding-left: 1rem;
+  margin-bottom: 0;
+}
+
+.summary-note-item {
+  margin-bottom: 0.25rem;
+}
+
+.summary-note-warning {
+  color: #8a5a00;
+}
+
+.summary-note-info {
+  color: #31485e;
+}
+
+.summary-note-empty {
+  color: #6c757d;
+  font-size: 0.8rem;
+}
+
+.summary-detail-footer {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.modal-dialog.workspace-modal-dialog {
+  width: 90vw;
+  max-width: 90vw;
+  margin: 5vh auto;
+}
+
+.modal-dialog.workspace-modal-dialog .modal-content {
+  height: 90vh;
+}
+
+.modal-dialog.workspace-modal-dialog .modal-header {
+  flex-shrink: 0;
+}
+
+.modal-dialog.workspace-modal-dialog .modal-body {
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.modal-dialog.workspace-modal-dialog .modal-footer {
+  flex-shrink: 0;
+}
+
+.scatterplot-comparison-card,
+.scatterplot-comparison-card .card-body,
+.scatterplot-panel-tab .html-widget,
+.scatterplot-panel-tab .plotly,
+.scatterplot-panel-tab .plot-container {
+  width: 100%;
+}
+
+.workspace-modal-dialog .scatterplot-comparison-card .card-body {
+  padding: 0.55rem 0.7rem 0.7rem;
+}
+
+.phase1-quick-mask-card,
+.phase1-quick-mask-card .card-body {
+  overflow: visible;
+}
+
+.phase1-quick-mask-card {
+  position: relative;
+  z-index: 2;
+}
+
+.phase1-quick-mask-card .card-body {
+  position: relative;
+  z-index: 2;
+}
+
+.phase1-quick-mask-card + .scatterplot-comparison-card {
+  position: relative;
+  z-index: 1;
+}
+
+.scatterplot-comparison-card .nav-tabs {
+  gap: 0.3rem;
+  margin-bottom: 0.55rem;
+  border-bottom-color: #d7e2ec;
+}
+
+.scatterplot-comparison-card .nav-tabs .nav-link {
+  padding: 0.45rem 0.8rem;
+  font-weight: 600;
+  color: #36536b;
+  border-top-left-radius: 0.55rem;
+  border-top-right-radius: 0.55rem;
+}
+
+.scatterplot-comparison-card .nav-tabs .nav-link.active,
+.scatterplot-comparison-card .nav-tabs .nav-item.show .nav-link {
+  color: #173147;
+  background: #fbfdff;
+  border-color: #d7e2ec #d7e2ec #fbfdff;
+}
+
+.scatterplot-comparison-card .tab-content {
+  border: 1px solid #d9e4ef;
+  border-radius: 0.65rem;
+  background: #fbfdff;
+  padding: 0.6rem 0.7rem 0.7rem;
+}
+
+.scatterplot-panel-tab {
+  width: 100%;
+}
+
+.scatterplot-panel-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  gap: 0.45rem 0.7rem;
+  align-items: end;
+  margin-bottom: 0.45rem;
+}
+
+.scatterplot-panel-controls .form-group,
+.scatterplot-panel-controls .shiny-input-container {
+  margin-bottom: 0;
+}
+
+.scatterplot-panel-controls label.control-label {
+  margin-bottom: 0.2rem;
+  font-size: 0.88rem;
+}
+
+.scatterplot-panel-controls .form-control {
+  min-height: 36px;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+
+.scatterplot-panel-toggle {
+  display: flex;
+  align-items: center;
+  min-height: 100%;
+}
+
+.scatterplot-panel-toggle .checkbox {
+  margin: 0;
+}
+
+.scatterplot-panel-toggle .checkbox label {
+  margin-bottom: 0;
+  font-weight: 600;
+  color: #22384b;
+}
+
+.scatterplot-panel-toggle input[type="checkbox"] {
+  margin-top: 0.1rem;
+}
+
+.scatterplot-panel-tab .alert {
+  margin-bottom: 0.45rem;
+  padding: 0.45rem 0.6rem;
+}
+
+@media (max-width: 992px) {
+  .scatterplot-panel-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .scatterplot-panel-toggle {
+    align-items: flex-start;
+  }
+}
+
+.workspace-modal-loading-shell,
+.workspace-modal-error {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.workspace-modal-loading-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #2d4f70;
+}
+
+.workspace-modal-loading-meta {
+  margin-top: 0.75rem;
+  color: #5b6c7d;
+  font-size: 0.88rem;
+}
+
+.workspace-modal-loading-progress {
+  height: 1rem;
+  background-color: #e5eff8;
+  border-radius: 0.4rem;
+  overflow: hidden;
+  margin-top: 0.6rem;
+}
+
+.workspace-modal-loading-progress .progress-bar {
+  transition: width 0.2s ease;
+}
+
+.workspace-modal-loading-detail {
+  margin-top: 0.85rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+.workspace-analysis-loading-status {
+  margin-top: 1rem;
+  border: 1px solid #d9e4ef;
+  border-radius: 0.5rem;
+  background: #f8fbfe;
+}
+
+.workspace-analysis-loading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.9rem;
+}
+
+.workspace-analysis-loading-row + .workspace-analysis-loading-row {
+  border-top: 1px solid #e3edf6;
+}
+
+.workspace-analysis-loading-row-label {
+  font-weight: 500;
+  color: #22384b;
+}
+
+.workspace-analysis-loading-row-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+}
+
+.workspace-analysis-loading-row.is-pending .workspace-analysis-loading-row-state {
+  color: #6c7a89;
+}
+
+.workspace-analysis-loading-row.is-loading .workspace-analysis-loading-row-state {
+  color: #2b6cb0;
+}
+
+.workspace-analysis-loading-row.is-ready .workspace-analysis-loading-row-state {
+  color: #198754;
+}
+
+.workspace-analysis-loading-row.is-error .workspace-analysis-loading-row-state {
+  color: #c0392b;
+}
+
+.workspace-startup-loading {
+  margin-bottom: 1rem;
+}
+
+/* ── Setup wizard ───────────────────────────────────────────────────────── */
+.wizard-stepper {
+  margin: 0.25rem 0;
+}
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: #f1f3f5;
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+.wizard-step .wizard-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #ced4da;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.wizard-step.active {
+  background: #e7f1ff;
+  color: #0b5ed7;
+  font-weight: 600;
+}
+.wizard-step.active .wizard-step-num { background: #1c7ed6; }
+.wizard-step.done { color: #198754; }
+.wizard-step.done .wizard-step-num { background: #198754; }
+
+/* Opened-project workspace: numbered clickable steps (mirrors .wizard-stepper) */
+.workspace-stepper { margin: 0.25rem 0; }
+.workspace-stepper .ws-step {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  background: #f1f3f5;
+  color: #6c757d;
+  font-size: 0.9rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.workspace-stepper .ws-step:hover { background: #e9ecef; color: #495057; }
+.workspace-stepper .ws-step .ws-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #ced4da;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.workspace-stepper .ws-step.active {
+  background: #e7f1ff;
+  color: #0b5ed7;
+  font-weight: 600;
+}
+.workspace-stepper .ws-step.active .ws-step-num { background: #1c7ed6; }
+
+/* Landing screen cards */
+.landing-shell { padding: 1.5rem 0.5rem; }
+.landing-card { transition: box-shadow 0.15s ease; }
+.landing-card:hover { box-shadow: 0 4px 16px rgba(20, 40, 80, 0.10); }
+.landing-card-icon { font-size: 2rem; line-height: 1; margin-bottom: 0.5rem; }
+.landing-card-title { margin-bottom: 0.35rem; font-weight: 600; }
+.landing-card-blurb { min-height: 3rem; }
+.wizard-classify-scroll {
+  max-height: 55vh;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 0.375rem;
+}
+.wizard-classify-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f1f3f5;
+  z-index: 2;
+}
+.wizard-classify-table td.wizard-col-name code { font-size: 0.85rem; }
+.wizard-classify-table td.wizard-col-examples {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wizard-classify-table .form-group,
+.wizard-classify-table .shiny-input-container { margin-bottom: 0; }
+
+/* ── Workbook GUI (Excel-like editable grids) ───────────────────────────── */
+.workbook-import-inline { display: inline-block; min-width: 230px; }
+.workbook-import-inline .form-group { margin-bottom: 0; }
+.workbook-grid { width: 100%; overflow-x: auto; }
+table.workbook-grid-table.dataTable {
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+table.workbook-grid-table.dataTable thead th {
+  background: #f1f3f5;
+  border: 1px solid #cfd6dd;
+  font-weight: 600;
+  color: #343a40;
+  white-space: nowrap;
+}
+table.workbook-grid-table.dataTable tbody td {
+  border: 1px solid #dee2e6;
+  padding: 4px 8px;
+}
+table.workbook-grid-table.dataTable tbody td:hover {
+  background: #eef6ff;
+  cursor: cell;
+}
+/* KeyTable active cell + selection (Excel-like blue) */
+table.workbook-grid-table.dataTable tbody td.focus {
+  box-shadow: inset 0 0 0 2px #1c7ed6;
+  background: #e7f1ff;
+}
+table.workbook-grid-table.dataTable tbody tr.selected td {
+  background: #d0ebff !important;
+}
+.workbook-grid-actionbar .badge { font-weight: 500; }
+
+.workspace-phase-body > .card:last-child {
+  margin-bottom: 0;
+}
+
+.workspace-phase-settings .form-group,
+.workspace-phase-settings .shiny-input-container {
+  margin-bottom: 0.75rem;
+}
+
+.modal-dialog.workspace-modal-dialog .bootstrap-select {
+  width: 100% !important;
+}
+
+.modal-dialog.workspace-modal-dialog .bootstrap-select > .dropdown-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modal-dialog.workspace-modal-dialog .bootstrap-select > .dropdown-toggle::after {
+  display: inline-block;
+  margin-left: 0.75rem;
+  flex-shrink: 0;
+}
+
+.modal-dialog.workspace-modal-dialog .bootstrap-select .filter-option {
+  flex: 1 1 auto;
+}
+
+.modal-dialog.workspace-modal-dialog .bootstrap-select .filter-option-inner-inner {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-dialog.workspace-modal-dialog .bs-container.dropdown.bootstrap-select,
+.modal-dialog.workspace-modal-dialog .bs-container.dropdown.bootstrap-select.show,
+.modal-dialog.workspace-modal-dialog .bs-container.dropdown.bootstrap-select .dropdown-menu {
+  z-index: 1065;
+}
+
+@keyframes streamcurves-inline-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.streamcurves-final-loading-notification {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  max-width: min(30rem, calc(100vw - 3rem));
+  box-sizing: border-box;
+}
+
+.streamcurves-final-loading-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-weight: 600;
+  line-height: 1.2;
+  width: 100%;
+}
+
+.streamcurves-final-loading-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.streamcurves-final-loading-spinner {
+  width: 0.85rem;
+  height: 0.85rem;
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  border: 2px solid rgba(43, 108, 176, 0.2);
+  border-top-color: #2b6cb0;
+  border-right-color: #2b6cb0;
+  border-radius: 999px;
+  animation: streamcurves-inline-spinner 0.8s linear infinite;
+}
+
+.streamcurves-final-loading-title {
+  display: inline-block;
+}
+
+.streamcurves-final-loading-close {
+  margin: 0 0 0 auto;
+  padding: 0 0 0 0.15rem;
+  border: none;
+  background: transparent;
+  color: #516779;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.streamcurves-final-loading-close:hover,
+.streamcurves-final-loading-close:focus-visible {
+  color: #2b6cb0;
+  outline: none;
+}
+
+.streamcurves-final-loading-detail {
+  margin-top: 0.35rem;
+  line-height: 1.35;
+  max-width: 100%;
+}
+
+/* Discipline color bands mirror the SQT Reference Curves xlsx fill palette
+ * (R/15_oh_sqt_workbook.R::oh_sqt_build_styles); applied to the workbench
+ * table cells + library dots below.
+ */
+
+/* ── Discipline / Function / Metric workbench ────────────────────────────── */
+.discipline-map-module .workbench-grid { gap: 1rem; }
+.discipline-map-module .workbench-right { position: sticky; top: 0.5rem; }
+.discipline-map-module .workbench-library .card-body { padding: 0.75rem; }
+.discipline-map-module .workbench-palette {
+  max-height: 62vh;
+  overflow-y: auto;
+  margin: -0.25rem;
+  padding: 0.25rem;
+}
+
+/* the Discipline | Function | Metrics table */
+.wb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  background: #fff;
+}
+.wb-table thead th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6c757d;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  border-bottom: 2px solid #e9ecef;
+}
+.wb-table .wb-th-disc { width: 8.5rem; }
+.wb-table .wb-th-fn { width: 14rem; }
+.wb-table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #f0f0f0;
+  vertical-align: top;
+}
+.wb-table tbody.wb-disc-group + tbody.wb-disc-group td { border-top: 2px solid #e9ecef; }
+
+.wb-disc {
+  font-weight: 600;
+  color: #2c3e50;
+  border-left: 4px solid #adb5bd;
+  background: #f8f9fa;
+  white-space: nowrap;
+}
+.wb-disc .wb-disc-label { writing-mode: horizontal-tb; }
+.wb-disc.discipline-hydrology       { background: #DCE6F1; border-left-color: #4A6FA5; }
+.wb-disc.discipline-hydraulics      { background: #B4C7E7; border-left-color: #2F5597; }
+.wb-disc.discipline-geomorphology   { background: #FBE5D6; border-left-color: #C55A11; }
+.wb-disc.discipline-physicochemistry{ background: #FFF2CC; border-left-color: #BF8F00; }
+.wb-disc.discipline-biology         { background: #E2EFDA; border-left-color: #548235; }
+
+.wb-fn { color: #343a40; }
+.wb-fn.wb-fn-active { background: #eef4ff; font-weight: 600; }
+.wb-metrics { line-height: 1.9; }
+.wb-empty { font-style: italic; }
+
+/* metric chips */
+.wb-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0 0.3rem 0.3rem 0;
+  padding: 0.1rem 0.2rem 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #ced4da;
+  background: #f1f3f5;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.wb-chip.wb-chip-data { background: #eaf4ec; border-color: #b7d9be; }
+.wb-chip.wb-chip-nodata { background: #f8f9fa; border-style: dashed; color: #868e96; }
+.wb-chip .wb-chip-tag {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #adb5bd;
+}
+.wb-chip .wb-chip-x {
+  border: none;
+  background: transparent;
+  color: #adb5bd;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.25rem;
+  cursor: pointer;
+  border-radius: 999px;
+}
+.wb-chip .wb-chip-x:hover { color: #c92a2a; background: rgba(201, 42, 42, 0.1); }
+
+/* usage badge + review flag */
+.wb-usage {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: #e7e9ec;
+  color: #495057;
+}
+.wb-usage.wb-usage-flag { background: #fff3cd; color: #9a7d0a; }
+
+/* + add-to-function button on each function row */
+.wb-add-fn {
+  border: 1px solid #ced4da;
+  background: #fff;
+  color: #4a6fa5;
+  border-radius: 6px;
+  width: 1.6rem;
+  height: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.wb-add-fn:hover { background: #eef4ff; }
+.wb-add-fn.wb-add-fn-active { background: #4a6fa5; color: #fff; border-color: #4a6fa5; }
+
+/* library palette rows */
+.workbench-active-bar, .workbench-active-hint { font-size: 0.82rem; }
+.wb-lib-row {
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+.wb-lib-row:hover { background: #f5f7fa; }
+.wb-lib-label { min-width: 0; }
+.wb-lib-label > span:first-child { overflow-wrap: anywhere; }
+.wb-lib-hasdata {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #2b8a3e;
+  border: 1px solid #b7d9be;
+  border-radius: 4px;
+  padding: 0 0.25rem;
+  margin-left: 0.35rem;
+}
+.wb-dot {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  background: #adb5bd;
+}
+.wb-dot.discipline-hydrology       { background: #4A6FA5; }
+.wb-dot.discipline-hydraulics      { background: #2F5597; }
+.wb-dot.discipline-geomorphology   { background: #C55A11; }
+.wb-dot.discipline-physicochemistry{ background: #BF8F00; }
+.wb-dot.discipline-biology         { background: #548235; }
+.wb-dot.wb-dot-other { background: #ced4da; }
+.wb-lib-add {
+  border: 1px solid #ced4da;
+  background: #fff;
+  color: #4a6fa5;
+  border-radius: 6px;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.wb-lib-add:hover:not([disabled]) { background: #eef4ff; }
+.wb-lib-add[disabled] { color: #ced4da; cursor: not-allowed; }
+
+/* ── Map-first import wizard ─────────────────────────────────────────────── */
+.import-map-card .leaflet-container {
+  border-radius: 6px;
+  border: 1px solid #d5deea;
+}
+.import-map-card .data-setup-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.setup-or-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.setup-or-divider::before,
+.setup-or-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+.import-map-card .wizard-classify-table td,
+.import-map-card .coverage-cell {
+  vertical-align: middle;
+}
+
+/* ── Cross-section tool ──────────────────────────────────────────────────── */
+.cross-section-module .xsec-stat {
+  text-align: center;
+  min-width: 130px;
+  padding: 0.5rem 0.85rem;
+  border: 1px solid #d5deea;
+  border-radius: 6px;
+  background: #f6f8fb;
+}
+.cross-section-module .xsec-stat-val {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1f3f6e;
+  line-height: 1.2;
+}
+.cross-section-module .xsec-stat-lab {
+  font-size: 0.72rem;
+  color: #55607a;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+/* Analyzed-site chips (anatomy shared with .wb-chip) */
+.cross-section-module .xsec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.cross-section-module .xsec-chip { cursor: pointer; user-select: none; }
+.cross-section-module .xsec-chip:hover { border-color: #9ec5e8; }
+.cross-section-module .xsec-chip-active {
+  background: #eef4ff;
+  border-color: #9ec5e8;
+  font-weight: 600;
+}
+.cross-section-module .xsec-chip-stale {
+  border-style: dashed;
+  background: #fff9ec;
+  border-color: #e3c987;
+}
+/* Bottom-align the Analyze button with the Site select (the input container
+   carries a bottom margin the raw button lacks). */
+.cross-section-module .xsec-picker-row .shiny-input-container { margin-bottom: 0; }
+.cross-section-module .xsec-idcol-line .btn-link {
+  font-size: inherit;
+  vertical-align: baseline;
+}
+/* Ecoregion name label shown on hover over the map polygons */
+.import-map-card .leaflet-tooltip {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #2f4b7c;
+  color: #1f3f6e;
+  font-weight: 600;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(20, 40, 80, 0.18);
+  padding: 2px 7px;
+}
+.import-map-card .leaflet-tooltip:before { display: none; }
+
+/* Segmented-control styling for inline radioButtons. This app's radios render with the
+   BS3-compat markup: .shiny-options-group > label.radio-inline > input + span. */
+.sites-view-toggle .shiny-options-group,
+.region-approach-toggle .shiny-options-group {
+  display: inline-flex;
+  border: 1px solid #c3ccd9;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.region-approach-toggle .shiny-input-container > label.control-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #55607a;
+  margin-bottom: 0.25rem;
+}
+/* region-type fills the side column in 4 equal segments */
+.region-approach-toggle .shiny-options-group { display: flex; width: 100%; }
+.sites-view-toggle .radio-inline,
+.region-approach-toggle .radio-inline {
+  display: flex;
+  margin: 0 !important;
+  padding: 0;
+}
+.region-approach-toggle .radio-inline { flex: 1 1 0; }
+.sites-view-toggle .radio-inline + .radio-inline,
+.region-approach-toggle .radio-inline + .radio-inline { border-left: 1px solid #c3ccd9; }
+.sites-view-toggle .radio-inline input[type="radio"],
+.region-approach-toggle .radio-inline input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+/* the <span> holds the option text — style it as the full clickable segment */
+.sites-view-toggle .radio-inline > span,
+.region-approach-toggle .radio-inline > span {
+  flex: 1 1 auto;
+  padding: 4px 14px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: #2f4b7c;
+  user-select: none;
+  transition: background-color 0.12s ease;
+}
+.region-approach-toggle .radio-inline > span { padding: 4px 4px; }
+.sites-view-toggle .radio-inline input:checked + span,
+.region-approach-toggle .radio-inline input:checked + span {
+  background: #2f4b7c;
+  color: #fff;
+}
+
+/* Pencil "rename project" button in the workspace header. */
+.workspace-rename-btn {
+  color: #6c7a90;
+  text-decoration: none;
+  vertical-align: baseline;
+}
+.workspace-rename-btn:hover { color: #2f4b7c; }
+
+/* Loaded-project "Choose columns" checkbox editor (Workbook module). */
+.workbook-choose-scroll {
+  max-height: 60vh;
+  overflow-y: auto;
+  border: 1px solid #d7dee8;
+  border-radius: 8px;
+  padding: 0 8px;
+}
+.workbook-choose .wizard-classify-table { margin-bottom: 0; }
+
+/* Per-source "N selected" badge in the collapsed metric-source accordion headers. */
+.metric-count-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 9px;
+  border-radius: 10px;
+  background: #eef2f8;
+  border: 1px solid #d7dee8;
+  color: #2f4b7c;
+  font-size: 0.72rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+.metric-count-badge .shiny-text-output { display: inline; }

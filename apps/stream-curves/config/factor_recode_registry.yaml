@@ -1,0 +1,63 @@
+# ── Factor Recode Registry ──────────────────────────────────────────────────
+# Defines factor collapsing rules applied via forcats::fct_collapse().
+# Source column is the original column; target column is the new derived factor.
+
+StreamType2:
+  source_column: "StreamType"
+  target_column: "StreamType2"
+  collapse_map:
+    B:
+      - B1c
+      - B3
+      - B3c
+      - B4
+      - B4a
+      - B4c
+    C:
+      - C1
+      - C3
+      - C4
+      - C4b
+    E:
+      - E4
+      - E6
+    F:
+      - F4
+  notes: "Rosgen stream type collapse"
+
+BEHIcombined:
+  source_column: "BEHI_NBS"
+  target_column: "BEHIcombined"
+  collapse_map:
+    Stable:
+      - "VL/M"
+      - "L/M"
+    "Moderately unstable":
+      - "M/L"
+      - "M/M"
+      - "M/H"
+    Unstable:
+      - "M/VH"
+      - "H/H"
+      - "H/M"
+      - "H/L"
+      - "H/VH"
+  notes: "BEHI/NBS stability grouping"
+
+BEHIeroding:
+  source_column: "BEHI_NBS"
+  target_column: "BEHIeroding"
+  collapse_map:
+    "Non-eroding Bank":
+      - "VL/M"
+      - "L/M"
+      - "M/L"
+    "Actively eroding":
+      - "M/M"
+      - "M/H"
+      - "M/VH"
+      - "H/H"
+      - "H/M"
+      - "H/L"
+      - "H/VH"
+  notes: "Bank erosion status grouping"
