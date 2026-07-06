@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# HyRiver / request caches
+cache/
+*.sqlite
+.hyriver_cache/
+
+# Local Claude Code tooling (not for publishing)
+.claude/
+
+# Posit Publisher: keep the deploy CONFIG (.posit/publish/*.toml) in git, but ignore
+# the account-specific deployment RECORDS (content GUIDs / URLs, written on first deploy).
+.posit/publish/deployments/
+
+# Internal / confidential docs — the SFARI manuscript, TN drafts (.docx incl. Word
+# ~$ lock files), copyrighted style PDFs, and raw field data. Never publish.
+docs/*.docx
+docs/**/*.docx
+
+# Local secrets (never commit API keys, e.g. USGS NWIS)
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

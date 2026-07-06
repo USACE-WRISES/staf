@@ -1,0 +1,3216 @@
+{
+  "schemaVersion": 1,
+  "method": "Stream Functional Assessment Rapid Index (SFARI)",
+  "count": 82,
+  "likertScale": {
+    "order": [
+      "Strongly Agree",
+      "Agree",
+      "Neutral",
+      "Disagree",
+      "Strongly Disagree"
+    ],
+    "numeric": {
+      "Strongly Agree": 14,
+      "Agree": 11,
+      "Neutral": 8,
+      "Disagree": 5,
+      "Strongly Disagree": 2
+    },
+    "notApplicable": "Not Applicable"
+  },
+  "onlineResources": [
+    {
+      "name": "EPA EnviroAtlas",
+      "description": "Interactive environmental data incl. stream health, land use, riparian, water quality.",
+      "url": "https://enviroatlas.epa.gov/enviroatlas/interactivemap/",
+      "reference": "U.S. EPA, 2023"
+    },
+    {
+      "name": "Google Earth",
+      "description": "Satellite imagery for visualizing streams, watersheds, and land features.",
+      "url": "https://earth.google.com/",
+      "reference": "Google, 2023"
+    },
+    {
+      "name": "Model My Watershed",
+      "description": "Watershed modeling; land use, stream and water-quality assessment.",
+      "url": "https://modelmywatershed.org/",
+      "reference": "Stroud Water Research Center, 2023"
+    },
+    {
+      "name": "USGS National Map Advanced Viewer",
+      "description": "Topographic and hydrologic data incl. streamflow and watershed boundaries.",
+      "url": "https://apps.nationalmap.gov/viewer/",
+      "reference": "USGS, 2023a"
+    },
+    {
+      "name": "USGS StreamStats",
+      "description": "Streamflow statistics and watershed characteristics at a point.",
+      "url": "https://streamstats.usgs.gov/ss/",
+      "reference": "USGS, 2023b"
+    }
+  ],
+  "metrics": [
+    {
+      "metricId": "catchment-hydrology-impervious-surface-area",
+      "functionId": "catchment-hydrology",
+      "category": "Hydrology",
+      "name": "Impervious surface area",
+      "scale": "W",
+      "metricStatement": "The proportion of the watershed covered by materials that prevent infiltration, such as asphalt, rooftops, and compacted surfaces. Higher imperviousness reduces infiltration and increases fast runoff, which produces flashier hydrographs and elevates pollutant and thermal loads to streams.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "< 5% impervious",
+          "exampleObservation": "Largely forest and pasture. Small town footprint."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "~5–10% impervious",
+          "exampleObservation": "Suburban neighborhoods with scattered commercial areas."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "10–20% impervious",
+          "exampleObservation": "Mixed suburban and commercial corridors."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": ">20% impervious",
+          "exampleObservation": "Urban core and arterial corridors dominate lower basin."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.impervious",
+        "client": "streamcat",
+        "field": "pctimp2019ws",
+        "label": "NLCD 2019 Impervious (MRLC) via Model My Watershed",
+        "url": "https://modelmywatershed.org/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "catchment-hydrology-road-density",
+      "functionId": "catchment-hydrology",
+      "category": "Hydrology",
+      "name": "Road density",
+      "scale": "W",
+      "metricStatement": "Total road length per watershed area. Roads add connected impervious area and drain stormwater efficiently to channels via ditches, culverts, and crossings. This increases peak flows and delivers sediments and pollutants.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "<0.5 km roads/km²",
+          "exampleObservation": "Few local roads. Rare stream crossings."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "~0.5–1.0 km/km²",
+          "exampleObservation": "Collector roads present. Some drainage ditches."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "1–2 km/km²",
+          "exampleObservation": "Grid network near town center. Several culvert crossings."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": ">2 km/km²",
+          "exampleObservation": "Highways and frontage roads crisscross basin. Frequent crossings to channel."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.road_density",
+        "client": "streamcat",
+        "field": "rddens",
+        "label": "Road density — StreamCat rddens / TIGER roads",
+        "url": "https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "catchment-hydrology-land-use-change",
+      "functionId": "catchment-hydrology",
+      "category": "Hydrology",
+      "name": "Land use change",
+      "scale": "W",
+      "metricStatement": "The percent of the watershed converted from one major land cover class to another over a specified period. New development and clearing reduce infiltration and increase runoff volume and timing shifts. These changes can compound water-quality stressors. Change toward reference condition is generally considered positive, while change away from reference condition toward development or urbanization is generally considered negative.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "<5% area converted (e.g., 2001–2019)",
+          "exampleObservation": "Stable land cover since 2001. Minor field rotations only."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "5–15% converted",
+          "exampleObservation": "New subdivisions on outskirts."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "~15–30% converted",
+          "exampleObservation": "Widespread exurban growth and clearing."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "≥30% converted",
+          "exampleObservation": "Major urban expansion or large agricultural conversion."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.land_use_change",
+        "client": "landcover_change",
+        "field": "pct_converted",
+        "label": "NLCD land cover change (2001 vs 2019)",
+        "url": "https://www.mrlc.gov/viewer/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "catchment-hydrology-impoundments",
+      "functionId": "catchment-hydrology",
+      "category": "Hydrology",
+      "name": "Impoundments",
+      "scale": "W",
+      "metricStatement": "The number and influence of dams and flow-regulated reaches that modify downstream hydrographs. Impoundments store and release water on engineered schedules. They can reduce flood peaks, flatten seasonal signals, and lower baseflows, especially under hydropeaking.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "None or negligible influence",
+          "exampleObservation": "No major dams. Only small farm ponds far upstream."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "1–2 small dams, partial influence",
+          "exampleObservation": "One small off-channel dam upstream. Limited storage."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Multiple moderate dams affecting peaks/baseflow",
+          "exampleObservation": "Several moderate impoundments in series."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Heavily regulated system",
+          "exampleObservation": "Large reservoir close upstream with hydropeaking or strict seasonal rule curves."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.impoundments",
+        "client": "nid_barriers",
+        "field": "dam_count",
+        "label": "USACE NID + USGS NABD (upstream dams)",
+        "url": "https://nid.sec.usace.army.mil/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "surface-water-storage-wetland-coverage",
+      "functionId": "surface-water-storage",
+      "category": "Hydrology",
+      "name": "Wetland Coverage",
+      "scale": "W",
+      "metricStatement": "The share of the mapped floodplain or valley bottom that is classified as wetlands. Greater wetland area increases detention and residence time. This can flatten storm peaks and promote settling and biogeochemical uptake that lowers nutrient loads.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "High (>5% of floodplain area)",
+          "exampleObservation": "Wetlands within mapped floodplain or valley bottom"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Moderate (~2–5%)",
+          "exampleObservation": "Wetlands within mapped floodplain or valley bottom"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": "Wetlands within mapped floodplain or valley bottom"
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Low (~1–2%)",
+          "exampleObservation": "Wetlands within mapped floodplain or valley bottom"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Very low (<1%)",
+          "exampleObservation": "Wetlands within mapped floodplain or valley bottom"
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.wetland_coverage",
+        "client": "streamcat",
+        "field": "pctwdwet2019ws+pcthbwet2019ws",
+        "label": "USFWS NWI over FEMA NFHL; StreamCat wetlands",
+        "url": "https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "surface-water-storage-floodplain-water-retention",
+      "functionId": "surface-water-storage",
+      "category": "Hydrology",
+      "name": "Floodplain Water Retention",
+      "scale": "R",
+      "metricStatement": "The frequency and extent of overbanking that engages floodplain storage. When moderate events overtop banks and reach the floodplain, water is detained, velocities drop, and fine sediments and nutrients are retained or transformed. Regular engagement at bankfull to moderate recurrence intervals is a sign of healthy storage.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Floodplain engages at ~1–2 yr or 2–5 yr events",
+          "exampleObservation": "Overbanking frequency based on field metrics and gage context"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Overbanking requires slightly larger than bankfull but not rare",
+          "exampleObservation": "Overbanking frequency based on field metrics and gage context"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": "Overbanking frequency based on field metrics and gage context"
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Overbanking mainly at ~5–10 yr events. Partial disconnection",
+          "exampleObservation": "Overbanking frequency based on field metrics and gage context"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Rarely or never overbanking below ~10-yr events. Incision or levees present",
+          "exampleObservation": "Overbanking frequency based on field metrics and gage context"
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "surface-water-storage-in-channel-ponding-beaver",
+      "functionId": "surface-water-storage",
+      "category": "Hydrology",
+      "name": "In-channel Ponding / Beaver",
+      "scale": "R",
+      "metricStatement": "Small in‑channel ponds, including beaver dams, where naturally expected create local storage. These features increase residence time, moderate temperature swings, and can bolster late‑season baseflow. Ecological benefits include added cover, rearing habitat, and organic‑matter retention. Excessive or closely spaced structures can fragment habitat.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Present where expected. Enhance baseflow and habitat. Minimal fragmentation",
+          "exampleObservation": "Beaver dams or small ponds relative to natural capacity"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "One to two small obstructions. Minor impacts",
+          "exampleObservation": "Beaver dams or small ponds relative to natural capacity"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": "Beaver dams or small ponds relative to natural capacity"
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Multiple ponds that moderately disrupt longitudinal connectivity",
+          "exampleObservation": "Beaver dams or small ponds relative to natural capacity"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Widespread channel fragmentation or overabundant ponding",
+          "exampleObservation": "Beaver dams or small ponds relative to natural capacity"
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "surface-water-storage-off-channel-storage",
+      "functionId": "surface-water-storage",
+      "category": "Hydrology",
+      "name": "Off-channel Storage",
+      "scale": "R",
+      "metricStatement": "Off-channel storage includes side channels, oxbows, swales, and beaver‑influenced floodplain wetlands that store water outside the main channel during moderate events. Connectivity near bankfull is important for routine engagement of storage and for seasonal habitat.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Multiple features connect during moderate (~bankfull) floods",
+          "exampleObservation": "Side channels, oxbows, and beaver wetlands connected near bankfull"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Partial connection or few off-channel areas",
+          "exampleObservation": "Side channels, oxbows, and beaver wetlands connected near bankfull"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": "Side channels, oxbows, and beaver wetlands connected near bankfull"
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Only large floods (>5–10 yr) access these areas",
+          "exampleObservation": "Side channels, oxbows, and beaver wetlands connected near bankfull"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Off-channel features mostly gone or permanently cut off",
+          "exampleObservation": "Side channels, oxbows, and beaver wetlands connected near bankfull"
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "reach-inflow-concentrated-flow-inputs",
+      "functionId": "reach-inflow",
+      "category": "Hydrology",
+      "name": "Concentrated flow inputs",
+      "scale": "R",
+      "metricStatement": "The density and character of stormwater outfalls and ditches that discharge directly to the reach. Higher densities are typically associated with flashier hydrographs and elevated pollutant loads.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "0–1",
+          "exampleObservation": "Outfalls or ditches per 100 m"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "2–3",
+          "exampleObservation": "Outfalls or ditches per 100 m"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": "Outfalls or ditches per 100 m"
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "4–5",
+          "exampleObservation": "Outfalls or ditches per 100 m"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": ">5",
+          "exampleObservation": "Outfalls or ditches per 100 m"
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.concentrated_inputs",
+        "client": "manual",
+        "field": "",
+        "label": "Municipal MS4 outfall GIS layers (local)",
+        "url": "https://www.epa.gov/npdes/stormwater-discharges-municipal-sources"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "reach-inflow-tributary-condition-and-impact",
+      "functionId": "reach-inflow",
+      "category": "Hydrology",
+      "name": "Tributary condition and impact",
+      "scale": "R",
+      "metricStatement": "The stability and quality of inflows delivered by tributaries at confluences. Altered or impaired tributaries can deliver inconsistent flows, excess sediment, and pollutants that overwhelm mainstem capacity.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Mostly natural tributaries with stable flows and typical sediment loads",
+          "exampleObservation": "Stability and turbidity at confluences during storms"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "One or two moderately altered tributaries with occasional elevated turbidity",
+          "exampleObservation": "Stability and turbidity at confluences during storms"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": "Stability and turbidity at confluences during storms"
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Multiple majorly altered tributaries with frequent sediment plumes",
+          "exampleObservation": "Stability and turbidity at confluences during storms"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Widespread severely altered tributaries or severe pollution at many confluences",
+          "exampleObservation": "Stability and turbidity at confluences during storms"
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "reach-inflow-local-runoff-diversions",
+      "functionId": "reach-inflow",
+      "category": "Hydrology",
+      "name": "Local runoff diversions",
+      "scale": "R",
+      "metricStatement": "Withdrawals and return flows near the reach, including irrigation canals, water‑rights diversions, and industrial discharges. Diversions can reduce flows during critical periods. Returns can add warm or nutrient‑rich water that alters chemistry and temperature.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "No notable withdrawals or returns",
+          "exampleObservation": "Withdrawals and return flows near the reach"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Minor ditches or returns with limited effect",
+          "exampleObservation": "Withdrawals and return flows near the reach"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": "Withdrawals and return flows near the reach"
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Moderate diversions or large returns that cause seasonal stress",
+          "exampleObservation": "Withdrawals and return flows near the reach"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Large or chronic diversions or major returns that alter the flow regime",
+          "exampleObservation": "Withdrawals and return flows near the reach"
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.diversions",
+        "client": "manual",
+        "field": "",
+        "label": "State water-rights / diversions GIS",
+        "url": "https://waterdata.usgs.gov/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "reach-inflow-road-highway-drainage",
+      "functionId": "reach-inflow",
+      "category": "Hydrology",
+      "name": "Road/highway drainage",
+      "scale": "R",
+      "metricStatement": "Direct drainage from roads and highways to the channel. These outlets can deliver hydrocarbons, metals, deicers, sediment, and warm runoff. They can also create localized erosive jets at outlets.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "0–1",
+          "exampleObservation": "Road or highway outfalls per 100 m"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "2–3",
+          "exampleObservation": "Road or highway outfalls per 100 m"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": "Road or highway outfalls per 100 m"
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "4–5",
+          "exampleObservation": "Road or highway outfalls per 100 m"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "≥5 or a major highway outfall",
+          "exampleObservation": "Road or highway outfalls per 100 m"
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "streamflow-regime-flow-permanence",
+      "functionId": "streamflow-regime",
+      "category": "Hydrology",
+      "name": "Flow permanence",
+      "scale": "R",
+      "metricStatement": "Flow permanence describes whether the reach’s overall flow duration (ephemeral, intermittent, or perennial) and baseflow conditions match the expected natural regime. It combines multiple lines of evidence, including regional SDAM class, streambed vegetation indicators, mean annual flow statistics, and, where available, flow-permanence statistics such as flowing days per year. This metric matters because sustained changes in flow duration or baseflow indicate altered hydrologic inputs (for example, groundwater depletion, diversions, or increased impervious cover) that in turn affect physical habitat, water quality, and biological communities.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Vegetation, SDAM indicators, and mean flow all align with expected perennial, intermittent, or ephemeral patterns.",
+          "exampleObservation": "Bed vegetation, SDAM class, and mean flow all match the expected flow class."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Small mismatch in bed vegetation, SDAM indicators, or mean flow, but the overall class still makes sense.",
+          "exampleObservation": "Minor inconsistencies in any one line of evidence."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Bed vegetation, SDAM indicators, or mean flow suggest a different flow class than expected.",
+          "exampleObservation": "Clear mismatch in one or more lines of evidence."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Multiple indicators point to a flow class that conflicts with reference or historical conditions.",
+          "exampleObservation": "Strong contradiction across lines of evidence."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.flow_permanence",
+        "client": "nwis",
+        "field": "zero_flow_days",
+        "label": "USGS NWIS daily flow (zero-flow days) + NHDPlus HR FCODE",
+        "url": "https://waterdata.usgs.gov/nwis"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "streamflow-regime-flow-permanence-statistics",
+      "functionId": "streamflow-regime",
+      "category": "Hydrology",
+      "name": "Flow permanence statistics",
+      "scale": "R",
+      "metricStatement": "Zero‑flow days and dry periods quantify how often a stream is dry and for how long. Stable statistics over time indicate consistent flow duration. Large increases in zero‑flow days in a historically perennial reach point to meaningful alteration.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Zero flow days and dry periods match the historical pattern for the reach type.",
+          "exampleObservation": "Flow permanence stable."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slight increase in zero flow days or short new dry periods.",
+          "exampleObservation": "Minor change."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Longer or more frequent dry periods that affect habitat availability.",
+          "exampleObservation": "Significant change."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Long cessation periods in a formerly perennial reach, indicating a new flow category.",
+          "exampleObservation": "Major departure."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.flow_statistics",
+        "client": "nwis",
+        "field": "flow_duration",
+        "label": "USGS NWIS daily flow (flow-duration / IHA)",
+        "url": "https://waterdata.usgs.gov/nwis"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "streamflow-regime-channel-natural-flow-regime",
+      "functionId": "streamflow-regime",
+      "category": "Hydrology",
+      "name": "Channel natural flow regime",
+      "scale": "R",
+      "metricStatement": "Summarizes how the current daily-flow pattern compares to the stream’s natural regime, including magnitude, frequency, duration, timing, and rate of change of flow events. This metric combines Indicators of Hydrologic Alteration with the Richards–Baker Flashiness Index to screen for hydrologic alteration from dams, withdrawals, urbanization, or drainage improvements. Higher flashiness and extended low-flow or dry periods indicate loss of stable-flow windows and deviation from the expected flow permanence condition.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Day-to-day flows change gradually and seasonal high and low flows match reference patterns.",
+          "exampleObservation": "Flashiness near reference. Seasonal pattern intact."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Some increase in rapid rises and falls or small timing shifts in seasonal peaks.",
+          "exampleObservation": "Slightly elevated flashiness or small seasonal shift."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Frequent sharp surges or longer dry intervals. High flows occur less often.",
+          "exampleObservation": "Clearly elevated flashiness or extended dryness."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Strongly regulated pattern with rapid daily fluctuations or very long dry periods.",
+          "exampleObservation": "Extreme flashiness or hydropeaking."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.natural_flow_regime",
+        "client": "nwis",
+        "field": "flow_alteration",
+        "label": "TNC IHA on NWIS; else StreamCat dam regulation",
+        "url": "https://www.conservationgateway.org/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "streamflow-regime-artificial-structures-and-inputs",
+      "functionId": "streamflow-regime",
+      "category": "Hydrology",
+      "name": "Artificial structures and inputs",
+      "scale": "R",
+      "metricStatement": "This metric documents artificial structures and operational inputs that directly alter the natural flow pattern of a reach. Dams, weirs, and hydropower facilities can dampen peak flows, alter seasonal timing, or cause daily stage swings. Levees and spoil banks limit floodplain access. Diversions, pump stations, and withdrawals flows can reduce or augment baseflow outside natural seasonal patterns. Together, these features indicate how much human infrastructure reshapes the hydrograph and affects floodplain connection.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "No structures present or only small features with little influence on flows.",
+          "exampleObservation": "No upstream dams or levees affecting the reach."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "One small structure creates a limited backwater or localized effect only.",
+          "exampleObservation": "Localized regulation with minor influence."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Levees or other structures reduce floodplain access or flatten flood peaks.",
+          "exampleObservation": "Noticeable confinement or peak reduction."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Large dam or major structure controls flows or causes sharp daily water level changes.",
+          "exampleObservation": "Strong regulation or hydropeaking."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydrology.artificial_structures",
+        "client": "aquatic_barriers",
+        "field": "structures",
+        "label": "USACE National Levee Database + NID",
+        "url": "https://levees.sec.usace.army.mil/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "low-flow-baseflow-dynamics-low-flow-velocity",
+      "functionId": "low-flow-baseflow-dynamics",
+      "category": "Hydraulics",
+      "name": "Low flow velocity",
+      "scale": "R",
+      "metricStatement": "Low flow velocity describes how much water moves through the thalweg during typical low flow conditions. Some measurable movement helps maintain dissolved oxygen and prevents stagnant, warm, or algae-prone conditions. This metric also reflects whether baseflow patterns and seasonal timing match the reach’s historical flow class. New dry periods or major timing shifts can reduce wetted habitat, increase temperature stress, and alter water-quality conditions.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Water moves steadily through most of the reach. Small debris drifts without stopping.",
+          "exampleObservation": "Float test shows about 0.08 m/s over 20 m. No stagnant film."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Water moves in most places but slows at riffle tails and inner bends.",
+          "exampleObservation": "Slow movement with brief still pockets on inside bends."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Only slight movement in the thalweg. Debris often stops in pools or flat runs.",
+          "exampleObservation": "Water nearly still in long runs. Occasional surface film."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No visible water movement. Surface film common.",
+          "exampleObservation": "Widespread stagnation, scum, or odor."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydraulics.low_flow_velocity",
+        "client": "xscalc",
+        "field": "velocity",
+        "label": "Manning (native XS calc): low-flow Q, slope, roughness",
+        "url": ""
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "low-flow-baseflow-dynamics-low-flow-depth",
+      "functionId": "low-flow-baseflow-dynamics",
+      "category": "Hydraulics",
+      "name": "Low flow depth",
+      "scale": "R",
+      "metricStatement": "This metric evaluates whether the reach maintains adequate wetted depth and continuity during typical low flow. It integrates minimum pool depth, the percent of channel that remains wetted, the amount of exposed bed, and low-flow exceedance statistics (Q90 and Q10). Together these indicators show if the reach provides thermal and habitat refuge, maintains surface connectivity, and reflects a low-flow regime that is consistent with reference conditions. Deep low-flow pools buffer temperature and predation risk, continuous wetted habitat supports movement and feeding, limited exposed bed reduces thermal swings, and stable Q90 and Q10 values indicate intact baseflow support.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Pools are clearly deep enough to hold water. Most of the channel remains wetted and the bed is mostly submerged.",
+          "exampleObservation": "Continuous wetted thread with only short dry patches."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Pools hold moderate depth and a shallow thread links many of them. Wetted areas cover about half or more of the reach.",
+          "exampleObservation": "Several dry riffles, but long pools remain connected."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Pools are shallow and only a few areas remain wetted. Much of the bed is exposed and riffles are mostly dry.",
+          "exampleObservation": "Mostly isolated pools with narrow trickles."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Pools are very shallow or nearly dry. The bed is mostly exposed and there is no continuous wetted path.",
+          "exampleObservation": "Disconnected pools along most of reach."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydraulics.low_flow_depth",
+        "client": "xscalc",
+        "field": "depth",
+        "label": "3DEP cross-section + Manning (native XS calc) at low-flow Q",
+        "url": ""
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "low-flow-baseflow-dynamics-longitudinal-connectivity",
+      "functionId": "low-flow-baseflow-dynamics",
+      "category": "Hydraulics",
+      "name": "Longitudinal connectivity",
+      "scale": "R",
+      "metricStatement": "The degree to which residual pools and riffle segments remain linked by a continuous surface‑water path along the thalweg at normal low flow. Good connectivity allows fish and invertebrates to reach suitable habitat. Poor connectivity isolates pools, which raises thermal and oxygen stress and can cause stranding. At normal low flow, the pattern of velocity and depth, movement of water and fine sediment, thalweg depth, and residual pool connectivity should match reference or expected condition.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Water moves between pools without breaks. Riffles remain wetted and pass water.",
+          "exampleObservation": "All low flow pools connected by a visible surface thread."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Short dry riffles appear but several pools are still linked by shallow threads of water.",
+          "exampleObservation": "About half of the pools have a surface connection."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Only a few narrow trickles remain. Riffles are mostly dry and block movement.",
+          "exampleObservation": "Most pools isolated with minimal surface connection."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No surface flow between pools. All riffles dry.",
+          "exampleObservation": "Pools stagnant and fully isolated."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "low-flow-baseflow-dynamics-lateral-connectivity",
+      "functionId": "low-flow-baseflow-dynamics",
+      "category": "Hydraulics",
+      "name": "Lateral connectivity",
+      "scale": "R",
+      "metricStatement": "At normal low flow, water should remain in contact with both banks and low benches across much of the reach. Lateral contact sustains edge habitat, allows exchange with small backwaters and seep‑fed pockets, and helps moderate temperature and water quality. Loss of contact leaves wide dry shelves, reduces refuge, and limits surface–subsurface exchange.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Side features contain water and are linked to the main channel by a shallow flow path.",
+          "exampleObservation": "Side channels and backwaters stay wetted and connect to the main channel along most of the reach."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Side channels hold water in several places and connect where the bank is lowest.",
+          "exampleObservation": "Some side areas wetted and connect at bends or low points."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Backwaters or side pockets hold small amounts of water but do not connect to the channel except after storms.",
+          "exampleObservation": "Most side areas dry or only damp. A few wet pockets remain."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Channel is confined to the thalweg. All off-channel features dry.",
+          "exampleObservation": "Banks dry to the toe. No side channels or backwaters remain wetted."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "high-flow-dynamics-overbank-flow-frequency",
+      "functionId": "high-flow-dynamics",
+      "category": "Hydraulics",
+      "name": "Overbank Flow Frequency",
+      "scale": "R",
+      "metricStatement": "How often flows exceed bankfull stage and inundate the floodplain benches. Frequent engagement of near‑channel floodplain surfaces spreads energy, deposits fines, and limits in‑channel erosion. Bankfull flows commonly correspond to the channel‑forming discharge in many alluvial systems. Engagement around the 1–2 year event suggests a well‑sized channel and functional energy dissipation on benches.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Floodplain activation ~1–2 yr",
+          "exampleObservation": "Recent moderate events inundate low benches and side bars. Field stakes at bankfull are inundated about every other year."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Activation ~3–5 yr",
+          "exampleObservation": "Benches inundated in a few recent years but not consistently."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Activation ~5–10 yr",
+          "exampleObservation": "Only larger, less frequent events reach benches. Benches are dusty or vegetated with upland species."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Activation rare except large floods",
+          "exampleObservation": "Benches rarely or never wet. Levees or incision isolate the floodplain except during extremes."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydraulics.overbank_frequency",
+        "client": "bieger",
+        "field": "recurrence",
+        "label": "USGS PeakFQ / regional bankfull-Q regression",
+        "url": "https://streamstats.usgs.gov/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "high-flow-dynamics-peak-flow-capacity-morphological-check",
+      "functionId": "high-flow-dynamics",
+      "category": "Hydraulics",
+      "name": "Peak Flow Capacity (Morphological Check)",
+      "scale": "R",
+      "metricStatement": "Whether channel dimensions at bankfull are sized appropriately for the watershed. This is a morphology‑based, quick consistency check. Large departures from regional curves often coincide with frequent bank failures, oversized trapezoidal sections, or channels that are too small and therefore blow out during moderate floods.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Near regional curve; stable",
+          "exampleObservation": "Bankfull width and depth closely match regional curves for the drainage area and slope. Bars and banks remain stable through ~1–2 yr flows."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Mild departure; occasional instability",
+          "exampleObservation": "Slightly oversized or undersized relative to curves. Isolated bank slumps after moderate events."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Major departure; frequent instability",
+          "exampleObservation": "Noticeable mismatch to curves. Frequent bar growth or cutbank retreat after moderate events."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Severe departure; chronic instability",
+          "exampleObservation": "Highly outside the expected channel pattern for the setting. Repeated blowouts, chute formation, or bank failures with moderate floods."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydraulics.peak_capacity",
+        "client": "bieger",
+        "field": "bankfull_geom",
+        "label": "Regional bankfull-geometry regressions + 3DEP",
+        "url": "https://streamstats.usgs.gov/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
+      "functionId": "high-flow-dynamics",
+      "category": "Hydraulics",
+      "name": "Peak Flow Capacity (Velocity/ Shear Stress)",
+      "scale": "R",
+      "metricStatement": "This metric evaluates whether hydraulic forces at bankfull are compatible with the strength of the bed and banks. It compares estimated boundary shear stress at bankfull to the critical stress needed to move the median bed material (D50), and uses the reach’s geomorphic response to recent near-bankfull events as supporting evidence. When shear at bankfull is well matched to the bed, the channel experiences light, routine reworking that maintains bars and pools without chronic instability. When shear is too high, frequent scour, armor break-up, and bank erosion occur. When shear is too low, the bed may lock up, fines can accumulate, and aggradation becomes more likely. Observed patterns such as fresh bar growth, scour around structures, bank slumps, toppled vegetation, or abrupt planform changes provide clear indicators of whether velocity and shear are in balance.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Near threshold; stable (τ \\approx \\ τC) at bankfull",
+          "exampleObservation": "Velocity and shear match what the bed can resist. Only small bar tweaks or thin new deposits. Computed bankfull shear (τ) aligns with estimated critical (τC) for measured (D50). No widespread scour or deposition."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slight mismatch; occasional instability",
+          "exampleObservation": "Small(τ ) modestly above or below (τ C). Localized scour spots or minor deposition in a few places."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Marked mismatch",
+          "exampleObservation": "(τ ) well above (τC) with frequent scour, or far below (τC) with patchy armoring and fill."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Extreme mismatch",
+          "exampleObservation": "( τ) extremely mismatched. Reach-wide degradation or aggradation after moderate flows."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "high-flow-dynamics-high-flow-velocity-shear-observed",
+      "functionId": "high-flow-dynamics",
+      "category": "Hydraulics",
+      "name": "High-Flow Velocity/Shear (Observed)",
+      "scale": "R",
+      "metricStatement": "High-Flow Velocity/Shear (Observed)",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Well matched to substrate",
+          "exampleObservation": "Multi-date imagery shows minor bar reshaping only. Field notes record thin fresh deposits and small, self-healing scars."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Mild stress in spots",
+          "exampleObservation": "Moderate fresh bars or short bank scarps in a few locations."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Notable mismatch; frequent instability",
+          "exampleObservation": "Velocity and shear noticeably too high or too low. Bars grow, shift, or scour around structures after moderate flows."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Extreme mismatch; chronic instability",
+          "exampleObservation": "Widespread bank retreat, channel shifts, or large sediment deposits after moderate flows."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "high-flow-dynamics-bed-mobilization-frequency",
+      "functionId": "high-flow-dynamics",
+      "category": "Hydraulics",
+      "name": "Bed Mobilization Frequency",
+      "scale": "R",
+      "metricStatement": "How often the bed surface begins to move relative to flood statistics. The goal is for initial motion to occur near the channel‑forming discharge. If the bed mobilizes far below bankfull, the bed can winnow or armor quickly. If the bed rarely mobilizes, habitat may simplify and fines may accumulate. Bankfull is commonly near the 1–2 year event in many alluvial systems, so matching that order of frequency is a useful screen.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Motion near bankfull (~1–2 yr)",
+          "exampleObservation": "Painted tracers or pebble counts indicate surface mobility near bankfull. Historic records show similar behavior."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slightly off",
+          "exampleObservation": "Motion occurs somewhat below or above bankfull. Habitat still diverse but trending."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Often locked or often scoured",
+          "exampleObservation": "Bed stays locked through multiple moderate floods, or mobilizes during sub-bankfull flows every season."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Extreme mismatch",
+          "exampleObservation": "Bed rarely moves even in large events, or reworks dramatically during modest events."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydraulics.bed_mobilization",
+        "client": "xscalc",
+        "field": "shear",
+        "label": "Shields (D50 + peak Q) via native XS calc shear",
+        "url": ""
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "floodplain-connectivity-floodplain-complexity",
+      "functionId": "floodplain-connectivity",
+      "category": "Hydraulics",
+      "name": "Floodplain Complexity",
+      "scale": "R",
+      "metricStatement": "Presence and connectivity of side channels, backwaters, oxbows, and wetlands that exchange water with the mainstem during moderate floods. More connected features increase storage and habitat opportunities.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Several off-channel features connected at ~1–2 year stage; pattern resembles historical complexity.",
+          "exampleObservation": "Multiple active side channels, backwaters, and oxbows exchange flow during moderate floods. Field photos confirm inundation paths."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Partial complexity. Some features are disconnected at moderate floods.",
+          "exampleObservation": "Some side channels remain but several are truncated by berms or levees. Connectivity occurs only in parts of the reach."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Most side channels lost or isolated. Minimal diversity of floodplain features.",
+          "exampleObservation": "Only a small backwater remains. Most historic features are isolated or filled."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Drastically simplified or leveed. No functional off-channel areas.",
+          "exampleObservation": "Both banks are leveed or the reach is straightened and dredged. No off-channel areas remain despite historical evidence."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "floodplain-connectivity-entrenchment-er",
+      "functionId": "floodplain-connectivity",
+      "category": "Hydraulics",
+      "name": "Entrenchment (ER)",
+      "scale": "R",
+      "metricStatement": "Degree of confinement of the channel within its valley. ER is the flood‑prone width divided by bankfull width. The flood‑prone width is measured at an elevation equal to twice the bankfull depth above the thalweg. Higher ER means less entrenchment and easier access to the floodplain.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "ER > 2.2.",
+          "exampleObservation": "LiDAR cross-sections show flood-prone width more than 2.2 times bankfull width."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "ER ~1.4–2.2.",
+          "exampleObservation": "Representative cross-section yields ER ≈ 1.7."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "ER < 1.4.",
+          "exampleObservation": "Three cross-sections yield ER ≈ 1.2."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "ER near 1.0 and confinement by levees or walls.",
+          "exampleObservation": "Channel is walled or deeply incised with little widening at flood-prone elevation."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "floodplain-connectivity-channel-condition",
+      "functionId": "floodplain-connectivity",
+      "category": "Hydraulics",
+      "name": "Channel Condition",
+      "scale": "R",
+      "metricStatement": "Presence of incision, dredging, straightening, levees, or spoil berms that raise banks and limit lateral access.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Stable channel. Not incised or dredged. Frequent floodplain access.",
+          "exampleObservation": "No levees or spoil banks. Sinuous planform. No signs of dredging."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slight channelization or partial dredging.",
+          "exampleObservation": "Short straightened segment and intermittent spoil berm on one bank."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Heavily modified or incised with limited floodplain access.",
+          "exampleObservation": "Reach is incised by about 1–2 m with continuous spoil banks on one or both banks."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Deeply dredged or – – fully channelized. No functional floodplain.",
+          "exampleObservation": "Recently dredged trapezoidal channel with levees along both banks."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "floodplain-connectivity-lateral-floodplain-inundation",
+      "functionId": "floodplain-connectivity",
+      "category": "Hydraulics",
+      "name": "Lateral Floodplain Inundation",
+      "scale": "R",
+      "metricStatement": "Frequency at which overbank flows inundate the floodplain along the reach.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "1–2 year floods inundate side and backwaters.",
+          "exampleObservation": "HEC-RAS 2D shows the floodplain and backwaters inundate at ~Q2 with 0.3–0.6 m depths."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "3–5 year floods required for broad access.",
+          "exampleObservation": "Inundation begins near ~Q3–Q5 with patchy coverage."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "~10 year event needed for access.",
+          "exampleObservation": "Little inundation until ~Q10. Backwaters remain dry in moderate events."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Only extreme events produce inundation.",
+          "exampleObservation": "No inundation until very large floods because of levees and incision."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_hydraulics.lateral_inundation",
+        "client": "threedep",
+        "field": "inundation",
+        "label": "NWI + NAIP + 3DEP DEM/hillshade",
+        "url": "https://apps.nationalmap.gov/downloader/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "hyporheic-connectivity-channel-complexity-for-exchange",
+      "functionId": "hyporheic-connectivity",
+      "category": "Hydraulics",
+      "name": "Channel Complexity for Exchange",
+      "scale": "R",
+      "metricStatement": "Bedforms such as riffles, pools, steps, and dunes create hydraulic head gradients that drive hyporheic exchange. Alternating high‑ and low‑pressure zones promote downwelling and upwelling that refresh pore water and transport heat and solutes. More pronounced and frequent bedforms increase head gradients and surface–subsurface exchange, which improves thermal buffering and nutrient processing.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Well-developed bedforms with obvious upwelling and downwelling zones.",
+          "exampleObservation": "Alternating riffle–pool sequence. Distinct head drops at riffles. Patchy dunes in sand-bed reaches."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Bedform variety present but partially uniform.",
+          "exampleObservation": "Some riffles and shallow pools but long uniform runs between."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Mostly uniform habitat with limited exchange features.",
+          "exampleObservation": "Mostly long runs. Few weak riffles."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Bed lacks form. Exchange likely negligible.",
+          "exampleObservation": "Featureless, planar bed with silt cover."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "hyporheic-connectivity-floodplain-permeability",
+      "functionId": "hyporheic-connectivity",
+      "category": "Hydraulics",
+      "name": "Floodplain Permeability",
+      "scale": "R",
+      "metricStatement": "Permeable floodplain soils allow lateral hyporheic flow and bank storage, which extend residence time and moderate thermal and chemical conditions. Sandy to gravelly soils with higher saturated hydraulic conductivity promote subsurface flow paths and enhance denitrification and temperature buffering. Clayey or compacted fills restrict exchange and shorten residence time.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Predominantly permeable floodplain soils supporting subsurface flow.",
+          "exampleObservation": "Hand-textured sands and sandy loams in frequently inundated swales. Groundwater mounding observed after floods."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Partially permeable. Some clogging layers.",
+          "exampleObservation": "Mixed sand over clay. Localized perched layers."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Mostly fine or shallow bedrock that limits infiltration.",
+          "exampleObservation": "Clayey overbank deposits or shallow bedrock exposed."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Heavily compacted or lined. Minimal subsurface exchange.",
+          "exampleObservation": "Spoil berms or compacted fill along banks."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "hyporheic-connectivity-bed-surface-grain-size",
+      "functionId": "hyporheic-connectivity",
+      "category": "Hydraulics",
+      "name": "Bed Surface Grain Size",
+      "scale": "R",
+      "metricStatement": "Coarse, open‑framework gravel and cobble provide interstitial space for water to enter the bed and for organisms to occupy. High fine‑sediment content seals pore spaces and reduces exchange. Reduced embeddedness and lower fine‑sediment cover correlate with higher permeability and stronger hyporheic flow paths.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Fines < 25%. Low embeddedness.",
+          "exampleObservation": "Pebble count shows clean gravel–cobble with open interstices."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Fines 25–50%. Moderate embeddedness.",
+          "exampleObservation": "Some fine matrix visible between gravels."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Fines 50–75%. High embeddedness.",
+          "exampleObservation": "Gravels largely buried by sand/silt."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Fines >75%. Very high embeddedness.",
+          "exampleObservation": "Bed surface mostly sand, silt, or consolidated fines."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "hyporheic-connectivity-visible-hyporheic-indicators",
+      "functionId": "hyporheic-connectivity",
+      "category": "Hydraulics",
+      "name": "Visible Hyporheic Indicators",
+      "scale": "R",
+      "metricStatement": "Field evidence of surface–subsurface exchange includes bed infiltration zones on riffle crests, upwelling boils in pools or margins, springs and seeps, temperature anomalies, or dye/thermal infrared signals. Direct indicators confirm that exchange pathways are active and ecologically meaningful at the scale of the assessed reach.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Clear, frequent indicators of sub-surface flow.",
+          "exampleObservation": "Multiple small upwelling boils at pool tails. Cold seeps along margins during summer."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Occasional indicators.",
+          "exampleObservation": "One or two seeps noted. Weak infiltration on riffle crests."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Rare or uncertain indicators.",
+          "exampleObservation": "Questionable features. Staining but no active upwelling observed."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No evidence. Bed appears sealed or compacted.",
+          "exampleObservation": "No seeps or infiltration zones observed at baseflow or falling limb."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "channel-evolution-channel-evolution-stage",
+      "functionId": "channel-evolution",
+      "category": "Geomorphology",
+      "name": "Channel evolution stage",
+      "scale": "R",
+      "metricStatement": "Staging integrates multiple field indicators into a single statement of condition and trend. It signals present risk and likely near‑term adjustments such as widening or bench formation.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Schumm Stage I or VI. Cluer & Thorne stages 0–1 or 6–8.",
+          "exampleObservation": "Low, vegetated banks. Frequent overbanking near bankfull. No fresh downcutting."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Schumm Stage V or mid-range in Cluer & Thorne.",
+          "exampleObservation": "Point bars rebuilding. Patchy inset benches forming. Short raw segments remain."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Schumm Stage III–IV.",
+          "exampleObservation": "Fresh slumps common. Bed appears lowered relative to floodplain."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Schumm Stage II or destructive phases.",
+          "exampleObservation": "Deeply entrenched cross-section with tall raw banks. Active knickpoint present."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "channel-evolution-incision-trend-headcuts",
+      "functionId": "channel-evolution",
+      "category": "Geomorphology",
+      "name": "Incision trend (headcuts)",
+      "scale": "R",
+      "metricStatement": "Headcuts and knickpoints indicate active vertical instability. Their presence and migration rate show whether incision is ongoing or has stabilized, which controls floodplain disconnection and bank failure risk.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "No active headcuts.",
+          "exampleObservation": "No headcuts mapped in imagery or field. Old steps fully vegetated."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Localized feature with limited progression.",
+          "exampleObservation": "One small local knickpoint at a tributary junction with little change between dates."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "One to two moderate, actively migrating headcuts.",
+          "exampleObservation": "Headcut with fresh plunge pool and exposed strata observed in two locations. Upstream migration evident between image years."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Multiple or large active headcuts with rapid advance.",
+          "exampleObservation": "Several large headcuts marching upstream across the reach with widespread bank failures above cuts."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "channel-evolution-widening-trend",
+      "functionId": "channel-evolution",
+      "category": "Geomorphology",
+      "name": "Widening trend",
+      "scale": "R",
+      "metricStatement": "Width change integrates bank failures, armoring, and constraints. Over‑widening lowers depths and simplifies habitat. Suppressed widening can signal artificial confinement and latent instability that may transfer erosion downstream.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Near-reference lateral change.",
+          "exampleObservation": "Digitized edges show minor width change over a decade. Bars and banks behave like nearby reference reaches."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slightly above reference change.",
+          "exampleObservation": "Mild net widening over 10 years with occasional raw banks and quick revegetation."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Notably above or below reference with instability or constraints.",
+          "exampleObservation": "Width increased well beyond reference. Frequent mass failures or pronounced confinement in places."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Highly accelerated or heavily suppressed outside stable norms.",
+          "exampleObservation": "Rapid over-widening after storms, or planform fully locked by hardening that suppresses natural change."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "channel-evolution-recovery-indicators",
+      "functionId": "channel-evolution",
+      "category": "Geomorphology",
+      "name": "Recovery indicators",
+      "scale": "R",
+      "metricStatement": "Vegetated benches, inset floodplains, and nascent side bars show aggradation and re‑connection. These features signal movement toward a multi‑surface valley floor and the diverse habitats associated with late‑stage recovery.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Broad, established vegetated benches or inset floodplains.",
+          "exampleObservation": "Continuous inset benches on both banks with established woody and herbaceous cover."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Noticeable but incomplete bench and bar formation.",
+          "exampleObservation": "Patchy vegetated bars and short bench segments. Vegetation is establishing."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Sparse new floodplain surfaces and limited vegetation.",
+          "exampleObservation": "Narrow, mostly bare bars. Few inset surfaces. Fresh erosion visible."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No meaningful signs of recovery.",
+          "exampleObservation": "No benches or inset floodplains. Vertical raw banks dominate."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "channel-floodplain-dynamics-bank-erosion-potential",
+      "functionId": "channel-floodplain-dynamics",
+      "category": "Geomorphology",
+      "name": "Bank Erosion Potential",
+      "scale": "R",
+      "metricStatement": "Bank erosion potential integrates bank geometry, rooting, surface protection, the share of banks that are raw or failing, and the extent of artificial hardening. It summarizes whether erosion is natural and episodic or chronic and widespread, and it links directly to sediment delivery and habitat quality. The Bank Erosion Hazard Index (BEHI) provides a consistent field score of erodibility and is often paired with Near Bank Stress in the BANCS method to relate condition to erosion rates. Higher risk categories correspond to higher expected erosion. Natural deep‑rooted vegetation increases resistance, while extensive hardening can stabilize banks locally but may transfer energy and degrade habitat if not designed carefully. Rapid condition checks used by agencies also record what fraction of the bankline is raw and actively eroding. The percent of eroding banks is a direct indicator of instability and fine‑sediment supply.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Most banks are vegetated with few raw spots. Erosion is minor and recovers quickly.",
+          "exampleObservation": "Banks are well vegetated with deep roots. Bank faces are low and stable."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Patchy vegetation and scattered raw banks. Some localized erosion but not widespread.",
+          "exampleObservation": "Vegetation is mixed. Some shallow roots or steeper faces. Undercut spots occur."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Long bare sections and frequent slumps. Erosion affects large portions of the reach.",
+          "exampleObservation": "Banks are near vertical and mostly bare. Long raw faces and small slumps occur."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Widespread raw banks and failing armor. Erosion is persistent across most of the reach.",
+          "exampleObservation": "Most banks are tall, slumped, or bare. Protection is minimal or failing."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "channel-floodplain-dynamics-bank-migration-and-meander",
+      "functionId": "channel-floodplain-dynamics",
+      "category": "Geomorphology",
+      "name": "Bank Migration and Meander",
+      "scale": "R",
+      "metricStatement": "Meander migration and the frequency of cutoffs or avulsions should fit the valley setting and match nearby reference behavior. Occasional cutoffs are a normal part of meander evolution. Excessive migration rates, sudden chute formation, or abrupt planform shifts indicate instability and elevated sediment inputs.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Migration rate near reference. Cutoffs are rare or slow.",
+          "exampleObservation": "Bends migrate slowly and match nearby reference reaches. Oxbows form rarely over many decades."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Migration is slightly accelerated or locally constrained. Cutoffs are occasional.",
+          "exampleObservation": "Some bends migrate a bit faster than reference. A few cutoffs occur over 30 to 40 years."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Migration is about two to three times the reference in sensitive bends. Multiple cutoffs in recent decades.",
+          "exampleObservation": "Bends expand often. Chute cutoffs shorten the reach."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Migration is very rapid or the channel path is fixed by long armor far beyond reference behavior. Cutoffs are frequent or large in the last decade.",
+          "exampleObservation": "Bends translate quickly or the channel avulses into a new corridor. This is not typical of the setting."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_geomorph.bank_migration",
+        "client": "manual",
+        "field": "",
+        "label": "Multi-date NAIP/Google Earth; USGS DSAS / RivMAP; EarthExplorer",
+        "url": "https://earthexplorer.usgs.gov/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "channel-floodplain-dynamics-sinuosity",
+      "functionId": "channel-floodplain-dynamics",
+      "category": "Geomorphology",
+      "name": "Sinuosity",
+      "scale": "R",
+      "metricStatement": "Sinuosity is the ratio of channel length to valley length. Values near 1 indicate a straight planform. Higher values indicate more curvature and meandering. Increased curvature redistributes velocity, promotes bar formation, and increases habitat variety. Many geomorphic classifications treat reaches with sinuosity less than about 1.05 as straight, 1.1 to 1.5 as sinuous, and greater than about 1.5 as meandering.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "~1.2–1.5, or matches local reference",
+          "exampleObservation": "Meanders occupy full valley floor. Alternating bars are well developed."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "~1.1–1.2",
+          "exampleObservation": "Gentle bends with long straight runs."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "~1.05–1.1",
+          "exampleObservation": "Mostly straight with infrequent bends."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "<1.05 where meanders are expected",
+          "exampleObservation": "Channelized ditch through a meander belt."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "channel-floodplain-dynamics-channel-pattern",
+      "functionId": "channel-floodplain-dynamics",
+      "category": "Geomorphology",
+      "name": "Channel pattern",
+      "scale": "R",
+      "metricStatement": "This metric evaluates whether the reach follows a natural planform for its setting. It can use multiple observations such as the extent of artificial realignment, whether the number of active threads matches the expected single‑thread or braided type, and whether side channels remain connected. Straightening increases local stream power and can trigger incision and rapid lateral adjustment. Unnatural braiding in single‑thread settings or forced single‑thread in naturally braided valleys signals imbalance. Connected side channels add capacity and habitat and support routine floodplain engagement.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Pattern matches local reference for this setting. No artificial straightening.",
+          "exampleObservation": "Single-thread meandering channel that fits the valley. Alternating bars and pools are clear."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Minor realignment or short armored sections. Pattern is close to reference.",
+          "exampleObservation": "Mostly single-thread with some straightened or simplified segments. Bars are present but patchy."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Most banks are vegetated with few raw spots. Erosion is minor and recovers quickly.",
+          "exampleObservation": "Banks are well vegetated with deep roots. Bank faces are low and stable."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Patchy vegetation and scattered raw banks. Some localized erosion but not widespread.",
+          "exampleObservation": "Vegetation is mixed. Some shallow roots or steeper faces. Undercut spots occur."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_geomorph.channel_pattern",
+        "client": "delineation",
+        "field": "sinuosity",
+        "label": "Historic USGS topo (TopoView) + NAIP + 3DEP LiDAR; sinuosity",
+        "url": "https://ngmdb.usgs.gov/topoview/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "sediment-continuity-sediment-deposition-patterns",
+      "functionId": "sediment-continuity",
+      "category": "Geomorphology",
+      "name": "Sediment Deposition Patterns",
+      "scale": "R",
+      "metricStatement": "Map where sediment is stored within the bankfull corridor and the types of bars that form. In single‑thread meandering channels, stable point bars and lateral bars are expected. Widespread or persistent mid‑channel bars in such settings can indicate imbalance in supply versus transport. The spatial pattern of storage reflects hydraulic sorting and forms expected for the channel type.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Bar types and locations match expected reference for a single-thread meandering channel (Leopold et al., 1964).",
+          "exampleObservation": "Point bars present on bends. No persistent mid-channel bars."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Minor departures from reference pattern.",
+          "exampleObservation": "Small lateral bars and occasional temporary islands."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Pattern suggests imbalance in supply vs transport for expected channel type (Bridge 2003).",
+          "exampleObservation": "Multiple mid-channel bars that persist year to year and split flow."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Widespread bar growth inconsistent with reference condition.",
+          "exampleObservation": "Reach clogged with large deposits that force multi-threading where not natural."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "sediment-continuity-channel-degradation-incision",
+      "functionId": "sediment-continuity",
+      "category": "Geomorphology",
+      "name": "Channel Degradation (Incision)",
+      "scale": "R",
+      "metricStatement": "Downcutting lowers the bed relative to the floodplain, disconnects overbank flows, and often propagates upstream as headcuts. Incision shifts sediment sources from upstream bed material toward bank and bed erosion within the reach, which destabilizes the system.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "ER > 2.2. No active headcuts (Rosgen 1996, 2006).",
+          "exampleObservation": "Low banks with inset benches. No active headcuts observed."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "ER ~1.4–2.2. Limited headcut activity (Rosgen 1996, 2006).",
+          "exampleObservation": "Localized bed lowering. One small headcut with vegetation establishing."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "ER < 1.4. Observable upstream migration of headcuts (Simon & Rinaldi 2006).",
+          "exampleObservation": "High banks and lowered bed. One to two moderate headcuts migrating."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "ER < 1.4 reach-wide. Widespread incision (Schumm et al., 1984; Rosgen 2006).",
+          "exampleObservation": "Multiple large active headcuts. Floodplain largely disconnected."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "sediment-continuity-fine-sediment-balance",
+      "functionId": "sediment-continuity",
+      "category": "Geomorphology",
+      "name": "Fine Sediment Balance",
+      "scale": "W",
+      "metricStatement": "Chronic turbidity and fine sediment that fills spaces between gravels reduce oxygen exchange, smother benthic habitats, and degrade spawning and invertebrate habitat. The degree to which coarse substrate is buried by fines can be assessed as “embeddedness”.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Embeddedness < 25% (Class 1) (Sylte & Fischenich 2002).",
+          "exampleObservation": "Gravel–cobble riffles with open voids. Thin or absent silt film."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Embeddedness 25–50% (Class 2) (Sylte & Fischenich 2002).",
+          "exampleObservation": "Some fines in pools and along margins. Riffles mostly clean."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Embeddedness 50–75% (Class 3) (Sylte & Fischenich 2002).",
+          "exampleObservation": "Riffles partly blanketed in silt after storms. Fines persist for weeks."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Embeddedness > 75% (Class 4) (Sylte & Fischenich 2002).",
+          "exampleObservation": "Substrate largely buried in fines. Chronic turbidity even at low flow."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "sediment-continuity-transport-capacity",
+      "functionId": "sediment-continuity",
+      "category": "Geomorphology",
+      "name": "Transport Capacity",
+      "scale": "W",
+      "metricStatement": "Evaluate whether typical flows can mobilize the sizes of sediment supplied. If transport capacity is too low for the supplied sediment, bars and aggradation expand. If capacity is too high, persistent scour and armoring are likely.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Bankfull Shields stress ≈ 0.03–0.06 and consistent with D50. Morphology shows balanced scour/fill (Buffington & Montgomery 1997).",
+          "exampleObservation": "Bars form on inner bends and migrate gradually. Pools maintained."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Shields slightly below critical range. Minor deposition.",
+          "exampleObservation": "Modest bar growth in low-energy sections. Some narrowing."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Shields well below critical range. Under-capacity relative to supply.",
+          "exampleObservation": "Large new bars in straight sections. Pools infilling."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Shields well above critical range. Persistent over-capacity (Knighton 1998).",
+          "exampleObservation": "Deep scour and exposed armor. Few bars remain."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_geomorph.transport_capacity",
+        "client": "threedep",
+        "field": "stream_power",
+        "label": "StreamStats flow + NHDPlus HR slope/length (stream power)",
+        "url": "https://streamstats.usgs.gov/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "bed-composition-bedform-dynamics-large-wood-frequency-and-diversity",
+      "functionId": "bed-composition-bedform-dynamics",
+      "category": "Geomorphology",
+      "name": "Large Wood Frequency and Diversity",
+      "scale": "R",
+      "metricStatement": "Large wood supports pool formation, bar development, and habitat diversity. This metric combines the general abundance of large wood pieces and the presence and condition of key pieces. Expected amounts vary by stream size and region. Forested streams typically have frequent and diverse wood, including rootwads and stable pieces. In naturally open landscapes, low wood may match reference conditions. Key pieces are the larger, more stable logs that strongly influence hydraulics. Their stability increases with size and with the presence of a rootwad.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Meets or exceeds reference for both density and variety. Wood is stable, interacts with flow, and forms pools or bars.",
+          "exampleObservation": "Frequent large logs and jams are present throughout the reach. Pieces include logs with roots and stable key pieces."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slightly below reference. Some pieces are small or unstable. Wood still adds habitat but less consistently.",
+          "exampleObservation": "A moderate number of logs with some variety. Distribution is patchy with fewer jams."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Below reference for forested streams. Limited interaction with flow. Few or no key pieces.",
+          "exampleObservation": "Few logs are present and variety is low. Pieces are isolated and often small."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Far below reference for forested streams. If the natural setting has little wood, compare to that reference.",
+          "exampleObservation": "No large wood is present in the channel or on bars."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "bed-composition-bedform-dynamics-riparian-wood-recruitment",
+      "functionId": "bed-composition-bedform-dynamics",
+      "category": "Geomorphology",
+      "name": "Riparian Wood Recruitment",
+      "scale": "R",
+      "metricStatement": "The near‑channel forest supplies future wood. Most pieces that enter small and mid‑sized streams originate close to the bank. Classic studies show that roughly 70 percent or more of pieces come from within about 20 m of the channel. Modeling and field analyses commonly use riparian corridors on the order of tree height, which is about 30–40 m in many forests, as the most effective zone for recruitment. Both banks matter. Wider, continuous, mature forest along both banks increases long‑term wood supply.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Wide and continuous mature forest within ~30 m of banks on both sides. Strong recruitment potential. (Andrews Forest)",
+          "exampleObservation": "Mature forest ≥ 30 m wide along both banks with downed trees stored on the floodplain."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Partial forest coverage. Recruitment present but reduced.",
+          "exampleObservation": "15–30 m forested buffer, mixed age. Some gaps or one bank narrower."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Narrow or patchy buffer. Few large stems near channel.",
+          "exampleObservation": "Narrow strips < 15 m or patchy trees with frequent breaks."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No meaningful near-channel forest where forest is natural.",
+          "exampleObservation": "Grass, crops, or development to the top of bank with no big trees within 30 m."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "bed-composition-bedform-dynamics-substrate-composition",
+      "functionId": "bed-composition-bedform-dynamics",
+      "category": "Geomorphology",
+      "name": "Substrate Composition",
+      "scale": "R",
+      "metricStatement": "This metric combines substrate size distribution, embeddedness by fines, and any consolidation or armoring of the bed surface. Together, these conditions influence how easily sediment moves, how much pore space is available for organisms, and how well oxygen and water can circulate through the bed. Gravel and cobble provide important habitat structure, while excessive fine sediment fills pores and reduces habitat quality. Strong consolidation or heavy armor also limits natural mobility and habitat diversity.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Size classes match reference. Embeddedness is low unless fines are naturally high, such as in wetland streams. No excessive hard surface layer.",
+          "exampleObservation": "Gravel and cobble sizes match the reference for this stream type. Fine sediment is low. Most stones are not buried."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Minor departure from reference. Embeddedness is moderate. Surface may be slightly compacted.",
+          "exampleObservation": "Slight shift in sizes. Some extra fines in riffles or margins. Some stones are partly buried."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Outside typical range for size classes. Embeddedness is high or surface is locked. Habitat quality is reduced.",
+          "exampleObservation": "Clear buildup of fines that blanket gravel and cobble, or the surface is dominated by large, tightly packed stones. Many stones are buried."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Far from reference. Severe burial of coarse substrate or extreme hardening. Habitat complexity from substrate is minimal.",
+          "exampleObservation": "Bed is mostly fine sediment such as sand or silt, or a very hard pavement of large stones with little loose material."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "bed-composition-bedform-dynamics-bedform-diversity",
+      "functionId": "bed-composition-bedform-dynamics",
+      "category": "Geomorphology",
+      "name": "Bedform Diversity",
+      "scale": "R",
+      "metricStatement": "Presence and clarity of the expected bedform sequence for the stream type. Riffle–run–pool sequences or step–pool sequences indicate organized energy dissipation and sediment transport. Homogeneous beds can signal altered transport capacity or simplification that reduces habitat niches.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Robust bedform variety for stream type.",
+          "exampleObservation": "Clear riffle–run–pool or step–pool sequence with distinct units at expected spacing."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Partially uniform bed with intermittent units.",
+          "exampleObservation": "Some diversity present but units are less distinct or spacing is irregular."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Minimal expression of expected units.",
+          "exampleObservation": "Mostly homogeneous bed. Sequences are faint or discontinuous."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No meaningful bedform sequence.",
+          "exampleObservation": "Entirely flattened or artificially uniform bed."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "light-thermal-regime-riparian-canopy-cover",
+      "functionId": "light-thermal-regime",
+      "category": "Physicochemistry",
+      "name": "Riparian Canopy Cover",
+      "scale": "R",
+      "metricStatement": "Riparian vegetation reduces direct solar input to the channel. This moderates summer temperature, dampens daily thermal swings, and limits nuisance algal growth where nutrients are available. Shading is one of the most effective local controls on stream thermal regime.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "75–100% shade where forested reference conditions are expected.",
+          "exampleObservation": "Closed canopy of mature hardwoods and conifers. Continuous overchannel foliage."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "50–75% shade.",
+          "exampleObservation": "Mixed canopy with gaps near crossings and meadows."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "25–50% shade.",
+          "exampleObservation": "Fragmented tree line with long open reaches beside pasture."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "<25% shade. Note that excessive shade would be flagged only in historically open systems.",
+          "exampleObservation": "Cleared banks and open valley floor in a historically forested setting."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_physicochem.riparian_canopy",
+        "client": "enviroatlas",
+        "field": "canopy_pct",
+        "label": "NLCD Tree Canopy Cover + EPA EnviroAtlas riparian",
+        "url": "https://enviroatlas.epa.gov/enviroatlas/interactivemap/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "light-thermal-regime-stream-temperature-rapid",
+      "functionId": "light-thermal-regime",
+      "category": "Physicochemistry",
+      "name": "Stream Temperature (rapid)",
+      "scale": "R",
+      "metricStatement": "Water temperature maxima and diel range integrate heat exchange, shade, and groundwater influence. Temperature directly governs oxygen solubility and metabolic rates and can cause thermal stress if thresholds are exceeded.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Rarely surpasses local standard. For screening, <20 °C in coldwater or <28 °C in warmwater.",
+          "exampleObservation": "Logger record shows summer highs below local standard. Small diel range."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slightly exceeds threshold occasionally.",
+          "exampleObservation": "Occasional brief exceedances during heat waves."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Frequent near or over threshold.",
+          "exampleObservation": "Repeated warm afternoons near or over the threshold each week."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Consistently high or lethal temperatures.",
+          "exampleObservation": "Daily exceedance and several events approaching lethal levels."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "light-thermal-regime-algal-growth-light-limited",
+      "functionId": "light-thermal-regime",
+      "category": "Physicochemistry",
+      "name": "Algal Growth (light-limited)",
+      "scale": "R",
+      "metricStatement": "Thermal refugia are localized cool zones created by groundwater upwelling, springs, deep pools, or strong shade. These areas allow fish and invertebrates to persist during regional heat events and can maintain connectivity across otherwise stressful habitat.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Minimal algae. No nuisance mats.",
+          "exampleObservation": "Thin periphyton film on stable cobbles. No mats."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slightly elevated algae coverage.",
+          "exampleObservation": "Light filaments on sunlit margins."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Large mats partially impair habitat.",
+          "exampleObservation": "Broad patches of filamentous algae covering riffles."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Dense bloom or scum overshadowing substrate.",
+          "exampleObservation": "Thick blooms and scums that blanket the bed and trap fine sediment."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "light-thermal-regime-thermal-refugia",
+      "functionId": "light-thermal-regime",
+      "category": "Physicochemistry",
+      "name": "Thermal Refugia",
+      "scale": "R",
+      "metricStatement": "Thermal refugia are localized cool zones created by groundwater upwelling, springs, deep pools, or strong shade. These areas allow fish and invertebrates to persist during regional heat events and can maintain connectivity across otherwise stressful habitat.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Multiple cooler pockets or deeper pools moderating temperature extremes.",
+          "exampleObservation": "Multiple cold seeps and deep pools evident. Fish aggregations present on hot days."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "One to two minor or limited refuges.",
+          "exampleObservation": "One small spring-fed side channel with limited extent."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Rare or minimal cooler zones. Partial stress.",
+          "exampleObservation": "Scattered weak cool spots with little depth refuge."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No refuges where historically expected. High thermal risk.",
+          "exampleObservation": "No detectable cool pockets in a reach that historically had springs or deep pools."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "carbon-processing-cpom-retention",
+      "functionId": "carbon-processing",
+      "category": "Physicochemistry",
+      "name": "CPOM Retention",
+      "scale": "R",
+      "metricStatement": "Retention of leaf litter and small wood indicates the stream’s capacity to hold energy resources long enough for microbial conditioning and shredding. Greater retention supports heterotrophic metabolism and more efficient energy transfer to higher trophic levels.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Abundant CPOM retention and multiple debris accumulations typical for forested systems",
+          "exampleObservation": "Stable leaf packs lodged behind wood and in low-velocity pockets along most of the reach"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Some retention with partial flushing",
+          "exampleObservation": "Leaf packs present but many flush out after moderate storms"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Sparse organic matter and limited retention",
+          "exampleObservation": "Only scattered leaves on bars or in eddies. Bed often scoured clean"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No effective retention or severe overload causing anoxia",
+          "exampleObservation": "Bed largely bare with thin organic film or black, anoxic conditions"
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "carbon-processing-detritus-decomposition-rate-shredder-detritivore-presence",
+      "functionId": "carbon-processing",
+      "category": "Physicochemistry",
+      "name": "Detritus Decomposition Rate, Shredder/ Detritivore Presence",
+      "scale": "R",
+      "metricStatement": "Leaf‑litter breakdown integrates microbial conditioning, shredder feeding, temperature, and water quality. Visible fungal colonization and active shredding indicate a healthy detrital cycle. Balanced, timely breakdown signals functional heterotrophic processing. Suppressed or very slow rates, or the absence of shredders where they are expected, flag impairment This metric is assessed from rapid, observable evidence rather than quantitative decomposition measurements. Look for visible fungal conditioning and softened or skeletonized leaves, and for shredder-type invertebrates identified to coarse groups. Quantitative leaf-pack studies and fine taxonomic identification are optional. Where shredders are naturally absent, such as in large rivers, intermittent streams, or regions with low coarse organic matter supply, score the metric Not Applicable rather than as impaired..",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Fast breakdown with strong biological processing and multiple shredder groups present",
+          "exampleObservation": "Leaf packs break down quickly with softening and visible fungal growth. Kick sample includes several shredder taxa"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Intermediate breakdown with partial shredder presence",
+          "exampleObservation": "Moderate softening of leaves with some fungal growth. One or two shredder groups present at low abundance"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Slow breakdown with few or no active shredders",
+          "exampleObservation": "Little change to leaf material after several weeks. Packs often coated in silt. Assemblage mostly tolerant collectors and grazers"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Very slow breakdown and absence of shredder taxa in suitable habitat",
+          "exampleObservation": "No noticeable mass loss. Strong odor or anoxic conditions. No shredders in a reach where they are expected"
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "carbon-processing-riparian-corridor-width-and-quality",
+      "functionId": "carbon-processing",
+      "category": "Physicochemistry",
+      "name": "Riparian Corridor Width and Quality",
+      "scale": "R",
+      "metricStatement": "The riparian corridor supplies leaf litter, twigs, and wood. It also moderates light and temperature, which modulate both decomposition and primary production. Diverse native riparian vegetation increases the quantity and timing of organic inputs and helps sustain carbon processing.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Approximately ≥ 30 m native buffer. Diverse structure",
+          "exampleObservation": "Continuous native trees and shrubs on both banks at about 30 m or more"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "15–30 m with partial native cover",
+          "exampleObservation": "Mostly vegetated but interrupted by lawns or crossings. About 15–30 m"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "5–15 m and limited native diversity",
+          "exampleObservation": "Narrow grass strip or mowed edges. About 5–15 m"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "< 5 m or essentially no corridor",
+          "exampleObservation": "Cropland, pavement, or fill to the top of bank. Less than 5 m"
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_physicochem.riparian_corridor",
+        "client": "enviroatlas",
+        "field": "corridor",
+        "label": "EPA EnviroAtlas riparian (15-50 m) + NLCD",
+        "url": "https://enviroatlas.epa.gov/enviroatlas/interactivemap/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "carbon-processing-algal-and-primary-production",
+      "functionId": "carbon-processing",
+      "category": "Physicochemistry",
+      "name": "Algal and Primary Production",
+      "scale": "R",
+      "metricStatement": "Balanced autochthonous production complements allochthonous inputs. Light, nutrients, and flow create biofilms that feed grazers and stabilize food webs. Excessive periphyton or filamentous mats can drive large diel swings in oxygen and can suppress detrital pathways by smothering substrates.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Balanced growth and no nuisance bloom",
+          "exampleObservation": "Thin biofilm with visible gravel and cobble. No mats"
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slightly elevated algae",
+          "exampleObservation": "Slight periphyton increase. Occasional filament clusters"
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Moderate nuisance mats that partially impair habitat",
+          "exampleObservation": "Frequent moderate mats in glides and pools"
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Dense blooms overshadowing habitat",
+          "exampleObservation": "Thick mats or scums widespread. Substrate obscured"
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "nutrient-cycling-visible-algal-indications-n-p",
+      "functionId": "nutrient-cycling",
+      "category": "Physicochemistry",
+      "name": "Visible Algal Indications (N/P)",
+      "scale": "R",
+      "metricStatement": "Total nitrogen and total phosphorus concentrations provide a direct index of nutrient supply that drives algal growth and oxygen dynamics. Concentration targets are region specific, but well studied ranges can guide rapid screening.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "< 10% benthic algal cover",
+          "exampleObservation": "Cobble substrate mostly clean. Thin biofilm only."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "~10–30% cover",
+          "exampleObservation": "Thin green filaments on stones in patches."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "~30–50% cover",
+          "exampleObservation": "Mats cover about one third to one half of riffles."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "> 50% cover or nuisance mats",
+          "exampleObservation": "Thick mats and surface scum on most substrate."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "nutrient-cycling-n-p-concentrations",
+      "functionId": "nutrient-cycling",
+      "category": "Physicochemistry",
+      "name": "N/P Concentrations",
+      "scale": "R",
+      "metricStatement": "Total nitrogen and total phosphorus concentrations provide a direct index of nutrient supply that drives algal growth and oxygen dynamics. Concentration targets are region specific, but well studied ranges can guide rapid screening.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Near low to moderate trophic benchmarks",
+          "exampleObservation": "TN ~0.5 mg/L and TP ~0.03 mg/L."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slightly elevated nutrients",
+          "exampleObservation": "TN ~0.7–1.0 mg/L or TP ~0.05–0.075 mg/L."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Marked elevation",
+          "exampleObservation": "TN ~1.0–1.5 mg/L or TP ~0.075–0.10 mg/L."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Strong enrichment",
+          "exampleObservation": "TN > 1.5 mg/L or TP > 0.10 mg/L."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "nutrient-cycling-vegetated-riparian-corridor-width",
+      "functionId": "nutrient-cycling",
+      "category": "Physicochemistry",
+      "name": "Vegetated Riparian Corridor Width",
+      "scale": "R",
+      "metricStatement": "A continuous, vegetated riparian corridor slows and filters runoff, traps sediment, and enhances nutrient uptake before water reaches the stream. Sufficient width improves nitrate removal and reduces particulate phosphorus delivery.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "≥ ~30 m width per bank",
+          "exampleObservation": "Continuous native forest buffer on both banks."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "~15–30 m",
+          "exampleObservation": "Mostly vegetated buffer with gaps."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "~5–15 m",
+          "exampleObservation": "Narrow buffer with frequent breaks."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "< ~5 m",
+          "exampleObservation": "Cropped or paved to bank edge."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_physicochem.riparian_width",
+        "client": "enviroatlas",
+        "field": "width",
+        "label": "EPA EnviroAtlas riparian",
+        "url": "https://enviroatlas.epa.gov/enviroatlas/interactivemap/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "nutrient-cycling-relative-denitrification-potential",
+      "functionId": "nutrient-cycling",
+      "category": "Physicochemistry",
+      "name": "Relative Denitrification Potential",
+      "scale": "R",
+      "metricStatement": "Denitrification removes nitrate by converting it to nitrogen gases under anoxic, carbon‑rich, and saturated conditions. Connected floodplains and wetlands are key hotspots for this process and can substantially reduce nitrate export from watersheds.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Strong potential with frequent seasonal saturation",
+          "exampleObservation": "Connected floodplain wetlands with hydric soils and backwater pockets."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Moderate potential",
+          "exampleObservation": "Some wet pockets. Channel partly disconnected from floodplain."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Low potential",
+          "exampleObservation": "Limited wetland area. Bankfull rarely overtops."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Negligible potential",
+          "exampleObservation": "No wetlands. Floodplain ditched or tile drained."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "water-soil-quality-water-clarity-turbidity",
+      "functionId": "water-soil-quality",
+      "category": "Physicochemistry",
+      "name": "Water Clarity / Turbidity",
+      "scale": "R",
+      "metricStatement": "Turbidity reduces sunlight, which is needed for primary production, and can clog gills. Suspended sediments also carry nutrients and metals on particle surfaces that can worsen water‑quality problems.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Mostly clear or only slightly cloudy at baseflow.",
+          "exampleObservation": "Water is clear at baseflow and similar to a local reference reach. Bottom is visible at knee depth."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slight turbidity or color that is short-lived.",
+          "exampleObservation": "Slight yellow-brown tint after storms that clears within a day."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Persistent cloudiness at baseflow.",
+          "exampleObservation": "Cloudy water persists during baseflow. Fine sediment coats substrate."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Persistently muddy or sheen present.",
+          "exampleObservation": "Chronically muddy water. Visible oily sheen or scum in slack water."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "water-soil-quality-dissolved-oxygen-rapid",
+      "functionId": "water-soil-quality",
+      "category": "Physicochemistry",
+      "name": "Dissolved Oxygen (rapid)",
+      "scale": "R",
+      "metricStatement": "Dissolved oxygen (DO) supports respiration for fish and invertebrates. Low DO can cause acute stress, avoidance, and fish kills.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "> 6 mg/L consistently.",
+          "exampleObservation": "DO readings consistently above 6 mg/L. No recorded night-time dips."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "5–6 mg/L borderline.",
+          "exampleObservation": "DO commonly 5–6 mg/L in late summer."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "3–5 mg/L frequent stress.",
+          "exampleObservation": "Night minima 3–5 mg/L during warm periods."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "< 3 mg/L dangerously low.",
+          "exampleObservation": "DO dips below 3 mg/L and fish stress observed."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "water-soil-quality-pollutants",
+      "functionId": "water-soil-quality",
+      "category": "Physicochemistry",
+      "name": "Pollutants",
+      "scale": "R",
+      "metricStatement": "Pollution in water and floodplain soils, including metals, hydrocarbons, pesticides, and emerging contaminants, can cause stress or mortality and can build up in food webs. Contaminated or fill‑dominated floodplain soils can leach pollutants to the channel and reduce riparian filtration and bank stability.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "No visible contamination indicators or known exceedances.",
+          "exampleObservation": "No oily sheen, staining, or chemical odor. Soils appear natural and intact. No impairment listings."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Minor localized inputs or mild odor only.",
+          "exampleObservation": "Occasional faint odor near a storm outfall or small dump pile on the floodplain."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Recognized contamination risk or known moderate contamination.",
+          "exampleObservation": "Stained soils, debris, or chemical odor near developed or industrial areas. Located downstream of a listed contaminated site."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Severe or chronic contamination.",
+          "exampleObservation": "Strong odor, visible seepage, recurring sheen, or known hazardous site on the floodplain. Fish kill reports on record."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "water-soil-quality-ph-and-specific-conductivity-rapid",
+      "functionId": "water-soil-quality",
+      "category": "Physicochemistry",
+      "name": "pH & Specific Conductivity (rapid)",
+      "scale": "R",
+      "metricStatement": "pH controls metal solubility and toxicity. Specific conductivity indicates ionic strength from dissolved salts. Values outside typical ranges often signal mine drainage, road salt, brines, or wastewater influence and can impair aquatic communities.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "pH ~6.5–8.5 and cond. < 500 µS/cm typical.",
+          "exampleObservation": "pH 7.4. Specific conductance 250 µS/cm."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Slightly off-range or mild elevation.",
+          "exampleObservation": "pH 6.3 or 8.7 with otherwise stable chemistry."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Marked deviation or 800–1500 µS/cm.",
+          "exampleObservation": "pH 5.8 or 9.2. Conductivity ~1000 µS/cm."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Extreme pH or very high conductance.",
+          "exampleObservation": "pH 4.8 or 10.2. Conductivity > 2000 µS/cm."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "water-soil-quality-bank-and-floodplain-soil-condition",
+      "functionId": "water-soil-quality",
+      "category": "Physicochemistry",
+      "name": "Bank & Floodplain Soil Condition",
+      "scale": "R",
+      "metricStatement": "Bank & Floodplain Soil Condition",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Natural soils. No contamination indicators.",
+          "exampleObservation": "Intact native soils and vegetation. No odors or staining."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Minor dumping or localized inputs.",
+          "exampleObservation": "Small dump pile or localized manure near a crossing."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Known moderate contamination.",
+          "exampleObservation": "Stained soils and debris on banks near former industrial area."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Highly contaminated soils.",
+          "exampleObservation": "Strong petroleum odor, visible seepage, or listed hazardous site on the floodplain."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "habitat-provision-in-stream-habitat-complexity",
+      "functionId": "habitat-provision",
+      "category": "Biology",
+      "name": "In-Stream Habitat Complexity",
+      "scale": "R",
+      "metricStatement": "This metric captures the variety and arrangement of habitat units such as riffles, runs, pools, and cover elements. Greater diversity of units increases niche space and supports higher productivity and resilience.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Multiple habitat types well represented.",
+          "exampleObservation": "Riffles, runs, pools, and large wood recur across the reach."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Some variety but missing key elements.",
+          "exampleObservation": "Riffle and run common. Pools intermittent. Sparse cover."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Mostly uniform. Only 1–2 distinct features.",
+          "exampleObservation": "Long uniform glide or sand bed with occasional shallow run."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Very uniform channel. Limited structural diversity.",
+          "exampleObservation": "Straight, entrenched, uniform channel with little cover."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "habitat-provision-overhanging-vegetation",
+      "functionId": "habitat-provision",
+      "category": "Biology",
+      "name": "Overhanging Vegetation",
+      "scale": "R",
+      "metricStatement": "Overhanging vegetation provides cover from predators and high velocities. They can also create shaded microhabitats important for many fishes and amphibians.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "About 50% or more of banks provide overhanging cover.",
+          "exampleObservation": "Thick root mats and overhanging shrubs along outside bends."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "About 25–50% cover.",
+          "exampleObservation": "Intermittent and low branches in meanders."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "About 10–25% cover.",
+          "exampleObservation": "Short isolated pockets with overhanging vegetation."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "<10% cover.",
+          "exampleObservation": "Little to no overhanging vegetation."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "habitat-provision-aquatic-invertebrate-habitat",
+      "functionId": "habitat-provision",
+      "category": "Biology",
+      "name": "Aquatic Invertebrate Habitat",
+      "scale": "R",
+      "metricStatement": "Stable substrates such as cobble, coarse wood, and persistent leaf packs provide attachment points and refuges for invertebrates, including sensitive mayflies, stoneflies, and caddisflies (EPT) that underpin food webs. A mix of substrate sizes and small organic pockets creates small‑scale velocity and shelter contrasts that support diverse invertebrates and foraging fishes. Expectations should reflect local reference conditions. In some ephemeral or bedrock channels, more uniform substrates can be natural.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Multiple stable substrates and organic cover supporting diverse invertebrates.",
+          "exampleObservation": "Stable cobble riffles with gravel pockets, root wads, leaf packs, and scattered wood."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Some substrate variety but partly limited by fines.",
+          "exampleObservation": "Cobble and gravel with some roots or wood. Fines cover parts of the bed."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Limited stable substrate and few microhabitats.",
+          "exampleObservation": "Mostly mobile sand or silt with little wood or leaf packs."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Very poor substrate variety and minimal invertebrate habitat.",
+          "exampleObservation": "Uniform sand, silt, or bedrock. No wood, leaf packs, or root structure."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "habitat-provision-lateral-and-off-channel-habitats",
+      "functionId": "habitat-provision",
+      "category": "Biology",
+      "name": "Lateral and Off-Channel Habitats",
+      "scale": "R",
+      "metricStatement": "Side channels, connected backwaters, and seasonally active floodplain wetlands provide refuge during high flows, warm periods, and winter conditions. They also offer spawning and rearing areas and increase survival during disturbances.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Well connected off-channel areas offering refuge and spawning.",
+          "exampleObservation": "Side channels and backwaters connect during seasonal highs. Fish and amphibian use observed."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Some partial connection.",
+          "exampleObservation": "One or two backwaters with partial seasonal connection."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Rare or only ephemeral off-channel usage.",
+          "exampleObservation": "Small depressions connect only during rare floods."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No side channels or backwaters remain.",
+          "exampleObservation": "Levees or berms isolate the channel from the floodplain."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "population-support-fish-habitat",
+      "functionId": "population-support",
+      "category": "Biology",
+      "name": "Fish habitat",
+      "scale": "R",
+      "metricStatement": "Successful reproduction is supported by low embeddedness and good spawning habitat. Fish spawning requires clean, well‑sorted gravel or other appropriate materials where that is the reference condition. Excess fine sediment fills spaces between gravels, reduces oxygen delivery to eggs, and lowers embryo survival. Juveniles need shallow, low‑velocity margins with cover from wood, undercuts, or vegetation. These areas help them avoid displacement and predators and improve survival during high flows and heat. Where vegetation or other substrates are the normal spawning medium for native fauna, judge condition against that reference.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Embeddedness 0–25 percent; over 40 percent shallow, low-velocity cover.",
+          "exampleObservation": "Clean gravels with open spaces and many shallow pockets, wood, and vegetation."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Embeddedness 25–50 percent; about 20–40 percent shallow, low-velocity cover.",
+          "exampleObservation": "Light sand on riffles; scattered wood and bank cover."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Embeddedness 50–75 percent; about 5–20 percent shallow, low-velocity cover.",
+          "exampleObservation": "Gravels embedded with silt; few bank pockets or calm margins."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Embeddedness ≥75 percent; less than 5 percent shallow, low-velocity cover.",
+          "exampleObservation": "Bed mostly sand or silt; no pockets or structural cover."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "population-support-aquatic-invertebrate-community",
+      "functionId": "population-support",
+      "category": "Biology",
+      "name": "Aquatic Invertebrate Community",
+      "scale": "R",
+      "metricStatement": "Sensitive aquatic insects such as mayflies, stoneflies, and caddisflies provide food for fishes and amphibians and could be used as indicators of habitat and water quality conditions that support populations.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "All three EPT orders present with multiple taxa.",
+          "exampleObservation": "Mayflies, stoneflies, and caddisflies found in kick sample."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Two EPT orders present.",
+          "exampleObservation": "Two of three EPT orders present."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "One EPT order present.",
+          "exampleObservation": "Only one EPT order present."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Zero EPT orders present.",
+          "exampleObservation": "No EPT. Mostly tolerant midges and worms."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "population-support-fish-presence",
+      "functionId": "population-support",
+      "category": "Biology",
+      "name": "Fish Presence",
+      "scale": "R",
+      "metricStatement": "A healthy fish assemblage includes multiple native species with a range of body sizes that reflect successful growth and survival. Regular appearance of young-of-year across edge habitats, riffles, and backwaters signals that spawning, incubation, and early juvenile survival are functioning. Dominance by only a few tolerant species, absence of natives, or a lack of young-of-year signals stressors that limit population support.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Multiple native species with broad size classes.",
+          "exampleObservation": "Several native species across many sizes."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Few natives with partial size classes.",
+          "exampleObservation": "Two to three natives; sizes limited."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "One to two tolerant species dominate.",
+          "exampleObservation": "Only tolerant species present in low numbers."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Absent or only non-native species present.",
+          "exampleObservation": "No fish detected where expected."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "population-support-amphibian-and-crayfish-presence",
+      "functionId": "population-support",
+      "category": "Biology",
+      "name": "Amphibian and Crayfish Presence",
+      "scale": "R",
+      "metricStatement": "Amphibians and crayfishes are sensitive to changes in hydrology, temperature, and habitat complexity. Their presence and diversity complement fish and macroinvertebrate indicators, especially in small streams.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Presence aligns with reference expectations.",
+          "exampleObservation": "Multiple frogs, salamanders, and crayfish observed."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Limited presence.",
+          "exampleObservation": "A few individuals observed."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Rare occurrence.",
+          "exampleObservation": "One or two sightings only."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Absent where historically expected.",
+          "exampleObservation": "None detected during suitable season."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "community-dynamics-native-and-non-native-species",
+      "functionId": "community-dynamics",
+      "category": "Biology",
+      "name": "Native and non-native species",
+      "scale": "R",
+      "metricStatement": "Communities dominated by native fish and invertebrates that reflect historical or regional reference conditions indicate that habitats and water quality are sufficient to support expected biodiversity. Loss of sensitive native species, increases in tolerant generalists, and a growing share of non-native or invasive taxa signal stress, biotic homogenization, and reduced ecological resilience Non-native and invasive are not equivalent. Where possible, base the score on the percent of invasive taxa with a clear definition, since some non-native species are common even in otherwise functional systems. Because observed species vary with sampling timing and location, this metric is most reliable when based on a compiled multi-year or multi-site record rather than a single visit..",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Native community matches reference. Non natives rare and low abundance.",
+          "exampleObservation": "Native fish and invertebrates common. Very few non natives seen."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Minor native loss. Non natives present but natives still dominant.",
+          "exampleObservation": "Most natives present. Some sensitive species missing."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Noticeable native decline. Non natives common or co-dominant.",
+          "exampleObservation": "Many sensitive natives gone. Non natives frequent."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Natives rare or absent. Community dominated by tolerant or invasive taxa.",
+          "exampleObservation": "Only tolerant or non native species observed."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "community-dynamics-species-richness-composition-and-abundance",
+      "functionId": "community-dynamics",
+      "category": "Biology",
+      "name": "Species richness, composition and abundance",
+      "scale": "R",
+      "metricStatement": "Species richness and community composition reflect overall habitat quality and environmental condition. A healthy stream supports multiple major macroinvertebrate groups, including sensitive EPT taxa, along with a balanced mix of functional feeding groups that indicate a well-organized food web. High richness and a diverse set of guilds suggest intact habitat and water quality. Declines in richness, dominance by tolerant taxa, or simplified feeding groups often signal stress and reduced ecological integrity.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "High richness. Balanced feeding groups. Good index score.",
+          "exampleObservation": "Many species across several feeding groups."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Moderate richness. Some imbalance in feeding groups.",
+          "exampleObservation": "Several species present. Some groups missing."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Low richness. Dominance by tolerant taxa or single group.",
+          "exampleObservation": "Few species. One or two groups dominate."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Extremely low richness and diversity. Poor index score.",
+          "exampleObservation": "Very few species. Mostly tolerant taxa."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "community-dynamics-riparian-communities",
+      "functionId": "community-dynamics",
+      "category": "Biology",
+      "name": "Riparian communities",
+      "scale": "R",
+      "metricStatement": "Healthy riparian communities include the expected mix of native trees, shrubs, and groundcover that provide shade, organic matter, wood, bank stability, and habitat. Communities that resemble local reference conditions support better biological integrity by moderating temperature, filtering runoff, and supplying food and cover for aquatic and terrestrial species. Native riparian communities with multiple vegetation layers also support keystone species such as beaver, mussels, and crayfish where they are naturally expected.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Wide, intact native corridor with minimal invasives.",
+          "exampleObservation": "Continuous native trees, shrubs, and groundcover."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Moderate width and structure. Some invasive patches present.",
+          "exampleObservation": "Mostly vegetated corridor with some gaps."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Narrow corridor. Fragmented native cover with common invasives.",
+          "exampleObservation": "Thin or patchy vegetation along banks."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Corridor very narrow or absent. Native plants largely missing.",
+          "exampleObservation": "Little native vegetation. Banks mostly lawn or invasives."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_biology.riparian_communities",
+        "client": "enviroatlas",
+        "field": "veg",
+        "label": "EPA EnviroAtlas riparian; StreamCat; NLCD",
+        "url": "https://enviroatlas.epa.gov/enviroatlas/interactivemap/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "community-dynamics-keystone-species",
+      "functionId": "community-dynamics",
+      "category": "Biology",
+      "name": "Keystone species",
+      "scale": "R",
+      "metricStatement": "Keystone species such as beaver, freshwater mussels, and large crayfish play an outsized role in maintaining stream health. Beaver create off-channel habitat, increase hydraulic complexity, and help buffer baseflow. Mussels, crayfish, and similar taxa filter water, stabilize food webs, and engineer habitat structure. Healthy populations indicate strong ecological integrity, while absence where historically expected or severe overabundance that disrupts connectivity are warning signs of degradation Confirming mussels, crayfish, or similar taxa often requires permits, trained surveyors, and specific methods, so where those are not available, assess keystone presence when feasible and record a confidence flag rather than a definitive absence..",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "Expected keystone taxa widespread. No invasive dominance.",
+          "exampleObservation": "Beaver, mussels, or crayfish common where expected."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "At least one keystone taxon present but limited distribution.",
+          "exampleObservation": "Some keystone species present but patchy."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Keystone taxa rare compared to reference or historical levels.",
+          "exampleObservation": "Keystone species observed only in small numbers."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "No keystone taxa present. Strong invasive dominance.",
+          "exampleObservation": "Expected keystone species absent. Invasives common."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "watershed-connectivity-upstream-and-downstream-barriers",
+      "functionId": "watershed-connectivity",
+      "category": "Biology",
+      "name": "Upstream and Downstream Barriers",
+      "scale": "R",
+      "metricStatement": "This metric captures how dams, weirs, grade controls, and natural drops restrict longitudinal movement. Fewer or smaller barriers mean more habitat is connected. This improves dispersal, gene flow, and recolonization after floods, droughts, or spills.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "80–100% of habitat accessible. No major barriers.",
+          "exampleObservation": "No dams or weirs within the connected corridor. Only small natural steps that fish pass at typical flows."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "About 50–80% accessible.",
+          "exampleObservation": "One small low-head structure downstream with partial passage at moderate flows."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "About 20–50% accessible.",
+          "exampleObservation": "Several small barriers in series restrict movement across subreaches."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "<20% accessible due to big dams or multiple blockages.",
+          "exampleObservation": "Large regulating dam close to the reach with multiple downstream grade controls."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_biology.barriers",
+        "client": "aquatic_barriers",
+        "field": "barrier_count",
+        "label": "National Aquatic Barrier Inventory (USFWS/TNC) + USACE NID",
+        "url": "https://connectivity.sarpdata.com/"
+      },
+      "autoSuggest": null
+    },
+    {
+      "metricId": "watershed-connectivity-culvert-and-road-crossing-passability",
+      "functionId": "watershed-connectivity",
+      "category": "Biology",
+      "name": "Culvert and Road-Crossing Passability",
+      "scale": "R",
+      "metricStatement": "This metric evaluates whether stream–road crossings allow aquatic organisms and drift to pass at a wide range of flows. Perched outlets, excessive slopes, and smooth barrel conditions can block passage and fragment habitat, even in otherwise connected reaches.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "80–100% stream continuity at crossings.",
+          "exampleObservation": "Crossings are embedded and aligned with natural bed. No outlet drops."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "About 50–80% passable.",
+          "exampleObservation": "Most crossings passable. A few show minor outlet drops or smooth barrels."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "About 20–50% passable.",
+          "exampleObservation": "Several perched culverts and steep barrels concentrate flow and block passage."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "<20% passable. Multiple perched culverts hamper movement.",
+          "exampleObservation": "Many perched pipes and long smooth boxes with no bed material."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "watershed-connectivity-lateral-connectivity-for-riparian-fauna",
+      "functionId": "watershed-connectivity",
+      "category": "Biology",
+      "name": "Lateral Connectivity for Riparian Fauna",
+      "scale": "R",
+      "metricStatement": "This metric considers whether levees, berms, walls, or continuous revetment trap semi‑aquatic fauna in the channel or prevent movement across the floodplain. Open lateral corridors allow amphibians, reptiles, mammals, and insects to move between wetlands, backwaters, and riparian cover for feeding, breeding, and refuge.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "No major levees or walls. Free lateral movement for semiaquatic fauna.",
+          "exampleObservation": "Banks are free of continuous levees or walls. Side channels and backwaters are accessible."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Some partial barriers but still some access.",
+          "exampleObservation": "Short levee segments occur, but frequent gaps allow movement to wetlands."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Large levees hamper movement in many areas.",
+          "exampleObservation": "Long levees or riprapped banks on one side limit access to the floodplain in many places."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Heavily walled or leveed corridor. Minimal lateral connectivity.",
+          "exampleObservation": "Both banks armored or walled for long distances. Few or no access points."
+        }
+      ],
+      "desktopSupportable": false
+    },
+    {
+      "metricId": "watershed-connectivity-dewatered-or-intermittent-segments",
+      "functionId": "watershed-connectivity",
+      "category": "Biology",
+      "name": "Dewatered or Intermittent Segments",
+      "scale": "R",
+      "metricStatement": "This metric identifies artificial dry‑downs and chronic disconnections that strand biota and break longitudinal pathways. Persistent or seasonal dewatering prevents movement among habitats and can cause repeated local extirpations.",
+      "likertCriteria": [
+        {
+          "likert": "Strongly Agree",
+          "criteria": "No artificial dryness. Natural connectivity is maintained.",
+          "exampleObservation": "Continuous wetted channel during the expected season. No artificial withdrawals noted."
+        },
+        {
+          "likert": "Agree",
+          "criteria": "Minor dryness in small segments.",
+          "exampleObservation": "Short dry patches appear during late season but reconnect after small rains."
+        },
+        {
+          "likert": "Neutral",
+          "criteria": "",
+          "exampleObservation": ""
+        },
+        {
+          "likert": "Disagree",
+          "criteria": "Notable dryness or disconnection in key reaches.",
+          "exampleObservation": "Long dry segments form in critical habitat areas during the growing season."
+        },
+        {
+          "likert": "Strongly Disagree",
+          "criteria": "Chronic or large-scale dewatering. Major fragmentation.",
+          "exampleObservation": "Reaches are chronically dewatered or disconnected for long periods due to withdrawals or diversions."
+        }
+      ],
+      "desktopSupportable": true,
+      "desktopSource": {
+        "adapter": "desktop_biology.dewatered_segments",
+        "client": "nwis",
+        "field": "zero_flow_days",
+        "label": "USGS NWIS zero-flow days + NHD FCODE + imagery",
+        "url": "https://waterdata.usgs.gov/nwis"
+      },
+      "autoSuggest": null
+    }
+  ]
+}
