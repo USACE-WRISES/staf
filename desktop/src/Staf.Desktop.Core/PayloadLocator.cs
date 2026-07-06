@@ -21,14 +21,14 @@ public sealed class InstalledPayloadLocator(ShellConfig config) : IPayloadLocato
         var pointer = state.Load();
         if (pointer is not { Env: { } env, Apps: { } apps })
         {
-            throw new ShellException("The STAF runtime is not installed yet — complete first-run setup.");
+            throw new ShellException("The STAF runtime is not installed yet. Complete first-run setup.");
         }
 
         var python = Path.Combine(state.DirFor(env.Dir), "python", "python.exe");
         if (!File.Exists(python))
         {
             throw new ShellException(
-                $"The installed runtime is missing ({python}). Use Troubleshooting → reinstall, or run first-run setup again.");
+                $"The installed runtime is missing ({python}). Run first-run setup again.");
         }
         var appsRoot = state.DirFor(apps.Dir);
         var manifest = Path.Combine(appsRoot, "desktop-manifest.json");

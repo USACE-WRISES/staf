@@ -73,7 +73,7 @@
       statusText.className = "status-detail";
       statusText.textContent = STATUS_LABEL[app.status] || app.status;
       if (app.detail && (app.status === "crashed" || app.status === "starting")) {
-        statusText.textContent += " — " + app.detail;
+        statusText.textContent += " · " + app.detail;
         statusText.title = app.detail;
       }
       status.appendChild(dot);
@@ -95,29 +95,25 @@
       }
       launch.addEventListener("click", function () { send("launch", app.id); });
 
-      var stop = document.createElement("button");
-      stop.type = "button";
-      stop.className = "btn btn-secondary";
-      stop.textContent = "Stop";
-      stop.disabled = !(app.status === "running" || app.status === "starting");
-      stop.addEventListener("click", function () { send("stop", app.id); });
-
-      var logs = document.createElement("button");
-      logs.type = "button";
-      logs.className = "btn btn-quiet";
-      logs.textContent = "Log";
-      logs.title = "Open this app's log file";
-      logs.addEventListener("click", function () { send("viewLogs", app.id); });
-
       actions.appendChild(launch);
-      actions.appendChild(stop);
-      actions.appendChild(logs);
+
+      // Closing an app's window already stops its server, so cards carry no Stop button.
+      // The one exception: while a start is still in flight there is no window yet to close,
+      // so offer a Cancel until the app is up.
+      if (app.status === "starting") {
+        var cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.className = "btn btn-secondary";
+        cancel.textContent = "Cancel";
+        cancel.addEventListener("click", function () { send("stop", app.id); });
+        actions.appendChild(cancel);
+      }
 
       if (app.webUrl) {
         var web = document.createElement("a");
         web.href = "#";
         web.className = "card-weblink";
-        web.textContent = "web app";
+        web.textContent = "Web app ↗";
         web.title = "Open the hosted version in your browser: " + app.webUrl;
         web.addEventListener("click", function (e) {
           e.preventDefault();

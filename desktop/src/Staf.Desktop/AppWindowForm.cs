@@ -29,7 +29,7 @@ internal sealed class AppWindowForm : Form
         _app = app;
         _port = port;
 
-        Text = $"{app.Name} — STAF Desktop";
+        Text = $"{app.Name} - STAF Desktop Application";
         StartPosition = FormStartPosition.CenterScreen;
         Size = new Size(1280, 860);
         MinimumSize = new Size(720, 480);
@@ -63,11 +63,6 @@ internal sealed class AppWindowForm : Form
         core.NewWindowRequested += OnNewWindowRequested;
         core.NavigationStarting += OnNavigationStarting;
         core.DownloadStarting += OnDownloadStarting;
-        core.DocumentTitleChanged += (_, _) =>
-        {
-            var title = core.DocumentTitle;
-            Text = string.IsNullOrWhiteSpace(title) ? $"{_app.Name} — STAF Desktop" : $"{title} — STAF Desktop";
-        };
 
         core.Navigate($"http://127.0.0.1:{_port}/");
     }

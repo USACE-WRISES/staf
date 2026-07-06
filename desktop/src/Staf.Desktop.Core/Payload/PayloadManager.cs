@@ -217,7 +217,7 @@ public sealed class PayloadManager(
         {
             // Rename is atomic, so an existing version dir is complete (e.g. crash after extract,
             // before commit). Reuse it.
-            log.WriteLine($"[payload] {name} {info.Version} already extracted — reusing");
+            log.WriteLine($"[payload] {name} {info.Version} already extracted - reusing");
             return;
         }
 
@@ -237,7 +237,7 @@ public sealed class PayloadManager(
             }
             catch (PayloadIntegrityException first)
             {
-                log.WriteLine($"[payload] {name} integrity mismatch ({first.ActualSha256}) — retrying once from scratch");
+                log.WriteLine($"[payload] {name} integrity mismatch ({first.ActualSha256}) - retrying once from scratch");
                 try
                 {
                     await downloader.DownloadAsync(info.Url, partPath, info.Sha256, info.SizeBytes, progress, ct).ConfigureAwait(false);
@@ -246,7 +246,7 @@ public sealed class PayloadManager(
                 {
                     throw new ShellException(
                         $"The downloaded {name} package failed verification twice (expected sha256 {second.ExpectedSha256}, got {second.ActualSha256}). " +
-                        "The release may be corrupted — try again later.", second);
+                        "The release may be corrupted. Try again later.", second);
                 }
             }
 
@@ -255,7 +255,7 @@ public sealed class PayloadManager(
         }
         else
         {
-            log.WriteLine($"[payload] {name} zip already present — skipping download");
+            log.WriteLine($"[payload] {name} zip already present - skipping download");
         }
 
         var stagingDir = Path.Combine(state.PayloadsDir, $".staging-{Guid.NewGuid():N}");
