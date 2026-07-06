@@ -67,10 +67,11 @@ main { flex: 1; padding: 0 1.4rem; }
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
+/* Unlike the site's link-only cards, these cards hold buttons — no translateY on hover, so
+   click targets never move under the pointer. */
 .apps-hub-card:hover {
   border-color: #a0b4d0;
   box-shadow: 0 6px 18px rgba(47, 75, 124, 0.1);
-  transform: translateY(-3px);
 }
 
 .apps-hub-card-head {
