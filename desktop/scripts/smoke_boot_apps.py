@@ -31,10 +31,20 @@ def free_port() -> int:
         return s.getsockname()[1]
 
 
+FORBIDDEN_IMPORTS = ["aiodns", "pycares"]  # pruned from the payload; present => broken Windows DNS
+
+
 def check_imports(python: str, imports: list[str]) -> None:
-    print(f"[smoke] import check: {', '.join(imports)}", flush=True)
+    print(f"[smoke] import check: {', '.join(imports)} (forbidden: {', '.join(FORBIDDEN_IMPORTS)})", flush=True)
     code = "import importlib, sys\n" + "\n".join(
         f"importlib.import_module({mod!r})" for mod in imports
+    ) + "\n" + "\n".join(
+        "try:\n"
+        f"    importlib.import_module({mod!r})\n"
+        f"    raise SystemExit('FORBIDDEN module importable: {mod} (prune.txt not applied?)')\n"
+        "except ImportError:\n"
+        "    pass"
+        for mod in FORBIDDEN_IMPORTS
     ) + "\nprint('imports OK', sys.version)"
     result = subprocess.run(
         [python, "-c", code],

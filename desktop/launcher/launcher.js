@@ -117,7 +117,7 @@
         var web = document.createElement("a");
         web.href = "#";
         web.className = "card-weblink";
-        web.textContent = "web version ↗";
+        web.textContent = "web app";
         web.title = "Open the hosted version in your browser: " + app.webUrl;
         web.addEventListener("click", function (e) {
           e.preventDefault();
@@ -240,14 +240,6 @@
     e.preventDefault();
     send("openLogsFolder");
   });
-  document.getElementById("ts-toggle").addEventListener("click", function (e) {
-    e.preventDefault();
-    var menu = document.getElementById("ts-menu");
-    menu.hidden = !menu.hidden;
-  });
-  document.getElementById("ts-clear").addEventListener("click", function () { send("clearCaches"); });
-  document.getElementById("ts-revert").addEventListener("click", function () { send("revertPayload"); });
-  document.getElementById("ts-file").addEventListener("click", function () { send("installFromFile"); });
   setupRetry.addEventListener("click", function () {
     showSetup({ message: "Retrying…", percent: -1 });
     send("setupRetry");
