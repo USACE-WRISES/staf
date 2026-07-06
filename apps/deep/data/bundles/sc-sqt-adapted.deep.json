@@ -1,0 +1,1496 @@
+{
+  "schemaVersion": 1,
+  "tier": "detailed",
+  "assessmentId": "sc-sqt-adapted",
+  "assessmentName": "SC SQT Adapted",
+  "stateCode": "SC",
+  "stateName": "South Carolina",
+  "sourceCitation": "South Carolina SQT",
+  "applicability": "South Carolina streams",
+  "functionCount": 11,
+  "metricsByFunction": [
+    {
+      "functionId": "catchment-hydrology",
+      "functionName": "Catchment hydrology",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "catchment-hydrology-land-use-coefficient",
+          "metricName": "Land Use Coefficient",
+          "discipline": "Hydrology",
+          "inputType": "desktop (gis)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Land Use Coefficient",
+          "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+          "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+          "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 55,
+                "y": 1
+              },
+              {
+                "x": 62,
+                "y": 0.7
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "reach-inflow",
+      "functionName": "Reach inflow",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "reach-inflow-concentrated-flow-points",
+          "metricName": "Concentrated Flow Points",
+          "discipline": "Hydrology",
+          "inputType": "field (with desktop pre-screen)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Concentrated Flow Points",
+          "metricStatement": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+          "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+          "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 0.7
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "floodplain-connectivity",
+      "functionName": "Floodplain connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+          "metricName": "Entrenchment Ratio (ER)",
+          "discipline": "Hydraulics",
+          "inputType": "field (survey) or desktop (lidar cross sections)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Entrenchment Ratio (ER)",
+          "metricStatement": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+          "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+          "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT - C Streams",
+            "stratification": "C Streams",
+            "points": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2.2,
+                "y": 0.7
+              },
+              {
+                "x": 7.3,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "C Streams",
+              "layerName": "South Carolina SQT - C Streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2.2,
+                  "y": 0.7
+                },
+                {
+                  "x": 7.3,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "E Streams",
+              "layerName": "South Carolina SQT - E Streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2.2,
+                  "y": 0.7
+                },
+                {
+                  "x": 10,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "B Streams",
+              "layerName": "South Carolina SQT - B Streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 1.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 2,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "C Streams"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-evolution",
+      "functionName": "Channel evolution",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "channel-evolution-width-depth-ratio-state",
+          "metricName": "Width/Depth Ratio State",
+          "discipline": "Geomorphology",
+          "inputType": "field (survey)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Width/Depth Ratio State",
+          "metricStatement": "Channel dimension indicator used to infer incision/widening or departure from reference geometry.",
+          "howToMeasure": "Measure bankfull width and mean depth at representative cross sections; compute W/D and compare to expected (regional curves or SQT reference).",
+          "methodContext": "Context: Channel\n\nMethod: Field (survey)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1.8,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "functionName": "Channel and floodplain dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "channel-and-floodplain-dynamics-average-diameter-at-breast-height-dbh",
+          "metricName": "Average Diameter at Breast Height (DBH)",
+          "discipline": "Geomorphology",
+          "inputType": "see state sqt protocol",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Average Diameter at Breast Height (DBH)",
+          "metricStatement": "Metric definition and measurement are state SQT-specific.",
+          "howToMeasure": "Follow the state SQT metric definition and apply the scoring breakpoints for the appropriate stratum.",
+          "methodContext": "Context: Varies\n\nMethod: See state SQT protocol",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 9.3,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+          "metricName": "Bank Height Ratio (BHR)",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Bank Height Ratio (BHR)",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1.5,
+                "y": 0.3
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-erosion-rate",
+          "metricName": "Erosion Rate",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Erosion Rate",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0.1,
+                "y": 1
+              },
+              {
+                "x": 0.2,
+                "y": 0.7
+              },
+              {
+                "x": 0.4,
+                "y": 0.3
+              },
+              {
+                "x": 0.71,
+                "y": 0
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+          "metricName": "Percent Streambank Armoring",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Percent Streambank Armoring",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 30,
+                "y": 0
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+          "metricName": "Percent Streambank Erosion",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Percent Streambank Erosion",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 5,
+                "y": 1
+              },
+              {
+                "x": 11,
+                "y": 0.7
+              },
+              {
+                "x": 50,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "light-thermal-regime",
+      "functionName": "Light & thermal regime",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "light-and-thermal-regime-summer-daily-maximum",
+          "metricName": "Summer Daily Maximum",
+          "discipline": "Physicochemistry",
+          "inputType": "field (logger) and/or desktop (data compilation)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Summer Daily Maximum",
+          "metricStatement": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+          "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 58,
+                "y": 1
+              },
+              {
+                "x": 64,
+                "y": 0.7
+              },
+              {
+                "x": 77,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "carbon-processing",
+      "functionName": "Carbon processing",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "carbon-processing-monoculture-area",
+          "metricName": "Monoculture Area",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Monoculture Area",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 100,
+                "y": 0
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "carbon-processing-native-herbaceous-cover",
+          "metricName": "Native Herbaceous Cover",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Native Herbaceous Cover",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 75,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "carbon-processing-native-shrub-density",
+          "metricName": "Native Shrub Density",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Native Shrub Density",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 566,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "carbon-processing-tree-density",
+          "metricName": "Tree Density",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Tree Density",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 135,
+                "y": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "nutrient-cycling",
+      "functionName": "Nutrient cycling",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "nutrient-cycling-buffer-width",
+          "metricName": "Buffer Width",
+          "discipline": "Physicochemistry",
+          "inputType": "desktop (gis) and/or field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Buffer Width",
+          "metricStatement": "Width of vegetated riparian buffer that filters nutrients/sediment and moderates temperature and organic matter inputs.",
+          "howToMeasure": "Measure average buffer width along the reach by land use/valley setting; apply slope- or stream-type-stratified SQT thresholds.",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Desktop (GIS) and/or Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT - Buffer slope < 5% - Single Family Residential",
+            "stratification": "Buffer slope < 5% - Single Family Residential",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 50,
+                "y": 0.7
+              },
+              {
+                "x": 300,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Buffer slope < 5% - Single Family Residential",
+              "layerName": "South Carolina SQT - Buffer slope < 5% - Single Family Residential",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 50,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope 5-20% - Single Family Residential",
+              "layerName": "South Carolina SQT - Buffer slope 5-20% - Single Family Residential",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 100,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope 21-40% - Single Family Residential",
+              "layerName": "South Carolina SQT - Buffer slope 21-40% - Single Family Residential",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 150,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope >40% - Single Family Residential",
+              "layerName": "South Carolina SQT - Buffer slope >40% - Single Family Residential",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 200,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope < 5% - Multi-Family Residential",
+              "layerName": "South Carolina SQT - Buffer slope < 5% - Multi-Family Residential",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 60,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope 5-20% - Multi-Family Residential",
+              "layerName": "South Carolina SQT - Buffer slope 5-20% - Multi-Family Residential",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 120,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope 21-40% - Multi-Family Residential",
+              "layerName": "South Carolina SQT - Buffer slope 21-40% - Multi-Family Residential",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 180,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope >40% - Multi-Family Residential",
+              "layerName": "South Carolina SQT - Buffer slope >40% - Multi-Family Residential",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 240,
+                  "y": 0.7
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope < 5% - Commercial / Golf Course / Agriculture / Silviculture",
+              "layerName": "South Carolina SQT - Buffer slope < 5% - Commercial / Golf Course / Agriculture / Silviculture",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 150,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope 5-20% - Commercial / Golf Course / Agriculture / Silviculture",
+              "layerName": "South Carolina SQT - Buffer slope 5-20% - Commercial / Golf Course / Agriculture / Silviculture",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 150,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope 21-40% - Commercial / Golf Course / Agriculture / Silviculture",
+              "layerName": "South Carolina SQT - Buffer slope 21-40% - Commercial / Golf Course / Agriculture / Silviculture",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 225,
+                  "y": 0.7
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope >40% - Commercial / Golf Course / Agriculture / Silviculture",
+              "layerName": "South Carolina SQT - Buffer slope >40% - Commercial / Golf Course / Agriculture / Silviculture",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 300,
+                  "y": 0.7
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope < 5% - Industrial / Landfill",
+              "layerName": "South Carolina SQT - Buffer slope < 5% - Industrial / Landfill",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 150,
+                  "y": 0.7
+                },
+                {
+                  "x": 300,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope 5-20% - Industrial / Landfill",
+              "layerName": "South Carolina SQT - Buffer slope 5-20% - Industrial / Landfill",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 250,
+                  "y": 0.7
+                }
+              ]
+            },
+            {
+              "stratum": "Buffer slope 21-40% - Industrial / Landfill",
+              "layerName": "South Carolina SQT - Buffer slope 21-40% - Industrial / Landfill",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 350,
+                  "y": 0.7
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Buffer slope < 5% - Single Family Residential"
+        },
+        {
+          "metricId": "nutrient-cycling-total-nitrogen",
+          "metricName": "Total Nitrogen",
+          "discipline": "Physicochemistry",
+          "inputType": "field (sampling) and/or desktop (data compilation)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Total Nitrogen",
+          "metricStatement": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+          "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+          "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0.4,
+                "y": 1
+              },
+              {
+                "x": 0.8,
+                "y": 0.7
+              },
+              {
+                "x": 2.3,
+                "y": 0
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "nutrient-cycling-total-phosphorous",
+          "metricName": "Total Phosphorous",
+          "discipline": "Physicochemistry",
+          "inputType": "field (sampling) and/or desktop (data compilation)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Total Phosphorous",
+          "metricStatement": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+          "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+          "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0.04,
+                "y": 1
+              },
+              {
+                "x": 0.08,
+                "y": 0.7
+              },
+              {
+                "x": 0.2,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "water-soil-quality",
+      "functionName": "Water & soil quality",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "water-and-soil-quality-e-coli",
+          "metricName": "E.Coli",
+          "discipline": "Physicochemistry",
+          "inputType": "field (meter/logger) and/or desktop (data compilation)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "E.Coli",
+          "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+          "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0.29,
+                "y": 1
+              },
+              {
+                "x": 0.69,
+                "y": 1
+              },
+              {
+                "x": 0.7,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "water-and-soil-quality-tss-and-turbidity",
+          "metricName": "TSS and Turbidity",
+          "discipline": "Physicochemistry",
+          "inputType": "field (meter/logger) and/or desktop (data compilation)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "TSS and Turbidity",
+          "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+          "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 10,
+                "y": 1
+              },
+              {
+                "x": 50,
+                "y": 0.3
+              },
+              {
+                "x": 100,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "habitat-provision",
+      "functionName": "Habitat provision",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "habitat-provision-lwd-index",
+          "metricName": "LWD Index",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "LWD Index",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 355,
+                "y": 0.7
+              },
+              {
+                "x": 731,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "habitat-provision-lwd-piece-count",
+          "metricName": "LWD Piece Count",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "LWD Piece Count",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 16,
+                "y": 0.7
+              },
+              {
+                "x": 28,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "habitat-provision-percent-riffle",
+          "metricName": "Percent Riffle",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Percent Riffle",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT - A streams",
+            "stratification": "A streams",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 54,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "A streams",
+              "layerName": "South Carolina SQT - A streams",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 54,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "B streams",
+              "layerName": "South Carolina SQT - B streams",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 53,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "C streams",
+              "layerName": "South Carolina SQT - C streams",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 45,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "E streams",
+              "layerName": "South Carolina SQT - E streams",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 43,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "A streams"
+        },
+        {
+          "metricId": "habitat-provision-pool-depth-ratio",
+          "metricName": "Pool Depth Ratio",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Pool Depth Ratio",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT - A streams",
+            "stratification": "A streams",
+            "points": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 1.1,
+                "y": 0.3
+              },
+              {
+                "x": 1.4,
+                "y": 0.7
+              },
+              {
+                "x": 1.7,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "A streams",
+              "layerName": "South Carolina SQT - A streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 1.1,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 1.7,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "B streams",
+              "layerName": "South Carolina SQT - B streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2,
+                  "y": 0.3
+                },
+                {
+                  "x": 2.3,
+                  "y": 0.7
+                },
+                {
+                  "x": 2.9,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "C streams",
+              "layerName": "South Carolina SQT - C streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 1.2,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.9,
+                  "y": 0.7
+                },
+                {
+                  "x": 2.3,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "E streams",
+              "layerName": "South Carolina SQT - E streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 1.4,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.7,
+                  "y": 0.7
+                },
+                {
+                  "x": 2.1,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "A streams"
+        },
+        {
+          "metricId": "habitat-provision-pool-spacing-ratio",
+          "metricName": "Pool Spacing Ratio",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "Pool Spacing Ratio",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT - A and B Stream Types",
+            "stratification": "A and B Stream Types",
+            "points": [
+              {
+                "x": 4,
+                "y": 1
+              },
+              {
+                "x": 5,
+                "y": 0.7
+              },
+              {
+                "x": 6.5,
+                "y": 0
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "A and B Stream Types",
+              "layerName": "South Carolina SQT - A and B Stream Types",
+              "points": [
+                {
+                  "x": 4,
+                  "y": 1
+                },
+                {
+                  "x": 5,
+                  "y": 0.7
+                },
+                {
+                  "x": 6.5,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "stratum": "Bc Stream Types",
+              "layerName": "South Carolina SQT - Bc Stream Types",
+              "points": [
+                {
+                  "x": 5,
+                  "y": 1
+                },
+                {
+                  "x": 6,
+                  "y": 0.7
+                },
+                {
+                  "x": 8,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "stratum": "C and E Stream Types",
+              "layerName": "South Carolina SQT - C and E Stream Types",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 3.5,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "A and B Stream Types"
+        }
+      ]
+    },
+    {
+      "functionId": "population-support",
+      "functionName": "Population support",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "population-support-ept-taxa-present",
+          "metricName": "EPT Taxa Present",
+          "discipline": "Biology",
+          "inputType": "field (bioassessment) and/or desktop (existing scores)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "EPT Taxa Present",
+          "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+          "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+          "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT - Blue Ridge Mountains",
+            "stratification": "Blue Ridge Mountains",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 19,
+                "y": 0.3
+              },
+              {
+                "x": 28,
+                "y": 0.7
+              },
+              {
+                "x": 36,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Blue Ridge Mountains",
+              "layerName": "South Carolina SQT - Blue Ridge Mountains",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 19,
+                  "y": 0.3
+                },
+                {
+                  "x": 28,
+                  "y": 0.7
+                },
+                {
+                  "x": 36,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Piedmont",
+              "layerName": "South Carolina SQT - Piedmont",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 14,
+                  "y": 0.3
+                },
+                {
+                  "x": 21,
+                  "y": 0.7
+                },
+                {
+                  "x": 28,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Southeastern Plains and Middle Atlantic Coastal Plain",
+              "layerName": "South Carolina SQT - Southeastern Plains and Middle Atlantic Coastal Plain",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 5,
+                  "y": 0.3
+                },
+                {
+                  "x": 10,
+                  "y": 0.7
+                },
+                {
+                  "x": 15,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Blue Ridge Mountains"
+        },
+        {
+          "metricId": "population-support-sc-bi-score",
+          "metricName": "SC BI Score",
+          "discipline": "Biology",
+          "inputType": "field (bioassessment) and/or desktop (existing scores)",
+          "sourceCitation": "South Carolina SQT",
+          "xLabel": "SC BI Score",
+          "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+          "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+          "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "South Carolina SQT - Bioassessment Class 1",
+            "stratification": "Bioassessment Class 1",
+            "points": [
+              {
+                "x": -1,
+                "y": 0
+              },
+              {
+                "x": 0.05,
+                "y": 0.7
+              },
+              {
+                "x": 1,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Bioassessment Class 1",
+              "layerName": "South Carolina SQT - Bioassessment Class 1",
+              "points": [
+                {
+                  "x": -1,
+                  "y": 0
+                },
+                {
+                  "x": 0.05,
+                  "y": 0.7
+                },
+                {
+                  "x": 1,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Bioassessment Class 2",
+              "layerName": "South Carolina SQT - Bioassessment Class 2",
+              "points": [
+                {
+                  "x": -1,
+                  "y": 0
+                },
+                {
+                  "x": 0.002,
+                  "y": 0.7
+                },
+                {
+                  "x": 1,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Bioassessment Class 3",
+              "layerName": "South Carolina SQT - Bioassessment Class 3",
+              "points": [
+                {
+                  "x": -1,
+                  "y": 0
+                },
+                {
+                  "x": 0.005,
+                  "y": 0.7
+                },
+                {
+                  "x": 1,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Bioassessment Class 4",
+              "layerName": "South Carolina SQT - Bioassessment Class 4",
+              "points": [
+                {
+                  "x": -1,
+                  "y": 0
+                },
+                {
+                  "x": 0.3,
+                  "y": 0.7
+                },
+                {
+                  "x": 1,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Bioassessment Class 1"
+        }
+      ]
+    }
+  ],
+  "unresolvedMetrics": []
+}

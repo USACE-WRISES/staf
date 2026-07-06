@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+.DS_Store
+
+# Local dev / assistant config (machine-specific)
+.claude/
+
+# HyRiver / aiohttp caches (generated at runtime)
+cache/
+*.sqlite
+
+# Transient example artifacts (keep the documented spring-sample bundle)
+examples/osam-real.deep.json
+examples/demo-session.json
+examples/spring-roundtrip.deep.json
+
+# Posit Publisher per-deployment records (account-specific URLs)
+.posit/publish/deployments/
