@@ -15,6 +15,7 @@ Primary working areas:
 - `docs/_includes/`: shared HTML fragments used by widgets/pages
 - `scripts/`: build/transform scripts (for example, metric-library generation)
 - `apps/easi`, `apps/sfari`, `apps/deep`, `apps/stream-curves`: the Shiny apps (each self-contained: own requirements.txt, www/, data/, tests/, `.posit/publish` deploy config)
+- `desktop/`: STAF Desktop shell (C#/.NET 10 + WebView2 + Velopack) that runs the same apps locally; release model in `desktop/RELEASING.md`. Payload/release rules: `desktop-payload-*` and `desktop-current` GitHub releases are ALWAYS prereleases; `desktop/scripts/*.ps1` stay pure ASCII; after changing an app requirements pin, regenerate `desktop/payload/env.lock`
 - `libs/`: reserved for the future `staf-core` shared package
 
 ## Goals
@@ -45,6 +46,7 @@ Run what applies to the files touched:
 - `npm test --silent`
 - `npm run build:metric-library` (if metric-library source/scripts changed)
 - app changes: `cd apps\<app>` then `python -m pytest` (stream-curves: `python -m pytest -m "not live"`)
+- desktop changes: `dotnet test desktop\Staf.Desktop.slnx`
 - optional local preview:
   - site: `cd docs` then `bundle exec jekyll serve`
   - app: `cd apps\<app>` then `shiny run app.py --port <port>`

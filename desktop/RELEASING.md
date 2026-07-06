@@ -81,8 +81,16 @@ desktop/scripts/build-apps-payload.ps1 -EnvVersion <env-…> -PythonExe .venv/Sc
 
 # packaged artifacts exactly as CI ships them
 dotnet publish desktop/src/Staf.Desktop -c Release -r win-x64 --self-contained -o desktop/build/publish
-vpk pack --packId StafDesktop --packVersion 0.0.0-local --packDir desktop/build/publish --mainExe StafDesktop.exe
+vpk pack --packId StafDesktop --packVersion 0.0.0-local --packDir desktop/build/publish --mainExe StafDesktop.exe --icon desktop/resources/icon.ico
+
+# regenerate the app icon + site favicon (deterministic; both derive from the same art)
+.venv/Scripts/python.exe desktop/scripts/make_icon.py
 ```
+
+For fully offline sites: after a shell release exists, run the **desktop-offline-bundle** workflow
+(Actions tab) — it attaches `staf-desktop-offline-<tag>.zip` (installer + portable + payload zips +
+manifest + README) to that release. Users install the shell from it, then use Troubleshooting →
+"Install from file…" pointed at the extracted folder.
 
 Dev loop: launch `StafDesktop.exe` from a checkout and it runs the four apps from the repo
 `.venv` (dev mode). `STAF_FORCE_PAYLOAD=1` exercises installed-payload mode in a checkout;

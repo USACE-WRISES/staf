@@ -240,6 +240,14 @@
     e.preventDefault();
     send("openLogsFolder");
   });
+  document.getElementById("ts-toggle").addEventListener("click", function (e) {
+    e.preventDefault();
+    var menu = document.getElementById("ts-menu");
+    menu.hidden = !menu.hidden;
+  });
+  document.getElementById("ts-clear").addEventListener("click", function () { send("clearCaches"); });
+  document.getElementById("ts-revert").addEventListener("click", function () { send("revertPayload"); });
+  document.getElementById("ts-file").addEventListener("click", function () { send("installFromFile"); });
   setupRetry.addEventListener("click", function () {
     showSetup({ message: "Retrying…", percent: -1 });
     send("setupRetry");

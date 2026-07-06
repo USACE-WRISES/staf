@@ -33,6 +33,7 @@ internal sealed class AppWindowForm : Form
         StartPosition = FormStartPosition.CenterScreen;
         Size = new Size(1280, 860);
         MinimumSize = new Size(720, 480);
+        ShellIcon.Apply(this);
 
         _webView = new WebView2 { Dock = DockStyle.Fill };
         Controls.Add(_webView);
