@@ -1,30 +1,74 @@
-# Stream Tiered Assessment Framework
+# Stream Tiered Assessment Framework (STAF)
 
-This repository hosts the documentation site for the Tiered Stream Assessment Approach. The site is built with GitHub Pages using Jekyll and the just-the-docs theme, with content in Markdown and lightweight JS widgets.
+Monorepo for the STAF documentation site and the four Shiny-for-Python assessment apps.
 
-## Structure
-- `docs/`: GitHub Pages site source 
-- `docs/assets/`: CSS, JavaScript, and data files
-- `docs/_includes/`: HTML partials for widgets
+| Part | Path | Where it runs |
+|---|---|---|
+| Documentation site & app portal | `docs/` | [usace-wrises.github.io/staf](https://usace-wrises.github.io/staf/) (GitHub Pages) |
+| EASI — Screening tier | `apps/easi` | [gtmenichino-easi.share.connect.posit.cloud](https://gtmenichino-easi.share.connect.posit.cloud/) |
+| SFARI — Rapid tier | `apps/sfari` | [gtmenichino-sfari.share.connect.posit.cloud](https://gtmenichino-sfari.share.connect.posit.cloud/) |
+| DEEP — Detailed tier | `apps/deep` | [gtmenichino-deep.share.connect.posit.cloud](https://gtmenichino-deep.share.connect.posit.cloud/) |
+| stream-curves — curve builder for DEEP | `apps/stream-curves` | [gtmenichino-stream-curves.share.connect.posit.cloud](https://gtmenichino-stream-curves.share.connect.posit.cloud/) |
 
-## Local preview (optional)
-If you want to preview locally, you can run Jekyll from the `docs/` folder:
+## Repository layout
 
-```bash
-bundle install
-cd docs/
-bundle exec jekyll serve
-bundle exec jekyll serve --livereload
-http://127.0.0.1:4000/staf/
+- `docs/` — Jekyll site source (GitHub Pages builds this folder; just-the-docs remote theme). The Tools page (`docs/tools/`) is the launch portal for the four apps; app URLs live in `docs/_data/apps.yml`.
+- `apps/` — the four Shiny for Python apps. Each folder is self-contained (own `requirements.txt`, `www/`, `data/`, tests, and Posit Publisher config) and deploys to its own Posit Connect Cloud content item.
+- `libs/` — reserved for `staf-core`, the future shared package for code duplicated across the apps.
+- `scripts/`, `src/` — TypeScript build pipeline for the metric library (see below).
+- `notes/` — internal working notes; anything outside `docs/` is not published.
+
+## Working on the apps
+
+One shared virtual environment at the repo root covers all four apps (Python 3.12):
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
 ```
 
-If you do not have Jekyll installed, you can rely on GitHub Pages to build the site.
+Run an app locally (each gets its own port):
 
-## Configuration notes
-- Update `_config.yml` with your GitHub repository URL for the edit links.
-- If your site is hosted at a subpath, set `baseurl` in `_config.yml`.
+```powershell
+cd apps\easi          # or apps\sfari, apps\deep, apps\stream-curves
+shiny run app.py --port 8000
+```
 
-## Data files
+Run tests **per app, from the app's own directory** (the four suites cannot run together from the repo root):
+
+```powershell
+cd apps\easi;          python -m pytest
+cd apps\sfari;         python -m pytest
+cd apps\deep;          python -m pytest
+cd apps\stream-curves; python -m pytest -m "not live"
+```
+
+## Deploying an app
+
+Each app deploys **separately** with the Posit Publisher extension (VS Code / Positron) from its `apps/<app>` folder:
+
+- The tracked `.posit/publish/<name>.toml` is the deploy configuration (entrypoint, files, Python version).
+- The untracked `.posit/publish/deployments/*.toml` records bind redeploys to the **existing** Connect Cloud content item — they are what keep the public app URLs stable. Never delete or commit them; back them up if you move machines.
+- Before deploying, confirm Publisher targets the existing deployment rather than creating a new one.
+
+App URLs are listed in `docs/_data/apps.yml` (used by the site) and in each app's `staf_topnav` (the in-app cross-navigation). Until a shared `staf-core` package exists, a URL change must be mirrored in both places.
+
+## The documentation site
+
+Local preview:
+
+```bash
+cd docs
+bundle install          # first time
+bundle exec jekyll serve
+# http://127.0.0.1:4000/staf/
+```
+
+GitHub Pages builds the site automatically from `docs/` on every push to `main`. `docs/_site/` is local build output and is not tracked.
+
+### Data files
+
 Each data file is JSON format and feeds one or more widgets. Field definitions are also documented in `docs/contribute/data-dictionary.md`.
 
 - `docs/assets/data/functions.json`
@@ -40,10 +84,8 @@ Each data file is JSON format and feeds one or more widgets. Field definitions a
   - Purpose: starter sample scores used by the scoring sandbox.
   - Fields: `function_id`, `score`.
 
-## Contributing
-See `docs/contribute/index.md` for the contribution workflow and content style guidelines.
+### Metric library build workflow
 
-## Metric library build workflow
 The metric library is generated from the source CSV file:
 
 - Source CSV location: `docs/assets/data/metric-library/Metric Library Complete *.csv`
@@ -52,12 +94,6 @@ The metric library is generated from the source CSV file:
 
 ```bash
 npm run build:metric-library
-```
-
-You can also run the script directly (equivalent behavior):
-
-```bash
-npx ts-node scripts/compileMetricLibraryFromCsv.ts
 ```
 
 Optional: specify an explicit CSV path:
@@ -79,8 +115,13 @@ Generated outputs include:
 - Tier datasets (`screening-metrics.tsv`, `rapid-indicators.tsv`, `rapid-criteria.tsv`, `detailed-metrics.tsv`)
 
 ### Metric library download (XLSX)
-The in-app **Metric Library download** (left sidebar button) exports an `.xlsx` with:
+
+The Tools-page **Metric Toolbox** button exports an `.xlsx` with:
 - Sheet 1: `Metrics`
 - Sheet 2: `Reference Curves`
 
 This workbook is built at runtime from the canonical JSON metric library (`index.json` + metric detail JSON + curve-set JSON), not by rebuilding from TSV files.
+
+## Contributing
+
+See `docs/contribute/index.md` for the contribution workflow and content style guidelines.

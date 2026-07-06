@@ -1,0 +1,13 @@
+# Union dev environment for all four Shiny apps — one shared root .venv.
+# EASI's list is a superset of SFARI's and DEEP's; stream-curves adds a disjoint
+# stats/plotting stack with identical shared pins. Installing all four together
+# doubles as a pin-alignment check: pip errors if any app drifts to a
+# conflicting version.
+#
+# Deployments do NOT use this file — Posit Publisher bundles each app with its
+# own apps/<app>/requirements.txt.
+-r apps/easi/requirements.txt
+-r apps/sfari/requirements.txt
+-r apps/deep/requirements.txt
+-r apps/stream-curves/requirements.txt
+pytest

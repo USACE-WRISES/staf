@@ -17,6 +17,22 @@ vendor/
 _site/
 
 # =========================
+# Python apps (apps/*) — defense-in-depth on top of per-app .gitignores
+# =========================
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+cache/
+*.sqlite
+.hyriver_cache/
+.posit/publish/deployments/
+out/
+outputs/
+.env
+
+# =========================
 # Misc
 # =========================
 .DS_Store
