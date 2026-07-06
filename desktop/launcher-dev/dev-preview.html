@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>STAF Desktop — launcher dev preview</title>
+  <link rel="stylesheet" href="../launcher/launcher.css">
+  <style>
+    .dev-banner {
+      background: #fff3cd;
+      border-bottom: 1px solid #e2d39b;
+      color: #7a5d00;
+      font-size: 0.75rem;
+      padding: 0.25rem 1.4rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="dev-banner">DEV PREVIEW — mocked shell host (dev-host-mock.js); real page is desktop/launcher/index.html inside WebView2</div>
+
+  <header class="shell-header">
+    <div>
+      <h1>STAF <span class="muted">— Stream Tiered Assessment Framework</span></h1>
+      <p class="tagline">Launch the assessment apps on this computer. Data services (USGS/EPA) still require an internet connection.</p>
+    </div>
+    <button id="open-website" class="btn btn-secondary" type="button" title="Open the STAF website in your browser">STAF website ↗</button>
+  </header>
+
+  <main>
+    <section id="setup-view" class="setup-view" hidden>
+      <h2>Setting up STAF Desktop</h2>
+      <p id="setup-message">Downloading the assessment runtime…</p>
+      <div class="progress"><div id="setup-bar" class="progress-bar" style="width: 0%"></div></div>
+      <p id="setup-detail" class="muted"></p>
+    </section>
+
+    <section id="apps-view">
+      <div id="apps-grid" class="apps-hub-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="shell-footer">
+    <span id="footer-mode" class="muted"></span>
+    <span class="footer-actions">
+      <a href="#" id="open-logs">Open logs folder</a>
+    </span>
+  </footer>
+
+  <script src="dev-host-mock.js"></script>
+  <script src="../launcher/launcher.js"></script>
+</body>
+</html>

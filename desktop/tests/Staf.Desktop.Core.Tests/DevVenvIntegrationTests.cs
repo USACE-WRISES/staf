@@ -14,8 +14,12 @@ public sealed class DevVenvIntegrationTests
 {
     private static bool Enabled => Environment.GetEnvironmentVariable("STAF_ITEST") == "1";
 
-    [Fact]
-    public async Task Sfari_Boots_AnswersHttp_And_StopsGracefully()
+    [Theory]
+    [InlineData("easi", "easi")]
+    [InlineData("sfari", "sfari")]
+    [InlineData("deep", "deep")]
+    [InlineData("curves", "stream-curves")]
+    public async Task App_Boots_AnswersHttp_And_StopsGracefully(string id, string dir)
     {
         if (!Enabled)
         {
@@ -31,14 +35,14 @@ public sealed class DevVenvIntegrationTests
         var config = new ShellConfig { DataRoot = dataRoot, SelfExePath = stopHelperExe, DevRepoRoot = repoRoot };
         config.EnsureDirectories();
 
-        var sfari = new AppDescriptor { Id = "sfari", Dir = "sfari", Entry = "app.py", Name = "SFARI" };
+        var app = new AppDescriptor { Id = id, Dir = dir, Entry = "app.py", Name = id.ToUpperInvariant() };
         using var logs = new LogFactory(config.LogsDir);
         using var job = KillOnCloseJob.TryCreate();
         using var probe = new HttpHealthProbe();
         var supervisor = new AppSupervisor(
             config,
             new DevPayloadLocator(config),
-            [sfari],
+            [app],
             new WindowsProcessRunner(job),
             probe,
             logs,
@@ -66,11 +70,11 @@ public sealed class DevVenvIntegrationTests
             }
         };
 
-        await supervisor.StartAsync("sfari");
+        await supervisor.StartAsync(id);
         var state = await running.Task.WaitAsync(TimeSpan.FromMinutes(3));
         Assert.NotNull(state.Port);
 
-        await supervisor.StopAsync("sfari");
+        await supervisor.StopAsync(id);
         var final = await stopped.Task.WaitAsync(TimeSpan.FromSeconds(30));
 
         // Exit code 0 proves the Ctrl+C landed and uvicorn drained; a forced kill reports -1.
