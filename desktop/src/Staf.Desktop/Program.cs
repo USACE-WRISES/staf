@@ -75,7 +75,7 @@ internal static class Program
         var stateStore = new StateStore(config.StateFile);
         var supervisor = new AppSupervisor(config, locator, manifest.Apps, runner, probe, logs, stateStore, shellLog);
 
-        Application.Run(new LauncherForm(config, supervisor));
+        Application.Run(new LauncherForm(config, supervisor, shellLog));
 
         shellLog.WriteLine("[shell] === STAF Desktop exiting ===");
         return 0;

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self' data:;">
+  <title>STAF Desktop</title>
+  <link rel="stylesheet" href="launcher.css">
+</head>
+<body>
+  <header class="shell-header">
+    <div>
+      <h1>STAF <span class="muted">— Stream Tiered Assessment Framework</span></h1>
+      <p class="tagline">Launch the assessment apps on this computer. Data services (USGS/EPA) still require an internet connection.</p>
+    </div>
+    <button id="open-website" class="btn btn-secondary" type="button" title="Open the STAF website in your browser">STAF website ↗</button>
+  </header>
+
+  <main>
+    <!-- First-run payload setup (hidden until the payload manager drives it; M3) -->
+    <section id="setup-view" class="setup-view" hidden>
+      <h2>Setting up STAF Desktop</h2>
+      <p id="setup-message">Downloading the assessment runtime…</p>
+      <div class="progress"><div id="setup-bar" class="progress-bar" style="width: 0%"></div></div>
+      <p id="setup-detail" class="muted"></p>
+    </section>
+
+    <section id="apps-view">
+      <div id="apps-grid" class="apps-hub-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="shell-footer">
+    <span id="footer-mode" class="muted"></span>
+    <span class="footer-actions">
+      <a href="#" id="open-logs">Open logs folder</a>
+    </span>
+  </footer>
+
+  <script src="launcher.js"></script>
+</body>
+</html>

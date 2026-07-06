@@ -10,6 +10,7 @@ are overrideable; export PDF / CSV / GeoJSON.
 from __future__ import annotations
 
 import html
+import json
 import os
 import tempfile
 from pathlib import Path
@@ -167,6 +168,9 @@ STAF_LINKS = {
     "curves": "https://gtmenichino-stream-curves.share.connect.posit.cloud/",
     "deep":   "https://gtmenichino-deep.share.connect.posit.cloud/",
 }
+_staf_links_overrides = os.environ.get("STAF_LINKS_OVERRIDES")
+if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on web deploys
+    STAF_LINKS.update(json.loads(_staf_links_overrides))
 
 
 def staf_topnav(current: str):
