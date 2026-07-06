@@ -9,7 +9,9 @@ node_modules/
 docs/vendor/
 docs/.bundle/
 .bundle/
-vendor/
+# Root-anchored: a bare vendor/ would also swallow app runtime assets like
+# apps/stream-curves/www/vendor/ (required at boot).
+/vendor/
 
 # =========================
 # Jekyll build output
