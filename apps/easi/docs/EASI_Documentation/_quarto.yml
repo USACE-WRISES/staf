@@ -1,0 +1,10 @@
+# Quarto project config for the EASI V&V documentation.
+# Renders the single report straight into the app's www/ folder as a
+# self-contained file, so `quarto render` needs no manual copy step.
+#   www/documentation.html  <- output (served by the app, linked from its header)
+# Run `quarto render` from this folder, or use `python scripts/build_docs.py`.
+project:
+  type: default
+  output-dir: ../../www      # repo_root/www
+  render:
+    - easi-vnv.qmd           # the only document; _generated/ and README are auto-skipped

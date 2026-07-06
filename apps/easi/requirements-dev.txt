@@ -1,0 +1,4 @@
+# Development / test dependencies — NOT needed at runtime (Posit Connect Cloud
+# deploys from requirements.txt only). Install with:  pip install -r requirements-dev.txt
+-r requirements.txt
+pytest>=8

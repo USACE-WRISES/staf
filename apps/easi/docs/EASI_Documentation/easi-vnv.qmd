@@ -1,0 +1,551 @@
+---
+title: "Ecosystem Assessment Screening Index (EASI)"
+subtitle: "Method documentation, verification, and validation"
+abstract: >
+  The Ecosystem Assessment Screening Index (EASI) is the Screening tier of the
+  Stream Tiered Assessment Framework (STAF). It estimates the condition of
+  wadeable streams across the conterminous United States from national datasets,
+  with no fieldwork required. This document describes how EASI is conceptualized,
+  quantified, and applied, and it reports verification and validation work. EASI
+  was exercised at field sites that span the country, and its desktop estimates
+  were compared with independent field assessments from the Stream Functions
+  Assessment and Rapid Index (SFARI), the Rapid tier of STAF. Three sites are
+  presented as worked verification cases. This is the extended companion to the
+  EASI technical note.
+format:
+  html:
+    output-file: documentation.html
+    theme: cosmo
+    css: easi-docs.css
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    toc-title: "Contents"
+    number-sections: true
+    number-depth: 2
+    fig-cap-location: bottom
+    tbl-cap-location: top
+    embed-resources: true
+    smooth-scroll: true
+    code-tools: false
+---
+
+::: callout-note-soft
+This document is the extended documentation for EASI. A shorter technical note
+introduces the method for first-time readers (Stepchinski and Menichino In Review).
+The EASI web application is available at
+[usace-wrises.github.io/easi](https://usace-wrises.github.io/easi).
+:::
+
+# Introduction
+
+Stream assessments inform restoration design, regulatory permitting, mitigation
+crediting, and long-term monitoring (Palmer and Filoso 2009, Doyle and Shields
+2012). Many methods are available, and they vary widely in the functions they
+cover and the effort they require, which makes their results difficult to compare
+(Stepchinski et al. 2025a, Stepchinski et al. 2025b). To organize this range of
+effort, the Stream Tiered Assessment Framework (STAF) describes three tiers of
+assessment: Screening, Rapid, and Detailed (Stepchinski et al. In Review b). The
+Screening tier uses low effort and accepts higher uncertainty. It relies on
+desktop data and takes minutes to hours per site, which suits watershed screening
+and early planning. The Rapid tier uses moderate effort and focused fieldwork.
+The Detailed tier uses surveys, data collection, and modeling to support final
+design and crediting.
+
+EASI is the Screening tier of STAF. It evaluates a comprehensive set of stream
+functions for any wadeable stream in the conterminous United States, drawing
+entirely on public national data services. EASI is semi-quantitative, so it is
+useful for screening many sites, evaluating alternatives, and tracking change
+over time. Existing screening tools often cover only some stream functions or
+apply only to certain regions. EASI was built to close that gap by compiling
+widely used screening metrics into one consistent assessment that runs nationwide
+(Stepchinski and Menichino In Review).
+
+This document serves three purposes. First, it describes how EASI is
+conceptualized, quantified, and applied. Second, it documents verification, which
+asks whether the method behaves as designed and produces sensible results across
+diverse conditions. Third, it documents validation, which asks whether EASI
+estimates agree with independent field observations. The verification and
+validation work reuses field data from the Stream Functions Assessment and Rapid
+Index (SFARI), the Rapid tier of STAF (David et al. In Review). Because EASI and
+SFARI share the same stream functions, SFARI field results provide a practical
+field reference for EASI desktop estimates at the same locations. The document
+structure follows the SFARI technical report so that the two tiers read as a
+matched pair, at a lighter level of detail.
+
+# Conceptualization
+
+## Stream functions and functional categories
+
+EASI is built on a single list of stream functions that applies across stream
+types in the United States (Stepchinski et al. In Review a). The list synthesizes
+established concepts, including the functional objectives of Fischenich (2006),
+the Stream Functions Pyramid (Harman et al. 2012), and process-based restoration
+principles (Beechie et al. 2010). For organization and communication, the
+functions are grouped into five functional categories: hydrology, hydraulics,
+geomorphology, physicochemistry, and biology. These categories follow the Stream
+Functions Pyramid (Harman et al. 2012), which is widely used and supports
+communication among practitioners.
+
+EASI uses one screening metric per function. A single metric per function keeps a
+complete assessment fast and repeatable, which is the central requirement of a
+screening tier. The twenty functions and their categories are listed in
+@sec-quantification.
+
+## From functions to ecosystem condition
+
+Stream functions do not act in isolation. A change in one function commonly
+affects others and affects the physical, chemical, and biological condition of
+the stream. EASI represents this structure by linking each function to one or
+more outcomes, following Stepchinski et al. (In Review a). Each function has a
+direct effect on the outcome it most strongly controls and, where supported by
+the literature, indirect effects on the others. @tbl-outcomes shows the mapping
+used in EASI.
+
+| Functional category | Function | Physical | Chemical | Biological |
+|---|---|:--:|:--:|:--:|
+| Hydrology | Catchment hydrology | D | i | i |
+| Hydrology | Surface water storage | D | i | i |
+| Hydrology | Reach inflow | D | i | i |
+| Hydrology | Streamflow regime | D | i | i |
+| Hydraulics | Low flow and baseflow dynamics | D | i | i |
+| Hydraulics | High flow dynamics | D | i | i |
+| Hydraulics | Floodplain connectivity | D | i | i |
+| Hydraulics | Hyporheic connectivity | D | i | i |
+| Geomorphology | Channel evolution | D | i | i |
+| Geomorphology | Channel and floodplain dynamics | D | i | i |
+| Geomorphology | Sediment continuity | D | i | i |
+| Geomorphology | Bed composition and large wood | D | i | i |
+| Physicochemistry | Light and thermal regime | - | D | i |
+| Physicochemistry | Carbon processing | - | D | i |
+| Physicochemistry | Nutrient cycling | i | D | i |
+| Physicochemistry | Water and soil quality | i | D | i |
+| Biology | Habitat provision | - | - | D |
+| Biology | Population support | i | i | D |
+| Biology | Community dynamics | i | i | D |
+| Biology | Watershed connectivity | i | - | D |
+
+: Stream functions and their direct (D) and indirect (i) effects on physical,
+chemical, and biological outcomes. A dash indicates no documented effect. {#tbl-outcomes}
+
+The three outcomes, physical, chemical, and biological, together represent
+overall ecosystem condition. Reporting condition in these three consistent
+categories keeps results comparable across sites and across project phases, which
+supports site selection for the Rapid and Detailed tiers.
+
+# Quantification {#sec-quantification}
+
+## Metrics
+
+EASI assigns one screening metric to each of the twenty functions. Each metric is
+computed from national data and rated against published thresholds. The metrics are
+listed by discipline in @tbl-metrics-hydrology through @tbl-metrics-biology. For each
+metric, the tables give its function, definition, how EASI computes it, and the Good,
+Fair, and Poor scoring criteria.
+
+| Metric | Attribute | Detail |
+|:--------|:------------------|:----------------------------------------------------|
+| **Impervious Surface Cover** | Function | Catchment hydrology |
+|  | Definition | Share of the contributing watershed covered by impervious surfaces (roads, roofs, parking), which speeds runoff and can degrade flow and water quality. |
+|  | How EASI computes it | Percent impervious area in the delineated watershed from EPA StreamCat (NLCD-based imperviousness). Scale: Watershed. |
+|  | Scoring | Good: <10%<br>Fair: 10%-25%<br>Poor: >25% |
+| **Percent Wetlands in Watershed** | Function | Surface water storage |
+|  | Definition | Share of the watershed that is wetland, which stores water, buffers peak flows, and sustains baseflow. |
+|  | How EASI computes it | Percent wetland cover in the watershed from EPA StreamCat (woody plus herbaceous wetlands). NLCD 2021 is an optional alternative source. Scale: Watershed. |
+|  | Scoring | Good: >5% wetland coverage, or consistent with historical norm.<br>Fair: 1-5% wetland coverage.<br>Poor: <1% wetland coverage, or heavily drained wetlands. |
+| **Concentrated Runoff / Stormwater Inputs** | Function | Reach inflow |
+|  | Definition | Degree to which concentrated runoff (road-stream crossings, stormwater outfalls) delivers flashy, untreated flow directly to the reach. |
+|  | How EASI computes it | Screening proxy from road-stream crossing density (Census TIGER) and watershed road density (StreamCat). Scale: Reach. |
+|  | Scoring | Good: 0-1 outfall per 100 m, and no noticeable discharge effects.<br>Fair: 2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering. / 4-5 outfalls per 100 m, with sediment or pollutant inputs.<br>Poor: More than 5 outfalls per 100 m, or major highway drains with concentrated discharge. |
+| **Flow Alteration (Regulation / Water Use)** | Function | Streamflow regime |
+|  | Definition | How much dams, diversions, and water use alter the natural magnitude and timing of streamflow. |
+|  | How EASI computes it | Upstream dam storage and density (StreamCat, from the National Inventory of Dams) with USGS NWIS gage comparison where available. Scale: Watershed/Reach. |
+|  | Scoring | Good: <10% difference from baseline.<br>Fair: 10-50% difference.<br>Poor: >50% difference. Near dewatering or strong hydropeaking. |
+
+: Hydrology metrics {#tbl-metrics-hydrology}
+
+| Metric | Attribute | Detail |
+|:--------|:------------------|:----------------------------------------------------|
+| **Low-flow Wetted Connectivity** | Function | Low flow and baseflow dynamics |
+|  | Definition | Whether the channel stays wetted and longitudinally connected during low-flow periods (flow permanence). |
+|  | How EASI computes it | Screening proxy from NHD flow-permanence (F-code) and USGS NWIS zero-flow records. Scale: Reach. |
+|  | Scoring | Good: >75% of channel wetted at normal low flow (or dryness is normal if ephemeral).<br>Fair: 25-75% wetted.<br>Poor: <25% wetted, or mostly disconnected pools in a perennial reach. |
+| **Floodplain Engagement Frequency (bankfull recurrence)** | Function | High flow dynamics |
+|  | Definition | How often high flows top the bank and engage the floodplain (recurrence interval of overbank flooding). |
+|  | How EASI computes it | Bank-height ratio from a USGS 3DEP cross-section with regional bankfull curves and StreamStats peak-flow regressions. Recomputes when the cross-section is edited. Scale: Reach. |
+|  | Scoring | Good: About 1-2 yr floods engage the floodplain.<br>Fair: About 3-5 yr floods are needed. / About 5-10 yr floods are needed.<br>Poor: Floodplain is rarely inundated except during extreme events. |
+| **Floodplain Access / Entrenchment** | Function | Floodplain connectivity |
+|  | Definition | Whether the channel has lateral access to a floodplain, via the entrenchment ratio (flood-prone width divided by bankfull width). |
+|  | How EASI computes it | Entrenchment ratio (flood-prone width divided by bankfull width) from a USGS 3DEP cross-section. Recomputes when the cross-section is edited. Scale: Reach. |
+|  | Scoring | Good: Stable channel that is not incised or dredged with frequent floodplain access.<br>Fair: Slight channelization or partial dredging. / Heavily modified or incised channel with limited floodplain access.<br>Poor: Deeply dredged or channelized reach with little functional floodplain. |
+| **Hyporheic Exchange Indicators** | Function | Hyporheic connectivity |
+|  | Definition | Potential for surface water to exchange with the shallow subsurface (hyporheic zone), inferred from channel slope and sinuosity. |
+|  | How EASI computes it | Screening proxy from channel slope (3DEP), sinuosity, and soil saturated hydraulic conductivity (SSURGO). Scale: Reach. |
+|  | Scoring | Good: Well developed bedforms and strong potential for exchange.<br>Fair: Some bedform variety but partially uniform. / Mostly uniform run with limited exchange.<br>Poor: Featureless or silted bed with negligible exchange. |
+
+: Hydraulics metrics {#tbl-metrics-hydraulics}
+
+| Metric | Attribute | Detail |
+|:--------|:------------------|:----------------------------------------------------|
+| **Channel Evolution Stage & Trends** | Function | Channel evolution |
+|  | Definition | Whether the channel is stable or actively incising or widening, reflecting its stage in the channel-evolution sequence. |
+|  | How EASI computes it | Screening proxy from 3DEP incision indicators and NHD channelization. Scale: Reach. |
+|  | Scoring | Good: Stable or re-stabilized channel (Stage I or VI).<br>Fair: Partially recovered channel (often Stage V). / Actively widening or incising (often Stage III-IV).<br>Poor: Severe incision or destructive phases (often Stage II or severe III-IV). |
+| **Bank Erosion & Armoring Condition** | Function | Channel and floodplain dynamics |
+|  | Definition | Susceptibility to accelerated bank erosion or hardening, from stream power, soil erodibility, and riparian condition. |
+|  | How EASI computes it | Screening proxy from stream power (3DEP), soil erodibility (SSURGO K-factor), and riparian deficit. Scale: Reach. |
+|  | Scoring | Good: Predominantly natural banks with deeply rooted cover.<br>Fair: Some armoring or partial vegetation coverage. / Large portion of banks is armored or vegetation is sparse.<br>Poor: Failing armoring or widespread bare banks with severe instability. |
+| **Sediment Supply Potential (watershed/banks)** | Function | Sediment continuity |
+|  | Definition | Potential for excess sediment from watershed sources (cropland, roads) and channel banks relative to natural supply. |
+|  | How EASI computes it | Watershed proxy from soil erodibility, cropland and hay cover, road density, and upstream dam storage (StreamCat). Scale: Watershed. |
+|  | Scoring | Good: Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal.<br>Fair: Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff.<br>Poor: High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. |
+| **Substrate Condition (grain size/embeddedness/fines/consolidation)** | Function | Bed composition and large wood |
+|  | Definition | Quality of the streambed substrate (grain size, embeddedness, fines) that supports habitat and spawning. |
+|  | How EASI computes it | Screening proxy from channel gradient (3DEP) and watershed erodibility (StreamCat). Scale: Reach. |
+|  | Scoring | Good: Open interstitial coarse bed with minimal fines.<br>Fair: Mild embedding or partial fine coverage. / Strong embedding or siltation limiting infiltration.<br>Poor: Predominantly fine or consolidated bed with little interstitial space. |
+
+: Geomorphology metrics {#tbl-metrics-geomorphology}
+
+| Metric | Attribute | Detail |
+|:--------|:------------------|:----------------------------------------------------|
+| **Stream Temperature** | Function | Light and thermal regime |
+|  | Definition | Whether stream temperature stays within ranges suitable for aquatic life (observed data, or riparian-shade/climate surrogate). |
+|  | How EASI computes it | Observed temperature from the EPA Water Quality Portal where available. Otherwise a climate-and-shade surrogate (StreamCat mean temperature plus riparian cover). Scale: Reach. |
+|  | Scoring | Good: Rarely surpasses local standard or typical seasonal maxima for the stream type.<br>Fair: Slightly exceeds thresholds occasionally.<br>Poor: Frequently near or above thresholds. / Consistently high or potentially lethal temperatures. |
+| **Detrital Processing (CPOM retention / shredders)** | Function | Carbon processing |
+|  | Definition | Capacity to capture and process coarse organic matter (leaf litter), supported by riparian forest input. |
+|  | How EASI computes it | Riparian forest extent within 100 m of the stream network (StreamCat) as a proxy for coarse organic-matter input. Scale: Reach. |
+|  | Scoring | Good: Abundant CPOM retention with stable leaf packs typical for the system.<br>Fair: Some retention but partially flushed out. / Sparse organic matter and limited retention.<br>Poor: Essentially no retained organic matter, or overload causing anoxia risk. |
+| **Nitrogen & Phosphorus Concentrations** | Function | Nutrient cycling |
+|  | Definition | Whether nutrient (N and P) concentrations stay near reference levels rather than driving enrichment. |
+|  | How EASI computes it | Observed total nitrogen and phosphorus from the EPA Water Quality Portal where available. Otherwise compared against ecoregion nutrient criteria. Scale: Reach/Watershed. |
+|  | Scoring | Good: Near background or guideline values.<br>Fair: Slightly elevated N or P. / Marked with ecological effects.<br>Poor: Significantly above guidelines indicating strong nutrient pollution. |
+| **Regulatory Impairment Status (305b/303d/TMDL)** | Function | Water and soil quality |
+|  | Definition | Whether the reach is on a Clean Water Act impaired-waters list (303(d)/305(b)/TMDL) for water-quality problems. |
+|  | How EASI computes it | Clean Water Act 303(d)/305(b)/TMDL status from EPA ATTAINS at the reach and nearby waters. Scale: Reach. |
+|  | Scoring | Good: In category 1, 2, or 3 or aquatic life uses not evaluated.<br>Fair: In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated.<br>Poor: In Category 5 due to nonsupport of aquatic life uses OR in Category 4 and aquatic life impairment not actively being mitigated. |
+
+: Physicochemistry metrics {#tbl-metrics-physicochemistry}
+
+| Metric | Attribute | Detail |
+|:--------|:------------------|:----------------------------------------------------|
+| **In-stream Habitat Complexity & Cover** | Function | Habitat provision |
+|  | Definition | Physical habitat diversity and cover (pools, riffles, structure, wood) available to aquatic organisms. |
+|  | How EASI computes it | Screening proxy from sinuosity, gradient variability, riparian cover, and stream order. Scale: Reach. |
+|  | Scoring | Good: Multiple habitat types well represented.<br>Fair: Some variety but key elements are missing. / Mostly uniform with only 1-2 distinct features.<br>Poor: Very uniform channel with limited structural diversity. |
+| **Biological Integrity (IBI / community condition)** | Function | Population support |
+|  | Definition | Overall condition of the aquatic biological community relative to reference (a screening surrogate for a measured IBI). |
+|  | How EASI computes it | StreamCat predicted biological condition, or the nearest NRSA / state bioassessment station. Scale: Reach. |
+|  | Scoring | Good: Multiple observations where historically expected.<br>Fair: Some presence but limited. / Rare or single individuals.<br>Poor: Absent where historically expected. |
+| **Invasive / Non-native Species Presence** | Function | Community dynamics |
+|  | Definition | Extent to which invasive or non-native species are present in the watershed and may displace natives. |
+|  | How EASI computes it | USGS Nonindigenous Aquatic Species (NAS) occurrences within the watershed (HUC). Scale: Watershed. |
+|  | Scoring | Good: <5% invasive presence.<br>Fair: 5-50% invasive presence.<br>Poor: >50% invasive presence or one invasive dominates. |
+| **Fish Passage & Barrier Effects (longitudinal connectivity)** | Function | Watershed connectivity |
+|  | Definition | Whether dams or barriers disrupt upstream-downstream movement of fish and aquatic organisms. |
+|  | How EASI computes it | Barrier inventories (USACE National Inventory of Dams, USGS NABD, USFWS/SARP) within the watershed. Scale: Reach. |
+|  | Scoring | Good: No barrier within watershed OR barriers provide beneficial effect on project area and allows for aquatic organism passage.<br>Fair: Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists creating minor passage barrier.<br>Poor: Aquatic organism barriers (including impoundment(s)) located within 1 mile upstream or downstream of project area has a negative effect on aquatic organism passage. |
+
+: Biology metrics {#tbl-metrics-biology}
+
+Metrics are computed from established national sources. These include the EPA
+StreamCat landscape summaries, USGS 3DEP elevation data, the EPA Water Quality
+Portal, the EPA ATTAINS impaired-waters database, the USACE National Inventory of
+Dams, and the USGS Nonindigenous Aquatic Species database. Channel geometry is
+estimated from a 3DEP cross section using regional bankfull curves (Bieger et al.
+2015) selected by physiographic division (Fenneman and Johnson 1946), together
+with the entrenchment and bank-height ratios of Rosgen (1996). Because some
+metrics are national proxies, any metric rating can be overridden with field
+evidence or more detailed data, which updates the scores.
+
+## Scoring
+
+Each metric is rated Good, Fair, or Poor against the published thresholds in the
+discipline tables (@tbl-metrics-hydrology through @tbl-metrics-biology). A rating
+of Good indicates condition at or near reference for that metric. Fair indicates
+a moderate departure. Poor indicates a substantial departure. In the web
+application these ratings are assigned automatically from the underlying data,
+and an assessor can override any rating with field evidence.
+
+Each rating maps to a function score on a 0 to 15 scale. A rating maps to the
+midpoint index of its range, and the function score is that index multiplied by
+15 and rounded. This gives 13 for Good, 8 for Fair, and 3 for Poor. Function
+scores of 11 to 15 indicate a Functioning state, 6 to 10 indicate a
+Functioning-at-Risk state, and 0 to 5 indicate a Non-Functioning state.
+
+## Aggregation
+
+Function scores are combined into three outcome sub-indices for physical,
+chemical, and biological condition. Each function contributes to the outcome it
+directly affects with a weight of 1.0 and to outcomes it indirectly affects with
+a weight of 0.1, following @tbl-outcomes. Each sub-index is the weighted sum of
+its function scores divided by the maximum possible weighted sum, which places it
+on a 0 to 1 scale. The three sub-indices are then averaged into the overall
+Ecosystem Condition Index. A sub-index or index value of 0 to 0.39 indicates
+Non-Functioning condition, 0.40 to 0.69 indicates Functioning-at-Risk condition,
+and 0.70 to 1.0 indicates Functioning condition.
+
+# Application
+
+EASI is a web application that runs in a browser and requires no installation,
+accounts, or data subscriptions. The user works through four named steps.
+
+1. **Identify.** The user pans a national map and clicks a stream. The click
+   snaps to the mapped stream line from the National Hydrography Dataset.
+2. **Basin.** The application delineates the contributing watershed and an
+   upstream assessment reach, then reports the drainage area, the reach length,
+   and the stream identifiers. The assessment reach follows the field convention
+   of about twenty times the bankfull width (Harrelson et al. 1994).
+3. **Configure.** The twenty functions are listed by category. Where more than
+   one national data source exists for a metric, the user can choose which source
+   to use.
+4. **Report.** The application computes the metrics, scores them, and presents an
+   interactive report. The report shows the function scores, the physical,
+   chemical, and biological sub-indices, the overall Ecosystem Condition Index,
+   an editable channel cross section, and the full metric table. Results can be
+   exported as PDF, CSV, or GeoJSON.
+
+Because EASI is a screening tool, every rating can be overridden. An assessor who
+has field data or more detailed information can replace a rating, and the scores
+update immediately. This keeps EASI useful as a first pass that a Rapid or
+Detailed assessment can later refine.
+
+# Verification and testing
+
+Verification asks whether the method behaves as designed and produces sensible
+results across the range of streams it is meant to cover. We verified EASI in two
+ways. First, we ran EASI across a national set of field sites that span a wide
+range of stream sizes, settings, and condition. Second, we examined individual
+sites in detail to confirm that the metric results and the cross-section geometry
+match what is known about each reach.
+
+## Coverage across diverse sites
+
+We ran EASI at the verification sites used by SFARI. These sites were selected to
+span ecoregions, stream orders, drainage areas, and land use, from small forested
+headwaters to large rivers and from least-disturbed reaches to heavily developed
+urban channels. @tbl-coverage lists the sites and the resulting EASI Ecosystem
+Condition Index next to the SFARI field value. EASI computed all twenty functions
+at every site, which confirms that the method runs end to end across this range
+of conditions.
+
+{{< include _generated/site_coverage.md >}}
+
+## Worked verification cases
+
+Three sites are presented in detail. They were chosen to contrast a
+least-disturbed New England headwater with two developed streams on the Gulf
+Coastal Plain. For each site we show the EASI cross section, a field photograph,
+and the EASI function ratings next to the SFARI field ratings.
+
+### Mink Brook, New Hampshire {#sec-case-mb}
+
+Mink Brook near Hanover, New Hampshire (43.6899, -72.2840, NHD COMID 9327030) is
+a third-order stream in a largely
+forested watershed. Field review confirms a stable, well-connected channel with
+good floodplain access. The desktop cross section underestimated bankfull height
+at this reach, which drove the automated High flow dynamics and Channel evolution
+ratings too low. Following the override workflow that EASI is designed to support,
+these two functions, together with Floodplain connectivity, were set to Good to
+reflect the field condition. This is the kind of expert correction the screening
+tier expects when field evidence is available. @fig-xs-mb shows the EASI cross
+section and @fig-photo-mb shows the reach.
+
+![EASI cross section for Mink Brook.](figures/xs_MB.png){#fig-xs-mb width=85%}
+
+![Mink Brook, New Hampshire.](figures/photo_minkbrook.jpg){#fig-photo-mb width=70%}
+
+{{< include _generated/case_MB.md >}}
+
+### Cowart Creek, Texas {#sec-case-cc}
+
+Cowart Creek is a low-gradient, second-order stream on the Gulf Coastal Plain
+near Houston, Texas (29.5189, -95.1929, NHD COMID 1563096), in a heavily developed
+watershed. Both EASI and SFARI rate
+this reach as Non-Functioning, consistent with its incised channel, sparse
+riparian cover, elevated nutrients, and impaired status. @fig-xs-cc shows the
+EASI cross section and @fig-photo-cc shows the reach.
+
+![EASI cross section for Cowart Creek.](figures/xs_CC.png){#fig-xs-cc width=85%}
+
+![Cowart Creek, Texas, upstream view.](figures/photo_cowart_up.jpg){#fig-photo-cc width=70%}
+
+{{< include _generated/case_CC.md >}}
+
+### Marys Creek, Texas {#sec-case-mc}
+
+Marys Creek is a first-order stream on the Gulf Coastal Plain near Houston,
+Texas (29.5458, -95.2644, NHD COMID 1562892), also in a developed watershed. As with Cowart Creek, EASI and SFARI agree
+on Non-Functioning condition. @fig-xs-mc shows the EASI cross section and
+@fig-photo-mc shows the reach.
+
+![EASI cross section for Marys Creek.](figures/xs_MC.png){#fig-xs-mc width=85%}
+
+![Marys Creek, Texas, upstream view.](figures/photo_marys_up.jpg){#fig-photo-mc width=70%}
+
+{{< include _generated/case_MC.md >}}
+
+# Validation
+
+Validation asks whether EASI estimates agree with independent observations of
+stream condition. We used the SFARI field assessments as the reference. SFARI is
+the Rapid tier of STAF and is based on focused fieldwork, so its results provide
+an independent, field-based measure of the same stream functions that EASI
+estimates from desktop data (David et al. In Review). Because the two methods
+share the same function list, we can compare them at three levels: the overall
+Ecosystem Condition Index, the three outcome sub-indices, and the individual
+functions.
+
+## Data and methods
+
+EASI was run at each SFARI site using only the site coordinates. SFARI field
+results were taken from the SFARI verification dataset. Both methods report
+function scores on a 0 to 15 scale and report sub-indices and the Ecosystem
+Condition Index on a 0 to 1 scale, so the two are directly comparable without
+rescaling. We compared the methods with scatter plots against a one-to-one line,
+with the Pearson correlation and mean absolute difference, and with agreement on
+the three condition classes (Non-Functioning, Functioning-at-Risk, Functioning).
+
+Two points about the data should be stated plainly. First, the SFARI dataset
+contained two rows whose scores exactly duplicated another site. These were
+treated as data-entry duplicates and were excluded from the quantitative
+comparison, although EASI was still run at those locations for the coverage
+table. Second, the Mink Brook case applied an expert override to two functions,
+as described in @sec-case-mb. The override is noted wherever Mink Brook appears
+so that it does not silently improve the agreement.
+
+{{< include _generated/val_stats.md >}}
+
+## Ecosystem Condition Index
+
+@fig-val-eci compares the EASI and SFARI Ecosystem Condition Index across sites.
+Points near the one-to-one line indicate agreement.
+
+![EASI and SFARI Ecosystem Condition Index across the verification sites. The
+dashed line is one-to-one.](figures/val_eci_scatter.png){#fig-val-eci width=70%}
+
+## Outcome sub-indices
+
+@fig-val-sub compares the physical, chemical, and biological sub-indices.
+
+![EASI and SFARI physical, chemical, and biological sub-indices.](figures/val_subindex.png){#fig-val-sub width=95%}
+
+## Function-level agreement
+
+@fig-val-func summarizes agreement for each shared function. SFARI Planform
+change and EASI Bed composition and large wood have no counterpart in the other
+method, so nineteen of the twenty functions are compared.
+
+![Mean absolute difference between EASI and SFARI function scores, by function,
+on the 0 to 15 scale.](figures/val_function_agreement.png){#fig-val-func width=90%}
+
+## Classification agreement
+
+@tbl-val-class shows how often EASI and SFARI place a site in the same condition
+class for the Ecosystem Condition Index.
+
+{{< include _generated/val_classification.md >}}
+
+## Interpretation
+
+EASI is a screening tool, so the goal of validation is not exact agreement with
+field results. The goal is to confirm that EASI separates streams in good
+condition from streams in poor condition and that it does so for the right
+reasons. The comparisons above should be read in that light. Where EASI and SFARI
+diverge, the difference often points to a function that depends on field
+observation, which is exactly where the override workflow and the higher STAF
+tiers add value.
+
+# Summary
+
+EASI is the Screening tier of STAF. It estimates the condition of wadeable
+streams across the conterminous United States from national data, organizes the
+results into physical, chemical, and biological outcomes, and reports an overall
+Ecosystem Condition Index. This document described how EASI is conceptualized,
+quantified, and applied, and it reported verification and validation against
+SFARI field results at sites that span the country. EASI ran end to end at every
+site and produced condition estimates that track the field assessments. Continued
+work will refine the metric thresholds and the function-to-outcome weighting,
+expand the validation dataset, and extend the web application as additional
+national datasets become available.
+
+# References
+
+::: {#refs-manual}
+Beechie, T. J., D. A. Sear, J. D. Olden, G. R. Pess, J. M. Buffington, H. Moir,
+P. Roni, and M. M. Pollock. 2010. Process-based principles for restoring river
+ecosystems. BioScience 60: 209-222.
+
+Bieger, K., H. Rathjens, P. M. Allen, and J. G. Arnold. 2015. Development and
+evaluation of bankfull hydraulic geometry relationships for the physiographic
+regions of the United States. Journal of the American Water Resources Association
+51 (3): 842-858.
+
+David, G. C. L., D. E. Somerville, J. M. McCarthy, S. D. MacNeil, F. Fitzpatrick,
+R. Evans, and D. Wilson. 2021. Technical Guide for the Development, Evaluation,
+and Modification of Stream Assessment Methods for the Corps Regulatory Program.
+Washington, DC: U.S. Army Corps of Engineers.
+
+David, G. C. L., L. M. Stepchinski, S. R. Wiest, and G. T. Menichino. In Review.
+Stream Functions Assessment and Rapid Index (SFARI). Technical Report, Ecosystem
+Management and Restoration Research Program. Vicksburg, MS: U.S. Army Engineer
+Research and Development Center.
+
+Doyle, M. W., and F. D. Shields Jr. 2012. Compensatory mitigation for streams
+under the Clean Water Act: Reassessing science and redirecting policy. Journal of
+the American Water Resources Association 48 (3): 494-509.
+
+Fenneman, N. M., and D. W. Johnson. 1946. Physical Divisions of the United States
+(map, 1:7,000,000). Reston, VA: U.S. Geological Survey.
+
+Fischenich, J. C. 2006. Functional Objectives for Stream Restoration. EMRRP
+Technical Note SR-52. Vicksburg, MS: U.S. Army Corps of Engineers.
+
+Harman, W., R. Starr, M. Carter, K. Tweedy, M. M. Clemmons, K. Suggs, and C.
+Miller. 2012. A Function-Based Framework for Stream Assessment and Restoration
+Projects. Washington, DC: U.S. Environmental Protection Agency.
+
+Harrelson, C. C., C. L. Rawlins, and J. P. Potyondy. 1994. Stream Channel
+Reference Sites: An Illustrated Guide to Field Technique. General Technical Report
+RM-245. Fort Collins, CO: U.S. Department of Agriculture, Forest Service.
+
+Palmer, M. A., and J. D. Allan. 2006. Restoring rivers. Issues in Science and
+Technology 22 (2): 40-48.
+
+Palmer, M. A., and S. Filoso. 2009. Restoration of ecosystem services for
+environmental markets. Science 325 (5940): 575-576.
+
+Rosgen, D. L. 1996. Applied River Morphology. Pagosa Springs, CO: Wildland
+Hydrology.
+
+Stepchinski, L., S. K. McKay, and G. T. Menichino. 2025a. Review of Stream
+Assessments for Evaluating Ecological Impacts and Benefits. Technical Note,
+Ecosystem Management and Restoration Research Program. Vicksburg, MS: U.S. Army
+Engineer Research and Development Center.
+
+Stepchinski, L. M., S. K. McKay, A. E. Harris, and G. T. Menichino. 2025b. A
+review of stream assessment methods in the United States. Journal of the American
+Water Resources Association. https://doi.org/10.1111/1752-1688.70056.
+
+Stepchinski, L. M., S. K. McKay, and G. T. Menichino. In Review a. A Synthesis
+and Inventory of Stream Functions. River Research and Applications.
+
+Stepchinski, L. M., S. K. McKay, and G. T. Menichino. In Review b. A Tiered
+Approach to Developing Function-Based Stream Assessments. Journal of the American
+Water Resources Association.
+
+Stepchinski, L. M., and G. T. Menichino. In Review. Ecosystem Assessment Screening
+Index (EASI). ERDC/TN EMRRP-26-DRAFT. Vicksburg, MS: U.S. Army Engineer Research
+and Development Center.
+
+Wohl, E., B. P. Bledsoe, R. B. Jacobson, N. L. Poff, S. L. Rathburn, D. M.
+Walters, and A. C. Wilcox. 2015. The natural sediment regime in rivers:
+Broadening the foundation for ecosystem management. BioScience 65 (4): 358-371.
+:::
+
+# Appendix: full site comparison {.appendix}
+
+@tbl-appendix reports every verification site with its EASI and SFARI Ecosystem
+Condition Index and sub-indices. Duplicated SFARI rows are marked.
+
+{{< include _generated/appendix_comparison.md >}}

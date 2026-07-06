@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EASI — Ecosystem Assessment Screening Index</title>
+  <meta name="description" content="EASI automates a screening-tier stream ecosystem assessment. Redirecting to the live application.">
+
+  <!-- ===================================================================== -->
+  <!-- EASI live application URL.  If the hosting location ever changes, update -->
+  <!-- it in the two places below (the meta refresh and the "Launch EASI" link). -->
+  <!-- The stable address (usace-wrises.github.io/easi) does not change.        -->
+  <!-- ===================================================================== -->
+  <meta http-equiv="refresh" content="0; url=https://gtmenichino-easi.share.connect.posit.cloud">
+  <link rel="canonical" href="https://gtmenichino-easi.share.connect.posit.cloud">
+
+  <style>
+    :root { --ink:#1f2a37; --muted:#5b6776; --accent:#1f5fa8; --line:#e4e8ee; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink); background: #f6f8fa;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card {
+      max-width: 30rem; margin: 1.5rem; padding: 2.25rem 2.5rem;
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(16,24,40,.06); text-align: center;
+    }
+    h1 { margin: 0; font-size: 2.4rem; letter-spacing: .04em; color: var(--accent); }
+    .sub { margin: .35rem 0 1.4rem; font-size: 1.02rem; color: var(--ink); }
+    .note { margin: 0 0 1.5rem; font-size: .92rem; color: var(--muted); }
+    a.launch {
+      display: inline-block; padding: .7rem 1.4rem; border-radius: 8px;
+      background: var(--accent); color: #fff; text-decoration: none; font-weight: 600;
+    }
+    a.launch:hover { background: #17467c; }
+    .fine { margin-top: 1.4rem; font-size: .8rem; color: var(--muted); }
+    .fine a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>EASI</h1>
+    <p class="sub">Ecosystem Assessment Screening Index</p>
+    <p class="note">Taking you to the live application&hellip;</p>
+    <p>
+      <a class="launch" id="launch" href="https://gtmenichino-easi.share.connect.posit.cloud">Launch EASI</a>
+    </p>
+    <p class="fine">If you are not redirected automatically, use the button above.<br>
+      Source code: <a href="https://github.com/USACE-WRISES/easi">github.com/USACE-WRISES/easi</a></p>
+  </main>
+
+  <script>
+    // Instant redirect for browsers with JavaScript. Reads the URL from the
+    // Launch link so there is no extra copy to maintain. Falls back to the
+    // <meta refresh> and the visible link if JavaScript is disabled.
+    window.location.replace(document.getElementById("launch").href);
+  </script>
+</body>
+</html>
