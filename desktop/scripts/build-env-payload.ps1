@@ -28,11 +28,13 @@ $pbsLock = Join-Path $payloadDir 'pbs.lock'
 $pruneFile = Join-Path $payloadDir 'prune.txt'
 
 function Get-EnvVersion {
-    # Line endings must not change the version: normalize CRLF->LF before hashing so a Windows
+    # Content hash over ALL env-build inputs (locks + prune recipe) so any change triggers a
+    # rebuild in CI. Line endings must not change the version: normalize CRLF->LF so a Windows
     # working tree and a CI checkout agree.
     $envText = (Get-Content $envLock -Raw) -replace "`r`n", "`n"
     $pbsText = (Get-Content $pbsLock -Raw) -replace "`r`n", "`n"
-    $bytes = [Text.Encoding]::UTF8.GetBytes($envText + $pbsText)
+    $pruneText = (Get-Content $pruneFile -Raw) -replace "`r`n", "`n"
+    $bytes = [Text.Encoding]::UTF8.GetBytes($envText + $pbsText + $pruneText)
     $sha = [Security.Cryptography.SHA256]::Create()
     try {
         $hex = -join ($sha.ComputeHash($bytes) | ForEach-Object { $_.ToString('x2') })

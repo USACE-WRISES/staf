@@ -8,3 +8,10 @@ Lib/site-packages/**/test/**
 # webpack chunk filenames overflow Windows path limits inside the payload.
 share/jupyter
 etc/jupyter
+# aiodns/pycares (a hard dep of async-retriever that it never imports) make aiohttp pick its
+# AsyncResolver, which bypasses the Windows resolver and fails with "Could not contact DNS
+# servers" on many Windows setups (VPN adapters etc.) — silently killing every HyRiver call
+# (flowlines, delineation, metrics). Without them aiohttp uses the threaded getaddrinfo
+# resolver. Linux web deploys are unaffected (they install from the apps' requirements).
+Lib/site-packages/aiodns*
+Lib/site-packages/pycares*
