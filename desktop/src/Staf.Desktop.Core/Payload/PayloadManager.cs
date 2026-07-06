@@ -227,7 +227,7 @@ public sealed class PayloadManager(
         if (!File.Exists(zipPath))
         {
             var label = $"Downloading {(name == "env" ? "the assessment runtime" : "the STAF apps")} ({info.SizeBytes / 1_000_000} MB)…";
-            var progress = new Progress<long>(done => Report(PayloadPhase.Downloading, name, done, info.SizeBytes, label));
+            var progress = new SyncProgress<long>(done => Report(PayloadPhase.Downloading, name, done, info.SizeBytes, label));
             Report(PayloadPhase.Downloading, name, 0, info.SizeBytes, label);
 
             var downloader = new Downloader(source);
@@ -263,7 +263,7 @@ public sealed class PayloadManager(
         {
             var extractLabel = $"Unpacking {(name == "env" ? "the assessment runtime" : "the STAF apps")}…";
             Report(PayloadPhase.Extracting, name, 0, 0, extractLabel);
-            var progress = new Progress<(int Done, int Total)>(p =>
+            var progress = new SyncProgress<(int Done, int Total)>(p =>
                 Report(PayloadPhase.Extracting, name, p.Done, p.Total, extractLabel));
             await Task.Run(() => Extractor.Extract(zipPath, stagingDir, progress, ct), ct).ConfigureAwait(false);
             Directory.Move(stagingDir, finalDir);
@@ -294,6 +294,18 @@ public sealed class PayloadManager(
 
     private void Report(PayloadPhase phase, string? component, long done, long total, string message) =>
         Progress?.Invoke(new PayloadProgress(phase, component, done, total, message));
+
+    /// <summary>
+    /// Synchronous IProgress. Progress&lt;T&gt; posts callbacks through a sync context or the
+    /// thread pool, so a late download/extract report could arrive after the final synchronous
+    /// Done/Failed report and overwrite it (stale setup text in the UI; on CI the payload tests
+    /// saw Extracting delivered after Done). Reporting inline keeps the event stream ordered;
+    /// the launcher marshals to the UI thread itself.
+    /// </summary>
+    private sealed class SyncProgress<T>(Action<T> handler) : IProgress<T>
+    {
+        public void Report(T value) => handler(value);
+    }
 
     private static void TryDelete(string dir)
     {
