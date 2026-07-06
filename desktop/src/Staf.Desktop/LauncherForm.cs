@@ -147,10 +147,6 @@ internal sealed class LauncherForm : Form, IShellHub
                 await supStop.StopAsync(stopId);
                 break;
 
-            case "viewLogs" when command.AppId is { } logId && _supervisor is { } supLog:
-                OpenInShell("notepad.exe", supLog.GetLogPath(logId));
-                break;
-
             case "openWeb" when command.AppId is { } webId && _supervisor is { } supWeb:
                 var webUrl = supWeb.Apps.FirstOrDefault(a => a.Id.Equals(webId, StringComparison.OrdinalIgnoreCase))?.WebUrl;
                 if (!string.IsNullOrEmpty(webUrl))
@@ -194,7 +190,7 @@ internal sealed class LauncherForm : Form, IShellHub
         }
         catch (ShellException ex) when (_services.PayloadManager is not null)
         {
-            _services.ShellLog.WriteLine($"[shell] payload not ready ({ex.Message}) — starting first-run setup");
+            _services.ShellLog.WriteLine($"[shell] payload not ready ({ex.Message}) - starting first-run setup");
             await RunFirstRunSetupAsync();
         }
         catch (ShellException ex)
@@ -353,7 +349,7 @@ internal sealed class LauncherForm : Form, IShellHub
             Post(new
             {
                 type = "updateDone",
-                message = "Update installed — apps use it the next time they start.",
+                message = "Update installed. Apps use it the next time they start.",
             });
         }
         catch (ShellException ex)
@@ -622,7 +618,7 @@ internal sealed class LauncherForm : Form, IShellHub
         e.Cancel = true;
         _shuttingDown = true;
         Enabled = false;
-        Text = "STAF Desktop — stopping apps…";
+        Text = "STAF Desktop - stopping apps…";
 
         foreach (var window in _appWindows.Values.ToList())
         {

@@ -26,7 +26,7 @@ public static class Extractor
             var target = Path.GetFullPath(Path.Combine(stagingDir, entry.FullName));
             if (!target.StartsWith(root, StringComparison.OrdinalIgnoreCase))
             {
-                throw new ShellException($"The payload archive contains an unsafe path ('{entry.FullName}') — refusing to extract.");
+                throw new ShellException($"The payload archive contains an unsafe path ('{entry.FullName}'); refusing to extract.");
             }
 
             if (entry.FullName.EndsWith('/') || entry.FullName.EndsWith('\\'))

@@ -1,29 +1,26 @@
 ---
 title: Launch the Apps
 nav_order: 7
-description: "Launch the STAF assessment web applications."
+description: "Launch the STAF web applications or download STAF Desktop."
 ---
 {% include staf_page_chrome.html %}
 
-Each STAF tier has its own web application. Launch any of them below. Each one opens in a new tab. All four tools use the same 20 stream functions and the same scoring, so results are comparable across tiers.
+## Web Applications
+
+Each tier has its own app. All four use the same 20 stream functions and scoring, so results are comparable across tiers.
 
 {% include apps_hub.html %}
 
-## Prefer to run STAF on your own computer?
+## Desktop Versions
 
-**STAF Desktop** is a Windows app that runs these same four tools locally — same interface, same results, but on your computer's own processing power. No admin rights needed.
+STAF Desktop runs the same four tools locally on Windows. Same interface, same results, no admin rights needed.
 
 <ul class="tools-downloads">
-  <li><a class="btn btn-primary" href="https://github.com/USACE-WRISES/staf/releases/latest/download/StafDesktop-win-Setup.exe">Download STAF Desktop (installer)</a> <span class="tools-download-note">Per-user install; keeps itself up to date.</span></li>
-  <li><a class="btn" href="https://github.com/USACE-WRISES/staf/releases/latest/download/StafDesktop-win-Portable.zip">Portable version (zip)</a> <span class="tools-download-note">No installation — extract anywhere and run <code>STAF Desktop.exe</code>.</span></li>
+  <li><a class="btn btn-primary" href="https://github.com/USACE-WRISES/staf/releases/latest/download/StafDesktop-win-Setup.exe">Download STAF Desktop</a> <span class="tools-download-note">Per-user install; keeps itself up to date.</span></li>
+  <li><a class="btn" href="https://github.com/USACE-WRISES/staf/releases/latest/download/StafDesktop-win-Portable.zip">Portable version (zip)</a> <span class="tools-download-note">Extract anywhere and run <code>STAF Desktop.exe</code>.</span></li>
 </ul>
 
-The first launch downloads the assessment runtime (about 310 MB) and takes a few minutes; after that the apps start instantly and updates arrive automatically. Windows may show a SmartScreen notice because the app is new — choose <em>More info → Run anyway</em>. Requires Windows 10/11 and an internet connection (the assessments use live USGS/EPA data services).
-
-## How the tools fit together
-- Screening (EASI) and Rapid (SFARI) each work on their own. Choose a site and get a stream condition score.
-- Detailed assessments run in DEEP. DEEP comes with a limited number of predefined assessments out of the box.
-- More detailed assessments are added over time. They are built with the stream-curves app. Building them is time-intensive, so new ones are released as they are finished.
+Requires Windows 10/11 and an internet connection (assessments use live USGS/EPA data). The first launch downloads the runtime (about 310 MB); after that the apps start instantly and update automatically. If Windows shows a SmartScreen notice, choose <em>More info</em>, then <em>Run anyway</em>.
 
 ## Downloads and resources
 

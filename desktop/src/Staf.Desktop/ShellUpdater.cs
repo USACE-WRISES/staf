@@ -36,7 +36,7 @@ internal sealed class ShellUpdater(ILineLog log)
     {
         if (!IsSupported)
         {
-            log.WriteLine("[shell-update] not a packaged install — skipping check");
+            log.WriteLine("[shell-update] not a packaged install - skipping check");
             return null;
         }
         try
@@ -67,7 +67,7 @@ internal sealed class ShellUpdater(ILineLog log)
             return;
         }
         await _manager.DownloadUpdatesAsync(_pending, progress).ConfigureAwait(false);
-        log.WriteLine("[shell-update] downloaded — restarting to apply");
+        log.WriteLine("[shell-update] downloaded - restarting to apply");
         _manager.ApplyUpdatesAndRestart(_pending);
     }
 }

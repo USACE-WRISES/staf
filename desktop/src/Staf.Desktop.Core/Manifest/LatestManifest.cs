@@ -98,7 +98,7 @@ public sealed record LatestManifest
         if (!allowedUrlPrefixes.Any(p => c.Url.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
         {
             throw new ShellException(
-                $"The update manifest points the {name} download at an unexpected location ({c.Url}) — refusing. ({source})");
+                $"The update manifest points the {name} download at an unexpected location ({c.Url}); refusing. ({source})");
         }
     }
 

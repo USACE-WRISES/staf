@@ -16,7 +16,7 @@
       "https://gtmenichino-deep.share.connect.posit.cloud/", "crashed", null,
       "exited unexpectedly (code 3)\nFatal Python error: Aborted"),
     card("curves", "stream-curves", "Reference and Regional Curve Builder", "Detailed", 3,
-      "Builder tool — creates the reference-curve assessments that DEEP runs. For assessment developers rather than day-to-day users.",
+      "Builds the reference-curve assessments that DEEP runs. For assessment developers rather than day-to-day users.",
       "https://gtmenichino-stream-curves.share.connect.posit.cloud/", "stopped", null, null),
   ];
 
@@ -98,7 +98,7 @@
         case "applyUpdate":
           emitRaw({ type: "updateProgress", message: "Downloading the STAF apps (26 MB)…", percent: 40 });
           setTimeout(function () {
-            emitRaw({ type: "updateDone", message: "Update installed — apps use it the next time they start." });
+            emitRaw({ type: "updateDone", message: "Update installed. Apps use it the next time they start." });
           }, 900);
           break;
         case "applyShellUpdate":

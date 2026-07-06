@@ -226,7 +226,7 @@ public sealed class AppSupervisor : IAsyncDisposable
 
                 if (!await WaitForExitAsync(process, _options.GracefulStopWait).ConfigureAwait(false))
                 {
-                    entry.Log.WriteLine("[shell] graceful stop timed out — killing process tree");
+                    entry.Log.WriteLine("[shell] graceful stop timed out - killing process tree");
                     process.KillTree();
                     await WaitForExitAsync(process, _options.KillWait).ConfigureAwait(false);
                     detail = "stopped (forced)";
@@ -269,7 +269,7 @@ public sealed class AppSupervisor : IAsyncDisposable
                 if (attempt < _options.MaxSpawnAttempts && entry.Recent.ContainsAny(SupervisorOptions.BindErrorMarkers))
                 {
                     attempt++;
-                    entry.Log.WriteLine($"[shell] port bind conflict — retrying with a new port (attempt {attempt})");
+                    entry.Log.WriteLine($"[shell] port bind conflict - retrying with a new port (attempt {attempt})");
                     entry.Recent.Clear();
                     try
                     {
@@ -324,12 +324,12 @@ public sealed class AppSupervisor : IAsyncDisposable
                     Status = AppStatus.Starting,
                     Port = port,
                     Pid = entry.Process!.Pid,
-                    Detail = "still starting — the first run can take a few minutes",
+                    Detail = "first start can take a few minutes",
                 }, ct);
             }
             if (elapsed > _options.StartHardCap)
             {
-                entry.Log.WriteLine("[shell] startup exceeded the hard cap — killing process");
+                entry.Log.WriteLine("[shell] startup exceeded the hard cap - killing process");
                 entry.Process!.KillTree();
                 SetStateUnlessCancelled(entry, new AppRuntimeState
                 {

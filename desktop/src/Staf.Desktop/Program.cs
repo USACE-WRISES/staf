@@ -63,7 +63,7 @@ internal static class Program
         using var job = KillOnCloseJob.TryCreate(shellLog.WriteLine);
         if (job is null)
         {
-            shellLog.WriteLine("[shell] warning: job object unavailable — orphan cleanup degraded");
+            shellLog.WriteLine("[shell] warning: job object unavailable - orphan cleanup degraded");
         }
         var runner = new WindowsProcessRunner(job, shellLog.WriteLine);
         using var probe = new HttpHealthProbe();

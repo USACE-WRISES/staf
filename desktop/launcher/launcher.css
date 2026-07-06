@@ -187,19 +187,10 @@ main { flex: 1; padding: 0 1.4rem; }
 }
 .btn-secondary:hover:not(:disabled) { border-color: var(--accent); }
 
-.btn-quiet {
-  background: none;
-  color: #666;
-  border: none;
-  font-size: 0.8rem;
-  text-decoration: underline;
-  padding: 0.3rem 0.2rem;
-}
-
 .card-weblink {
   margin-left: auto;
   font-size: 0.78rem;
-  color: #888;
+  color: var(--accent);
   text-decoration: none;
 }
 .card-weblink:hover { color: var(--accent); text-decoration: underline; }
