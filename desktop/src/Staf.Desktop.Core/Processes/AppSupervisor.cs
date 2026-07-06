@@ -66,6 +66,7 @@ public sealed class AppSupervisor : IAsyncDisposable
         public IAppProcess? Process { get; set; }
         public CancellationTokenSource? MonitorCts { get; set; }
         public Task? MonitorTask { get; set; }
+        public PayloadPaths? ActivePayload { get; set; }
     }
 
     private readonly ShellConfig _config;
@@ -105,6 +106,30 @@ public sealed class AppSupervisor : IAsyncDisposable
 
     public AppRuntimeState GetState(string appId) => GetEntry(appId).State;
 
+    /// <summary>
+    /// Payload directories that live processes are executing from (env dir via python.exe, apps
+    /// root). Prune must never delete these; superseded payloads are cleaned once idle.
+    /// </summary>
+    public IReadOnlyCollection<string> GetInUsePayloadDirs()
+    {
+        var dirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in _entries.Values)
+        {
+            if (entry.State.Status is AppStatus.Starting or AppStatus.Running or AppStatus.Stopping
+                && entry.ActivePayload is { } payload)
+            {
+                // python.exe sits at <envDir>\python\python.exe → keep <envDir>.
+                var pythonDir = Path.GetDirectoryName(payload.PythonExe);
+                if (Path.GetDirectoryName(pythonDir) is { } envDir)
+                {
+                    dirs.Add(envDir);
+                }
+                dirs.Add(payload.AppsRoot);
+            }
+        }
+        return dirs;
+    }
+
     public IReadOnlyList<string> GetRecentOutput(string appId) => GetEntry(appId).Recent.Snapshot();
 
     public string GetLogPath(string appId) => GetEntry(appId).Log.Path;
@@ -133,6 +158,7 @@ public sealed class AppSupervisor : IAsyncDisposable
 
             entry.Recent.Clear();
             CleanupMonitor(entry);
+            entry.ActivePayload = payload;
             SetState(entry, new AppRuntimeState { Status = AppStatus.Starting, Detail = "starting…" });
 
             int port;
@@ -213,6 +239,7 @@ public sealed class AppSupervisor : IAsyncDisposable
 
             entry.Log.WriteLine($"[shell] {detail}");
             CleanupProcess(entry);
+            entry.ActivePayload = null;
             SetState(entry, new AppRuntimeState { Status = AppStatus.Stopped, Detail = detail });
         }
         finally

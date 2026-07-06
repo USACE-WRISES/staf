@@ -17,12 +17,16 @@
   </header>
 
   <main>
-    <!-- First-run payload setup (hidden until the payload manager drives it; M3) -->
+    <!-- First-run payload setup (driven by the shell's payload manager) -->
     <section id="setup-view" class="setup-view" hidden>
       <h2>Setting up STAF Desktop</h2>
-      <p id="setup-message">Downloading the assessment runtime…</p>
-      <div class="progress"><div id="setup-bar" class="progress-bar" style="width: 0%"></div></div>
+      <p id="setup-message">Preparing…</p>
+      <div class="progress" id="setup-progress"><div id="setup-bar" class="progress-bar" style="width: 0%"></div></div>
       <p id="setup-detail" class="muted"></p>
+      <div id="setup-actions" class="setup-actions" hidden>
+        <button id="setup-retry" class="btn btn-primary" type="button">Try again</button>
+        <button id="setup-from-file" class="btn btn-secondary" type="button" title="Install from an offline bundle folder">Install from file…</button>
+      </div>
     </section>
 
     <section id="apps-view">
@@ -33,6 +37,10 @@
   <footer class="shell-footer">
     <span id="footer-mode" class="muted"></span>
     <span class="footer-actions">
+      <span id="update-chip" class="update-chip" hidden>
+        <span id="update-text"></span>
+        <button id="update-install" class="btn btn-primary btn-small" type="button">Install</button>
+      </span>
       <a href="#" id="open-logs">Open logs folder</a>
     </span>
   </footer>

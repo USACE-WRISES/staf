@@ -12,10 +12,15 @@
       font-size: 0.75rem;
       padding: 0.25rem 1.4rem;
     }
+    .dev-banner button { margin-left: 0.6rem; font-size: 0.72rem; }
   </style>
 </head>
 <body>
-  <div class="dev-banner">DEV PREVIEW — mocked shell host (dev-host-mock.js); real page is desktop/launcher/index.html inside WebView2</div>
+  <div class="dev-banner">DEV PREVIEW — mocked shell host; real page is desktop/launcher/index.html inside WebView2.
+    <button type="button" onclick="window.__mockScenario('firstRun')">simulate first-run</button>
+    <button type="button" onclick="window.__mockScenario('setupError')">simulate setup error</button>
+    <button type="button" onclick="window.__mockScenario('updateAvailable')">simulate update</button>
+  </div>
 
   <header class="shell-header">
     <div>
@@ -28,9 +33,13 @@
   <main>
     <section id="setup-view" class="setup-view" hidden>
       <h2>Setting up STAF Desktop</h2>
-      <p id="setup-message">Downloading the assessment runtime…</p>
-      <div class="progress"><div id="setup-bar" class="progress-bar" style="width: 0%"></div></div>
+      <p id="setup-message">Preparing…</p>
+      <div class="progress" id="setup-progress"><div id="setup-bar" class="progress-bar" style="width: 0%"></div></div>
       <p id="setup-detail" class="muted"></p>
+      <div id="setup-actions" class="setup-actions" hidden>
+        <button id="setup-retry" class="btn btn-primary" type="button">Try again</button>
+        <button id="setup-from-file" class="btn btn-secondary" type="button" title="Install from an offline bundle folder">Install from file…</button>
+      </div>
     </section>
 
     <section id="apps-view">
@@ -41,6 +50,10 @@
   <footer class="shell-footer">
     <span id="footer-mode" class="muted"></span>
     <span class="footer-actions">
+      <span id="update-chip" class="update-chip" hidden>
+        <span id="update-text"></span>
+        <button id="update-install" class="btn btn-primary btn-small" type="button">Install</button>
+      </span>
       <a href="#" id="open-logs">Open logs folder</a>
     </span>
   </footer>

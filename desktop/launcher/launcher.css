@@ -211,6 +211,14 @@ main { flex: 1; padding: 0 1.4rem; }
 
 .setup-view h2 { margin-top: 0; color: var(--accent-dark); }
 
+.setup-view.error #setup-message { color: var(--err); }
+
+.setup-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
 .progress {
   height: 10px;
   background: #e8edf4;
@@ -230,6 +238,7 @@ main { flex: 1; padding: 0 1.4rem; }
 .shell-footer {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 1rem;
   padding: 0.55rem 1.4rem;
   border-top: 1px solid #e0e4e9;
@@ -238,3 +247,31 @@ main { flex: 1; padding: 0 1.4rem; }
 }
 
 .shell-footer a { color: var(--accent); }
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.update-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #eef7f0;
+  border: 1px solid #bfe3c8;
+  border-radius: 999px;
+  padding: 0.2rem 0.35rem 0.2rem 0.75rem;
+  color: #1d6b34;
+}
+
+.update-chip.error {
+  background: #fbeeec;
+  border-color: #eac6c0;
+  color: var(--err);
+}
+
+.btn-small {
+  font-size: 0.75rem;
+  padding: 0.22rem 0.7rem;
+}
