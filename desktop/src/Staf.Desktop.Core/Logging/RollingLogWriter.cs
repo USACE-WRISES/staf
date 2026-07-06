@@ -56,8 +56,13 @@ public sealed class RollingLogWriter : ILineLog
     private StreamWriter Open()
     {
         Directory.CreateDirectory(System.IO.Path.GetDirectoryName(Path)!);
+        // ReadWrite sharing: the single-instance mutex already guarantees one long-lived writer,
+        // so wider sharing costs nothing — and it stops short-lived siblings (--stop-helper, log
+        // viewers, probes) from being locked out while the shell holds the file. A pre-existing
+        // restrictive foreign handle still wins at open time; the per-line Open() retry above
+        // means logging self-heals the moment such a holder lets go.
         return new StreamWriter(
-            new FileStream(Path, FileMode.Append, FileAccess.Write, FileShare.Read),
+            new FileStream(Path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite),
             new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
         { AutoFlush = true };
     }

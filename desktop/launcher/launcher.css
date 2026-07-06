@@ -13,6 +13,11 @@
 
 * { box-sizing: border-box; }
 
+/* The hidden attribute must always win. Several elements pair [hidden] with a class that sets
+   display (.update-chip, .setup-actions), and any author display rule overrides the UA's
+   [hidden] { display: none } — which left the update chip visible, empty, on every launch. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   font-family: "Segoe UI", system-ui, -apple-system, sans-serif;

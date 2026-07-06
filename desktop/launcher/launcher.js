@@ -180,6 +180,7 @@
   var chipAction = "applyUpdate"; // which command the chip button sends (payload vs shell update)
 
   function showUpdateChip(text, opts) {
+    if (!text) { return; } // a chip with no words helps nobody
     opts = opts || {};
     if (updateChipTimer) { clearTimeout(updateChipTimer); updateChipTimer = null; }
     if (opts.action) { chipAction = opts.action; }
