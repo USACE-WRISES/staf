@@ -26,6 +26,7 @@ internal sealed class LauncherForm : Form, IShellHub
     private readonly Dictionary<string, AppWindowForm> _appWindows = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _pendingOpen = new(StringComparer.OrdinalIgnoreCase);
 
+    private readonly ShellUpdater _shellUpdater;
     private CoreWebView2Environment? _environment;
     private AppSupervisor? _supervisor;
     private (LatestManifest Manifest, UpdatePlan Plan)? _pendingUpdate;
@@ -38,6 +39,7 @@ internal sealed class LauncherForm : Form, IShellHub
     public LauncherForm(ShellServices services)
     {
         _services = services;
+        _shellUpdater = new ShellUpdater(services.ShellLog);
 
         Text = "STAF Desktop";
         StartPosition = FormStartPosition.CenterScreen;
@@ -131,6 +133,10 @@ internal sealed class LauncherForm : Form, IShellHub
                 await ApplyPendingUpdateAsync();
                 break;
 
+            case "applyShellUpdate":
+                await ApplyShellUpdateAsync();
+                break;
+
             case "launch" when command.AppId is { } launchId:
                 await LaunchOrFocusAsync(launchId);
                 break;
@@ -183,6 +189,7 @@ internal sealed class LauncherForm : Form, IShellHub
             _services.ShellLog.WriteLine($"[shell] apps ready ({manifest.Apps.Count} apps, payload manifest {manifest.Version})");
 
             _ = BackgroundUpdateCheckAsync();
+            _ = BackgroundShellUpdateCheckAsync();
         }
         catch (ShellException ex) when (_services.PayloadManager is not null)
         {
@@ -347,6 +354,54 @@ internal sealed class LauncherForm : Form, IShellHub
         }
         finally
         {
+            _payloadBusy = false;
+        }
+    }
+
+    private async Task BackgroundShellUpdateCheckAsync()
+    {
+        var version = await _shellUpdater.CheckAsync();
+        if (version is not null)
+        {
+            RunOnUi(() => Post(new { type = "shellUpdateAvailable", message = $"New STAF Desktop {version} available" }));
+        }
+    }
+
+    private async Task ApplyShellUpdateAsync()
+    {
+        if (_payloadBusy)
+        {
+            return;
+        }
+        _payloadBusy = true;
+        try
+        {
+            Post(new { type = "updateProgress", message = "Preparing to update STAF Desktop…", percent = -1 });
+
+            // Stop app servers cleanly before Velopack restarts the process (the job object
+            // would otherwise hard-kill them mid-session).
+            foreach (var window in _appWindows.Values.ToList())
+            {
+                if (!window.IsDisposed)
+                {
+                    window.SuppressStopOnClose = true;
+                    window.Close();
+                }
+            }
+            _appWindows.Clear();
+            if (_supervisor is { } supervisor)
+            {
+                await supervisor.StopAllAsync();
+            }
+
+            await _shellUpdater.DownloadAndRestartAsync(percent => RunOnUi(() =>
+                Post(new { type = "updateProgress", message = "Downloading STAF Desktop update…", percent })));
+            // Not reached on success: the process restarts into the new version.
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            _services.ShellLog.WriteLine($"[shell-update] apply failed: {ex.Message}");
+            Post(new { type = "updateError", message = $"Shell update failed: {ex.Message}" });
             _payloadBusy = false;
         }
     }

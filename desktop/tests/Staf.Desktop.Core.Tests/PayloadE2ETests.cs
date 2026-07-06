@@ -61,12 +61,14 @@ public sealed class PayloadE2ETests
             await manager.ApplyAsync(source, update.Manifest, update.Plan, CancellationToken.None);
         }
 
-        // ── Phase 2: resolve the installed payload and boot the stub app for real ──
+        // ── Phase 2: resolve the installed payload and boot its first app for real ──
+        // (mini payload → the stub; real payload → EASI, the heaviest import chain)
         var locator = new InstalledPayloadLocator(config);
         var payload = locator.Resolve();
         Assert.StartsWith(config.PayloadsDir, payload.PythonExe); // truly running from the payload
         var manifest = DesktopManifest.Load(payload.ManifestFile);
-        var stub = Assert.Single(manifest.Apps);
+        Assert.NotEmpty(manifest.Apps);
+        var stub = manifest.Apps[0];
 
         using var job = KillOnCloseJob.TryCreate();
         using var probe = new HttpHealthProbe();
@@ -99,11 +101,12 @@ public sealed class PayloadE2ETests
         var runState = await running.Task.WaitAsync(TimeSpan.FromMinutes(2));
         Assert.NotNull(runState.Port);
 
-        // The page itself must come from the payload's stub app.
+        // The page must be a real document served by the payload's app.
         using (var http = new HttpClient(new SocketsHttpHandler { UseProxy = false }))
         {
             var html = await http.GetStringAsync($"http://127.0.0.1:{runState.Port}/");
-            Assert.Contains("payload pipeline", html, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("<html", html, StringComparison.OrdinalIgnoreCase);
+            Assert.True(html.Length > 500, "suspiciously small response");
         }
 
         await supervisor.StopAsync(stub.Id);

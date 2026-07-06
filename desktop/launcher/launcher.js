@@ -177,10 +177,12 @@
   // ── Footer update chip ─────────────────────────────────────────────────
 
   var updateChipTimer = null;
+  var chipAction = "applyUpdate"; // which command the chip button sends (payload vs shell update)
 
   function showUpdateChip(text, opts) {
     opts = opts || {};
     if (updateChipTimer) { clearTimeout(updateChipTimer); updateChipTimer = null; }
+    if (opts.action) { chipAction = opts.action; }
     updateChip.hidden = false;
     updateChip.classList.toggle("error", !!opts.error);
     updateText.textContent = text;
@@ -211,7 +213,10 @@
         hideSetup();
         break;
       case "updateAvailable":
-        showUpdateChip(msg.message, {});
+        showUpdateChip(msg.message, { action: "applyUpdate" });
+        break;
+      case "shellUpdateAvailable":
+        showUpdateChip(msg.message, { action: "applyShellUpdate", buttonLabel: "Restart & update" });
         break;
       case "updateProgress":
         showUpdateChip(msg.message + (typeof msg.percent === "number" && msg.percent >= 0 ? " (" + msg.percent + "%)" : ""),
@@ -243,7 +248,7 @@
     send("installFromFile");
   });
   updateInstall.addEventListener("click", function () {
-    send("applyUpdate");
+    send(chipAction);
   });
 
   send("ready");

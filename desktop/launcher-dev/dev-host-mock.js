@@ -71,6 +71,8 @@
       emitRaw({ type: "setupError", message: "Could not download the STAF runtime: the update server is unreachable.", canRetry: true });
     } else if (name === "updateAvailable") {
       emitRaw({ type: "updateAvailable", message: "Update available (26 MB)" });
+    } else if (name === "shellUpdate") {
+      emitRaw({ type: "shellUpdateAvailable", message: "New STAF Desktop 0.2.0 available" });
     }
   };
 
@@ -98,6 +100,9 @@
           setTimeout(function () {
             emitRaw({ type: "updateDone", message: "Update installed — apps use it the next time they start." });
           }, 900);
+          break;
+        case "applyShellUpdate":
+          emitRaw({ type: "updateProgress", message: "Downloading STAF Desktop update…", percent: 55 });
           break;
         case "launch":
           if (!app) { return; }
