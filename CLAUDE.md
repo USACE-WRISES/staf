@@ -53,7 +53,7 @@ cd apps\easi && shiny run app.py --port 8000     # sfari:8001 deep:8003 stream-c
 ## Deployment
 
 - **Site**: pushed to `main` → GitHub Pages rebuilds from `docs/` automatically. Nothing to deploy manually.
-- **Apps**: one repo, four separate deployments. Deploy with Posit Publisher (VS Code/Positron) from the app's folder. The tracked `.posit/publish/<name>.toml` is the config; the **untracked** `.posit/publish/deployments/*.toml` records tie redeploys to the existing Connect Cloud content item and keep the public URLs stable. Always confirm Publisher targets the existing deployment, never a new one.
+- **Apps**: one repo, four separate deployments. Deploy with Posit Publisher (VS Code/Positron) — open `apps/<app>` as its own window first; Publisher's config discovery from the monorepo root is slow and unreliable. The tracked `.posit/publish/<name>.toml` is the config; the **untracked** `.posit/publish/deployments/*.toml` records tie redeploys to the existing Connect Cloud content item and keep the public URLs stable. Always confirm Publisher targets the existing deployment, never a new one. Note: the `*.share.connect.posit.cloud` URLs return 403 to curl/scripts (bot gate) — verify in a real browser.
 
 ## Coding Conventions
 
