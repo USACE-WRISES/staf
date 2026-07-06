@@ -9,6 +9,17 @@ Each STAF tier has its own web application. Launch any of them below. Each one o
 
 {% include apps_hub.html %}
 
+## Prefer to run STAF on your own computer?
+
+**STAF Desktop** is a Windows app that runs these same four tools locally — same interface, same results, but on your computer's own processing power. No admin rights needed.
+
+<ul class="tools-downloads">
+  <li><a class="btn btn-primary" href="https://github.com/USACE-WRISES/staf/releases/latest/download/StafDesktop-win-Setup.exe">Download STAF Desktop (installer)</a> <span class="tools-download-note">Per-user install; keeps itself up to date.</span></li>
+  <li><a class="btn" href="https://github.com/USACE-WRISES/staf/releases/latest/download/StafDesktop-win-Portable.zip">Portable version (zip)</a> <span class="tools-download-note">No installation — extract anywhere and run <code>STAF Desktop.exe</code>.</span></li>
+</ul>
+
+The first launch downloads the assessment runtime (about 310 MB) and takes a few minutes; after that the apps start instantly and updates arrive automatically. Windows may show a SmartScreen notice because the app is new — choose <em>More info → Run anyway</em>. Requires Windows 10/11 and an internet connection (the assessments use live USGS/EPA data services).
+
 ## How the tools fit together
 - Screening (EASI) and Rapid (SFARI) each work on their own. Choose a site and get a stream condition score.
 - Detailed assessments run in DEEP. DEEP comes with a limited number of predefined assessments out of the box.
