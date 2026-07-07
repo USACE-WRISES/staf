@@ -1,0 +1,63 @@
+{%- comment -%}
+Redirect card for one STAF app. Include with an app id, e.g. {% include app_redirect.html id="easi" %}.
+The target URL is read from docs/_data/apps.yml (the single source of truth), so re-homing an app is
+a one-line edit there and every /staf/<app> link follows. Ported from the old easi redirect repo
+(apps/easi/site/index.html): instant meta refresh + canonical for no-JS, JS location.replace so the
+stub does not sit in browser history, and a visible Launch button as the final fallback.
+{%- endcomment -%}
+{%- assign app = site.data.apps | where: "id", include.id | first -%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Redirecting to {{ app.name }}</title>
+  <meta name="description" content="{{ app.name }} ({{ app.full_name }}). Redirecting to the live application.">
+  <meta http-equiv="refresh" content="0; url={{ app.url }}">
+  <link rel="canonical" href="{{ app.url }}">
+  <style>
+    :root { --ink:#1f2a37; --muted:#5b6776; --accent:#1f5fa8; --line:#e4e8ee; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink); background: #f6f8fa;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .card {
+      max-width: 30rem; margin: 1.5rem; padding: 2.25rem 2.5rem;
+      background: #fff; border: 1px solid var(--line); border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(16,24,40,.06); text-align: center;
+    }
+    h1 { margin: 0; font-size: 2.4rem; letter-spacing: .04em; color: var(--accent); }
+    .sub { margin: .35rem 0 1.4rem; font-size: 1.02rem; color: var(--ink); }
+    .note { margin: 0 0 1.5rem; font-size: .92rem; color: var(--muted); }
+    a.launch {
+      display: inline-block; padding: .7rem 1.4rem; border-radius: 8px;
+      background: var(--accent); color: #fff; text-decoration: none; font-weight: 600;
+    }
+    a.launch:hover { background: #17467c; }
+    .fine { margin-top: 1.4rem; font-size: .8rem; color: var(--muted); }
+    .fine a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>{{ app.name }}</h1>
+    <p class="sub">{{ app.full_name }}</p>
+    <p class="note">Taking you to the live application...</p>
+    <p>
+      <a class="launch" id="launch" href="{{ app.url }}">Launch {{ app.name }}</a>
+    </p>
+    <p class="fine">If you are not redirected automatically, use the button above.<br>
+      Part of <a href="{{ '/' | relative_url }}">STAF</a>.</p>
+  </main>
+
+  <script>
+    // Instant redirect for browsers with JavaScript. Reads the URL from the Launch link so there is
+    // no extra copy to maintain. Falls back to the meta refresh and the visible link without JS.
+    window.location.replace(document.getElementById("launch").href);
+  </script>
+</body>
+</html>
