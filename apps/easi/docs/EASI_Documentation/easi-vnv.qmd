@@ -34,7 +34,7 @@ format:
 This document is the extended documentation for EASI. A shorter technical note
 introduces the method for first-time readers (Stepchinski and Menichino In Review).
 The EASI web application is available at
-[usace-wrises.github.io/easi](https://usace-wrises.github.io/easi).
+[usace-wrises.github.io/staf/easi](https://usace-wrises.github.io/staf/easi/).
 :::
 
 # Introduction
