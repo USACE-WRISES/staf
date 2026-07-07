@@ -520,15 +520,19 @@ def import_map_server(
             dc.on_draw(_on_draw)
             return dc
 
+        def _add_default_region_overlay():
+            # Seed the default ecoregion polygons AFTER the region map's first
+            # flush (registered from _ensure_maps_built). Skip if the user has
+            # already switched approach in the brief interim.
+            with reactive.isolate():
+                kind = region_kind()
+            if kind == "ecoregion" and _rlayers.get("eco") is None:
+                _add(_rlayers, _REGION_MAP, "eco", _eco_layer())
+
         def _ensure_maps_built():
-            # Run-once assembly, inside a live session but only when the
-            # wizard is actually shown — the leaflet bundle (loaded eagerly at
-            # page parse, views/widget_deps.py) is ready long before this.
-            # (The htmlmanager may still log a couple of "Could not create a
-            # model" retries HERE, at wizard open: the Map/controls/layers
-            # models reference each other and can arrive out of order —
-            # a shinywidgets 0.8.1 quirk, retried and harmless. Page load
-            # itself is clean now.)
+            # Run-once assembly, inside a live session but only when the wizard
+            # is actually shown — the leaflet bundle (loaded eagerly at page
+            # parse, views/widget_deps.py) is ready long before this.
             nonlocal _REGION_MAP, _SITES_MAP, _hover_readout
             if _REGION_MAP is not None:
                 return
@@ -546,8 +550,13 @@ def import_map_server(
                                      attribution=_USGS_ATTR, max_native_zoom=16,
                                      max_zoom=18))
             _SITES_MAP.add(LayersControl(position="topright"))
-            # ecoregion polys are the default approach
-            _add(_rlayers, _REGION_MAP, "eco", _eco_layer())
+            # The default ecoregion overlay is a GeoJSON child; attaching it to
+            # the region map's INITIAL widget state trips a shinywidgets 0.8.1
+            # bug (client logs "Could not create a model" and the polygons never
+            # render). Every later approach/selection change adds its layer as a
+            # post-display update and works, so seed the default the same way:
+            # just after this render's flush reaches the client.
+            session.on_flushed(_add_default_region_overlay, once=True)
 
         @render_widget
         def region_map():  # noqa: A001
