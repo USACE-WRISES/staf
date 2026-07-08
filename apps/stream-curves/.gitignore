@@ -9,6 +9,9 @@ __pycache__/
 outputs/
 *.streamcurves.json
 
+# Secrets (never commit): MMW API key, read by streamcurves/datasources/mmw.py
+scripts/.mmw_api_key
+
 # Posit Publisher: keep the deploy CONFIG (.posit/publish/*.toml) in git, but ignore
 # the account-specific deployment RECORDS (content GUIDs / URLs, written on first deploy).
 .posit/publish/deployments/

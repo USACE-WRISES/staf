@@ -26,7 +26,6 @@ def _sample_fields() -> dict:
     )
     return {
         "data": data,
-        "qa_log": pd.DataFrame({"step": ["clean"], "message": ["ok"], "level": ["info"]}),
         "metric_config": {"m1": {"column_name": "value", "higher_is_better": True}},
         "strat_config": {"s1": {"column_name": "strat", "levels": ["x", "y", "z"]}},
         "config_version": 2,
@@ -146,3 +145,25 @@ def test_inf_roundtrip():
     out = _roundtrip(fields)
     assert out["input_metadata"]["upper"] == math.inf
     assert out["input_metadata"]["lower"] == -math.inf
+
+
+def test_region_of_applicability_roundtrips():
+    fields = _sample_fields()
+    fields["region_of_applicability"] = {
+        "kind": "ecoregion", "code": "55", "name": "Eastern Corn Belt Plains",
+    }
+    out = _roundtrip(fields)
+    assert out["region_of_applicability"] == {
+        "kind": "ecoregion", "code": "55", "name": "Eastern Corn Belt Plains",
+    }
+
+
+def test_region_of_applicability_polygon_roundtrips():
+    fields = _sample_fields()
+    rings = [[[-84.0, 40.0], [-83.0, 40.0], [-83.0, 41.0], [-84.0, 40.0]]]
+    fields["region_of_applicability"] = {
+        "kind": "polygon", "code": "USER", "name": "Custom area", "polygon": rings,
+    }
+    out = _roundtrip(fields)
+    assert out["region_of_applicability"]["kind"] == "polygon"
+    assert out["region_of_applicability"]["polygon"] == rings

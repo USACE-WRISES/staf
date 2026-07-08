@@ -32,6 +32,7 @@ ENTRY_COLUMNS = [
 
 _ENTRIES_CACHE: pd.DataFrame | None = None
 _FN_LOOKUP_CACHE: dict | None = None
+_CANON_FN_CACHE: dict | None = None
 
 
 def load_staf_metric_library(path: str | None = None) -> dict:
@@ -62,6 +63,43 @@ def _staf_function_lookup() -> dict:
         lk[f["id"]] = {"name": f["name"], "discipline": f["category"]}
     _FN_LOOKUP_CACHE = lk
     return lk
+
+
+def _canonical_function_index() -> dict:
+    """``lower(name | alias) -> {"id","name","discipline"}`` from staf_functions.json
+    (cached). The ``aliases`` field reconciles known label spellings (e.g. metric_map
+    uses "Water and soil quality" for the canonical "Water & soil quality")."""
+    global _CANON_FN_CACHE
+    if _CANON_FN_CACHE is not None:
+        return _CANON_FN_CACHE
+    fns = config.staf_functions_raw().get("functions") or []
+    idx: dict = {}
+    for f in fns:
+        canon = {"id": f.get("id"), "name": f.get("name"), "discipline": f.get("category")}
+        for nm in [f.get("name"), *(f.get("aliases") or [])]:
+            if nm is None:
+                continue
+            key = str(nm).strip().lower()
+            if key:
+                idx.setdefault(key, canon)
+    _CANON_FN_CACHE = idx
+    return idx
+
+
+def staf_canonical_function(name) -> dict | None:
+    """Resolve a function label (canonical name OR a staf_functions.json alias,
+    case-insensitive) to ``{"id","name","discipline"}``, or ``None`` if unknown."""
+    if name is None:
+        return None
+    try:
+        if pd.isna(name):
+            return None
+    except (TypeError, ValueError):
+        pass
+    key = str(name).strip().lower()
+    if not key:
+        return None
+    return _canonical_function_index().get(key)
 
 
 def staf_function_meta() -> pd.DataFrame:
@@ -155,9 +193,10 @@ def staf_metric_library_entries() -> pd.DataFrame:
 
 def _reset_cache() -> None:
     """Test hook: drop cached lookup + exploded entries."""
-    global _ENTRIES_CACHE, _FN_LOOKUP_CACHE
+    global _ENTRIES_CACHE, _FN_LOOKUP_CACHE, _CANON_FN_CACHE
     _ENTRIES_CACHE = None
     _FN_LOOKUP_CACHE = None
+    _CANON_FN_CACHE = None
 
 
 def staf_metric_library_default_mapping(metric_keys=(), metric_config=None) -> pd.DataFrame:
@@ -237,3 +276,107 @@ def staf_metric_library_default_mapping(metric_keys=(), metric_config=None) -> p
         assign = pd.concat([assign, scaffold], ignore_index=True)
         assign["sort_order"] = pd.Series(range(1, len(assign) + 1), dtype="int64")
     return assign
+
+
+def default_discipline_function_mapping(metric_keys=(), metric_config=None) -> pd.DataFrame:
+    """Comprehensive default mapping for the workbench prefill + "Reset to STAF
+    defaults" button.
+
+    Unions two sources so the workbench default matches the import wizard's Compile
+    coverage:
+
+    * the STAF master library (:func:`staf_metric_library_default_mapping`) — keeps
+      its real assignments AND its ``lib:`` planned / no-data rows, and
+    * ``config/metric_map.yaml`` (:func:`~streamcurves.metric_map.metric_map_functions_for`)
+      — the complete metric -> function crosswalk that drives the Compile screen,
+      applied to every compiled metric_key (assigned to EVERY function it serves).
+
+    Function labels are canonicalized (:func:`staf_canonical_function`, resolving
+    staf_functions.json aliases) so buckets align with the workbench skeleton and the
+    ``(metric_key, function_label)`` pair de-dupes cleanly across the two sources. A
+    compiled metric with no home in either source becomes a blank scaffold row. Always
+    passes :func:`~streamcurves.mapping.validate_discipline_function_mapping`.
+    """
+    from .metric_map import metric_map_functions_for
+
+    # clean, unique, order-preserving keys (matches the base builder).
+    keys: list = []
+    seen: set = set()
+    for k in list(metric_keys):
+        if k is None:
+            continue
+        try:
+            if pd.isna(k):
+                continue
+        except (TypeError, ValueError):
+            pass
+        if str(k) == "" or k in seen:
+            continue
+        seen.add(k)
+        keys.append(k)
+    keyset = {str(k) for k in keys}
+
+    base = staf_metric_library_default_mapping(keys, metric_config)
+
+    def _present(v) -> bool:
+        if v is None:
+            return False
+        try:
+            if pd.isna(v):
+                return False
+        except (TypeError, ValueError):
+            pass
+        return str(v).strip() != ""
+
+    rows_mk: list = []
+    rows_disc: list = []
+    rows_fl: list = []
+    seen_pairs: set = set()
+
+    # 1) base library rows: real assignments + lib: planned rows. Drop the base's
+    #    blank scaffolds — coverage for compiled metrics is re-derived from
+    #    metric_map below so the workbench default matches the Compile screen.
+    if base is not None and len(base) > 0:
+        for _, r in base.iterrows():
+            mk, fl = r["metric_key"], r["function_label"]
+            if not (_present(mk) and _present(fl)):
+                continue
+            pair = (str(mk), str(fl).strip().lower())
+            if pair in seen_pairs:
+                continue
+            seen_pairs.add(pair)
+            rows_mk.append(mk)
+            rows_disc.append(r["discipline"])
+            rows_fl.append(fl)
+
+    # 2) metric_map.yaml assignments for every compiled metric_key, one row per
+    #    function the metric serves (canonicalized to the workbench's function name).
+    for mk in keys:
+        for ff in metric_map_functions_for(str(mk)):
+            canon = staf_canonical_function(ff.get("function_name"))
+            if canon is None:
+                continue
+            pair = (str(mk), str(canon["name"]).strip().lower())
+            if pair in seen_pairs:
+                continue
+            seen_pairs.add(pair)
+            rows_mk.append(mk)
+            rows_disc.append(canon["discipline"])
+            rows_fl.append(canon["name"])
+
+    # 3) compiled metrics with no home in either source -> blank scaffold row.
+    assigned_real = {str(m) for m in rows_mk if str(m) in keyset}
+    for k in keys:
+        if str(k) not in assigned_real:
+            rows_mk.append(k)
+            rows_disc.append(None)
+            rows_fl.append(None)
+
+    return pd.DataFrame(
+        {
+            "metric_key": pd.Series(rows_mk, dtype=object),
+            "discipline": pd.Series(rows_disc, dtype=object),
+            "function_label": pd.Series(rows_fl, dtype=object),
+            "sort_order": pd.Series(range(1, len(rows_mk) + 1), dtype="int64"),
+        }
+    )

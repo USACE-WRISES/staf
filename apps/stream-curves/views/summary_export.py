@@ -19,7 +19,6 @@ from datetime import datetime
 from shiny import module, reactive, render, req, ui
 
 from streamcurves.deep_export import (
-    build_deep_assessment_bundle,
     deep_collect_curve_rows,
     deep_slug,
     write_deep_assessment_bundle,
@@ -30,6 +29,7 @@ from streamcurves.oh_export import (
 )
 from streamcurves.paths import TEMPLATES_DIR
 from streamcurves.science_report import build_science_support_html
+from views import assessment_publish as ap
 from views import summary_state as sst
 from views.state import AppState
 from views.theme import bi
@@ -133,6 +133,11 @@ def summary_export_server(input, output, session, state: AppState):
         ctx = export_context()
         meta = ctx["session_meta"]
         confirmed = ctx["discipline_function_mapping_confirmed"]
+        # The DEEP bundle needs at least one finalized Phase-4 curve, else
+        # build_bundle_from_state raises and the download would otherwise be an error
+        # stub (not a real .deep.json). Gate the button on the same rule the builder
+        # uses so no broken bundle can ever be produced.
+        deep_ready = bool(deep_collect_curve_rows(state.completed_metrics() or {}))
 
         def stat_card(title, value, detail=None):
             body = [
@@ -154,7 +159,7 @@ def summary_export_server(input, output, session, state: AppState):
                 class_="card mb-2",
             )
 
-        def dl_button(dl_id, label):
+        def dl_button(dl_id, label, *, enabled=True, disabled_title=None):
             cls = "btn btn-primary btn-sm"
             if not confirmed:
                 return ui.download_button(
@@ -162,6 +167,14 @@ def summary_export_server(input, output, session, state: AppState):
                     label,
                     class_=cls + " disabled",
                     title="Confirm the Discipline → Function → Metric mapping first.",
+                    aria_disabled="true",
+                )
+            if not enabled:
+                return ui.download_button(
+                    ns(dl_id),
+                    label,
+                    class_=cls + " disabled",
+                    title=disabled_title or "Not ready to export yet.",
                     aria_disabled="true",
                 )
             return ui.download_button(ns(dl_id), label, class_=cls)
@@ -249,7 +262,24 @@ def summary_export_server(input, output, session, state: AppState):
                         "DEEP Assessment Bundle (.deep.json)",
                         "A portable detailed-assessment definition for the DEEP "
                         "executor app — finalized curves, mapped to STAF functions.",
-                        dl_button("dl_deep_assessment", "Download DEEP Bundle"),
+                        dl_button(
+                            "dl_deep_assessment",
+                            "Download DEEP Bundle",
+                            enabled=deep_ready,
+                            disabled_title=(
+                                "Finalize at least one reference curve (Phase 4) "
+                                "before exporting the DEEP bundle."
+                            ),
+                        ),
+                    ),
+                    ui.div(
+                        bi("magic"),
+                        " This bundle is a testable snapshot. To make it a reusable, "
+                        "versioned assessment that DEEP lists for everyone, open the ",
+                        ui.tags.strong("Library"),
+                        " tab and publish this session. To test scoring first, upload the "
+                        "downloaded bundle in DEEP (its assessment step accepts uploads).",
+                        class_="alert alert-info mt-2 mb-0 small",
                     ),
                     class_="card-body",
                 ),
@@ -315,43 +345,27 @@ def summary_export_server(input, output, session, state: AppState):
         )
     )
     def dl_deep_assessment():
-        with reactive.isolate():
-            completed = state.completed_metrics() or {}
-            mapping = state.discipline_function_mapping()
-            metric_config = state.metric_config() or {}
-            session_name = state.session_name()
+        # Shared builder: finalized curves + mapping + config + region-of-applicability.
         try:
-            curve_rows = deep_collect_curve_rows(completed)
-            if not curve_rows:
-                ui.notification_show(
-                    "No finalized reference curves in this session. Complete at least "
-                    "one metric's Phase 4 curve first.",
-                    type="warning",
-                    duration=8,
-                )
-                yield json.dumps(
-                    {
-                        "error": "No finalized reference curves in this session.",
-                        "hint": "Complete at least one metric's Phase 4 curve, then export.",
-                    },
-                    indent=2,
-                ).encode("utf-8")
-                return
-            meta = {
-                "assessmentId": deep_slug(session_name or "spring-assessment"),
-                "assessmentName": session_name or "Spring Assessment",
-                "sourceCitation": "StreamCurves reference-curve development",
-            }
-            bundle = build_deep_assessment_bundle(
-                curve_rows, mapping, metric_config, meta=meta
-            )
-            with tempfile.TemporaryDirectory() as d:
-                out = os.path.join(d, "bundle.deep.json")
-                write_deep_assessment_bundle(bundle, out)
-                with open(out, "rb") as f:
-                    yield f.read()
+            bundle = ap.build_bundle_from_state(state)
+        except ValueError as e:  # no finalized curves yet
+            ui.notification_show(str(e), type="warning", duration=8)
+            yield json.dumps(
+                {
+                    "error": str(e),
+                    "hint": "Complete at least one metric's Phase 4 curve, then export.",
+                },
+                indent=2,
+            ).encode("utf-8")
+            return
         except Exception as e:  # noqa: BLE001
             logger.exception("DEEP export failed")
             yield json.dumps({"error": str(e), "hint": "DEEP export failed."}, indent=2).encode(
                 "utf-8"
             )
+            return
+        with tempfile.TemporaryDirectory() as d:
+            out = os.path.join(d, "bundle.deep.json")
+            write_deep_assessment_bundle(bundle, out)
+            with open(out, "rb") as f:
+                yield f.read()

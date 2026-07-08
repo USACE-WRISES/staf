@@ -50,8 +50,9 @@ adds pytest and other dev-only tooling.
 - **Cross-Sections** — on-demand geomorphic cross-sections (NLDI snap + 3DEP terrain).
 
 The import wizard and cross-sections tab pull from public REST services (USGS
-NLDI/3DEP, EPA StreamCAT, USGS StreamStats, and — with an `MMW_API_KEY` — Model
-My Watershed); each source fails to NA rather than aborting.
+NLDI/3DEP, EPA StreamCAT, USGS StreamStats, and Model My Watershed); each source
+fails to NA rather than aborting. Model My Watershed needs an API key: set
+`MMW_API_KEY`, or put the key in the gitignored `scripts/.mmw_api_key`.
 
 ## Deploy (Posit Connect Cloud)
 

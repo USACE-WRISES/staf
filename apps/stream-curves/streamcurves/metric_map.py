@@ -144,6 +144,22 @@ def metric_map_function_label(code) -> str:
     return f"{ff['discipline']}: {ff['function_name']}"
 
 
+def metric_map_functions_for(code) -> list[dict]:
+    """ALL ``{discipline, function_name}`` a code serves, in file order (a metric
+    is listed under every function it informs). Same ``ss_``/``ws``/``cat`` code
+    tolerance as :func:`metric_map_function_for`; returns the matches for the
+    first candidate that hits, or ``[]``."""
+    df = metric_map_entries()
+    for cc in _code_candidates(code):
+        hit = df[df["code"] == cc]
+        if len(hit) > 0:
+            return [
+                {"discipline": r["discipline"], "function_name": r["function_name"]}
+                for _, r in hit.iterrows()
+            ]
+    return []
+
+
 def metric_map_role_for(code):
     """Role suggestion ``metric|predictor|both`` for a code, or None if the code
     is not in the map. Same code-naming tolerance as function_for (R 131-136)."""
@@ -175,6 +191,7 @@ def _mmw_core_metrics_codes() -> list[str]:
         "mmw_mean_slope_pct",
         "mmw_mean_elev_m",
         "mmw_annual_precip_cm",
+        "mmw_da_sqmi",
     ]
 
 

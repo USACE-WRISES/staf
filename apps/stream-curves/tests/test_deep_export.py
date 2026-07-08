@@ -337,6 +337,32 @@ def test_meta_defaults():
     assert m["curve"]["layerName"] == "Developed in SPRING (stream-curves)"
 
 
+def _one_metric_case():
+    rows = {"m": mk_row("m", [0, 1], [0, 1], True)}
+    mapping = pd.DataFrame(
+        {"metric_key": ["m"], "discipline": ["Hydrology"],
+         "function_label": ["Catchment hydrology"], "sort_order": [1]}
+    )
+    return rows, mapping
+
+
+def test_bundle_carries_region_and_library_when_present():
+    rows, mapping = _one_metric_case()
+    region = {"kind": "ecoregion", "code": "55", "name": "Eastern Corn Belt Plains"}
+    library = {"libraryId": "eastern-corn-belt-plains", "version": 2,
+               "updatedAt": "2026-07-07T00:00:00Z"}
+    b = build_deep_assessment_bundle(rows, mapping, {}, {"region": region, "library": library})
+    assert b["region"] == region
+    assert b["library"] == library
+
+
+def test_bundle_omits_region_and_library_when_absent():
+    rows, mapping = _one_metric_case()
+    b = build_deep_assessment_bundle(rows, mapping, {}, {})
+    assert "region" not in b
+    assert "library" not in b
+
+
 # --------------------------------------------------------------------------- #
 # DataFrame input path (threshold_rows shape from streamcurves/curves.py)
 # --------------------------------------------------------------------------- #

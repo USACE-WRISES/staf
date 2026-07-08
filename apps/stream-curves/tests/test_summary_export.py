@@ -78,7 +78,7 @@ def export_state() -> AppState:
     """A loaded OSAM state with one finalized (perRiffle) reference curve."""
     state = AppState.fresh()
     bundle = read_input_workbook(FIXTURE)
-    cleaned, qa = clean_data(
+    cleaned, _ = clean_data(
         bundle["raw_data"], bundle["metric_config"],
         bundle["strat_config"], bundle["factor_recode_config"],
     )
@@ -92,7 +92,6 @@ def export_state() -> AppState:
         state.predictor_config.set(bundle["predictor_config"])
         state.factor_recode_config.set(bundle["factor_recode_config"])
         state.data.set(dat)
-        state.qa_log.set(qa)
         state.precheck_df.set(run_metric_precheck(dat, bundle["metric_config"]))
         state.current_metric.set("perRiffle")
         state.app_data_loaded.set(True)
