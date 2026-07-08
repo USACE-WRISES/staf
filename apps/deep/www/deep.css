@@ -184,3 +184,80 @@
   vertical-align: middle;
   border: 1px solid rgba(0, 0, 0, .14);
 }
+
+/* File-input progress bar ("Uploading..." / "Upload complete") in the narrow (352px)
+   left pane: Bootstrap's default .progress height (1rem) clips the label there. Shiny
+   puts both `progress` and `shiny-file-input-progress` on the SAME element, so target it
+   directly (not as a descendant) and let it grow to fit the text. Covers both left-pane
+   file inputs (assessment upload + resume-a-saved-assessment). */
+.easi-leftpane .shiny-file-input-progress {
+  height: auto;
+  min-height: 20px;
+  margin-bottom: 6px;
+}
+.easi-leftpane .shiny-file-input-progress .progress-bar {
+  height: auto;
+  line-height: 20px;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 0 6px;
+}
+
+/* ---- floating assessment-coverage panel (www/coverage.js) ---- */
+/* A collapsible card over the map, docked below the top-right basemaps (LayersControl) button.
+   Hidden until coverage.js adds .is-ready (once docked / once the deep_coverage handshake
+   resolves); it then stays visible even with an empty library, showing a "No published
+   assessments yet" empty state. */
+.deep-cov-panel {
+  position: absolute; top: 62px; right: 12px; z-index: 1100;
+  display: none; flex-direction: column; width: 240px; max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 86px); background: #fff; border: 1px solid var(--card-border);
+  border-radius: 8px; overflow: hidden; box-shadow: 0 8px 26px rgba(15, 23, 42, .16);
+}
+.deep-cov-panel.is-ready { display: flex; }
+/* Docked into the leaflet top-right control stack (coverage.js). The position:absolute above
+   is only a fallback if docking fails; once docked, leaflet floats it right and clears both,
+   so it stacks BELOW the layers button and flows down when that list expands (no overlap). */
+.deep-cov-panel.leaflet-control {
+  position: relative; top: auto; right: auto; z-index: auto; margin: 12px 10px 0 0;
+}
+.deep-cov-panel.collapsed { width: auto; min-width: 0; }
+.deep-cov-panel.collapsed .deep-cov-body { display: none; }
+
+.deep-cov-head {
+  display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 11px; flex: none;
+  cursor: pointer; user-select: none; border-bottom: 1px solid var(--rule);
+}
+.deep-cov-head:hover { background: var(--surface-soft); }
+.deep-cov-panel.collapsed .deep-cov-head { border-bottom: none; }
+.deep-cov-title { font-weight: 600; font-size: 12.5px; color: var(--easi-accent); white-space: nowrap; }
+
+/* drawn chevron (rotated border-L), not a font glyph — reads clearly at any size */
+.deep-cov-caret {
+  width: 16px; height: 16px; flex: none; display: inline-flex;
+  align-items: center; justify-content: center; color: var(--easi-accent);
+}
+.deep-cov-caret::before {
+  content: ""; width: 8px; height: 8px;
+  border-right: 2.4px solid currentColor; border-bottom: 2.4px solid currentColor;
+  transform: rotate(45deg) translate(-1.5px, -1.5px); transition: transform .15s ease;
+}
+.deep-cov-panel.collapsed .deep-cov-caret::before {
+  transform: rotate(-45deg) translate(-1.5px, -1.5px);
+}
+
+.deep-cov-body { padding: 6px 10px 9px; overflow-y: auto; }
+.deep-cov-row { display: flex; align-items: center; gap: 6px; margin: 5px 0; }
+.deep-cov-lbl { display: flex; align-items: flex-start; gap: 7px; flex: 1 1 auto;
+  min-width: 0; cursor: pointer; margin: 0; }
+.deep-cov-lbl input { margin-top: 2px; flex: none; }
+.deep-cov-all { padding-bottom: 6px; margin-bottom: 5px; border-bottom: 1px solid var(--rule);
+  font-weight: 600; }
+.deep-cov-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.deep-cov-name { font-size: 12px; color: #33415c; }
+.deep-cov-sub { font-size: 10.5px; color: #8a93a3; }
+.deep-cov-empty { font-size: 12px; color: #8a93a3; padding: 4px 2px 2px; }
+.deep-cov-zoom { flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; padding: 0; border: 1px solid var(--card-border); background: #fff;
+  border-radius: 5px; color: var(--easi-accent); cursor: pointer; }
+.deep-cov-zoom:hover { background: var(--surface-soft); border-color: var(--easi-accent); }

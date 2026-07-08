@@ -59,10 +59,13 @@ class LoadedAssessment:
 # Registry (predefined) + upload
 # --------------------------------------------------------------------------- #
 def list_predefined() -> list[dict]:
-    """Lightweight catalog for a picker: id, name, state, counts."""
+    """Lightweight catalog for a picker: id, name, state, counts, and (for library
+    assessments) the region + embedded version/last-updated."""
     out = []
     for a in config.assessments():
         mbf = a.get("metricsByFunction", [])
+        lib = a.get("library") or {}
+        region = a.get("region") or lib.get("region") or {}
         out.append(
             {
                 "assessmentId": a["assessmentId"],
@@ -71,8 +74,108 @@ def list_predefined() -> list[dict]:
                 "sourceCitation": a.get("sourceCitation", ""),
                 "functionCount": len([fn for fn in mbf if fn.get("metrics")]),
                 "metricCount": sum(len(fn.get("metrics", [])) for fn in mbf),
+                "regionName": region.get("name", ""),
+                "version": lib.get("version"),
+                "updatedAt": lib.get("updatedAt", ""),
             }
         )
+    return out
+
+
+def _region_geometry(region: dict | None) -> dict | None:
+    """Normalize a stored region polygon into a GeoJSON geometry, or None.
+
+    A published library bundle stores the outline as a geometry dict
+    ({type, coordinates}); a user-drawn region may store bare rings (a list). Both
+    normalize to a geometry so the map layer renders them the same way.
+    """
+    poly = (region or {}).get("polygon")
+    if not poly:
+        return None
+    if isinstance(poly, dict) and poly.get("type") and poly.get("coordinates"):
+        return poly
+    if isinstance(poly, list) and poly:
+        first = poly[0]
+        # a bare ring of [x, y] points -> single-ring Polygon; a list of rings -> Polygon
+        if first and isinstance(first[0], (int, float)):
+            return {"type": "Polygon", "coordinates": [poly]}
+        return {"type": "Polygon", "coordinates": poly}
+    return None
+
+
+def library_region_features() -> dict:
+    """A GeoJSON FeatureCollection of the available assessments that carry a region
+    outline, for DEEP's "available assessments" map overlay. Each feature's properties
+    carry ``assessmentId`` (for click-to-load), ``assessmentName`` and ``regionName``.
+    ``features`` is empty when nothing has a polygon (e.g. only the state-SQT registry).
+    """
+    feats: list[dict] = []
+    for a in config.assessments():
+        region = a.get("region") or (a.get("library") or {}).get("region") or {}
+        geom = _region_geometry(region)
+        if not geom:
+            continue
+        lib = a.get("library") or {}
+        feats.append(
+            {
+                "type": "Feature",
+                "properties": {
+                    "assessmentId": a.get("assessmentId"),
+                    "assessmentName": a.get("assessmentName", a.get("assessmentId")),
+                    "regionName": region.get("name", ""),
+                    "version": lib.get("version"),
+                    "updatedAt": lib.get("updatedAt", ""),
+                },
+                "geometry": geom,
+            }
+        )
+    return {"type": "FeatureCollection", "features": feats}
+
+
+# --------------------------------------------------------------------------- #
+# Applicability (which assessments cover a clicked point)
+# --------------------------------------------------------------------------- #
+def _point_in_ring(x: float, y: float, ring: list) -> bool:
+    """Ray-casting point-in-ring test; ``ring`` is a sequence of ``[lon, lat]`` pairs."""
+    n = len(ring)
+    inside = False
+    j = n - 1
+    for i in range(n):
+        xi, yi = ring[i][0], ring[i][1]
+        xj, yj = ring[j][0], ring[j][1]
+        if ((yi > y) != (yj > y)) and (x < (xj - xi) * (y - yi) / (yj - yi) + xi):
+            inside = not inside
+        j = i
+    return inside
+
+
+def _point_in_polygon(x: float, y: float, rings: list) -> bool:
+    """Point in a GeoJSON polygon: inside the outer ring and outside every hole."""
+    if not rings or not _point_in_ring(x, y, rings[0]):
+        return False
+    return not any(_point_in_ring(x, y, h) for h in rings[1:])
+
+
+def _point_in_geometry(lon: float, lat: float, geom: dict | None) -> bool:
+    if not geom:
+        return False
+    t, coords = geom.get("type"), geom.get("coordinates") or []
+    if t == "Polygon":
+        return _point_in_polygon(lon, lat, coords)
+    if t == "MultiPolygon":
+        return any(_point_in_polygon(lon, lat, poly) for poly in coords)
+    return False
+
+
+def applicable_assessments(lat: float, lon: float) -> list[str]:
+    """assessmentIds applicable at ``(lat, lon)``: the region polygon contains the point, or
+    the assessment has no region polygon (no area of applicability -> applies everywhere)."""
+    out: list[str] = []
+    for a in config.assessments():
+        region = a.get("region") or (a.get("library") or {}).get("region") or {}
+        geom = _region_geometry(region)
+        if geom is None or _point_in_geometry(lon, lat, geom):
+            out.append(a.get("assessmentId"))
     return out
 
 

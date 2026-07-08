@@ -61,13 +61,31 @@ STEP_LABELS = [(STEP_IDENTIFY, "Identify"), (STEP_BASIN, "Basin"),
 CATEGORY_ORDER = list(config.CATEGORY_ORDER)
 _FNF_SHORT = {"Functioning": "F", "Functioning-at-Risk": "AR", "Non-Functioning": "NF"}
 
-# Predefined assessment catalog (static — built into data/).
-_PREDEF = assessments.list_predefined()
-_PREDEF_CHOICES = {
-    a["assessmentId"]: f'{a["assessmentName"]} — {a["sourceCitation"]} · '
-                       f'{a["metricCount"]} metrics · {a["functionCount"]}/20 functions'
-    for a in _PREDEF
-}
+# Predefined + library assessment catalog. Built fresh per render (not cached) so a
+# newly published library version shows up in dev/desktop without a DEEP restart; on
+# the cloud this just reads the baked registry.
+def _assessment_choices(applicable_ids=None) -> dict:
+    """Assessment-picker choices. With ``applicable_ids`` (the ids whose area of
+    applicability covers the clicked point, plus every assessment that specifies no area),
+    split into an 'Applicable here' optgroup first, then 'Other assessments'."""
+    all_choices: dict[str, str] = {}
+    for a in assessments.list_predefined():
+        label = (f'{a["assessmentName"]} — {a["sourceCitation"]} · '
+                 f'{a["metricCount"]} metrics · {a["functionCount"]}/20 functions')
+        if a.get("version"):
+            label += f' · v{a["version"]}'
+        all_choices[a["assessmentId"]] = label
+    if applicable_ids is None:
+        return all_choices
+    ids = set(applicable_ids)
+    applicable = {i: lbl for i, lbl in all_choices.items() if i in ids}
+    others = {i: lbl for i, lbl in all_choices.items() if i not in ids}
+    grouped: dict = {}
+    if applicable:
+        grouped["Applicable here"] = applicable
+    if others:
+        grouped["Other assessments"] = others
+    return grouped or all_choices
 
 # Detailed metricIds DEEP can desktop-compute (Phase 3).
 _COMPUTED_IDS = _computed.computable_ids()
@@ -350,11 +368,12 @@ def staf_topnav(current: str):
 
 app_ui = ui.page_fillable(
     ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=1"),
-                    ui.tags.link(rel="stylesheet", href="deep.css?v=1"),
+                    ui.tags.link(rel="stylesheet", href="deep.css?v=5"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="measure.js", defer="")),
+                    ui.tags.script(src="measure.js", defer=""),
+                    ui.tags.script(src="coverage.js", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
         ui.div(
@@ -374,6 +393,16 @@ app_ui = ui.page_fillable(
             output_widget("map", height="100%") if _HAS_MAP
             else ui.div("Map requires ipyleaflet + shinywidgets.", class_="text-muted p-3"),
             class_="easi-map-wrap",
+        ),
+        # Floating coverage panel (populated client-side by coverage.js). Always visible once the
+        # panel docks; shows a "No published assessments yet" empty state until an assessment is
+        # published.
+        ui.div(
+            ui.div(ui.span(class_="deep-cov-caret"),
+                   ui.span("Assessment coverage", class_="deep-cov-title"),
+                   class_="deep-cov-head"),
+            ui.div(id="deep-cov-body", class_="deep-cov-body"),
+            id="deep-cov-panel", class_="deep-cov-panel collapsed",
         ),
         ui.output_ui("worksheet"),
         ui.div(ui.output_ui("leftpane"), class_="easi-leftpane"),
@@ -404,6 +433,64 @@ def server(input, output, session_):  # noqa: C901
     current_fn = reactive.value(0)
     compute_nonce = reactive.value(0)          # bumped when desktop-compute merges values
     computed_for = reactive.value(None)        # assessmentId already desktop-computed
+
+    # One-shot deep-link ingest from the URL query string:
+    #   ?assessment=<libraryId>          -> load that predefined/library assessment
+    #   ?handoff=<local .deep.json path> -> load a draft bundle handed off by
+    #       StreamCurves' "Test in DEEP" (desktop; the file is local to this machine).
+    # Reuses the same loaders as the picker/upload, so no scoring UI is duplicated.
+    _url_ingested = reactive.value(False)
+
+    @reactive.effect
+    def _ingest_url_params():
+        if _url_ingested():
+            return
+        try:
+            search = session_.clientdata.url_search()
+        except Exception:  # noqa: BLE001
+            return
+        if not search:
+            return  # none present yet — wait for a real value before deciding
+        _url_ingested.set(True)
+        from urllib.parse import parse_qs
+
+        params = parse_qs(search.lstrip("?"))
+        aid = (params.get("assessment") or [None])[0]
+        handoff = (params.get("handoff") or [None])[0]
+        try:
+            if handoff:
+                with open(handoff, encoding="utf-8") as fh:
+                    la = assessments.from_bundle(json.load(fh))
+            elif aid:
+                la = assessments.load_predefined(aid)
+            else:
+                return
+        except Exception as exc:  # noqa: BLE001
+            ui.notification_show(f"Could not open the linked assessment: {exc}",
+                                 type="error", duration=8)
+            return
+        loaded_assessment.set(la); measured_values.set({}); current_fn.set(0)
+        current_step.set(STEP_ASSESS)
+        ui.notification_show(f"Loaded {la.assessment_name} from link.",
+                             type="message", duration=4)
+
+    # Coverage panel (www/coverage.js): reply to the client's ready handshake with the
+    # available-assessment outlines. coverage.js draws them as client-side, non-interactive
+    # Leaflet layers (out of the LayersControl) and renders a per-assessment toggle panel.
+    @reactive.effect
+    @reactive.event(input.coverage_ready)
+    async def _send_coverage():
+        payload = []
+        for f in assessments.library_region_features().get("features") or []:
+            p = f.get("properties") or {}
+            payload.append({
+                "assessmentId": p.get("assessmentId"),
+                "name": p.get("assessmentName") or p.get("assessmentId"),
+                "region": p.get("regionName") or "",
+                "version": p.get("version"),
+                "geometry": f.get("geometry"),
+            })
+        await session_.send_custom_message("deep_coverage", {"features": payload})
 
     _layers: dict = {"flow": None, "marker": None, "ws": None, "reach": None}
 
@@ -441,6 +528,8 @@ def server(input, output, session_):  # noqa: C901
                              attribution=USGS_ATTR, max_native_zoom=16, max_zoom=19))
             mp.add(TileLayer(url=USGS_HYDRO_URL, name="NHD Hydrography", base=False,
                              opacity=0.85, attribution=USGS_ATTR, max_native_zoom=16, max_zoom=19))
+            # top-right; coverage.js docks the coverage panel into this same control
+            # stack (just below this button), so the two auto-space and never overlap.
             mp.add(LayersControl(position="topright"))
             mp.add(ScaleControl(position="bottomright", metric=True, imperial=True))
             mp.on_interaction(_on_map_interaction)
@@ -519,7 +608,8 @@ def server(input, output, session_):  # noqa: C901
 
         def _apply_snap(hit):
             slat, slon, dist, comid = hit
-            _add_layer("marker", Marker(location=(slat, slon), draggable=False, title="Selected point"))
+            _add_layer("marker", Marker(location=(slat, slon), draggable=False,
+                                        title="Selected point", name="Selected point"))
             snapped_point.set((slat, slon, dist, comid))
             ui.update_numeric("lat", value=round(slat, 5))
             ui.update_numeric("lon", value=round(slon, 5))
@@ -725,6 +815,10 @@ def server(input, output, session_):  # noqa: C901
             _remove_layer(k)
         snapped_point.set(None); delin.set(None); stage.set("")
         loaded_assessment.set(None); measured_values.set({}); current_fn.set(0)
+        ui.update_numeric("lat", value=None)
+        ui.update_numeric("lon", value=None)
+        if _HAS_MAP:
+            _MAP.center = (39.5, -98.35); _MAP.zoom = 4
         current_step.set(STEP_IDENTIFY)
         try:
             ui.modal_remove()
@@ -822,11 +916,22 @@ def server(input, output, session_):  # noqa: C901
                        ui.input_action_button("to_assess", "Choose assessment", class_="btn-primary"),
                        class_="easi-pane-actions"))
         elif step == STEP_ASSESS:
+            with reactive.isolate():
+                pt = snapped_point()
+                dd = (delin() or {}).get("delineation") or {}
+            lat = pt[0] if pt else dd.get("snapped_lat")
+            lon = pt[1] if pt else dd.get("snapped_lon")
+            applicable = (assessments.applicable_assessments(lat, lon)
+                          if lat is not None and lon is not None else None)
+            has_regions = bool(assessments.library_region_features().get("features"))
             body = ui.TagList(
-                ui.div("Choose a predefined detailed assessment, or upload one you built in SPRING. "
-                       "Each defines the metrics and reference curves for scoring.", class_="easi-instr"),
-                ui.input_select("assessment_id", "Predefined detailed assessment",
-                                choices=_PREDEF_CHOICES),
+                ui.div("Choose a detailed assessment, or upload one you built in SPRING. Each "
+                       "defines the metrics and reference curves for scoring.", class_="easi-instr"),
+                *([ui.div("Assessments whose area of applicability covers your point are listed "
+                          "first. Hover a shaded region on the map for its details.",
+                          class_="easi-ac-credit")] if has_regions else []),
+                ui.input_select("assessment_id", "Detailed assessment",
+                                choices=_assessment_choices(applicable)),
                 ui.input_action_button("load_assessment", "Load this assessment",
                                        class_="btn-primary btn-sm"),
                 ui.hr(),
@@ -944,10 +1049,24 @@ def server(input, output, session_):  # noqa: C901
                         class_="easi-snap-note")
         nfun = len([fn for fn in la.metrics_by_function if fn.get("metrics")])
         nmet = sum(len(fn.get("metrics", [])) for fn in la.metrics_by_function)
+        # Library provenance travels with the bundle (LoadedAssessment.raw): show the
+        # region of applicability and which version/when it was last updated.
+        lib = la.raw.get("library") or {}
+        region = la.raw.get("region") or lib.get("region") or {}
+        info_bits = []
+        if region.get("name"):
+            info_bits.append(ui.div(f"Region: {region['name']}", class_="easi-ac-credit"))
+        if lib.get("version"):
+            updated = lib.get("updatedAt") or ""
+            when = f" · updated {updated[:10]}" if updated else ""
+            info_bits.append(
+                ui.div(f"Library version v{lib['version']}{when}", class_="easi-ac-credit")
+            )
         return ui.div(
             ui.p(f"✓ {la.assessment_name}", class_="easi-snap-note ok"),
             ui.div(f"{la.source_citation} · {nmet} metrics · {nfun}/20 functions",
                    class_="easi-ac-credit"),
+            *info_bits,
             ui.div(ui.input_action_button("to_measure", "Continue to measurements",
                                           class_="btn-primary"), class_="easi-pane-actions"))
 
@@ -1409,7 +1528,8 @@ def server(input, output, session_):  # noqa: C901
                 dd = d.get("delineation") or {}
                 if dd.get("snapped_lat") is not None:
                     _add_layer("marker", Marker(location=(dd["snapped_lat"], dd["snapped_lon"]),
-                                                draggable=False))
+                                                draggable=False, title="Selected point",
+                                                name="Selected point"))
                     b = delineation.geojson_bounds(d.get("watershed_geojson"), d.get("reach_geojson"))
                     if b:
                         _MAP.fit_bounds(b)
