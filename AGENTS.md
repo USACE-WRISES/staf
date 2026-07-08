@@ -39,6 +39,7 @@ Primary working areas:
 1) Do not manually edit generated outputs when a script is the canonical producer; run the generator.
 2) When data schemas are changed, update related docs and consumers in the same change set.
 3) Keep JSON/TSV outputs deterministic; the generator writes only under `docs/assets/data/`.
+4) Assessment library (`apps/library/`): do not hand-edit `catalog.json`, `manifest.json`, or `vN/` payloads — StreamCurves' Publish is the canonical producer. After a publish, re-bake DEEP (`apps/deep/scripts/bake_library_into_deep.py`) and commit `apps/library/**` and `apps/deep/data/**` together. Format contract: `apps/library/README.md`.
 
 ## Validation Checklist
 Run what applies to the files touched:

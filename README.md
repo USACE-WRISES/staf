@@ -16,6 +16,7 @@ STAF Desktop shell that runs those same apps locally.
 
 - `docs/` — Jekyll site source (GitHub Pages builds this folder; just-the-docs remote theme). The Tools page (`docs/tools/`) is the launch portal for the four apps; app URLs live in `docs/_data/apps.yml`.
 - `apps/` — the four Shiny for Python apps. Each folder is self-contained (own `requirements.txt`, `www/`, `data/`, tests, and Posit Publisher config) and deploys to its own Posit Connect Cloud content item.
+- `apps/library/` — the shared, version-controlled **STAF assessment library**: completed detailed assessments that StreamCurves publishes and DEEP runs (latest version only). See `apps/library/README.md` and "The assessment library" below.
 - `desktop/` — STAF Desktop: a C#/.NET 10 WebView2 shell that supervises the same four apps as local processes on a self-managed Python runtime (downloaded on first run, auto-updated from this repo's GitHub Releases). `dotnet test desktop\Staf.Desktop.slnx` runs its suite; launching a dev build from a checkout runs the apps from the repo `.venv`. Release model: `desktop/RELEASING.md`.
 - `libs/` — reserved for `staf-core`, the future shared package for code duplicated across the apps.
 - `scripts/`, `src/` — TypeScript build pipeline for the metric library (see below).
@@ -56,6 +57,18 @@ Each app deploys **separately** with the Posit Publisher extension (VS Code / Po
 - Before deploying, confirm Publisher targets the existing deployment rather than creating a new one.
 
 App URLs are listed in `docs/_data/apps.yml` (used by the site) and in each app's `staf_topnav` (the in-app cross-navigation). Until a shared `staf-core` package exists, a URL change must be mirrored in both places.
+
+## The assessment library
+
+`apps/library/` is the shared home for **completed detailed assessments** (reference-curve sets built in StreamCurves, run by DEEP). It is version-controlled: each assessment keeps every published version under `assessments/<id>/vN/`, and DEEP always uses the latest.
+
+The path from working files to a listed assessment:
+
+1. **Session** — a builder finishes reference curves in StreamCurves and saves a `.streamcurves.json` session (Data & Setup, then Save), then shares it with the publisher.
+2. **Publish** — the publisher (on local/desktop, where `apps/library/` is writable) opens StreamCurves' **Library** tab, loads the session (or the live one), and publishes it as a new version. StreamCurves writes `apps/library/`, then runs `apps/deep/scripts/bake_library_into_deep.py` to fold the latest into DEEP's baked registry (`apps/deep/data/deep-assessments.json`).
+3. **Ship** — commit `apps/library/**` and `apps/deep/data/**`, then redeploy DEEP. The cloud DEEP can't read `apps/library/` at runtime, so it relies on the baked registry; in local/desktop DEEP also merges the live library so newly published versions show up immediately.
+
+DEEP lists each library assessment on its assessment step (with region + version + last-updated), and StreamCurves can re-open any version to keep working on it. To test before publishing, download the `.deep.json` from StreamCurves' export and upload it on DEEP's assessment step; DEEP also accepts `?assessment=<id>` (a published assessment) and `?handoff=<local .deep.json path>` (a desktop draft) deep-links.
 
 ## The documentation site
 

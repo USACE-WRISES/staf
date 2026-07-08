@@ -32,6 +32,9 @@ docs/_data/apps.yml                Canonical app names/URLs for the portal
 
 apps/easi | sfari | deep | stream-curves    Shiny for Python apps (own requirements.txt,
                                             www/, data/, tests/, .posit/publish config)
+apps/library/                      Shared, versioned STAF assessment library — completed
+                                   detailed assessments StreamCurves publishes and DEEP runs
+                                   (catalog.json + assessments/<id>/vN/; see its README)
 desktop/                           STAF Desktop shell (C#/.NET 10 + WebView2 + Velopack)
 desktop/src/Staf.Desktop.Core/     All shell logic (supervisor, payload manager) — unit-tested
 desktop/src/Staf.Desktop/          Thin WinForms host (launcher + per-app windows)
@@ -58,7 +61,7 @@ py -3.12 -m venv .venv && .venv\Scripts\pip install -r requirements-dev.txt
 cd apps\easi && shiny run app.py --port 8000     # sfari:8001 deep:8003 stream-curves:8012
 
 # Desktop shell (dev mode runs the apps from the repo .venv)
-dotnet test desktop\Staf.Desktop.slnx            # 74 unit tests
+dotnet test desktop\Staf.Desktop.slnx            # 82 unit tests
 dotnet run --project desktop\src\Staf.Desktop    # or launch the built StafDesktop.exe
 ```
 
@@ -88,3 +91,4 @@ dotnet run --project desktop\src\Staf.Desktop    # or launch the built StafDeskt
 8. **Payload releases are ALWAYS `--prerelease`** — only shell `v*` releases may be normal releases, or `releases/latest` stops resolving to an installer (Velopack updater + humans depend on it)
 9. **`desktop/scripts/*.ps1` must stay pure ASCII** — PowerShell 5.1 reads BOM-less files as CP-1252, where UTF-8 em-dash bytes decode into smart quotes that PS honors as string delimiters, silently restructuring code
 10. **After changing any `apps/*/requirements.txt` pin, regenerate `desktop/payload/env.lock`** (command in `desktop/RELEASING.md`) — CI's consistency gate fails otherwise
+11. **After publishing an assessment library version, re-bake DEEP and commit both** — StreamCurves' Publish writes `apps/library/` and runs `apps/deep/scripts/bake_library_into_deep.py` (folding the latest into `apps/deep/data/deep-assessments.json`). Commit `apps/library/**` **and** `apps/deep/data/**`, then redeploy DEEP, so the cloud DEEP ships the new latest (it can't read `apps/library/` at runtime). Publishing is local/desktop only
