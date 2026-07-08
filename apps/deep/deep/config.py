@@ -66,8 +66,36 @@ def assessments_doc() -> dict:
     return _load("deep-assessments.json")
 
 
+def _merge_library(baked: list[dict]) -> list[dict]:
+    """Overlay the live shared library's latest bundles on the baked registry.
+
+    Local dev / desktop only (the library folder is absent on the cloud). A library
+    assessment with the same assessmentId replaces the baked one (latest wins); new
+    ids append after the baked entries. Any failure falls back to ``baked`` untouched.
+    """
+    try:
+        from . import library as _library  # local import avoids an import cycle
+
+        extra = _library.latest_bundles()
+    except Exception:  # noqa: BLE001
+        return baked
+    if not extra:
+        return baked
+
+    order = [a.get("assessmentId") for a in baked]
+    by_id = {a.get("assessmentId"): a for a in baked}
+    for bundle in extra:
+        aid = bundle.get("assessmentId")
+        if aid is None:
+            continue
+        if aid not in by_id:
+            order.append(aid)
+        by_id[aid] = bundle
+    return [by_id[i] for i in order if i in by_id]
+
+
 def assessments() -> list[dict]:
-    return assessments_doc()["assessments"]
+    return _merge_library(assessments_doc().get("assessments", []))
 
 
 def assessments_by_id() -> dict[str, dict]:

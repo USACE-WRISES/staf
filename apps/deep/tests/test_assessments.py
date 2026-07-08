@@ -16,8 +16,11 @@ def _midpoint_measure(la) -> dict[str, MeasuredValue]:
 
 
 def test_registry_lists_eight():
+    # The 8 baked state-SQT assessments are always present. The registry may also
+    # carry published shared-library assessments (merged in deep.config.assessments),
+    # so assert a subset rather than exact equality.
     cat = assessments.list_predefined()
-    assert {c["assessmentId"] for c in cat} == PREDEFINED
+    assert PREDEFINED <= {c["assessmentId"] for c in cat}
 
 
 def test_every_predefined_loads_with_valid_curves():
