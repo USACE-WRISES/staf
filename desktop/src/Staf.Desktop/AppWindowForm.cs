@@ -16,6 +16,7 @@ internal sealed class AppWindowForm : Form
     private readonly IShellHub _hub;
     private readonly AppDescriptor _app;
     private readonly int _port;
+    private readonly string? _deepLinkQuery;
     private readonly WebView2 _webView;
 
     /// <summary>Set before Close() when the shell is closing this window itself (stop command / shutdown).</summary>
@@ -23,11 +24,13 @@ internal sealed class AppWindowForm : Form
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public bool SuppressStopOnClose { get; set; }
 
-    public AppWindowForm(IShellHub hub, AppDescriptor app, int port, CoreWebView2Environment environment)
+    public AppWindowForm(IShellHub hub, AppDescriptor app, int port, CoreWebView2Environment environment,
+        string? deepLinkQuery = null)
     {
         _hub = hub;
         _app = app;
         _port = port;
+        _deepLinkQuery = deepLinkQuery;
 
         Text = $"{app.Name} - STAF Desktop Application";
         StartPosition = FormStartPosition.CenterScreen;
@@ -64,7 +67,22 @@ internal sealed class AppWindowForm : Form
         core.NavigationStarting += OnNavigationStarting;
         core.DownloadStarting += OnDownloadStarting;
 
-        core.Navigate($"http://127.0.0.1:{_port}/");
+        core.Navigate(LoopbackUrl(_deepLinkQuery));
+    }
+
+    /// <summary>The app's loopback URL, optionally carrying a deep-link query (incl. leading '?').</summary>
+    private string LoopbackUrl(string? query) => $"http://127.0.0.1:{_port}/{query}";
+
+    /// <summary>
+    /// Re-point an already-open window at a deep link, reloading the app so its startup
+    /// URL-param handler runs again. No-op if the WebView2 core isn't ready yet.
+    /// </summary>
+    public void NavigateDeepLink(string? query)
+    {
+        if (_webView.CoreWebView2 is { } core)
+        {
+            core.Navigate(LoopbackUrl(query));
+        }
     }
 
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
@@ -89,7 +107,7 @@ internal sealed class AppWindowForm : Form
         switch (decision.Action)
         {
             case NavAction.OpenApp when decision.AppId is { } appId:
-                _hub.RequestOpenApp(appId);
+                _hub.RequestOpenApp(appId, decision.Query);
                 break;
             case NavAction.FocusLauncher:
                 _hub.FocusLauncher();

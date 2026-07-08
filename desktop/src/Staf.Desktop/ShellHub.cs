@@ -13,8 +13,12 @@ internal interface IShellHub
     /// <summary>Loopback port → app id for every currently running app (navigation policy input).</summary>
     IReadOnlyDictionary<int, string> GetPortMap();
 
-    /// <summary>Launch the app if stopped, then open/focus its window.</summary>
-    void RequestOpenApp(string appId);
+    /// <summary>
+    /// Launch the app if stopped, then open/focus its window. When <paramref name="deepLinkQuery"/>
+    /// is set (the query string incl. leading '?' from a cross-app deep link), the window navigates
+    /// to <c>http://127.0.0.1:&lt;port&gt;/&lt;query&gt;</c> so the app's URL-param handler runs.
+    /// </summary>
+    void RequestOpenApp(string appId, string? deepLinkQuery = null);
 
     void FocusLauncher();
 

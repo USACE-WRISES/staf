@@ -21,6 +21,37 @@ public sealed class NavigationPolicyTests
         Assert.Equal(expectedApp, decision.AppId);
     }
 
+    [Theory]
+    [InlineData("staf-desktop://app/deep/?assessment=eastern-corn-belt-plains", "deep", "?assessment=eastern-corn-belt-plains")]
+    [InlineData("staf-desktop://app/deep?assessment=x", "deep", "?assessment=x")]
+    [InlineData("staf-desktop://app/deep/?handoff=draft123", "deep", "?handoff=draft123")]
+    public void StafDesktopAppLinks_PreserveTheDeepLinkQuery(string url, string expectedApp, string expectedQuery)
+    {
+        var decision = NavigationPolicy.Decide(url, ownPort: 8100, Ports);
+        Assert.Equal(NavAction.OpenApp, decision.Action);
+        Assert.Equal(expectedApp, decision.AppId);
+        Assert.Equal(expectedQuery, decision.Query);
+    }
+
+    [Theory]
+    [InlineData("staf-desktop://app/deep")]
+    [InlineData("staf-desktop://app/deep/")]
+    public void StafDesktopAppLinks_WithoutQuery_HaveNullQuery(string url)
+    {
+        var decision = NavigationPolicy.Decide(url, ownPort: 8100, Ports);
+        Assert.Equal(NavAction.OpenApp, decision.Action);
+        Assert.Null(decision.Query);
+    }
+
+    [Fact]
+    public void LoopbackPortLink_PreservesTheDeepLinkQuery()
+    {
+        var decision = NavigationPolicy.Decide("http://127.0.0.1:8101/?assessment=x", ownPort: 8100, Ports);
+        Assert.Equal(NavAction.OpenApp, decision.Action);
+        Assert.Equal("sfari", decision.AppId);
+        Assert.Equal("?assessment=x", decision.Query);
+    }
+
     [Fact]
     public void HomeLink_FocusesLauncher()
     {

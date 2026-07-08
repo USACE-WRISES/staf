@@ -24,7 +24,8 @@ internal sealed class LauncherForm : Form, IShellHub
     private readonly ShellServices _services;
     private readonly WebView2 _webView;
     private readonly Dictionary<string, AppWindowForm> _appWindows = new(StringComparer.OrdinalIgnoreCase);
-    private readonly HashSet<string> _pendingOpen = new(StringComparer.OrdinalIgnoreCase);
+    // appId -> deep-link query (incl. leading '?', or null) to apply once the app finishes launching.
+    private readonly Dictionary<string, string?> _pendingOpen = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly ShellUpdater _shellUpdater;
     private CoreWebView2Environment? _environment;
@@ -424,7 +425,7 @@ internal sealed class LauncherForm : Form, IShellHub
 
     // ── Supervisor → UI ────────────────────────────────────────────────────
 
-    private async Task LaunchOrFocusAsync(string appId)
+    private async Task LaunchOrFocusAsync(string appId, string? deepLinkQuery = null)
     {
         if (_supervisor is not { } supervisor)
         {
@@ -433,12 +434,12 @@ internal sealed class LauncherForm : Form, IShellHub
         var state = supervisor.GetState(appId);
         if (state.Status == AppStatus.Running && state.Port is { } port)
         {
-            OpenOrFocusAppWindow(appId, port);
+            OpenOrFocusAppWindow(appId, port, deepLinkQuery);
             return;
         }
         lock (_pendingOpen)
         {
-            _pendingOpen.Add(appId);
+            _pendingOpen[appId] = deepLinkQuery;
         }
         await supervisor.StartAsync(appId);
     }
@@ -455,13 +456,18 @@ internal sealed class LauncherForm : Form, IShellHub
             if (state.Status == AppStatus.Running && state.Port is { } port)
             {
                 bool shouldOpen;
+                string? deepLinkQuery;
                 lock (_pendingOpen)
                 {
-                    shouldOpen = _pendingOpen.Remove(appId);
+                    shouldOpen = _pendingOpen.TryGetValue(appId, out deepLinkQuery);
+                    if (shouldOpen)
+                    {
+                        _pendingOpen.Remove(appId);
+                    }
                 }
                 if (shouldOpen)
                 {
-                    OpenOrFocusAppWindow(appId, port);
+                    OpenOrFocusAppWindow(appId, port, deepLinkQuery);
                 }
             }
         });
@@ -515,7 +521,7 @@ internal sealed class LauncherForm : Form, IShellHub
 
     // ── App windows ────────────────────────────────────────────────────────
 
-    private void OpenOrFocusAppWindow(string appId, int port)
+    private void OpenOrFocusAppWindow(string appId, int port, string? deepLinkQuery = null)
     {
         if (_supervisor is not { } supervisor)
         {
@@ -525,11 +531,17 @@ internal sealed class LauncherForm : Form, IShellHub
         {
             existing.Activate();
             existing.BringToFront();
+            if (!string.IsNullOrEmpty(deepLinkQuery))
+            {
+                // Reload the already-open window at the deep link so its startup URL-param
+                // handler runs again (e.g. DEEP preloading the requested assessment).
+                existing.NavigateDeepLink(deepLinkQuery);
+            }
             return;
         }
 
         var descriptor = supervisor.Apps.First(a => a.Id.Equals(appId, StringComparison.OrdinalIgnoreCase));
-        var window = new AppWindowForm(this, descriptor, port, _environment!);
+        var window = new AppWindowForm(this, descriptor, port, _environment!, deepLinkQuery);
         _appWindows[appId] = window;
         window.Show();
     }
@@ -563,14 +575,14 @@ internal sealed class LauncherForm : Form, IShellHub
         return map;
     }
 
-    public void RequestOpenApp(string appId)
+    public void RequestOpenApp(string appId, string? deepLinkQuery = null)
     {
         if (_supervisor is not { } supervisor
             || !supervisor.Apps.Any(a => a.Id.Equals(appId, StringComparison.OrdinalIgnoreCase)))
         {
             return;
         }
-        RunOnUi(async () => await LaunchOrFocusAsync(appId));
+        RunOnUi(async () => await LaunchOrFocusAsync(appId, deepLinkQuery));
     }
 
     public void FocusLauncher()

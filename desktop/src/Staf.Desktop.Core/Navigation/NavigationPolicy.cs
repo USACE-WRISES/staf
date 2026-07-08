@@ -18,7 +18,7 @@ public enum NavAction
     Suppress,
 }
 
-public sealed record NavDecision(NavAction Action, string? AppId = null, string? Url = null);
+public sealed record NavDecision(NavAction Action, string? AppId = null, string? Url = null, string? Query = null);
 
 /// <summary>
 /// The one place that decides what any URL does inside shell windows. Pure logic:
@@ -52,7 +52,7 @@ public static class NavigationPolicy
                 var appId = uri.AbsolutePath.Trim('/');
                 if (appId.Length > 0)
                 {
-                    return new NavDecision(NavAction.OpenApp, AppId: appId);
+                    return new NavDecision(NavAction.OpenApp, AppId: appId, Query: NormalizeQuery(uri.Query));
                 }
             }
             return new NavDecision(NavAction.Suppress);
@@ -68,7 +68,7 @@ public static class NavigationPolicy
                 }
                 if (portToAppId.TryGetValue(uri.Port, out var appId))
                 {
-                    return new NavDecision(NavAction.OpenApp, AppId: appId);
+                    return new NavDecision(NavAction.OpenApp, AppId: appId, Query: NormalizeQuery(uri.Query));
                 }
                 // Unknown local server — likely a stale port from a previous session. Don't
                 // navigate the app window away; don't open a browser to a dead port either.
@@ -87,4 +87,13 @@ public static class NavigationPolicy
 
     private static bool IsLoopback(Uri uri) =>
         uri.IsLoopback;
+
+    /// <summary>
+    /// The deep-link query (including the leading '?') to carry to the opened app window, or
+    /// null when there is none. Cross-app links like <c>staf-desktop://app/deep/?assessment=x</c>
+    /// use this so the target app's loopback URL becomes <c>.../?assessment=x</c> and its startup
+    /// URL-param handler runs (e.g. DEEP preloading a library assessment).
+    /// </summary>
+    private static string? NormalizeQuery(string query) =>
+        string.IsNullOrEmpty(query) || query == "?" ? null : query;
 }
