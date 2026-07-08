@@ -7,6 +7,7 @@ functionPairCount 114) + config/staf_functions.json (20 functions).
 import pandas as pd
 
 from streamcurves import mapping as M
+from streamcurves import metric_map as MM
 from streamcurves import staf_library as SL
 
 
@@ -88,4 +89,77 @@ def test_default_mapping_unmatched_workbook_metric_appended_as_scaffold():
 def test_default_mapping_empty_keys_all_lib():
     dm = SL.staf_metric_library_default_mapping([])
     assert (dm["metric_key"].astype(str).str.startswith("lib:")).all()
+    assert M.validate_discipline_function_mapping(dm) is True
+
+
+# ── staf_canonical_function + default_discipline_function_mapping (composed) ──────
+
+def test_canonical_function_resolves_aliases():
+    c = SL.staf_canonical_function("Water & soil quality")
+    assert c is not None
+    assert c["name"] == "Water & soil quality"
+    assert c["discipline"] == "Physicochemistry"
+    assert c["id"] == "water-soil-quality"
+    # metric_map's alias spelling resolves to the same canonical function
+    assert SL.staf_canonical_function("Water and soil quality") == c
+    # case-insensitive alias
+    assert SL.staf_canonical_function("LIGHT AND THERMAL REGIME")["name"] == "Light & thermal regime"
+    # unknown / blank -> None
+    assert SL.staf_canonical_function("Not a function") is None
+    assert SL.staf_canonical_function(None) is None
+
+
+def test_default_mapping_multi_function_metric_from_metric_map():
+    # bfi informs two functions and is NOT a library app_metric_key: the composed
+    # default assigns it to BOTH (canonicalized), with no blank scaffold row.
+    dm = SL.default_discipline_function_mapping(["bfi"])
+    assert M.validate_discipline_function_mapping(dm) is True
+    bfi = dm[dm["metric_key"] == "bfi"]
+    assert set(bfi["function_label"].astype(str)) == {
+        "Streamflow regime", "Low flow and baseflow dynamics"
+    }
+    assert bfi["function_label"].map(lambda v: not pd.isna(v)).all()  # no scaffold row
+    disc = dict(zip(bfi["function_label"], bfi["discipline"]))
+    assert disc["Streamflow regime"] == "Hydrology"
+    assert disc["Low flow and baseflow dynamics"] == "Hydraulics"
+
+
+def test_default_mapping_canonicalizes_alias_labels():
+    # chem_COND is mapped under the alias "Water and soil quality"; the default must
+    # store the canonical "Water & soil quality" so it lands in the workbench bucket.
+    dm = SL.default_discipline_function_mapping(["chem_COND"])
+    labels = set(dm[dm["metric_key"] == "chem_COND"]["function_label"].astype(str))
+    assert "Water & soil quality" in labels
+    assert "Water and soil quality" not in labels
+
+
+def test_default_mapping_parity_with_compile_screen():
+    # every compiled metric the Compile screen would label gets a non-blank assignment.
+    compiled = ["chem_COND", "chem_PH", "chem_DOC", "phab_XBKA", "phab_SINU",
+                "phab_LSUB_DMM", "bfi", "runoff", "pctimp2019", "damdens",
+                "fish_NAT_TOTLNTAX", "bent_HPRIME"]
+    dm = SL.default_discipline_function_mapping(compiled)
+    assert M.validate_discipline_function_mapping(dm) is True
+    assigned = set(
+        dm[dm["function_label"].map(lambda v: isinstance(v, str) and v.strip() != "")][
+            "metric_key"
+        ].astype(str)
+    )
+    for mk in compiled:
+        if MM.metric_map_function_label(mk):  # the Compile screen labels it
+            assert mk in assigned, f"{mk} should be assigned in the default mapping"
+
+
+def test_default_mapping_uncovered_metric_becomes_scaffold():
+    dm = SL.default_discipline_function_mapping(["totally_custom_metric"])
+    scaffold = dm[dm["metric_key"] == "totally_custom_metric"]
+    assert len(scaffold) == 1
+    assert pd.isna(scaffold.iloc[0]["function_label"])
+    assert dm["sort_order"].tolist() == list(range(1, len(dm) + 1))
+
+
+def test_default_mapping_preserves_lib_planned_rows():
+    # the STAF library's planned / no-data (lib:) rows survive the composition.
+    dm = SL.default_discipline_function_mapping(["bfi"])
+    assert dm["metric_key"].astype(str).str.startswith("lib:").any()
     assert M.validate_discipline_function_mapping(dm) is True

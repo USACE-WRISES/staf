@@ -71,6 +71,7 @@ functions:
       - {code: runoff,            source: streamcat,    label: "Mean annual runoff (mm)",      default_selected: true,  role: both}
       - {code: precip8110,        source: streamcat,    label: "Mean annual precipitation (mm)", default_selected: true, role: both}
       - {code: DRNAREA,           source: streamstats,  label: "Drainage area (sq mi)",        default_selected: false, role: predictor}
+      - {code: mmw_da_sqmi,       source: mmw,          label: "Drainage area (sq mi, MMW)",   default_selected: false, role: predictor}
 
   - discipline: Hydrology
     function: Streamflow regime

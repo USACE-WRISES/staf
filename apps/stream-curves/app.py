@@ -38,12 +38,13 @@ import logging
 
 from streamcurves.mapping import realign_discipline_function_mapping
 from streamcurves.paths import WWW_DIR
-from streamcurves.staf_library import staf_metric_library_default_mapping
+from streamcurves.staf_library import default_discipline_function_mapping
 from views import state as st
 from views import summary_state as sst
 from views.analysis_workspace import analysis_workspace_server, analysis_workspace_ui
 from views.cross_section import cross_section_server, cross_section_ui
 from views.data_overview import data_overview_server, data_overview_ui
+from views.library import library_server, library_ui
 from views.phase1 import phase1_server, phase1_ui
 from views.phase2 import phase2_server, phase2_ui
 from views.phase3 import phase3_server, phase3_ui
@@ -137,6 +138,11 @@ app_ui = ui.page_navbar(
         ui.div(cross_section_ui("xsec"), class_="mt-3"),
         icon=bi("graph-down"),
     ),
+    ui.nav_panel(
+        "Library",
+        ui.div(library_ui("library"), class_="mt-3"),
+        icon=bi("layers"),
+    ),
     ui.nav_spacer(),
     ui.nav_control(
         ui.input_action_link(
@@ -171,6 +177,7 @@ def server(input, output, session):
     summary_page_server("summary", state)
     regional_curve_server("regional", state)
     cross_section_server("xsec", state)
+    library_server("library", state)
     summary_export_server("summary_export", state)
 
     # Standalone phase workspace instances (app.R:246-249); the analysis
@@ -204,7 +211,7 @@ def server(input, output, session):
             user_touched = state.mapping_user_touched()
         if not user_touched:
             try:
-                seeded = staf_metric_library_default_mapping(metric_keys, metric_config)
+                seeded = default_discipline_function_mapping(metric_keys, metric_config)
             except Exception as e:  # noqa: BLE001
                 logger.warning("STAF default seed failed: %s", e)
                 seeded = None

@@ -252,3 +252,97 @@ def _finite(v) -> bool:
         return math.isfinite(float(v))
     except (TypeError, ValueError):
         return False
+
+
+# ── region-of-applicability polygon (for the DEEP "available assessments" layer) ──
+# A published library assessment carries its region outline so DEEP can shade it on
+# the map. We resolve the outline from the same bundled GeoJSONs the import wizard
+# uses (ecoregion US_L3CODE / state abbr) and simplify it (Ramer-Douglas-Peucker,
+# pure Python to honor this module's no-shapely rule) so the inlined polygon stays
+# small in the bundle. ~500 m tolerance is well within a shaded regional overlay.
+_REGION_SIMPLIFY_EPS = 0.005   # degrees (~500 m)
+_REGION_COORD_PRECISION = 4    # decimal places (~11 m)
+
+
+def _rdp(points: list, eps: float) -> list:
+    """Ramer-Douglas-Peucker on a list of ``[lon, lat]`` points (iterative, so a huge
+    ring can't overflow the recursion stack). Keeps endpoints; drops points closer
+    than ``eps`` to the running chord."""
+    n = len(points)
+    if n < 3:
+        return list(points)
+    keep = [False] * n
+    keep[0] = keep[n - 1] = True
+    stack = [(0, n - 1)]
+    while stack:
+        i0, i1 = stack.pop()
+        x0, y0 = points[i0]
+        x1, y1 = points[i1]
+        dx, dy = x1 - x0, y1 - y0
+        seg = math.hypot(dx, dy) or 1e-12
+        dmax, idx = 0.0, -1
+        for i in range(i0 + 1, i1):
+            x, y = points[i]
+            d = abs(dx * (y0 - y) - (x0 - x) * dy) / seg
+            if d > dmax:
+                dmax, idx = d, i
+        if dmax > eps and idx != -1:
+            keep[idx] = True
+            stack.append((i0, idx))
+            stack.append((idx, i1))
+    return [points[i] for i in range(n) if keep[i]]
+
+
+def _simplify_ring(ring: list) -> list:
+    """Simplify + round one ring; return the original if it over-simplifies (< 4 pts,
+    which can't form a closed polygon)."""
+    r = _rdp(ring, _REGION_SIMPLIFY_EPS)
+    if len(r) >= 3 and r[0] != r[-1]:
+        r = r + [r[0]]
+    if len(r) < 4:
+        r = list(ring)
+    p = _REGION_COORD_PRECISION
+    return [[round(float(x), p), round(float(y), p)] for x, y in r]
+
+
+def region_polygon_geometry(kind, code):
+    """GeoJSON geometry (``Polygon``/``MultiPolygon``) outlining an EPA Level III
+    ecoregion (``US_L3CODE``) or a US state (2-letter ``state``), simplified for a
+    lightweight map overlay. ``None`` for other kinds or when the code isn't found."""
+    from .paths import DATA_DIR
+
+    if kind == "ecoregion":
+        path, prop = DATA_DIR / "ecoregions_l3.geojson", "US_L3CODE"
+    elif kind == "state":
+        path, prop = DATA_DIR / "us_states.geojson", "state"
+    else:
+        return None
+    code = str(code)
+    polys: list = []
+    for f in read_geojson_features(path):
+        if str((f.get("properties") or {}).get(prop)) != code:
+            continue
+        polys.extend(_geom_polygons(f.get("geometry")))
+    simplified = []
+    for poly in polys:
+        rings = [_simplify_ring(ring) for ring in poly if len(ring) >= 3]
+        rings = [r for r in rings if len(r) >= 4]
+        if rings:
+            simplified.append(rings)
+    if not simplified:
+        return None
+    if len(simplified) == 1:
+        return {"type": "Polygon", "coordinates": simplified[0]}
+    return {"type": "MultiPolygon", "coordinates": simplified}
+
+
+def region_with_polygon(region: dict) -> dict:
+    """Return a copy of ``region`` with a ``polygon`` GeoJSON geometry attached when it
+    can be resolved (ecoregion/state) and none is present. Regions that already carry a
+    polygon (e.g. a user-drawn shape) and unresolvable ones are returned unchanged."""
+    if not region or region.get("polygon"):
+        return region
+    geom = region_polygon_geometry(region.get("kind"), region.get("code"))
+    if not geom:
+        return region
+    return {**region, "polygon": geom}

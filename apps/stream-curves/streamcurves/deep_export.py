@@ -449,7 +449,7 @@ def build_deep_assessment_bundle(
         for b in ordered
     ]
 
-    return {
+    bundle = {
         "schemaVersion": 1,
         "tier": "detailed",
         "assessmentId": meta.get("assessmentId"),
@@ -460,6 +460,18 @@ def build_deep_assessment_bundle(
         "applicability": meta.get("applicability"),
         "metricsByFunction": metrics_by_function,
     }
+    # Region of applicability + library-version block travel as top-level fields.
+    # DEEP retains unknown bundle fields (LoadedAssessment.raw), so these surface in
+    # its assessment info panel without any DEEP schema change. `region` is present
+    # for drafts too; `library` is stamped by the library publisher (streamcurves/
+    # library.py) once a version is assigned.
+    region = meta.get("region")
+    if region:
+        bundle["region"] = region
+    library = meta.get("library")
+    if library:
+        bundle["library"] = library
+    return bundle
 
 
 def _json_default(o: Any):

@@ -38,7 +38,6 @@ SESSION_SUFFIX = ".streamcurves.json"
 SESSION_FIELDS = [
     # data
     "data",
-    "qa_log",
     "precheck_df",
     "data_source",
     "data_fingerprint",
@@ -90,6 +89,7 @@ SESSION_FIELDS = [
     "cross_sections",
     "column_sources",
     "column_functions",
+    "region_of_applicability",
 ]
 
 ## Fields whose dict payloads may contain non-serializable cached objects

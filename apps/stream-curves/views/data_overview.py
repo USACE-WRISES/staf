@@ -4,9 +4,9 @@ Covers the primary flows: the landing screen (Start New Project / Open
 Project), the xlsx workbook load pipeline (read → clean → derive → precheck →
 apply to state), JSON session save/restore (replacing the R app's .rds
 snapshots), and the opened-project workspace shell — header with Save
-Project / Save Workbook / Close Project plus the 5-step stepper (Workbook,
-Mapping, Validation, QA Log, Missing Data). Step sections stay mounted and
-are shown/hidden via a reactive <style> tag (the R app used conditionalPanel).
+Project / Save Workbook / Close Project plus the 3-step stepper (Workbook,
+Mapping, Pre-Run Validation). Step sections stay mounted and are shown/hidden
+via a reactive <style> tag (the R app used conditionalPanel).
 
 Deferred pieces of the R module (ported separately): the metadata editor
 tabs, the excel-like workbook grid, custom-grouping builder, site-mask
@@ -39,8 +39,6 @@ WORKSPACE_STEPS = [
     {"value": "workbook", "label": "Workbook"},
     {"value": "mapping", "label": "Discipline → Function → Metric"},
     {"value": "validation", "label": "Pre-Run Validation"},
-    {"value": "qa", "label": "QA Log"},
-    {"value": "missing", "label": "Missing Data"},
 ]
 
 
@@ -241,11 +239,6 @@ def data_overview_server(input, output, session, state: AppState):
                                 placeholder="No file selected",
                             ),
                             ui.output_ui(ns("upload_status")),
-                            ui.input_action_link(
-                                ns("dev_load_sample"),
-                                "Load bundled sample (OSAM workbook)",
-                                class_="small text-decoration-none",
-                            ),
                         ),
                         class_="h-100 landing-card",
                     ),
@@ -277,8 +270,6 @@ def data_overview_server(input, output, session, state: AppState):
             ),
             "mapping": discipline_map_ui("discipline_map"),
             "validation": ui.output_ui(ns("validation_warnings")),
-            "qa": ui.output_data_frame(ns("qa_log_table")),
-            "missing": ui.output_data_frame(ns("missing_table")),
         }
         return ui.div(
             ui.div(
@@ -343,7 +334,7 @@ def data_overview_server(input, output, session, state: AppState):
         try:
             p.set(value=0, message="Loading Workbook", detail="Loading workbook tables...")
             p.set(value=1, message="Loading Workbook", detail="Cleaning uploaded data...")
-            cleaned, qa_log = clean_data(
+            cleaned, _ = clean_data(
                 bundle["raw_data"],
                 bundle["metric_config"],
                 bundle["strat_config"],
@@ -369,7 +360,6 @@ def data_overview_server(input, output, session, state: AppState):
             state.input_metadata.set(bundle.get("metadata"))
             state.site_mask_config.set(bundle.get("site_mask_config"))
             state.data.set(derived)
-            state.qa_log.set(qa_log)
             state.precheck_df.set(precheck)
             state.data_source.set("upload")
             state.upload_filename.set(source_name)
@@ -418,7 +408,6 @@ def data_overview_server(input, output, session, state: AppState):
         st.reset_all_analysis(state)
 
         state.data.set(fields.get("data"))
-        state.qa_log.set(fields.get("qa_log"))
         state.precheck_df.set(fields.get("precheck_df"))
 
         state.data_source.set(fields.get("data_source") or "session_file")
@@ -472,6 +461,7 @@ def data_overview_server(input, output, session, state: AppState):
         state.cross_sections.set(fields.get("cross_sections") or {})
         state.column_sources.set(fields.get("column_sources") or {})
         state.column_functions.set(fields.get("column_functions") or {})
+        state.region_of_applicability.set(fields.get("region_of_applicability"))
 
         mapping = fields.get("discipline_function_mapping")
         if mapping is not None:
@@ -508,6 +498,29 @@ def data_overview_server(input, output, session, state: AppState):
         metadata_status.set(None)
         st.notify_workspace_refresh(state)
         return session_name
+
+    @reactive.effect
+    @reactive.event(state.session_restore_nonce, ignore_init=True)
+    def _restore_from_library_request():
+        # The Library tab loads a version's session payload and bumps the nonce;
+        # reuse the exact same restore path as opening a .streamcurves.json file.
+        with reactive.isolate():
+            rq = state.session_restore_request()
+        if not rq or not rq.get("payload"):
+            return
+        try:
+            restore_session_into_state(rq["payload"], source_name=rq.get("source_name"))
+        except Exception as e:  # noqa: BLE001
+            ui.notification_show(
+                f"Could not load the assessment: {e}", type="error", duration=8
+            )
+            return
+        ui.notification_show(
+            f"Loaded {rq.get('source_name') or 'assessment'}. Open Reference Curves to keep "
+            "working, or review inputs in Data & Setup.",
+            type="message",
+            duration=7,
+        )
 
     @reactive.effect
     @reactive.event(input.open_project_file)
@@ -563,19 +576,6 @@ def data_overview_server(input, output, session, state: AppState):
             metadata_status.set({"type": "danger", "text": f"Upload failed: {e}"})
             ui.notification_show(f"Upload failed: {e}", type="error", duration=8)
 
-    @reactive.effect
-    @reactive.event(input.dev_load_sample)
-    def _dev_load_sample():
-        from streamcurves.paths import ROOT
-
-        sample = ROOT / "tests" / "fixtures" / "OSAM_summarydata.xlsx"
-        try:
-            bundle = read_input_workbook(sample)
-            apply_workbook_bundle(bundle, sample.name)
-        except Exception as e:  # noqa: BLE001
-            upload_error.set(str(e))
-            ui.notification_show(f"Sample load failed: {e}", type="error", duration=8)
-
     # ── workspace step panels ────────────────────────────────────────────────
     @render.ui
     def workbook_summary():
@@ -627,29 +627,6 @@ def data_overview_server(input, output, session, state: AppState):
                 class_="table table-sm table-striped small",
             ),
         )
-
-    @render.data_frame
-    def qa_log_table():
-        qa = state.qa_log()
-        req(qa is not None)
-        return render.DataGrid(qa, height="420px")
-
-    @render.data_frame
-    def missing_table():
-        data = state.data()
-        req(data is not None)
-        counts = data.isna().sum()
-        missing = pd.DataFrame(
-            {
-                "column": counts.index.astype(str),
-                "n_missing": counts.values,
-                "pct_missing": (counts.values / max(len(data), 1) * 100).round(1),
-            }
-        )
-        missing = missing[missing["n_missing"] > 0].sort_values(
-            "n_missing", ascending=False
-        )
-        return render.DataGrid(missing.reset_index(drop=True), height="420px")
 
     # ── session save / workbook save ─────────────────────────────────────────
     # One Save button; the format choice (and its tradeoff) lives in a modal.

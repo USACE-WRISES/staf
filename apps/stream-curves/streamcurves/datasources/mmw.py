@@ -18,6 +18,12 @@ from . import _MISS, _as_float, _cache_get, _cache_set, _or, _request
 
 MMW_BASE = "https://modelmywatershed.org/api"
 
+# Gitignored app-local key file (fallback when MMW_API_KEY is unset), mirroring EASI.
+_KEY_FILE = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "scripts", ".mmw_api_key"
+)
+_SQKM_TO_SQMI = 0.3861021585  # kept local to avoid a datasources -> sites import
+
 _sleep = time.sleep  # patched in tests
 
 _MIN_INTERVAL_S = 60.0 / 90.0  # httr2 req_throttle(rate = 90/60)
@@ -30,8 +36,17 @@ def _pluck(x: Any, key: str) -> Any:
 
 
 def mmw_token() -> str | None:
-    k = os.environ.get("MMW_API_KEY", "")
-    return k if k else None
+    """MMW API token from ``$MMW_API_KEY`` or the gitignored ``scripts/.mmw_api_key``
+    file (env wins). Never logged."""
+    env = os.environ.get("MMW_API_KEY", "")
+    if env.strip():
+        return env.strip()
+    try:
+        with open(_KEY_FILE, "r", encoding="utf-8") as fh:
+            k = fh.read().strip()
+        return k or None
+    except OSError:
+        return None
 
 
 def mmw_available() -> bool:
@@ -135,7 +150,39 @@ def mmw_analyze_geom(geom: Any, category: str, max_polls: int = 40) -> Any:
     return survey
 
 
-def mmw_core_metrics() -> dict[str, dict[str, str]]:
+def _geojson_area_sqkm(geom: Any) -> float:
+    """Total area (sq km) of a GeoJSON Polygon/MultiPolygon via spherical polygon
+    area (the same math NLDI basins use). Outer rings add, holes subtract; NaN when
+    the geometry is missing/unusable."""
+    if not isinstance(geom, dict):
+        return math.nan
+    gtype = geom.get("type")
+    coords = geom.get("coordinates")
+    if gtype == "Polygon":
+        polys = [coords]
+    elif gtype == "MultiPolygon":
+        polys = coords
+    else:
+        return math.nan
+    from ..geo import spherical_polygon_area_m2  # local import: geo is a leaf, no cycle
+    total = 0.0
+    seen = False
+    for poly in polys or []:
+        for i, ring in enumerate(poly or []):
+            if not ring or len(ring) < 3:
+                continue
+            try:
+                a = spherical_polygon_area_m2([p[0] for p in ring], [p[1] for p in ring])
+            except (TypeError, ValueError, IndexError):
+                continue
+            if not math.isfinite(a):
+                continue
+            seen = True
+            total += a if i == 0 else -a   # ring 0 = outer (+); rings 1+ = holes (-)
+    return (total / 1e6) if seen else math.nan
+
+
+def mmw_core_metrics() -> dict[str, dict[str, str | None]]:
     """Curated Model My Watershed metrics: code -> {label, category}."""
     return {
         "mmw_developed_pct": {"label": "Developed land (%)", "category": "land/2019_2019"},
@@ -146,6 +193,9 @@ def mmw_core_metrics() -> dict[str, dict[str, str]]:
         "mmw_mean_slope_pct": {"label": "Mean terrain slope (%)", "category": "terrain"},
         "mmw_mean_elev_m": {"label": "Mean elevation (m)", "category": "terrain"},
         "mmw_annual_precip_cm": {"label": "Annual precipitation (cm)", "category": "climate"},
+        # geometry-derived (category None): area of the delineated watershed, not an
+        # analyze survey — computed from mmw_delineate's polygon in mmw_site_metrics.
+        "mmw_da_sqmi": {"label": "Drainage area (sq mi)", "category": None},
     }
 
 
@@ -220,4 +270,11 @@ def mmw_site_metrics(lat: Any, lon: Any, codes, max_polls: int = 40) -> dict[str
     surveys: dict[str, Any] = {}
     for categ in cats_needed:
         surveys[categ] = mmw_analyze_geom(geom, categ, max_polls=max_polls)
-    return {cd: _as_float(mmw_extract(cd, surveys)) for cd in codes}
+    out: dict[str, float] = {}
+    for cd in codes:
+        if cd == "mmw_da_sqmi":
+            # geometry-derived: area of the delineated watershed (sq km -> sq mi)
+            out[cd] = _as_float(_geojson_area_sqkm(geom) * _SQKM_TO_SQMI)
+        else:
+            out[cd] = _as_float(mmw_extract(cd, surveys))
+    return out

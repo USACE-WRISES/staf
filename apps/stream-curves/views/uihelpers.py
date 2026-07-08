@@ -185,3 +185,75 @@ def remove_analysis_launch_spinner_notification(request_id) -> bool:
     if not notification_id:
         return False
     return remove_final_loading_notification(notification_id)
+
+
+# --------------------------------------------------------------------------- #
+# Compile progress (import wizard step 5 — bottom-right live counter)
+# --------------------------------------------------------------------------- #
+
+
+class CompileProgress:
+    """Tracks the import-wizard compile so the bottom-right toast can show a
+    live ``N of Total`` counter plus the source currently being fetched.
+
+    Pure state + label formatting (no Shiny calls), so the arithmetic and the
+    label strings are unit-testable; the effect drives notification_show /
+    task_flush around it. Per-site sources (StreamStats, Model My Watershed)
+    count one unit per site — they are the slow long pole — while batch
+    sources (StreamCAT, NRSA, ...) count as one unit each.
+    """
+
+    def __init__(self, total: int):
+        self.total = max(int(total), 1)
+        self.done = 0
+        self._source = ""
+        self._site: int | None = None
+        self._n_sites: int | None = None
+
+    @classmethod
+    def for_run(
+        cls,
+        n_sites: int,
+        *,
+        want_da: bool = False,
+        want_elev: bool = False,
+        streamcat: bool = False,
+        nrsa: bool = False,
+        streamstats: bool = False,
+        mmw: bool = False,
+    ) -> "CompileProgress":
+        """Total work units for a run: NLDI snap + final assembly always run;
+        per-site sources add one unit per site; other active sources add one."""
+        n = max(int(n_sites), 0)
+        total = 2  # NLDI flowline snap + final table assembly
+        if want_da:
+            total += 1
+        if want_elev:
+            total += 1
+        if streamcat:
+            total += 1
+        if nrsa:
+            total += 1
+        if streamstats:
+            total += n
+        if mmw:
+            total += n
+        return cls(total)
+
+    def start(self, source: str, *, site: int | None = None, n_sites: int | None = None) -> None:
+        """Name the source about to be fetched (shown before it completes)."""
+        self._source = source
+        self._site = site
+        self._n_sites = n_sites
+
+    def complete(self, units: int = 1) -> None:
+        self.done = min(self.done + units, self.total)
+
+    def title(self) -> str:
+        return f"Compiling site data ({self.done} of {self.total})"
+
+    def detail(self) -> str:
+        base = self._source or "Working"
+        if self._site is not None and self._n_sites:
+            return f"{base}, site {self._site} of {self._n_sites}"
+        return base

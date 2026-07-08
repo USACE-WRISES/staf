@@ -21,13 +21,14 @@ from streamcurves.mapping import (
     validate_discipline_function_mapping,
 )
 from streamcurves.staf_library import (
+    default_discipline_function_mapping,
     staf_function_meta,
     staf_functions_by_discipline,
-    staf_metric_library_default_mapping,
     staf_metric_library_entries,
 )
 from views.state import AppState
 from views.theme import fa
+from views.wb_table import render_wb_table
 
 ## Separator joining metric_key + function name in the remove payload. Neither
 ## a metric_key nor a STAF function name contains this token.
@@ -224,7 +225,7 @@ def discipline_map_server(input, output, session, state: AppState):
         with reactive.isolate():
             metric_config = state.metric_config() or {}
         try:
-            dm = staf_metric_library_default_mapping(list(metric_config.keys()), metric_config)
+            dm = default_discipline_function_mapping(list(metric_config.keys()), metric_config)
         except Exception as e:  # noqa: BLE001
             ui.notification_show(
                 f"Could not load STAF defaults: {e}", type="error", duration=8
@@ -443,63 +444,38 @@ def discipline_map_server(input, output, session, state: AppState):
                 class_="wb-chip " + ("wb-chip-nodata" if nodata else "wb-chip-data"),
             )
 
-        disc_blocks = []
-        for disc, fns in by_disc.items():
-            if not fns:
-                continue
-            disc_cls = f"discipline-{disc.lower()}"
-            rows = []
-            for j, fn in enumerate(fns):
-                keys = metrics_for_fn(fn)
-                if hide_nodata:
-                    keys = [k for k in keys if workbench_has_data(k, metric_config)]
-                if not keys:
-                    chips = [ui.tags.span("—", class_="wb-empty text-muted")]
-                else:
-                    chips = [make_chip(k, fn) for k in keys]
-                is_active = active is not None and active == fn
-                add_btn = ui.tags.button(
-                    fa("plus"),
-                    type="button",
-                    class_="wb-add-fn" + (" wb-add-fn-active" if is_active else ""),
-                    title="Add metrics to this function",
-                    onclick=(
-                        f"Shiny.setInputValue('{ns('set_active_fn')}',"
-                        f"'{js_str(fn)}',{{priority:'event'}})"
-                    ),
-                )
-                fn_cell = ui.tags.td(
-                    ui.div(
-                        ui.tags.span(fn),
-                        add_btn,
-                        class_="d-flex align-items-center justify-content-between gap-2",
-                    ),
-                    class_="wb-fn" + (" wb-fn-active" if is_active else ""),
-                )
-                cells = []
-                if j == 0:
-                    cells.append(
-                        ui.tags.td(
-                            ui.tags.span(disc, class_="wb-disc-label"),
-                            class_=f"wb-disc {disc_cls}",
-                            rowspan=str(len(fns)),
-                        )
-                    )
-                cells.extend([fn_cell, ui.tags.td(*chips, class_="wb-metrics")])
-                rows.append(ui.tags.tr(*cells))
-            disc_blocks.append(ui.tags.tbody(*rows, class_="wb-disc-group"))
+        def fn_cell(fn: str):
+            is_active = active is not None and active == fn
+            add_btn = ui.tags.button(
+                fa("plus"),
+                type="button",
+                class_="wb-add-fn" + (" wb-add-fn-active" if is_active else ""),
+                title="Add metrics to this function",
+                onclick=(
+                    f"Shiny.setInputValue('{ns('set_active_fn')}',"
+                    f"'{js_str(fn)}',{{priority:'event'}})"
+                ),
+            )
+            return ui.tags.td(
+                ui.div(
+                    ui.tags.span(fn),
+                    add_btn,
+                    class_="d-flex align-items-center justify-content-between gap-2",
+                ),
+                class_="wb-fn" + (" wb-fn-active" if is_active else ""),
+            )
 
-        return ui.tags.table(
-            ui.tags.thead(
-                ui.tags.tr(
-                    ui.tags.th("Discipline", class_="wb-th-disc"),
-                    ui.tags.th("Function", class_="wb-th-fn"),
-                    ui.tags.th("Metrics", class_="wb-th-metrics"),
-                )
-            ),
-            *disc_blocks,
-            class_="wb-table",
-        )
+        def metrics_cell(fn: str):
+            keys = metrics_for_fn(fn)
+            if hide_nodata:
+                keys = [k for k in keys if workbench_has_data(k, metric_config)]
+            if not keys:
+                chips = [ui.tags.span("—", class_="wb-empty text-muted")]
+            else:
+                chips = [make_chip(k, fn) for k in keys]
+            return ui.tags.td(*chips, class_="wb-metrics")
+
+        return render_wb_table(by_disc, fn_cell=fn_cell, metrics_cell=metrics_cell)
 
     # ---- unassigned workbook metrics -----------------------------------------
     @render.ui

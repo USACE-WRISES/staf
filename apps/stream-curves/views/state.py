@@ -91,7 +91,6 @@ class AppState:
 
     # ── data ────────────────────────────────────────────────────────────────
     data: reactive.Value = _rv()
-    qa_log: reactive.Value = _rv()
     precheck_df: reactive.Value = _rv()
 
     data_source: reactive.Value = _rv()
@@ -171,6 +170,16 @@ class AppState:
     cross_sections: reactive.Value = _rv_factory(dict)
     column_sources: reactive.Value = _rv_factory(dict)
     column_functions: reactive.Value = _rv_factory(dict)
+
+    # Region of applicability chosen in the import wizard (persisted so it can
+    # ride into the DEEP bundle meta + the assessment library). Shape:
+    # {"kind": "ecoregion"|"state"|"polygon", "code", "name", "polygon"?}.
+    region_of_applicability: reactive.Value = _rv()
+
+    # Cross-tab session restore request: the Library tab loads a library version's
+    # session payload and asks the Data & Setup tab to restore it (bump the nonce).
+    session_restore_request: reactive.Value = _rv()
+    session_restore_nonce: reactive.Value = _rv(0)
 
     # ── workspace modal state machine ───────────────────────────────────────
     workspace_modal_type: reactive.Value = _rv()
@@ -344,7 +353,6 @@ def reset_app_to_startup(state: AppState) -> None:
         state.config_version.set(state.startup_config_version() or 0)
 
         state.data.set(None)
-        state.qa_log.set(None)
         state.precheck_df.set(None)
         state.input_metadata.set(None)
         state.site_mask_config.set(None)
@@ -352,6 +360,7 @@ def reset_app_to_startup(state: AppState) -> None:
         state.data_fingerprint.set(None)
         state.upload_filename.set(None)
         state.session_name.set(None)
+        state.region_of_applicability.set(None)
         state.current_metric.set(state.startup_current_metric() or "perRiffle")
         state.app_data_loaded.set(False)
         state.app_reset_nonce.set((state.app_reset_nonce() or 0) + 1)

@@ -35,7 +35,7 @@ def rebuild_app_from_tables(
     try:
         bundle = build_input_bundle_from_tables(candidate_tables)
 
-        cleaned, qa_log = clean_data(
+        cleaned, _ = clean_data(
             bundle["raw_data"],
             bundle["metric_config"],
             bundle["strat_config"],
@@ -58,7 +58,6 @@ def rebuild_app_from_tables(
         state.input_metadata.set(bundle.get("metadata"))
         state.site_mask_config.set(bundle.get("site_mask_config"))
         state.data.set(derived)
-        state.qa_log.set(qa_log)
         state.precheck_df.set(precheck)
         state.data_fingerprint.set(
             hashlib.md5(

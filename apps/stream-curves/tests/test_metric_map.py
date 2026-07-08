@@ -59,3 +59,25 @@ def test_role_for_tolerance_and_missing():
     assert MM.metric_map_role_for("__nope__") is None
     # NRSA measured indicator defaults to metric role
     assert MM.metric_map_role_for("pctimp2019") in ("metric", "predictor", "both")
+
+
+def test_functions_for_returns_every_function_a_code_serves():
+    # bfi informs two functions (listed once under each).
+    bfi = {f["function_name"] for f in MM.metric_map_functions_for("bfi")}
+    assert bfi == {"Streamflow regime", "Low flow and baseflow dynamics"}
+    # single-function metric
+    assert [f["function_name"] for f in MM.metric_map_functions_for("chem_COND")] == [
+        "Water and soil quality"
+    ]
+    # same ss_/ws/cat tolerance as the singular helper
+    assert MM.metric_map_functions_for("ss_DRNAREA") == MM.metric_map_functions_for("DRNAREA")
+    assert MM.metric_map_functions_for("__nope__") == []
+
+
+def test_mmw_drainage_area_metric_registered():
+    assert "mmw_da_sqmi" in MM._mmw_core_metrics_codes()
+    # the bundled map (now including mmw_da_sqmi) still validates cleanly
+    assert MM.metric_map_validate() == []
+    # mapped under Hydrology / Reach inflow, role predictor (like DRNAREA)
+    assert [f["function_name"] for f in MM.metric_map_functions_for("mmw_da_sqmi")] == ["Reach inflow"]
+    assert MM.metric_map_role_for("mmw_da_sqmi") == "predictor"

@@ -69,8 +69,11 @@ def _fresh_cache():
 
 
 @pytest.fixture()
-def no_mmw_key(monkeypatch):
+def no_mmw_key(monkeypatch, tmp_path):
     monkeypatch.delenv("MMW_API_KEY", raising=False)
+    # Also neutralize the gitignored key-file fallback so the suite stays hermetic even
+    # when a real apps/stream-curves/scripts/.mmw_api_key exists on the machine.
+    monkeypatch.setattr(mmw_mod, "_KEY_FILE", str(tmp_path / "no-mmw-key"))
 
 
 @pytest.fixture()
@@ -368,6 +371,7 @@ class TestMmwExtract:
             "mmw_mean_slope_pct",
             "mmw_mean_elev_m",
             "mmw_annual_precip_cm",
+            "mmw_da_sqmi",
         }
         assert meta["mmw_soil_cd_pct"]["category"] == "soil"
 
@@ -608,6 +612,71 @@ class TestMmwGating:
         monkeypatch.setenv("MMW_API_KEY", "abc123")
         assert ds.mmw_token() == "abc123"
         assert ds.mmw_available() is True
+
+    def test_token_from_key_file(self, no_mmw_key, monkeypatch, tmp_path):
+        kf = tmp_path / ".mmw_api_key"
+        kf.write_text("  file-key  \n", encoding="utf-8")
+        monkeypatch.setattr(mmw_mod, "_KEY_FILE", str(kf))
+        assert ds.mmw_token() == "file-key"      # trimmed
+        assert ds.mmw_available() is True
+
+    def test_env_wins_over_key_file(self, monkeypatch, tmp_path):
+        kf = tmp_path / ".mmw_api_key"
+        kf.write_text("file-key", encoding="utf-8")
+        monkeypatch.setattr(mmw_mod, "_KEY_FILE", str(kf))
+        monkeypatch.setenv("MMW_API_KEY", "env-key")
+        assert ds.mmw_token() == "env-key"
+
+    def test_no_env_no_file_is_none(self, no_mmw_key):
+        # no_mmw_key already points _KEY_FILE at a missing path
+        assert ds.mmw_token() is None
+        assert ds.mmw_available() is False
+
+
+class TestMmwDrainageArea:
+    _GEOM = {"type": "Polygon", "coordinates": [
+        [[-83.0, 40.0], [-83.0, 40.1], [-82.9, 40.1], [-82.9, 40.0], [-83.0, 40.0]]]}
+
+    def test_core_metrics_includes_drainage_area(self):
+        mc = ds.mmw_core_metrics()
+        assert "mmw_da_sqmi" in mc
+        assert mc["mmw_da_sqmi"]["category"] is None  # geometry-derived; no analyze call
+
+    def test_geojson_area_matches_spherical_helper(self):
+        from streamcurves.geo import spherical_polygon_area_m2
+        ring = self._GEOM["coordinates"][0]
+        expect = spherical_polygon_area_m2([p[0] for p in ring], [p[1] for p in ring]) / 1e6
+        assert expect > 0
+        assert mmw_mod._geojson_area_sqkm(self._GEOM) == pytest.approx(expect)
+
+    def test_geojson_area_multipolygon_sums(self):
+        ring = self._GEOM["coordinates"][0]
+        single = mmw_mod._geojson_area_sqkm(self._GEOM)
+        multi = mmw_mod._geojson_area_sqkm({"type": "MultiPolygon", "coordinates": [[ring], [ring]]})
+        assert multi == pytest.approx(2 * single)
+
+    def test_geojson_area_subtracts_holes(self):
+        outer = [[-83.0, 40.0], [-83.0, 40.2], [-82.8, 40.2], [-82.8, 40.0], [-83.0, 40.0]]
+        hole = [[-82.95, 40.05], [-82.95, 40.15], [-82.85, 40.15], [-82.85, 40.05], [-82.95, 40.05]]
+        full = mmw_mod._geojson_area_sqkm({"type": "Polygon", "coordinates": [outer]})
+        withhole = mmw_mod._geojson_area_sqkm({"type": "Polygon", "coordinates": [outer, hole]})
+        assert 0 < withhole < full
+
+    def test_geojson_area_bad_geometry_is_nan(self):
+        assert math.isnan(mmw_mod._geojson_area_sqkm(None))
+        assert math.isnan(mmw_mod._geojson_area_sqkm({"type": "Point", "coordinates": [0, 0]}))
+
+    def test_site_metrics_drainage_area_geometry_derived(self, mmw_key, monkeypatch):
+        # DA comes from the delineated polygon, not an analyze survey.
+        monkeypatch.setattr(mmw_mod, "mmw_delineate", lambda lat, lon, max_polls=40: self._GEOM)
+        analyze_calls = []
+        monkeypatch.setattr(
+            mmw_mod, "mmw_analyze_geom", lambda *a, **k: analyze_calls.append(a) or None
+        )
+        out = ds.mmw_site_metrics(40.05, -83.2, ["mmw_da_sqmi"])
+        expect = mmw_mod._geojson_area_sqkm(self._GEOM) * mmw_mod._SQKM_TO_SQMI
+        assert out["mmw_da_sqmi"] == pytest.approx(expect)
+        assert analyze_calls == []  # geometry-derived: no analyze category requested
 
 
 class TestMmwDelineate:

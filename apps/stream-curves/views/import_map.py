@@ -6,7 +6,8 @@ Step 1 defines the region of applicability (EPA Level III ecoregion, state, a
 drawn area, or none); all data entry, metric selection, classification and the
 build happen inside the wizard. Classify/Build reuse the shared classify UI and
 the same build path as everything else (build_config_tables_from_roles →
-rebuild_app_from_tables). Compile is synchronous (ui.Progress); sources fail to NA.
+rebuild_app_from_tables). Compile runs as a detached async task that paints a
+bottom-right progress toast between steps (st.task_flush); sources fail to NA.
 
 Maps use ipyleaflet (the DEEP persistent-map pattern): built once, mutated in
 place via an ``_layers`` dict, and rendered through shinywidgets. Region
@@ -18,6 +19,7 @@ leaflet.extras gap). The one visible behaviour change from R: hover shows a
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from functools import lru_cache
@@ -51,7 +53,11 @@ from streamcurves.datasources.streamcat import streamcat_metrics
 from streamcurves.datasources.streamstats import ss_basin_characteristics, ss_core_bcs
 from streamcurves.geo import point_in_polygon_rings, state_abbr_from_name, state_at
 from streamcurves.geomorph import bieger_division_abbr, bieger_geometry
-from streamcurves.metric_map import metric_map_default_codes, metric_map_function_label
+from streamcurves.metric_map import (
+    metric_map_default_codes,
+    metric_map_function_label,
+    metric_map_functions_for,
+)
 from streamcurves.nrsa import (
     attach_nrsa_metrics,
     load_nrsa_catalog,
@@ -70,6 +76,7 @@ from streamcurves.sites import (
     dedup_sites,
 )
 from streamcurves.sites import coverage_table as compute_coverage_table
+from streamcurves.staf_library import staf_canonical_function, staf_functions_by_discipline
 from streamcurves.terrain import nldi_basin_sqkm_many
 from views.classify_ui import (
     classify_assignments_from_input,
@@ -77,8 +84,15 @@ from views.classify_ui import (
     classify_table_html,
 )
 from views.rebuild import rebuild_app_from_tables
+from views import state as st
 from views.state import AppState
 from views.theme import bi, fa
+from views.uihelpers import (
+    CompileProgress,
+    remove_final_loading_notification,
+    show_final_loading_notification,
+)
+from views.wb_table import render_wb_table
 
 logger = logging.getLogger("streamcurves")
 
@@ -543,10 +557,12 @@ def import_map_server(
             _SITES_MAP = Map(center=(38, -96), zoom=4, scroll_wheel_zoom=True,
                              layout=Layout(height="100%"))
             _SITES_MAP.clear_layers()
-            _SITES_MAP.add(TileLayer(url=_USGS_TOPO, name="USGS Topo", base=True,
+            # USGS Topo is the default basemap: base layers stack in add-order, so
+            # the LAST-added one renders on top. Add Imagery first, Topo last.
+            _SITES_MAP.add(TileLayer(url=_USGS_IMAGERY, name="USGS Imagery", base=True,
                                      attribution=_USGS_ATTR, max_native_zoom=16,
                                      max_zoom=18))
-            _SITES_MAP.add(TileLayer(url=_USGS_IMAGERY, name="USGS Imagery", base=True,
+            _SITES_MAP.add(TileLayer(url=_USGS_TOPO, name="USGS Topo", base=True,
                                      attribution=_USGS_ATTR, max_native_zoom=16,
                                      max_zoom=18))
             _SITES_MAP.add(LayersControl(position="topright"))
@@ -828,6 +844,149 @@ def import_map_server(
         sites.set(dedup_sites(asm, "lon", "lat", tol_m=50))
 
     # ── compile (step 5) ──────────────────────────────────────────────────────
+    # The pull is run as a detached asyncio task (like the workspace modal +
+    # summary recompute): a sync effect captures the inputs and launches the
+    # coroutine, which paints a bottom-right progress toast between steps via
+    # st.task_flush(). Doing the work inline in the effect would block the loop
+    # (nothing paints until the end) and awaiting a flush inside the effect's
+    # own flush cycle wedges the session — see views/workspace_modal.py.
+    _compile_tasks: set = set()
+
+    def _launch(coro):
+        task = asyncio.create_task(coro)
+        _compile_tasks.add(task)
+        task.add_done_callback(_compile_tasks.discard)
+
+    async def _run_compile(sdf, upload_kept, metric_names, nrsa_names, ss_codes,
+                           mmw_codes, want_da, want_regional, want_elev, mmw_ok):
+        n = len(sdf)
+        run_mmw = bool(mmw_codes) and mmw_ok
+        prog = CompileProgress.for_run(
+            n,
+            want_da=want_da, want_elev=want_elev,
+            streamcat=bool(metric_names), nrsa=bool(nrsa_names),
+            streamstats=bool(ss_codes), mmw=run_mmw,
+        )
+
+        async def announce(source, *, site=None, n_sites=None):
+            # Name the source being fetched, repaint the toast, and yield so the
+            # websocket transmits before the (blocking) call runs.
+            prog.start(source, site=site, n_sites=n_sites)
+            show_final_loading_notification(
+                "sc_compile", prog.title(), prog.detail(), close_button=False
+            )
+            await st.task_flush()
+            await asyncio.sleep(0)
+
+        try:
+            await announce("Snapping sites to NHD flowlines")
+            comids = await asyncio.to_thread(nldi_comids, list(sdf["lon"]), list(sdf["lat"]))
+            sdf["comid"] = comids
+            prog.complete()
+
+            if want_da:
+                await announce("Drainage area (NLDI basins)")
+                da = await asyncio.to_thread(nldi_basin_sqkm_many, comids)
+                prog.complete()
+            else:
+                da = np.full(n, np.nan)
+
+            elev = None
+            if want_elev:
+                await announce("Site elevation (USGS 3DEP)")
+                elev = await asyncio.to_thread(
+                    lambda: [epqs_elev(sdf["lon"].iloc[i], sdf["lat"].iloc[i]) for i in range(n)]
+                )
+                prog.complete()
+
+            sc = None
+            if metric_names:
+                await announce(f"StreamCAT ({len(metric_names)} metrics)")
+                sc = await asyncio.to_thread(streamcat_metrics, comids, metric_names, area="watershed")
+                prog.complete()
+
+            if nrsa_names:
+                await announce(f"NRSA metrics ({len(nrsa_names)})")
+                sdf = await asyncio.to_thread(attach_nrsa_metrics, sdf, nrsa_names, load_nrsa_values())
+                prog.complete()
+
+            if ss_codes:
+                for cc in [f"ss_{c}" for c in ss_codes]:
+                    sdf[cc] = np.nan
+                for i in range(n):
+                    st_name = sdf["state"].iloc[i] if "state" in sdf.columns else None
+                    if st_name and str(st_name).strip():
+                        a = state_abbr_from_name(st_name)
+                        state_code = a if a else state_at(sdf["lon"].iloc[i], sdf["lat"].iloc[i], str(_STATES))
+                    else:
+                        state_code = state_at(sdf["lon"].iloc[i], sdf["lat"].iloc[i], str(_STATES))
+                    await announce(f"StreamStats ({state_code or '?'})", site=i + 1, n_sites=n)
+                    vals = await asyncio.to_thread(
+                        ss_basin_characteristics, sdf["lat"].iloc[i], sdf["lon"].iloc[i], state_code, ss_codes
+                    )
+                    for c in ss_codes:
+                        sdf.loc[sdf.index[i], f"ss_{c}"] = vals.get(c)
+                    prog.complete()
+
+            if run_mmw:
+                for cc in mmw_codes:
+                    sdf[cc] = np.nan
+                for i in range(n):
+                    await announce("Model My Watershed (watershed + attributes)", site=i + 1, n_sites=n)
+                    vals = await asyncio.to_thread(
+                        mmw_site_metrics, sdf["lat"].iloc[i], sdf["lon"].iloc[i], mmw_codes
+                    )
+                    for c in mmw_codes:
+                        sdf.loc[sdf.index[i], c] = vals.get(c)
+                    prog.complete()
+
+            await announce("Assembling table + regional predictions")
+            comp = compile_site_table(
+                sdf, lat_col="lat", lon_col="lon", comid_col="comid",
+                streamcat_wide=sc, physio_path=(str(_PHYSIO) if want_regional else None),
+                da_sqkm=da, bieger_geometry=bieger_geometry,
+                division_abbr=bieger_division_abbr,
+            )
+            if not want_regional:
+                comp = comp[[c for c in comp.columns
+                             if c not in ("pred_BW_ft", "pred_BD_ft", "pred_BA_ft2", "bieger_division")]]
+            if not want_da:
+                # DA_mi2 is built unconditionally by compile_site_table; drop the empty
+                # column when the user didn't request it (mirrors the regional guard above).
+                comp = comp[[c for c in comp.columns if c != "DA_mi2"]]
+            if want_elev:
+                comp["elev_3dep_m"] = np.round(np.asarray(elev, dtype=float), 2)
+            comp = comp[[c for c in comp.columns if c != ".source"]]
+            csrc = build_col_provenance(comp, sc, nrsa_names, upload_kept)
+            cfun = {c: metric_map_function_label(c) for c in comp.columns}
+            n_unmatched = int(sum(c is None for c in comids))
+            metric_cols = [c for c in comp.columns if c not in ("lat", "lon", "comid", "site_id")]
+            cov = compute_coverage_table(comp, metric_cols)
+            cov["source"] = [csrc.get(m, "") for m in cov["metric"]]
+            cov["SFARI function"] = [cfun.get(m, "") for m in cov["metric"]]
+
+            unmatched.set(n_unmatched)
+            compiled.set(comp)
+            col_source.set(csrc)
+            col_function.set(cfun)
+            saved_assignments.set(None)
+            coverage.set(cov)
+            prog.complete()
+            await st.task_flush()
+
+            remove_final_loading_notification("sc_compile")
+            extra = f" ({n_unmatched} couldn't snap to a flowline)" if n_unmatched > 0 else ""
+            ui.notification_show(
+                f"Compiled {len(comp)} sites{extra}. Continue to classify the columns.",
+                type="message", duration=6,
+            )
+            await st.task_flush()
+        except Exception as exc:  # noqa: BLE001 — surface the failure in a toast
+            logger.exception("compile failed")
+            remove_final_loading_notification("sc_compile")
+            ui.notification_show(f"Compile failed: {exc}", type="error", duration=8)
+            await st.task_flush()
+
     @reactive.effect
     @reactive.event(input.do_compile)
     def _compile():
@@ -844,86 +1003,20 @@ def import_map_server(
         if upload_df() is not None and keep is not None:
             drop = [c for c in upload_all if c not in keep]
             sdf = sdf[[c for c in sdf.columns if c not in drop]]
+        # Read every input up front (still in the reactive/event context); the
+        # detached worker then touches no reactive reads, only setters.
         metric_names = metric_sel() or []
         nrsa_names = nrsa_sel() or []
+        ss_codes = ss_sel() or []
+        mmw_codes = mmw_sel() or []
         want_da = bool(_inp("want_da"))
         want_regional = bool(_inp("want_regional"))
         want_elev = bool(_inp("want_elev"))
-        n = len(sdf)
-
-        with ui.Progress(min=0, max=1) as p:
-            p.set(0.05, message="Compiling site data", detail="Snapping sites to NHD flowlines")
-            comids = nldi_comids(list(sdf["lon"]), list(sdf["lat"]))
-            sdf["comid"] = comids
-            p.set(0.25, detail="Drainage area (NLDI basins)")
-            da = nldi_basin_sqkm_many(comids) if want_da else np.full(n, np.nan)
-            elev = None
-            if want_elev:
-                p.set(0.35, detail="Site elevation (USGS 3DEP)")
-                elev = [epqs_elev(sdf["lon"].iloc[i], sdf["lat"].iloc[i]) for i in range(n)]
-            sc = None
-            if metric_names:
-                p.set(0.45, detail=f"StreamCAT ({len(metric_names)} metrics)")
-                sc = streamcat_metrics(comids, metric_names, area="watershed")
-            if nrsa_names:
-                p.set(0.55, detail=f"NRSA metrics ({len(nrsa_names)})")
-                sdf = attach_nrsa_metrics(sdf, nrsa_names, load_nrsa_values())
-            ss_codes = ss_sel() or []
-            if ss_codes:
-                for cc in [f"ss_{c}" for c in ss_codes]:
-                    sdf[cc] = np.nan
-                for i in range(n):
-                    st_name = sdf["state"].iloc[i] if "state" in sdf.columns else None
-                    if st_name and str(st_name).strip():
-                        a = state_abbr_from_name(st_name)
-                        st = a if a else state_at(sdf["lon"].iloc[i], sdf["lat"].iloc[i], str(_STATES))
-                    else:
-                        st = state_at(sdf["lon"].iloc[i], sdf["lat"].iloc[i], str(_STATES))
-                    p.set(0.55 + 0.15 * (i + 1) / n, detail=f"StreamStats {i + 1}/{n} ({st or '?'})")
-                    vals = ss_basin_characteristics(sdf["lat"].iloc[i], sdf["lon"].iloc[i], st, ss_codes)
-                    for c in ss_codes:
-                        sdf.loc[sdf.index[i], f"ss_{c}"] = vals.get(c)
-            mmw_codes = mmw_sel() or []
-            if mmw_codes and mmw_available():
-                for cc in mmw_codes:
-                    sdf[cc] = np.nan
-                for i in range(n):
-                    p.set(0.7 + 0.15 * (i + 1) / n, detail=f"Model My Watershed {i + 1}/{n}")
-                    vals = mmw_site_metrics(sdf["lat"].iloc[i], sdf["lon"].iloc[i], mmw_codes)
-                    for c in mmw_codes:
-                        sdf.loc[sdf.index[i], c] = vals.get(c)
-            p.set(0.9, detail="Assembling table + regional predictions")
-            comp = compile_site_table(
-                sdf, lat_col="lat", lon_col="lon", comid_col="comid",
-                streamcat_wide=sc, physio_path=(str(_PHYSIO) if want_regional else None),
-                da_sqkm=da, bieger_geometry=bieger_geometry,
-                division_abbr=bieger_division_abbr,
-            )
-            if not want_regional:
-                comp = comp[[c for c in comp.columns
-                             if c not in ("pred_BW_ft", "pred_BD_ft", "pred_BA_ft2", "bieger_division")]]
-            if want_elev:
-                comp["elev_3dep_m"] = np.round(np.asarray(elev, dtype=float), 2)
-            comp = comp[[c for c in comp.columns if c != ".source"]]
-            csrc = build_col_provenance(comp, sc, nrsa_names, upload_kept)
-            cfun = {c: metric_map_function_label(c) for c in comp.columns}
-            unmatched.set(int(sum(c is None for c in comids)))
-            compiled.set(comp)
-            col_source.set(csrc)
-            col_function.set(cfun)
-            saved_assignments.set(None)
-            metric_cols = [c for c in comp.columns if c not in ("lat", "lon", "comid", "site_id")]
-            cov = compute_coverage_table(comp, metric_cols)
-            cov["source"] = [csrc.get(m, "") for m in cov["metric"]]
-            cov["SFARI function"] = [cfun.get(m, "") for m in cov["metric"]]
-            coverage.set(cov)
-            p.set(1.0, detail="Done")
-
-        extra = f" ({unmatched()} couldn't snap to a flowline)" if unmatched() > 0 else ""
-        ui.notification_show(
-            f"Compiled {len(compiled())} sites{extra}. Continue to classify the columns.",
-            type="message", duration=6,
-        )
+        mmw_ok = mmw_available()
+        _launch(_run_compile(
+            sdf, upload_kept, metric_names, nrsa_names, ss_codes, mmw_codes,
+            want_da, want_regional, want_elev, mmw_ok,
+        ))
 
     # ── classify + build ──────────────────────────────────────────────────────
     def _classify_profile():
@@ -933,6 +1026,18 @@ def import_map_server(
     def _built_tables():
         req(compiled() is not None and saved_assignments() is not None)
         return build_config_tables_from_roles(compiled(), saved_assignments())
+
+    def _region_of_applicability():
+        """Snapshot the wizard's region selection so it can ride into the
+        session, the DEEP bundle meta, and the assessment library. None when the
+        user chose no region. Shape mirrors apps/library/README.md's region block."""
+        kind = region_kind()
+        if not kind or kind == "none":
+            return None
+        roa = {"kind": kind, "code": region_code(), "name": region_name()}
+        if kind == "polygon" and user_polygon() is not None:
+            roa["polygon"] = user_polygon()
+        return roa
 
     @reactive.effect
     @reactive.event(input.wiz_build)
@@ -950,6 +1055,7 @@ def import_map_server(
         if ok:
             state.column_sources.set(dict(col_source() or {}))
             state.column_functions.set(dict(col_function() or {}))
+            state.region_of_applicability.set(_region_of_applicability())
             ui.notification_show(
                 "Dataset built. Open Reference Curves, or refine in the Workbook below.",
                 type="message", duration=7,
@@ -1076,7 +1182,8 @@ def import_map_server(
                 class_="d-flex gap-2 my-2",
             ),
             ui.output_ui("coverage_summary"),
-            ui.output_ui("coverage_table"),
+            ui.output_ui("compile_view_toggle"),
+            ui.output_ui("coverage_body"),
         )
 
     def _body_step6():
@@ -1306,9 +1413,11 @@ def import_map_server(
     @render.ui
     def mmw_section():
         if not mmw_available():
-            return ui.div(ui.TagList("Model My Watershed requires an API key (",
+            return ui.div(ui.TagList("Model My Watershed requires an API key. Set ",
                                      ui.tags.code("MMW_API_KEY"),
-                                     "). Set it to enable land cover, soils, terrain and climate metrics."),
+                                     " or put the key in ",
+                                     ui.tags.code("scripts/.mmw_api_key"),
+                                     " to enable land cover, soils, terrain, climate and drainage-area metrics."),
                           class_="text-muted small")
         mc = mmw_core_metrics()
         ch = {k: v["label"] for k, v in mc.items()}
@@ -1388,9 +1497,24 @@ def import_map_server(
         )
 
     @render.ui
-    def coverage_table():
+    def compile_view_toggle():
+        # Only offer the Table | Mapping switch once there's something compiled.
+        if coverage() is None:
+            return None
+        return ui.input_radio_buttons(
+            "compile_view", None,
+            {"table": "Table", "map": "Discipline → Function → Metric"},
+            selected="table", inline=True,
+        )
+
+    @render.ui
+    def coverage_body():
         cov = coverage()
         req(cov is not None)
+        # _inp() yields None until the toggle renders + the client echoes its default;
+        # treat that as the default table view.
+        if _inp("compile_view") == "map":
+            return _compile_coverage_mapping(cov)
         return _plain_table(cov)
 
     # ── classify + review outputs ─────────────────────────────────────────────
@@ -1448,6 +1572,47 @@ def _re_lat(c: str) -> bool:
 
 def _re_lon(c: str) -> bool:
     return bool(_re.search(r"^lon|lon$|long|longitude", str(c), _re.I))
+
+
+def _compile_coverage_mapping(cov):
+    """Read-only Discipline -> Function -> Metric coverage for the compiled metrics,
+    rendered with the same ``wb-table`` markup as the workbench so the two views look
+    identical. Each compiled metric appears under EVERY function it serves in
+    metric_map.yaml (canonicalized via staf_functions.json aliases); functions with no
+    compiled metric show a dash."""
+    metric_cols = [
+        str(m)
+        for m in (cov["metric"].tolist() if cov is not None else [])
+        if str(m) not in ("lat", "lon", "comid", "site_id")
+    ]
+    fn_metrics: dict[str, list[str]] = {}
+    for m in metric_cols:
+        for ff in metric_map_functions_for(m):
+            canon = staf_canonical_function(ff.get("function_name"))
+            if canon is None:
+                continue
+            fn_metrics.setdefault(canon["name"], []).append(m)
+
+    by_disc = staf_functions_by_discipline()
+
+    def fn_cell(fn: str):
+        return ui.tags.td(ui.tags.span(fn), class_="wb-fn")
+
+    def metrics_cell(fn: str):
+        mets = fn_metrics.get(fn) or []
+        if not mets:
+            return ui.tags.td(
+                ui.tags.span("—", class_="wb-empty text-muted"), class_="wb-metrics"
+            )
+        chips = [
+            ui.tags.span(
+                ui.tags.span(m, class_="wb-chip-label"), class_="wb-chip wb-chip-data"
+            )
+            for m in mets
+        ]
+        return ui.tags.td(*chips, class_="wb-metrics")
+
+    return render_wb_table(by_disc, fn_cell=fn_cell, metrics_cell=metrics_cell)
 
 
 def _plain_table(df: pd.DataFrame):
