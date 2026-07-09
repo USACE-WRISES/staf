@@ -161,7 +161,7 @@ app_ui = ui.page_navbar(
             ui.tags.link(rel="stylesheet", href=versioned_www_asset("curves.css")),
             ui.tags.script(src=versioned_www_asset("curves.js")),
         ),
-        staf_topnav("curves"),
+        staf_topnav(),
         # Static ipywidget/ipyleaflet deps (see views/widget_deps.py) — the
         # TagList renders nothing visible; its dependencies hoist into <head>.
         (static_ipywidget_dependencies() if _HAS_WIDGETS else None),

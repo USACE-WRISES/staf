@@ -67,4 +67,4 @@ Connect Cloud UI pointed at this repo. Interactive maps need `ipyleaflet` +
 
 Follows the DEEP app's py-shiny conventions: core (non-Express) syntax, pinned
 `requirements.txt` for Posit Connect Cloud, shared `www/styles.css` STAF design tokens
-under the app-specific `www/curves.css`, per-app copy of `staf_topnav()`.
+under the app-specific `www/curves.css`, per-app copy of `STAF_LINKS` + `staf_topnav()` (STAF banner link).

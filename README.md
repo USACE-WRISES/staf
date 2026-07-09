@@ -56,7 +56,7 @@ Each app deploys **separately** with the Posit Publisher extension (VS Code / Po
 - The untracked `.posit/publish/deployments/*.toml` records bind redeploys to the **existing** Connect Cloud content item — they are what keep the public app URLs stable. Never delete or commit them; back them up if you move machines.
 - Before deploying, confirm Publisher targets the existing deployment rather than creating a new one.
 
-App URLs are listed in `docs/_data/apps.yml` (used by the site) and in each app's `staf_topnav` (the in-app cross-navigation). Until a shared `staf-core` package exists, a URL change must be mirrored in both places.
+App URLs are listed in `docs/_data/apps.yml` (used by the site) and in each app's `STAF_LINKS` dict (used for the STAF banner link, StreamCurves' DEEP deep links, and the desktop overrides). Until a shared `staf-core` package exists, a URL change must be mirrored in both places.
 
 ## The assessment library
 

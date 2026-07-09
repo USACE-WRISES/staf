@@ -243,7 +243,7 @@
   padding: 0.75rem;
 }
 
-/* Shared STAF cross-app nav strip (sits just below the app navbar) */
+/* STAF site link strip, just below the app navbar (cross-app links removed). */
 .staf-topnav-strip {
   display: flex;
   align-items: center;
@@ -264,10 +264,6 @@
 }
 .staf-topnav-link:hover {
   color: #fff;
-}
-.staf-topnav-link.is-current {
-  color: #fff;
-  font-weight: 700;
 }
 
 /* Data & Setup layout */

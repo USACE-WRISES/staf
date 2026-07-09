@@ -33,7 +33,7 @@ Primary working areas:
 5) If JS/CSS assets change and cache-busting is used, update the version/tag in the relevant include(s).
 6) Keep changes accessible (keyboard behavior, readable labels, semantic markup where practical).
 7) Run app tests per app from that app's own directory (never from the repo root — the four pytest suites collide). Use the shared root `.venv` (Python 3.12, `requirements-dev.txt`).
-8) Never delete or commit `.posit/publish/deployments/` records — they keep the public app URLs stable. App URL changes must be mirrored in `docs/_data/apps.yml` and each app's `staf_topnav`.
+8) Never delete or commit `.posit/publish/deployments/` records — they keep the public app URLs stable. App URL changes must be mirrored in `docs/_data/apps.yml` and each app's `STAF_LINKS` dict.
 
 ## Data and Build Expectations
 1) Do not manually edit generated outputs when a script is the canonical producer; run the generator.

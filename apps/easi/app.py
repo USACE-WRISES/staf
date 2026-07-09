@@ -156,10 +156,10 @@ def _bieger_area_tip_html(current_name: str | None = None) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# Shared STAF cross-app nav — links to the other STAF tier apps + STAF home.
-# Small per-app copy (no shared build step across the R/Python apps); a future
-# staf-core package would centralize it. The current tool renders as inert
-# highlighted text; the other tools open in a new tab.
+# STAF top banner — a single link back to the STAF site; cross-links to the
+# other tier apps were removed to keep the banner minimal. STAF_LINKS still
+# carries every app URL: it is the in-app half of the URL mirror (see README)
+# and the desktop shell rewrites all entries via STAF_LINKS_OVERRIDES.
 # --------------------------------------------------------------------------- #
 STAF_LINKS = {
     "home":   "https://usace-wrises.github.io/staf/",
@@ -173,27 +173,16 @@ if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on w
     STAF_LINKS.update(json.loads(_staf_links_overrides))
 
 
-def staf_topnav(current: str):
-    items = [
-        ("home",   "STAF"),
-        ("easi",   "Screening · EASI"),
-        ("sfari",  "Rapid · SFARI"),
-        ("deep",   "Detailed · DEEP"),
-        ("curves", "Detailed · StreamCurves"),
-    ]
-    links = []
-    for key, label in items:
-        if key == current:
-            links.append(ui.tags.span(label, class_="staf-topnav-link is-current"))
-        else:
-            links.append(ui.tags.a(label, href=STAF_LINKS[key],
-                                    class_="staf-topnav-link",
-                                    target="_blank", rel="noopener"))
-    return ui.div(*links, class_="staf-topnav")
+def staf_topnav():
+    return ui.div(
+        ui.tags.a("STAF", href=STAF_LINKS["home"], class_="staf-topnav-link",
+                  target="_blank", rel="noopener"),
+        class_="staf-topnav",
+    )
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=21"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=22"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="report-edit.js", defer=""),
@@ -206,7 +195,7 @@ app_ui = ui.page_fillable(
         ui.div(
             ui.span("EASI", ui.tags.small("Ecosystem Assessment Screening Index"),
                     class_="easi-brand"),
-            staf_topnav("easi"),
+            staf_topnav(),
             ui.div(
                 ui.input_action_link("nav_new", "New analysis"),
                 ui.input_action_link("nav_about", "About"),
@@ -852,7 +841,7 @@ def server(input, output, session):
         def _apply_snap(hit):
             slat, slon, dist, comid = hit
             _add_layer("marker", Marker(location=(slat, slon), draggable=False,
-                                        title="Selected point"))
+                                        title="Selected point", name="Selected point"))
             snapped_point.set((slat, slon, dist, comid))
             ui.update_numeric("lat", value=round(slat, 5))
             ui.update_numeric("lon", value=round(slon, 5))

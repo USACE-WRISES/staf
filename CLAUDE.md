@@ -16,7 +16,7 @@ STAF (Stream Tiered Assessment Framework) is a monorepo with two kinds of delive
 | `apps/deep` | Detailed | Runs curve-based detailed assessments (predefined or uploaded `.deep.json` bundles) |
 | `apps/stream-curves` | Detailed (builder) | Builds reference/regional curves and exports `.deep.json` assessment bundles for DEEP |
 
-The site's Tools page is the app launch portal; app URLs live in `docs/_data/apps.yml` **and** in each app's `staf_topnav` — a URL change must be mirrored in both until a shared `staf-core` package exists (planned home: `libs/`).
+The site's Tools page is the app launch portal; app URLs live in `docs/_data/apps.yml` **and** in each app's `STAF_LINKS` dict — a URL change must be mirrored in both until a shared `staf-core` package exists (planned home: `libs/`).
 
 3. **STAF Desktop** (`desktop/`): a C#/.NET 10 WinForms + WebView2 shell that runs the *same four apps* locally from a self-managed payload (relocatable python-build-standalone + the apps tree, downloaded from GitHub Releases). Velopack packages it as a per-user `Setup.exe` and a self-updating portable zip. The only app-code concession to desktop is the `STAF_LINKS_OVERRIDES` env merge after each `STAF_LINKS` dict. See `desktop/RELEASING.md` for the release model.
 
