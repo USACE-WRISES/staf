@@ -57,20 +57,15 @@ def build_csv(delin, metric_scores, function_scores, evidence, sc) -> str:
         w.writerow([cat, f["name"], m["name"], m.get("scale", ""), rc.get("likert") or "",
                     ev.get("value_text") or "", ev.get("source") or "", rc.get("note") or ""])
     w.writerow([])
-    w.writerow(["Category", "Function", "Function score (0-15)", "Condition", "Not applicable", "Justification"])
+    w.writerow(["Category", "Function", "Function score (0-15)", "Condition", "Justification"])
     fbc = config.functions_by_category()
     for cat in _CAT:
         for f in fbc.get(cat, []):
             rec = function_scores.get(f["id"]) or {}
             score = rec.get("score")
-            if rec.get("na"):
-                band = "N/A"
-            elif score is not None:
-                band = scoring.function_score_band_label(score)
-            else:
-                band = ""
+            band = scoring.function_score_band_label(score) if score is not None else ""
             w.writerow([cat, f["name"], "" if score is None else score, band,
-                        "yes" if rec.get("na") else "", rec.get("note") or ""])
+                        rec.get("note") or ""])
     w.writerow([])
     w.writerow(["Outcome", "Sub-index"])
     for k in ("physical", "chemical", "biological"):
@@ -158,9 +153,7 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
         for f in fbc.get(cat, []):
             rec = function_scores.get(f["id"]) or {}
             score = rec.get("score")
-            if rec.get("na"):
-                band, col = "N/A", None
-            elif score is not None:
+            if score is not None:
                 band = scoring.function_score_band_label(score)
                 col = band_col.get(band)
             else:
@@ -214,5 +207,74 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
     if gallery:
         story += [Spacer(1, 10), Paragraph("Site photos", styles["Heading3"])] + gallery
 
+    doc.build(story)
+    return buf.getvalue()
+
+
+def build_desktop_metrics_pdf(delin, evidence) -> bytes:
+    """Field-prep list of the desktop-supportable metrics: what to look up, the pulled
+    value when the app already has one, and a link to the data source."""
+    from urllib.parse import urlparse
+    from xml.sax.saxutils import escape
+
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6 * inch, bottomMargin=0.6 * inch,
+                            leftMargin=0.6 * inch, rightMargin=0.6 * inch,
+                            title="SFARI Desktop Metrics")
+    styles = getSampleStyleSheet()
+    small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=7, leading=8.4)
+    small_dim = ParagraphStyle("small_dim", parent=small, textColor=colors.HexColor("#66708a"))
+    small_it = ParagraphStyle("small_it", parent=small_dim, fontName="Helvetica-Oblique")
+    grid = colors.HexColor("#d5deea")
+    head_bg = colors.HexColor("#eef2f8")
+    dl = (delin or {}).get("delineation", {})
+
+    story = [Paragraph("SFARI Desktop Metrics", styles["Title"]),
+             Paragraph(dl.get("gnis_name") or "(unnamed reach)", styles["Heading2"])]
+    hdr = [["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
+           ["COMID / HUC8", f"{dl.get('comid')} / {dl.get('huc8')}"],
+           ["Drainage / watershed area", f"{dl.get('drainage_area_sqkm')} / {dl.get('watershed_area_sqkm')} km2"],
+           ["Reach length", f"{dl.get('reach_length_ft')} ft"]]
+    t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
+    t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9), ("GRID", (0, 0), (-1, -1), 0.3, grid),
+                           ("BACKGROUND", (0, 0), (0, -1), head_bg)]))
+    story += [t, Spacer(1, 10)]
+
+    data = [["Discipline", "Function", "Metric", "Desktop evidence", "Value", "Data source"]]
+    for cat, f, m in _ordered_metrics():
+        if not m.get("desktopSupportable"):
+            continue
+        ds = m.get("desktopSource") or {}
+        ev = evidence.get(m["metricId"]) or {}
+        if ev.get("status") == "ok" and ev.get("value_text"):
+            val = Paragraph(escape(ev["value_text"]), small)
+        else:
+            val = Paragraph("review in the field", small_it)
+        url = ev.get("source_url") or ds.get("url") or ""
+        name = ev.get("source") or (urlparse(url).netloc if url else "")
+        if url:
+            href = escape(url, {'"': "&quot;"})
+            src = Paragraph(f'<link href="{href}" color="#1f4e8c">{escape(name or url)}</link>', small)
+        else:
+            src = Paragraph(escape(name), small)
+        data.append([Paragraph(escape(cat), small_dim), Paragraph(escape(f["name"]), small_dim),
+                     Paragraph(escape(m["name"]), small),
+                     Paragraph(escape(ds.get("label") or ""), small), val, src])
+    mt = Table(data, colWidths=[0.8 * inch, 1.15 * inch, 1.25 * inch, 1.5 * inch,
+                                1.35 * inch, 1.25 * inch], repeatRows=1)
+    mt.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 7),
+                            ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e5e8ee")),
+                            ("BACKGROUND", (0, 0), (-1, 0), head_bg),
+                            ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+    story += [mt, Spacer(1, 8),
+              Paragraph("Evaluate these metrics from the desktop before the field visit. Pulled "
+                        "values are shown; look up the rest at the linked data sources.",
+                        styles["Italic"])]
     doc.build(story)
     return buf.getvalue()

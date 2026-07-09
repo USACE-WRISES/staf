@@ -15,6 +15,7 @@ import json
 import os
 import tempfile
 from pathlib import Path
+from urllib.parse import urlparse
 
 # HyRiver cache -> writable temp dir (Connect Cloud FS is ephemeral). Set before
 # any HyRiver import so the clients pick it up.
@@ -234,6 +235,12 @@ def _info(text: str = None, *, html_tip: str = None):
 _LIKERT_DOT = {"Strongly Agree": "good", "Agree": "good", "Neutral": "fair",
                "Disagree": "poor", "Strongly Disagree": "poor"}
 
+# Rating -> dropdown tint class (closed-state color coding; mirrors LIKERT_CLS in
+# www/field-review.js and reuses the report-chip band palette).
+_LIKERT_CLS = {"Strongly Agree": "lk-good", "Agree": "lk-good", "Neutral": "lk-mid",
+               "Disagree": "lk-poor", "Strongly Disagree": "lk-poor",
+               config.LIKERT_NA: "lk-na"}
+
 
 def _criteria_tip_html(m) -> str:
     """Rich hover card for a metric: its statement + the Likert 'how to score' ladder.
@@ -261,10 +268,10 @@ def _criteria_tip_html(m) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# Shared STAF cross-app nav — links to the other STAF tier apps + STAF home.
-# Small per-app copy (no shared build step across the R/Python apps); a future
-# staf-core package would centralize it. The current tool renders as inert
-# highlighted text; the other tools open in a new tab.
+# STAF top banner — a single link back to the STAF site; cross-links to the
+# other tier apps were removed to keep the banner minimal. STAF_LINKS still
+# carries every app URL: it is the in-app half of the URL mirror (see README)
+# and the desktop shell rewrites all entries via STAF_LINKS_OVERRIDES.
 # --------------------------------------------------------------------------- #
 STAF_LINKS = {
     "home":   "https://usace-wrises.github.io/staf/",
@@ -278,37 +285,26 @@ if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on w
     STAF_LINKS.update(json.loads(_staf_links_overrides))
 
 
-def staf_topnav(current: str):
-    items = [
-        ("home",   "STAF"),
-        ("easi",   "Screening · EASI"),
-        ("sfari",  "Rapid · SFARI"),
-        ("deep",   "Detailed · DEEP"),
-        ("curves", "Detailed · StreamCurves"),
-    ]
-    links = []
-    for key, label in items:
-        if key == current:
-            links.append(ui.tags.span(label, class_="staf-topnav-link is-current"))
-        else:
-            links.append(ui.tags.a(label, href=STAF_LINKS[key],
-                                    class_="staf-topnav-link",
-                                    target="_blank", rel="noopener"))
-    return ui.div(*links, class_="staf-topnav")
+def staf_topnav():
+    return ui.div(
+        ui.tags.a("STAF", href=STAF_LINKS["home"], class_="staf-topnav-link",
+                  target="_blank", rel="noopener"),
+        class_="staf-topnav",
+    )
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=3"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=8"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="field-review.js", defer="")),
+                    ui.tags.script(src="field-review.js?v=4", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
         ui.div(
             ui.span("SFARI", ui.tags.small("Stream Functional Assessment Rapid Index"),
                     class_="easi-brand"),
-            staf_topnav("sfari"),
+            staf_topnav(),
             ui.div(
                 ui.input_action_link("nav_new", "New assessment"),
                 ui.download_button("save_session", "Save", class_="easi-nav-btn"),
@@ -366,7 +362,7 @@ def server(input, output, session):
 
     # ---- field-review scoring state (Phase 2) ----
     metric_scores = reactive.value({})     # {metricId: {"likert": str|None, "note": str}}
-    function_scores = reactive.value({})   # {functionId: {"score": int|None, "na": bool, "note": str}}
+    function_scores = reactive.value({})   # {functionId: {"score": int|None, "note": str}}
     current_fn = reactive.value(0)         # index into FN_IDS
     evidence = reactive.value({})          # {metricId: EvidenceResult dict} (desktop pull)
     _pull_prog = {"done": 0, "total": 0}
@@ -488,7 +484,7 @@ def server(input, output, session):
         def _apply_snap(hit):
             slat, slon, dist, comid = hit
             _add_layer("marker", Marker(location=(slat, slon), draggable=False,
-                                        title="Selected point"))
+                                        title="Selected point", name="Selected point"))
             snapped_point.set((slat, slon, dist, comid))
             ui.update_numeric("lat", value=round(slat, 5))
             ui.update_numeric("lon", value=round(slon, 5))
@@ -929,18 +925,7 @@ def server(input, output, session):
         except (TypeError, ValueError):
             return
         fs = dict(function_scores()); cur = dict(fs.get(fid, {}))
-        cur["score"] = max(0, min(15, val)); cur["na"] = False
-        fs[fid] = cur; function_scores.set(fs)
-
-    @reactive.effect
-    @reactive.event(input.fna_set)
-    def _on_fna():
-        ev = input.fna_set() or {}
-        fid = ev.get("fid")
-        if not fid:
-            return
-        fs = dict(function_scores()); cur = dict(fs.get(fid, {}))
-        cur["na"] = bool(ev.get("na"))
+        cur["score"] = max(0, min(15, val))
         fs[fid] = cur; function_scores.set(fs)
 
     @reactive.effect
@@ -1011,8 +996,7 @@ def server(input, output, session):
     @reactive.calc
     def scored():
         fs = function_scores()
-        scores = {fid: v["score"] for fid, v in fs.items()
-                  if v.get("score") is not None and not v.get("na")}
+        scores = {fid: v["score"] for fid, v in fs.items() if v.get("score") is not None}
         return scoring.score_assessment(scores)
 
     def _fn_suggest_value(fid):
@@ -1037,14 +1021,17 @@ def server(input, output, session):
         if current_step() not in (STEP_REVIEW, STEP_REPORT):
             return None
         cur = current_fn(); fs = function_scores()
-        items = []; idx = 0
+        items = [ui.tags.button("Get desktop metrics",
+                                {"data-desktop-metrics": "1", "type": "button",
+                                 "title": "Every metric you can evaluate from a desk, with pulled "
+                                          "values and links to the data sources"},
+                                class_="sfari-btn sfari-nav-desktop")]
+        idx = 0
         for cat in CATEGORY_ORDER:
             items.append(ui.div(cat, class_="sfari-nav-cat"))
             for f in FNS_BY_CAT.get(cat, []):
                 rec = fs.get(f["id"], {})
-                if rec.get("na"):
-                    dot = "#33415c"
-                elif rec.get("score") is not None:
+                if rec.get("score") is not None:
                     dot = scoring.function_score_band_color(rec["score"])
                 else:
                     dot = "#dfe4ec"
@@ -1053,7 +1040,7 @@ def server(input, output, session):
                                     ui.span(f["name"]),
                                     {"data-idx": str(idx)}, class_=cls))
                 idx += 1
-        if not any(v.get("score") is not None and not v.get("na") for v in fs.values()):
+        if not any(v.get("score") is not None for v in fs.values()):
             items.append(ui.div("Tip: use each function's metrics as evidence, then set its 0–15 score.",
                                  class_="sfari-nav-empty"))
         return ui.TagList(*items)
@@ -1113,12 +1100,16 @@ def server(input, output, session):
                 ev = ui.div(ui.span("field", class_="sfari-ev-tag field"),
                             ui.span("Field observation only.", class_="sfari-ev-val muted"),
                             class_="sfari-evidence")
-            btns = []
-            for lv in list(reversed(config.LIKERT_ORDER)) + [config.LIKERT_NA]:
-                short = config.LIKERT_SHORT.get(lv, "N/A")
-                bcls = "sfari-likert-btn" + (" sel" if sel == lv else "")
-                btns.append(ui.tags.button(short, {"data-mid": mid, "data-val": lv,
-                                                   "title": lv, "type": "button"}, class_=bcls))
+            opts = [ui.tags.option("Rate…", {"value": ""})]
+            for lv in list(config.LIKERT_ORDER) + [config.LIKERT_NA]:
+                oattrs = {"value": lv}
+                if sel == lv:
+                    oattrs["selected"] = "selected"
+                opts.append(ui.tags.option(lv, oattrs))
+            tint = _LIKERT_CLS.get(sel)
+            rate = ui.tags.select(*opts, {"data-mid": mid, "aria-label": f"Rate: {m['name']}"},
+                                  class_="sfari-likert-select"
+                                  + (" set" if sel else "") + (f" {tint}" if tint else ""))
             photos = rc.get("photos", []) or []
             thumbs = [
                 ui.span(
@@ -1137,7 +1128,9 @@ def server(input, output, session):
                               class_="sfari-photo-btn"),
                 {"data-mid": mid}, class_="sfari-photos")
             has_note = bool((note or "").strip())
-            stmt = (m.get("metricStatement") or "").strip()
+            # Show the short field-form agreement statement; the longer library
+            # metricStatement stays in the "how to score" tooltip (_criteria_tip_html).
+            stmt = (m.get("fieldStatement") or m.get("metricStatement") or "").strip()
             name_row = ui.div(
                 ui.span(m["name"], class_="sfari-metric-title"),
                 ui.span(m.get("scale", "R"),
@@ -1154,15 +1147,18 @@ def server(input, output, session):
             mcls = ("sfari-metric" + (" show-note" if has_note else "")
                     + (" show-photo" if photos else ""))
             metric_blocks.append(ui.div(
-                name_row,
-                (ui.div(stmt, class_="sfari-metric-statement") if stmt and stmt != m["name"] else None),
-                ev,
-                ui.div(*btns, {"data-mid": mid}, class_="sfari-likert"),
+                ui.div(
+                    name_row,
+                    (ui.div(stmt, class_="sfari-metric-statement")
+                     if stmt and stmt != m["name"] else None),
+                    ev,
+                    class_="sfari-metric-main"),
+                ui.div(rate, class_="sfari-metric-rate"),
                 ui.tags.textarea(note, {"data-mid": mid, "placeholder": "Note (optional)…"},
                                  class_="sfari-metric-note"),
                 photos_row,
                 class_=mcls))
-        score = rec.get("score"); na = rec.get("na", False)
+        score = rec.get("score")
         sval = score if score is not None else 8
         if score is not None:
             band_lbl = scoring.index_band_label(sval / 15.0)
@@ -1171,26 +1167,21 @@ def server(input, output, session):
             band_lbl = "Not scored yet"; band_col = "#e7ebf1"
         has_fnnote = bool((rec.get("note") or "").strip())
         card_cls = ("sfari-scorecard" + ("" if score is not None else " unset")
-                    + (" na" if na else "") + (" show-fnnote" if has_fnnote else ""))
+                    + (" show-fnnote" if has_fnnote else ""))
         scorecard = ui.div(
             ui.div(
                 ui.span("Function score", class_="sfari-fscore-lbl"),
                 _info("Your professional-judgment 0–15 score, using the metrics above as lines of "
                       "evidence. 11–15 Functioning · 6–10 At-Risk · 0–5 Non-Functioning."),
+                ui.tags.button("✎", {"data-toggle": "fnnote", "type": "button",
+                                     "title": "Add justification / notes"},
+                               class_="sfari-metric-toggle" + (" on" if has_fnnote else "")),
+                class_="sfari-fscore-head"),
+            ui.div(
                 ui.tags.input({"type": "range", "min": "0", "max": "15", "step": "1",
                                "value": str(sval), "data-fid": fid}, class_="sfari-fscore"),
                 ui.span(str(score) if score is not None else "–", class_="sfari-fscore-num"),
                 ui.span(band_lbl, class_="sfari-fscore-band", style=f"background:{band_col};"),
-                ui.tags.label(
-                    ui.tags.input({"type": "checkbox", "data-fid": fid,
-                                   **({"checked": "checked"} if na else {})}, class_="sfari-fna"),
-                    "N/A",
-                    {"title": "Mark N/A when this function genuinely doesn't apply to the reach — it "
-                              "is then excluded from the rollup and its denominators."},
-                    class_="sfari-fna-lbl"),
-                ui.tags.button("✎", {"data-toggle": "fnnote", "type": "button",
-                                     "title": "Add justification / notes"},
-                               class_="sfari-metric-toggle" + (" on" if has_fnnote else "")),
                 class_="sfari-fscore-row"),
             ui.output_ui("fn_suggest"),
             ui.tags.textarea(rec.get("note", ""),
@@ -1199,6 +1190,15 @@ def server(input, output, session):
                                              "from the suggestion)…"},
                              class_="sfari-fn-note"),
             class_=card_cls)
+        header_card = ui.div(
+            ui.div(
+                ui.div(f"Function {idx + 1} of {len(FN_IDS)} · {f['category']}",
+                       class_="sfari-fn-eyebrow"),
+                ui.div(f["name"], class_="sfari-fn-name"),
+                ui.p(f.get("functionStatement", ""), class_="sfari-fn-statement"),
+                class_="sfari-fn-info"),
+            scorecard,
+            class_="sfari-fn-card")
         prev_attrs = {"data-nav": "-1", "type": "button"}
         if idx == 0:
             prev_attrs["disabled"] = "disabled"
@@ -1217,20 +1217,12 @@ def server(input, output, session):
         rated = sum(1 for mm in METRICS_BY_FN.get(fid, [])
                     if (ms.get(mm["metricId"]) or {}).get("likert"))
         return ui.div(
-            ui.div(ui.span(f["name"]),
-                   ui.span(f"Function {idx + 1} / {len(FN_IDS)} · {f['category']}",
-                           class_="sfari-fn-counter"),
-                   class_="sfari-fn-title"),
-            ui.p(f.get("functionStatement", ""), class_="sfari-fn-statement"),
-            ui.div(ui.span("Metrics — lines of evidence"),
+            header_card,
+            ui.div(ui.span("Lines of evidence"),
                    ui.span(f"{rated} of {total} rated", class_="sfari-sec-count"),
                    class_="sfari-sec-lbl"),
-            ui.div(ui.tags.b("SD"), " strongly disagree · ", ui.tags.b("D"), " disagree · ",
-                   ui.tags.b("N"), " neutral · ", ui.tags.b("A"), " agree · ",
-                   ui.tags.b("SA"), " strongly agree · ", ui.tags.b("N/A"), " not applicable",
-                   class_="sfari-likert-legend"),
             *metric_blocks,
-            ui.div(scorecard, actions, class_="sfari-fn-footer"),
+            ui.div(actions, class_="sfari-fn-footer"),
             class_="sfari-fnpanel-inner")
 
     @render.ui
@@ -1255,8 +1247,7 @@ def server(input, output, session):
         eci = sc["ecosystemConditionIndex"]; subs = sc["subIndices"]
         cats = sc["categoryLabels"]; catvals = sc["categorySubIndices"]
         fs = function_scores()
-        n_scored = sum(1 for v in fs.values() if v.get("score") is not None and not v.get("na"))
-        n_na = sum(1 for v in fs.values() if v.get("na"))
+        n_scored = sum(1 for v in fs.values() if v.get("score") is not None)
         chips = []
         for cat in CATEGORY_ORDER:
             lbl = cats.get(cat)
@@ -1280,14 +1271,12 @@ def server(input, output, session):
             ui.div(*chips, class_="sfari-cat-chips"),
             ui.div(ui.tags.span(style=f"width:{(n_scored / 20) * 100:.0f}%;"),
                    class_="sfari-progress-bar"),
-            ui.div(f"{n_scored} / 20 functions scored" + (f" · {n_na} N/A" if n_na else ""),
-                   class_="sfari-progress"),
+            ui.div(f"{n_scored} / 20 functions scored", class_="sfari-progress"),
         )
 
     # ---- report modal ----
     def _any_scored():
-        return any(v.get("score") is not None and not v.get("na")
-                   for v in function_scores().values())
+        return any(v.get("score") is not None for v in function_scores().values())
 
     @reactive.effect
     @reactive.event(input.open_report_evt)
@@ -1306,97 +1295,205 @@ def server(input, output, session):
         dl = d.get("delineation") or {}
         sc = scored()
         ms = metric_scores(); fs = function_scores(); ev = evidence()
+
+        # -- EASI-style header: stream name + fact chips, minimap at right --
         slat = dl.get("snapped_lat"); slon = dl.get("snapped_lon")
-        coord = (f"{slat:.5f}, {slon:.5f}" if slat is not None and slon is not None else "—")
+        coord = (f"{slat:.4f}, {slon:.4f}" if slat is not None and slon is not None else "—")
+
+        def fact(label, val):
+            return ui.span(ui.tags.b(f"{label}: "), str(val), class_="easi-fact")
+
+        # -- basin characteristics (EASI report format) --
+        basin_rows = [("COMID", dl.get("comid")), ("HUC8", dl.get("huc8")),
+                      ("Drainage area", f'{dl.get("drainage_area_sqkm")} km²'),
+                      ("Watershed area", f'{dl.get("watershed_area_sqkm")} km²'),
+                      ("Stream order", dl.get("stream_order"))]
+        basin = ui.tags.details(
+            ui.tags.summary("Basin characteristics", class_="easi-section-title easi-rollup-sum"),
+            ui.tags.table(ui.tags.tbody(
+                *[ui.tags.tr(ui.tags.th(k), ui.tags.td(str(v))) for k, v in basin_rows]),
+                class_="easi-tbl", style="max-width:560px;"),
+            class_="easi-rollup", open=True, style="margin:6px 0 0;")
+
+        # Basin table sits in the header's left column so it fills the space
+        # beside the minimap instead of leaving a gap below the fact chips.
         minimap = _geo_svg(d.get("watershed_geojson"), d.get("reach_geojson"))
         header = ui.div(
             ui.div(
-                ui.h3(dl.get("gnis_name") or "(unnamed reach)", style="margin:0;"),
-                ui.div(f"Lat/Lon {coord}  ·  COMID {dl.get('comid')}  ·  HUC8 {dl.get('huc8')}",
-                       style="font-size:12px;color:#667;margin-top:3px;"),
-                ui.div(f"Drainage area {dl.get('drainage_area_sqkm')} km²  ·  "
-                       f"Watershed {dl.get('watershed_area_sqkm')} km²  ·  "
-                       f"Reach {dl.get('reach_length_ft')} ft",
-                       style="font-size:12px;color:#667;margin-top:1px;"),
-                style="flex:1;"),
+                ui.div(
+                    ui.h3(dl.get("gnis_name") or "(unnamed reach)"),
+                    ui.div(fact("Analysis Point", coord),
+                           fact("Reach", f'{dl.get("reach_length_ft")} ft upstream'),
+                           class_="easi-facts"),
+                    class_="easi-summary-head"),
+                basin,
+                style="flex:1 1 380px;min-width:0;"),
             (ui.HTML(minimap) if minimap else None),
-            style="display:flex;gap:16px;align-items:flex-start;margin-bottom:12px;")
-        fbars = []
+            style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;")
+
+        # -- metric evidence: one collapsed expander per discipline, functions as group rows --
+        disc_blocks = []
         for cat in CATEGORY_ORDER:
-            fbars.append(ui.div(cat, style="font-family:var(--font-head);font-weight:700;"
-                                            "color:var(--easi-accent);font-size:12px;margin:8px 0 2px;"))
+            rows = []; n_rated = 0; n_total = 0
             for f in FNS_BY_CAT.get(cat, []):
-                rec = fs.get(f["id"], {})
-                if rec.get("na"):
-                    fbars.append(_bar(f["name"] + " (N/A)", 0, "#e7ebf1", vmax=15, fmt="{:.0f}", indent=True))
-                elif rec.get("score") is not None:
-                    fbars.append(_bar(f["name"], rec["score"],
-                                      scoring.function_score_band_color(rec["score"]),
-                                      vmax=15, fmt="{:.0f}", indent=True))
-                else:
-                    fbars.append(_bar(f["name"] + " (unscored)", 0, "#eef1f6", vmax=15,
-                                      fmt="{:.0f}", indent=True))
-        subs = sc["subIndices"]; eci = sc["ecosystemConditionIndex"]
-        summary = ui.div(
-            _bar("Ecosystem Condition Index", eci, scoring.index_band_color(eci)),
-            _bar("Physical outcome", subs["physical"], scoring.index_band_color(subs["physical"]), indent=True),
-            _bar("Chemical outcome", subs["chemical"], scoring.index_band_color(subs["chemical"]), indent=True),
-            _bar("Biological outcome", subs["biological"], scoring.index_band_color(subs["biological"]), indent=True))
-        rows = []
-        for cat in CATEGORY_ORDER:
-            rows.append(ui.tags.tr(ui.tags.td(cat, {"colspan": "5"}), class_="easi-disc"))
-            for f in FNS_BY_CAT.get(cat, []):
+                rows.append(ui.tags.tr(ui.tags.td(f["name"], {"colspan": "3"}),
+                                       class_="sfari-rep-fn"))
                 for m in METRICS_BY_FN.get(f["id"], []):
                     mid = m["metricId"]
                     rc = ms.get(mid) or {}
                     ed = ev.get(mid) or {}
                     lk = rc.get("likert")
+                    n_total += 1
+                    if lk:
+                        n_rated += 1
                     cell = (_chip(config.LIKERT_SHORT.get(lk, "N/A"), _likert_color(lk))
                             if lk else ui.span("—", style="color:#aab;"))
                     evtxt = ed.get("value_text") or ("field only" if not m.get("desktopSource") else "—")
+                    note = (rc.get("note") or "").strip()
                     photos = rc.get("photos", []) or []
-                    note_cell = ui.tags.td(
-                        rc.get("note", ""),
-                        (ui.div(*[ui.tags.img({"src": p.get("uri", "")}) for p in photos],
-                                class_="sfari-report-photos") if photos else None),
-                        style="font-size:11px;color:#55607a;")
                     rows.append(ui.tags.tr(
-                        ui.tags.td(f["name"], style="color:#8a93a3;font-size:11px;"),
-                        ui.tags.td(m["name"]),
+                        ui.tags.td(
+                            m["name"],
+                            (ui.div(note, class_="sfari-rep-note") if note else None),
+                            (ui.div(*[ui.tags.img({"src": p.get("uri", "")}) for p in photos],
+                                    class_="sfari-report-photos") if photos else None)),
                         ui.tags.td(cell),
-                        ui.tags.td(evtxt, style="font-size:11px;color:#45506a;"),
-                        note_cell))
-        table = ui.tags.table(
-            ui.tags.thead(ui.tags.tr(ui.tags.th("Function"), ui.tags.th("Metric"),
-                                     ui.tags.th("Likert"), ui.tags.th("Evidence"), ui.tags.th("Note"))),
-            ui.tags.tbody(*rows), class_="easi-tbl")
+                        ui.tags.td(evtxt, class_="sfari-rep-ev")))
+            disc_blocks.append(ui.tags.details(
+                ui.tags.summary(ui.span(cat), ui.span(f"{n_rated} of {n_total} rated",
+                                                      class_="sfari-rep-cnt"),
+                                class_="easi-rollup-sum sfari-rep-sum"),
+                ui.tags.table(
+                    ui.tags.thead(ui.tags.tr(ui.tags.th("Metric"), ui.tags.th("Likert"),
+                                             ui.tags.th("Desktop evidence"))),
+                    ui.tags.tbody(*rows), class_="easi-tbl sfari-rep-tbl"),
+                class_="easi-rollup sfari-rep-disc"))
+        evidence_tools = ui.div(
+            ui.tags.button("Expand all", {"data-rep-expand": "1", "type": "button"},
+                           class_="sfari-rep-toggle"),
+            ui.tags.button("Collapse all", {"data-rep-expand": "0", "type": "button"},
+                           class_="sfari-rep-toggle"),
+            class_="sfari-rep-tools")
+
+        # -- two-panel summary (EASI layout): function bars left, indices right --
+        def leg(items):
+            return ui.div(*[ui.span(ui.span(class_="easi-leg-sw", style=f"background:{c};"),
+                                    t, class_="easi-leg-item") for c, t in items],
+                          class_="easi-plot-legend")
+
+        fn_blocks = []
+        for cat in CATEGORY_ORDER:
+            bars = []
+            for f in FNS_BY_CAT.get(cat, []):
+                rec = fs.get(f["id"], {})
+                if rec.get("score") is not None:
+                    bars.append(_bar(f["name"], rec["score"],
+                                     scoring.function_score_band_color(rec["score"]),
+                                     vmax=15, fmt="{:.0f}"))
+                else:
+                    bars.append(_bar(f["name"] + " (unscored)", 0, "#eef1f6", vmax=15, fmt="{:.0f}"))
+            fn_blocks.append(ui.div(ui.div(cat, class_="easi-fn-group"), *bars,
+                                    class_="easi-fn-block"))
+        left = ui.div(ui.div("Function scores (0–15)", class_="easi-plot-title"),
+                      leg([(scoring.function_score_band_color(15), "Functioning 11–15"),
+                           (scoring.function_score_band_color(8), "At-Risk 6–10"),
+                           (scoring.function_score_band_color(0), "Non-Functioning 0–5")]),
+                      *fn_blocks, class_="easi-plot-panel")
+        subs = sc["subIndices"]; eci = sc["ecosystemConditionIndex"]
         cat_chips = []
         cats = sc.get("categoryLabels", {})
         for cat in CATEGORY_ORDER:
             lbl = cats.get(cat)
             col = scoring.index_band_color(sc.get("categorySubIndices", {}).get(cat, 0.0)) if lbl else "#eef1f6"
             cat_chips.append(_chip(f"{cat}: {_FNF_SHORT.get(lbl, '—') if lbl else '—'}", col))
-        category_block = ui.div(*[ui.span(c, style="margin-right:6px;") for c in cat_chips],
-                                style="margin:4px 0 2px;")
+        right = ui.div(ui.div("Condition indices", class_="easi-plot-title"),
+                       leg([(scoring.index_band_color(1.0), "Functioning 0.70–1.00"),
+                            (scoring.index_band_color(0.5), "At-Risk 0.40–0.69"),
+                            (scoring.index_band_color(0.0), "Non-Functioning 0.00–0.39")]),
+                       _bar("Ecosystem Condition Index", eci, scoring.index_band_color(eci)),
+                       _bar("Physical", subs["physical"],
+                            scoring.index_band_color(subs["physical"]), indent=True),
+                       _bar("Chemical", subs["chemical"],
+                            scoring.index_band_color(subs["chemical"]), indent=True),
+                       _bar("Biological", subs["biological"],
+                            scoring.index_band_color(subs["biological"]), indent=True),
+                       ui.div("Functional categories", class_="easi-plot-title",
+                              style="margin-top:14px;"),
+                       ui.div(*[ui.span(c, style="margin-right:6px;") for c in cat_chips],
+                              style="margin:4px 0 2px;"),
+                       class_="easi-plot-panel")
+
         body = ui.div(
             header,
-            ui.h4("Function scores (0–15)", style="margin-top:4px;"),
-            ui.div(*fbars),
-            ui.h4("Outcome sub-indices & Ecosystem Condition Index", style="margin-top:14px;"),
-            summary,
-            ui.h4("Functional categories", style="margin-top:14px;"),
-            category_block,
-            ui.h4("Metric evidence & Likert scores", style="margin-top:14px;"),
-            table,
+            ui.div("Metric evidence & Likert scores", class_="easi-section-title"),
+            evidence_tools,
+            *disc_blocks,
+            ui.div("Summary", class_="easi-section-title"),
+            ui.div(left, right, class_="easi-summary-plots"),
             ui.div("Desktop evidence supports scoring; the assessor assigns the Likert and 0–15 "
                    "function scores. Likert thresholds are national defaults — calibrate regionally.",
-                   style="font-size:11px;color:#8a93a3;margin-top:10px;"),
+                   class_="easi-disclaimer"),
             id="sfari-report")
         return ui.modal(
             body, title="SFARI Screening Report", easy_close=True, size="xl",
             footer=ui.div(ui.download_button("dl_pdf", "PDF", class_="btn-sm"),
                           ui.download_button("dl_csv", "CSV", class_="btn-sm"),
                           ui.download_button("dl_geojson", "GeoJSON", class_="btn-sm"),
+                          ui.modal_button("Close"),
+                          style="display:flex;gap:8px;align-items:center;"))
+
+    # ---- desktop-metrics list (evaluate these before the field day) ----
+    @reactive.effect
+    @reactive.event(input.desktop_metrics_evt)
+    def _open_desktop_metrics():
+        ui.modal_show(_desktop_metrics_modal())
+
+    def _desktop_metrics_modal():
+        ev_map = evidence()
+        pulling = pull_task.status() == "running"
+        dim = "color:#8a93a3;font-size:11px;"
+        rows = []
+        n = 0
+        for cat in CATEGORY_ORDER:
+            for f in FNS_BY_CAT.get(cat, []):
+                for m in METRICS_BY_FN.get(f["id"], []):
+                    if not m.get("desktopSupportable"):
+                        continue
+                    n += 1
+                    ds = m.get("desktopSource") or {}
+                    ed = ev_map.get(m["metricId"]) or {}
+                    if ed.get("status") == "ok" and ed.get("value_text"):
+                        val = ui.tags.b(ed["value_text"])
+                    elif pulling:
+                        val = ui.span("pulling…", style="color:#8a93a3;font-style:italic;")
+                    else:
+                        val = ui.span("review in the field",
+                                      style="color:#8a93a3;font-style:italic;")
+                    src_url = ed.get("source_url") or ds.get("url")
+                    src_name = (ed.get("source")
+                                or (urlparse(ds.get("url")).netloc if ds.get("url") else None)
+                                or "—")
+                    src = (ui.tags.a(src_name, {"href": src_url, "target": "_blank",
+                                                "rel": "noopener"}) if src_url else src_name)
+                    rows.append(ui.tags.tr(
+                        ui.tags.td(cat, style=dim),
+                        ui.tags.td(f["name"], style=dim),
+                        ui.tags.td(m["name"]),
+                        ui.tags.td(ds.get("label") or "—", style="font-size:11px;color:#45506a;"),
+                        ui.tags.td(val, style="font-size:11px;color:#2f3a52;"),
+                        ui.tags.td(src, style="font-size:11px;")))
+        table = ui.tags.table(
+            ui.tags.thead(ui.tags.tr(ui.tags.th("Discipline"), ui.tags.th("Function"),
+                                     ui.tags.th("Metric"), ui.tags.th("Desktop evidence"),
+                                     ui.tags.th("Value"), ui.tags.th("Data source"))),
+            ui.tags.tbody(*rows), class_="easi-tbl")
+        intro = (f"{n} of the {len(METRICS_BY_ID)} metrics can be evaluated from a desk before "
+                 "the site visit. Pulled values fill the Value column; look up the rest at the "
+                 "linked data sources.")
+        return ui.modal(
+            ui.div(ui.div(intro, class_="easi-instr"), table, id="sfari-desktop-metrics"),
+            title="Desktop metrics", easy_close=True, size="xl",
+            footer=ui.div(ui.download_button("dl_desktop_metrics", "Download PDF", class_="btn-sm"),
                           ui.modal_button("Close"),
                           style="display:flex;gap:8px;align-items:center;"))
 
@@ -1560,6 +1657,10 @@ def server(input, output, session):
     def dl_pdf():
         yield report.build_pdf(delin() or {}, metric_scores(), function_scores(), evidence(), scored())
 
+    @render.download(filename="sfari-desktop-metrics.pdf")
+    def dl_desktop_metrics():
+        yield report.build_desktop_metrics_pdf(delin() or {}, evidence())
+
     @reactive.effect
     @reactive.event(input.load_session)
     def _load_session():
@@ -1590,7 +1691,8 @@ def server(input, output, session):
                 dd = d.get("delineation") or {}
                 if dd.get("snapped_lat") is not None:
                     _add_layer("marker", Marker(location=(dd["snapped_lat"], dd["snapped_lon"]),
-                                                draggable=False))
+                                                draggable=False, title="Selected point",
+                                                name="Selected point"))
                     b = delineation.geojson_bounds(d.get("watershed_geojson"), d.get("reach_geojson"))
                     if b:
                         _MAP.fit_bounds(b)

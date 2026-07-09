@@ -349,7 +349,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .easi-header .easi-nav a { color: #cdd8ec; text-decoration: none; font-size: 13px; cursor: pointer; }
 .easi-header .easi-nav a:hover { color: #fff; }
 
-/* Shared STAF cross-app nav — links to the other STAF tier apps + STAF home. */
+/* STAF site link in the header (cross-app links removed to keep the banner minimal). */
 .easi-header .staf-topnav {
   display: flex; align-items: center; gap: 14px;
   margin-left: 22px; padding-left: 20px;
@@ -360,7 +360,6 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   white-space: nowrap; cursor: pointer;
 }
 .easi-header .staf-topnav-link:hover { color: #fff; }
-.easi-header .staf-topnav-link.is-current { color: #fff; font-weight: 700; cursor: default; }
 
 /* map fills everything below the header */
 .easi-map-wrap { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 0; }
@@ -380,6 +379,24 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   font-family: var(--font-head); font-weight: 600; border-radius: 8px 8px 0 0;
 }
 .easi-pane-body { padding: 12px 14px 16px; }
+
+/* File-input progress bar ("Uploading..." / "Upload complete") in the narrow (352px)
+   left pane: Bootstrap's default .progress height (1rem) clips the label there. Shiny
+   puts both `progress` and `shiny-file-input-progress` on the SAME element, so target it
+   directly (not as a descendant) and let it grow to fit the text. Covers the
+   resume-a-saved-assessment file input. */
+.easi-leftpane .shiny-file-input-progress {
+  height: auto;
+  min-height: 20px;
+  margin-bottom: 6px;
+}
+.easi-leftpane .shiny-file-input-progress .progress-bar {
+  height: auto;
+  line-height: 20px;
+  font-size: 11px;
+  white-space: nowrap;
+  padding: 0 6px;
+}
 .easi-instr {
   background: #f5f8fb; border-left: 3px solid var(--easi-accent); padding: 8px 10px;
   font-size: 12.5px; color: #33415c; margin-bottom: 10px; border-radius: 0 4px 4px 0;
@@ -579,97 +596,119 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   font-weight: 600; color: var(--easi-accent); }
 .sfari-nav-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: #dfe4ec;
   border: 1px solid rgba(0,0,0,.12); }
-.sfari-fnpanel { flex: 1; overflow-y: auto; padding: 14px 20px 6px; }
-.sfari-fnpanel-inner { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100%; }
-.sfari-fn-title { font-family: var(--font-head); color: var(--eci-title); font-size: 1.18rem;
-  font-weight: 700; margin: 0 0 3px; display: flex; align-items: center; gap: 8px; }
-.sfari-fn-counter { font-size: 12px; color: #8a93a3; font-weight: 500; margin-left: auto; }
-.sfari-fn-statement { font-size: 12.5px; color: #55607a; margin: 0 0 10px; line-height: 1.45; }
-.sfari-sec-lbl { font-family: var(--font-head); font-size: 11px; font-weight: 700; color: #8a93a3;
-  text-transform: uppercase; letter-spacing: .04em; margin: 4px 0 3px;
+/* single assessment-wide "Get desktop metrics" pinned at the top of the rail */
+.sfari-nav-desktop { display: block; width: calc(100% - 28px); margin: 8px 14px 4px;
+  padding: 6px 10px; font-size: 12.5px; text-align: center; }
+.sfari-fnpanel { flex: 1; overflow-y: auto; padding: 16px 26px 6px; }
+.sfari-fnpanel-inner { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100%; }
+/* function header card — the field-sheet header: what the function is + its 0-15 score */
+.sfari-fn-card { background: #fff; border: 1px solid var(--card-border); border-radius: 10px;
+  padding: 16px 20px 14px; margin-bottom: 14px; display: flex; flex-wrap: wrap;
+  gap: 12px 28px; align-items: stretch; }
+.sfari-fn-info { flex: 1 1 380px; min-width: 300px; display: flex; flex-direction: column;
+  align-items: flex-start; }
+.sfari-fn-eyebrow { font-family: var(--font-head); font-size: 11.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em; color: #8a93a3; margin-bottom: 3px; }
+.sfari-fn-name { font-family: var(--font-head); color: var(--eci-title); font-size: 1.35rem;
+  font-weight: 700; line-height: 1.25; margin: 0 0 6px; }
+.sfari-fn-statement { font-size: 14px; color: #3d4a63; margin: 0; line-height: 1.55; }
+.sfari-sec-lbl { font-family: var(--font-head); font-size: 12px; font-weight: 700; color: #7c869c;
+  text-transform: uppercase; letter-spacing: .04em; margin: 4px 0 7px;
   display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.sfari-sec-count { font-size: 10.5px; font-weight: 600; color: #aeb6c4; text-transform: none; letter-spacing: 0; }
-.sfari-likert-legend { font-size: 10.5px; color: #8a93a3; line-height: 1.5; margin: 0 0 9px; }
-.sfari-likert-legend b { color: #55607a; font-weight: 700; }
+.sfari-sec-count { font-size: 11.5px; font-weight: 600; color: #98a1b1; text-transform: none; letter-spacing: 0; }
+/* metric = one field-sheet row: evidence on the left, rating dropdown on the right */
 .sfari-metric { background: #fff; border: 1px solid var(--card-border); border-radius: 8px;
-  padding: 8px 11px; margin-bottom: 8px; }
-.sfari-metric-name { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
-.sfari-metric-title { font-size: 13px; font-weight: 600; color: #2a3344; }
-.sfari-metric-scale { font-size: 9.5px; font-weight: 700; color: #98a1b1; cursor: help; flex: none;
+  padding: 11px 16px; margin-bottom: 10px; display: grid;
+  grid-template-columns: minmax(0, 1fr) 215px; gap: 2px 20px; align-items: center; }
+.sfari-metric-main { min-width: 0; }
+.sfari-metric-name { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+.sfari-metric-title { font-size: 14px; font-weight: 600; color: #2a3344; }
+.sfari-metric-scale { font-size: 10px; font-weight: 700; color: #98a1b1; cursor: help; flex: none;
   border: 1px solid #dfe4ec; border-radius: 4px; padding: 0 4px; }
 .sfari-metric-actions { margin-left: auto; display: flex; gap: 2px; flex: none; }
 .sfari-metric-toggle { border: 1px solid transparent; background: none; border-radius: 5px;
   padding: 1px 5px; font-size: 12px; line-height: 1.35; color: #98a1b1; cursor: pointer; }
 .sfari-metric-toggle:hover { background: #eef2f8; color: var(--easi-accent); }
 .sfari-metric-toggle.on { color: var(--easi-accent); background: #eef2f8; border-color: #d3e0f2; }
-.sfari-metric-statement { font-size: 11.5px; color: #6b7689; line-height: 1.4; margin: 0 0 6px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sfari-metric-statement { font-size: 13px; color: #4d5870; line-height: 1.5; margin: 0 0 7px; }
 .sfari-evidence { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  font-size: 11.5px; color: #45506a; background: var(--surface-soft);
-  border: 1px solid #eaeef4; border-radius: 5px; padding: 4px 8px; margin-bottom: 6px; }
+  font-size: 12.5px; color: #45506a; background: var(--surface-soft);
+  border: 1px solid #eaeef4; border-radius: 5px; padding: 5px 9px; margin-bottom: 0; }
 .sfari-evidence .src { color: #8a93a3; }
 .sfari-evidence .easi-info { margin-left: 0; }
-.sfari-ev-tag { font-size: 8.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+.sfari-ev-tag { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
   color: #5a7fb0; background: #eaf1fb; border: 1px solid #d3e0f2; border-radius: 4px; padding: 1px 5px; flex: none; }
 .sfari-ev-tag.field { color: #7a869a; background: #f0f2f6; border-color: #e2e6ee; }
 .sfari-ev-val { font-weight: 700; color: #2f3a52; }
 .sfari-ev-val.muted { font-weight: 500; color: #8a93a3; font-style: italic; }
 .sfari-suggest-chip { display: inline-block; background: #eef2f8; color: #3b6d9c;
-  border: 1px solid #cdd8ec; border-radius: 9px; padding: 1px 9px; font-size: 11px;
+  border: 1px solid #cdd8ec; border-radius: 9px; padding: 1px 9px; font-size: 12px;
   font-weight: 600; cursor: pointer; margin-left: auto; flex: none; }
 .sfari-suggest-chip:hover { background: #e2eaf6; }
-.sfari-likert { display: flex; align-items: stretch; margin: 0; }
-.sfari-likert-btn { flex: 1 1 0; border: 1px solid var(--card-border); background: #fff; border-radius: 0;
-  margin-left: -1px; padding: 5px 4px; font-size: 11.5px; font-weight: 600; color: #55607a;
-  cursor: pointer; text-align: center; transition: border-color .12s, background .12s; }
-.sfari-likert-btn:first-child { border-radius: 6px 0 0 6px; margin-left: 0; }
-.sfari-likert-btn:nth-child(5) { border-radius: 0 6px 6px 0; }
-.sfari-likert-btn:hover { border-color: var(--easi-accent); z-index: 2; }
-.sfari-likert-btn.sel { z-index: 2; }
-.sfari-likert-btn.sel[data-val="Strongly Agree"], .sfari-likert-btn.sel[data-val="Agree"] {
-  background: var(--band-good); color: #1f3f6e; border-color: #9fbce0; }
-.sfari-likert-btn.sel[data-val="Neutral"] { background: #e7ebf1; color: #40495a; border-color: #c7cede; }
-.sfari-likert-btn.sel[data-val="Disagree"], .sfari-likert-btn.sel[data-val="Strongly Disagree"] {
-  background: var(--band-poor); color: #7a2e2e; border-color: #e0a3a3; }
-.sfari-likert-btn[data-val="Not Applicable"] { flex: 0 0 auto; margin-left: 12px; padding: 5px 11px;
-  border-radius: 6px; color: #8a93a3; }
-.sfari-likert-btn.sel[data-val="Not Applicable"] { background: #33415c; color: #fff; border-color: #33415c; }
-.sfari-metric-note { width: 100%; box-sizing: border-box; resize: vertical; height: 30px;
-  border: 1px solid var(--card-border); border-radius: 6px; padding: 4px 8px; font-size: 12px;
+/* rating dropdown (full Likert labels, so no legend needed) */
+.sfari-likert-select { width: 100%; box-sizing: border-box; border: 1px solid var(--card-border);
+  border-radius: 7px; background: #fff; color: #55607a; font-size: 13px; font-weight: 600;
+  padding: 8px 10px; cursor: pointer; }
+.sfari-likert-select:hover { border-color: var(--easi-accent); }
+.sfari-likert-select:focus { outline: none; border-color: var(--easi-accent);
+  box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
+/* closed-state tint by chosen rating — same palette as the report chips / old buttons */
+.sfari-likert-select.lk-good { background: var(--band-good); color: #1f3f6e; border-color: #9fbce0; }
+.sfari-likert-select.lk-mid { background: #e7ebf1; color: #40495a; border-color: #c7cede; }
+.sfari-likert-select.lk-poor { background: var(--band-poor); color: #7a2e2e; border-color: #e0a3a3; }
+.sfari-likert-select.lk-na { background: #33415c; color: #fff; border-color: #33415c; }
+/* option-row tints (honored by Chromium/Firefox; Safari falls back to plain rows) */
+.sfari-likert-select option { background: #fff; color: #33415c; }
+.sfari-likert-select option[value="Strongly Agree"],
+.sfari-likert-select option[value="Agree"] { background: var(--band-good); color: #1f3f6e; }
+.sfari-likert-select option[value="Neutral"] { background: #e7ebf1; color: #40495a; }
+.sfari-likert-select option[value="Disagree"],
+.sfari-likert-select option[value="Strongly Disagree"] { background: var(--band-poor); color: #7a2e2e; }
+.sfari-likert-select option[value="Not Applicable"] { background: #33415c; color: #fff; }
+.sfari-metric-note { width: 100%; box-sizing: border-box; resize: vertical; height: 32px;
+  border: 1px solid var(--card-border); border-radius: 6px; padding: 5px 9px; font-size: 13px;
   color: #2a3344; margin-top: 7px; }
 .sfari-metric-note:focus, .sfari-fn-note:focus { outline: none; border-color: var(--easi-accent);
   box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
 /* optional fields stay collapsed until toggled (auto-shown when they already hold content) */
-.sfari-metric .sfari-metric-note, .sfari-metric .sfari-photos { display: none; }
+.sfari-metric .sfari-metric-note, .sfari-metric .sfari-photos { display: none; grid-column: 1 / -1; }
 .sfari-metric.show-note .sfari-metric-note { display: block; }
 .sfari-metric.show-photo .sfari-photos { display: flex; }
 .sfari-scorecard .sfari-fn-note { display: none; }
 .sfari-scorecard.show-fnnote .sfari-fn-note { display: block; }
-/* sticky compact score + navigation footer — always reachable without scrolling the metrics */
+/* sticky navigation footer — always reachable without scrolling the metrics */
 .sfari-fn-footer { position: sticky; bottom: 0; z-index: 5; margin-top: auto;
-  background: var(--surface-soft); padding-top: 9px;
+  background: var(--surface-soft); padding: 9px 0 10px;
   box-shadow: 0 -10px 14px -10px rgba(20, 40, 80, .16); }
-.sfari-scorecard { background: #fff; border: 1px solid var(--easi-accent); border-radius: 8px; padding: 9px 13px; }
+.sfari-fn-footer .sfari-nav-actions { margin-top: 0; }
+/* score panel lives in the header card, beside the function statement it scores */
+.sfari-scorecard { flex: 1 1 430px; min-width: 320px; align-self: center;
+  background: var(--surface-soft); border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 12px 14px; }
 .sfari-scorecard.unset .sfari-fscore-num { color: #b6becb; }
-.sfari-scorecard.na { opacity: .55; }
-.sfari-fscore-row { display: flex; align-items: center; gap: 12px; }
-.sfari-fscore-lbl { font-family: var(--font-head); font-size: 12.5px; font-weight: 700; color: var(--eci-title); flex: none; }
+/* head line pins the N/A + note toggles so the variable-width band pill below never moves them */
+.sfari-fscore-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.sfari-fscore-head .sfari-metric-toggle { margin-left: auto; }
+.sfari-fscore-row { display: flex; align-items: center; gap: 11px; }
+.sfari-fscore-lbl { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: var(--eci-title); flex: none; }
 .sfari-fscore { flex: 1; accent-color: var(--easi-accent); height: 6px; min-width: 90px; }
 .sfari-fscore-num { font-family: var(--font-head); font-weight: 700; font-size: 1.4rem; color: var(--eci-title);
   width: 30px; text-align: center; font-variant-numeric: tabular-nums; flex: none; }
-.sfari-fscore-band { padding: 3px 11px; border-radius: 11px; font-size: 11px; font-weight: 600;
-  color: #33415c; flex: none; white-space: nowrap; }
-.sfari-fna-lbl { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: #55607a; cursor: pointer; flex: none; }
-.sfari-suggest-line { font-size: 11.5px; color: #55607a; margin: 6px 0 0; }
+/* fixed width sized to the longest label (Functioning-at-Risk) so the slider does not
+   stretch/shrink as the band changes while dragging */
+.sfari-fscore-band { padding: 3px 8px; border-radius: 11px; font-size: 11px; font-weight: 600;
+  color: #33415c; flex: none; white-space: nowrap; min-width: 128px; text-align: center;
+  box-sizing: border-box; }
+.sfari-suggest-line { font-size: 12.5px; color: #55607a; margin: 7px 0 0; }
 .sfari-accept { background: #eef2f8; color: var(--easi-accent); border: 1px solid #cdd8ec;
-  border-radius: 6px; padding: 2px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer; margin-left: 8px; }
+  border-radius: 6px; padding: 2px 10px; font-size: 12px; font-weight: 600; cursor: pointer; margin-left: 8px; }
 .sfari-accept:hover { background: #e2eaf6; }
 .sfari-fn-note { width: 100%; box-sizing: border-box; resize: vertical; height: 34px;
-  border: 1px solid var(--card-border); border-radius: 6px; padding: 5px 8px; font-size: 12px;
+  border: 1px solid var(--card-border); border-radius: 6px; padding: 5px 9px; font-size: 13px;
   color: #2a3344; margin-top: 8px; }
 .sfari-nav-actions { display: flex; gap: 8px; margin-top: 9px; flex-wrap: wrap; }
 .sfari-btn { border: 1px solid var(--card-border); background: #fff; border-radius: 7px;
-  padding: 6px 14px; font-size: 12.5px; font-weight: 600; color: #33415c; cursor: pointer; }
+  padding: 6px 14px; font-size: 13px; font-weight: 600; color: #33415c; cursor: pointer; }
 .sfari-btn:hover { border-color: var(--easi-accent); color: var(--easi-accent); }
 .sfari-btn.primary { background: var(--easi-accent); color: #fff; border-color: var(--easi-accent); }
 .sfari-btn.primary:hover { background: var(--easi-accent-dark); color: #fff; }
@@ -720,8 +759,25 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-nav-empty { font-size: 11px; color: #8a93a3; padding: 9px 14px; font-style: italic; line-height: 1.4; }
 .sfari-evidence.pending { color: #8a93a3; font-style: italic; }
 
-/* N/A control sits beside the score, subtle box */
-.sfari-na-row { justify-content: flex-end; }
+/* desktop-metrics modal: sticky header while scrolling the 26-row table */
+#sfari-desktop-metrics .easi-tbl thead th { position: sticky; top: 0; z-index: 3; }
+
+/* report: condensed per-discipline evidence expanders (collapsed by default) */
+.sfari-rep-tools { display: flex; gap: 12px; margin: 2px 0 6px; }
+.sfari-rep-toggle { border: none; background: none; padding: 0; font-size: 11.5px;
+  font-weight: 600; color: var(--easi-accent); cursor: pointer; }
+.sfari-rep-toggle:hover { text-decoration: underline; }
+details.sfari-rep-disc { margin: 5px 0; border: 1px solid var(--card-border);
+  border-radius: 8px; padding: 8px 12px; background: #fff; }
+summary.sfari-rep-sum { font-family: var(--font-head); font-weight: 600;
+  color: var(--eci-title); font-size: 13.5px; }
+.sfari-rep-cnt { margin-left: auto; font-size: 11.5px; font-weight: 600; color: #8a93a3; }
+.sfari-rep-tbl { margin-top: 8px; }
+.sfari-rep-tbl .sfari-rep-fn td { background: var(--surface-soft); color: var(--easi-accent);
+  font-family: var(--font-head); font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: .03em; }
+.sfari-rep-note { font-size: 11px; color: #55607a; font-style: italic; margin-top: 2px; }
+.sfari-rep-ev { font-size: 11.5px; color: #45506a; }
 
 /* report modal: sticky column + category headers while scrolling the 82-row table */
 #sfari-report .easi-tbl thead th { position: sticky; top: 0; z-index: 3; }
@@ -747,11 +803,10 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   .sfari-nav-fn { flex: 0 0 auto; border-left: none; border: 1px solid transparent;
     border-radius: 6px; margin: 2px 3px; padding: 4px 9px; }
   .sfari-nav-fn.active { border-color: var(--easi-accent); background: #eaf0f9; }
+  .sfari-nav-desktop { flex: 1 1 100%; width: auto; margin: 4px 3px 2px; }
   .sfari-fnpanel { order: 2; padding: 12px 14px 6px; }
   .sfari-fnpanel-inner { max-width: 100%; }
-  .sfari-fscore-row { flex-wrap: wrap; }
-  .sfari-likert-btn { padding: 5px 2px; }
-  .sfari-likert-btn[data-val="Not Applicable"] { margin-left: 8px; padding: 5px 9px; }
+  .sfari-metric { grid-template-columns: 1fr; }
   .sfari-rollup { width: 100%; order: 3; max-height: 230px; border-left: none;
     border-top: 1px solid var(--card-border); }
   .sfari-rollup .stepper-wrap { display: none; }              /* stepper already in the header flow */

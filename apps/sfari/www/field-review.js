@@ -3,7 +3,7 @@
  * All edits go through Shiny.setInputValue (event priority) so the server keeps a
  * shadow copy for the live rollup while the dynamic panel re-renders only on
  * function switch (never on a keystroke/drag) — the same non-binding technique
- * EASI uses for its report overrides. Visual state (Likert highlight, score
+ * EASI uses for its report overrides. Visual state (rating dropdown, score
  * number/band) is updated client-side so there is no round-trip flicker.
  */
 (function () {
@@ -20,6 +20,10 @@
     return { label: "Functioning", color: "#c8d9f2" };
   }
 
+  // rating -> select tint class (mirrors _LIKERT_CLS in app.py)
+  var LIKERT_CLS = { "Strongly Agree": "lk-good", "Agree": "lk-good", "Neutral": "lk-mid",
+                     "Disagree": "lk-poor", "Strongly Disagree": "lk-poor", "Not Applicable": "lk-na" };
+
   document.addEventListener("click", function (e) {
     // Step navigator (data-step) — one event, so the two steppers never collide on ids.
     var step = e.target.closest("[data-step]");
@@ -32,29 +36,21 @@
       if (host && kind) { host.classList.toggle("show-" + kind); tog.classList.toggle("on"); }
       return;
     }
-    // Likert segmented button — toggle visual + notify.
-    var b = e.target.closest(".sfari-likert-btn");
-    if (b) {
-      var group = b.closest(".sfari-likert");
-      var wasSel = b.classList.contains("sel");
-      if (group) group.querySelectorAll(".sfari-likert-btn").forEach(function (x) { x.classList.remove("sel"); });
-      if (wasSel) { send("likert_set", { mid: b.dataset.mid, val: "" }); }   // click again to clear
-      else { b.classList.add("sel"); send("likert_set", { mid: b.dataset.mid, val: b.dataset.val }); }
-      updateRatedCount();
-      return;
-    }
-    // "use this" suggested Likert chip -> select that Likert.
+    // "use this" suggested Likert chip -> set that rating in the metric's dropdown.
     var chip = e.target.closest(".sfari-suggest-chip");
     if (chip) {
-      var mid = chip.dataset.mid, val = chip.dataset.val;
-      var host = document.querySelector('.sfari-likert[data-mid="' + cssEsc(mid) + '"]');
-      if (host) {
-        host.querySelectorAll(".sfari-likert-btn").forEach(function (x) {
-          x.classList.toggle("sel", x.dataset.val === val);
-        });
-      }
-      send("likert_set", { mid: mid, val: val, accepted: true });
-      updateRatedCount();
+      var lksel = document.querySelector('.sfari-likert-select[data-mid="' + cssEsc(chip.dataset.mid) + '"]');
+      if (lksel) { lksel.value = chip.dataset.val; lksel.dispatchEvent(new Event("change", { bubbles: true })); }
+      return;
+    }
+    // Desktop-metrics list popup.
+    var dm = e.target.closest("[data-desktop-metrics]");
+    if (dm) { send("desktop_metrics_evt", {}); return; }
+    // Report: expand/collapse every discipline evidence expander at once.
+    var rx = e.target.closest("[data-rep-expand]");
+    if (rx) {
+      var open = rx.dataset.repExpand === "1";
+      document.querySelectorAll("#sfari-report details.sfari-rep-disc").forEach(function (dd) { dd.open = open; });
       return;
     }
     // Accept the suggested 0-15 function score -> move the slider + commit.
@@ -109,15 +105,18 @@
   });
 
   document.addEventListener("change", function (e) {
-    var sl = e.target.closest(".sfari-fscore");
-    if (sl) { send("fnscore_set", { fid: sl.dataset.fid, score: parseInt(sl.value, 10) }); return; }
-    var na = e.target.closest(".sfari-fna");
-    if (na) {
-      var card = na.closest(".sfari-scorecard");
-      if (card) card.classList.toggle("na", na.checked);
-      send("fna_set", { fid: na.dataset.fid, na: na.checked });
+    // Likert rating dropdown — empty value clears the rating.
+    var lk = e.target.closest(".sfari-likert-select");
+    if (lk) {
+      lk.classList.remove("lk-good", "lk-mid", "lk-poor", "lk-na");
+      if (LIKERT_CLS[lk.value]) lk.classList.add(LIKERT_CLS[lk.value]);
+      lk.classList.toggle("set", !!lk.value);
+      send("likert_set", { mid: lk.dataset.mid, val: lk.value });
+      updateRatedCount();
       return;
     }
+    var sl = e.target.closest(".sfari-fscore");
+    if (sl) { send("fnscore_set", { fid: sl.dataset.fid, score: parseInt(sl.value, 10) }); return; }
     // Metric photo(s) chosen -> downscale, add thumbnail client-side, persist to server.
     var photo = e.target.closest(".sfari-photo");
     if (photo) {
@@ -145,9 +144,9 @@
   function updateRatedCount() {
     var el = document.querySelector(".sfari-sec-count");
     if (!el) return;
-    var groups = document.querySelectorAll(".sfari-fnpanel .sfari-likert");
+    var groups = document.querySelectorAll(".sfari-fnpanel .sfari-likert-select");
     var rated = 0;
-    groups.forEach(function (g) { if (g.querySelector(".sfari-likert-btn.sel")) rated++; });
+    groups.forEach(function (g) { if (g.value) rated++; });
     el.textContent = rated + " of " + groups.length + " rated";
   }
 

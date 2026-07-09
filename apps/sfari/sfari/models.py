@@ -6,7 +6,7 @@ assessment's live state is held as plain dicts in ``app.py`` and serialized by
 ``session.py``; their shapes are:
 
     metric_scores[metricId]   = {"likert": str|None, "note": str, "photos": [{"id","uri"}]}
-    function_scores[functionId] = {"score": int|None, "na": bool, "note": str}
+    function_scores[functionId] = {"score": int|None, "note": str}
     evidence[metricId]        = EvidenceResult.to_dict()
 """
 from __future__ import annotations
