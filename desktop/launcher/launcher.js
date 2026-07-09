@@ -17,6 +17,8 @@
   }
 
   var grid = document.getElementById("apps-grid");
+  var advancedSection = document.getElementById("advanced-tools");
+  var advancedList = document.getElementById("advanced-list");
   var footerMode = document.getElementById("footer-mode");
   var appsView = document.getElementById("apps-view");
   var setupView = document.getElementById("setup-view");
@@ -40,95 +42,141 @@
 
   // ── Card grid ──────────────────────────────────────────────────────────
 
+  // Status dot + label. Shared by the assessment cards and the advanced rows.
+  function buildStatus(app) {
+    var status = document.createElement("div");
+    status.className = "app-status";
+    var dot = document.createElement("span");
+    dot.className = "status-dot " + app.status;
+    var statusText = document.createElement("span");
+    statusText.className = "status-detail";
+    statusText.textContent = STATUS_LABEL[app.status] || app.status;
+    if (app.detail && (app.status === "crashed" || app.status === "starting")) {
+      statusText.textContent += " · " + app.detail;
+      statusText.title = app.detail;
+    }
+    status.appendChild(dot);
+    status.appendChild(statusText);
+    return status;
+  }
+
+  // Launch/Open button plus Cancel and web link. Shared by cards and advanced rows.
+  function buildActions(app) {
+    var actions = document.createElement("div");
+    actions.className = "card-actions";
+
+    var launch = document.createElement("button");
+    launch.type = "button";
+    launch.className = "btn btn-primary";
+    if (app.status === "running") {
+      launch.textContent = "Open " + app.name;
+    } else if (app.status === "starting" || app.status === "stopping") {
+      launch.textContent = app.status === "starting" ? "Starting…" : "Stopping…";
+      launch.disabled = true;
+    } else {
+      launch.textContent = "Launch " + app.name;
+    }
+    launch.addEventListener("click", function () { send("launch", app.id); });
+
+    actions.appendChild(launch);
+
+    // Closing an app's window already stops its server, so there is no Stop button.
+    // The one exception: while a start is still in flight there is no window yet to close,
+    // so offer a Cancel until the app is up.
+    if (app.status === "starting") {
+      var cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.className = "btn btn-secondary";
+      cancel.textContent = "Cancel";
+      cancel.addEventListener("click", function () { send("stop", app.id); });
+      actions.appendChild(cancel);
+    }
+
+    if (app.webUrl) {
+      var web = document.createElement("a");
+      web.href = "#";
+      web.className = "card-weblink";
+      web.textContent = "Web app ↗";
+      web.title = "Open the hosted version in your browser: " + app.webUrl;
+      web.addEventListener("click", function (e) {
+        e.preventDefault();
+        send("openWeb", app.id);
+      });
+      actions.appendChild(web);
+    }
+
+    return actions;
+  }
+
+  function buildCard(app) {
+    var card = document.createElement("div");
+    card.className = "apps-hub-card";
+    card.dataset.app = app.id;
+
+    var head = document.createElement("div");
+    head.className = "apps-hub-card-head";
+    var h3 = document.createElement("h3");
+    h3.textContent = app.name;
+    var badge = document.createElement("span");
+    badge.className = "tier-badge tier-" + app.tierNum;
+    badge.textContent = "Tier " + app.tierNum + " · " + app.tier;
+    head.appendChild(h3);
+    head.appendChild(badge);
+
+    var fullname = document.createElement("p");
+    fullname.className = "apps-hub-fullname";
+    fullname.textContent = app.fullName;
+
+    var desc = document.createElement("p");
+    desc.className = "apps-hub-desc";
+    desc.textContent = app.description;
+
+    card.appendChild(head);
+    card.appendChild(fullname);
+    card.appendChild(desc);
+    card.appendChild(buildStatus(app));
+    card.appendChild(buildActions(app));
+    return card;
+  }
+
+  // Compact row for builder apps (stream-curves): name and full name only, no tier badge
+  // or description, with the same status and launch controls as a card.
+  function buildAdvancedRow(app) {
+    var row = document.createElement("div");
+    row.className = "advanced-row";
+    row.dataset.app = app.id;
+
+    var ident = document.createElement("div");
+    ident.className = "advanced-row-ident";
+    var name = document.createElement("span");
+    name.className = "advanced-row-name";
+    name.textContent = app.name;
+    var full = document.createElement("span");
+    full.className = "advanced-row-fullname";
+    full.textContent = app.fullName;
+    ident.appendChild(name);
+    ident.appendChild(full);
+
+    row.appendChild(ident);
+    row.appendChild(buildStatus(app));
+    row.appendChild(buildActions(app));
+    return row;
+  }
+
   function renderSnapshot(snapshot) {
+    var advanced = []; // builder apps render as compact rows below the cards
     grid.textContent = "";
     snapshot.apps.forEach(function (app) {
-      var card = document.createElement("div");
-      card.className = "apps-hub-card";
-      card.dataset.app = app.id;
-
-      var head = document.createElement("div");
-      head.className = "apps-hub-card-head";
-      var h3 = document.createElement("h3");
-      h3.textContent = app.name;
-      var badge = document.createElement("span");
-      badge.className = "tier-badge tier-" + app.tierNum;
-      badge.textContent = "Tier " + app.tierNum + " · " + app.tier;
-      head.appendChild(h3);
-      head.appendChild(badge);
-
-      var fullname = document.createElement("p");
-      fullname.className = "apps-hub-fullname";
-      fullname.textContent = app.fullName;
-
-      var desc = document.createElement("p");
-      desc.className = "apps-hub-desc";
-      desc.textContent = app.description;
-
-      var status = document.createElement("div");
-      status.className = "app-status";
-      var dot = document.createElement("span");
-      dot.className = "status-dot " + app.status;
-      var statusText = document.createElement("span");
-      statusText.className = "status-detail";
-      statusText.textContent = STATUS_LABEL[app.status] || app.status;
-      if (app.detail && (app.status === "crashed" || app.status === "starting")) {
-        statusText.textContent += " · " + app.detail;
-        statusText.title = app.detail;
+      if (app.id === "curves") {
+        advanced.push(app);
+        return;
       }
-      status.appendChild(dot);
-      status.appendChild(statusText);
-
-      var actions = document.createElement("div");
-      actions.className = "card-actions";
-
-      var launch = document.createElement("button");
-      launch.type = "button";
-      launch.className = "btn btn-primary";
-      if (app.status === "running") {
-        launch.textContent = "Open " + app.name;
-      } else if (app.status === "starting" || app.status === "stopping") {
-        launch.textContent = app.status === "starting" ? "Starting…" : "Stopping…";
-        launch.disabled = true;
-      } else {
-        launch.textContent = "Launch " + app.name;
-      }
-      launch.addEventListener("click", function () { send("launch", app.id); });
-
-      actions.appendChild(launch);
-
-      // Closing an app's window already stops its server, so cards carry no Stop button.
-      // The one exception: while a start is still in flight there is no window yet to close,
-      // so offer a Cancel until the app is up.
-      if (app.status === "starting") {
-        var cancel = document.createElement("button");
-        cancel.type = "button";
-        cancel.className = "btn btn-secondary";
-        cancel.textContent = "Cancel";
-        cancel.addEventListener("click", function () { send("stop", app.id); });
-        actions.appendChild(cancel);
-      }
-
-      if (app.webUrl) {
-        var web = document.createElement("a");
-        web.href = "#";
-        web.className = "card-weblink";
-        web.textContent = "Web app ↗";
-        web.title = "Open the hosted version in your browser: " + app.webUrl;
-        web.addEventListener("click", function (e) {
-          e.preventDefault();
-          send("openWeb", app.id);
-        });
-        actions.appendChild(web);
-      }
-
-      card.appendChild(head);
-      card.appendChild(fullname);
-      card.appendChild(desc);
-      card.appendChild(status);
-      card.appendChild(actions);
-      grid.appendChild(card);
+      grid.appendChild(buildCard(app));
     });
+
+    advancedList.textContent = "";
+    advanced.forEach(function (app) { advancedList.appendChild(buildAdvancedRow(app)); });
+    advancedSection.hidden = advanced.length === 0;
 
     footerMode.textContent =
       "STAF Desktop " + snapshot.shell.version +
