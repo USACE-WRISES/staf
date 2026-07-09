@@ -1,5 +1,6 @@
 <div class="apps-hub-grid">
   {% for app in site.data.apps %}
+  {% unless app.advanced %}
   <div class="apps-hub-card" data-app="{{ app.id }}">
     <div class="apps-hub-card-head">
       <h3>{{ app.name }}</h3>
@@ -9,5 +10,6 @@
     <p class="apps-hub-desc">{{ app.description }}</p>
     <a class="btn btn-primary apps-hub-launch" href="{{ app.url }}" target="_blank" rel="noopener">Launch {{ app.name }} &#8599;</a>
   </div>
+  {% endunless %}
   {% endfor %}
 </div>
