@@ -349,7 +349,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .easi-header .easi-nav a { color: #cdd8ec; text-decoration: none; font-size: 13px; cursor: pointer; }
 .easi-header .easi-nav a:hover { color: #fff; }
 
-/* Shared STAF cross-app nav — links to the other STAF tier apps + STAF home. */
+/* STAF site link in the header (cross-app links removed to keep the banner minimal). */
 .easi-header .staf-topnav {
   display: flex; align-items: center; gap: 14px;
   margin-left: 22px; padding-left: 20px;
@@ -360,7 +360,6 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   white-space: nowrap; cursor: pointer;
 }
 .easi-header .staf-topnav-link:hover { color: #fff; }
-.easi-header .staf-topnav-link.is-current { color: #fff; font-weight: 700; cursor: default; }
 
 /* map fills everything below the header */
 .easi-map-wrap { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 0; }

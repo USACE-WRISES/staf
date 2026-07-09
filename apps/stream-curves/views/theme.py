@@ -95,9 +95,11 @@ def versioned_www_asset(asset_name: str) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# Shared STAF cross-app nav — port of staf_topnav() (app/app.R:60-92).
-# Links to the other three STAF tier apps + the STAF site. The current tool
-# renders as inert highlighted text; the other tools open in a new tab.
+# STAF top-banner strip — a single link back to the STAF site; cross-links to
+# the other tier apps were removed to keep the banner minimal. STAF_LINKS
+# still carries every app URL: the library view deep-links into DEEP from it,
+# it is the in-app half of the URL mirror (see README), and the desktop shell
+# rewrites all entries via STAF_LINKS_OVERRIDES.
 # --------------------------------------------------------------------------- #
 
 STAF_LINKS = {
@@ -112,28 +114,12 @@ if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on w
     STAF_LINKS.update(json.loads(_staf_links_overrides))
 
 
-def staf_topnav(current: str):
-    # "Tier · App" labels; both detailed-tier apps share the Detailed prefix
-    # (DEEP runs assessments, StreamCurves builds them — hence DEEP first).
-    items = [
-        ("home", "STAF"),
-        ("easi", "Screening · EASI"),
-        ("sfari", "Rapid · SFARI"),
-        ("deep", "Detailed · DEEP"),
-        ("curves", "Detailed · StreamCurves"),
-    ]
-    links = []
-    for key, label in items:
-        if key == current:
-            links.append(ui.tags.span(label, class_="staf-topnav-link is-current"))
-        else:
-            links.append(
-                ui.tags.a(
-                    label,
-                    href=STAF_LINKS[key],
-                    class_="staf-topnav-link",
-                    target="_blank",
-                    rel="noopener",
-                )
-            )
-    return ui.tags.div(ui.tags.div(*links, class_="staf-topnav"), class_="staf-topnav-strip")
+def staf_topnav():
+    link = ui.tags.a(
+        "STAF",
+        href=STAF_LINKS["home"],
+        class_="staf-topnav-link",
+        target="_blank",
+        rel="noopener",
+    )
+    return ui.tags.div(ui.tags.div(link, class_="staf-topnav"), class_="staf-topnav-strip")
