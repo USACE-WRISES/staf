@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-07T23:12:42Z",
+  "assessments": [
+    {
+      "assessmentId": "eastern-corn-belt-plains",
+      "assessmentName": "Eastern Corn Belt Plains",
+      "region": {
+        "kind": "ecoregion",
+        "code": "55",
+        "name": "Eastern Corn Belt Plains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-07-07T23:12:42Z"
+    },
+    {
+      "assessmentId": "northeastern-highlands",
+      "assessmentName": "Northeastern Highlands",
+      "region": {
+        "kind": "ecoregion",
+        "code": "58",
+        "name": "Northeastern Highlands"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 0,
+      "latestUpdatedAt": null
+    }
+  ]
+}

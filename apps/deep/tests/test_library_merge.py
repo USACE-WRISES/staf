@@ -75,20 +75,22 @@ def test_absent_library_returns_baked(tmp_path, monkeypatch):
 
 
 def test_new_library_assessment_is_appended(libroot):
+    # Needs an id the baked registry will never contain (eastern-corn-belt-plains is
+    # baked into data/ now, so it would replace rather than append).
     _write_library_version(
-        libroot, "eastern-corn-belt-plains", 1,
-        name="ECBP Adapted", region_name="Eastern Corn Belt Plains",
+        libroot, "test-only-region", 1,
+        name="Test Only Region", region_name="Test Only Region",
     )
     _write_catalog(
         libroot,
-        [{"assessmentId": "eastern-corn-belt-plains", "assessmentName": "ECBP Adapted",
-          "region": {"kind": "ecoregion", "code": "55", "name": "Eastern Corn Belt Plains"},
+        [{"assessmentId": "test-only-region", "assessmentName": "Test Only Region",
+          "region": {"kind": "ecoregion", "code": "55", "name": "Test Only Region"},
           "latestVersion": 1, "latestUpdatedAt": "2026-07-07T00:00:00Z"}],
     )
     ids = [a["assessmentId"] for a in config.assessments()]
-    assert "eastern-corn-belt-plains" in ids
+    assert "test-only-region" in ids
     assert len(ids) == len(_baked_ids()) + 1
-    assert config.assessments_by_id()["eastern-corn-belt-plains"]["library"]["version"] == 1
+    assert config.assessments_by_id()["test-only-region"]["library"]["version"] == 1
 
 
 def test_library_wins_over_baked_same_id_no_duplicate(libroot):
