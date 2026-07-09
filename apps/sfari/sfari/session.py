@@ -29,10 +29,14 @@ def dump(delineation: dict, metric_scores: dict, function_scores: dict,
 def load(text: str) -> dict:
     """Parse a saved assessment. Returns the state dict (missing keys default empty)."""
     d = json.loads(text)
+    function_scores = d.get("function_scores", {})
+    for rec in function_scores.values():
+        if isinstance(rec, dict):
+            rec.pop("na", None)   # function-level N/A was removed; only metrics can be N/A
     return {
         "delineation": d.get("delineation", {}),
         "metric_scores": d.get("metric_scores", {}),
-        "function_scores": d.get("function_scores", {}),
+        "function_scores": function_scores,
         "evidence": d.get("evidence", {}),
         "cross_section": d.get("cross_section"),
     }
