@@ -40,11 +40,18 @@ def test_library_region_features_selects_only_polygon_bearers(monkeypatch):
     assert fc["features"][1]["geometry"]["type"] == "MultiPolygon"
 
 
-def test_library_region_features_empty_for_state_sqt_registry():
-    # The real baked registry (state-SQT assessments) carries no region polygons.
+def test_library_region_features_come_only_from_library_assessments():
+    # State-SQT registry entries never carry a region polygon, so every feature in
+    # the real feed traces back to a library-published assessment and is renderable.
+    # At least one exists now that the library ships Eastern Corn Belt Plains v1.
     fc = assessments.library_region_features()
     assert fc["type"] == "FeatureCollection"
-    assert fc["features"] == []
+    assert len(fc["features"]) >= 1
+    lib_ids = {aid for aid, a in config.assessments_by_id().items() if a.get("library")}
+    for f in fc["features"]:
+        assert f["properties"]["assessmentId"] in lib_ids
+        assert f["properties"]["assessmentName"]
+        assert f["geometry"]["type"] in ("Polygon", "MultiPolygon")
 
 
 def test_applicable_assessments(monkeypatch):

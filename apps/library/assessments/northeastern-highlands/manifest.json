@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "assessmentId": "northeastern-highlands",
+  "assessmentName": "Northeastern Highlands",
+  "region": { "kind": "ecoregion", "code": "58", "name": "Northeastern Highlands" },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "",
+  "latestVersion": 0,
+  "versions": []
+}
