@@ -107,6 +107,8 @@
         if (num) num.textContent = v;
         if (band) { band.textContent = bd.label; band.style.background = bd.color; }
         card.classList.remove("unset");
+        var st = document.querySelector(".sfari-foot-score");
+        if (st) { st.textContent = "scored"; st.classList.add("ok"); }
       }
       return;
     }
@@ -152,12 +154,13 @@
   // Live "N of M rated" counter in the section label (the panel is isolated server-side, so
   // it does not re-render on each rating — update it client-side instead).
   function updateRatedCount() {
-    var el = document.querySelector(".sfari-sec-count");
-    if (!el) return;
     var groups = document.querySelectorAll(".sfari-fnpanel .sfari-likert-select");
     var rated = 0;
     groups.forEach(function (g) { if (g.value) rated++; });
-    el.textContent = rated + " of " + groups.length + " rated";
+    var el = document.querySelector(".sfari-sec-count");
+    if (el) el.textContent = rated + " of " + groups.length + " rated";
+    var foot = document.querySelector(".sfari-foot-rated");
+    if (foot) foot.textContent = rated + "/" + groups.length + " rated";
   }
 
   function scrollPanelTop() {
