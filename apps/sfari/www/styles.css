@@ -787,14 +787,17 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
    "Assessment loaded" notification */
 .easi-nav .shiny-input-container { margin: 0; width: auto; }
 .easi-nav .input-group { width: auto; flex-wrap: nowrap; }
-/* the Browse wrapper label carries a 24px line box that pushed Open ~2px low */
-.easi-nav .input-group label { display: flex; align-items: center; line-height: 1; margin: 0; }
+/* the Browse wrapper label must not add its own line box around the Open span */
+.easi-nav .input-group label { display: flex; align-items: center; margin: 0; }
 .easi-nav .input-group .form-control { display: none; }
 .easi-nav .shiny-file-input-progress { display: none; }
 .easi-nav .btn-file { background: transparent; border: none; color: #cdd8ec;
-  font-size: 13px; font-weight: 400; padding: 0; border-radius: 0; line-height: inherit;
+  font-size: 13px; font-weight: 400; padding: 0; border-radius: 0; line-height: 1.5;
   box-shadow: none; cursor: pointer; }
 .easi-nav .btn-file:hover { color: #fff; }
+/* hairline divider groups the assessment file actions (New/Open/Save) from the info
+   links (About/Help) — same separator idiom as .staf-topnav */
+.easi-nav #nav_about { border-left: 1px solid rgba(255, 255, 255, .22); padding-left: 18px; }
 
 /* per-metric site photos */
 .sfari-photos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 7px; }
