@@ -235,12 +235,6 @@ def _info(text: str = None, *, html_tip: str = None):
 _LIKERT_DOT = {"Strongly Agree": "good", "Agree": "good", "Neutral": "fair",
                "Disagree": "poor", "Strongly Disagree": "poor"}
 
-# Rating -> dropdown tint class (closed-state color coding; mirrors LIKERT_CLS in
-# www/field-review.js and reuses the report-chip band palette).
-_LIKERT_CLS = {"Strongly Agree": "lk-good", "Agree": "lk-good", "Neutral": "lk-mid",
-               "Disagree": "lk-poor", "Strongly Disagree": "lk-poor",
-               config.LIKERT_NA: "lk-na"}
-
 
 def _criteria_tip_html(m) -> str:
     """Rich hover card for a metric: its statement + the Likert 'how to score' ladder.
@@ -294,11 +288,11 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=8"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=9"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="field-review.js?v=4", defer="")),
+                    ui.tags.script(src="field-review.js?v=5", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
         ui.div(
@@ -1011,7 +1005,16 @@ def server(input, output, session):
         if current_step() not in (STEP_REVIEW, STEP_REPORT):
             return None
         return ui.div(
-            ui.div(ui.output_ui("fn_nav"), class_="sfari-nav"),
+            ui.div(
+                ui.div("SFARI — Field review", class_="easi-pane-head"),
+                ui.div(_stepper(current_step()), class_="sfari-nav-steps"),
+                ui.tags.button("Get desktop metrics",
+                               {"data-desktop-metrics": "1", "type": "button",
+                                "title": "Every metric you can evaluate from a desk, with pulled "
+                                         "values and links to the data sources"},
+                               class_="sfari-btn sfari-nav-desktop"),
+                ui.output_ui("fn_nav"),
+                class_="sfari-nav"),
             ui.div(ui.output_ui("fn_panel"), class_="sfari-fnpanel"),
             ui.div(ui.output_ui("rollup_rail"), class_="sfari-rollup"),
             class_="sfari-worksheet")
@@ -1021,11 +1024,7 @@ def server(input, output, session):
         if current_step() not in (STEP_REVIEW, STEP_REPORT):
             return None
         cur = current_fn(); fs = function_scores()
-        items = [ui.tags.button("Get desktop metrics",
-                                {"data-desktop-metrics": "1", "type": "button",
-                                 "title": "Every metric you can evaluate from a desk, with pulled "
-                                          "values and links to the data sources"},
-                                class_="sfari-btn sfari-nav-desktop")]
+        items = []
         idx = 0
         for cat in CATEGORY_ORDER:
             items.append(ui.div(cat, class_="sfari-nav-cat"))
@@ -1040,9 +1039,6 @@ def server(input, output, session):
                                     ui.span(f["name"]),
                                     {"data-idx": str(idx)}, class_=cls))
                 idx += 1
-        if not any(v.get("score") is not None for v in fs.values()):
-            items.append(ui.div("Tip: use each function's metrics as evidence, then set its 0–15 score.",
-                                 class_="sfari-nav-empty"))
         return ui.TagList(*items)
 
     @render.ui
@@ -1106,10 +1102,8 @@ def server(input, output, session):
                 if sel == lv:
                     oattrs["selected"] = "selected"
                 opts.append(ui.tags.option(lv, oattrs))
-            tint = _LIKERT_CLS.get(sel)
             rate = ui.tags.select(*opts, {"data-mid": mid, "aria-label": f"Rate: {m['name']}"},
-                                  class_="sfari-likert-select"
-                                  + (" set" if sel else "") + (f" {tint}" if tint else ""))
+                                  class_="sfari-likert-select" + (" set" if sel else ""))
             photos = rc.get("photos", []) or []
             thumbs = [
                 ui.span(
@@ -1169,9 +1163,10 @@ def server(input, output, session):
         card_cls = ("sfari-scorecard" + ("" if score is not None else " unset")
                     + (" show-fnnote" if has_fnnote else ""))
         scorecard = ui.div(
+            ui.p(f.get("functionStatement", ""), class_="sfari-fn-statement"),
             ui.div(
                 ui.span("Function score", class_="sfari-fscore-lbl"),
-                _info("Your professional-judgment 0–15 score, using the metrics above as lines of "
+                _info("Your professional-judgment 0–15 score, using the metrics below as lines of "
                       "evidence. 11–15 Functioning · 6–10 At-Risk · 0–5 Non-Functioning."),
                 ui.tags.button("✎", {"data-toggle": "fnnote", "type": "button",
                                      "title": "Add justification / notes"},
@@ -1195,7 +1190,6 @@ def server(input, output, session):
                 ui.div(f"Function {idx + 1} of {len(FN_IDS)} · {f['category']}",
                        class_="sfari-fn-eyebrow"),
                 ui.div(f["name"], class_="sfari-fn-name"),
-                ui.p(f.get("functionStatement", ""), class_="sfari-fn-statement"),
                 class_="sfari-fn-info"),
             scorecard,
             class_="sfari-fn-card")
@@ -1232,8 +1226,8 @@ def server(input, output, session):
         fid = FN_IDS[current_fn()]
         sug = _fn_suggest_value(fid)
         if sug is None:
-            return ui.div("Score the metrics above and a suggested 0–15 value appears here "
-                          "(you decide the final score).", class_="sfari-suggest-line")
+            return ui.div("Rate the metrics below for a suggested score.",
+                          class_="sfari-suggest-line")
         return ui.div(f"Suggested from metric Likerts: {sug:g}  ",
                       ui.tags.button("Accept", {"data-fid": fid, "data-val": f"{sug:g}",
                                                 "type": "button"}, class_="sfari-accept"),
@@ -1259,8 +1253,6 @@ def server(input, output, session):
                               style=f"background:{col};color:#33415c;")
             chips.append(ui.div(ui.span(cat, class_="lab"), val, class_="sfari-cat-chip"))
         return ui.TagList(
-            ui.div(_stepper(current_step()), class_="stepper-wrap"),
-            ui.h4("Live rollup"),
             ui.div(ui.div(f"{eci:.2f}", class_="sfari-eci"),
                    ui.div("Ecosystem Condition Index", class_="sfari-eci-lbl"),
                    class_="sfari-eci-box"),
