@@ -20,10 +20,6 @@
     return { label: "Functioning", color: "#c8d9f2" };
   }
 
-  // rating -> select tint class (mirrors _LIKERT_CLS in app.py)
-  var LIKERT_CLS = { "Strongly Agree": "lk-good", "Agree": "lk-good", "Neutral": "lk-mid",
-                     "Disagree": "lk-poor", "Strongly Disagree": "lk-poor", "Not Applicable": "lk-na" };
-
   document.addEventListener("click", function (e) {
     // Step navigator (data-step) — one event, so the two steppers never collide on ids.
     var step = e.target.closest("[data-step]");
@@ -70,11 +66,27 @@
     if (xs) { send("xs_open_evt", { fid: xs.dataset.xs }); return; }
     var xsa = e.target.closest("[data-xs-attach]");
     if (xsa) { send("xs_attach_evt", {}); return; }
-    // Prev / Next / jump navigation.
+    // Prev / Next / jump navigation. "Done" on the last function opens the report; every
+    // other move also scrolls the panel back to the top of the new function.
     var nav = e.target.closest("[data-nav]");
-    if (nav) { send("nav_move", { d: parseInt(nav.dataset.nav, 10) }); return; }
+    if (nav) {
+      var d = parseInt(nav.dataset.nav, 10);
+      var active = document.querySelector(".sfari-nav-fn.active");
+      var lastIdx = document.querySelectorAll(".sfari-nav-fn").length - 1;
+      if (d === 1 && active && parseInt(active.dataset.idx, 10) === lastIdx) {
+        send("open_report_evt", {});
+      } else {
+        scrollPanelTop();
+        send("nav_move", { d: d });
+      }
+      return;
+    }
     var jump = e.target.closest(".sfari-nav-fn");
-    if (jump && jump.dataset.idx !== undefined) { send("nav_jump", { i: parseInt(jump.dataset.idx, 10) }); return; }
+    if (jump && jump.dataset.idx !== undefined) {
+      scrollPanelTop();
+      send("nav_jump", { i: parseInt(jump.dataset.idx, 10) });
+      return;
+    }
     // Remove a metric photo.
     var prm = e.target.closest(".sfari-photo-rm");
     if (prm) {
@@ -108,8 +120,6 @@
     // Likert rating dropdown — empty value clears the rating.
     var lk = e.target.closest(".sfari-likert-select");
     if (lk) {
-      lk.classList.remove("lk-good", "lk-mid", "lk-poor", "lk-na");
-      if (LIKERT_CLS[lk.value]) lk.classList.add(LIKERT_CLS[lk.value]);
       lk.classList.toggle("set", !!lk.value);
       send("likert_set", { mid: lk.dataset.mid, val: lk.value });
       updateRatedCount();
@@ -148,6 +158,11 @@
     var rated = 0;
     groups.forEach(function (g) { if (g.value) rated++; });
     el.textContent = rated + " of " + groups.length + " rated";
+  }
+
+  function scrollPanelTop() {
+    var p = document.querySelector(".sfari-fnpanel");
+    if (p) p.scrollTop = 0;
   }
 
   function debounce(el, fn) { clearTimeout(el._deb); el._deb = setTimeout(fn, 350); }
