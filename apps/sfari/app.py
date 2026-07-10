@@ -291,7 +291,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=14"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=15"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
@@ -1281,6 +1281,9 @@ def server(input, output, session):
             ui.div(ui.div("–" if n_scored == 0 else f"{eci:.2f}",
                           class_="sfari-eci" + (" empty" if n_scored == 0 else "")),
                    ui.div("Ecosystem Condition Index", class_="sfari-eci-lbl"),
+                   (ui.div(ui.div(class_="sfari-eci-knob",
+                                  style=f"left:{max(2.0, min(98.0, eci * 100)):.1f}%;"),
+                           class_="sfari-eci-track") if n_scored else None),
                    class_="sfari-eci-box"),
             _sub_bar("Physical", "physical"),
             _sub_bar("Chemical", "chemical"),
