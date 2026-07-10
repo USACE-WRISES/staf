@@ -16,15 +16,22 @@ accent left border) → Previous/Next. Supporting changes:
 - Evidence strips lost their boxes (quieter rows).
 - styles.css cache-bust bumped to v=10.
 
-Files: `apps/sfari/app.py`, `apps/sfari/www/styles.css` (plus this note).
+Follow-up refinement (same day, per user mockup): numbered section headers —
+"1 Evidence" (one card holding the header + metric rows with dividers) and
+"2 Score this function" on the conclusion card — plus a justified footer:
+Previous (+ hydraulics) left, live "n/m rated · score needed/scored" status
+center, "Next function ›" right. Cache-busts v=11 / field-review.js v=6.
 
-## To undo the reorg
+Files: `apps/sfari/app.py`, `apps/sfari/www/styles.css`,
+`apps/sfari/www/field-review.js` (plus this note).
 
-Revert the single commit titled
-`sfari: field review task-ordered reorg (single revertible commit)`:
+## To undo the redesign
 
-    git revert $(git log --format=%H --grep="field review task-ordered reorg" -n 1)
+Revert every commit after the restore point d0adffa (`sfari: field review
+polish (dropdown colors, flicker, layout, fonts, banded slider)`) — git
+reverts them newest-first automatically:
 
-then restart the SFARI app / preview server. That restores the previous
-approved state — commit `sfari: field review polish (dropdown colors,
-flicker, layout, fonts, banded slider)`.
+    git revert --no-edit d0adffa..HEAD
+
+(or `git reset --hard d0adffa` to erase them instead, while unpushed), then
+restart the SFARI app / preview server.

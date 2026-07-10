@@ -622,13 +622,19 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-fn-name { font-family: var(--font-head); color: var(--eci-title); font-size: 1.5rem;
   font-weight: 700; line-height: 1.25; margin: 0 0 6px; }
 .sfari-fn-statement { font-size: 15.5px; color: #3d4a63; margin: 0 0 10px; line-height: 1.55; }
-.sfari-sec-lbl { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: #7c869c;
-  text-transform: uppercase; letter-spacing: .04em; margin: 4px 0 7px;
-  display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.sfari-sec-count { font-size: 12.5px; font-weight: 600; color: #98a1b1; text-transform: none; letter-spacing: 0; }
-/* metric = one field-sheet row: evidence on the left, rating dropdown on the right */
-.sfari-metric { background: #fff; border: 1px solid var(--card-border); border-radius: 8px;
-  padding: 11px 16px; margin-bottom: 10px; display: grid;
+/* numbered section headers — 1 Evidence / 2 Score this function */
+.sfari-step-num { flex: none; width: 21px; height: 21px; border-radius: 50%; background: #33415c;
+  color: #fff; font-family: var(--font-head); font-size: 11.5px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center; }
+/* one card holds the section header + all metric rows (divider lines between rows) */
+.sfari-ev-card { background: #fff; border: 1px solid var(--card-border); border-radius: 10px;
+  margin-bottom: 14px; overflow: hidden; }
+.sfari-sec-lbl { font-family: var(--font-head); font-size: 14.5px; font-weight: 700;
+  color: var(--eci-title); margin: 0; padding: 12px 16px 11px;
+  display: flex; align-items: center; gap: 9px; }
+.sfari-sec-count { font-size: 12.5px; font-weight: 600; color: #98a1b1; margin-left: auto; }
+/* metric = one row in the Evidence card: statement + pulled value left, rating right */
+.sfari-metric { border-top: 1px solid var(--rule); padding: 13px 16px; display: grid;
   grid-template-columns: minmax(0, 1fr) 215px; gap: 2px 20px; align-items: center; }
 .sfari-metric-main { min-width: 0; }
 .sfari-metric-name { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
@@ -688,17 +694,27 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-fn-footer { position: sticky; bottom: 0; z-index: 5; margin-top: auto;
   background: var(--surface-soft); padding: 9px 0 10px;
   box-shadow: 0 -10px 14px -10px rgba(20, 40, 80, .16); }
-.sfari-fn-footer .sfari-nav-actions { margin-top: 0; }
+/* justified footer: Previous (+ hydraulics) left · live status center · Next right */
+.sfari-fn-footer .sfari-nav-actions { margin-top: 0; justify-content: space-between;
+  align-items: center; }
+.sfari-foot-left { display: flex; gap: 8px; }
+.sfari-foot-status { display: flex; align-items: center; gap: 7px; font-size: 12.5px;
+  color: #98a1b1; }
+.sfari-foot-rated { color: #55607a; font-weight: 600; }
+.sfari-foot-score { color: #b07d1e; font-weight: 600; }
+.sfari-foot-score.ok { color: var(--bio-title); }
 /* the function's conclusion card — after the evidence: judge the statement, set the score */
 .sfari-scorecard { width: 100%; min-width: 0; box-sizing: border-box; background: #fff;
   border: 1px solid var(--card-border); border-left: 3px solid var(--easi-accent);
   border-radius: 10px; padding: 14px 16px; margin: 4px 0 12px; }
 .sfari-scorecard.unset .sfari-fscore-num { color: #b6becb; }
-/* head line pins the N/A + note toggles so the variable-width band pill below never moves them */
-.sfari-fscore-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+/* head line: numbered header row with a full-width divider (negative margins reach the
+   card edges past the 14/16px scorecard padding); pins the note toggle at the right */
+.sfari-fscore-head { display: flex; align-items: center; gap: 9px; margin: -14px -16px 12px;
+  padding: 12px 16px 11px; border-bottom: 1px solid var(--rule); }
 .sfari-fscore-head .sfari-metric-toggle { margin-left: auto; }
 .sfari-fscore-row { display: flex; align-items: center; gap: 11px; }
-.sfari-fscore-lbl { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--eci-title); flex: none; }
+.sfari-fscore-lbl { font-family: var(--font-head); font-size: 14.5px; font-weight: 700; color: var(--eci-title); flex: none; }
 /* banded 0-15 slider (the EASI report gauge look, but interactive): 0-5 NF | 6-10 AR |
    11-15 F. Gradient stops sit at the integer flip points (5.5/15 = 36.67%, 10.5/15 = 70%).
    Keep the -webkit-/-moz- rules separate — a browser drops any rule containing an unknown

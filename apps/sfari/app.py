@@ -288,11 +288,11 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=10"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=11"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="field-review.js?v=5", defer="")),
+                    ui.tags.script(src="field-review.js?v=6", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
         ui.div(
@@ -1163,15 +1163,16 @@ def server(input, output, session):
         card_cls = ("sfari-scorecard" + ("" if score is not None else " unset")
                     + (" show-fnnote" if has_fnnote else ""))
         scorecard = ui.div(
-            ui.p(f.get("functionStatement", ""), class_="sfari-fn-statement"),
             ui.div(
-                ui.span("Function score", class_="sfari-fscore-lbl"),
-                _info("Your professional-judgment 0–15 score, using the metrics above as lines of "
-                      "evidence. 11–15 Functioning · 6–10 At-Risk · 0–5 Non-Functioning."),
+                ui.span("2", class_="sfari-step-num"),
+                ui.span("Score this function", class_="sfari-fscore-lbl"),
+                _info("Your professional-judgment 0–15 score, using the evidence above. "
+                      "11–15 Functioning · 6–10 At-Risk · 0–5 Non-Functioning."),
                 ui.tags.button("✎", {"data-toggle": "fnnote", "type": "button",
                                      "title": "Add justification / notes"},
                                class_="sfari-metric-toggle" + (" on" if has_fnnote else "")),
                 class_="sfari-fscore-head"),
+            ui.p(f.get("functionStatement", ""), class_="sfari-fn-statement"),
             ui.div(
                 ui.tags.input({"type": "range", "min": "0", "max": "15", "step": "1",
                                "value": str(sval), "data-fid": fid}, class_="sfari-fscore"),
@@ -1190,27 +1191,36 @@ def server(input, output, session):
                    class_="sfari-fn-eyebrow"),
             ui.div(f["name"], class_="sfari-fn-name"),
             class_="sfari-fn-head")
-        prev_attrs = {"data-nav": "-1", "type": "button"}
-        if idx == 0:
-            prev_attrs["disabled"] = "disabled"
-        action_btns = [
-            ui.tags.button("‹ Previous", prev_attrs, class_="sfari-btn"),
-            ui.tags.button("Next ›" if idx < len(FN_IDS) - 1 else "Done",
-                           {"data-nav": "1", "type": "button"}, class_="sfari-btn primary"),
-        ]
-        if fid in HYDRAULICS_FNS:
-            action_btns.append(ui.tags.button("Cross-section hydraulics",
-                                              {"data-xs": fid, "type": "button"}, class_="sfari-btn"))
-        actions = ui.div(*action_btns, class_="sfari-nav-actions")
         total = len(METRICS_BY_FN.get(fid, []))
         rated = sum(1 for mm in METRICS_BY_FN.get(fid, [])
                     if (ms.get(mm["metricId"]) or {}).get("likert"))
+        prev_attrs = {"data-nav": "-1", "type": "button"}
+        if idx == 0:
+            prev_attrs["disabled"] = "disabled"
+        left_btns = [ui.tags.button("‹ Previous", prev_attrs, class_="sfari-btn")]
+        if fid in HYDRAULICS_FNS:
+            left_btns.append(ui.tags.button("Cross-section hydraulics",
+                                            {"data-xs": fid, "type": "button"}, class_="sfari-btn"))
+        scored_yet = rec.get("score") is not None
+        actions = ui.div(
+            ui.div(*left_btns, class_="sfari-foot-left"),
+            ui.div(ui.span(f"{rated}/{total} rated", class_="sfari-foot-rated"),
+                   ui.span("·"),
+                   ui.span("scored" if scored_yet else "score needed",
+                           class_="sfari-foot-score" + (" ok" if scored_yet else "")),
+                   class_="sfari-foot-status"),
+            ui.tags.button("Next function ›" if idx < len(FN_IDS) - 1 else "Done",
+                           {"data-nav": "1", "type": "button"}, class_="sfari-btn primary"),
+            class_="sfari-nav-actions")
         return ui.div(
             fn_head,
-            ui.div(ui.span("Lines of evidence"),
-                   ui.span(f"{rated} of {total} rated", class_="sfari-sec-count"),
-                   class_="sfari-sec-lbl"),
-            *metric_blocks,
+            ui.div(
+                ui.div(ui.span("1", class_="sfari-step-num"),
+                       ui.span("Evidence", class_="sfari-sec-title"),
+                       ui.span(f"{rated} of {total} rated", class_="sfari-sec-count"),
+                       class_="sfari-sec-lbl"),
+                *metric_blocks,
+                class_="sfari-ev-card"),
             scorecard,
             ui.div(actions, class_="sfari-fn-footer"),
             class_="sfari-fnpanel-inner")
@@ -1222,7 +1232,7 @@ def server(input, output, session):
         fid = FN_IDS[current_fn()]
         sug = _fn_suggest_value(fid)
         if sug is None:
-            return ui.div("Rate the metrics above for a suggested score.",
+            return ui.div("A suggested value appears as evidence is rated.",
                           class_="sfari-suggest-line")
         return ui.div(f"Suggested from metric Likerts: {sug:g}  ",
                       ui.tags.button("Accept", {"data-fid": fid, "data-val": f"{sug:g}",
