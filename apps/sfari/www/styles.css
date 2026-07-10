@@ -615,10 +615,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   color: var(--easi-accent); border-color: #b9c8e0; }
 .sfari-fnpanel { flex: 1; overflow-y: auto; padding: 16px 26px 6px; }
 .sfari-fnpanel-inner { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100%; }
-/* function header card — the field-sheet header: what the function is + its 0-15 score */
-.sfari-fn-card { background: #fff; border: 1px solid var(--card-border); border-radius: 10px;
-  padding: 16px 20px 14px; margin-bottom: 14px; }
-.sfari-fn-info { margin-bottom: 10px; }
+/* function heading — plain title; the scorecard (the conclusion) sits after the metrics */
+.sfari-fn-head { margin: 2px 0 10px; }
 .sfari-fn-eyebrow { font-family: var(--font-head); font-size: 12.5px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .05em; color: #8a93a3; margin-bottom: 3px; }
 .sfari-fn-name { font-family: var(--font-head); color: var(--eci-title); font-size: 1.5rem;
@@ -639,13 +637,21 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   border: 1px solid #dfe4ec; border-radius: 4px; padding: 0 4px; }
 .sfari-metric-actions { margin-left: auto; display: flex; gap: 2px; flex: none; }
 .sfari-metric-toggle { border: 1px solid transparent; background: none; border-radius: 5px;
-  padding: 1px 5px; font-size: 12px; line-height: 1.35; color: #98a1b1; cursor: pointer; }
+  padding: 1px 5px; font-size: 12px; line-height: 1.35; color: #98a1b1; cursor: pointer;
+  transition: opacity .12s; }
 .sfari-metric-toggle:hover { background: #eef2f8; color: var(--easi-accent); }
 .sfari-metric-toggle.on { color: var(--easi-accent); background: #eef2f8; border-color: #d3e0f2; }
+/* metric note/photo toggles appear on hover or keyboard focus (always on touch, and always
+   once they hold content via .on); scoped to .sfari-metric so the scorecard pencil stays */
+@media (hover: hover) and (pointer: fine) {
+  .sfari-metric .sfari-metric-toggle:not(.on) { opacity: 0; }
+  .sfari-metric:hover .sfari-metric-toggle,
+  .sfari-metric:focus-within .sfari-metric-toggle { opacity: 1; }
+}
 .sfari-metric-statement { font-size: 14px; color: #4d5870; line-height: 1.5; margin: 0 0 7px; }
 .sfari-evidence { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
-  font-size: 13px; color: #45506a; background: var(--surface-soft);
-  border: 1px solid #eaeef4; border-radius: 5px; padding: 5px 9px; margin-bottom: 0; }
+  font-size: 13px; color: #45506a; background: none; border: none;
+  padding: 3px 0 0; margin-bottom: 0; }
 .sfari-evidence .src { color: #8a93a3; }
 .sfari-evidence .easi-info { margin-left: 0; }
 .sfari-ev-tag { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
@@ -683,10 +689,10 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   background: var(--surface-soft); padding: 9px 0 10px;
   box-shadow: 0 -10px 14px -10px rgba(20, 40, 80, .16); }
 .sfari-fn-footer .sfari-nav-actions { margin-top: 0; }
-/* score panel fills the header card, directly under the statement it scores */
-.sfari-scorecard { width: 100%; min-width: 0; box-sizing: border-box;
-  background: var(--surface-soft); border: 1px solid var(--card-border);
-  border-radius: 8px; padding: 12px 14px; }
+/* the function's conclusion card — after the evidence: judge the statement, set the score */
+.sfari-scorecard { width: 100%; min-width: 0; box-sizing: border-box; background: #fff;
+  border: 1px solid var(--card-border); border-left: 3px solid var(--easi-accent);
+  border-radius: 10px; padding: 14px 16px; margin: 4px 0 12px; }
 .sfari-scorecard.unset .sfari-fscore-num { color: #b6becb; }
 /* head line pins the N/A + note toggles so the variable-width band pill below never moves them */
 .sfari-fscore-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
@@ -748,6 +754,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-eci-box { text-align: center; background: var(--surface-soft); border: 1px solid var(--card-border);
   border-radius: 8px; padding: 10px; margin-bottom: 14px; }
 .sfari-eci { font-family: var(--font-head); font-size: 2.1rem; font-weight: 700; color: var(--eci-title); line-height: 1; }
+.sfari-eci.empty { color: #b6becb; }
 .sfari-eci-lbl { font-size: 11px; color: #8a93a3; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
 .sfari-cat-chips { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
 .sfari-cat-chip { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;
@@ -755,6 +762,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-cat-chip .lab { color: #45506a; font-weight: 600; }
 .sfari-cat-chip .val { padding: 1px 8px; border-radius: 9px; font-size: 10.5px; }
 .sfari-progress { font-size: 12.5px; color: #8a93a3; margin-top: 12px; text-align: center; }
+/* the results column's call to action; turns primary once all 20 functions are scored */
+.sfari-rollup-report { display: block; width: 100%; margin-top: 12px; text-align: center; }
 
 /* --------------------------------------------------------------------------- */
 /* Polish pass: responsive, photos, progress, sticky report headers            */

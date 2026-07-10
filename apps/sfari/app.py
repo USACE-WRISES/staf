@@ -288,7 +288,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=9"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=10"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
@@ -1166,7 +1166,7 @@ def server(input, output, session):
             ui.p(f.get("functionStatement", ""), class_="sfari-fn-statement"),
             ui.div(
                 ui.span("Function score", class_="sfari-fscore-lbl"),
-                _info("Your professional-judgment 0–15 score, using the metrics below as lines of "
+                _info("Your professional-judgment 0–15 score, using the metrics above as lines of "
                       "evidence. 11–15 Functioning · 6–10 At-Risk · 0–5 Non-Functioning."),
                 ui.tags.button("✎", {"data-toggle": "fnnote", "type": "button",
                                      "title": "Add justification / notes"},
@@ -1185,14 +1185,11 @@ def server(input, output, session):
                                              "from the suggestion)…"},
                              class_="sfari-fn-note"),
             class_=card_cls)
-        header_card = ui.div(
-            ui.div(
-                ui.div(f"Function {idx + 1} of {len(FN_IDS)} · {f['category']}",
-                       class_="sfari-fn-eyebrow"),
-                ui.div(f["name"], class_="sfari-fn-name"),
-                class_="sfari-fn-info"),
-            scorecard,
-            class_="sfari-fn-card")
+        fn_head = ui.div(
+            ui.div(f"Function {idx + 1} of {len(FN_IDS)} · {f['category']}",
+                   class_="sfari-fn-eyebrow"),
+            ui.div(f["name"], class_="sfari-fn-name"),
+            class_="sfari-fn-head")
         prev_attrs = {"data-nav": "-1", "type": "button"}
         if idx == 0:
             prev_attrs["disabled"] = "disabled"
@@ -1204,18 +1201,17 @@ def server(input, output, session):
         if fid in HYDRAULICS_FNS:
             action_btns.append(ui.tags.button("Cross-section hydraulics",
                                               {"data-xs": fid, "type": "button"}, class_="sfari-btn"))
-        action_btns.append(ui.tags.button("Open report", {"data-report": "1", "type": "button"},
-                                          class_="sfari-btn"))
         actions = ui.div(*action_btns, class_="sfari-nav-actions")
         total = len(METRICS_BY_FN.get(fid, []))
         rated = sum(1 for mm in METRICS_BY_FN.get(fid, [])
                     if (ms.get(mm["metricId"]) or {}).get("likert"))
         return ui.div(
-            header_card,
+            fn_head,
             ui.div(ui.span("Lines of evidence"),
                    ui.span(f"{rated} of {total} rated", class_="sfari-sec-count"),
                    class_="sfari-sec-lbl"),
             *metric_blocks,
+            scorecard,
             ui.div(actions, class_="sfari-fn-footer"),
             class_="sfari-fnpanel-inner")
 
@@ -1226,7 +1222,7 @@ def server(input, output, session):
         fid = FN_IDS[current_fn()]
         sug = _fn_suggest_value(fid)
         if sug is None:
-            return ui.div("Rate the metrics below for a suggested score.",
+            return ui.div("Rate the metrics above for a suggested score.",
                           class_="sfari-suggest-line")
         return ui.div(f"Suggested from metric Likerts: {sug:g}  ",
                       ui.tags.button("Accept", {"data-fid": fid, "data-val": f"{sug:g}",
@@ -1252,18 +1248,30 @@ def server(input, output, session):
                 val = ui.span(_FNF_SHORT.get(lbl, "—"), class_="val",
                               style=f"background:{col};color:#33415c;")
             chips.append(ui.div(ui.span(cat, class_="lab"), val, class_="sfari-cat-chip"))
+        outs = sc["outcomes"]
+
+        def _sub_bar(label, key):
+            # an outcome no scored function contributes to stays dashed, not "0.00"
+            if outs[key]["max"] <= 0:
+                return _bar(label, 0.0, "#e7ebf1", fmt="–")
+            return _bar(label, subs[key], scoring.index_band_color(subs[key]))
+
         return ui.TagList(
-            ui.div(ui.div(f"{eci:.2f}", class_="sfari-eci"),
+            ui.div(ui.div("–" if n_scored == 0 else f"{eci:.2f}",
+                          class_="sfari-eci" + (" empty" if n_scored == 0 else "")),
                    ui.div("Ecosystem Condition Index", class_="sfari-eci-lbl"),
                    class_="sfari-eci-box"),
-            _bar("Physical", subs["physical"], scoring.index_band_color(subs["physical"])),
-            _bar("Chemical", subs["chemical"], scoring.index_band_color(subs["chemical"])),
-            _bar("Biological", subs["biological"], scoring.index_band_color(subs["biological"])),
+            _sub_bar("Physical", "physical"),
+            _sub_bar("Chemical", "chemical"),
+            _sub_bar("Biological", "biological"),
             ui.h4("Functional categories", style="margin-top:15px;"),
             ui.div(*chips, class_="sfari-cat-chips"),
             ui.div(ui.tags.span(style=f"width:{(n_scored / 20) * 100:.0f}%;"),
                    class_="sfari-progress-bar"),
             ui.div(f"{n_scored} / 20 functions scored", class_="sfari-progress"),
+            ui.tags.button("Open report", {"data-report": "1", "type": "button"},
+                           class_="sfari-btn sfari-rollup-report"
+                           + (" primary" if n_scored == len(FN_IDS) else "")),
         )
 
     # ---- report modal ----
