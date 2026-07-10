@@ -237,7 +237,8 @@ _LIKERT_DOT = {"Strongly Agree": "good", "Agree": "good", "Neutral": "fair",
 
 
 def _criteria_tip_html(m) -> str:
-    """Rich hover card for a metric: its statement + the Likert 'how to score' ladder.
+    """Rich hover card for a metric: its statement + an example Likert scoring ladder
+    (illustrative anchors, not exact thresholds — the user judges fit for their stream).
     Criteria are raw text (may contain '<', '>', '&'), so escape them for the HTML tip."""
     import html as _h
     name = m.get("name", "")
@@ -256,7 +257,9 @@ def _criteria_tip_html(m) -> str:
             f'<div class="easi-tip-crit"><span class="easi-tip-dot {_LIKERT_DOT.get(lk, "fair")}"></span>'
             f'<span><b>{_h.escape(short)}</b> — {_h.escape(crit)}</span></div>')
     if rungs:
-        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">How to score</span>'
+        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Example scoring</span>'
+                     '<div class="easi-tip-sub">Illustrative only — judge what\'s appropriate '
+                     'for your stream type and region.</div>'
                      + "".join(rungs) + "</div>")
     return "".join(parts)
 
