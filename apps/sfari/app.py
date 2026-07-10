@@ -255,10 +255,10 @@ def _criteria_tip_html(m) -> str:
         short = config.LIKERT_SHORT.get(lk, lk)
         rungs.append(
             f'<div class="easi-tip-crit"><span class="easi-tip-dot {_LIKERT_DOT.get(lk, "fair")}"></span>'
-            f'<span><b>{_h.escape(short)}</b> — {_h.escape(crit)}</span></div>')
+            f'<span><b>{_h.escape(short)}:</b> {_h.escape(crit)}</span></div>')
     if rungs:
         parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Example scoring</span>'
-                     '<div class="easi-tip-sub">Illustrative only — judge what\'s appropriate '
+                     '<div class="easi-tip-sub">Illustrative only. Judge what\'s appropriate '
                      'for your stream type and region.</div>'
                      + "".join(rungs) + "</div>")
     return "".join(parts)
@@ -1080,7 +1080,7 @@ def server(input, output, session):
                 link = (ui.tags.a("look it up ↗", {"href": url, "target": "_blank",
                                                    "rel": "noopener"}) if url else None)
                 ev = ui.div(ui.span("desktop", class_="sfari-ev-tag"),
-                            ui.span("Not available — review in the field.", class_="sfari-ev-val muted"),
+                            ui.span("Not available. Review in the field.", class_="sfari-ev-val muted"),
                             link, (_info(edata.get("note", "")) if edata.get("note") else None),
                             class_="sfari-evidence")
             elif ds and pulling:
@@ -1168,8 +1168,17 @@ def server(input, output, session):
             ui.div(
                 ui.span("2", class_="sfari-step-num"),
                 ui.span("Score this function", class_="sfari-fscore-lbl"),
-                _info("Your professional-judgment 0–15 score, using the evidence above. "
-                      "11–15 Functioning · 6–10 At-Risk · 0–5 Non-Functioning."),
+                _info(html_tip=(
+                    '<div class="easi-tip-sec">Your professional-judgment 0-15 score, '
+                    'using the evidence above.</div>'
+                    '<div class="easi-tip-sec">'
+                    '<div class="easi-tip-crit"><span class="easi-tip-dot poor"></span>'
+                    '<span><b>0-5:</b> Non-Functioning</span></div>'
+                    '<div class="easi-tip-crit"><span class="easi-tip-dot fair"></span>'
+                    '<span><b>6-10:</b> Functioning-at-Risk</span></div>'
+                    '<div class="easi-tip-crit"><span class="easi-tip-dot good"></span>'
+                    '<span><b>11-15:</b> Functioning</span></div>'
+                    '</div>')),
                 ui.tags.button("✎", {"data-toggle": "fnnote", "type": "button",
                                      "title": "Add justification / notes"},
                                class_="sfari-metric-toggle" + (" on" if has_fnnote else "")),
@@ -1443,7 +1452,7 @@ def server(input, output, session):
             ui.div("Summary", class_="easi-section-title"),
             ui.div(left, right, class_="easi-summary-plots"),
             ui.div("Desktop evidence supports scoring; the assessor assigns the Likert and 0–15 "
-                   "function scores. Likert thresholds are national defaults — calibrate regionally.",
+                   "function scores. Likert thresholds are national defaults. Calibrate regionally.",
                    class_="easi-disclaimer"),
             id="sfari-report")
         return ui.modal(
@@ -1533,7 +1542,7 @@ def server(input, output, session):
                             n_lob=0.06, n_rob=0.06, lb=geom["lb"], rb=geom["rb"])
         q_bf = int(round(bf["Q"])) if bf and bf.get("Q") else 100
         return ui.modal(
-            ui.div(f"Synthetic bankfull section — {geom['division_name']} regional curve "
+            ui.div(f"Synthetic bankfull section: {geom['division_name']} regional curve "
                    f"(Bieger 2015) at DA {geom['da']:.0f} km²: bankfull width "
                    f"{geom['width_m']:.1f} m, mean depth {geom['depth_m']:.2f} m. Adjust slope, "
                    f"roughness, and target discharge; results feed the hydraulics metrics.",
@@ -1712,7 +1721,7 @@ def server(input, output, session):
                 pass
         current_fn.set(0)
         current_step.set(STEP_REVIEW)
-        ui.notification_show("Assessment loaded — resuming field review.", type="message", duration=4)
+        ui.notification_show("Assessment loaded. Resuming field review.", type="message", duration=4)
 
 
 app = App(app_ui, server, static_assets=Path(__file__).parent / "www")
