@@ -1,0 +1,18 @@
+{
+  "assessmentId": "mn-sqt-adapted",
+  "assessmentName": "MN SQT Adapted",
+  "version": 1,
+  "updatedAt": "2026-07-12T01:57:25Z",
+  "author": "STAF SQT migration",
+  "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+  "region": {
+    "kind": "state",
+    "code": "MN",
+    "name": "Minnesota"
+  },
+  "stateCode": "MN",
+  "stateName": "Minnesota",
+  "sourceCitation": "Minnesota SQT",
+  "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
+  "supersedesVersion": null
+}

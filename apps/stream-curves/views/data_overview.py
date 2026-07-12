@@ -462,6 +462,15 @@ def data_overview_server(input, output, session, state: AppState):
         state.column_sources.set(fields.get("column_sources") or {})
         state.column_functions.set(fields.get("column_functions") or {})
         state.region_of_applicability.set(fields.get("region_of_applicability"))
+        state.easi_screening_sites.set(fields.get("easi_screening_sites"))
+        state.easi_screening_metrics.set(fields.get("easi_screening_metrics"))
+        state.easi_screening_criteria.set(fields.get("easi_screening_criteria"))
+        state.run_meta.set(fields.get("run_meta"))
+        state.run_stage_status.set(fields.get("run_stage_status") or {})
+        state.curve_review.set(fields.get("curve_review") or {})
+        state.screening_run.set(fields.get("screening_run"))
+        state.site_exclusions.set(fields.get("site_exclusions") or [])
+        state.validation_records.set(fields.get("validation_records") or [])
 
         mapping = fields.get("discipline_function_mapping")
         if mapping is not None:

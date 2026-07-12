@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "ak-sqt-adapted",
+  "assessmentName": "AK SQT Adapted",
+  "region": {
+    "kind": "state",
+    "code": "AK",
+    "name": "Alaska"
+  },
+  "stateCode": "AK",
+  "stateName": "Alaska",
+  "sourceCitation": "Alaska SQT",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-07-12T01:57:25Z",
+      "author": "STAF SQT migration",
+      "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+      "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
+      "supersedesVersion": null
+    }
+  ]
+}

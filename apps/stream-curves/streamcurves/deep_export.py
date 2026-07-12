@@ -460,6 +460,20 @@ def build_deep_assessment_bundle(
         "applicability": meta.get("applicability"),
         "metricsByFunction": metrics_by_function,
     }
+    # Scoring contract: the method a DEEP consumer applies to these curves. Mirrors
+    # apps/deep/deep/config.py (INDEX_BANDS thresholds, FUNCTION_SCORE_BANDS,
+    # FUNCTION_SCORE_MAX, indirect weight). Excluded from content_digest (which hashes
+    # only metricsByFunction + region code), so it never perturbs a version fingerprint.
+    bundle["scoringContract"] = {
+        "method": "STAF detailed reference-curve scoring",
+        "methodVersion": "iqr-seed-v1",
+        "indexBands": [0.39, 0.69],
+        "functionScoreBands": [5, 10],
+        "functionScoreMax": 15,
+        "indirectWeight": 0.10,
+        "rounding": {"index": 2, "functionScore": 0},
+        "settings": {},
+    }
     # Region of applicability + library-version block travel as top-level fields.
     # DEEP retains unknown bundle fields (LoadedAssessment.raw), so these surface in
     # its assessment info panel without any DEEP schema change. `region` is present

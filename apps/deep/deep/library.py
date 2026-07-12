@@ -73,3 +73,111 @@ def latest_bundles() -> list[dict]:
         except Exception:  # noqa: BLE001
             logger.exception("library: could not read %s", bundle_path)
     return out
+
+
+# --------------------------------------------------------------------------- #
+# All-versions view (bake source): one record per eligible (id, version)
+# --------------------------------------------------------------------------- #
+_ELIGIBLE = ("preliminary", "certified")
+
+
+def _status_map(root: Path, aid: str) -> dict[int, str]:
+    """version -> current lifecycle status from ``status.json`` (last record wins)."""
+    p = root / "assessments" / aid / "status.json"
+    if not p.is_file():
+        return {}
+    try:
+        doc = _read_json(p)
+    except Exception:  # noqa: BLE001
+        return {}
+    out: dict[int, str] = {}
+    for rec in doc.get("history") or []:
+        try:
+            v = int(rec.get("version"))
+        except (TypeError, ValueError):
+            continue
+        s = str(rec.get("status") or "").strip().lower()
+        if v:
+            out[v] = s
+    return out
+
+
+def all_eligible_bundles() -> list[dict]:
+    """Every *eligible* (preliminary or certified) published version's bundle, each
+    stamped with ``version``, ``lifecycle``, and ``assessmentRef`` (``"id@vN"``).
+
+    This is the authoritative bake source: DEEP offers a version chooser per assessment,
+    so every eligible version is baked (not just the latest). Empty when the library
+    folder is absent (cloud) or on read error.
+    """
+    root = library_root()
+    catalog_path = root / "catalog.json"
+    if not catalog_path.is_file():
+        return []
+    try:
+        catalog = _read_json(catalog_path)
+    except Exception:  # noqa: BLE001
+        logger.exception("library: could not read catalog at %s", catalog_path)
+        return []
+
+    out: list[dict] = []
+    for entry in catalog.get("assessments") or []:
+        aid = entry.get("assessmentId")
+        if not aid:
+            continue
+        manifest_path = root / "assessments" / aid / "manifest.json"
+        if not manifest_path.is_file():
+            continue
+        try:
+            manifest = _read_json(manifest_path)
+        except Exception:  # noqa: BLE001
+            continue
+        smap = _status_map(root, aid)
+        for v in manifest.get("versions") or []:
+            try:
+                ver = int(v.get("version"))
+            except (TypeError, ValueError):
+                continue
+            status = smap.get(ver, "preliminary")
+            if status not in _ELIGIBLE:
+                continue
+            bundle_path = root / "assessments" / aid / f"v{ver}" / "assessment.deep.json"
+            if not bundle_path.is_file():
+                logger.warning("library: %s v%d bundle missing", aid, ver)
+                continue
+            try:
+                bundle = dict(_read_json(bundle_path))
+            except Exception:  # noqa: BLE001
+                logger.exception("library: could not read %s", bundle_path)
+                continue
+            bundle["version"] = ver
+            bundle["lifecycle"] = status
+            bundle["assessmentRef"] = f"{aid}@v{ver}"
+            out.append(bundle)
+    return out
+
+
+def catalog_pointers() -> dict[str, dict]:
+    """``{assessmentId: {defaultVersion, latestCertified, latestPreliminary}}`` from the
+    library catalog, for the baked registry's ``libraryCatalog`` block. Empty when the
+    library is absent."""
+    root = library_root()
+    catalog_path = root / "catalog.json"
+    if not catalog_path.is_file():
+        return {}
+    try:
+        catalog = _read_json(catalog_path)
+    except Exception:  # noqa: BLE001
+        return {}
+    out: dict[str, dict] = {}
+    for entry in catalog.get("assessments") or []:
+        aid = entry.get("assessmentId")
+        latest = int(entry.get("latestVersion") or 0)
+        if not aid or latest < 1:
+            continue
+        out[aid] = {
+            "defaultVersion": int(entry.get("defaultVersion") or latest),
+            "latestCertified": int(entry.get("latestCertified") or 0),
+            "latestPreliminary": int(entry.get("latestPreliminary") or 0),
+        }
+    return out

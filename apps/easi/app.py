@@ -24,8 +24,11 @@ os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
 import anyio  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
 
-from easi import (assessment, bieger, config, delineation, geomorph,  # noqa: E402
-                  pipeline, report, scoring)
+from easi import (assessment, batch_ui, bieger, config, delineation,  # noqa: E402
+                  geomorph, pipeline, report, scoring)
+from easi.batch import api as batch_api  # noqa: E402
+from easi.batch import contracts as batch_contracts  # noqa: E402
+from easi.batch import exports as batch_exports  # noqa: E402
 from easi.datasources import flowlines  # noqa: E402
 from easi.datasources.geocode import geocode_address  # noqa: E402
 from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
@@ -182,7 +185,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=22"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=23"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="report-edit.js", defer=""),
@@ -198,6 +201,7 @@ app_ui = ui.page_fillable(
             staf_topnav(),
             ui.div(
                 ui.input_action_link("nav_new", "New analysis"),
+                ui.input_action_link("nav_batch", "Batch"),
                 ui.input_action_link("nav_about", "About"),
                 ui.input_action_link("nav_help", "Help"),
                 # Extended documentation (verification & validation) — a static,
@@ -215,6 +219,7 @@ app_ui = ui.page_fillable(
             class_="easi-map-wrap",
         ),
         ui.div(ui.output_ui("leftpane"), class_="easi-leftpane"),
+        ui.output_ui("batch_workspace"),
         ui.output_ui("readout"),
         ui.output_ui("flow_loading"),
         ui.output_ui("cursor_style"),
@@ -1946,6 +1951,262 @@ def server(input, output, session):
         res = export_result()
         if res:
             yield report.build_geojson(res).encode("utf-8")
+
+    # ==================================================================== #
+    # Batch workspace (full-width overlay; the single-site flow stays default)
+    # ==================================================================== #
+    app_mode = reactive.value("single")
+    batch_step = reactive.value("import")     # import | configure | run | results
+    batch_sites = reactive.value([])          # [{site_id, lat, lon, comid?}]
+    batch_msg = reactive.value("")
+    batch_result = reactive.value(None)       # BatchResult object (with artifacts)
+    _batch_prog = {"done": 0, "total": 0, "stage": "", "site": ""}
+    batch_tick = reactive.value(0)
+
+    _BATCH_STEPS = [("import", "Import"), ("configure", "Configure"),
+                    ("run", "Run"), ("results", "Results")]
+
+    @reactive.effect
+    @reactive.event(input.nav_batch)
+    def _enter_batch():
+        app_mode.set("batch")
+
+    @reactive.effect
+    @reactive.event(input.batch_exit)
+    def _leave_batch():
+        app_mode.set("single")
+
+    def _parse_and_set(text: str):
+        sites, errors = batch_ui.parse_sites_text(text)
+        sites = sites[:batch_api.MAX_SITES]
+        batch_sites.set(sites)
+        parts = [f"{len(sites)} site(s) ready"]
+        if errors:
+            parts.append(f"{len(errors)} issue(s): " + "; ".join(errors[:3]))
+        batch_msg.set(" — ".join(parts))
+
+    @reactive.effect
+    @reactive.event(input.batch_parse)
+    def _on_parse():
+        _parse_and_set(input.batch_paste() or "")
+
+    @reactive.effect
+    @reactive.event(input.batch_file)
+    def _on_file():
+        finfo = input.batch_file()
+        if not finfo:
+            return
+        try:
+            text = Path(finfo[0]["datapath"]).read_text(
+                encoding="utf-8", errors="replace")
+        except Exception as exc:  # noqa: BLE001
+            batch_msg.set(f"could not read file: {exc}")
+            return
+        _parse_and_set(text)
+
+    @reactive.effect
+    @reactive.event(input.batch_to_configure)
+    def _to_configure():
+        if not batch_sites():
+            ui.notification_show("Add at least one site first.", type="warning",
+                                 duration=3)
+            return
+        batch_step.set("configure")
+
+    @reactive.effect
+    @reactive.event(input.batch_back_import)
+    def _back_import():
+        batch_step.set("import")
+
+    @reactive.extended_task
+    async def batch_task(sites: list, reach_ft: float, criteria):
+        req = batch_contracts.BatchRequest(
+            sites=[batch_contracts.SiteRequest(
+                site_id=str(s.get("site_id") or ""), lat=s["lat"], lon=s["lon"],
+                comid=s.get("comid")) for s in sites],
+            config=batch_contracts.BatchConfig(reach_length_ft=reach_ft),
+            criteria=criteria)
+
+        def on_event(stage, site_id, info):
+            _batch_prog["stage"], _batch_prog["site"] = stage, site_id
+            if stage == "site_done":
+                _batch_prog["done"] = _batch_prog.get("done", 0) + 1
+
+        return await batch_api.run_batch(req, on_event=on_event)
+
+    @reactive.effect
+    @reactive.event(input.batch_run)
+    def _start_batch():
+        sites = batch_sites()
+        if not sites:
+            ui.notification_show("Add sites first.", type="warning", duration=3)
+            return
+        reach_ft = float(input.batch_reach() or DEFAULT_REACH_FT)
+        _batch_prog.update(done=0, total=len(sites), stage="starting", site="")
+        batch_result.set(None)
+        batch_step.set("run")
+        batch_task(sites, reach_ft, input.batch_criteria() or "functional")
+
+    @reactive.effect
+    def _poll_batch():
+        if batch_task.status() == "running":
+            reactive.invalidate_later(0.6)
+            with reactive.isolate():
+                batch_tick.set(batch_tick() + 1)
+
+    @reactive.effect
+    def _batch_done():
+        if batch_task.status() != "success":
+            return
+        with reactive.isolate():
+            batch_result.set(batch_task.result())
+            batch_step.set("results")
+
+    @reactive.effect
+    @reactive.event(input.batch_new)
+    def _batch_new():
+        batch_result.set(None)
+        batch_sites.set([])
+        batch_msg.set("")
+        batch_step.set("import")
+
+    def _batch_stepper(active):
+        return ui.div(*[ui.span(label, class_="easi-batch-step"
+                                + (" active" if key == active else ""))
+                        for key, label in _BATCH_STEPS],
+                      class_="easi-batch-steps")
+
+    def _sites_preview():
+        sites = batch_sites()
+        if not sites:
+            return None
+        body = [ui.tags.tr(ui.tags.td(s.get("site_id") or "(auto)"),
+                           ui.tags.td(f'{s["lat"]:.5f}'),
+                           ui.tags.td(f'{s["lon"]:.5f}'),
+                           ui.tags.td(str(s.get("comid") or "")))
+                for s in sites[:60]]
+        return ui.div(ui.tags.table(
+            ui.tags.thead(ui.tags.tr(ui.tags.th("Site"), ui.tags.th("Lat"),
+                                     ui.tags.th("Lon"), ui.tags.th("COMID"))),
+            ui.tags.tbody(*body), class_="easi-tbl easi-batch-preview"),
+            class_="easi-batch-preview-wrap")
+
+    def _import_panel():
+        return ui.div(
+            ui.p("Paste a table of sites (id, lat, lon) or upload a CSV/TSV file. "
+                 "A header row is optional; up to 150 sites.", class_="easi-instr"),
+            ui.input_text_area("batch_paste", None, rows=6, width="100%",
+                               placeholder="MB, 43.72, -72.25\nCC, 40.10, -83.10"),
+            ui.div(
+                ui.input_action_button("batch_parse", "Parse pasted sites",
+                                       class_="btn btn-sm btn-secondary"),
+                ui.input_file("batch_file", None,
+                              accept=[".csv", ".tsv", ".txt"], multiple=False,
+                              button_label="Upload CSV/TSV"),
+                class_="easi-batch-import-row"),
+            ui.div(batch_msg(), class_="easi-batch-msg") if batch_msg() else None,
+            _sites_preview(),
+            ui.div(ui.input_action_button("batch_to_configure",
+                                          "Continue to Configure",
+                                          class_="btn btn-primary"),
+                   class_="easi-batch-actions"))
+
+    def _configure_panel():
+        return ui.div(
+            ui.h5("Batch defaults"),
+            ui.input_numeric("batch_reach", "Reach length (ft)",
+                             value=int(DEFAULT_REACH_FT), min=100, max=10000,
+                             step=100),
+            ui.input_select(
+                "batch_criteria", "Reference-condition criteria",
+                {"functional": "Functional (raw ECI > 0.69)",
+                 "reference_condition": "Reference condition (ECI, all sub-indices "
+                 "> 0.69 and all function scores > 10)"},
+                selected="functional"),
+            ui.p(f"{len(batch_sites())} site(s) will run all 20 metrics.",
+                 class_="easi-instr"),
+            ui.div(
+                ui.input_action_button("batch_back_import", "Back",
+                                       class_="btn btn-sm btn-secondary"),
+                ui.input_action_button("batch_run", "Run batch",
+                                       class_="btn btn-primary"),
+                class_="easi-batch-actions"))
+
+    def _run_panel():
+        batch_tick()                      # depend on the poller so this re-renders
+        done, total = _batch_prog.get("done", 0), _batch_prog.get("total", 0)
+        running = batch_task.status() == "running"
+        pct = int(100 * done / total) if total else 0
+        detail = (f" — {_batch_prog.get('stage', '')} {_batch_prog.get('site', '')}"
+                  if running else "")
+        return ui.div(
+            ui.h5("Running batch…" if running else "Batch finished"),
+            ui.div(ui.div(class_="easi-batch-bar-fill", style=f"width:{pct}%"),
+                   class_="easi-batch-bar"),
+            ui.p(f"{done}/{total} sites complete{detail}", class_="easi-instr"))
+
+    def _stat(label, value):
+        return ui.div(ui.div(str(value), class_="easi-batch-stat-v"),
+                      ui.div(label, class_="easi-batch-stat-l"),
+                      class_="easi-batch-stat")
+
+    def _results_table(res: dict):
+        body = []
+        for s in res.get("sites", []):
+            q = s.get("qualification", {})
+            eci = s.get("eci")
+            comp = s.get("completeness", {})
+            body.append(ui.tags.tr(
+                ui.tags.td(s.get("site_id")),
+                ui.tags.td(s.get("state")),
+                ui.tags.td("" if eci is None else f"{eci:.2f}"),
+                ui.tags.td(q.get("auto") or ""),
+                ui.tags.td(q.get("final") or ""),
+                ui.tags.td(f'{comp.get("computed", 0)}/{comp.get("total", 0)}')))
+        return ui.div(ui.tags.table(
+            ui.tags.thead(ui.tags.tr(
+                ui.tags.th("Site"), ui.tags.th("State"), ui.tags.th("ECI"),
+                ui.tags.th("Auto"), ui.tags.th("Final"), ui.tags.th("Computed"))),
+            ui.tags.tbody(*body), class_="easi-tbl easi-batch-results"),
+            class_="easi-batch-results-wrap")
+
+    def _results_panel():
+        obj = batch_result()
+        if obj is None:
+            return ui.p("No results yet.", class_="easi-instr")
+        res = obj.to_dict()
+        s = batch_ui.result_summary(res)
+        return ui.div(
+            ui.div(_stat("Sites", s["total"]), _stat("Succeeded", s["succeeded"]),
+                   _stat("Partial", s["partial"]), _stat("Failed", s["failed"]),
+                   _stat("Qualified", s["qualified"]), _stat("Retained", s["retained"]),
+                   class_="easi-batch-stats"),
+            ui.div(ui.download_button("dl_batch_zip", "Download batch ZIP",
+                                      class_="btn btn-primary"),
+                   ui.input_action_button("batch_new", "New batch",
+                                          class_="btn btn-sm btn-secondary"),
+                   class_="easi-batch-actions"),
+            _results_table(res))
+
+    @render.ui
+    def batch_workspace():
+        if app_mode() != "batch":
+            return None
+        step = batch_step()
+        panel = {"import": _import_panel, "configure": _configure_panel,
+                 "run": _run_panel, "results": _results_panel}[step]()
+        return ui.div(
+            ui.div(ui.span("EASI Batch Processing", class_="easi-batch-brand"),
+                   ui.input_action_link("batch_exit", "Back to single site"),
+                   _batch_stepper(step), class_="easi-batch-head"),
+            ui.div(panel, class_="easi-batch-scroll"),
+            class_="easi-batch")
+
+    @render.download(filename="easi_batch.zip")
+    def dl_batch_zip():
+        obj = batch_result()
+        if obj is not None:
+            yield batch_exports.build_batch_zip(obj, include_pdf=False)
 
 
 # Shiny for Python serves a static dir only when configured (no implicit www/).

@@ -1,0 +1,173 @@
+{
+  "computedCount": 19,
+  "ecosystemConditionIndex": 0.73,
+  "functionScores": {
+    "bed-composition-bedform-dynamics": 8,
+    "carbon-processing": 8,
+    "catchment-hydrology": 13,
+    "channel-evolution": 13,
+    "channel-floodplain-dynamics": 8,
+    "community-dynamics": 13,
+    "floodplain-connectivity": 13,
+    "habitat-provision": 13,
+    "high-flow-dynamics": 13,
+    "hyporheic-connectivity": 8,
+    "light-thermal-regime": 13,
+    "low-flow-baseflow-dynamics": 13,
+    "population-support": 8,
+    "reach-inflow": 8,
+    "sediment-continuity": 8,
+    "streamflow-regime": 13,
+    "surface-water-storage": 8,
+    "water-soil-quality": 13,
+    "watershed-connectivity": 13
+  },
+  "metrics": [
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "catchment-hydrology-impervious-surface-cover",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 8,
+      "index": 0.545,
+      "metricId": "surface-water-storage-percent-wetlands-in-watershed",
+      "rating": "Fair",
+      "status": "ok"
+    },
+    {
+      "functionScore": 8,
+      "index": 0.545,
+      "metricId": "reach-inflow-concentrated-runoff-stormwater-inputs",
+      "rating": "Fair",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "floodplain-connectivity-floodplain-access-entrenchment",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 8,
+      "index": 0.545,
+      "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
+      "rating": "Fair",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "channel-evolution-channel-evolution-stage-and-trends",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 8,
+      "index": 0.545,
+      "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
+      "rating": "Fair",
+      "status": "ok"
+    },
+    {
+      "functionScore": 8,
+      "index": 0.545,
+      "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
+      "rating": "Fair",
+      "status": "ok"
+    },
+    {
+      "functionScore": 8,
+      "index": 0.545,
+      "metricId": "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation",
+      "rating": "Fair",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "light-and-thermal-regime-stream-temperature",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 8,
+      "index": 0.545,
+      "metricId": "carbon-processing-detrital-processing-cpom-retention-shredders",
+      "rating": "Fair",
+      "status": "ok"
+    },
+    {
+      "functionScore": null,
+      "index": null,
+      "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
+      "rating": null,
+      "status": "unavailable"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 8,
+      "index": 0.545,
+      "metricId": "population-support-biological-integrity-ibi-community-condition",
+      "rating": "Fair",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "community-dynamics-invasive-non-native-species-presence",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity",
+      "rating": "Good",
+      "status": "ok"
+    }
+  ],
+  "subIndices": {
+    "biological": 0.76,
+    "chemical": 0.74,
+    "physical": 0.7
+  },
+  "totalCount": 20
+}

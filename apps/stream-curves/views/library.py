@@ -17,6 +17,8 @@ from urllib.parse import quote
 from shiny import module, reactive, render, ui
 
 from streamcurves import library as lib
+from streamcurves import packaging, redaction
+from streamcurves import run_state as rs
 from streamcurves.deep_export import write_deep_assessment_bundle
 from views import assessment_publish as ap
 from views.state import AppState
@@ -100,6 +102,7 @@ def library_ui():
             class_="mb-3",
         ),
         ui.output_ui("lib_publish"),
+        ui.output_ui("lib_governance"),
         class_="mt-3",
     )
 
@@ -108,6 +111,7 @@ def library_ui():
 def library_server(input, output, session, state: AppState):
     refresh = reactive.value(0)
     draft_handoff_url = reactive.value(None)  # set after a desktop draft is staged
+    restricted_pkg = reactive.value(None)     # {bytes, filename, sha256} after a publish
 
     def _assessments() -> list[dict]:
         refresh()
@@ -301,7 +305,25 @@ def library_server(input, output, session, state: AppState):
             ui.input_text_area(
                 "pub_notes", "Revision notes (what changed in this version)", value="", rows=2
             ),
+            ui.input_text(
+                "pub_maintainer",
+                "Maintainer name (for the canonical publish audit trail)",
+                value=os.environ.get("STAF_LIBRARY_MAINTAINER", ""),
+            ),
         ]
+        # writable() is already True in this branch, so a non-None reason here means
+        # canonical publishing is off (the STAF_LIBRARY_PUBLISH flag is not set). Publish
+        # still runs the local flow, but it will not mutate the shared library.
+        canonical_off = lib.publish_gate_reason("_probe_")
+        if canonical_off:
+            body.append(
+                ui.div(
+                    bi("lock"),
+                    " ",
+                    canonical_off,
+                    class_="alert alert-secondary mt-2 mb-0 small",
+                )
+            )
         if _is_desktop():
             body.append(
                 ui.div(
@@ -331,6 +353,7 @@ def library_server(input, output, session, state: AppState):
                 disabled=None if loaded else "disabled",
             )
         )
+        body.append(ui.output_ui("restricted_download"))
         if not loaded:
             body.append(
                 ui.div(
@@ -383,30 +406,79 @@ def library_server(input, output, session, state: AppState):
             )
             return
 
+        # Canonical-publish gate: STAF_LIBRARY_PUBLISH=1 + writable + maintainer name.
+        maintainer = (input.pub_maintainer() or "").strip()
+        gate_reason = lib.publish_gate_reason(maintainer)
+        if gate_reason:
+            ui.notification_show(gate_reason, type="warning", duration=10)
+            return
+
         region = ap.region_from_state(state)
         name = input.pub_name() or aid
         meta = {
             "assessmentName": name,
             "region": region,
             "sourceCitation": input.pub_citation() or ap.DEFAULT_SOURCE_CITATION,
-            "author": input.pub_author() or "",
+            "author": input.pub_author() or maintainer,
             "revisionNotes": input.pub_notes() or "",
         }
         if region and region.get("kind") == "state":
             meta["stateCode"] = region.get("code") or ""
             meta["stateName"] = region.get("name") or ""
 
+        # Guided readiness gate: only enforced once a guided run exists (a populated
+        # curve_review). The Advanced path (confirmed mapping + finalized curves, no
+        # guided run) publishes on the mapping/curve checks already made above.
+        snap = ap.run_snapshot(state)
+        if snap.get("curve_review") and not rs.is_ready_to_publish(snap):
+            unresolved = rs.flagged_metrics(snap.get("curve_review") or {})
+            ui.notification_show(
+                "Finish the guided checklist before publishing: "
+                + (f"{len(unresolved)} flagged curve(s) still need review."
+                   if unresolved else "region, retained sites, enrichment, and in-scope "
+                   "curves must all be complete."),
+                type="warning", duration=10)
+            return
+
         try:
             bundle = ap.build_bundle_from_state(
                 state,
                 meta={"assessmentName": name, "sourceCitation": meta["sourceCitation"]},
             )
-            payload = ap.session_payload_from_state(state)
-            version = lib.publish_version(aid, meta, payload, bundle)
+            full_payload = ap.session_payload_from_state(state)
+            # Restricted (full-detail) package for access-controlled distribution.
+            with reactive.isolate():
+                validation = list(state.validation_records() or [])
+            zip_bytes, sha256, summary = packaging.build_restricted_package(
+                full_payload, bundle, validation_records=validation)
+            # Redact the public session and prove the redaction held before writing it.
+            redacted, _report = redaction.redact_session_payload(full_payload)
+            violations = redaction.redaction_violations(redacted)
+            if violations:
+                ui.notification_show(
+                    "Publish blocked: the public session still contains identity data ("
+                    + "; ".join(violations[:3]) + "). Nothing was written.",
+                    type="error", duration=12)
+                return
+            version = lib.publish_version(
+                aid, meta, redacted, bundle,
+                restricted_package={"sha256": sha256, "summary": summary})
         except Exception as e:  # noqa: BLE001
             logger.exception("library publish failed")
             ui.notification_show(f"Publish failed: {e}", type="error", duration=10)
             return
+
+        # Stash the restricted ZIP for download and mark the run published.
+        restricted_pkg.set({
+            "bytes": zip_bytes,
+            "filename": f"{aid}-v{version}-restricted.zip",
+            "sha256": sha256,
+        })
+        with reactive.isolate():
+            stage_status = dict(state.run_stage_status() or {})
+        stage_status["publish"] = {"status": "done",
+                                   "label": f"Published {name} v{version}."}
+        state.run_stage_status.set(stage_status)
 
         refresh.set(refresh() + 1)
 
@@ -427,6 +499,245 @@ def library_server(input, output, session, state: AppState):
                 type="warning",
                 duration=12,
             )
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def restricted_download():
+        pkg = restricted_pkg()
+        if not pkg:
+            return None
+        return ui.div(
+            ui.hr(class_="my-2"),
+            ui.div(
+                bi("lock"),
+                f" Restricted full-detail package ready (sha256 {pkg['sha256'][:12]}...). "
+                "Distribute it only under access control; it holds coordinates and identities.",
+                class_="text-muted small mb-1"),
+            ui.download_button(
+                "dl_restricted",
+                ui.TagList(bi("file-earmark-arrow-up"), " Download restricted package"),
+                class_="btn btn-outline-secondary btn-sm"),
+        )
+
+    @render.download(
+        filename=lambda: (restricted_pkg() or {}).get("filename") or "restricted.zip")
+    def dl_restricted():
+        pkg = restricted_pkg()
+        if pkg:
+            yield pkg["bytes"]
+
+    # ── Lifecycle & governance (validation records + certification) ───────────
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def lib_governance():
+        refresh()
+        if not lib.writable():
+            return None
+        items = [a for a in _assessments() if int(a.get("latestVersion") or 0) > 0]
+        if not items:
+            return None
+        choices = {a["assessmentId"]: a.get("assessmentName") or a["assessmentId"]
+                   for a in items}
+        return ui.card(
+            ui.card_header(ui.TagList(bi("ui-checks"), " Lifecycle & governance")),
+            ui.card_body(
+                ui.p("Attach independent-check evidence, mark a version validated, then "
+                     "certify it for DEEP. Certification requires a completed EcoPCX review.",
+                     class_="text-muted small"),
+                ui.div(
+                    ui.div(ui.input_select("gov_assessment", "Assessment", choices=choices),
+                           class_="col-sm-8"),
+                    ui.div(ui.input_select("gov_version", "Version", choices={}),
+                           class_="col-sm-4"),
+                    class_="row g-2"),
+                ui.output_ui("gov_status"),
+                ui.div(
+                    ui.input_action_button("gov_add_record", "Add validation record",
+                                           class_="btn btn-sm btn-outline-primary"),
+                    ui.input_action_button("gov_mark_validated", "Mark validated",
+                                           class_="btn btn-sm btn-outline-success ms-1"),
+                    ui.input_action_button("gov_retire", "Retire",
+                                           class_="btn btn-sm btn-outline-secondary ms-1"),
+                    class_="mt-2"),
+                ui.hr(class_="my-2"),
+                ui.input_checkbox("gov_ecopcx",
+                                  "EcoPCX independent review is complete", value=False),
+                ui.input_text("gov_actor", "Maintainer name (audit trail)",
+                              value=os.environ.get("STAF_LIBRARY_MAINTAINER", "")),
+                ui.input_action_button("gov_certify", "Certify version",
+                                       class_="btn btn-sm btn-success mt-1"),
+            ),
+            class_="mb-3",
+        )
+
+    @reactive.effect
+    def _fill_gov_version():
+        refresh()
+        try:
+            aid = input.gov_assessment()
+        except Exception:  # noqa: BLE001 — the select may not be mounted yet
+            return
+        if not aid:
+            return
+        manifest = lib.read_manifest(aid) or {}
+        versions = sorted((int(v.get("version") or 0)
+                           for v in (manifest.get("versions") or [])), reverse=True)
+        ui.update_select("gov_version",
+                         choices={str(v): f"v{v}" for v in versions},
+                         selected=str(versions[0]) if versions else None)
+
+    def _gov_target() -> tuple[str, int] | None:
+        try:
+            aid = input.gov_assessment()
+            ver = int(input.gov_version())
+        except Exception:  # noqa: BLE001
+            return None
+        if not aid or not ver:
+            return None
+        return aid, ver
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def gov_status():
+        refresh()
+        tgt = _gov_target()
+        if not tgt:
+            return None
+        aid, ver = tgt
+        status = lib.version_status(aid, ver)
+        vstate = lib.version_validation_state(aid, ver)
+        n_records = len(lib.read_validation(aid).get("records") or [])
+        status_cls = {"certified": "bg-success", "preliminary": "bg-primary",
+                      "retired": "bg-secondary"}.get(status, "bg-info text-dark")
+        val_cls = "bg-success" if vstate == "validated" else "bg-secondary"
+        return ui.div(
+            ui.tags.span(f"status: {status}", class_=f"badge {status_cls}"),
+            ui.tags.span(f"validation: {vstate}", class_=f"badge {val_cls} ms-1"),
+            ui.tags.span(f"{n_records} record(s)", class_="badge bg-light text-dark ms-1"),
+            class_="mt-2")
+
+    @reactive.effect
+    @reactive.event(input.gov_add_record)
+    def _gov_add_record():
+        tgt = _gov_target()
+        if not tgt:
+            return
+        ui.modal_show(ui.modal(
+            ui.input_text("gov_rec_method", "Check method",
+                          placeholder="independent recompute / field re-measure"),
+            ui.input_text("gov_rec_checker", "Checker",
+                          placeholder="name or organization"),
+            ui.input_select("gov_rec_outcome", "Outcome",
+                            choices={"match": "Matches", "minor": "Minor differences",
+                                     "major": "Major differences"}),
+            ui.input_text_area("gov_rec_note", "Note (aggregate only, no site data)",
+                               width="100%"),
+            title="Add validation record", easy_close=True,
+            footer=ui.TagList(
+                ui.modal_button("Cancel"),
+                ui.input_action_button("gov_rec_save", "Save record",
+                                       class_="btn btn-primary"))))
+
+    @reactive.effect
+    @reactive.event(input.gov_rec_save)
+    def _gov_rec_save():
+        tgt = _gov_target()
+        if not tgt:
+            return
+        aid, ver = tgt
+        actor = (input.gov_actor() or "").strip() or (input.gov_rec_checker() or "").strip()
+        if not actor:
+            ui.notification_show("Enter a checker or maintainer name.", type="warning",
+                                 duration=5)
+            return
+        try:
+            lib.add_validation_record(aid, ver, {
+                "method": input.gov_rec_method() or "",
+                "checker": input.gov_rec_checker() or "",
+                "outcome": input.gov_rec_outcome() or "",
+            }, actor=actor, note=input.gov_rec_note() or None)
+        except Exception as e:  # noqa: BLE001
+            ui.notification_show(f"Could not add record: {e}", type="error", duration=8)
+            return
+        ui.modal_remove()
+        refresh.set(refresh() + 1)
+        ui.notification_show("Validation record added.", type="message", duration=4)
+
+    @reactive.effect
+    @reactive.event(input.gov_mark_validated)
+    def _gov_mark_validated():
+        tgt = _gov_target()
+        if not tgt:
+            return
+        aid, ver = tgt
+        actor = (input.gov_actor() or "").strip()
+        if not actor:
+            ui.notification_show("Enter a maintainer name first.", type="warning", duration=5)
+            return
+        n_records = len(lib._validation_records_for(aid, ver))
+        try:
+            lib.set_version_validation(aid, ver, "validated",
+                                       {"n_records": n_records}, actor)
+        except Exception as e:  # noqa: BLE001
+            ui.notification_show(f"Cannot mark validated: {e}", type="warning", duration=8)
+            return
+        refresh.set(refresh() + 1)
+        ui.notification_show(f"{aid} v{ver} marked validated.", type="message", duration=5)
+
+    @reactive.effect
+    @reactive.event(input.gov_certify)
+    def _gov_certify():
+        tgt = _gov_target()
+        if not tgt:
+            return
+        aid, ver = tgt
+        actor = (input.gov_actor() or "").strip()
+        if not actor:
+            ui.notification_show("Enter a maintainer name first.", type="warning", duration=5)
+            return
+        if lib.version_validation_state(aid, ver) != "validated":
+            ui.notification_show("Mark the version validated before certifying.",
+                                 type="warning", duration=6)
+            return
+        if not input.gov_ecopcx():
+            ui.notification_show("Confirm the EcoPCX review is complete before certifying.",
+                                 type="warning", duration=6)
+            return
+        gate = lib.publish_gate_reason(actor)
+        if gate:
+            ui.notification_show(gate, type="warning", duration=10)
+            return
+        try:
+            lib.set_version_status(aid, ver, "certified", actor,
+                                   note="EcoPCX complete; validated.")
+        except Exception as e:  # noqa: BLE001
+            ui.notification_show(f"Certify failed: {e}", type="error", duration=8)
+            return
+        baked_ok, baked_msg = lib.rebake_deep()
+        refresh.set(refresh() + 1)
+        ui.notification_show(
+            f"Certified {aid} v{ver}."
+            + (" DEEP registry updated." if baked_ok else f" Rebake DEEP manually ({baked_msg})."),
+            type="message", duration=10)
+
+    @reactive.effect
+    @reactive.event(input.gov_retire)
+    def _gov_retire():
+        tgt = _gov_target()
+        if not tgt:
+            return
+        aid, ver = tgt
+        actor = (input.gov_actor() or "").strip()
+        if not actor:
+            ui.notification_show("Enter a maintainer name first.", type="warning", duration=5)
+            return
+        try:
+            lib.set_version_status(aid, ver, "retired", actor, note="Retired by maintainer.")
+        except Exception as e:  # noqa: BLE001
+            ui.notification_show(f"Retire failed: {e}", type="error", duration=8)
+            return
+        refresh.set(refresh() + 1)
+        ui.notification_show(f"Retired {aid} v{ver}.", type="message", duration=5)
 
     # ── desktop-only: stage the current draft and hand it to DEEP (?handoff=) ──
     @reactive.effect

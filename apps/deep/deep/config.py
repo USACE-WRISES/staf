@@ -61,44 +61,111 @@ def outcome_mapping() -> dict[str, dict[str, str]]:
     return {r["id"]: {k: r[k] for k in OUTCOMES} for r in rows}
 
 
-# --- Predefined assessment registry ---
+# --- Predefined assessment registry (v2: one record per (id, version)) ---
 def assessments_doc() -> dict:
     return _load("deep-assessments.json")
 
 
-def _merge_library(baked: list[dict]) -> list[dict]:
-    """Overlay the live shared library's latest bundles on the baked registry.
+def _normalize_record(r: dict) -> dict:
+    """Ensure a registry record carries ``version`` / ``lifecycle`` / ``assessmentRef``
+    (v1 records lack them: version from the library block or 1, lifecycle preliminary)."""
+    r = dict(r)
+    lib = r.get("library") or {}
+    ver = r.get("version") or lib.get("version") or 1
+    try:
+        ver = int(ver)
+    except (TypeError, ValueError):
+        ver = 1
+    r["version"] = ver
+    if not r.get("lifecycle"):
+        r["lifecycle"] = str(lib.get("lifecycle") or lib.get("status") or "preliminary")
+    if not r.get("assessmentRef"):
+        r["assessmentRef"] = f"{r.get('assessmentId')}@v{ver}"
+    return r
 
-    Local dev / desktop only (the library folder is absent on the cloud). A library
-    assessment with the same assessmentId replaces the baked one (latest wins); new
-    ids append after the baked entries. Any failure falls back to ``baked`` untouched.
-    """
+
+def _registry_records() -> list[dict]:
+    """All (id, version) records, live-library-merged by ref (local/desktop only)."""
+    baked = [_normalize_record(r) for r in assessments_doc().get("assessments", [])]
     try:
         from . import library as _library  # local import avoids an import cycle
 
-        extra = _library.latest_bundles()
+        extra = _library.all_eligible_bundles()
     except Exception:  # noqa: BLE001
-        return baked
+        extra = []
     if not extra:
         return baked
-
-    order = [a.get("assessmentId") for a in baked]
-    by_id = {a.get("assessmentId"): a for a in baked}
+    order = [r["assessmentRef"] for r in baked]
+    by_ref = {r["assessmentRef"]: r for r in baked}
     for bundle in extra:
-        aid = bundle.get("assessmentId")
-        if aid is None:
+        rec = _normalize_record(bundle)
+        ref = rec["assessmentRef"]
+        if ref not in by_ref:
+            order.append(ref)
+        by_ref[ref] = rec
+    return [by_ref[ref] for ref in order if ref in by_ref]
+
+
+def library_catalog() -> dict[str, dict]:
+    """``{id: {defaultVersion, latestCertified, latestPreliminary}}`` derived from the
+    live registry records (certified wins the default, else latest preliminary)."""
+    by_id: dict[str, dict] = {}
+    for r in _registry_records():
+        aid = r.get("assessmentId")
+        if not aid:
             continue
-        if aid not in by_id:
-            order.append(aid)
-        by_id[aid] = bundle
-    return [by_id[i] for i in order if i in by_id]
+        ver = int(r.get("version") or 1)
+        life = r.get("lifecycle", "preliminary")
+        d = by_id.setdefault(aid, {"versions": [], "certified": [], "preliminary": []})
+        d["versions"].append(ver)
+        (d["certified"] if life == "certified" else d["preliminary"]).append(ver)
+    out: dict[str, dict] = {}
+    for aid, d in by_id.items():
+        lc = max(d["certified"]) if d["certified"] else 0
+        lp = max(d["preliminary"]) if d["preliminary"] else 0
+        out[aid] = {
+            "defaultVersion": lc or lp or (max(d["versions"]) if d["versions"] else 1),
+            "latestCertified": lc,
+            "latestPreliminary": lp,
+        }
+    return out
+
+
+def assessments_by_ref() -> dict[str, dict]:
+    return {r["assessmentRef"]: r for r in _registry_records()}
+
+
+def default_ref_for(assessment_id: str) -> str | None:
+    cat = library_catalog().get(assessment_id)
+    if not cat:
+        return None
+    return f"{assessment_id}@v{cat['defaultVersion']}"
+
+
+def load_ref(ref: str) -> dict | None:
+    return assessments_by_ref().get(ref)
 
 
 def assessments() -> list[dict]:
-    return _merge_library(assessments_doc().get("assessments", []))
+    """One record per assessment at its default version (back-compat surface for the
+    picker, coverage, and region features). Ordered by first appearance in the registry."""
+    by_ref = assessments_by_ref()
+    cat = library_catalog()
+    seen: list[str] = []
+    for r in _registry_records():
+        aid = r.get("assessmentId")
+        if aid and aid not in seen:
+            seen.append(aid)
+    out: list[dict] = []
+    for aid in seen:
+        ref = default_ref_for(aid)
+        if ref and ref in by_ref:
+            out.append(by_ref[ref])
+    return out
 
 
 def assessments_by_id() -> dict[str, dict]:
+    """id -> the default-version record (back-compat: resolves to the default version)."""
     return {a["assessmentId"]: a for a in assessments()}
 
 

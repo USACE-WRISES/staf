@@ -1,0 +1,566 @@
+{
+  "version": 1,
+  "note": "SFARI Field Worksheet v1.0 overlay manifest. Rectangles are in original 1700x2200 px coords (origin top-left); multiply by pdf_scale (0.36) for US Letter points, and flip y (pdf_y = (height - y - h) * scale). See scripts/build_fieldform_manifest.py for how each rect was measured and its confidence. Per-function Notes rects are the real ruled 'Notes/Other Metrics' cells (detected from the raster gridlines).",
+  "page_px": [
+    1700,
+    2200
+  ],
+  "dpi": 200,
+  "pdf_scale": 0.36,
+  "columns_px": {
+    "left": 101,
+    "func_metrics": 417,
+    "metrics_score": 1461,
+    "right": 1555
+  },
+  "notes_cell_x_px": [
+    417,
+    1461
+  ],
+  "metadata_rects_px": {
+    "reach_id": [
+      210,
+      146,
+      116,
+      26
+    ],
+    "reach_length": [
+      476,
+      146,
+      136,
+      26
+    ],
+    "coordinates": [
+      1295,
+      146,
+      255,
+      26
+    ]
+  },
+  "metadata_baseline_px": 168,
+  "footer_mask_px": [
+    758,
+    2098,
+    184,
+    42
+  ],
+  "pages": [
+    {
+      "filename": "Page1.jpg",
+      "order": 1,
+      "discipline": "Hydrology",
+      "width": 1700,
+      "height": 2200,
+      "dpi": 200,
+      "sha256": "8747611c91f179e6c792dcad6470eca130cffcd0854bb8a8678946ff678883ed",
+      "notes_rows": [
+        {
+          "functionId": "catchment-hydrology",
+          "function": "Catchment hydrology",
+          "rect": [
+            417,
+            848,
+            1044,
+            62
+          ]
+        },
+        {
+          "functionId": "surface-water-storage",
+          "function": "Surface water storage",
+          "rect": [
+            417,
+            1213,
+            1044,
+            61
+          ]
+        },
+        {
+          "functionId": "reach-inflow",
+          "function": "Reach inflow",
+          "rect": [
+            417,
+            1582,
+            1044,
+            62
+          ]
+        },
+        {
+          "functionId": "streamflow-regime",
+          "function": "Streamflow regime",
+          "rect": [
+            417,
+            2014,
+            1044,
+            61
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "Page2.jpg",
+      "order": 2,
+      "discipline": "Hydraulics",
+      "width": 1700,
+      "height": 2200,
+      "dpi": 200,
+      "sha256": "6215b85b9d908b54e01d0b7642236474cd82394e2bfebf350db927e65e99fb4d",
+      "notes_rows": [
+        {
+          "functionId": "low-flow-baseflow-dynamics",
+          "function": "Low flow and baseflow dynamics",
+          "rect": [
+            417,
+            714,
+            1044,
+            78
+          ]
+        },
+        {
+          "functionId": "high-flow-dynamics",
+          "function": "High flow dynamics",
+          "rect": [
+            417,
+            1113,
+            1044,
+            61
+          ]
+        },
+        {
+          "functionId": "floodplain-connectivity",
+          "function": "Floodplain connectivity",
+          "rect": [
+            417,
+            1477,
+            1044,
+            62
+          ]
+        },
+        {
+          "functionId": "hyporheic-connectivity",
+          "function": "Hyporheic connectivity",
+          "rect": [
+            417,
+            1891,
+            1044,
+            61
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "Page3.jpg",
+      "order": 3,
+      "discipline": "Geomorphology",
+      "width": 1700,
+      "height": 2200,
+      "dpi": 200,
+      "sha256": "970cde6985fb5b1752a6a7dfcd42c7378a1fb8a00408c59a83eb73676d8bc186",
+      "notes_rows": [
+        {
+          "functionId": "channel-evolution",
+          "function": "Channel evolution",
+          "rect": [
+            417,
+            510,
+            1044,
+            62
+          ]
+        },
+        {
+          "functionId": "channel-floodplain-dynamics",
+          "function": "Channel and floodplain dynamics",
+          "rect": [
+            417,
+            1070,
+            1044,
+            62
+          ]
+        },
+        {
+          "functionId": "sediment-continuity",
+          "function": "Sediment continuity",
+          "rect": [
+            417,
+            1435,
+            1044,
+            61
+          ]
+        },
+        {
+          "functionId": "bed-composition-bedform-dynamics",
+          "function": "Bed composition and bedform dynamics",
+          "rect": [
+            417,
+            1912,
+            1044,
+            61
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "Page4.jpg",
+      "order": 4,
+      "discipline": "Physicochemistry",
+      "width": 1700,
+      "height": 2200,
+      "dpi": 200,
+      "sha256": "fad44ed9a15914adcbbb7cf1db2280f37923bdf41f6152c8ccb076add5bc191d",
+      "notes_rows": [
+        {
+          "functionId": "light-thermal-regime",
+          "function": "Light and thermal regime",
+          "rect": [
+            417,
+            523,
+            1044,
+            62
+          ]
+        },
+        {
+          "functionId": "carbon-processing",
+          "function": "Carbon processing",
+          "rect": [
+            417,
+            935,
+            1044,
+            62
+          ]
+        },
+        {
+          "functionId": "nutrient-cycling",
+          "function": "Nutrient cycling",
+          "rect": [
+            417,
+            1300,
+            1044,
+            61
+          ]
+        },
+        {
+          "functionId": "water-soil-quality",
+          "function": "Water and soil quality",
+          "rect": [
+            417,
+            1664,
+            1044,
+            61
+          ]
+        }
+      ]
+    },
+    {
+      "filename": "Page5.jpg",
+      "order": 5,
+      "discipline": "Biology",
+      "width": 1700,
+      "height": 2200,
+      "dpi": 200,
+      "sha256": "469d4a7ca6d5d2f0dffb3c277aa880702a902d8de1c333646fb93f9649811f74",
+      "notes_rows": [
+        {
+          "functionId": "habitat-provision",
+          "function": "Habitat provision",
+          "rect": [
+            417,
+            546,
+            1044,
+            61
+          ]
+        },
+        {
+          "functionId": "population-support",
+          "function": "Population support",
+          "rect": [
+            417,
+            1000,
+            1044,
+            62
+          ]
+        },
+        {
+          "functionId": "community-dynamics",
+          "function": "Community dynamics",
+          "rect": [
+            417,
+            1435,
+            1044,
+            62
+          ]
+        },
+        {
+          "functionId": "watershed-connectivity",
+          "function": "Watershed connectivity",
+          "rect": [
+            417,
+            1793,
+            1044,
+            61
+          ]
+        }
+      ]
+    }
+  ],
+  "desktop_metrics": [
+    {
+      "metricId": "catchment-hydrology-impervious-surface-area",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "catchment-hydrology",
+      "function": "Catchment hydrology",
+      "metric": "Impervious surface area",
+      "method": "NLCD 2019 Impervious (MRLC) via Model My Watershed",
+      "order": 1
+    },
+    {
+      "metricId": "catchment-hydrology-road-density",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "catchment-hydrology",
+      "function": "Catchment hydrology",
+      "metric": "Road density",
+      "method": "Road density \u2014 StreamCat rddens / TIGER roads",
+      "order": 2
+    },
+    {
+      "metricId": "catchment-hydrology-land-use-change",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "catchment-hydrology",
+      "function": "Catchment hydrology",
+      "metric": "Land use change",
+      "method": "NLCD land cover change (2001 vs 2019)",
+      "order": 3
+    },
+    {
+      "metricId": "catchment-hydrology-impoundments",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "catchment-hydrology",
+      "function": "Catchment hydrology",
+      "metric": "Impoundments",
+      "method": "USACE NID + USGS NABD (upstream dams)",
+      "order": 4
+    },
+    {
+      "metricId": "surface-water-storage-wetland-coverage",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "surface-water-storage",
+      "function": "Surface water storage",
+      "metric": "Wetland Coverage",
+      "method": "USFWS NWI over FEMA NFHL; StreamCat wetlands",
+      "order": 5
+    },
+    {
+      "metricId": "reach-inflow-concentrated-flow-inputs",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "reach-inflow",
+      "function": "Reach inflow",
+      "metric": "Concentrated flow inputs",
+      "method": "Municipal MS4 outfall GIS layers (local)",
+      "order": 6
+    },
+    {
+      "metricId": "reach-inflow-local-runoff-diversions",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "reach-inflow",
+      "function": "Reach inflow",
+      "metric": "Local runoff diversions",
+      "method": "State water-rights / diversions GIS",
+      "order": 7
+    },
+    {
+      "metricId": "streamflow-regime-flow-permanence",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "streamflow-regime",
+      "function": "Streamflow regime",
+      "metric": "Flow permanence",
+      "method": "USGS NWIS daily flow (zero-flow days) + NHDPlus HR FCODE",
+      "order": 8
+    },
+    {
+      "metricId": "streamflow-regime-flow-permanence-statistics",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "streamflow-regime",
+      "function": "Streamflow regime",
+      "metric": "Flow permanence statistics",
+      "method": "USGS NWIS daily flow (flow-duration / IHA)",
+      "order": 9
+    },
+    {
+      "metricId": "streamflow-regime-channel-natural-flow-regime",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "streamflow-regime",
+      "function": "Streamflow regime",
+      "metric": "Channel natural flow regime",
+      "method": "TNC IHA on NWIS; else StreamCat dam regulation",
+      "order": 10
+    },
+    {
+      "metricId": "streamflow-regime-artificial-structures-and-inputs",
+      "page": 1,
+      "discipline": "Hydrology",
+      "functionId": "streamflow-regime",
+      "function": "Streamflow regime",
+      "metric": "Artificial structures and inputs",
+      "method": "USACE National Levee Database + NID",
+      "order": 11
+    },
+    {
+      "metricId": "low-flow-baseflow-dynamics-low-flow-velocity",
+      "page": 2,
+      "discipline": "Hydraulics",
+      "functionId": "low-flow-baseflow-dynamics",
+      "function": "Low flow and baseflow dynamics",
+      "metric": "Low flow velocity",
+      "method": "Manning (native XS calc): low-flow Q, slope, roughness",
+      "order": 12
+    },
+    {
+      "metricId": "low-flow-baseflow-dynamics-low-flow-depth",
+      "page": 2,
+      "discipline": "Hydraulics",
+      "functionId": "low-flow-baseflow-dynamics",
+      "function": "Low flow and baseflow dynamics",
+      "metric": "Low flow depth",
+      "method": "3DEP cross-section + Manning (native XS calc) at low-flow Q",
+      "order": 13
+    },
+    {
+      "metricId": "high-flow-dynamics-overbank-flow-frequency",
+      "page": 2,
+      "discipline": "Hydraulics",
+      "functionId": "high-flow-dynamics",
+      "function": "High flow dynamics",
+      "metric": "Overbank Flow Frequency",
+      "method": "USGS PeakFQ / regional bankfull-Q regression",
+      "order": 14
+    },
+    {
+      "metricId": "high-flow-dynamics-peak-flow-capacity-morphological-check",
+      "page": 2,
+      "discipline": "Hydraulics",
+      "functionId": "high-flow-dynamics",
+      "function": "High flow dynamics",
+      "metric": "Peak Flow Capacity (Morphological Check)",
+      "method": "Regional bankfull-geometry regressions + 3DEP",
+      "order": 15
+    },
+    {
+      "metricId": "high-flow-dynamics-bed-mobilization-frequency",
+      "page": 2,
+      "discipline": "Hydraulics",
+      "functionId": "high-flow-dynamics",
+      "function": "High flow dynamics",
+      "metric": "Bed Mobilization Frequency",
+      "method": "Shields (D50 + peak Q) via native XS calc shear",
+      "order": 16
+    },
+    {
+      "metricId": "floodplain-connectivity-lateral-floodplain-inundation",
+      "page": 2,
+      "discipline": "Hydraulics",
+      "functionId": "floodplain-connectivity",
+      "function": "Floodplain connectivity",
+      "metric": "Lateral Floodplain Inundation",
+      "method": "NWI + NAIP + 3DEP DEM/hillshade",
+      "order": 17
+    },
+    {
+      "metricId": "channel-floodplain-dynamics-bank-migration-and-meander",
+      "page": 3,
+      "discipline": "Geomorphology",
+      "functionId": "channel-floodplain-dynamics",
+      "function": "Channel and floodplain dynamics",
+      "metric": "Bank Migration and Meander",
+      "method": "Multi-date NAIP/Google Earth; USGS DSAS / RivMAP; EarthExplorer",
+      "order": 18
+    },
+    {
+      "metricId": "channel-floodplain-dynamics-channel-pattern",
+      "page": 3,
+      "discipline": "Geomorphology",
+      "functionId": "channel-floodplain-dynamics",
+      "function": "Channel and floodplain dynamics",
+      "metric": "Channel pattern",
+      "method": "Historic USGS topo (TopoView) + NAIP + 3DEP LiDAR; sinuosity",
+      "order": 19
+    },
+    {
+      "metricId": "sediment-continuity-transport-capacity",
+      "page": 3,
+      "discipline": "Geomorphology",
+      "functionId": "sediment-continuity",
+      "function": "Sediment continuity",
+      "metric": "Transport Capacity",
+      "method": "StreamStats flow + NHDPlus HR slope/length (stream power)",
+      "order": 20
+    },
+    {
+      "metricId": "light-thermal-regime-riparian-canopy-cover",
+      "page": 4,
+      "discipline": "Physicochemistry",
+      "functionId": "light-thermal-regime",
+      "function": "Light and thermal regime",
+      "metric": "Riparian Canopy Cover",
+      "method": "NLCD Tree Canopy Cover + EPA EnviroAtlas riparian",
+      "order": 21
+    },
+    {
+      "metricId": "carbon-processing-riparian-corridor-width-and-quality",
+      "page": 4,
+      "discipline": "Physicochemistry",
+      "functionId": "carbon-processing",
+      "function": "Carbon processing",
+      "metric": "Riparian Corridor Width and Quality",
+      "method": "EPA EnviroAtlas riparian (15-50 m) + NLCD",
+      "order": 22
+    },
+    {
+      "metricId": "nutrient-cycling-vegetated-riparian-corridor-width",
+      "page": 4,
+      "discipline": "Physicochemistry",
+      "functionId": "nutrient-cycling",
+      "function": "Nutrient cycling",
+      "metric": "Vegetated Riparian Corridor Width",
+      "method": "EPA EnviroAtlas riparian",
+      "order": 23
+    },
+    {
+      "metricId": "community-dynamics-riparian-communities",
+      "page": 5,
+      "discipline": "Biology",
+      "functionId": "community-dynamics",
+      "function": "Community dynamics",
+      "metric": "Riparian communities",
+      "method": "EPA EnviroAtlas riparian; StreamCat; NLCD",
+      "order": 24
+    },
+    {
+      "metricId": "watershed-connectivity-upstream-and-downstream-barriers",
+      "page": 5,
+      "discipline": "Biology",
+      "functionId": "watershed-connectivity",
+      "function": "Watershed connectivity",
+      "metric": "Upstream and Downstream Barriers",
+      "method": "National Aquatic Barrier Inventory (USFWS/TNC) + USACE NID",
+      "order": 25
+    },
+    {
+      "metricId": "watershed-connectivity-dewatered-or-intermittent-segments",
+      "page": 5,
+      "discipline": "Biology",
+      "functionId": "watershed-connectivity",
+      "function": "Watershed connectivity",
+      "metric": "Dewatered or Intermittent Segments",
+      "method": "USGS NWIS zero-flow days + NHD FCODE + imagery",
+      "order": 26
+    }
+  ]
+}

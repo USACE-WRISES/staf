@@ -21,6 +21,7 @@ class EvidenceResult:
     metric_id: str
     value: Any = None
     value_text: str = ""
+    field_value_text: str = ""                   # concise self-identifying print value ("Impervious 12.3%")
     suggested_likert: Optional[str] = None      # from autoSuggest vs likertCriteria
     confidence: str = "M"                        # H/M/L — confidence in the DATA
     source: str = ""

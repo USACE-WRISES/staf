@@ -1,0 +1,18 @@
+{
+  "assessmentId": "co-sqt-adapted",
+  "assessmentName": "CO SQT Adapted",
+  "version": 1,
+  "updatedAt": "2026-07-12T01:57:25Z",
+  "author": "STAF SQT migration",
+  "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+  "region": {
+    "kind": "state",
+    "code": "CO",
+    "name": "Colorado"
+  },
+  "stateCode": "CO",
+  "stateName": "Colorado",
+  "sourceCitation": "Colorado SQT",
+  "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
+  "supersedesVersion": null
+}

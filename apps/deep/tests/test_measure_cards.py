@@ -18,14 +18,14 @@ _PTS = [{"x": 0, "y": 1.0}, {"x": 35, "y": 0.7}, {"x": 50, "y": 0.3}]
 # metricStatement carried through the regenerated predefined library
 # --------------------------------------------------------------------------- #
 def test_every_built_metric_has_a_statement():
-    # build_deep_data.py guarantees a metricStatement on every state-SQT metric.
-    # Library-published bundles (StreamCurves) may omit it — the measure card then
-    # drops the statement div (app.py reads it with .get) — so skip those here.
+    # The state-SQT assessments guarantee a metricStatement on every metric (from the
+    # STAF metric library, whether baked by build_deep_data.py or migrated into the
+    # shared library). Other StreamCurves-published bundles may omit it — the measure
+    # card drops the statement div (app.py reads it with .get) — so only check the SQTs.
     total = 0
-    registry = config.assessments_by_id()
     for entry in assessments.list_predefined():
         aid = entry["assessmentId"]
-        if registry[aid].get("library"):
+        if not aid.endswith("-sqt-adapted"):
             continue
         la = assessments.load_predefined(aid)
         for fn in la.metrics_by_function:

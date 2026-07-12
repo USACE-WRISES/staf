@@ -85,7 +85,7 @@ METRIC_STATEMENT_ALIASES = {
 }
 
 # --- Short "reference-good" agreement statements from the paper SFARI Field
-# Worksheet v1.0 (docs/FieldForm/Page1-5.jpg), keyed by metricId. These are what
+# Worksheet v1.0 (data/FieldForm/Page1-5.jpg), keyed by metricId. These are what
 # the assessor agrees/disagrees with in the field; the app shows them next to each
 # metric (the longer metricStatement stays in the "how to score" tooltip). Two
 # 5th-metrics have no row on the paper form and fall back to metricStatement:

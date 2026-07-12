@@ -1,0 +1,14 @@
+# SFARI — dev/test-only dependencies (NOT installed on Posit Connect Cloud).
+#
+# Install alongside the runtime pins for local development and the test suite:
+#     D:/Code/Work/staf/.venv/Scripts/pip install -r apps/sfari/requirements-dev.txt
+#
+# pypdf backs the structural PDF assertions in tests/test_field_forms_pdf.py
+# (media-box size, page count, continuous "Page X of Y", embedded text). It is a
+# pure-Python wheel and never ships to the deployed app. Poppler (pdftoppm) stays a
+# manual-only QA tool for rendering the field-forms packet to a visual contact sheet;
+# it is intentionally NOT a Python dependency.
+
+-r requirements.txt
+
+pypdf==6.14.2

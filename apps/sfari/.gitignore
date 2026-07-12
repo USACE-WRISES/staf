@@ -26,6 +26,9 @@ docs/**/*.docx
 # Local secrets (never commit API keys, e.g. USGS NWIS)
 .env
 
+# Scratch / QA render artifacts (e.g. sample field-forms PDFs for the Poppler pass)
+tmp/
+
 # OS / editor
 .DS_Store
 Thumbs.db

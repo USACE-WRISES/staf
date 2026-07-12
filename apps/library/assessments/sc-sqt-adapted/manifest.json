@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "sc-sqt-adapted",
+  "assessmentName": "SC SQT Adapted",
+  "region": {
+    "kind": "state",
+    "code": "SC",
+    "name": "South Carolina"
+  },
+  "stateCode": "SC",
+  "stateName": "South Carolina",
+  "sourceCitation": "South Carolina SQT",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-07-12T01:57:26Z",
+      "author": "STAF SQT migration",
+      "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+      "contentDigest": "sha256:91a19a28ca5e6bbbe1f35eefb5a06284a65b006ccddca6f905fe28e79a893f23",
+      "supersedesVersion": null
+    }
+  ]
+}

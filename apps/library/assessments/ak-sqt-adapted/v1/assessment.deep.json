@@ -1,0 +1,5747 @@
+{
+  "schemaVersion": 1,
+  "tier": "detailed",
+  "assessmentId": "ak-sqt-adapted",
+  "assessmentName": "AK SQT Adapted",
+  "stateCode": "AK",
+  "stateName": "Alaska",
+  "sourceCitation": "Alaska SQT",
+  "applicability": "Alaska streams",
+  "metricsByFunction": [
+    {
+      "functionId": "catchment-hydrology",
+      "functionName": "Catchment hydrology",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "catchment-hydrology-anthropogenic-land-cover",
+          "metricName": "Anthropogenic Land Cover",
+          "discipline": "Hydrology",
+          "inputType": "desktop (gis)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Anthropogenic Land Cover",
+          "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+          "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+          "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 35,
+                "y": 0.7
+              },
+              {
+                "x": 50,
+                "y": 0.3
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "catchment-hydrology-impervious-cover",
+          "metricName": "Impervious Cover",
+          "discipline": "Hydrology",
+          "inputType": "desktop (gis)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Impervious Cover",
+          "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+          "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+          "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 10,
+                "y": 0.7
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "catchment-hydrology-land-use-coefficient",
+          "metricName": "Land Use Coefficient",
+          "discipline": "Hydrology",
+          "inputType": "desktop (gis)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Land Use Coefficient",
+          "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+          "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+          "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 9,
+                "y": 1
+              },
+              {
+                "x": 16,
+                "y": 0.7
+              },
+              {
+                "x": 22,
+                "y": 0.3
+              },
+              {
+                "x": 86,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "reach-inflow",
+      "functionName": "Reach inflow",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "reach-inflow-concentrated-flow-points-1-000-ft",
+          "metricName": "Concentrated Flow Points / 1,000 ft",
+          "discipline": "Hydrology",
+          "inputType": "field (with desktop pre-screen)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Concentrated Flow Points / 1,000 ft",
+          "metricStatement": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+          "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+          "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 0.7
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "floodplain-connectivity",
+      "functionName": "Floodplain connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+          "metricName": "Entrenchment Ratio (ER)",
+          "discipline": "Hydraulics",
+          "inputType": "field (survey) or desktop (lidar cross sections)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Entrenchment Ratio (ER)",
+          "metricStatement": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+          "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+          "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT - C Streams",
+            "stratification": "C Streams",
+            "points": [
+              {
+                "x": 2,
+                "y": 0.3
+              },
+              {
+                "x": 2.4,
+                "y": 0.7
+              },
+              {
+                "x": 4.4,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "C Streams",
+              "layerName": "Alaska SQT - C Streams",
+              "points": [
+                {
+                  "x": 2,
+                  "y": 0.3
+                },
+                {
+                  "x": 2.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 4.4,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "E Streams",
+              "layerName": "Alaska SQT - E Streams",
+              "points": [
+                {
+                  "x": 2,
+                  "y": 0.3
+                },
+                {
+                  "x": 2.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 6.5,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "B Stream Types",
+              "layerName": "Alaska SQT - B Stream Types",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 1.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 2.2,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "C Streams"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-evolution",
+      "functionName": "Channel evolution",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "channel-evolution-width-depth-ratio",
+          "metricName": "Width/Depth Ratio",
+          "discipline": "Geomorphology",
+          "inputType": "field (survey)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Width/Depth Ratio",
+          "metricStatement": "Channel dimension indicator used to infer incision/widening or departure from reference geometry.",
+          "howToMeasure": "Measure bankfull width and mean depth at representative cross sections; compute W/D and compare to expected (regional curves or SQT reference).",
+          "methodContext": "Context: Channel\n\nMethod: Field (survey)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 20,
+                "y": 0
+              },
+              {
+                "x": 100,
+                "y": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "functionName": "Channel and floodplain dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+          "metricName": "Bank Height Ratio (BHR)",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Bank Height Ratio (BHR)",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1.5,
+                "y": 0.3
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+          "metricName": "Percent Streambank Armoring",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Percent Streambank Armoring",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 30,
+                "y": 0
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+          "metricName": "Percent Streambank Erosion",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Percent Streambank Erosion",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 5,
+                "y": 1
+              },
+              {
+                "x": 10,
+                "y": 0.7
+              },
+              {
+                "x": 75,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "functionName": "Bed composition and large wood",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+          "metricName": "Percent Fines < 2mm",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Percent Fines < 2mm",
+          "metricStatement": "Streambed substrate size distribution used to infer habitat quality, sediment transport, and embeddedness/fine sediment stress.",
+          "howToMeasure": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT - Gravel Bed",
+            "stratification": "Gravel Bed",
+            "points": [
+              {
+                "x": 3,
+                "y": 1
+              },
+              {
+                "x": 15,
+                "y": 0.7
+              },
+              {
+                "x": 37,
+                "y": 0.3
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Gravel Bed",
+              "layerName": "Alaska SQT - Gravel Bed",
+              "points": [
+                {
+                  "x": 3,
+                  "y": 1
+                },
+                {
+                  "x": 15,
+                  "y": 0.7
+                },
+                {
+                  "x": 37,
+                  "y": 0.3
+                }
+              ]
+            },
+            {
+              "stratum": "Cobble, Boulders, Bedrock",
+              "layerName": "Alaska SQT - Cobble, Boulders, Bedrock",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 1
+                },
+                {
+                  "x": 5,
+                  "y": 0.7
+                },
+                {
+                  "x": 10,
+                  "y": 0.3
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Gravel Bed"
+        }
+      ]
+    },
+    {
+      "functionId": "light-thermal-regime",
+      "functionName": "Light & thermal regime",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "light-and-thermal-regime-daily-maximum-temperature",
+          "metricName": "Daily Maximum Temperature",
+          "discipline": "Physicochemistry",
+          "inputType": "field (logger) and/or desktop (data compilation)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Daily Maximum Temperature",
+          "metricStatement": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+          "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 1.1,
+                "y": 1
+              },
+              {
+                "x": 1.25,
+                "y": 0.3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "carbon-processing",
+      "functionName": "Carbon processing",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "carbon-processing-percent-native-cover",
+          "metricName": "Percent Native Cover",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Percent Native Cover",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 95,
+                "y": 0.7
+              },
+              {
+                "x": 100,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "carbon-processing-riparian-extent",
+          "metricName": "Riparian Extent",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Riparian Extent",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT - Unconfined Alluvial Valleys",
+            "stratification": "Unconfined Alluvial Valleys",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 100,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Unconfined Alluvial Valleys",
+              "layerName": "Alaska SQT - Unconfined Alluvial Valleys",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 100,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Confined Alluvial or Colluvial/V-Shaped Valleys",
+              "layerName": "Alaska SQT - Confined Alluvial or Colluvial/V-Shaped Valleys",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 60,
+                  "y": 0.3
+                },
+                {
+                  "x": 100,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Unconfined Alluvial Valleys"
+        },
+        {
+          "metricId": "carbon-processing-vegetative-complexity",
+          "metricName": "Vegetative Complexity",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Vegetative Complexity",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT - Alaska & Brooks Range",
+            "stratification": "Alaska & Brooks Range",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0.06,
+                "y": 0.3
+              },
+              {
+                "x": 0.83,
+                "y": 0.7
+              },
+              {
+                "x": 1.57,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Alaska & Brooks Range",
+              "layerName": "Alaska SQT - Alaska & Brooks Range",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0.06,
+                  "y": 0.3
+                },
+                {
+                  "x": 0.83,
+                  "y": 0.7
+                },
+                {
+                  "x": 1.57,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Interior Highlands",
+              "layerName": "Alaska SQT - Interior Highlands",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0.94,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.21,
+                  "y": 0.7
+                },
+                {
+                  "x": 1.67,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Interior Bottomlands",
+              "layerName": "Alaska SQT - Interior Bottomlands",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 1.19,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.37,
+                  "y": 0.7
+                },
+                {
+                  "x": 1.82,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Interior Forested Lowlands/Uplands",
+              "layerName": "Alaska SQT - Interior Forested Lowlands/Uplands",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 1.24,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.45,
+                  "y": 0.7
+                },
+                {
+                  "x": 1.87,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Alaska & Brooks Range"
+        }
+      ]
+    },
+    {
+      "functionId": "nutrient-cycling",
+      "functionName": "Nutrient cycling",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "nutrient-cycling-diatom-index",
+          "metricName": "Diatom Index",
+          "discipline": "Physicochemistry",
+          "inputType": "field (sampling) and/or desktop (data compilation)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Diatom Index",
+          "metricStatement": "Nutrient concentration or bioindicator of nutrient enrichment affecting productivity and eutrophication risk.",
+          "howToMeasure": "Collect and analyze TN/TP (or compute diatom-based nutrient index) for the reach and compare to SQT thresholds, accounting for stratified region classes.",
+          "methodContext": "Context: Channel\n\nMethod: Field (sampling) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 58,
+                "y": 0.7
+              },
+              {
+                "x": 75,
+                "y": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "water-soil-quality",
+      "functionName": "Water & soil quality",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "water-and-soil-quality-daily-average-turbidity",
+          "metricName": "Daily Average Turbidity",
+          "discipline": "Physicochemistry",
+          "inputType": "field (meter/logger) and/or desktop (data compilation)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Daily Average Turbidity",
+          "metricStatement": "Water-quality condition affecting aquatic life and designated uses (oxygen stress, sediment/turbidity, bacteria, or ionic strength).",
+          "howToMeasure": "Collect field measurements (spot or continuous) and/or compile recent lab results for the reach; summarize relevant statistic (e.g., daily mean/max) per SQT; score against thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (meter/logger) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 3,
+                "y": 1
+              },
+              {
+                "x": 10,
+                "y": 0.7
+              },
+              {
+                "x": 100,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "habitat-provision",
+      "functionName": "Habitat provision",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "habitat-provision-lwd-frequency",
+          "metricName": "LWD Frequency",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "LWD Frequency",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT - Alaska Range",
+            "stratification": "Alaska Range",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0.8,
+                "y": 0.3
+              },
+              {
+                "x": 1.5,
+                "y": 0.7
+              },
+              {
+                "x": 6.3,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Alaska Range",
+              "layerName": "Alaska SQT - Alaska Range",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0.8,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.5,
+                  "y": 0.7
+                },
+                {
+                  "x": 6.3,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Brooks Range",
+              "layerName": "Alaska SQT - Brooks Range",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0.62,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.2,
+                  "y": 0.7
+                },
+                {
+                  "x": 4.2,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Interior Bottomlands",
+              "layerName": "Alaska SQT - Interior Bottomlands",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 3.7,
+                  "y": 0.3
+                },
+                {
+                  "x": 4.7,
+                  "y": 0.7
+                },
+                {
+                  "x": 54.5,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Interior Forested Lowlands/Uplands and Highlands",
+              "layerName": "Alaska SQT - Interior Forested Lowlands/Uplands and Highlands",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 0.6,
+                  "y": 0.3
+                },
+                {
+                  "x": 1.3,
+                  "y": 0.7
+                },
+                {
+                  "x": 24.1,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Alaska Range"
+        },
+        {
+          "metricId": "habitat-provision-percent-riffle",
+          "metricName": "Percent Riffle",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Percent Riffle",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT - Slopes < 3%",
+            "stratification": "Slopes < 3%",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 62,
+                "y": 0.7
+              },
+              {
+                "x": 68,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Slopes < 3%",
+              "layerName": "Alaska SQT - Slopes < 3%",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 62,
+                  "y": 0.7
+                },
+                {
+                  "x": 68,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Slopes < 3% / Overall",
+              "layerName": "Alaska SQT - Slopes < 3% / Overall",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 39,
+                  "y": 0.7
+                },
+                {
+                  "x": 50,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Slopes < 3%"
+        },
+        {
+          "metricId": "habitat-provision-pool-depth-ratio",
+          "metricName": "Pool Depth Ratio",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Pool Depth Ratio",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT - B & Ba Streams",
+            "stratification": "B & Ba Streams",
+            "points": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 1.8,
+                "y": 0.7
+              },
+              {
+                "x": 2.8,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "B & Ba Streams",
+              "layerName": "Alaska SQT - B & Ba Streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 1.8,
+                  "y": 0.7
+                },
+                {
+                  "x": 2.8,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "All other Streams",
+              "layerName": "Alaska SQT - All other Streams",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2.2,
+                  "y": 0.7
+                },
+                {
+                  "x": 3.2,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "B & Ba Streams"
+        },
+        {
+          "metricId": "habitat-provision-pool-spacing-ratio",
+          "metricName": "Pool Spacing Ratio",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Pool Spacing Ratio",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT - B and Ba Stream Types",
+            "stratification": "B and Ba Stream Types",
+            "points": [
+              {
+                "x": 2,
+                "y": 1
+              },
+              {
+                "x": 3.9,
+                "y": 0.7
+              },
+              {
+                "x": 6,
+                "y": 0
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "B and Ba Stream Types",
+              "layerName": "Alaska SQT - B and Ba Stream Types",
+              "points": [
+                {
+                  "x": 2,
+                  "y": 1
+                },
+                {
+                  "x": 3.9,
+                  "y": 0.7
+                },
+                {
+                  "x": 6,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "stratum": "Bc Stream Types",
+              "layerName": "Alaska SQT - Bc Stream Types",
+              "points": [
+                {
+                  "x": 3.4,
+                  "y": 1
+                },
+                {
+                  "x": 6,
+                  "y": 0.7
+                }
+              ]
+            },
+            {
+              "stratum": "C Streams",
+              "layerName": "Alaska SQT - C Streams",
+              "points": [
+                {
+                  "x": 3,
+                  "y": 0
+                },
+                {
+                  "x": 3.7,
+                  "y": 0.7
+                },
+                {
+                  "x": 4,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "E Streams",
+              "layerName": "Alaska SQT - E Streams",
+              "points": [
+                {
+                  "x": 1.8,
+                  "y": 0
+                },
+                {
+                  "x": 3,
+                  "y": 0.7
+                },
+                {
+                  "x": 3.5,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "B and Ba Stream Types"
+        }
+      ]
+    },
+    {
+      "functionId": "population-support",
+      "functionName": "Population support",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "population-support-alaskan-interior-mmi",
+          "metricName": "Alaskan Interior MMI",
+          "discipline": "Biology",
+          "inputType": "field (bioassessment) and/or desktop (existing scores)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Alaskan Interior MMI",
+          "metricStatement": "Biological integrity metric (IBI/MMI/OE) indicating whether habitat and water quality support native aquatic communities.",
+          "howToMeasure": "Collect biological samples per state protocol, calculate the relevant index (IBI/MMI/RIVPACS O/E), and compare to SQT thresholds for the appropriate region/biotype.",
+          "methodContext": "Context: Channel\n\nMethod: Field (bioassessment) and/or Desktop (existing scores)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 36,
+                "y": 1
+              },
+              {
+                "x": 43,
+                "y": 0.7
+              },
+              {
+                "x": 62,
+                "y": 0.3
+              },
+              {
+                "x": 81,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "community-dynamics",
+      "functionName": "Community dynamics",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "community-dynamics-fish-species-richness",
+          "metricName": "Fish Species Richness",
+          "discipline": "Biology",
+          "inputType": "field (fish survey) and/or desktop (existing data)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Fish Species Richness",
+          "metricStatement": "Community composition indicator reflecting native diversity and assemblage balance relative to expectation.",
+          "howToMeasure": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT - Anadromous",
+            "stratification": "Anadromous",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 80,
+                "y": 0.7
+              },
+              {
+                "x": 100,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Anadromous",
+              "layerName": "Alaska SQT - Anadromous",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 80,
+                  "y": 0.7
+                },
+                {
+                  "x": 100,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Non-anadromous",
+              "layerName": "Alaska SQT - Non-anadromous",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 60,
+                  "y": 0.7
+                },
+                {
+                  "x": 100,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Anadromous"
+        },
+        {
+          "metricId": "community-dynamics-relative-abundance-and-species-biomass-metrics",
+          "metricName": "Relative Abundance and Species Biomass metrics",
+          "discipline": "Biology",
+          "inputType": "field (fish survey) and/or desktop (existing data)",
+          "sourceCitation": "Alaska SQT",
+          "xLabel": "Relative Abundance and Species Biomass metrics",
+          "metricStatement": "Community composition indicator reflecting native diversity and assemblage balance relative to expectation.",
+          "howToMeasure": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Alaska SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0.9,
+                "y": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "region": {
+    "kind": "state",
+    "code": "AK",
+    "name": "Alaska",
+    "polygon": {
+      "type": "MultiPolygon",
+      "coordinates": [
+        [
+          [
+            [
+              -131.602,
+              55.118
+            ],
+            [
+              -131.5692,
+              55.2823
+            ],
+            [
+              -131.3556,
+              55.1837
+            ],
+            [
+              -131.3884,
+              55.0139
+            ],
+            [
+              -131.6458,
+              55.0358
+            ],
+            [
+              -131.602,
+              55.118
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -131.8321,
+              55.4247
+            ],
+            [
+              -131.6458,
+              55.3042
+            ],
+            [
+              -131.7499,
+              55.1289
+            ],
+            [
+              -131.8321,
+              55.1892
+            ],
+            [
+              -131.8321,
+              55.4247
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -132.9767,
+              56.4379
+            ],
+            [
+              -132.7357,
+              56.4598
+            ],
+            [
+              -132.6317,
+              56.4215
+            ],
+            [
+              -132.6645,
+              56.2736
+            ],
+            [
+              -132.8782,
+              56.2407
+            ],
+            [
+              -133.0698,
+              56.3339
+            ],
+            [
+              -132.9767,
+              56.4379
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -133.5956,
+              56.3503
+            ],
+            [
+              -133.1629,
+              56.3174
+            ],
+            [
+              -133.0534,
+              56.1257
+            ],
+            [
+              -132.6207,
+              55.9121
+            ],
+            [
+              -132.4728,
+              55.7807
+            ],
+            [
+              -132.4619,
+              55.6711
+            ],
+            [
+              -132.3578,
+              55.6493
+            ],
+            [
+              -132.3414,
+              55.5068
+            ],
+            [
+              -132.1661,
+              55.3644
+            ],
+            [
+              -132.1442,
+              55.2385
+            ],
+            [
+              -132.0292,
+              55.2768
+            ],
+            [
+              -131.9799,
+              55.1782
+            ],
+            [
+              -131.958,
+              54.7894
+            ],
+            [
+              -132.0292,
+              54.7017
+            ],
+            [
+              -132.3085,
+              54.7182
+            ],
+            [
+              -132.3852,
+              54.9153
+            ],
+            [
+              -132.4838,
+              54.8989
+            ],
+            [
+              -132.6865,
+              55.0468
+            ],
+            [
+              -132.7467,
+              54.9975
+            ],
+            [
+              -132.9165,
+              55.0468
+            ],
+            [
+              -132.8891,
+              54.8989
+            ],
+            [
+              -132.7303,
+              54.9372
+            ],
+            [
+              -132.6262,
+              54.8825
+            ],
+            [
+              -132.6755,
+              54.6798
+            ],
+            [
+              -132.8672,
+              54.7017
+            ],
+            [
+              -133.1575,
+              54.9592
+            ],
+            [
+              -133.2396,
+              55.0906
+            ],
+            [
+              -133.2232,
+              55.2275
+            ],
+            [
+              -133.4532,
+              55.2166
+            ],
+            [
+              -133.4532,
+              55.3206
+            ],
+            [
+              -133.278,
+              55.3316
+            ],
+            [
+              -133.1027,
+              55.4247
+            ],
+            [
+              -133.1794,
+              55.589
+            ],
+            [
+              -133.3875,
+              55.6219
+            ],
+            [
+              -133.4204,
+              55.8847
+            ],
+            [
+              -133.497,
+              56.0162
+            ],
+            [
+              -133.6394,
+              55.9231
+            ],
+            [
+              -133.6942,
+              56.071
+            ],
+            [
+              -133.5463,
+              56.1422
+            ],
+            [
+              -133.6668,
+              56.312
+            ],
+            [
+              -133.5956,
+              56.3503
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -133.738,
+              55.5561
+            ],
+            [
+              -133.5463,
+              55.4904
+            ],
+            [
+              -133.4149,
+              55.5726
+            ],
+            [
+              -133.2834,
+              55.5342
+            ],
+            [
+              -133.4204,
+              55.3864
+            ],
+            [
+              -133.634,
+              55.4302
+            ],
+            [
+              -133.738,
+              55.5561
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -133.9078,
+              56.9308
+            ],
+            [
+              -134.0502,
+              57.0294
+            ],
+            [
+              -133.8859,
+              57.0952
+            ],
+            [
+              -133.3437,
+              57.002
+            ],
+            [
+              -133.1027,
+              57.0075
+            ],
+            [
+              -132.9329,
+              56.8213
+            ],
+            [
+              -132.6207,
+              56.668
+            ],
+            [
+              -132.6536,
+              56.5529
+            ],
+            [
+              -132.8179,
+              56.4927
+            ],
+            [
+              -133.0425,
+              56.5201
+            ],
+            [
+              -133.2013,
+              56.4489
+            ],
+            [
+              -133.4204,
+              56.4927
+            ],
+            [
+              -133.6613,
+              56.4489
+            ],
+            [
+              -133.7106,
+              56.6844
+            ],
+            [
+              -133.6887,
+              56.8377
+            ],
+            [
+              -133.8695,
+              56.8432
+            ],
+            [
+              -133.9078,
+              56.9308
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -134.1159,
+              56.4817
+            ],
+            [
+              -134.2529,
+              56.5584
+            ],
+            [
+              -134.4007,
+              56.7227
+            ],
+            [
+              -134.4172,
+              56.8487
+            ],
+            [
+              -134.2967,
+              56.9089
+            ],
+            [
+              -134.1707,
+              56.8487
+            ],
+            [
+              -134.1433,
+              56.9528
+            ],
+            [
+              -133.749,
+              56.772
+            ],
+            [
+              -133.7106,
+              56.5968
+            ],
+            [
+              -133.8476,
+              56.5748
+            ],
+            [
+              -133.9352,
+              56.3777
+            ],
+            [
+              -133.8366,
+              56.3229
+            ],
+            [
+              -133.9571,
+              56.0929
+            ],
+            [
+              -134.1105,
+              56.1422
+            ],
+            [
+              -134.1324,
+              55.9998
+            ],
+            [
+              -134.231,
+              56.071
+            ],
+            [
+              -134.2912,
+              56.3503
+            ],
+            [
+              -134.1159,
+              56.4817
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -134.6362,
+              56.2846
+            ],
+            [
+              -134.6691,
+              56.1696
+            ],
+            [
+              -134.806,
+              56.2353
+            ],
+            [
+              -135.1785,
+              56.6789
+            ],
+            [
+              -135.414,
+              56.8104
+            ],
+            [
+              -135.3318,
+              56.9144
+            ],
+            [
+              -135.4249,
+              57.1664
+            ],
+            [
+              -135.6878,
+              57.369
+            ],
+            [
+              -135.4195,
+              57.5662
+            ],
+            [
+              -135.299,
+              57.484
+            ],
+            [
+              -135.0634,
+              57.4183
+            ],
+            [
+              -134.8499,
+              57.4073
+            ],
+            [
+              -134.8444,
+              57.2485
+            ],
+            [
+              -134.6362,
+              56.7282
+            ],
+            [
+              -134.6362,
+              56.2846
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -134.7129,
+              58.2234
+            ],
+            [
+              -134.3733,
+              58.1467
+            ],
+            [
+              -134.1762,
+              58.1577
+            ],
+            [
+              -134.1871,
+              58.081
+            ],
+            [
+              -133.9023,
+              57.8072
+            ],
+            [
+              -134.0995,
+              57.851
+            ],
+            [
+              -134.1488,
+              57.7579
+            ],
+            [
+              -133.9352,
+              57.6155
+            ],
+            [
+              -133.8695,
+              57.3635
+            ],
+            [
+              -134.0831,
+              57.2978
+            ],
+            [
+              -134.1543,
+              57.2102
+            ],
+            [
+              -134.4993,
+              57.0294
+            ],
+            [
+              -134.6034,
+              57.0349
+            ],
+            [
+              -134.6472,
+              57.2266
+            ],
+            [
+              -134.576,
+              57.3416
+            ],
+            [
+              -134.6089,
+              57.5114
+            ],
+            [
+              -134.7294,
+              57.7195
+            ],
+            [
+              -134.7074,
+              57.8291
+            ],
+            [
+              -134.7841,
+              58.0974
+            ],
+            [
+              -134.9156,
+              58.2124
+            ],
+            [
+              -134.9539,
+              58.4096
+            ],
+            [
+              -134.7129,
+              58.2234
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -135.8576,
+              57.3307
+            ],
+            [
+              -135.7152,
+              57.3307
+            ],
+            [
+              -135.5673,
+              57.1499
+            ],
+            [
+              -135.633,
+              57.024
+            ],
+            [
+              -135.8576,
+              56.9966
+            ],
+            [
+              -135.8247,
+              57.1937
+            ],
+            [
+              -135.8576,
+              57.3307
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -136.2793,
+              58.207
+            ],
+            [
+              -135.9781,
+              58.2015
+            ],
+            [
+              -135.7809,
+              58.2891
+            ],
+            [
+              -135.4961,
+              58.1686
+            ],
+            [
+              -135.6495,
+              58.0372
+            ],
+            [
+              -135.5947,
+              57.9879
+            ],
+            [
+              -135.4523,
+              58.1358
+            ],
+            [
+              -135.1073,
+              58.0865
+            ],
+            [
+              -134.9156,
+              57.9769
+            ],
+            [
+              -135.0251,
+              57.7798
+            ],
+            [
+              -134.9375,
+              57.7633
+            ],
+            [
+              -134.8225,
+              57.5005
+            ],
+            [
+              -135.0854,
+              57.4621
+            ],
+            [
+              -135.5728,
+              57.6757
+            ],
+            [
+              -135.5564,
+              57.4566
+            ],
+            [
+              -135.7097,
+              57.369
+            ],
+            [
+              -135.8905,
+              57.4073
+            ],
+            [
+              -136.0,
+              57.5443
+            ],
+            [
+              -136.2081,
+              57.6374
+            ],
+            [
+              -136.367,
+              57.8291
+            ],
+            [
+              -136.5696,
+              57.9167
+            ],
+            [
+              -136.5587,
+              58.0755
+            ],
+            [
+              -136.4217,
+              58.1303
+            ],
+            [
+              -136.3779,
+              58.2672
+            ],
+            [
+              -136.2793,
+              58.207
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -147.0798,
+              60.2006
+            ],
+            [
+              -147.5016,
+              59.9486
+            ],
+            [
+              -147.5344,
+              59.8501
+            ],
+            [
+              -147.874,
+              59.7843
+            ],
+            [
+              -147.8028,
+              59.9377
+            ],
+            [
+              -147.4359,
+              60.0965
+            ],
+            [
+              -147.2058,
+              60.2718
+            ],
+            [
+              -147.0798,
+              60.2006
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -147.5618,
+              60.5785
+            ],
+            [
+              -147.6166,
+              60.3704
+            ],
+            [
+              -147.759,
+              60.1568
+            ],
+            [
+              -147.9562,
+              60.228
+            ],
+            [
+              -147.7919,
+              60.4744
+            ],
+            [
+              -147.5618,
+              60.5785
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -147.7864,
+              70.2453
+            ],
+            [
+              -147.6823,
+              70.2015
+            ],
+            [
+              -147.162,
+              70.1577
+            ],
+            [
+              -146.8882,
+              70.185
+            ],
+            [
+              -146.5103,
+              70.185
+            ],
+            [
+              -146.0995,
+              70.1467
+            ],
+            [
+              -145.8585,
+              70.1686
+            ],
+            [
+              -145.623,
+              70.0865
+            ],
+            [
+              -145.1958,
+              69.9934
+            ],
+            [
+              -144.6207,
+              69.9714
+            ],
+            [
+              -144.4619,
+              70.0262
+            ],
+            [
+              -144.0785,
+              70.0591
+            ],
+            [
+              -143.9142,
+              70.1303
+            ],
+            [
+              -143.4979,
+              70.1412
+            ],
+            [
+              -143.5034,
+              70.0919
+            ],
+            [
+              -143.2569,
+              70.1193
+            ],
+            [
+              -142.7476,
+              70.0426
+            ],
+            [
+              -142.4025,
+              69.9167
+            ],
+            [
+              -142.0794,
+              69.8564
+            ],
+            [
+              -142.0082,
+              69.8017
+            ],
+            [
+              -141.7124,
+              69.7907
+            ],
+            [
+              -141.4331,
+              69.6976
+            ],
+            [
+              -141.3784,
+              69.6373
+            ],
+            [
+              -141.2086,
+              69.6866
+            ],
+            [
+              -141.0005,
+              69.6483
+            ],
+            [
+              -141.0005,
+              60.3046
+            ],
+            [
+              -140.5349,
+              60.2225
+            ],
+            [
+              -140.4747,
+              60.3101
+            ],
+            [
+              -139.9872,
+              60.1842
+            ],
+            [
+              -139.6969,
+              60.343
+            ],
+            [
+              -139.089,
+              60.3594
+            ],
+            [
+              -139.1985,
+              60.091
+            ],
+            [
+              -139.0452,
+              59.9979
+            ],
+            [
+              -138.7001,
+              59.9103
+            ],
+            [
+              -138.6235,
+              59.7679
+            ],
+            [
+              -137.6047,
+              59.2421
+            ],
+            [
+              -137.4459,
+              58.908
+            ],
+            [
+              -137.2652,
+              59.0011
+            ],
+            [
+              -136.827,
+              59.16
+            ],
+            [
+              -136.5806,
+              59.1654
+            ],
+            [
+              -136.4655,
+              59.2859
+            ],
+            [
+              -136.4765,
+              59.4667
+            ],
+            [
+              -136.3012,
+              59.4667
+            ],
+            [
+              -136.2574,
+              59.6255
+            ],
+            [
+              -135.9452,
+              59.6638
+            ],
+            [
+              -135.4797,
+              59.8008
+            ],
+            [
+              -135.0251,
+              59.5653
+            ],
+            [
+              -135.0689,
+              59.4229
+            ],
+            [
+              -134.9594,
+              59.2805
+            ],
+            [
+              -134.702,
+              59.2476
+            ],
+            [
+              -134.3788,
+              59.034
+            ],
+            [
+              -134.4007,
+              58.9738
+            ],
+            [
+              -134.2529,
+              58.8587
+            ],
+            [
+              -133.8421,
+              58.7273
+            ],
+            [
+              -133.1739,
+              58.1522
+            ],
+            [
+              -133.0753,
+              57.9988
+            ],
+            [
+              -132.8672,
+              57.8455
+            ],
+            [
+              -132.5605,
+              57.5059
+            ],
+            [
+              -132.2538,
+              57.2156
+            ],
+            [
+              -132.3688,
+              57.0952
+            ],
+            [
+              -132.0511,
+              57.0513
+            ],
+            [
+              -132.1278,
+              56.8761
+            ],
+            [
+              -131.8704,
+              56.8049
+            ],
+            [
+              -131.8375,
+              56.6022
+            ],
+            [
+              -131.5801,
+              56.6132
+            ],
+            [
+              -131.0872,
+              56.4051
+            ],
+            [
+              -130.7805,
+              56.3667
+            ],
+            [
+              -130.6216,
+              56.2681
+            ],
+            [
+              -130.4683,
+              56.2407
+            ],
+            [
+              -130.4245,
+              56.1422
+            ],
+            [
+              -130.1013,
+              56.1148
+            ],
+            [
+              -130.0027,
+              55.9943
+            ],
+            [
+              -130.1506,
+              55.7697
+            ],
+            [
+              -130.1287,
+              55.5835
+            ],
+            [
+              -129.9863,
+              55.2768
+            ],
+            [
+              -130.0959,
+              55.2001
+            ],
+            [
+              -130.3368,
+              54.9208
+            ],
+            [
+              -130.6874,
+              54.7182
+            ],
+            [
+              -130.786,
+              54.8222
+            ],
+            [
+              -130.9174,
+              54.7894
+            ],
+            [
+              -131.0105,
+              54.9975
+            ],
+            [
+              -130.9831,
+              55.0851
+            ],
+            [
+              -131.0927,
+              55.1892
+            ],
+            [
+              -130.8626,
+              55.2987
+            ],
+            [
+              -130.9284,
+              55.3371
+            ],
+            [
+              -131.1584,
+              55.2001
+            ],
+            [
+              -131.2844,
+              55.2878
+            ],
+            [
+              -131.4268,
+              55.2385
+            ],
+            [
+              -131.843,
+              55.4575
+            ],
+            [
+              -131.7006,
+              55.6985
+            ],
+            [
+              -131.9635,
+              55.6164
+            ],
+            [
+              -131.9744,
+              55.4959
+            ],
+            [
+              -132.1826,
+              55.589
+            ],
+            [
+              -132.2264,
+              55.704
+            ],
+            [
+              -132.084,
+              55.83
+            ],
+            [
+              -132.1278,
+              55.956
+            ],
+            [
+              -132.325,
+              55.8519
+            ],
+            [
+              -132.5222,
+              56.0765
+            ],
+            [
+              -132.6426,
+              56.0326
+            ],
+            [
+              -132.7193,
+              56.2189
+            ],
+            [
+              -132.5276,
+              56.3393
+            ],
+            [
+              -132.3414,
+              56.3393
+            ],
+            [
+              -132.3962,
+              56.4872
+            ],
+            [
+              -132.2976,
+              56.6789
+            ],
+            [
+              -132.451,
+              56.6734
+            ],
+            [
+              -132.7686,
+              56.8377
+            ],
+            [
+              -132.9932,
+              57.0349
+            ],
+            [
+              -133.5189,
+              57.1773
+            ],
+            [
+              -133.508,
+              57.5771
+            ],
+            [
+              -133.6778,
+              57.6264
+            ],
+            [
+              -133.6394,
+              57.7907
+            ],
+            [
+              -133.8147,
+              57.8345
+            ],
+            [
+              -134.0721,
+              58.0536
+            ],
+            [
+              -134.1433,
+              58.1686
+            ],
+            [
+              -134.587,
+              58.207
+            ],
+            [
+              -135.0744,
+              58.5027
+            ],
+            [
+              -135.2825,
+              59.1928
+            ],
+            [
+              -135.3811,
+              59.034
+            ],
+            [
+              -135.3373,
+              58.8916
+            ],
+            [
+              -135.1401,
+              58.6178
+            ],
+            [
+              -135.1894,
+              58.5739
+            ],
+            [
+              -135.058,
+              58.3494
+            ],
+            [
+              -135.0854,
+              58.2015
+            ],
+            [
+              -135.2771,
+              58.2344
+            ],
+            [
+              -135.4304,
+              58.3987
+            ],
+            [
+              -135.633,
+              58.426
+            ],
+            [
+              -135.9178,
+              58.3822
+            ],
+            [
+              -135.9124,
+              58.6178
+            ],
+            [
+              -136.0876,
+              58.8149
+            ],
+            [
+              -136.2465,
+              58.7547
+            ],
+            [
+              -136.8763,
+              58.9628
+            ],
+            [
+              -136.9311,
+              58.9025
+            ],
+            [
+              -136.586,
+              58.8368
+            ],
+            [
+              -136.3177,
+              58.6725
+            ],
+            [
+              -136.2136,
+              58.667
+            ],
+            [
+              -136.1807,
+              58.5356
+            ],
+            [
+              -136.0438,
+              58.3822
+            ],
+            [
+              -136.3889,
+              58.2946
+            ],
+            [
+              -136.5915,
+              58.3494
+            ],
+            [
+              -136.597,
+              58.2124
+            ],
+            [
+              -136.8599,
+              58.3165
+            ],
+            [
+              -136.9475,
+              58.3932
+            ],
+            [
+              -137.1118,
+              58.3932
+            ],
+            [
+              -137.5664,
+              58.5904
+            ],
+            [
+              -137.9005,
+              58.7656
+            ],
+            [
+              -137.9334,
+              58.8697
+            ],
+            [
+              -138.1196,
+              59.023
+            ],
+            [
+              -138.6344,
+              59.1326
+            ],
+            [
+              -138.9192,
+              59.2476
+            ],
+            [
+              -139.4176,
+              59.379
+            ],
+            [
+              -139.7462,
+              59.505
+            ],
+            [
+              -139.7189,
+              59.6419
+            ],
+            [
+              -139.6257,
+              59.5981
+            ],
+            [
+              -139.5162,
+              59.6857
+            ],
+            [
+              -139.6257,
+              59.8829
+            ],
+            [
+              -139.4888,
+              59.9925
+            ],
+            [
+              -139.5545,
+              60.0418
+            ],
+            [
+              -139.801,
+              59.8336
+            ],
+            [
+              -140.3158,
+              59.6967
+            ],
+            [
+              -140.9292,
+              59.746
+            ],
+            [
+              -141.4441,
+              59.872
+            ],
+            [
+              -141.466,
+              59.9706
+            ],
+            [
+              -141.707,
+              59.9486
+            ],
+            [
+              -141.9644,
+              60.0198
+            ],
+            [
+              -142.5395,
+              60.0856
+            ],
+            [
+              -142.8736,
+              60.091
+            ],
+            [
+              -143.6239,
+              60.0363
+            ],
+            [
+              -143.8923,
+              59.9979
+            ],
+            [
+              -144.2318,
+              60.1403
+            ],
+            [
+              -144.6536,
+              60.2061
+            ],
+            [
+              -144.785,
+              60.2937
+            ],
+            [
+              -144.8343,
+              60.4416
+            ],
+            [
+              -145.1246,
+              60.4306
+            ],
+            [
+              -145.2232,
+              60.2992
+            ],
+            [
+              -145.738,
+              60.4744
+            ],
+            [
+              -145.8202,
+              60.5511
+            ],
+            [
+              -146.3514,
+              60.4087
+            ],
+            [
+              -146.6088,
+              60.2389
+            ],
+            [
+              -146.7184,
+              60.3978
+            ],
+            [
+              -146.6088,
+              60.4854
+            ],
+            [
+              -146.4555,
+              60.4635
+            ],
+            [
+              -145.9516,
+              60.5785
+            ],
+            [
+              -146.0173,
+              60.6661
+            ],
+            [
+              -146.2528,
+              60.6223
+            ],
+            [
+              -146.3459,
+              60.7373
+            ],
+            [
+              -146.565,
+              60.7537
+            ],
+            [
+              -146.7841,
+              61.044
+            ],
+            [
+              -146.8663,
+              60.9728
+            ],
+            [
+              -147.173,
+              60.9345
+            ],
+            [
+              -147.2715,
+              60.9728
+            ],
+            [
+              -147.3756,
+              60.8797
+            ],
+            [
+              -147.759,
+              60.9126
+            ],
+            [
+              -147.7754,
+              60.8085
+            ],
+            [
+              -148.0328,
+              60.7811
+            ],
+            [
+              -148.1533,
+              60.8195
+            ],
+            [
+              -148.0657,
+              61.0057
+            ],
+            [
+              -148.1752,
+              61.0002
+            ],
+            [
+              -148.3505,
+              60.803
+            ],
+            [
+              -148.1095,
+              60.7373
+            ],
+            [
+              -148.0876,
+              60.5949
+            ],
+            [
+              -147.9397,
+              60.4416
+            ],
+            [
+              -148.0274,
+              60.2773
+            ],
+            [
+              -148.2191,
+              60.332
+            ],
+            [
+              -148.2738,
+              60.2499
+            ],
+            [
+              -148.0876,
+              60.217
+            ],
+            [
+              -147.9836,
+              59.9979
+            ],
+            [
+              -148.2519,
+              59.9541
+            ],
+            [
+              -148.3998,
+              59.9979
+            ],
+            [
+              -148.6353,
+              59.9377
+            ],
+            [
+              -148.7558,
+              59.987
+            ],
+            [
+              -149.068,
+              59.9815
+            ],
+            [
+              -149.057,
+              60.0637
+            ],
+            [
+              -149.2049,
+              60.0089
+            ],
+            [
+              -149.2871,
+              59.9048
+            ],
+            [
+              -149.4185,
+              59.9979
+            ],
+            [
+              -149.5828,
+              59.8665
+            ],
+            [
+              -149.5116,
+              59.8062
+            ],
+            [
+              -149.7416,
+              59.7296
+            ],
+            [
+              -149.9498,
+              59.7186
+            ],
+            [
+              -150.0319,
+              59.6146
+            ],
+            [
+              -150.2565,
+              59.5214
+            ],
+            [
+              -150.4098,
+              59.5543
+            ],
+            [
+              -150.5796,
+              59.4448
+            ],
+            [
+              -150.7165,
+              59.4502
+            ],
+            [
+              -151.0013,
+              59.2257
+            ],
+            [
+              -151.3081,
+              59.2093
+            ],
+            [
+              -151.4066,
+              59.2805
+            ],
+            [
+              -151.5928,
+              59.16
+            ],
+            [
+              -151.9762,
+              59.2531
+            ],
+            [
+              -151.8886,
+              59.4229
+            ],
+            [
+              -151.6367,
+              59.4831
+            ],
+            [
+              -151.4724,
+              59.4721
+            ],
+            [
+              -151.4231,
+              59.5379
+            ],
+            [
+              -151.1273,
+              59.6693
+            ],
+            [
+              -151.1164,
+              59.7789
+            ],
+            [
+              -151.5052,
+              59.631
+            ],
+            [
+              -151.8284,
+              59.7186
+            ],
+            [
+              -151.8667,
+              59.7789
+            ],
+            [
+              -151.7024,
+              60.0308
+            ],
+            [
+              -151.4231,
+              60.2115
+            ],
+            [
+              -151.3793,
+              60.3594
+            ],
+            [
+              -151.2971,
+              60.3868
+            ],
+            [
+              -151.2642,
+              60.5456
+            ],
+            [
+              -151.4066,
+              60.7209
+            ],
+            [
+              -151.0616,
+              60.7866
+            ],
+            [
+              -150.4044,
+              61.0386
+            ],
+            [
+              -150.2455,
+              60.94
+            ],
+            [
+              -150.0429,
+              60.9126
+            ],
+            [
+              -149.7416,
+              61.0166
+            ],
+            [
+              -150.0757,
+              61.1536
+            ],
+            [
+              -150.2072,
+              61.2576
+            ],
+            [
+              -150.4701,
+              61.2467
+            ],
+            [
+              -150.6563,
+              61.296
+            ],
+            [
+              -150.7111,
+              61.2522
+            ],
+            [
+              -151.0232,
+              61.181
+            ],
+            [
+              -151.1656,
+              61.044
+            ],
+            [
+              -151.4778,
+              61.0112
+            ],
+            [
+              -151.801,
+              60.8523
+            ],
+            [
+              -151.8338,
+              60.7483
+            ],
+            [
+              -152.0803,
+              60.6935
+            ],
+            [
+              -152.1351,
+              60.5785
+            ],
+            [
+              -152.3103,
+              60.5073
+            ],
+            [
+              -152.3925,
+              60.3046
+            ],
+            [
+              -152.7321,
+              60.1732
+            ],
+            [
+              -152.5677,
+              60.0691
+            ],
+            [
+              -152.7047,
+              59.9158
+            ],
+            [
+              -153.0223,
+              59.8884
+            ],
+            [
+              -153.0497,
+              59.6912
+            ],
+            [
+              -153.3455,
+              59.62
+            ],
+            [
+              -153.4386,
+              59.7022
+            ],
+            [
+              -153.5865,
+              59.5488
+            ],
+            [
+              -153.7617,
+              59.5433
+            ],
+            [
+              -153.7289,
+              59.4338
+            ],
+            [
+              -154.1177,
+              59.3681
+            ],
+            [
+              -154.1944,
+              59.0669
+            ],
+            [
+              -153.7508,
+              59.0504
+            ],
+            [
+              -153.4002,
+              58.9683
+            ],
+            [
+              -153.3017,
+              58.8697
+            ],
+            [
+              -153.4441,
+              58.7109
+            ],
+            [
+              -153.6796,
+              58.6123
+            ],
+            [
+              -153.8986,
+              58.6068
+            ],
+            [
+              -153.9205,
+              58.5192
+            ],
+            [
+              -154.063,
+              58.4863
+            ],
+            [
+              -153.9972,
+              58.3768
+            ],
+            [
+              -154.1451,
+              58.2124
+            ],
+            [
+              -154.4628,
+              58.0591
+            ],
+            [
+              -154.6435,
+              58.0591
+            ],
+            [
+              -154.8188,
+              58.0043
+            ],
+            [
+              -154.9886,
+              58.0153
+            ],
+            [
+              -155.12,
+              57.955
+            ],
+            [
+              -155.0817,
+              57.8729
+            ],
+            [
+              -155.3281,
+              57.8291
+            ],
+            [
+              -155.3774,
+              57.7086
+            ],
+            [
+              -155.5472,
+              57.7852
+            ],
+            [
+              -155.7334,
+              57.5497
+            ],
+            [
+              -156.0456,
+              57.5662
+            ],
+            [
+              -156.0237,
+              57.4402
+            ],
+            [
+              -156.2099,
+              57.4731
+            ],
+            [
+              -156.3414,
+              57.4183
+            ],
+            [
+              -156.3414,
+              57.2485
+            ],
+            [
+              -156.5495,
+              56.9856
+            ],
+            [
+              -156.8836,
+              56.9528
+            ],
+            [
+              -157.1574,
+              56.8323
+            ],
+            [
+              -157.2012,
+              56.7665
+            ],
+            [
+              -157.3765,
+              56.8597
+            ],
+            [
+              -157.6723,
+              56.6077
+            ],
+            [
+              -157.7544,
+              56.6789
+            ],
+            [
+              -157.9187,
+              56.657
+            ],
+            [
+              -157.9571,
+              56.5146
+            ],
+            [
+              -158.1268,
+              56.4598
+            ],
+            [
+              -158.3295,
+              56.4817
+            ],
+            [
+              -158.4883,
+              56.3393
+            ],
+            [
+              -158.209,
+              56.2955
+            ],
+            [
+              -158.5102,
+              55.9779
+            ],
+            [
+              -159.3756,
+              55.8738
+            ],
+            [
+              -159.6166,
+              55.5945
+            ],
+            [
+              -159.6768,
+              55.6547
+            ],
+            [
+              -159.644,
+              55.83
+            ],
+            [
+              -159.8137,
+              55.8574
+            ],
+            [
+              -160.0273,
+              55.7916
+            ],
+            [
+              -160.0602,
+              55.7204
+            ],
+            [
+              -160.3943,
+              55.6054
+            ],
+            [
+              -160.5367,
+              55.474
+            ],
+            [
+              -160.5805,
+              55.5671
+            ],
+            [
+              -160.6681,
+              55.4575
+            ],
+            [
+              -160.8653,
+              55.5288
+            ],
+            [
+              -161.2323,
+              55.359
+            ],
+            [
+              -161.5061,
+              55.3644
+            ],
+            [
+              -161.4678,
+              55.4959
+            ],
+            [
+              -161.5883,
+              55.6219
+            ],
+            [
+              -161.6978,
+              55.5178
+            ],
+            [
+              -161.6868,
+              55.4083
+            ],
+            [
+              -162.0538,
+              55.0742
+            ],
+            [
+              -162.1798,
+              55.1563
+            ],
+            [
+              -162.2181,
+              55.0303
+            ],
+            [
+              -162.4701,
+              55.0523
+            ],
+            [
+              -162.5084,
+              55.2494
+            ],
+            [
+              -162.6618,
+              55.2932
+            ],
+            [
+              -162.7165,
+              55.222
+            ],
+            [
+              -162.5796,
+              55.1344
+            ],
+            [
+              -162.6453,
+              54.9975
+            ],
+            [
+              -162.848,
+              54.9263
+            ],
+            [
+              -163.0013,
+              55.0796
+            ],
+            [
+              -163.1875,
+              55.0906
+            ],
+            [
+              -163.2204,
+              55.0303
+            ],
+            [
+              -163.0342,
+              54.9427
+            ],
+            [
+              -163.3738,
+              54.8003
+            ],
+            [
+              -163.1437,
+              54.762
+            ],
+            [
+              -163.1382,
+              54.6963
+            ],
+            [
+              -163.3299,
+              54.7456
+            ],
+            [
+              -163.5873,
+              54.6141
+            ],
+            [
+              -164.0857,
+              54.6196
+            ],
+            [
+              -164.3322,
+              54.532
+            ],
+            [
+              -164.3541,
+              54.4662
+            ],
+            [
+              -164.6389,
+              54.3895
+            ],
+            [
+              -164.847,
+              54.4169
+            ],
+            [
+              -164.9183,
+              54.6031
+            ],
+            [
+              -164.7101,
+              54.6634
+            ],
+            [
+              -164.5513,
+              54.8879
+            ],
+            [
+              -164.3432,
+              54.8934
+            ],
+            [
+              -163.8941,
+              55.0413
+            ],
+            [
+              -163.5326,
+              55.0468
+            ],
+            [
+              -163.3957,
+              54.9044
+            ],
+            [
+              -163.2916,
+              55.0084
+            ],
+            [
+              -163.3135,
+              55.1289
+            ],
+            [
+              -163.1054,
+              55.1837
+            ],
+            [
+              -162.8808,
+              55.1837
+            ],
+            [
+              -162.5796,
+              55.4466
+            ],
+            [
+              -162.2455,
+              55.6821
+            ],
+            [
+              -161.8074,
+              55.8902
+            ],
+            [
+              -161.2925,
+              55.9833
+            ],
+            [
+              -161.0789,
+              55.9395
+            ],
+            [
+              -160.8708,
+              55.9998
+            ],
+            [
+              -160.816,
+              55.9121
+            ],
+            [
+              -160.931,
+              55.8135
+            ],
+            [
+              -160.8051,
+              55.7369
+            ],
+            [
+              -160.7667,
+              55.8574
+            ],
+            [
+              -160.5093,
+              55.8683
+            ],
+            [
+              -160.4381,
+              55.7916
+            ],
+            [
+              -160.2793,
+              55.7643
+            ],
+            [
+              -160.2738,
+              55.8574
+            ],
+            [
+              -160.5367,
+              55.9395
+            ],
+            [
+              -160.5586,
+              55.9943
+            ],
+            [
+              -160.3833,
+              56.2517
+            ],
+            [
+              -160.1478,
+              56.3996
+            ],
+            [
+              -159.8302,
+              56.542
+            ],
+            [
+              -159.3263,
+              56.668
+            ],
+            [
+              -158.9593,
+              56.8487
+            ],
+            [
+              -158.7841,
+              56.783
+            ],
+            [
+              -158.6417,
+              56.8104
+            ],
+            [
+              -158.7019,
+              56.9254
+            ],
+            [
+              -158.6581,
+              57.0349
+            ],
+            [
+              -158.3788,
+              57.2649
+            ],
+            [
+              -157.9954,
+              57.4128
+            ],
+            [
+              -157.6887,
+              57.61
+            ],
+            [
+              -157.7051,
+              57.7195
+            ],
+            [
+              -157.4587,
+              58.4973
+            ],
+            [
+              -157.0753,
+              58.7054
+            ],
+            [
+              -157.1191,
+              58.8697
+            ],
+            [
+              -158.0392,
+              58.6342
+            ],
+            [
+              -158.3295,
+              58.6616
+            ],
+            [
+              -158.4007,
+              58.7602
+            ],
+            [
+              -158.565,
+              58.804
+            ],
+            [
+              -158.6198,
+              58.9135
+            ],
+            [
+              -158.7676,
+              58.8642
+            ],
+            [
+              -158.8607,
+              58.6944
+            ],
+            [
+              -158.7019,
+              58.4808
+            ],
+            [
+              -158.8936,
+              58.3877
+            ],
+            [
+              -159.0634,
+              58.4206
+            ],
+            [
+              -159.392,
+              58.7602
+            ],
+            [
+              -159.6166,
+              58.9299
+            ],
+            [
+              -159.7316,
+              58.9299
+            ],
+            [
+              -159.8083,
+              58.804
+            ],
+            [
+              -159.9068,
+              58.782
+            ],
+            [
+              -160.0547,
+              58.8861
+            ],
+            [
+              -160.2355,
+              58.9025
+            ],
+            [
+              -160.3176,
+              59.0723
+            ],
+            [
+              -160.8544,
+              58.8806
+            ],
+            [
+              -161.3363,
+              58.7437
+            ],
+            [
+              -161.3747,
+              58.667
+            ],
+            [
+              -161.7526,
+              58.552
+            ],
+            [
+              -161.9388,
+              58.6561
+            ],
+            [
+              -161.769,
+              58.7766
+            ],
+            [
+              -161.8293,
+              59.0614
+            ],
+            [
+              -161.9552,
+              59.3626
+            ],
+            [
+              -161.7033,
+              59.4886
+            ],
+            [
+              -161.9114,
+              59.7405
+            ],
+            [
+              -162.0922,
+              59.8829
+            ],
+            [
+              -162.2346,
+              60.091
+            ],
+            [
+              -162.4481,
+              60.1787
+            ],
+            [
+              -162.5029,
+              59.9979
+            ],
+            [
+              -162.7603,
+              59.9596
+            ],
+            [
+              -163.1711,
+              59.8446
+            ],
+            [
+              -163.664,
+              59.7953
+            ],
+            [
+              -163.9324,
+              59.8062
+            ],
+            [
+              -164.1624,
+              59.8665
+            ],
+            [
+              -164.1898,
+              60.0253
+            ],
+            [
+              -164.387,
+              60.0746
+            ],
+            [
+              -164.6992,
+              60.2937
+            ],
+            [
+              -164.9621,
+              60.3375
+            ],
+            [
+              -165.2688,
+              60.5785
+            ],
+            [
+              -165.0607,
+              60.688
+            ],
+            [
+              -165.0168,
+              60.8907
+            ],
+            [
+              -165.1757,
+              60.8469
+            ],
+            [
+              -165.1976,
+              60.9728
+            ],
+            [
+              -165.1209,
+              61.0769
+            ],
+            [
+              -165.3235,
+              61.17
+            ],
+            [
+              -165.3454,
+              61.0714
+            ],
+            [
+              -165.5919,
+              61.1097
+            ],
+            [
+              -165.6248,
+              61.2795
+            ],
+            [
+              -165.8165,
+              61.3015
+            ],
+            [
+              -165.9205,
+              61.4165
+            ],
+            [
+              -165.9151,
+              61.5589
+            ],
+            [
+              -166.1067,
+              61.4931
+            ],
+            [
+              -166.1396,
+              61.6301
+            ],
+            [
+              -165.9041,
+              61.6629
+            ],
+            [
+              -166.0958,
+              61.8163
+            ],
+            [
+              -165.7562,
+              61.8272
+            ],
+            [
+              -165.7562,
+              62.0134
+            ],
+            [
+              -165.6741,
+              62.1394
+            ],
+            [
+              -165.0442,
+              62.5392
+            ],
+            [
+              -164.9128,
+              62.6597
+            ],
+            [
+              -164.8197,
+              62.6378
+            ],
+            [
+              -164.8744,
+              62.8076
+            ],
+            [
+              -164.6335,
+              63.0979
+            ],
+            [
+              -164.4253,
+              63.2129
+            ],
+            [
+              -164.0365,
+              63.2622
+            ],
+            [
+              -163.7352,
+              63.2129
+            ],
+            [
+              -163.3135,
+              63.0376
+            ],
+            [
+              -163.0397,
+              63.0595
+            ],
+            [
+              -162.6618,
+              63.2293
+            ],
+            [
+              -162.2729,
+              63.4868
+            ],
+            [
+              -162.0757,
+              63.5141
+            ],
+            [
+              -162.0264,
+              63.4484
+            ],
+            [
+              -161.5554,
+              63.4484
+            ],
+            [
+              -161.1392,
+              63.5032
+            ],
+            [
+              -160.7667,
+              63.7715
+            ],
+            [
+              -160.7667,
+              63.8373
+            ],
+            [
+              -160.9529,
+              64.0892
+            ],
+            [
+              -160.9749,
+              64.2371
+            ],
+            [
+              -161.2651,
+              64.3959
+            ],
+            [
+              -161.3747,
+              64.5328
+            ],
+            [
+              -161.0789,
+              64.4945
+            ],
+            [
+              -160.7996,
+              64.6095
+            ],
+            [
+              -160.7832,
+              64.7191
+            ],
+            [
+              -161.1446,
+              64.9217
+            ],
+            [
+              -161.413,
+              64.7629
+            ],
+            [
+              -161.665,
+              64.7903
+            ],
+            [
+              -161.9005,
+              64.7026
+            ],
+            [
+              -162.1688,
+              64.6807
+            ],
+            [
+              -162.2346,
+              64.6205
+            ],
+            [
+              -162.5413,
+              64.5328
+            ],
+            [
+              -162.6344,
+              64.385
+            ],
+            [
+              -162.7877,
+              64.3247
+            ],
+            [
+              -162.8589,
+              64.5
+            ],
+            [
+              -163.0451,
+              64.5383
+            ],
+            [
+              -163.1766,
+              64.4014
+            ],
+            [
+              -163.2533,
+              64.4671
+            ],
+            [
+              -163.5983,
+              64.5657
+            ],
+            [
+              -164.3048,
+              64.5602
+            ],
+            [
+              -164.8087,
+              64.4507
+            ],
+            [
+              -165.0004,
+              64.4343
+            ],
+            [
+              -165.4112,
+              64.5
+            ],
+            [
+              -166.1889,
+              64.5767
+            ],
+            [
+              -166.3915,
+              64.6369
+            ],
+            [
+              -166.4846,
+              64.7355
+            ],
+            [
+              -166.4135,
+              64.8724
+            ],
+            [
+              -166.6928,
+              64.9874
+            ],
+            [
+              -166.638,
+              65.1134
+            ],
+            [
+              -166.4627,
+              65.1791
+            ],
+            [
+              -166.5175,
+              65.338
+            ],
+            [
+              -166.7968,
+              65.338
+            ],
+            [
+              -167.0269,
+              65.3818
+            ],
+            [
+              -167.476,
+              65.4146
+            ],
+            [
+              -167.7115,
+              65.4968
+            ],
+            [
+              -168.073,
+              65.5789
+            ],
+            [
+              -168.1058,
+              65.683
+            ],
+            [
+              -167.5417,
+              65.8199
+            ],
+            [
+              -166.8297,
+              66.0499
+            ],
+            [
+              -166.3313,
+              66.1869
+            ],
+            [
+              -166.0465,
+              66.1102
+            ],
+            [
+              -165.7562,
+              66.0938
+            ],
+            [
+              -165.6905,
+              66.2033
+            ],
+            [
+              -165.8658,
+              66.2197
+            ],
+            [
+              -165.8822,
+              66.3128
+            ],
+            [
+              -165.1866,
+              66.4662
+            ],
+            [
+              -164.4034,
+              66.5812
+            ],
+            [
+              -163.9817,
+              66.5922
+            ],
+            [
+              -163.7517,
+              66.5538
+            ],
+            [
+              -163.8722,
+              66.3895
+            ],
+            [
+              -163.8283,
+              66.2745
+            ],
+            [
+              -163.916,
+              66.1924
+            ],
+            [
+              -163.7681,
+              66.0609
+            ],
+            [
+              -163.4942,
+              66.0828
+            ],
+            [
+              -163.1492,
+              66.0609
+            ],
+            [
+              -162.7494,
+              66.0883
+            ],
+            [
+              -162.6344,
+              66.039
+            ],
+            [
+              -162.3715,
+              66.028
+            ],
+            [
+              -162.1414,
+              66.0773
+            ],
+            [
+              -161.8402,
+              66.0226
+            ],
+            [
+              -161.5499,
+              66.2417
+            ],
+            [
+              -161.3418,
+              66.2526
+            ],
+            [
+              -161.1994,
+              66.2088
+            ],
+            [
+              -161.1282,
+              66.3348
+            ],
+            [
+              -161.528,
+              66.395
+            ],
+            [
+              -161.9114,
+              66.3457
+            ],
+            [
+              -161.8731,
+              66.51
+            ],
+            [
+              -162.1743,
+              66.6853
+            ],
+            [
+              -162.5029,
+              66.74
+            ],
+            [
+              -162.6015,
+              66.8989
+            ],
+            [
+              -162.3441,
+              66.9372
+            ],
+            [
+              -162.0155,
+              66.7784
+            ],
+            [
+              -162.0757,
+              66.6524
+            ],
+            [
+              -161.9169,
+              66.5538
+            ],
+            [
+              -161.5718,
+              66.4388
+            ],
+            [
+              -161.4897,
+              66.5593
+            ],
+            [
+              -161.884,
+              66.7181
+            ],
+            [
+              -161.7142,
+              67.0029
+            ],
+            [
+              -161.8512,
+              67.0522
+            ],
+            [
+              -162.24,
+              66.992
+            ],
+            [
+              -162.6398,
+              67.0084
+            ],
+            [
+              -162.7001,
+              67.0577
+            ],
+            [
+              -162.9027,
+              67.0084
+            ],
+            [
+              -163.7407,
+              67.1289
+            ],
+            [
+              -163.7571,
+              67.2549
+            ],
+            [
+              -164.0091,
+              67.5342
+            ],
+            [
+              -164.2117,
+              67.6383
+            ],
+            [
+              -164.5349,
+              67.7259
+            ],
+            [
+              -165.1921,
+              67.9669
+            ],
+            [
+              -165.4933,
+              68.06
+            ],
+            [
+              -165.7946,
+              68.0819
+            ],
+            [
+              -166.2437,
+              68.2462
+            ],
+            [
+              -166.6818,
+              68.3393
+            ],
+            [
+              -166.7037,
+              68.3722
+            ],
+            [
+              -166.3751,
+              68.4215
+            ],
+            [
+              -166.2272,
+              68.5748
+            ],
+            [
+              -166.2163,
+              68.8815
+            ],
+            [
+              -165.329,
+              68.8596
+            ],
+            [
+              -164.2555,
+              68.9308
+            ],
+            [
+              -163.9762,
+              68.9856
+            ],
+            [
+              -163.5326,
+              69.1389
+            ],
+            [
+              -163.1109,
+              69.3745
+            ],
+            [
+              -163.0232,
+              69.61
+            ],
+            [
+              -162.8425,
+              69.8126
+            ],
+            [
+              -162.4701,
+              69.9824
+            ],
+            [
+              -162.3112,
+              70.1084
+            ],
+            [
+              -161.8512,
+              70.311
+            ],
+            [
+              -161.78,
+              70.2562
+            ],
+            [
+              -161.3966,
+              70.2398
+            ],
+            [
+              -160.8379,
+              70.3439
+            ],
+            [
+              -160.4874,
+              70.4534
+            ],
+            [
+              -159.6494,
+              70.793
+            ],
+            [
+              -159.3318,
+              70.8094
+            ],
+            [
+              -159.2989,
+              70.7601
+            ],
+            [
+              -158.9758,
+              70.7985
+            ],
+            [
+              -158.6581,
+              70.7875
+            ],
+            [
+              -158.0337,
+              70.8313
+            ],
+            [
+              -157.4203,
+              70.9792
+            ],
+            [
+              -156.8124,
+              71.2859
+            ],
+            [
+              -156.5659,
+              71.3516
+            ],
+            [
+              -156.5221,
+              71.2969
+            ],
+            [
+              -155.5855,
+              71.1709
+            ],
+            [
+              -155.5089,
+              71.0833
+            ],
+            [
+              -155.832,
+              70.9682
+            ],
+            [
+              -155.9799,
+              70.9628
+            ],
+            [
+              -155.9744,
+              70.8094
+            ],
+            [
+              -155.5034,
+              70.8587
+            ],
+            [
+              -155.476,
+              70.9409
+            ],
+            [
+              -155.2624,
+              71.0175
+            ],
+            [
+              -155.1912,
+              70.9737
+            ],
+            [
+              -155.0324,
+              71.149
+            ],
+            [
+              -154.5668,
+              70.9902
+            ],
+            [
+              -154.6435,
+              70.8697
+            ],
+            [
+              -154.3532,
+              70.8368
+            ],
+            [
+              -154.1834,
+              70.7656
+            ],
+            [
+              -153.9315,
+              70.8806
+            ],
+            [
+              -153.4879,
+              70.8861
+            ],
+            [
+              -153.2359,
+              70.9244
+            ],
+            [
+              -152.5897,
+              70.8861
+            ],
+            [
+              -152.261,
+              70.8423
+            ],
+            [
+              -152.4199,
+              70.6068
+            ],
+            [
+              -151.8174,
+              70.5465
+            ],
+            [
+              -151.7736,
+              70.4863
+            ],
+            [
+              -151.1876,
+              70.3822
+            ],
+            [
+              -151.1821,
+              70.4315
+            ],
+            [
+              -150.7604,
+              70.4972
+            ],
+            [
+              -150.3551,
+              70.4917
+            ],
+            [
+              -150.3496,
+              70.437
+            ],
+            [
+              -150.1141,
+              70.4315
+            ],
+            [
+              -149.8676,
+              70.5082
+            ],
+            [
+              -149.4623,
+              70.5191
+            ],
+            [
+              -149.1775,
+              70.4863
+            ],
+            [
+              -148.7887,
+              70.4041
+            ],
+            [
+              -148.6079,
+              70.4206
+            ],
+            [
+              -148.3505,
+              70.3055
+            ],
+            [
+              -148.2026,
+              70.3494
+            ],
+            [
+              -147.9616,
+              70.3165
+            ],
+            [
+              -147.7864,
+              70.2453
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -152.9402,
+              58.0262
+            ],
+            [
+              -152.9457,
+              57.9824
+            ],
+            [
+              -153.2907,
+              58.0481
+            ],
+            [
+              -153.0442,
+              58.3056
+            ],
+            [
+              -152.8197,
+              58.3275
+            ],
+            [
+              -152.6663,
+              58.563
+            ],
+            [
+              -152.4966,
+              58.3548
+            ],
+            [
+              -152.3542,
+              58.426
+            ],
+            [
+              -152.0803,
+              58.311
+            ],
+            [
+              -152.0803,
+              58.1522
+            ],
+            [
+              -152.4801,
+              58.1303
+            ],
+            [
+              -152.6554,
+              58.0591
+            ],
+            [
+              -152.9402,
+              58.0262
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -153.9589,
+              57.5388
+            ],
+            [
+              -153.6741,
+              57.6702
+            ],
+            [
+              -153.9315,
+              57.6976
+            ],
+            [
+              -153.937,
+              57.8126
+            ],
+            [
+              -153.7234,
+              57.8893
+            ],
+            [
+              -153.57,
+              57.8345
+            ],
+            [
+              -153.5481,
+              57.7195
+            ],
+            [
+              -153.4605,
+              57.7962
+            ],
+            [
+              -153.455,
+              57.966
+            ],
+            [
+              -153.2688,
+              57.8893
+            ],
+            [
+              -153.2359,
+              57.9988
+            ],
+            [
+              -153.0716,
+              57.9331
+            ],
+            [
+              -152.8745,
+              57.9331
+            ],
+            [
+              -152.7211,
+              57.9934
+            ],
+            [
+              -152.4692,
+              57.8893
+            ],
+            [
+              -152.4692,
+              57.599
+            ],
+            [
+              -152.1515,
+              57.6209
+            ],
+            [
+              -152.3596,
+              57.4293
+            ],
+            [
+              -152.743,
+              57.5059
+            ],
+            [
+              -152.6006,
+              57.38
+            ],
+            [
+              -152.7101,
+              57.2759
+            ],
+            [
+              -152.9073,
+              57.3252
+            ],
+            [
+              -152.9128,
+              57.128
+            ],
+            [
+              -153.214,
+              57.0733
+            ],
+            [
+              -153.3126,
+              56.9911
+            ],
+            [
+              -153.4988,
+              57.0678
+            ],
+            [
+              -153.696,
+              56.8597
+            ],
+            [
+              -153.8493,
+              56.8377
+            ],
+            [
+              -154.0137,
+              56.7446
+            ],
+            [
+              -154.0739,
+              56.9692
+            ],
+            [
+              -154.3039,
+              56.8487
+            ],
+            [
+              -154.3149,
+              56.9199
+            ],
+            [
+              -154.523,
+              56.9911
+            ],
+            [
+              -154.5394,
+              57.1937
+            ],
+            [
+              -154.7421,
+              57.2759
+            ],
+            [
+              -154.6271,
+              57.5114
+            ],
+            [
+              -154.2273,
+              57.6593
+            ],
+            [
+              -153.9808,
+              57.6483
+            ],
+            [
+              -153.9589,
+              57.5388
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -154.534,
+              56.6022
+            ],
+            [
+              -154.7421,
+              56.3996
+            ],
+            [
+              -154.8078,
+              56.4325
+            ],
+            [
+              -154.534,
+              56.6022
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -155.6348,
+              55.9231
+            ],
+            [
+              -155.476,
+              55.9121
+            ],
+            [
+              -155.5308,
+              55.704
+            ],
+            [
+              -155.7937,
+              55.7314
+            ],
+            [
+              -155.8375,
+              55.8026
+            ],
+            [
+              -155.6348,
+              55.9231
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -159.8904,
+              55.2823
+            ],
+            [
+              -159.9507,
+              55.0687
+            ],
+            [
+              -160.2574,
+              54.8934
+            ],
+            [
+              -160.1095,
+              55.1618
+            ],
+            [
+              -160.0054,
+              55.1344
+            ],
+            [
+              -159.8904,
+              55.2823
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -160.5203,
+              55.359
+            ],
+            [
+              -160.334,
+              55.359
+            ],
+            [
+              -160.3395,
+              55.2494
+            ],
+            [
+              -160.5257,
+              55.1289
+            ],
+            [
+              -160.6901,
+              55.2111
+            ],
+            [
+              -160.7941,
+              55.1344
+            ],
+            [
+              -160.8544,
+              55.3206
+            ],
+            [
+              -160.7996,
+              55.3809
+            ],
+            [
+              -160.5203,
+              55.359
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -162.2565,
+              54.9811
+            ],
+            [
+              -162.2346,
+              54.8934
+            ],
+            [
+              -162.3496,
+              54.8387
+            ],
+            [
+              -162.4372,
+              54.9318
+            ],
+            [
+              -162.2565,
+              54.9811
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -162.4153,
+              63.6346
+            ],
+            [
+              -162.5632,
+              63.536
+            ],
+            [
+              -162.6125,
+              63.6237
+            ],
+            [
+              -162.4153,
+              63.6346
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -162.8041,
+              54.4881
+            ],
+            [
+              -162.5906,
+              54.4498
+            ],
+            [
+              -162.6125,
+              54.3676
+            ],
+            [
+              -162.7822,
+              54.3731
+            ],
+            [
+              -162.8041,
+              54.4881
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -165.5481,
+              54.2964
+            ],
+            [
+              -165.4769,
+              54.1814
+            ],
+            [
+              -165.6302,
+              54.1321
+            ],
+            [
+              -165.685,
+              54.2526
+            ],
+            [
+              -165.5481,
+              54.2964
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -165.7398,
+              54.154
+            ],
+            [
+              -166.0465,
+              54.0445
+            ],
+            [
+              -166.1122,
+              54.1212
+            ],
+            [
+              -165.9808,
+              54.2198
+            ],
+            [
+              -165.7398,
+              54.154
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -166.3642,
+              60.3594
+            ],
+            [
+              -166.1341,
+              60.3978
+            ],
+            [
+              -166.0848,
+              60.3265
+            ],
+            [
+              -165.8822,
+              60.343
+            ],
+            [
+              -165.685,
+              60.2773
+            ],
+            [
+              -165.6467,
+              59.9925
+            ],
+            [
+              -165.7507,
+              59.8993
+            ],
+            [
+              -166.0082,
+              59.8446
+            ],
+            [
+              -166.0629,
+              59.746
+            ],
+            [
+              -166.4408,
+              59.8555
+            ],
+            [
+              -166.6161,
+              59.8501
+            ],
+            [
+              -166.994,
+              59.9925
+            ],
+            [
+              -167.1255,
+              59.9925
+            ],
+            [
+              -167.3445,
+              60.0746
+            ],
+            [
+              -167.4212,
+              60.2061
+            ],
+            [
+              -167.3117,
+              60.2389
+            ],
+            [
+              -166.9392,
+              60.2061
+            ],
+            [
+              -166.764,
+              60.3101
+            ],
+            [
+              -166.5778,
+              60.3211
+            ],
+            [
+              -166.4956,
+              60.3923
+            ],
+            [
+              -166.3642,
+              60.3594
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -166.3751,
+              54.0116
+            ],
+            [
+              -166.2108,
+              53.935
+            ],
+            [
+              -166.5449,
+              53.7488
+            ],
+            [
+              -166.5394,
+              53.7159
+            ],
+            [
+              -166.1177,
+              53.8528
+            ],
+            [
+              -166.1122,
+              53.7761
+            ],
+            [
+              -166.282,
+              53.683
+            ],
+            [
+              -166.5558,
+              53.6228
+            ],
+            [
+              -166.5832,
+              53.5297
+            ],
+            [
+              -166.879,
+              53.4311
+            ],
+            [
+              -167.1364,
+              53.4256
+            ],
+            [
+              -167.3062,
+              53.3325
+            ],
+            [
+              -167.6239,
+              53.2503
+            ],
+            [
+              -167.7936,
+              53.338
+            ],
+            [
+              -167.4596,
+              53.442
+            ],
+            [
+              -167.3555,
+              53.4256
+            ],
+            [
+              -167.1036,
+              53.5132
+            ],
+            [
+              -167.1638,
+              53.6118
+            ],
+            [
+              -167.0214,
+              53.7159
+            ],
+            [
+              -166.8078,
+              53.6666
+            ],
+            [
+              -166.7859,
+              53.7323
+            ],
+            [
+              -167.0159,
+              53.7542
+            ],
+            [
+              -167.1419,
+              53.8254
+            ],
+            [
+              -167.0324,
+              53.9459
+            ],
+            [
+              -166.6435,
+              54.0171
+            ],
+            [
+              -166.5613,
+              53.8802
+            ],
+            [
+              -166.3751,
+              54.0116
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -168.7904,
+              53.1572
+            ],
+            [
+              -168.4071,
+              53.3489
+            ],
+            [
+              -168.3852,
+              53.4311
+            ],
+            [
+              -168.2373,
+              53.5242
+            ],
+            [
+              -168.0072,
+              53.568
+            ],
+            [
+              -167.8868,
+              53.5187
+            ],
+            [
+              -167.8429,
+              53.3873
+            ],
+            [
+              -168.2701,
+              53.2449
+            ],
+            [
+              -168.5002,
+              53.0367
+            ],
+            [
+              -168.6864,
+              52.9655
+            ],
+            [
+              -168.7904,
+              53.1572
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -169.7489,
+              52.8943
+            ],
+            [
+              -169.7051,
+              52.7958
+            ],
+            [
+              -169.9625,
+              52.7903
+            ],
+            [
+              -169.9899,
+              52.856
+            ],
+            [
+              -169.7489,
+              52.8943
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -170.1487,
+              57.2211
+            ],
+            [
+              -170.2857,
+              57.128
+            ],
+            [
+              -170.313,
+              57.2211
+            ],
+            [
+              -170.1487,
+              57.2211
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -170.669,
+              52.6972
+            ],
+            [
+              -170.6033,
+              52.6041
+            ],
+            [
+              -170.7895,
+              52.5383
+            ],
+            [
+              -170.8169,
+              52.6369
+            ],
+            [
+              -170.669,
+              52.6972
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -171.7425,
+              63.7168
+            ],
+            [
+              -170.9484,
+              63.5689
+            ],
+            [
+              -170.4883,
+              63.6949
+            ],
+            [
+              -170.2802,
+              63.6839
+            ],
+            [
+              -170.094,
+              63.6127
+            ],
+            [
+              -170.0447,
+              63.4922
+            ],
+            [
+              -169.6448,
+              63.4265
+            ],
+            [
+              -169.5189,
+              63.3663
+            ],
+            [
+              -168.9986,
+              63.3389
+            ],
+            [
+              -168.6864,
+              63.2951
+            ],
+            [
+              -168.8562,
+              63.1472
+            ],
+            [
+              -169.1081,
+              63.18
+            ],
+            [
+              -169.3765,
+              63.1527
+            ],
+            [
+              -169.5134,
+              63.0869
+            ],
+            [
+              -169.6394,
+              62.9391
+            ],
+            [
+              -169.8311,
+              63.076
+            ],
+            [
+              -170.0556,
+              63.1691
+            ],
+            [
+              -170.2637,
+              63.18
+            ],
+            [
+              -170.3623,
+              63.2841
+            ],
+            [
+              -170.8662,
+              63.4156
+            ],
+            [
+              -171.1017,
+              63.421
+            ],
+            [
+              -171.4632,
+              63.306
+            ],
+            [
+              -171.737,
+              63.3663
+            ],
+            [
+              -171.8521,
+              63.4868
+            ],
+            [
+              -171.7425,
+              63.7168
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -172.4326,
+              52.3905
+            ],
+            [
+              -172.4162,
+              52.2754
+            ],
+            [
+              -172.6079,
+              52.2535
+            ],
+            [
+              -172.5695,
+              52.3521
+            ],
+            [
+              -172.4326,
+              52.3905
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -173.6266,
+              52.1495
+            ],
+            [
+              -173.4951,
+              52.1057
+            ],
+            [
+              -173.1227,
+              52.1111
+            ],
+            [
+              -173.1063,
+              52.0783
+            ],
+            [
+              -173.5499,
+              52.029
+            ],
+            [
+              -173.6266,
+              52.1495
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -174.3222,
+              52.2809
+            ],
+            [
+              -174.3276,
+              52.3795
+            ],
+            [
+              -174.1852,
+              52.4179
+            ],
+            [
+              -173.9826,
+              52.3193
+            ],
+            [
+              -174.0593,
+              52.2262
+            ],
+            [
+              -174.1798,
+              52.2316
+            ],
+            [
+              -174.1414,
+              52.1276
+            ],
+            [
+              -174.3331,
+              52.1166
+            ],
+            [
+              -174.7384,
+              52.0071
+            ],
+            [
+              -174.9684,
+              52.0399
+            ],
+            [
+              -174.9027,
+              52.1166
+            ],
+            [
+              -174.6562,
+              52.1057
+            ],
+            [
+              -174.3222,
+              52.2809
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -176.4691,
+              51.8537
+            ],
+            [
+              -176.2884,
+              51.8702
+            ],
+            [
+              -176.2884,
+              51.7442
+            ],
+            [
+              -176.5184,
+              51.7606
+            ],
+            [
+              -176.8032,
+              51.6127
+            ],
+            [
+              -176.9127,
+              51.8099
+            ],
+            [
+              -176.7923,
+              51.8154
+            ],
+            [
+              -176.7758,
+              51.9633
+            ],
+            [
+              -176.6279,
+              51.9687
+            ],
+            [
+              -176.6279,
+              51.8592
+            ],
+            [
+              -176.4691,
+              51.8537
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -177.1537,
+              51.9468
+            ],
+            [
+              -177.0442,
+              51.8975
+            ],
+            [
+              -177.1209,
+              51.7278
+            ],
+            [
+              -177.2742,
+              51.6785
+            ],
+            [
+              -177.2797,
+              51.7825
+            ],
+            [
+              -177.1537,
+              51.9468
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -178.1232,
+              51.9194
+            ],
+            [
+              -177.9534,
+              51.914
+            ],
+            [
+              -177.8,
+              51.7935
+            ],
+            [
+              -177.9643,
+              51.6511
+            ],
+            [
+              -178.1232,
+              51.9194
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              -187.1076,
+              52.9929
+            ],
+            [
+              -187.2938,
+              52.9272
+            ],
+            [
+              -187.3047,
+              52.8231
+            ],
+            [
+              -188.9049,
+              52.7629
+            ],
+            [
+              -188.642,
+              52.9272
+            ],
+            [
+              -188.642,
+              53.0039
+            ],
+            [
+              -187.1076,
+              52.9929
+            ]
+          ]
+        ]
+      ]
+    }
+  },
+  "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
+  "library": {
+    "libraryId": "ak-sqt-adapted",
+    "version": 1,
+    "updatedAt": "2026-07-12T01:57:25Z",
+    "author": "STAF SQT migration",
+    "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+    "region": {
+      "kind": "state",
+      "code": "AK",
+      "name": "Alaska"
+    },
+    "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
+    "supersedesVersion": null
+  }
+}

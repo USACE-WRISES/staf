@@ -561,3 +561,33 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   color: #66708a; padding: 2px 9px; cursor: pointer;
 }
 .easi-modal-x:hover { color: var(--eci-title); }
+
+/* ===== Batch workspace (full-width overlay below the 50px header) ===== */
+.easi-batch { position: absolute; top: 50px; left: 0; right: 0; bottom: 0;
+  z-index: 600; background: #f7f9fc; display: flex; flex-direction: column; }
+.easi-batch-head { display: flex; align-items: center; gap: 20px;
+  padding: 10px 20px; background: #fff; border-bottom: 1px solid #e2e8f2; }
+.easi-batch-brand { font-family: var(--font-head); font-weight: 700; font-size: 1rem; }
+.easi-batch-head a { color: #4a6fb5; font-size: 13px; cursor: pointer; text-decoration: none; }
+.easi-batch-head a:hover { text-decoration: underline; }
+.easi-batch-steps { margin-left: auto; display: flex; gap: 8px; }
+.easi-batch-step { font-size: 12px; color: #8794ac; padding: 3px 10px;
+  border-radius: 12px; background: #eef2f8; }
+.easi-batch-step.active { color: #fff; background: #4a6fb5; font-weight: 600; }
+.easi-batch-scroll { flex: 1; overflow: auto; padding: 22px 26px; }
+.easi-batch-scroll > div { max-width: 900px; margin: 0 auto; }
+.easi-batch-import-row { display: flex; gap: 16px; align-items: center;
+  margin: 10px 0; flex-wrap: wrap; }
+.easi-batch-msg { margin: 6px 0; font-size: 13px; color: #4a6fb5; font-weight: 600; }
+.easi-batch-actions { margin-top: 18px; display: flex; gap: 12px; }
+.easi-batch-preview-wrap, .easi-batch-results-wrap { margin: 14px 0; max-height: 360px;
+  overflow: auto; border: 1px solid #e2e8f2; border-radius: 6px; }
+.easi-batch-preview, .easi-batch-results { width: 100%; font-size: 12.5px; }
+.easi-batch-bar { height: 12px; background: #e2e8f2; border-radius: 6px;
+  overflow: hidden; margin: 10px 0; }
+.easi-batch-bar-fill { height: 100%; background: #4a6fb5; transition: width .3s; }
+.easi-batch-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
+.easi-batch-stat { background: #fff; border: 1px solid #e2e8f2; border-radius: 8px;
+  padding: 10px 16px; text-align: center; min-width: 84px; }
+.easi-batch-stat-v { font-size: 1.4rem; font-weight: 700; color: var(--eci-title); }
+.easi-batch-stat-l { font-size: 11px; color: #8794ac; text-transform: uppercase; }

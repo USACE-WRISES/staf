@@ -176,6 +176,37 @@ class AppState:
     # {"kind": "ecoregion"|"state"|"polygon", "code", "name", "polygon"?}.
     region_of_applicability: reactive.Value = _rv()
 
+    # ── EASI reference-condition screening (session schema v2) ──────────────
+    # Candidate decisions from the vendored EASI batch engine, keyed by external
+    # site id, persisted so screening survives save/reload. Every candidate is
+    # preserved (passed and failed); only retained sites continue to enrichment.
+    easi_screening_sites: reactive.Value = _rv()        # list[dict] / DataFrame
+    easi_screening_metrics: reactive.Value = _rv()      # list[dict] / DataFrame
+    easi_screening_criteria: reactive.Value = _rv()     # dict snapshot
+
+    # ── guided-run state (streamcurves/run_state.py owns the shapes) ─────────
+    # run_meta: {created, updated, method versions, region}; run_stage_status:
+    # {stage_key: {status, detail}} snapshot for the guided cards; curve_review:
+    # {metric: entry} flagged-review queue; screening_run: last direct-run
+    # summary dict; site_exclusions: list[{site_id, reason, source, note}].
+    run_meta: reactive.Value = _rv()
+    run_stage_status: reactive.Value = _rv_factory(dict)
+    curve_review: reactive.Value = _rv_factory(dict)
+    screening_run: reactive.Value = _rv()
+    site_exclusions: reactive.Value = _rv_factory(list)
+    # Validation records (restricted): list[dict] of independent-check evidence
+    # that a maintainer can attach before certifying a library version.
+    validation_records: reactive.Value = _rv_factory(list)
+
+    # ── root navigation requests (guided home -> shell) ─────────────────────
+    # nav_request: a nav_panel value to switch main_navbar to; wizard_step_request:
+    # a 1-based Data & Setup wizard step to jump to. Both are nonce-driven so the
+    # same request can fire twice.
+    nav_request: reactive.Value = _rv()
+    nav_request_nonce: reactive.Value = _rv(0)
+    wizard_step_request: reactive.Value = _rv()
+    wizard_step_nonce: reactive.Value = _rv(0)
+
     # Cross-tab session restore request: the Library tab loads a library version's
     # session payload and asks the Data & Setup tab to restore it (bump the nonce).
     session_restore_request: reactive.Value = _rv()
@@ -338,6 +369,9 @@ def reset_all_analysis(state: AppState) -> None:
     state.phase3_verification.set({})
     state.decision_log.set(pd.DataFrame())
     state.stratum_results.set({})
+    # Guided-run analysis outputs (curve classification + stage snapshot).
+    state.curve_review.set({})
+    state.run_stage_status.set({})
 
 
 def reset_app_to_startup(state: AppState) -> None:
@@ -361,6 +395,13 @@ def reset_app_to_startup(state: AppState) -> None:
         state.upload_filename.set(None)
         state.session_name.set(None)
         state.region_of_applicability.set(None)
+        state.easi_screening_sites.set(None)
+        state.easi_screening_metrics.set(None)
+        state.easi_screening_criteria.set(None)
+        state.run_meta.set(None)
+        state.screening_run.set(None)
+        state.site_exclusions.set([])
+        state.validation_records.set([])
         state.current_metric.set(state.startup_current_metric() or "perRiffle")
         state.app_data_loaded.set(False)
         state.app_reset_nonce.set((state.app_reset_nonce() or 0) + 1)

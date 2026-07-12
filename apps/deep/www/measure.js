@@ -31,6 +31,19 @@
     }
     return clamp01(p[p.length - 1].y);
   }
+  // Endpoint-clamp advisory — mirror of deep/curves.domain_warning.
+  function domainWarning(points, x) {
+    if (!points || !points.length) return null;
+    var xs = points
+      .filter(function (p) { return p && p.x != null && p.y != null; })
+      .map(function (p) { return +p.x; })
+      .sort(function (a, b) { return a - b; });
+    if (xs.length < 2) return null;
+    var lo = xs[0], hi = xs[xs.length - 1];
+    if (x < lo) return "value " + x + " is below the curve domain [" + lo + ", " + hi + "]; score clamped to the endpoint";
+    if (x > hi) return "value " + x + " is above the curve domain [" + lo + ", " + hi + "]; score clamped to the endpoint";
+    return null;
+  }
   function idxColor(v) {
     if (v == null) return "#eef1f6";
     if (v <= 0.39) return "#f5b5b5";
@@ -110,6 +123,14 @@
     if (ic) ic.textContent = idx.toFixed(2);
     if (bc) bc.innerHTML = '<span class="deep-band-dot" style="background:' + idxColor(idx) + ';"></span>' + idxLabel(idx);
   }
+  // Toggle the metric's endpoint-clamp advisory (hidden when in-domain / unset).
+  function updateWarn(metricEl, val) {
+    var el = metricEl.querySelector(".deep-domain-warn");
+    if (!el) return;
+    var msg = (val == null) ? null : domainWarning(pointsOf(metricEl), val);
+    if (msg) { el.textContent = msg; el.hidden = false; }
+    else { el.textContent = ""; el.hidden = true; }
+  }
   function updateMetric(metricEl) {
     var val = rawValue(metricEl);
     var idx = (val == null) ? null : interp(pointsOf(metricEl), val);
@@ -117,6 +138,7 @@
     if (chip) { chip.textContent = (idx == null ? "—" : idx.toFixed(2)); chip.style.background = idxColor(idx); }
     updateMarker(metricEl, val, idx);
     updateHereRow(metricEl, val, idx);
+    updateWarn(metricEl, val);
   }
   function updateFunction() {
     var card = document.querySelector(".deep-scorecard");

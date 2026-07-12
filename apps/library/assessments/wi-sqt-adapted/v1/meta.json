@@ -1,0 +1,18 @@
+{
+  "assessmentId": "wi-sqt-adapted",
+  "assessmentName": "WI SQT Adapted",
+  "version": 1,
+  "updatedAt": "2026-07-12T01:57:26Z",
+  "author": "STAF SQT migration",
+  "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+  "region": {
+    "kind": "state",
+    "code": "WI",
+    "name": "Wisconsin"
+  },
+  "stateCode": "WI",
+  "stateName": "Wisconsin",
+  "sourceCitation": "Wisconsin SQT",
+  "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b",
+  "supersedesVersion": null
+}

@@ -6,8 +6,10 @@ export screen (Finalize / Test in DEEP) and the Library tab (Publish) can't drif
 
 from __future__ import annotations
 
+import pandas as pd
 from shiny import reactive
 
+from streamcurves import run_state as rs
 from streamcurves import session_io as sio
 from streamcurves.deep_export import (
     build_deep_assessment_bundle,
@@ -17,6 +19,45 @@ from streamcurves.deep_export import (
 from views.state import AppState
 
 DEFAULT_SOURCE_CITATION = "StreamCurves reference-curve development"
+
+
+def run_snapshot(state: AppState) -> dict:
+    """Snapshot of the current run for ``run_state.derive_stage_status`` /
+    ``is_ready_to_publish``. Shared by the guided home and the Library publish gate
+    so both read the same facts from AppState."""
+    with reactive.isolate():
+        region = state.region_of_applicability()
+        meta = state.run_meta() or {}
+        sc = state.easi_screening_sites()
+        stage_status = state.run_stage_status() or {}
+        data = state.data()
+        curve_review = state.curve_review() or {}
+    kind = (region or {}).get("kind") if region else None
+    n_candidates = int(meta.get("n_candidates") or 0)
+    has_screening = sc is not None and not (hasattr(sc, "empty") and sc.empty)
+    n_retained = 0
+    if has_screening:
+        df = sc if hasattr(sc, "columns") else pd.DataFrame(sc)
+        if "final_decision" in df.columns:
+            n_retained = int((df["final_decision"] == "retained").sum())
+        n_candidates = max(n_candidates, int(len(df)))
+    enr = stage_status.get("enrichment_build") or {}
+    pub = stage_status.get("publish") or {}
+    return {
+        "has_region": region is not None and kind not in (None, "none"),
+        "region_is_ecoregion": kind == "ecoregion",
+        "region_kind": kind,
+        "region_label": (region or {}).get("name") if region else None,
+        "has_data_source": has_screening or n_candidates > 0 or data is not None,
+        "n_candidates": n_candidates,
+        "has_screening": has_screening,
+        "n_retained": n_retained,
+        "enriched": bool(data is not None and enr.get("status") == "done"),
+        "n_enriched": int(enr.get("n_enriched") or 0),
+        "curve_review": curve_review,
+        "published": bool(pub.get("status") == "done"),
+        "published_label": pub.get("label"),
+    }
 
 
 def region_from_state(state: AppState) -> dict | None:

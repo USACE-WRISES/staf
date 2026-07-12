@@ -1,4 +1,4 @@
-"""Tests for scripts/bake_library_into_deep.py.
+"""Tests for scripts/bake_library_into_deep.py (v2: authoritative, all eligible versions).
 
 Everything runs against a tmp ``out`` and a monkeypatched STAF_LIBRARY_ROOT, so the real
 apps/deep/data and apps/library are never touched.
@@ -23,10 +23,8 @@ def _load_bake_module():
     return mod
 
 
-def _write_library_version(root, aid, version, name):
-    vdir = root / "assessments" / aid / f"v{version}"
-    vdir.mkdir(parents=True)
-    bundle = {
+def _bundle(aid, version, name):
+    return {
         "schemaVersion": 1,
         "tier": "detailed",
         "assessmentId": aid,
@@ -35,25 +33,49 @@ def _write_library_version(root, aid, version, name):
         "region": {"kind": "ecoregion", "code": "55", "name": "ECBP"},
         "library": {"libraryId": aid, "version": version, "updatedAt": "2026-07-07T00:00:00Z"},
         "metricsByFunction": [
-            {
-                "functionId": "catchment-hydrology",
-                "functionName": "Catchment hydrology",
-                "discipline": "Hydrology",
-                "metrics": [
-                    {"metricId": "m1", "metricName": "M1",
-                     "curve": {"points": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]}}
-                ],
-            }
+            {"functionId": "catchment-hydrology", "functionName": "Catchment hydrology",
+             "discipline": "Hydrology",
+             "metrics": [{"metricId": "m1", "metricName": "M1",
+                          "curve": {"points": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]}}]}
         ],
     }
-    (vdir / "assessment.deep.json").write_text(json.dumps(bundle), encoding="utf-8")
+
+
+def _write_library(root, aid, name, versions, statuses=None):
+    """Write version bundles + manifest + status.json for one assessment.
+
+    ``versions``: list of ints. ``statuses``: {version: status}; defaults to preliminary.
+    """
+    statuses = statuses or {}
+    for v in versions:
+        vdir = root / "assessments" / aid / f"v{v}"
+        vdir.mkdir(parents=True, exist_ok=True)
+        (vdir / "assessment.deep.json").write_text(json.dumps(_bundle(aid, v, name)),
+                                                    encoding="utf-8")
+    (root / "assessments" / aid / "manifest.json").write_text(
+        json.dumps({"schemaVersion": 2, "assessmentId": aid, "assessmentName": name,
+                    "latestVersion": max(versions),
+                    "versions": [{"version": v} for v in versions]}),
+        encoding="utf-8")
+    history = [{"version": v, "status": statuses.get(v, "preliminary"),
+                "actor": "t", "timestamp": "2026-07-07T00:00:00Z"} for v in versions]
+    (root / "assessments" / aid / "status.json").write_text(
+        json.dumps({"schemaVersion": 2, "assessmentId": aid, "history": history}),
+        encoding="utf-8")
 
 
 def _write_catalog(root, entries):
     (root / "catalog.json").write_text(
-        json.dumps({"schemaVersion": 1, "generatedAt": None, "assessments": entries}),
-        encoding="utf-8",
-    )
+        json.dumps({"schemaVersion": 2, "generatedAt": None, "assessments": entries}),
+        encoding="utf-8")
+
+
+def _catalog_entry(aid, name, latest, default, cert=0, prelim=0):
+    return {"assessmentId": aid, "assessmentName": name,
+            "region": {"kind": "ecoregion", "code": "55", "name": "ECBP"},
+            "latestVersion": latest, "defaultVersion": default,
+            "latestCertified": cert, "latestPreliminary": prelim,
+            "latestUpdatedAt": "2026-07-07T00:00:00Z"}
 
 
 @pytest.fixture
@@ -64,61 +86,90 @@ def libroot(tmp_path, monkeypatch):
     return root
 
 
-def _seed_registry(out, assessments):
-    out.mkdir(parents=True, exist_ok=True)
-    (out / "deep-assessments.json").write_text(
-        json.dumps({"schemaVersion": 1, "tier": "detailed", "assessments": assessments}),
-        encoding="utf-8",
-    )
-
-
-def test_bake_appends_library_and_writes_bundle(tmp_path, libroot):
+def test_bake_writes_v2_registry_and_versioned_bundles(tmp_path, libroot):
     out = tmp_path / "data"
-    _seed_registry(out, [{"assessmentId": "ak-sqt-adapted", "assessmentName": "AK",
-                          "metricsByFunction": []}])
-    _write_library_version(libroot, "eastern-corn-belt-plains", 2, "ECBP Adapted")
-    _write_catalog(libroot, [
-        {"assessmentId": "eastern-corn-belt-plains", "assessmentName": "ECBP Adapted",
-         "region": {"kind": "ecoregion", "code": "55", "name": "ECBP"},
-         "latestVersion": 2, "latestUpdatedAt": "2026-07-07T00:00:00Z"}])
-
+    _write_library(libroot, "eastern-corn-belt-plains", "ECBP Adapted", [1])
+    _write_catalog(libroot, [_catalog_entry("eastern-corn-belt-plains", "ECBP Adapted",
+                                            latest=1, default=1, prelim=1)])
     bake = _load_bake_module()
     result = bake.bake(out=out)
+
     assert result["libraryCount"] == 1
-    assert result["added"] == ["eastern-corn-belt-plains"]
+    assert result["records"] == 1
+    assert result["assessments"] == ["eastern-corn-belt-plains"]
 
     doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
-    ids = [a["assessmentId"] for a in doc["assessments"]]
-    assert ids == ["ak-sqt-adapted", "eastern-corn-belt-plains"]
-    ecbp = next(a for a in doc["assessments"] if a["assessmentId"] == "eastern-corn-belt-plains")
-    assert ecbp["library"]["version"] == 2
+    assert doc["schemaVersion"] == 2
+    assert "eastern-corn-belt-plains" in doc["libraryCatalog"]
+    rec = doc["assessments"][0]
+    assert rec["assessmentRef"] == "eastern-corn-belt-plains@v1"
+    assert rec["lifecycle"] == "preliminary"
+    # per-version bundle + default bundle both written
+    assert (out / "bundles" / "eastern-corn-belt-plains@v1.deep.json").is_file()
     assert (out / "bundles" / "eastern-corn-belt-plains.deep.json").is_file()
 
 
-def test_bake_is_idempotent_and_updates_existing(tmp_path, libroot):
+def test_bake_bakes_all_eligible_versions_certified_default(tmp_path, libroot):
     out = tmp_path / "data"
-    _seed_registry(out, [])
-    _write_library_version(libroot, "eastern-corn-belt-plains", 1, "ECBP")
-    _write_catalog(libroot, [
-        {"assessmentId": "eastern-corn-belt-plains", "assessmentName": "ECBP",
-         "region": {"kind": "ecoregion", "code": "55", "name": "ECBP"},
-         "latestVersion": 1, "latestUpdatedAt": "2026-07-07T00:00:00Z"}])
+    # v1 certified, v2 preliminary -> both baked; default is the certified v1.
+    _write_library(libroot, "ecbp", "ECBP", [1, 2], statuses={1: "certified", 2: "preliminary"})
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=1,
+                                            cert=1, prelim=2)])
+    bake = _load_bake_module()
+    result = bake.bake(out=out)
+    assert result["records"] == 2
 
+    doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
+    refs = {r["assessmentRef"] for r in doc["assessments"]}
+    assert refs == {"ecbp@v1", "ecbp@v2"}
+    assert doc["libraryCatalog"]["ecbp"]["defaultVersion"] == 1
+    # the default bundle mirrors the certified v1
+    default_bundle = json.loads((out / "bundles" / "ecbp.deep.json").read_text("utf-8"))
+    assert default_bundle["version"] == 1
+
+
+def test_bake_excludes_retired_versions(tmp_path, libroot):
+    out = tmp_path / "data"
+    _write_library(libroot, "ecbp", "ECBP", [1, 2], statuses={1: "retired", 2: "preliminary"})
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=2, prelim=2)])
     bake = _load_bake_module()
     bake.bake(out=out)
-    r2 = bake.bake(out=out)
     doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
-    assert len(doc["assessments"]) == 1  # not duplicated on re-run
-    assert r2["updated"] == ["eastern-corn-belt-plains"]
+    refs = {r["assessmentRef"] for r in doc["assessments"]}
+    assert refs == {"ecbp@v2"}  # retired v1 is not eligible
 
 
-def test_bake_no_library_leaves_registry_unchanged(tmp_path, libroot):
+def test_bake_is_idempotent(tmp_path, libroot):
     out = tmp_path / "data"
-    _seed_registry(out, [{"assessmentId": "ak-sqt-adapted", "assessmentName": "AK",
-                          "metricsByFunction": []}])
+    _write_library(libroot, "ecbp", "ECBP", [1])
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=1, default=1, prelim=1)])
+    bake = _load_bake_module()
+    r1 = bake.bake(out=out)
+    first = (out / "deep-assessments.json").read_text("utf-8")
+    r2 = bake.bake(out=out)
+    second = (out / "deep-assessments.json").read_text("utf-8")
+    assert first == second  # byte-identical on re-run
+    assert r1 == r2
+
+
+def test_bake_drops_stale_bundle_files(tmp_path, libroot):
+    out = tmp_path / "data"
+    (out / "bundles").mkdir(parents=True)
+    (out / "bundles" / "old-removed.deep.json").write_text("{}", encoding="utf-8")
+    _write_library(libroot, "ecbp", "ECBP", [1])
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=1, default=1, prelim=1)])
+    bake = _load_bake_module()
+    bake.bake(out=out)
+    assert not (out / "bundles" / "old-removed.deep.json").is_file()
+    assert (out / "bundles" / "ecbp@v1.deep.json").is_file()
+
+
+def test_bake_empty_library_is_empty_registry(tmp_path, libroot):
+    out = tmp_path / "data"
     _write_catalog(libroot, [])  # nothing published
     bake = _load_bake_module()
     result = bake.bake(out=out)
     assert result["libraryCount"] == 0
     doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
-    assert [a["assessmentId"] for a in doc["assessments"]] == ["ak-sqt-adapted"]
+    assert doc["assessments"] == []
+    assert doc["schemaVersion"] == 2

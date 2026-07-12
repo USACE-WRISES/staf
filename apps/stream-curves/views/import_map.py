@@ -28,6 +28,11 @@ import numpy as np
 import pandas as pd
 from shiny import module, reactive, render, req, ui
 
+from pathlib import Path  # noqa: E402
+
+from streamcurves import easi_screening  # noqa: E402
+from streamcurves import run_state as rs  # noqa: E402
+
 try:
     from ipyleaflet import (
         DrawControl,
@@ -73,7 +78,6 @@ from streamcurves.profiler import (
 from streamcurves.sites import (
     assemble_sites,
     compile_site_table,
-    dedup_sites,
 )
 from streamcurves.sites import coverage_table as compute_coverage_table
 from streamcurves.staf_library import staf_canonical_function, staf_functions_by_discipline
@@ -308,6 +312,7 @@ def import_map_ui():
                     class_="sites-view-toggle d-flex justify-content-end mb-2",
                 ),
                 ui.output_ui("sites_view_body"),
+                ui.output_ui("easi_screening_panel"),
                 class_="wiz-step-block wiz-step-block-3",
             ),
             ui.output_ui("body"),
@@ -746,6 +751,16 @@ def import_map_server(
         step.set(max(1, step() - 1))
 
     @reactive.effect
+    @reactive.event(state.wizard_step_nonce, ignore_init=True)
+    def _wizard_step_from_root():
+        # The guided home routes here by requesting a wizard step (1-based).
+        with reactive.isolate():
+            req_step = state.wizard_step_request()
+        if req_step is None:
+            return
+        step.set(max(1, min(N_STEPS, int(req_step))))
+
+    @reactive.effect
     @reactive.event(state.app_reset_nonce, ignore_init=True)
     def _reset():
         step.set(1)
@@ -841,7 +856,13 @@ def import_map_server(
             sites.set(None)
             return
         asm = assemble_sites(upload=upload_part, nrsa=nrsa_part)
-        sites.set(dedup_sites(asm, "lon", "lat", tol_m=50))
+        # No coordinate dedup: reference screening + reviewer overrides decide which
+        # candidate sites continue, so every assembled row is preserved here.
+        sites.set(asm)
+        # Publish the candidate count so the guided home can report it.
+        meta = rs.touch_run_meta(state.run_meta())
+        meta["n_candidates"] = int(len(asm))
+        state.run_meta.set(meta)
 
     # ── compile (step 5) ──────────────────────────────────────────────────────
     # The pull is run as a detached asyncio task (like the workspace modal +
@@ -858,7 +879,8 @@ def import_map_server(
         task.add_done_callback(_compile_tasks.discard)
 
     async def _run_compile(sdf, upload_kept, metric_names, nrsa_names, ss_codes,
-                           mmw_codes, want_da, want_regional, want_elev, mmw_ok):
+                           mmw_codes, want_da, want_regional, want_elev, mmw_ok,
+                           exclusions=None):
         n = len(sdf)
         run_mmw = bool(mmw_codes) and mmw_ok
         prog = CompileProgress.for_run(
@@ -867,6 +889,9 @@ def import_map_server(
             streamcat=bool(metric_names), nrsa=bool(nrsa_names),
             streamstats=bool(ss_codes), mmw=run_mmw,
         )
+        # Per-source diagnostics feed run_stage_status["enrichment_build"] so the
+        # guided card can say which sources succeeded, retried, or were isolated.
+        diag = {"sources": {}, "isolated": [], "site_failures": {}}
 
         async def announce(source, *, site=None, n_sites=None):
             # Name the source being fetched, repaint the toast, and yield so the
@@ -878,15 +903,35 @@ def import_map_server(
             await st.task_flush()
             await asyncio.sleep(0)
 
+        async def pull(label, fn, on_fail):
+            # One retry, then failure isolation: a non-critical source that keeps
+            # failing degrades to its fallback instead of aborting the whole build.
+            for attempt in (1, 2):
+                try:
+                    val = await asyncio.to_thread(fn)
+                    diag["sources"][label] = "ok" if attempt == 1 else "ok_retry"
+                    return val
+                except Exception as exc:  # noqa: BLE001 — isolate optional sources
+                    if attempt == 2:
+                        diag["sources"][label] = f"failed: {exc}"
+                        diag["isolated"].append(label)
+                        logger.warning("compile source %s failed after retry: %s", label, exc)
+                        return on_fail()
+                    logger.info("compile source %s failed (attempt 1), retrying: %s", label, exc)
+
         try:
+            # NLDI comids stay a hard failure: everything downstream keys off them.
             await announce("Snapping sites to NHD flowlines")
             comids = await asyncio.to_thread(nldi_comids, list(sdf["lon"]), list(sdf["lat"]))
             sdf["comid"] = comids
+            diag["sources"]["nldi_comids"] = "ok"
             prog.complete()
 
             if want_da:
                 await announce("Drainage area (NLDI basins)")
-                da = await asyncio.to_thread(nldi_basin_sqkm_many, comids)
+                da = await pull("drainage_area",
+                                lambda: nldi_basin_sqkm_many(comids),
+                                lambda: np.full(n, np.nan))
                 prog.complete()
             else:
                 da = np.full(n, np.nan)
@@ -894,25 +939,35 @@ def import_map_server(
             elev = None
             if want_elev:
                 await announce("Site elevation (USGS 3DEP)")
-                elev = await asyncio.to_thread(
-                    lambda: [epqs_elev(sdf["lon"].iloc[i], sdf["lat"].iloc[i]) for i in range(n)]
-                )
+                elev = await pull(
+                    "elevation_3dep",
+                    lambda: [epqs_elev(sdf["lon"].iloc[i], sdf["lat"].iloc[i]) for i in range(n)],
+                    lambda: None)
                 prog.complete()
 
             sc = None
             if metric_names:
                 await announce(f"StreamCAT ({len(metric_names)} metrics)")
-                sc = await asyncio.to_thread(streamcat_metrics, comids, metric_names, area="watershed")
+                sc = await pull(
+                    "streamcat",
+                    lambda: streamcat_metrics(comids, metric_names, area="watershed"),
+                    lambda: None)
                 prog.complete()
 
             if nrsa_names:
                 await announce(f"NRSA metrics ({len(nrsa_names)})")
-                sdf = await asyncio.to_thread(attach_nrsa_metrics, sdf, nrsa_names, load_nrsa_values())
+                nrsa_res = await pull(
+                    "nrsa",
+                    lambda: attach_nrsa_metrics(sdf, nrsa_names, load_nrsa_values()),
+                    lambda: None)
+                if nrsa_res is not None:
+                    sdf = nrsa_res
                 prog.complete()
 
             if ss_codes:
                 for cc in [f"ss_{c}" for c in ss_codes]:
                     sdf[cc] = np.nan
+                ss_fail = 0
                 for i in range(n):
                     st_name = sdf["state"].iloc[i] if "state" in sdf.columns else None
                     if st_name and str(st_name).strip():
@@ -921,24 +976,39 @@ def import_map_server(
                     else:
                         state_code = state_at(sdf["lon"].iloc[i], sdf["lat"].iloc[i], str(_STATES))
                     await announce(f"StreamStats ({state_code or '?'})", site=i + 1, n_sites=n)
-                    vals = await asyncio.to_thread(
-                        ss_basin_characteristics, sdf["lat"].iloc[i], sdf["lon"].iloc[i], state_code, ss_codes
-                    )
-                    for c in ss_codes:
-                        sdf.loc[sdf.index[i], f"ss_{c}"] = vals.get(c)
+                    try:
+                        vals = await asyncio.to_thread(
+                            ss_basin_characteristics, sdf["lat"].iloc[i], sdf["lon"].iloc[i], state_code, ss_codes
+                        )
+                        for c in ss_codes:
+                            sdf.loc[sdf.index[i], f"ss_{c}"] = vals.get(c)
+                    except Exception as exc:  # noqa: BLE001 — isolate one site, keep NaN
+                        ss_fail += 1
+                        logger.warning("StreamStats failed for site %d: %s", i + 1, exc)
                     prog.complete()
+                diag["sources"]["streamstats"] = "ok" if ss_fail == 0 else f"partial ({ss_fail} failed)"
+                if ss_fail:
+                    diag["site_failures"]["streamstats"] = ss_fail
 
             if run_mmw:
                 for cc in mmw_codes:
                     sdf[cc] = np.nan
+                mmw_fail = 0
                 for i in range(n):
                     await announce("Model My Watershed (watershed + attributes)", site=i + 1, n_sites=n)
-                    vals = await asyncio.to_thread(
-                        mmw_site_metrics, sdf["lat"].iloc[i], sdf["lon"].iloc[i], mmw_codes
-                    )
-                    for c in mmw_codes:
-                        sdf.loc[sdf.index[i], c] = vals.get(c)
+                    try:
+                        vals = await asyncio.to_thread(
+                            mmw_site_metrics, sdf["lat"].iloc[i], sdf["lon"].iloc[i], mmw_codes
+                        )
+                        for c in mmw_codes:
+                            sdf.loc[sdf.index[i], c] = vals.get(c)
+                    except Exception as exc:  # noqa: BLE001 — isolate one site, keep NaN
+                        mmw_fail += 1
+                        logger.warning("MMW failed for site %d: %s", i + 1, exc)
                     prog.complete()
+                diag["sources"]["mmw"] = "ok" if mmw_fail == 0 else f"partial ({mmw_fail} failed)"
+                if mmw_fail:
+                    diag["site_failures"]["mmw"] = mmw_fail
 
             await announce("Assembling table + regional predictions")
             comp = compile_site_table(
@@ -971,6 +1041,24 @@ def import_map_server(
             col_function.set(cfun)
             saved_assignments.set(None)
             coverage.set(cov)
+            # Legacy site_mask_config from the screening/reviewer exclusions so the
+            # workbook export still carries masks (empty over a retained-only frame,
+            # but with the right label column + the exclusion provenance preserved
+            # separately in state.site_exclusions).
+            state.site_mask_config.set(rs.site_mask_config_from_exclusions(
+                comp, exclusions or [], site_id_column="site_id"))
+            # Record enrichment diagnostics for the guided card.
+            stage_status = dict(state.run_stage_status() or {})
+            stage_status["enrichment_build"] = {
+                "status": "done",
+                "n_enriched": int(len(comp)),
+                "n_unmatched": n_unmatched,
+                "sources": diag["sources"],
+                "isolated": diag["isolated"],
+                "site_failures": diag["site_failures"],
+            }
+            state.run_stage_status.set(stage_status)
+            state.run_meta.set(rs.touch_run_meta(state.run_meta()))
             prog.complete()
             await st.task_flush()
 
@@ -994,6 +1082,25 @@ def import_map_server(
         if sdf is None or len(sdf) == 0:
             return
         sdf = sdf.copy()
+        # Retained-only enrichment: when reference screening exists, enrich only the
+        # sites whose final decision is "retained" (1:1 on the external site_id). The
+        # Advanced (no-screening) path enriches every assembled row unchanged.
+        sc = state.easi_screening_sites()
+        if sc is not None and not (hasattr(sc, "empty") and sc.empty):
+            tables = {"easi_screening_sites":
+                      (sc if hasattr(sc, "columns") else pd.DataFrame(sc)).to_dict("records")}
+            retained = set(easi_screening.retained_site_ids(tables))
+            if not retained:
+                ui.notification_show(
+                    "No sites are retained after screening; retain at least one "
+                    "before compiling.", type="warning", duration=7)
+                return
+            sdf = sdf[sdf["site_id"].astype(str).isin(retained)].reset_index(drop=True)
+            if len(sdf) == 0:
+                ui.notification_show(
+                    "None of the retained site ids match the assembled sites.",
+                    type="warning", duration=7)
+                return
         upload_all = upload_extra_cols()
         keep = _inp("upload_cols")
         upload_kept = (
@@ -1013,9 +1120,10 @@ def import_map_server(
         want_regional = bool(_inp("want_regional"))
         want_elev = bool(_inp("want_elev"))
         mmw_ok = mmw_available()
+        exclusions = list(state.site_exclusions() or [])
         _launch(_run_compile(
             sdf, upload_kept, metric_names, nrsa_names, ss_codes, mmw_codes,
-            want_da, want_regional, want_elev, mmw_ok,
+            want_da, want_regional, want_elev, mmw_ok, exclusions,
         ))
 
     # ── classify + build ──────────────────────────────────────────────────────
@@ -1298,6 +1406,272 @@ def import_map_server(
         req(s is not None)
         show = s[[c for c in ("site_id", "lat", "lon", ".source", "state") if c in s.columns]]
         return render.DataGrid(show.head(100).reset_index(drop=True), height="360px")
+
+    # ---- EASI reference-condition screening ---------------------------------
+    # Two paths: run the vendored engine in-process (local/desktop, direct) or
+    # import a finalized batch ZIP (cloud-safe fallback). Either way we persist
+    # the three screening tables and re-derive the retained set + site_exclusions.
+    _screen_prog = {"done": 0, "total": 0, "stage": ""}
+    _screen_cancel = {"flag": False}
+
+    def _screening_site_rows(sdf) -> list[dict]:
+        rows: list[dict] = []
+        for _, r in sdf.iterrows():
+            lat, lon = r.get("lat"), r.get("lon")
+            if lat is None or lon is None or not (np.isfinite(lat) and np.isfinite(lon)):
+                continue
+            row = {"site_id": str(r.get("site_id")), "lat": float(lat), "lon": float(lon)}
+            if "comid" in sdf.columns and pd.notna(r.get("comid")):
+                row["comid"] = int(r["comid"])
+            rows.append(row)
+        return rows
+
+    def _sync_screening_derivations(sites_df, *, method: str | None = None) -> None:
+        """Re-derive the retained set, site_exclusions, and the screening_run
+        summary from the current sites table (called after every screen or
+        reviewer override)."""
+        df = sites_df if hasattr(sites_df, "columns") else pd.DataFrame(sites_df)
+        has_final = "final_decision" in df.columns
+        retained_ids = (
+            set(df.loc[df["final_decision"] == "retained", "site_id"].astype(str))
+            if has_final else set()
+        )
+        exclusions: list[dict] = []
+        for _, r in df.iterrows():
+            sid = str(r.get("site_id"))
+            if not has_final or r.get("final_decision") != "retained":
+                by_reviewer = bool(r.get("reviewer"))
+                exclusions.append({
+                    "site_id": sid,
+                    "reason": r.get("reason") or "screened out",
+                    "source": "reviewer" if by_reviewer else "screening",
+                    "note": r.get("reviewer_note"),
+                })
+        state.site_exclusions.set(exclusions)
+        run = dict(state.screening_run() or {})
+        run.update({
+            "n_screened": int(len(df)),
+            "n_retained": int(len(retained_ids)),
+            "method": method or run.get("method") or "zip_import",
+            "method_version": rs.SCREENING_METHOD_VERSION,
+        })
+        state.screening_run.set(run)
+        state.run_meta.set(rs.touch_run_meta(state.run_meta()))
+
+    def _persist_screening(tables: dict, *, method: str | None = None) -> None:
+        sites_df = pd.DataFrame(tables["easi_screening_sites"])
+        state.easi_screening_sites.set(sites_df)
+        state.easi_screening_metrics.set(pd.DataFrame(tables["easi_screening_metrics"]))
+        state.easi_screening_criteria.set(tables["easi_screening_criteria"])
+        _sync_screening_derivations(sites_df, method=method)
+
+    @reactive.extended_task
+    async def screen_task(site_rows: list[dict], criteria, progress: dict,
+                          cancel: dict) -> dict:
+        def on_event(stage, site_id, info):
+            progress["stage"] = stage
+            if stage == "site_done":
+                progress["done"] = progress.get("done", 0) + 1
+
+        batch = await easi_screening.screen_sites_direct_async(
+            site_rows, criteria, on_event=on_event,
+            cancel=lambda: bool(cancel.get("flag")))
+        return easi_screening.to_screening_tables(batch)
+
+    @reactive.effect
+    @reactive.event(input.screening_run_direct)
+    def _run_screening_direct():
+        s = sites()
+        if s is None or len(s) == 0:
+            return
+        rows = _screening_site_rows(s)
+        if not rows:
+            ui.notification_show("No candidate sites have coordinates to screen.",
+                                 type="warning", duration=6)
+            return
+        preset = _inp("screening_preset") or "functional"
+        _screen_prog.update({"done": 0, "total": len(rows), "stage": "queued"})
+        _screen_cancel["flag"] = False
+        screen_task(rows, preset, _screen_prog, _screen_cancel)
+        ui.notification_show(f"Screening {len(rows)} candidate sites…", id="sc_screen",
+                             type="message", duration=None)
+
+    @reactive.effect
+    @reactive.event(input.screening_cancel)
+    def _cancel_screening():
+        _screen_cancel["flag"] = True
+        ui.notification_show("Cancelling screening…", id="sc_screen",
+                             type="warning", duration=None)
+
+    @reactive.effect
+    def _screen_poll():
+        if screen_task.status() != "running":
+            return
+        reactive.invalidate_later(0.4)
+        done, total = _screen_prog.get("done", 0), _screen_prog.get("total", 0)
+        ui.notification_show(f"Screening candidate sites… {done} of {total}",
+                             id="sc_screen", type="message", duration=None)
+
+    @reactive.effect
+    def _screen_done():
+        status = screen_task.status()
+        if status in ("initial", "running"):
+            return
+        ui.notification_remove("sc_screen")
+        try:
+            tables = screen_task.result()
+        except Exception as exc:  # noqa: BLE001
+            ui.notification_show(f"Screening failed: {exc}", type="error", duration=8)
+            return
+        _persist_screening(tables, method="direct_engine")
+        n = len(tables["easi_screening_sites"])
+        keep = len(easi_screening.retained_site_ids(tables))
+        note = " (cancelled early)" if _screen_cancel.get("flag") else ""
+        ui.notification_show(f"Screened {n} sites, {keep} retained{note}.",
+                             type="message", duration=6)
+
+    @reactive.effect
+    @reactive.event(input.screening_zip)
+    def _import_screening_zip():
+        finfo = input.screening_zip()
+        if not finfo:
+            return
+        try:
+            data = Path(finfo[0]["datapath"]).read_bytes()
+            tables = easi_screening.to_screening_tables(
+                easi_screening.screen_result_from_zip(data))
+        except Exception as exc:  # noqa: BLE001
+            ui.notification_show(f"Could not read EASI screening ZIP: {exc}",
+                                 type="error", duration=6)
+            return
+        _persist_screening(tables, method="zip_import")
+        n = len(tables["easi_screening_sites"])
+        keep = len(easi_screening.retained_site_ids(tables))
+        ui.notification_show(f"Imported EASI screening: {n} sites, {keep} retained.",
+                             type="message", duration=5)
+
+    @reactive.effect
+    @reactive.event(input.screening_clear)
+    def _clear_screening():
+        state.easi_screening_sites.set(None)
+        state.easi_screening_metrics.set(None)
+        state.easi_screening_criteria.set(None)
+        state.site_exclusions.set([])
+        state.screening_run.set(None)
+
+    def _apply_reviewer_override(decision: str) -> None:
+        sc = state.easi_screening_sites()
+        if sc is None:
+            return
+        df = (sc if hasattr(sc, "columns") else pd.DataFrame(sc)).reset_index(drop=True)
+        sel = screening_table.cell_selection()
+        rows0 = list((sel or {}).get("rows") or [])
+        if not rows0:
+            ui.notification_show("Select one or more rows first.",
+                                 type="warning", duration=5)
+            return
+        note = (_inp("screening_note") or "").strip()
+        if not note:
+            ui.notification_show("Add a short reviewer note before overriding.",
+                                 type="warning", duration=5)
+            return
+        for col in ("final_decision", "reviewer", "reviewer_note", "reason"):
+            if col not in df.columns:
+                df[col] = None
+        df = df.astype({"final_decision": object, "reviewer": object,
+                        "reviewer_note": object, "reason": object})
+        for i in rows0:
+            if 0 <= i < len(df):
+                df.at[i, "final_decision"] = decision
+                df.at[i, "reviewer"] = "reviewer"
+                df.at[i, "reviewer_note"] = note
+                df.at[i, "reason"] = f"reviewer {decision}: {note}"
+        state.easi_screening_sites.set(df)
+        _sync_screening_derivations(df)
+        ui.notification_show(
+            f"{len(rows0)} site(s) marked {decision}.", type="message", duration=4)
+
+    @reactive.effect
+    @reactive.event(input.screening_retain_sel)
+    def _retain_selected():
+        _apply_reviewer_override("retained")
+
+    @reactive.effect
+    @reactive.event(input.screening_exclude_sel)
+    def _exclude_selected():
+        _apply_reviewer_override("excluded")
+
+    @render.data_frame
+    def screening_table():
+        sc = state.easi_screening_sites()
+        req(sc is not None)
+        df = sc if hasattr(sc, "columns") else pd.DataFrame(sc)
+        cols = [c for c in ("site_id", "state", "eci", "auto_decision",
+                            "final_decision", "reviewer", "reason") if c in df.columns]
+        return render.DataGrid(df[cols].reset_index(drop=True), height="260px",
+                               selection_mode="rows", width="100%")
+
+    @render.ui
+    def easi_screening_panel():
+        s = sites()
+        if s is None or len(s) == 0:
+            return None
+        engine_ok = easi_screening.engine_available()
+        sc = state.easi_screening_sites()
+        if sc is None or (hasattr(sc, "empty") and sc.empty):
+            run_controls = (
+                ui.TagList(
+                    ui.div(
+                        ui.input_select(
+                            ns("screening_preset"), None,
+                            choices={"functional": "Functional preset",
+                                     "reference_condition": "Reference-condition preset"},
+                            selected="functional", width="220px"),
+                        ui.input_action_button(
+                            ns("screening_run_direct"), "Run screening",
+                            class_="btn btn-sm btn-primary ms-2"),
+                        ui.input_action_button(
+                            ns("screening_cancel"), "Cancel",
+                            class_="btn btn-sm btn-outline-secondary ms-1"),
+                        class_="d-flex align-items-center mb-2"),
+                    ui.tags.p("Runs the EASI batch engine on this machine over your "
+                              "candidate sites, keeping only qualifying reference sites.",
+                              class_="text-muted small mb-2"),
+                )
+                if engine_ok else
+                ui.div("The EASI engine is not available here. Import a finalized "
+                       "batch ZIP produced on a machine that has it.",
+                       class_="text-muted small mb-2")
+            )
+            return ui.div(
+                ui.tags.h6("EASI reference-condition screening", class_="mb-1"),
+                run_controls,
+                ui.tags.hr(class_="my-2"),
+                ui.tags.p("Or import a finalized EASI batch ZIP (cloud-safe, no engine):",
+                          class_="text-muted small mb-1"),
+                ui.input_file(ns("screening_zip"), None, accept=[".zip"]),
+                class_="easi-screening-panel border rounded p-2 mt-3")
+        df = sc if hasattr(sc, "columns") else pd.DataFrame(sc)
+        retained = int((df["final_decision"] == "retained").sum()) \
+            if "final_decision" in df.columns else 0
+        return ui.div(
+            ui.tags.h6("EASI screening results", class_="mb-1"),
+            ui.div(f"{len(df)} screened · {retained} retained · "
+                   f"{len(df) - retained} excluded. Retained sites continue to enrichment.",
+                   class_="alert alert-info py-2 mb-2"),
+            ui.output_data_frame("screening_table"),
+            ui.div(
+                ui.input_text(ns("screening_note"), None,
+                              placeholder="Reviewer note (required to override)",
+                              width="320px"),
+                ui.input_action_button(ns("screening_retain_sel"), "Retain selected",
+                                       class_="btn btn-sm btn-outline-success ms-2"),
+                ui.input_action_button(ns("screening_exclude_sel"), "Exclude selected",
+                                       class_="btn btn-sm btn-outline-danger ms-1"),
+                class_="d-flex align-items-center mt-2"),
+            ui.input_action_button(ns("screening_clear"), "Clear screening",
+                                   class_="btn btn-sm btn-outline-secondary mt-2"),
+            class_="easi-screening-panel border rounded p-2 mt-3")
 
     @reactive.effect
     def _refresh_sites_map():

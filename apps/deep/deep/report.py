@@ -13,12 +13,57 @@ import csv
 import io
 import json
 
-from . import curves, scoring
+from . import curves, scoring, session
 
 
 def _mbf(assessment) -> list[dict]:
     mbf = getattr(assessment, "metrics_by_function", None)
     return mbf if mbf is not None else (assessment or {}).get("metricsByFunction", [])
+
+
+def _raw(assessment) -> dict:
+    """The underlying assessment dict, whether ``assessment`` is a LoadedAssessment or a dict."""
+    r = getattr(assessment, "raw", None)
+    if isinstance(r, dict) and r:
+        return r
+    return assessment if isinstance(assessment, dict) else {}
+
+
+def _provenance(assessment, region):
+    """(version, lifecycle_status, content_digest, level3_dict, state_dict) for the report
+    header/props. Version/status/digest derive from the inlined bundle; region is the
+    already-resolved ``{"level3","state"}`` the caller passes (session field), defaulting
+    to empty when absent."""
+    raw = _raw(assessment)
+    version = (raw.get("library") or {}).get("version")
+    status = session.lifecycle_status(raw)
+    digest = session.bundle_digest(raw)
+    reg = region or {}
+    return version, status, digest, (reg.get("level3") or {}), (reg.get("state") or {})
+
+
+def _method_version(assessment) -> str:
+    """Scoring method version stamped on the bundle's ``scoringContract`` (empty if none)."""
+    return (_raw(assessment).get("scoringContract") or {}).get("methodVersion") or ""
+
+
+def _state_label(st: dict) -> str:
+    name, code = st.get("name"), st.get("code")
+    if name and code:
+        return f"{name} ({code})"
+    return name or code or ""
+
+
+def _l3_label(l3: dict) -> str:
+    code, name = l3.get("code"), l3.get("name")
+    if code and name:
+        return f"{code} {name}"
+    return name or code or ""
+
+
+def _region_combined(st: dict, l3: dict) -> str:
+    parts = [p for p in (_state_label(st), _l3_label(l3)) if p]
+    return "  ·  ".join(parts) if parts else "Not resolved"
 
 
 def _attr(assessment, obj_attr, dict_key, default=""):
@@ -43,12 +88,19 @@ def _rows(assessment, measured):
             yield fn, m, val, idx
 
 
-def _header_pairs(delin, assessment, sc):
+def _header_pairs(delin, assessment, sc, region=None):
     dl = (delin or {}).get("delineation", {})
     si = sc.get("subIndices", {})
+    version, status, digest, l3, st = _provenance(assessment, region)
     return [
         ("Assessment", _attr(assessment, "assessment_name", "assessmentName")),
+        ("Assessment version", "" if version is None else version),
+        ("Lifecycle status", status.title()),
+        ("Scoring method version", _method_version(assessment)),
         ("Source", _attr(assessment, "source_citation", "sourceCitation")),
+        ("State (region match)", _state_label(st)),
+        ("Level III ecoregion", _l3_label(l3)),
+        ("Content digest", digest),
         ("Stream", dl.get("gnis_name") or "(unnamed reach)"),
         ("Latitude", dl.get("snapped_lat")), ("Longitude", dl.get("snapped_lon")),
         ("COMID", dl.get("comid")), ("HUC8", dl.get("huc8")),
@@ -75,11 +127,11 @@ def _function_rows(assessment, sc):
         yield fn.get("functionName", fid), s, cond
 
 
-def build_csv(delin, assessment, measured, sc) -> str:
+def build_csv(delin, assessment, measured, sc, region=None) -> str:
     out = io.StringIO()
     w = csv.writer(out)
     w.writerow(["DEEP Detailed Assessment"])
-    for k, v in _header_pairs(delin, assessment, sc):
+    for k, v in _header_pairs(delin, assessment, sc, region):
         w.writerow([k, v])
     w.writerow([])
     w.writerow(["Function", "Discipline", "Metric", "Measured value", "Curve (source)",
@@ -102,10 +154,14 @@ def build_csv(delin, assessment, measured, sc) -> str:
     return out.getvalue()
 
 
-def build_geojson(delin, assessment, sc) -> str:
+def build_geojson(delin, assessment, sc, region=None) -> str:
     dl = (delin or {}).get("delineation", {})
+    version, status, digest, l3, st = _provenance(assessment, region)
     props = {"assessment": _attr(assessment, "assessment_name", "assessmentName"),
+             "assessment_version": version, "lifecycle_status": status,
              "source": _attr(assessment, "source_citation", "sourceCitation"),
+             "region_state": _state_label(st), "region_level3": _l3_label(l3),
+             "content_digest": digest,
              "stream": dl.get("gnis_name"), "comid": dl.get("comid"), "huc8": dl.get("huc8"),
              "drainage_area_sqkm": dl.get("drainage_area_sqkm"),
              "ecosystem_condition_index": sc.get("ecosystemConditionIndex")}
@@ -132,7 +188,7 @@ def build_geojson(delin, assessment, sc) -> str:
     return json.dumps({"type": "FeatureCollection", "features": feats}, indent=2)
 
 
-def build_pdf(delin, assessment, measured, sc) -> bytes:
+def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
     from reportlab.lib import colors
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -154,11 +210,16 @@ def build_pdf(delin, assessment, measured, sc) -> bytes:
                        styles["Heading2"]),
              Paragraph(dl.get("gnis_name") or "(unnamed reach)", styles["Heading3"])]
 
+    version, status, digest, l3, st = _provenance(assessment, region)
+    ver_txt = "unversioned" if version is None else f"v{version}"
     hdr = [["Source", _attr(assessment, "source_citation", "sourceCitation")],
+           ["Version / status", f"{ver_txt}  ·  {status.title()}"],
+           ["Region match", _region_combined(st, l3)],
            ["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
            ["COMID / HUC8", f"{dl.get('comid')} / {dl.get('huc8')}"],
            ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
            ["Reach length", f"{dl.get('reach_length_ft')} ft"],
+           ["Content digest", digest or "(none)"],
            ["Ecosystem Condition Index", f"{sc.get('ecosystemConditionIndex')}"]]
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
     t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9), ("GRID", (0, 0), (-1, -1), 0.3, grid),
