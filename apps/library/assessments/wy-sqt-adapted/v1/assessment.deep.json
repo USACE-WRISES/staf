@@ -1,0 +1,1476 @@
+{
+  "schemaVersion": 1,
+  "tier": "detailed",
+  "assessmentId": "wy-sqt-adapted",
+  "assessmentName": "WY SQT Adapted",
+  "stateCode": "WY",
+  "stateName": "Wyoming",
+  "sourceCitation": "Wyoming SQT",
+  "applicability": "Wyoming streams",
+  "metricsByFunction": [
+    {
+      "functionId": "catchment-hydrology",
+      "functionName": "Catchment hydrology",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "catchment-hydrology-land-use-coefficient",
+          "metricName": "Land Use Coefficient",
+          "discipline": "Hydrology",
+          "inputType": "desktop (gis)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Land Use Coefficient",
+          "metricStatement": "Catchment land cover/soil condition used as a surrogate for runoff/infiltration and stress from development or land conversion.",
+          "howToMeasure": "Delineate watershed for the reach; compute metric from land cover/impervious (e.g., NLCD) and/or soils (NRCS). Apply the state SQT scoring breakpoints.",
+          "methodContext": "Context: Watershed\n\nMethod: Desktop (GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 45,
+                "y": 1
+              },
+              {
+                "x": 62,
+                "y": 0.7
+              },
+              {
+                "x": 80,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "reach-inflow",
+      "functionName": "Reach inflow",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "reach-inflow-concentrated-flow-points",
+          "metricName": "Concentrated Flow Points",
+          "discipline": "Hydrology",
+          "inputType": "field (with desktop pre-screen)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Concentrated Flow Points",
+          "metricStatement": "Count of concentrated inflow locations (ditches, pipes, outfalls) that can deliver runoff, sediment, or pollutants to the reach.",
+          "howToMeasure": "Walk the reach (or use imagery pre-screen) and count concentrated inflow points; normalize by reach length (e.g., per 1,000 ft or per 100 m).",
+          "methodContext": "Context: Channel\n\nMethod: Field (with desktop pre-screen)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 1,
+                "y": 0.69
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "streamflow-regime",
+      "functionName": "Streamflow regime",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "streamflow-regime-flow-alteration-module",
+          "metricName": "Flow Alteration Module",
+          "discipline": "Hydrology",
+          "inputType": "desktop (hydrology/flow analysis)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Flow Alteration Module",
+          "metricStatement": "Composite indicator of departure from natural flow timing, magnitude, and variability due to regulation, withdrawals, or land use.",
+          "howToMeasure": "Compile daily discharge (or model outputs). Calculate the module score per SQT guidance (often based on multiple IHA-style metrics).",
+          "methodContext": "Context: Watershed\n\nMethod: Desktop (hydrology/flow analysis)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - ALL METRICS",
+            "stratification": "ALL METRICS",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 0.9,
+                "y": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "functionName": "Low flow and baseflow dynamics",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "low-flow-and-baseflow-dynamics-average-depth",
+          "metricName": "Average Depth",
+          "discipline": "Hydraulics",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Average Depth",
+          "metricStatement": "Typical water depth at baseflow conditions used to infer low-flow habitat availability.",
+          "howToMeasure": "Measure water depth at multiple transects during representative low flow and compute average; apply stratified scoring breakpoints.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - Tier I, W < 20'",
+            "stratification": "Tier I, W < 20'",
+            "points": [
+              {
+                "x": 0.2,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Tier I, W < 20'",
+              "layerName": "Wyoming SQT - Tier I, W < 20'",
+              "points": [
+                {
+                  "x": 0.2,
+                  "y": 0
+                },
+                {
+                  "x": 1,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Tier I, W >20'",
+              "layerName": "Wyoming SQT - Tier I, W >20'",
+              "points": [
+                {
+                  "x": 0.4,
+                  "y": 0
+                },
+                {
+                  "x": 1.5,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Tier II",
+              "layerName": "Wyoming SQT - Tier II",
+              "points": [
+                {
+                  "x": 0.6,
+                  "y": 0
+                },
+                {
+                  "x": 2.3,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Tier I, W < 20'"
+        }
+      ]
+    },
+    {
+      "functionId": "floodplain-connectivity",
+      "functionName": "Floodplain connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "floodplain-connectivity-entrenchment-ratio-er",
+          "metricName": "Entrenchment Ratio (ER)",
+          "discipline": "Hydraulics",
+          "inputType": "field (survey) or desktop (lidar cross sections)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Entrenchment Ratio (ER)",
+          "metricStatement": "Degree of floodplain access during moderate floods; low ER indicates incision and reduced overbank connectivity.",
+          "howToMeasure": "Measure flood-prone width and bankfull width/depth per SQT method; compute ER = flood-prone width / bankfull width (or per SQT definition).",
+          "methodContext": "Context: Channel/Floodplain\n\nMethod: Field (survey) or Desktop (LiDAR cross sections)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - Cb Stream Types",
+            "stratification": "Cb Stream Types",
+            "points": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2.2,
+                "y": 0.7
+              },
+              {
+                "x": 3.9,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Cb Stream Types",
+              "layerName": "Wyoming SQT - Cb Stream Types",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2.2,
+                  "y": 0.7
+                },
+                {
+                  "x": 3.9,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "C Stream Types",
+              "layerName": "Wyoming SQT - C Stream Types",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2.2,
+                  "y": 0.7
+                },
+                {
+                  "x": 4.4,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "E Stream Types",
+              "layerName": "Wyoming SQT - E Stream Types",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 2.2,
+                  "y": 0.7
+                },
+                {
+                  "x": 6.5,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "A, B, Ba, and Bc Stream Types",
+              "layerName": "Wyoming SQT - A, B, Ba, and Bc Stream Types",
+              "points": [
+                {
+                  "x": 1,
+                  "y": 0
+                },
+                {
+                  "x": 1.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 2.2,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Cb Stream Types"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-evolution",
+      "functionName": "Channel evolution",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "channel-evolution-width-depth-ratio-state",
+          "metricName": "Width/Depth Ratio State",
+          "discipline": "Geomorphology",
+          "inputType": "field (survey)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Width/Depth Ratio State",
+          "metricStatement": "Channel dimension indicator used to infer incision/widening or departure from reference geometry.",
+          "howToMeasure": "Measure bankfull width and mean depth at representative cross sections; compute W/D and compare to expected (regional curves or SQT reference).",
+          "methodContext": "Context: Channel\n\nMethod: Field (survey)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0.2,
+                "y": 0
+              },
+              {
+                "x": 1,
+                "y": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "functionName": "Channel and floodplain dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+          "metricName": "Bank Height Ratio (BHR)",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Bank Height Ratio (BHR)",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 1.5,
+                "y": 0.3
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-greenline-stability-rating",
+          "metricName": "Greenline Stability Rating",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Greenline Stability Rating",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 2,
+                "y": 0
+              },
+              {
+                "x": 5,
+                "y": 0.3
+              },
+              {
+                "x": 7,
+                "y": 0.7
+              },
+              {
+                "x": 9,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-percent-side-channels",
+          "metricName": "Percent Side Channels",
+          "discipline": "Geomorphology",
+          "inputType": "see state sqt protocol",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Percent Side Channels",
+          "metricStatement": "Metric definition and measurement are state SQT-specific.",
+          "howToMeasure": "Follow the state SQT metric definition and apply the scoring breakpoints for the appropriate stratum.",
+          "methodContext": "Context: Varies\n\nMethod: See state SQT protocol",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - Unconfined Alluvial",
+            "stratification": "Unconfined Alluvial",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 10,
+                "y": 0.3
+              },
+              {
+                "x": 50,
+                "y": 0.7
+              },
+              {
+                "x": 100,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Unconfined Alluvial",
+              "layerName": "Wyoming SQT - Unconfined Alluvial",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 10,
+                  "y": 0.3
+                },
+                {
+                  "x": 50,
+                  "y": 0.7
+                },
+                {
+                  "x": 100,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Confined Alluvial",
+              "layerName": "Wyoming SQT - Confined Alluvial",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 5,
+                  "y": 0.3
+                },
+                {
+                  "x": 25,
+                  "y": 0.7
+                },
+                {
+                  "x": 50,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Unconfined Alluvial"
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-percent-streambank-armoring",
+          "metricName": "Percent Streambank Armoring",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Percent Streambank Armoring",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 1
+              },
+              {
+                "x": 30,
+                "y": 0
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "channel-and-floodplain-dynamics-percent-streambank-erosion",
+          "metricName": "Percent Streambank Erosion",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Percent Streambank Erosion",
+          "metricStatement": "Bank stability/erosion and protection condition influencing channel change, sediment delivery, and habitat structure.",
+          "howToMeasure": "Map eroding and armored bank length, measure bank height and bankfull stage where needed, and/or score greenline stability per SQT protocol; compute percent lengths or ratios.",
+          "methodContext": "Context: Channel/Riparian\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 5,
+                "y": 1
+              },
+              {
+                "x": 10,
+                "y": 0.7
+              },
+              {
+                "x": 75,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "functionName": "Bed composition and large wood",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "bed-composition-and-large-wood-percent-fines-2mm",
+          "metricName": "Percent Fines < 2mm",
+          "discipline": "Geomorphology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Percent Fines < 2mm",
+          "metricStatement": "Streambed substrate size distribution used to infer habitat quality, sediment transport, and embeddedness/fine sediment stress.",
+          "howToMeasure": "Conduct pebble count or substrate characterization per SQT method; compute percent fines or D50 and apply scoring thresholds (stratified by bed type where needed).",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 5,
+                "y": 1
+              },
+              {
+                "x": 15,
+                "y": 0.7
+              },
+              {
+                "x": 50,
+                "y": 0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "functionId": "light-thermal-regime",
+      "functionName": "Light & thermal regime",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "light-and-thermal-regime-maximum-weekly-average-temperature-mwat",
+          "metricName": "Maximum Weekly Average Temperature (MWAT)",
+          "discipline": "Physicochemistry",
+          "inputType": "field (logger) and/or desktop (data compilation)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Maximum Weekly Average Temperature (MWAT)",
+          "metricStatement": "Thermal condition (maximum or weekly average temperature) used to assess heat stress risk and habitat suitability.",
+          "howToMeasure": "Deploy temperature logger (or compile existing records) over summer season; compute statistic (daily max, MWAT, July mean) and score against stratified thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (logger) and/or Desktop (data compilation)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - Tier I (Cold)",
+            "stratification": "Tier I (Cold)",
+            "points": [
+              {
+                "x": 15.4,
+                "y": 0.7
+              },
+              {
+                "x": 18.1,
+                "y": 0.3
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Tier I (Cold)",
+              "layerName": "Wyoming SQT - Tier I (Cold)",
+              "points": [
+                {
+                  "x": 15.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 18.1,
+                  "y": 0.3
+                }
+              ]
+            },
+            {
+              "stratum": "Tier II (Cold-Cool)",
+              "layerName": "Wyoming SQT - Tier II (Cold-Cool)",
+              "points": [
+                {
+                  "x": 17.7,
+                  "y": 0.7
+                },
+                {
+                  "x": 19.3,
+                  "y": 0.3
+                }
+              ]
+            },
+            {
+              "stratum": "Tier III (Cool)",
+              "layerName": "Wyoming SQT - Tier III (Cool)",
+              "points": [
+                {
+                  "x": 19.9,
+                  "y": 0.7
+                },
+                {
+                  "x": 22,
+                  "y": 0.3
+                }
+              ]
+            },
+            {
+              "stratum": "Tier IV (Cool-Warm)",
+              "layerName": "Wyoming SQT - Tier IV (Cool-Warm)",
+              "points": [
+                {
+                  "x": 24.4,
+                  "y": 0.7
+                },
+                {
+                  "x": 26,
+                  "y": 0.3
+                }
+              ]
+            },
+            {
+              "stratum": "Tier V (Warm)",
+              "layerName": "Wyoming SQT - Tier V (Warm)",
+              "points": [
+                {
+                  "x": 27.3,
+                  "y": 0.7
+                },
+                {
+                  "x": 29,
+                  "y": 0.3
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Tier I (Cold)"
+        }
+      ]
+    },
+    {
+      "functionId": "carbon-processing",
+      "functionName": "Carbon processing",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "carbon-processing-chlorophyll",
+          "metricName": "Chlorophyll ?",
+          "discipline": "Physicochemistry",
+          "inputType": "field (sampling/assay)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Chlorophyll ?",
+          "metricStatement": "Indicator of primary production or detrital processing that supports food webs and stream metabolism.",
+          "howToMeasure": "Collect periphyton/algal samples (or estimate biomass) and compute chlorophyll-a or biomass metric; apply SQT thresholds by biotype.",
+          "methodContext": "Context: Channel\n\nMethod: Field (sampling/assay)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - Basins and Plains",
+            "stratification": "Basins and Plains",
+            "points": [
+              {
+                "x": 16,
+                "y": 1
+              },
+              {
+                "x": 29,
+                "y": 0.7
+              },
+              {
+                "x": 117,
+                "y": 0.3
+              },
+              {
+                "x": 150,
+                "y": 0
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Basins and Plains",
+              "layerName": "Wyoming SQT - Basins and Plains",
+              "points": [
+                {
+                  "x": 16,
+                  "y": 1
+                },
+                {
+                  "x": 29,
+                  "y": 0.7
+                },
+                {
+                  "x": 117,
+                  "y": 0.3
+                },
+                {
+                  "x": 150,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "stratum": "Mountains",
+              "layerName": "Wyoming SQT - Mountains",
+              "points": [
+                {
+                  "x": 12,
+                  "y": 1
+                },
+                {
+                  "x": 26.75,
+                  "y": 0.7
+                },
+                {
+                  "x": 53,
+                  "y": 0.3
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Basins and Plains"
+        },
+        {
+          "metricId": "carbon-processing-herbaceous-vegetation-cover",
+          "metricName": "Herbaceous Vegetation Cover",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Herbaceous Vegetation Cover",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 35,
+                "y": 0
+              },
+              {
+                "x": 74,
+                "y": 0.7
+              },
+              {
+                "x": 119,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "carbon-processing-percent-native-cover",
+          "metricName": "Percent Native Cover",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Percent Native Cover",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 65,
+                "y": 0.3
+              },
+              {
+                "x": 91,
+                "y": 0.69
+              },
+              {
+                "x": 100,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "carbon-processing-riparian-extent",
+          "metricName": "Riparian Extent",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Riparian Extent",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - Unconfined Alluvial Valleys",
+            "stratification": "Unconfined Alluvial Valleys",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 30,
+                "y": 0.3
+              },
+              {
+                "x": 100,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Unconfined Alluvial Valleys",
+              "layerName": "Wyoming SQT - Unconfined Alluvial Valleys",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 30,
+                  "y": 0.3
+                },
+                {
+                  "x": 100,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+              "layerName": "Wyoming SQT - Confined Alluvial, Colluvial/V-Shaped, or Bedrock Valleys",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 60,
+                  "y": 0.3
+                },
+                {
+                  "x": 100,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Unconfined Alluvial Valleys"
+        },
+        {
+          "metricId": "carbon-processing-woody-vegetation-cover",
+          "metricName": "Woody Vegetation Cover",
+          "discipline": "Physicochemistry",
+          "inputType": "field and/or desktop (imagery/gis)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Woody Vegetation Cover",
+          "metricStatement": "Riparian vegetation condition and composition influencing organic matter inputs, bank stability, and habitat quality.",
+          "howToMeasure": "Measure riparian corridor attributes (extent, cover, composition, stem density, basal area) per SQT guidance and apply stratified thresholds (valley type/region).",
+          "methodContext": "Context: Riparian/Floodplain\n\nMethod: Field and/or Desktop (imagery/GIS)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - Mountains and Basins",
+            "stratification": "Mountains and Basins",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 69,
+                "y": 0.7
+              },
+              {
+                "x": 122,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Mountains and Basins",
+              "layerName": "Wyoming SQT - Mountains and Basins",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 69,
+                  "y": 0.7
+                },
+                {
+                  "x": 122,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Plains",
+              "layerName": "Wyoming SQT - Plains",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 76,
+                  "y": 1
+                },
+                {
+                  "x": 101,
+                  "y": 0.29
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Mountains and Basins"
+        }
+      ]
+    },
+    {
+      "functionId": "habitat-provision",
+      "functionName": "Habitat provision",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "habitat-provision-lwd-index",
+          "metricName": "LWD Index",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "LWD Index",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 430,
+                "y": 0.7
+              },
+              {
+                "x": 660,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "habitat-provision-lwd-piece-count",
+          "metricName": "LWD Piece Count",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "LWD Piece Count",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Walk a representative reach and count large woody debris pieces/jams per unit length (e.g., per 100 m) following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 13,
+                "y": 0.7
+              },
+              {
+                "x": 28,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "habitat-provision-percent-riffle",
+          "metricName": "Percent Riffle",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Percent Riffle",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - Streams < 3% slope",
+            "stratification": "Streams < 3% slope",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 60,
+                "y": 0.7
+              },
+              {
+                "x": 68,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Streams < 3% slope",
+              "layerName": "Wyoming SQT - Streams < 3% slope",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 60,
+                  "y": 0.7
+                },
+                {
+                  "x": 68,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Streams < 3% slope / Overall",
+              "layerName": "Wyoming SQT - Streams < 3% slope / Overall",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 39,
+                  "y": 0.7
+                },
+                {
+                  "x": 50,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Volcanics Mountains and Valleys Bioregion",
+              "layerName": "Wyoming SQT - Volcanics Mountains and Valleys Bioregion",
+              "points": [
+                {
+                  "x": 0,
+                  "y": 0
+                },
+                {
+                  "x": 76,
+                  "y": 0.7
+                },
+                {
+                  "x": 80,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Streams < 3% slope"
+        },
+        {
+          "metricId": "habitat-provision-pool-depth-ratio",
+          "metricName": "Pool Depth Ratio",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Pool Depth Ratio",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 1,
+                "y": 0
+              },
+              {
+                "x": 2.2,
+                "y": 0.7
+              },
+              {
+                "x": 3.2,
+                "y": 1
+              }
+            ]
+          }
+        },
+        {
+          "metricId": "habitat-provision-pool-spacing-ratio",
+          "metricName": "Pool Spacing Ratio",
+          "discipline": "Biology",
+          "inputType": "field",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Pool Spacing Ratio",
+          "metricStatement": "In-stream habitat structure metric (pools/riffles/wood) indicating habitat diversity and cover for aquatic organisms.",
+          "howToMeasure": "Map riffle and pool units along the reach; compute ratios (pool spacing or pool depth ratio) or percent riffle by length following SQT definitions.",
+          "methodContext": "Context: Channel\n\nMethod: Field",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - B and Ba Stream Types",
+            "stratification": "B and Ba Stream Types",
+            "points": [
+              {
+                "x": 3,
+                "y": 1
+              },
+              {
+                "x": 4,
+                "y": 0.7
+              },
+              {
+                "x": 7.5,
+                "y": 0
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "B and Ba Stream Types",
+              "layerName": "Wyoming SQT - B and Ba Stream Types",
+              "points": [
+                {
+                  "x": 3,
+                  "y": 1
+                },
+                {
+                  "x": 4,
+                  "y": 0.7
+                },
+                {
+                  "x": 7.5,
+                  "y": 0
+                }
+              ]
+            },
+            {
+              "stratum": "Bc Stream Types",
+              "layerName": "Wyoming SQT - Bc Stream Types",
+              "points": [
+                {
+                  "x": 3.4,
+                  "y": 1
+                },
+                {
+                  "x": 6,
+                  "y": 0.7
+                }
+              ]
+            },
+            {
+              "stratum": "C Stream Types",
+              "layerName": "Wyoming SQT - C Stream Types",
+              "points": [
+                {
+                  "x": 3,
+                  "y": 0
+                },
+                {
+                  "x": 3.7,
+                  "y": 0.7
+                },
+                {
+                  "x": 4,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Cb Stream Types",
+              "layerName": "Wyoming SQT - Cb Stream Types",
+              "points": [
+                {
+                  "x": 3,
+                  "y": 0.7
+                },
+                {
+                  "x": 3.7,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "E Stream Types",
+              "layerName": "Wyoming SQT - E Stream Types",
+              "points": [
+                {
+                  "x": 1.833333333,
+                  "y": 0
+                },
+                {
+                  "x": 3,
+                  "y": 0.7
+                },
+                {
+                  "x": 3.5,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "B and Ba Stream Types"
+        }
+      ]
+    },
+    {
+      "functionId": "population-support",
+      "functionName": "Population support",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "population-support-game-species-biomass",
+          "metricName": "Game Species Biomass",
+          "discipline": "Biology",
+          "inputType": "field (fish survey)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Game Species Biomass",
+          "metricStatement": "Population abundance/biomass indicator reflecting recruitment and survival of target game/native species.",
+          "howToMeasure": "Estimate density/biomass (or % change from baseline) per SQT method and score using the appropriate tier/ribbon class thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (fish survey)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT - Blue Ribbon and non-trout game fish",
+            "stratification": "Blue Ribbon and non-trout game fish",
+            "points": [
+              {
+                "x": 5,
+                "y": 0.3
+              },
+              {
+                "x": 25,
+                "y": 0.7
+              },
+              {
+                "x": 40,
+                "y": 1
+              }
+            ]
+          },
+          "curveLayers": [
+            {
+              "stratum": "Blue Ribbon and non-trout game fish",
+              "layerName": "Wyoming SQT - Blue Ribbon and non-trout game fish",
+              "points": [
+                {
+                  "x": 5,
+                  "y": 0.3
+                },
+                {
+                  "x": 25,
+                  "y": 0.7
+                },
+                {
+                  "x": 40,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Red Ribbon",
+              "layerName": "Wyoming SQT - Red Ribbon",
+              "points": [
+                {
+                  "x": 10,
+                  "y": 0.3
+                },
+                {
+                  "x": 50,
+                  "y": 0.7
+                },
+                {
+                  "x": 80,
+                  "y": 1
+                }
+              ]
+            },
+            {
+              "stratum": "Yellow/Green Ribbon",
+              "layerName": "Wyoming SQT - Yellow/Green Ribbon",
+              "points": [
+                {
+                  "x": 15,
+                  "y": 0.3
+                },
+                {
+                  "x": 75,
+                  "y": 0.7
+                },
+                {
+                  "x": 119,
+                  "y": 1
+                }
+              ]
+            }
+          ],
+          "activeStratum": "Blue Ribbon and non-trout game fish"
+        }
+      ]
+    },
+    {
+      "functionId": "community-dynamics",
+      "functionName": "Community dynamics",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "community-dynamics-native-fish-species-richness",
+          "metricName": "Native Fish Species Richness",
+          "discipline": "Biology",
+          "inputType": "field (fish survey) and/or desktop (existing data)",
+          "sourceCitation": "Wyoming SQT",
+          "xLabel": "Native Fish Species Richness",
+          "metricStatement": "Community composition indicator reflecting native diversity and assemblage balance relative to expectation.",
+          "howToMeasure": "Survey fish community, compute richness (% of expected where defined) or abundance/biomass composition metrics, and score against SQT thresholds.",
+          "methodContext": "Context: Channel\n\nMethod: Field (fish survey) and/or Desktop (existing data)",
+          "assignmentOrigin": "",
+          "curve": {
+            "layerName": "Wyoming SQT",
+            "stratification": "",
+            "points": [
+              {
+                "x": 0,
+                "y": 0
+              },
+              {
+                "x": 80,
+                "y": 0.69
+              },
+              {
+                "x": 100,
+                "y": 1
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "region": {
+    "kind": "state",
+    "code": "WY",
+    "name": "Wyoming",
+    "polygon": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -109.0808,
+            45.0021
+          ],
+          [
+            -105.9152,
+            45.0021
+          ],
+          [
+            -104.0585,
+            44.9966
+          ],
+          [
+            -104.053,
+            43.003
+          ],
+          [
+            -104.053,
+            41.0039
+          ],
+          [
+            -105.7289,
+            40.9984
+          ],
+          [
+            -107.9197,
+            41.0039
+          ],
+          [
+            -109.048,
+            40.9984
+          ],
+          [
+            -111.0471,
+            40.9984
+          ],
+          [
+            -111.0471,
+            42.0007
+          ],
+          [
+            -111.0471,
+            44.4763
+          ],
+          [
+            -111.0525,
+            45.0021
+          ],
+          [
+            -109.0808,
+            45.0021
+          ]
+        ]
+      ]
+    }
+  },
+  "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
+  "library": {
+    "libraryId": "wy-sqt-adapted",
+    "version": 1,
+    "updatedAt": "2026-07-12T01:57:26Z",
+    "author": "STAF SQT migration",
+    "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+    "region": {
+      "kind": "state",
+      "code": "WY",
+      "name": "Wyoming"
+    },
+    "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
+    "supersedesVersion": null
+  }
+}

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from . import config
+from . import config, geo, session
 
 
 @dataclass
@@ -169,7 +169,10 @@ def _point_in_geometry(lon: float, lat: float, geom: dict | None) -> bool:
 
 def applicable_assessments(lat: float, lon: float) -> list[str]:
     """assessmentIds applicable at ``(lat, lon)``: the region polygon contains the point, or
-    the assessment has no region polygon (no area of applicability -> applies everywhere)."""
+    the assessment has no region polygon (no area of applicability -> applies everywhere).
+
+    Legacy matcher retained for the current selector/tests. The redesign uses the stricter
+    :func:`covering_assessments`; this stays for backward compatibility."""
     out: list[str] = []
     for a in config.assessments():
         region = a.get("region") or (a.get("library") or {}).get("region") or {}
@@ -177,6 +180,109 @@ def applicable_assessments(lat: float, lon: float) -> list[str]:
         if geom is None or _point_in_geometry(lon, lat, geom):
             out.append(a.get("assessmentId"))
     return out
+
+
+def covering_assessments(lat: float, lon: float, *, require_polygon: bool = True) -> list[str]:
+    """assessmentIds whose published region polygon **covers** ``(lat, lon)``, ordered
+    **certified first, then preliminary** (stable within each tier).
+
+    Stricter than :func:`applicable_assessments`: with ``require_polygon=True`` (the
+    redesign default) a polygonless assessment does NOT apply everywhere — it is excluded,
+    so DEEP only offers assessments with a real area of applicability. Pass
+    ``require_polygon=False`` to also include polygonless assessments as a clearly-labeled
+    national fallback (the interim behavior until the state SQTs receive polygons upstream —
+    Part E). Lifecycle status is read from the bundle (``session.lifecycle_status``),
+    defaulting to preliminary.
+    """
+    certified: list[str] = []
+    preliminary: list[str] = []
+    for a in config.assessments():
+        region = a.get("region") or (a.get("library") or {}).get("region") or {}
+        geom = _region_geometry(region)
+        if geom is None:
+            if require_polygon:
+                continue
+            covered = True  # national fallback (no defined area of applicability)
+        else:
+            covered = _point_in_geometry(lon, lat, geom)
+        if not covered:
+            continue
+        bucket = certified if session.lifecycle_status(a) == "certified" else preliminary
+        bucket.append(a.get("assessmentId"))
+    return certified + preliminary
+
+
+def covering_refs(lat: float, lon: float, *, require_polygon: bool = True) -> list[dict]:
+    """Per covering assessment id, its eligible version refs, certified-first.
+
+    Coverage is decided from the *default* version's region polygon. Returns one dict per
+    covering id: ``{assessmentId, assessmentName, regionName, defaultRef, refs,
+    lifecycleByRef, versionByRef, hasCertified}`` where ``refs`` is ordered certified-desc
+    then preliminary-desc with the default ref first. Ids with a certified default sort
+    ahead. ``require_polygon`` mirrors :func:`covering_assessments`.
+    """
+    records = config._registry_records()
+    by_id: dict[str, list[dict]] = {}
+    for r in records:
+        aid = r.get("assessmentId")
+        if aid:
+            by_id.setdefault(aid, []).append(r)
+
+    out: list[dict] = []
+    for aid, recs in by_id.items():
+        default_ref = config.default_ref_for(aid)
+        default_rec = config.load_ref(default_ref) if default_ref else None
+        default_rec = default_rec or recs[0]
+        region = default_rec.get("region") or (default_rec.get("library") or {}).get("region") or {}
+        geom = _region_geometry(region)
+        if geom is None:
+            if require_polygon:
+                continue
+            covered = True
+        else:
+            covered = _point_in_geometry(lon, lat, geom)
+        if not covered:
+            continue
+
+        certified = sorted((r for r in recs if r.get("lifecycle") == "certified"),
+                           key=lambda r: -int(r.get("version") or 0))
+        preliminary = sorted((r for r in recs if r.get("lifecycle") != "certified"),
+                             key=lambda r: -int(r.get("version") or 0))
+        ordered = certified + preliminary
+        refs = [r["assessmentRef"] for r in ordered]
+        if default_ref in refs:
+            refs = [default_ref] + [r for r in refs if r != default_ref]
+        out.append({
+            "assessmentId": aid,
+            "assessmentName": default_rec.get("assessmentName", aid),
+            "regionName": region.get("name", ""),
+            "defaultRef": default_ref,
+            "refs": refs,
+            "lifecycleByRef": {r["assessmentRef"]: r.get("lifecycle", "preliminary") for r in ordered},
+            "versionByRef": {r["assessmentRef"]: int(r.get("version") or 1) for r in ordered},
+            "hasCertified": bool(certified),
+        })
+    out.sort(key=lambda e: (0 if e["hasCertified"] else 1, e["assessmentId"]))
+    return out
+
+
+def load_ref(ref: str) -> LoadedAssessment:
+    """Load a specific ``id@vN`` version record as a :class:`LoadedAssessment`."""
+    rec = config.load_ref(ref)
+    if rec is None:
+        raise KeyError(f"unknown assessment ref {ref!r}")
+    return LoadedAssessment.from_dict(rec)
+
+
+def resolve_site_regions(lat, lon) -> dict:
+    """Resolve a snapped site to its region labels via :mod:`deep.geo`.
+
+    Returns ``{"level3": {"code","name"}|None, "state": {"code","abbr","name"}|None}``.
+    Missing coordinates -> both None. Used by the session provenance stamp and the reports.
+    """
+    if lat is None or lon is None:
+        return {"level3": None, "state": None}
+    return {"level3": geo.level3_at(lat, lon), "state": geo.state_at(lat, lon)}
 
 
 def load_predefined(assessment_id: str) -> LoadedAssessment:

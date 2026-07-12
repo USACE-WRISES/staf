@@ -7,7 +7,6 @@
   "stateName": "Wyoming",
   "sourceCitation": "Wyoming SQT",
   "applicability": "Wyoming streams",
-  "functionCount": 13,
   "metricsByFunction": [
     {
       "functionId": "catchment-hydrology",
@@ -1395,5 +1394,86 @@
       ]
     }
   ],
-  "unresolvedMetrics": []
+  "region": {
+    "kind": "state",
+    "code": "WY",
+    "name": "Wyoming",
+    "polygon": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -109.0808,
+            45.0021
+          ],
+          [
+            -105.9152,
+            45.0021
+          ],
+          [
+            -104.0585,
+            44.9966
+          ],
+          [
+            -104.053,
+            43.003
+          ],
+          [
+            -104.053,
+            41.0039
+          ],
+          [
+            -105.7289,
+            40.9984
+          ],
+          [
+            -107.9197,
+            41.0039
+          ],
+          [
+            -109.048,
+            40.9984
+          ],
+          [
+            -111.0471,
+            40.9984
+          ],
+          [
+            -111.0471,
+            42.0007
+          ],
+          [
+            -111.0471,
+            44.4763
+          ],
+          [
+            -111.0525,
+            45.0021
+          ],
+          [
+            -109.0808,
+            45.0021
+          ]
+        ]
+      ]
+    }
+  },
+  "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
+  "library": {
+    "libraryId": "wy-sqt-adapted",
+    "version": 1,
+    "updatedAt": "2026-07-12T01:57:26Z",
+    "author": "STAF SQT migration",
+    "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+    "region": {
+      "kind": "state",
+      "code": "WY",
+      "name": "Wyoming"
+    },
+    "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
+    "supersedesVersion": null
+  },
+  "version": 1,
+  "lifecycle": "preliminary",
+  "assessmentRef": "wy-sqt-adapted@v1"
 }

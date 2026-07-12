@@ -34,14 +34,17 @@ def test_every_predefined_loads_with_valid_curves():
 
 
 def test_score_site_end_to_end_full_coverage():
-    la = assessments.load_predefined("ak-sqt-adapted")  # covers all 20 functions
+    la = assessments.load_predefined("ak-sqt-adapted")
     result, fresults = curves.score_site(la, _midpoint_measure(la))
     assert 0.0 <= result["ecosystemConditionIndex"] <= 1.0
     for key in config.OUTCOMES:
         assert 0.0 <= result["subIndices"][key] <= 1.0
-    # We measured every metric, so every listed function is scored (none NA).
+    # We measured every metric, so every function the assessment covers is scored
+    # (none NA). Coverage is the assessment's own function count, not a fixed 20.
     assert all(not fr.na for fr in fresults.values())
-    assert len(result["functionScores"]) == 20
+    covered = len([fn for fn in la.metrics_by_function if fn.get("metrics")])
+    assert covered >= 1
+    assert len(result["functionScores"]) == covered
 
 
 def test_scored_functions_match_assessment_coverage():

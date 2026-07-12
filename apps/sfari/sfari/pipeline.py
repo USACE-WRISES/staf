@@ -19,6 +19,28 @@ from . import delineation
 
 DEFAULT_REACH_FT = delineation.DEFAULT_REACH_FT
 
+# The cross-section (Manning) producer in app.py writes evidence entries stamped with
+# this exact source string; it is the ONLY thing that distinguishes an attached
+# cross-section entry from an automatically pulled one (there is no origin flag).
+XS_MANNING_SOURCE = "Native cross-section hydraulics (Manning)"
+
+
+def merge_pulled_evidence(existing: dict, pulled: dict) -> dict:
+    """Merge a fresh automatic evidence pull into the current evidence dict.
+
+    Automatic entries from ``pulled`` replace/add (including new ``unavailable``
+    results), while any existing entry produced by the cross-section tool (source ==
+    :data:`XS_MANNING_SOURCE`) is preserved. This lets the desktop pull re-run
+    (Retry) without wiping attached cross-section hydraulics. Pure: mutates neither
+    argument. On first run ``existing`` has no Manning entries, so the result equals
+    ``pulled`` and first-run behavior is unchanged.
+    """
+    merged = dict(pulled or {})
+    for mid, ev in (existing or {}).items():
+        if isinstance(ev, dict) and ev.get("source") == XS_MANNING_SOURCE:
+            merged[mid] = ev
+    return merged
+
 
 def _error(msg: str, lat: float, lon: float, reach_ft: float) -> dict:
     return {"status": "error", "message": msg,

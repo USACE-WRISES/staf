@@ -11,9 +11,27 @@ from __future__ import annotations
 
 import functools
 import json
+import os
 from pathlib import Path
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+
+def _resolve_data_dir() -> Path:
+    """Resolve the bundled data dir, portable across repo and vendored layouts.
+
+    Order: ``EASI_DATA_DIR`` env override -> an in-package ``easi/data`` (used when
+    the ``easi`` package is vendored into another app without a sibling ``data/``)
+    -> the repo layout's sibling ``apps/easi/data`` (``parents[1]/data``).
+    """
+    env = os.environ.get("EASI_DATA_DIR")
+    if env:
+        return Path(env)
+    in_pkg = Path(__file__).resolve().parent / "data"
+    if in_pkg.is_dir():
+        return in_pkg
+    return Path(__file__).resolve().parents[1] / "data"
+
+
+DATA_DIR = _resolve_data_dir()
 
 # --- STAF scoring constants (must match docs/assets/js/screening-assessment.js) ---
 # rating -> index (0-1): midpoint of each bin's recommended range

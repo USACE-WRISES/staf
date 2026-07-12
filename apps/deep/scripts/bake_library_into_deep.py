@@ -39,56 +39,59 @@ def _write(path: Path, obj) -> None:
 
 
 def bake(out: Path | None = None, library_root: Path | None = None) -> dict:
-    """Merge the library's latest bundles into ``deep-assessments.json`` (+ bundles/).
+    """Rewrite ``deep-assessments.json`` (v2) authoritatively from the shared library.
 
-    Returns a summary dict: ``added`` / ``updated`` assessment ids, ``libraryCount``,
-    ``total`` in the registry after baking.
+    The registry becomes ``{schemaVersion: 2, tier, libraryCatalog, assessments}`` where
+    ``assessments`` carries **one record per eligible (id, version)** (preliminary or
+    certified), each stamped ``assessmentRef``/``version``/``lifecycle``. Per-version
+    bundle files ``bundles/<id>@v<N>.deep.json`` plus a default ``bundles/<id>.deep.json``
+    (the catalog's defaultVersion) are written; stale bundle files are removed. Ordering is
+    deterministic (id, then version). Idempotent: same library -> same output.
+
+    Returns a summary dict: ``assessments`` (id list), ``records`` (count), ``libraryCount``.
     """
     out = Path(out) if out else DEFAULT_OUT
     if library_root is not None:
         os.environ["STAF_LIBRARY_ROOT"] = str(library_root)
 
+    bundles = deep_library.all_eligible_bundles()
+    pointers = deep_library.catalog_pointers()
+
+    # Deterministic ordering: by assessmentId, then version.
+    records = sorted(bundles, key=lambda b: (b.get("assessmentId") or "", int(b.get("version") or 0)))
+    library_catalog = {aid: pointers[aid] for aid in sorted(pointers)}
+
+    doc = {
+        "schemaVersion": 2,
+        "tier": "detailed",
+        "generatedFrom": "apps/library",
+        "libraryCatalog": library_catalog,
+        "assessments": records,
+    }
     reg_path = out / "deep-assessments.json"
-    doc = (
-        _load(reg_path)
-        if reg_path.is_file()
-        else {"schemaVersion": 1, "tier": "detailed", "assessments": []}
-    )
-    baked = list(doc.get("assessments") or [])
-    bundles = deep_library.latest_bundles()
-
-    order = [a.get("assessmentId") for a in baked]
-    by_id = {a.get("assessmentId"): a for a in baked}
-    added: list[str] = []
-    updated: list[str] = []
-    for bundle in bundles:
-        aid = bundle.get("assessmentId")
-        if aid is None:
-            continue
-        if aid in by_id:
-            updated.append(aid)
-        else:
-            added.append(aid)
-            order.append(aid)
-        by_id[aid] = bundle
-
-    doc["assessments"] = [by_id[i] for i in order if i in by_id]
     _write(reg_path, doc)
 
-    # Standalone upload-shaped copies (parity with build_deep_data.py).
-    for bundle in bundles:
+    # Rewrite bundles/: clear stale .deep.json, then write per-version + default copies.
+    bundles_dir = out / "bundles"
+    if bundles_dir.is_dir():
+        for old in bundles_dir.glob("*.deep.json"):
+            old.unlink()
+    default_version = {aid: p.get("defaultVersion") for aid, p in pointers.items()}
+    for bundle in records:
         aid = bundle.get("assessmentId")
-        if aid:
-            _write(
-                out / "bundles" / f"{aid}.deep.json",
-                {"schemaVersion": 1, "tier": "detailed", **bundle},
-            )
+        ver = int(bundle.get("version") or 0)
+        if not aid or ver < 1:
+            continue
+        payload = {"schemaVersion": 1, "tier": "detailed", **bundle}
+        _write(bundles_dir / f"{aid}@v{ver}.deep.json", payload)
+        if ver == default_version.get(aid):
+            _write(bundles_dir / f"{aid}.deep.json", payload)
 
+    assessment_ids = sorted({b.get("assessmentId") for b in records if b.get("assessmentId")})
     return {
-        "added": added,
-        "updated": updated,
+        "assessments": assessment_ids,
+        "records": len(records),
         "libraryCount": len(bundles),
-        "total": len(doc["assessments"]),
     }
 
 
@@ -106,14 +109,12 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     result = bake(out=args.out, library_root=args.library_root)
     print(
-        f"Baked {result['libraryCount']} library assessment(s) into "
+        f"Baked {result['records']} version record(s) from "
+        f"{len(result['assessments'])} assessment(s) into "
         f"{args.out / 'deep-assessments.json'}"
     )
-    if result["added"]:
-        print(f"  added:   {', '.join(result['added'])}")
-    if result["updated"]:
-        print(f"  updated: {', '.join(result['updated'])}")
-    print(f"  registry now has {result['total']} assessment(s)")
+    if result["assessments"]:
+        print(f"  assessments: {', '.join(result['assessments'])}")
     return 0
 
 

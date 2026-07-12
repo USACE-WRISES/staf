@@ -29,7 +29,7 @@ import pandas as pd
 
 logger = logging.getLogger("streamcurves")
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 APP_ID = "streamcurves"
 SESSION_SUFFIX = ".streamcurves.json"
 
@@ -90,6 +90,17 @@ SESSION_FIELDS = [
     "column_sources",
     "column_functions",
     "region_of_applicability",
+    # EASI reference-condition screening (schema v2)
+    "easi_screening_sites",
+    "easi_screening_metrics",
+    "easi_screening_criteria",
+    # guided-run state (schema v2, additive)
+    "run_meta",
+    "run_stage_status",
+    "curve_review",
+    "screening_run",
+    "site_exclusions",
+    "validation_records",
 ]
 
 ## Fields whose dict payloads may contain non-serializable cached objects
@@ -321,5 +332,22 @@ def decode_session_fields(payload: dict) -> dict[str, Any]:
     return {name: _decode_value(fields.get(name)) for name in SESSION_FIELDS}
 
 
+def _migrate_v1_to_v2(payload: dict) -> dict:
+    """Schema v1 -> v2: introduce empty EASI-screening state.
+
+    v1 sessions predate reference-condition screening; they migrate to v2 with an
+    empty screening state while keeping all existing data, masks, config, and
+    analysis results untouched.
+    """
+    fields = payload.setdefault("fields", {})
+    for name in ("easi_screening_sites", "easi_screening_metrics",
+                 "easi_screening_criteria",
+                 "run_meta", "run_stage_status", "curve_review",
+                 "screening_run", "site_exclusions", "validation_records"):
+        fields.setdefault(name, None)
+    payload["schema_version"] = 2
+    return payload
+
+
 ## v -> migration fn producing v+1
-_MIGRATIONS: dict[int, Any] = {}
+_MIGRATIONS: dict[int, Any] = {1: _migrate_v1_to_v2}

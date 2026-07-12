@@ -23,6 +23,7 @@ import logging
 import pandas as pd
 from shiny import module, reactive, render, req, ui
 
+from streamcurves import curve_automation as ca
 from views import state as st
 from views import summary_state as ss
 from views.curve_plots import build_overlay_curve_plot, build_reference_curve_plot
@@ -140,6 +141,9 @@ def summary_page_server(input, output, session, state: AppState):
                 progress_cb=lambda phase, m, i, n, stage: progress.update(phase, m, i, n, stage),
             )
             ss.set_metric_summary_edit_notes(state, metric, "Reference Curves", [])
+            # Re-score this metric's curve so a manual tweak updates the flagged
+            # review queue (without clobbering a reviewer decision on a no-op).
+            ca.sync_curve_review_after_recompute(state, [metric])
         except Exception as e:  # noqa: BLE001
             logger.exception("row recompute failed")
             ui.notification_show(
@@ -183,6 +187,7 @@ def summary_page_server(input, output, session, state: AppState):
                     set_row_busy(metric, False),
                 ),
             )
+            ca.sync_curve_review_after_recompute(state, metrics)
         except Exception as e:  # noqa: BLE001
             logger.exception("bulk recompute failed")
             ui.notification_show(f"Recompute all failed: {e}", type="error", duration=8)

@@ -15,7 +15,7 @@ from deep import assessments, config, library
 
 def _write_library_version(root, assessment_id, version, *, name, region_name):
     vdir = root / "assessments" / assessment_id / f"v{version}"
-    vdir.mkdir(parents=True)
+    vdir.mkdir(parents=True, exist_ok=True)
     region = {"kind": "ecoregion", "code": "55", "name": region_name}
     bundle = {
         "schemaVersion": 1,
@@ -46,6 +46,23 @@ def _write_library_version(root, assessment_id, version, *, name, region_name):
         ],
     }
     (vdir / "assessment.deep.json").write_text(json.dumps(bundle), encoding="utf-8")
+    # v2 registry reads manifest.json (all versions) + status.json (per-version status);
+    # accumulate this version into the manifest, defaulting to preliminary.
+    adir = root / "assessments" / assessment_id
+    mpath = adir / "manifest.json"
+    manifest = json.loads(mpath.read_text("utf-8")) if mpath.is_file() else {
+        "schemaVersion": 2, "assessmentId": assessment_id, "versions": []}
+    versions = {int(v["version"]) for v in manifest["versions"]} | {version}
+    manifest["assessmentName"] = name
+    manifest["latestVersion"] = max(versions)
+    manifest["versions"] = [{"version": v} for v in sorted(versions)]
+    mpath.write_text(json.dumps(manifest), encoding="utf-8")
+    spath = adir / "status.json"
+    status = json.loads(spath.read_text("utf-8")) if spath.is_file() else {
+        "schemaVersion": 2, "assessmentId": assessment_id, "history": []}
+    status["history"].append({"version": version, "status": "preliminary",
+                              "actor": "t", "timestamp": "2026-07-07T00:00:00Z"})
+    spath.write_text(json.dumps(status), encoding="utf-8")
     return bundle
 
 
@@ -150,6 +167,57 @@ def test_list_predefined_surfaces_region_and_version(libroot):
     )
     assert entry["version"] == 2
     assert entry["regionName"] == "Eastern Corn Belt Plains"
+
+
+def test_ref_api_default_and_load(libroot):
+    _write_library_version(libroot, "test-only-region", 1, name="v1", region_name="X")
+    _write_library_version(libroot, "test-only-region", 2, name="v2", region_name="X")
+    _write_catalog(libroot, [{"assessmentId": "test-only-region",
+                              "assessmentName": "v2", "latestVersion": 2}])
+    assert config.default_ref_for("test-only-region") == "test-only-region@v2"
+    rec = config.load_ref("test-only-region@v1")
+    assert rec is not None and rec["assessmentName"] == "v1"
+    by_ref = config.assessments_by_ref()
+    assert {"test-only-region@v1", "test-only-region@v2"}.issubset(by_ref)
+    la = assessments.load_ref("test-only-region@v2")
+    assert la.assessment_name == "v2"
+
+
+def test_covering_refs_groups_versions_certified_first(libroot, monkeypatch):
+    # A polygon covering a known point; two versions, v2 certified.
+    poly = {"type": "Polygon", "coordinates": [[[-72, 43], [-70, 43], [-70, 45], [-72, 45], [-72, 43]]]}
+    for v, life in ((1, "preliminary"), (2, "certified")):
+        vdir = libroot / "assessments" / "nh-test" / f"v{v}"
+        vdir.mkdir(parents=True, exist_ok=True)
+        region = {"kind": "ecoregion", "code": "58", "name": "NH", "polygon": poly}
+        bundle = {"schemaVersion": 1, "tier": "detailed", "assessmentId": "nh-test",
+                  "assessmentName": f"NH v{v}", "region": region,
+                  "library": {"version": v, "region": region},
+                  "metricsByFunction": [{"functionId": "catchment-hydrology",
+                                         "functionName": "CH", "discipline": "Hydrology",
+                                         "metrics": [{"metricId": "m1",
+                                                      "curve": {"points": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]}}]}]}
+        (vdir / "assessment.deep.json").write_text(json.dumps(bundle), encoding="utf-8")
+    (libroot / "assessments" / "nh-test" / "manifest.json").write_text(
+        json.dumps({"schemaVersion": 2, "assessmentId": "nh-test", "latestVersion": 2,
+                    "versions": [{"version": 1}, {"version": 2}]}), encoding="utf-8")
+    (libroot / "assessments" / "nh-test" / "status.json").write_text(
+        json.dumps({"schemaVersion": 2, "assessmentId": "nh-test", "history": [
+            {"version": 1, "status": "preliminary"}, {"version": 2, "status": "certified"}]}),
+        encoding="utf-8")
+    _write_catalog(libroot, [{"assessmentId": "nh-test", "assessmentName": "NH v2",
+                              "latestVersion": 2}])
+
+    covering = assessments.covering_refs(44.0, -71.0, require_polygon=True)
+    entry = next(c for c in covering if c["assessmentId"] == "nh-test")
+    # certified v2 is the default and leads the ref list
+    assert entry["defaultRef"] == "nh-test@v2"
+    assert entry["refs"][0] == "nh-test@v2"
+    assert set(entry["refs"]) == {"nh-test@v1", "nh-test@v2"}
+    assert entry["lifecycleByRef"]["nh-test@v2"] == "certified"
+    # a point outside the polygon does not match
+    assert not any(c["assessmentId"] == "nh-test"
+                   for c in assessments.covering_refs(10.0, 10.0, require_polygon=True))
 
 
 def test_uploaded_library_bundle_scores_through_deep(libroot):

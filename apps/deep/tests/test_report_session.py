@@ -46,6 +46,38 @@ def test_report_csv_contains_headers_and_rows():
     assert "Metric index (0-1)" in txt
 
 
+def _bundle_with_provenance():
+    b = _bundle()
+    b["library"] = {"libraryId": b["assessmentId"], "version": 4}
+    b["status"] = "certified"
+    return b
+
+
+def test_report_includes_version_status_region_and_digest():
+    la = assessments.from_bundle(_bundle_with_provenance())
+    state = _midpoint_state(la)
+    sc, _ = curves.score_site(la, measure.measured_from_state(state))
+    region = {"level3": {"code": "55", "name": "Eastern Corn Belt Plains"},
+              "state": {"code": "OH", "abbr": "OH", "name": "Ohio"}}
+
+    csv_txt = report.build_csv({}, la, state, sc, region=region)
+    assert "Assessment version" in csv_txt
+    assert "Certified" in csv_txt                      # lifecycle status, title-cased
+    assert "Ohio (OH)" in csv_txt                      # state region match
+    assert "55 Eastern Corn Belt Plains" in csv_txt    # Level III ecoregion match
+    assert "Content digest" in csv_txt and "sha256:" in csv_txt
+
+    delin = {"delineation": {"snapped_lat": 40.0, "snapped_lon": -83.5, "comid": 1}}
+    gj = json.loads(report.build_geojson(delin, la, sc, region=region))
+    ap = next(f["properties"] for f in gj["features"]
+              if f["properties"].get("type") == "analysis_point")
+    assert ap["assessment_version"] == 4
+    assert ap["lifecycle_status"] == "certified"
+    assert ap["region_state"] == "Ohio (OH)"
+    assert ap["region_level3"] == "55 Eastern Corn Belt Plains"
+    assert ap["content_digest"].startswith("sha256:")
+
+
 def test_report_geojson_is_feature_collection():
     la = assessments.from_bundle(_bundle())
     sc, _ = curves.score_site(la, measure.measured_from_state(_midpoint_state(la)))

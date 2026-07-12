@@ -1,0 +1,18 @@
+{
+  "assessmentId": "nc-sqt-adapted",
+  "assessmentName": "NC SQT Adapted",
+  "version": 1,
+  "updatedAt": "2026-07-12T01:57:25Z",
+  "author": "STAF SQT migration",
+  "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+  "region": {
+    "kind": "state",
+    "code": "NC",
+    "name": "North Carolina"
+  },
+  "stateCode": "NC",
+  "stateName": "North Carolina",
+  "sourceCitation": "North Carolina SQT",
+  "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
+  "supersedesVersion": null
+}

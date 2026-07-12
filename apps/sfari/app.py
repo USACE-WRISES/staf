@@ -26,7 +26,7 @@ os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
 import anyio  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
 
-from sfari import bieger, config, delineation, pipeline, report, scoring, session, xscalc  # noqa: E402
+from sfari import bieger, config, delineation, pipeline, report, scoring, session as session_io, xscalc  # noqa: E402
 from sfari.datasources import flowlines  # noqa: E402
 from sfari.datasources.geocode import geocode_address  # noqa: E402
 from sfari.pipeline import DEFAULT_REACH_FT  # noqa: E402
@@ -291,7 +291,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=15"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=16"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
@@ -986,7 +986,12 @@ def server(input, output, session):
         except Exception:
             return
         if res.get("status") == "ok":
-            evidence.set(res.get("evidence") or {})
+            # MERGE (not replace): a re-run must not wipe attached cross-section
+            # (Manning) entries. First run has nothing to preserve, so this equals
+            # the pulled dict. Read current evidence isolated to avoid a self-loop.
+            with reactive.isolate():
+                cur = evidence()
+            evidence.set(pipeline.merge_pulled_evidence(cur, res.get("evidence") or {}))
 
     # ---- live rollup ----
     @reactive.calc
@@ -1010,10 +1015,10 @@ def server(input, output, session):
             ui.div(
                 ui.div("SFARI — Field review", class_="easi-pane-head"),
                 ui.div(_stepper(current_step()), class_="sfari-nav-steps"),
-                ui.tags.button("Get desktop metrics",
+                ui.tags.button("Get Field Forms",
                                {"data-desktop-metrics": "1", "type": "button",
-                                "title": "Every metric you can evaluate from a desk, with pulled "
-                                         "values and links to the data sources"},
+                                "title": "Print-ready field packet: five blank field-form pages "
+                                         "plus your pulled desktop metrics"},
                                class_="sfari-btn sfari-nav-desktop"),
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),
@@ -1473,11 +1478,49 @@ def server(input, output, session):
         ui.modal_show(_desktop_metrics_modal())
 
     def _desktop_metrics_modal():
+        # Body is a reactive output so it rebuilds live as the pull progresses and as
+        # evidence merges in; the modal shell (title + Close) is static.
+        return ui.modal(
+            ui.output_ui("field_forms_body"),
+            title="Field Forms", easy_close=True, size="xl",
+            footer=ui.modal_button("Close"))
+
+    # Field-form readiness status vocabulary, derived per metric from the pulled
+    # evidence + the metric's desktop source client.
+    _FF_BADGE = {
+        "Available": "#d8ecd8;color:#1f6b32",
+        "Pending": "#eef1f6;color:#5a6478",
+        "Unavailable": "#f3d9d9;color:#8a2d2d",
+        "Local review required": "#e7ddf3;color:#5b3f8a",
+        "Run cross-section tool": "#dce8f5;color:#2c4f7a",
+        "Additional hydraulic estimate required": "#fdf0d6;color:#7a5b12",
+    }
+
+    def _ff_status(m: dict, ed: dict, pulling: bool) -> str:
+        if ed.get("status") == "ok" and ed.get("value_text"):
+            return "Available"
+        client = (m.get("desktopSource") or {}).get("client")
+        if client == "xscalc":
+            return "Run cross-section tool"
+        if client == "bieger":
+            return "Additional hydraulic estimate required"
+        if client == "manual":
+            return "Local review required"
+        if ed.get("status") in ("unavailable", "error"):
+            return "Unavailable"
+        return "Pending"
+
+    @render.ui
+    def field_forms_body():
         ev_map = evidence()
-        pulling = pull_task.status() == "running"
+        status = pull_task.status()
+        pulling = status == "running"
+        done, total = _pull_prog.get("done", 0), _pull_prog.get("total", 0)
         dim = "color:#8a93a3;font-size:11px;"
+
         rows = []
         n = 0
+        counts: dict[str, int] = {}
         for cat in CATEGORY_ORDER:
             for f in FNS_BY_CAT.get(cat, []):
                 for m in METRICS_BY_FN.get(f["id"], []):
@@ -1486,13 +1529,12 @@ def server(input, output, session):
                     n += 1
                     ds = m.get("desktopSource") or {}
                     ed = ev_map.get(m["metricId"]) or {}
-                    if ed.get("status") == "ok" and ed.get("value_text"):
-                        val = ui.tags.b(ed["value_text"])
-                    elif pulling:
-                        val = ui.span("pulling…", style="color:#8a93a3;font-style:italic;")
-                    else:
-                        val = ui.span("review in the field",
-                                      style="color:#8a93a3;font-style:italic;")
+                    st = _ff_status(m, ed, pulling)
+                    counts[st] = counts.get(st, 0) + 1
+                    badge = ui.span(st, class_="ff-badge",
+                                    style=f"background:{_FF_BADGE.get(st, '#eef1f6;color:#5a6478')};")
+                    val = (ui.tags.b(ed["value_text"]) if st == "Available"
+                           else ui.span("—", style="color:#8a93a3;"))
                     src_url = ed.get("source_url") or ds.get("url")
                     src_name = (ed.get("source")
                                 or (urlparse(ds.get("url")).netloc if ds.get("url") else None)
@@ -1504,22 +1546,57 @@ def server(input, output, session):
                         ui.tags.td(f["name"], style=dim),
                         ui.tags.td(m["name"]),
                         ui.tags.td(ds.get("label") or "—", style="font-size:11px;color:#45506a;"),
+                        ui.tags.td(badge, style="font-size:11px;"),
                         ui.tags.td(val, style="font-size:11px;color:#2f3a52;"),
                         ui.tags.td(src, style="font-size:11px;")))
         table = ui.tags.table(
             ui.tags.thead(ui.tags.tr(ui.tags.th("Discipline"), ui.tags.th("Function"),
                                      ui.tags.th("Metric"), ui.tags.th("Desktop evidence"),
-                                     ui.tags.th("Value"), ui.tags.th("Data source"))),
+                                     ui.tags.th("Status"), ui.tags.th("Value"),
+                                     ui.tags.th("Data source"))),
             ui.tags.tbody(*rows), class_="easi-tbl")
-        intro = (f"{n} of the {len(METRICS_BY_ID)} metrics can be evaluated from a desk before "
-                 "the site visit. Pulled values fill the Value column; look up the rest at the "
-                 "linked data sources.")
-        return ui.modal(
-            ui.div(ui.div(intro, class_="easi-instr"), table, id="sfari-desktop-metrics"),
-            title="Desktop metrics", easy_close=True, size="xl",
-            footer=ui.div(ui.download_button("dl_desktop_metrics", "Download PDF", class_="btn-sm"),
-                          ui.modal_button("Close"),
-                          style="display:flex;gap:8px;align-items:center;"))
+
+        # Live progress / summary (announced to assistive tech).
+        if pulling:
+            progress = ui.div(f"Preparing field forms… pulling desktop evidence "
+                              f"({done} of {total}).",
+                              {"aria-live": "polite"}, class_="easi-instr")
+        elif status == "initial":
+            progress = ui.div(f"{n} of the {len(METRICS_BY_ID)} metrics can be evaluated "
+                              "from a desk before the site visit.",
+                              {"aria-live": "polite"}, class_="easi-instr")
+        else:
+            avail = counts.get("Available", 0)
+            progress = ui.div(f"Field forms ready: {avail} of {n} desktop metrics pulled. "
+                              "The rest are flagged for the field visit below.",
+                              {"aria-live": "polite"}, class_="easi-instr")
+
+        # Controls: a disabled "Preparing…" button while pulling, else Download + Retry.
+        if pulling:
+            controls = ui.tags.button("Preparing field forms…", {"disabled": "disabled"},
+                                      class_="btn btn-sm btn-secondary")
+        else:
+            controls = ui.TagList(
+                ui.download_button("dl_desktop_metrics", "Download Field Forms PDF",
+                                   class_="btn-sm btn-primary"),
+                ui.input_action_button("ff_retry", "Retry pull",
+                                       class_="btn btn-sm btn-outline-secondary ms-2"))
+        return ui.div(progress, table, ui.div(controls, class_="ff-actions mt-2"),
+                      id="sfari-desktop-metrics")
+
+    @reactive.effect
+    @reactive.event(input.ff_retry)
+    def _ff_retry():
+        with reactive.isolate():
+            d = delin()
+        ci = (d or {}).get("ctx_inputs")
+        if not ci:
+            ui.notification_show("Delineate a reach first.", type="warning", duration=3)
+            return
+        _pull_prog["done"], _pull_prog["total"] = 0, 0
+        pull_task(ci, _pull_prog)   # merges into existing evidence (merge_pulled_evidence)
+        ui.notification_show("Retrying desktop evidence pull…", id="pull",
+                             type="message", duration=None)
 
     # ---- cross-section hydraulics popup ----
     @reactive.effect
@@ -1641,24 +1718,29 @@ def server(input, output, session):
         q = res["Q"]
         ev = dict(evidence())
 
-        def put(mid, vt, note):
-            ev[mid] = {"metric_id": mid, "value_text": vt, "suggested_likert": None,
-                       "confidence": "M", "source": "Native cross-section hydraulics (Manning)",
+        def put(mid, vt, note, fvt=""):
+            ev[mid] = {"metric_id": mid, "value_text": vt, "field_value_text": fvt,
+                       "suggested_likert": None, "confidence": "M",
+                       "source": pipeline.XS_MANNING_SOURCE,
                        "source_url": "", "status": "ok", "note": note}
         put("low-flow-baseflow-dynamics-low-flow-depth",
             f"modeled max depth {res['depth_max']:.2f} ft at Q {q:.0f} cfs",
-            "From the cross-section Manning solver.")
+            "From the cross-section Manning solver.",
+            f"Low-flow depth {res['depth_max']:.2f} ft")
         put("low-flow-baseflow-dynamics-low-flow-velocity",
             f"modeled velocity {res['V']:.2f} ft/s at Q {q:.0f} cfs",
-            "From the cross-section Manning solver.")
+            "From the cross-section Manning solver.",
+            f"Low-flow velocity {res['V']:.2f} ft/s")
         put("high-flow-dynamics-peak-flow-capacity-velocity-shear-stress",
             f"V {res['V']:.2f} ft/s, τ {res['tau']:.3f} lb/ft², Fr {res['froude']:.2f}",
-            "At the modeled stage.")
+            "At the modeled stage.",
+            f"Peak V {res['V']:.2f} ft/s, Fr {res['froude']:.2f}")
         mob = f" → {'mobilizes' if res['tau'] > tc else 'stable'}" if tc else ""
         put("high-flow-dynamics-bed-mobilization-frequency",
             (f"bed shear τ {res['tau']:.3f} vs critical τc {tc:.3f} lb/ft²{mob}"
              if tc else f"bed shear τ {res['tau']:.3f} lb/ft²"),
-            "Shields comparison with the entered D50.")
+            "Shields comparison with the entered D50.",
+            f"Bed shear tau {res['tau']:.3f} lb/ft2")
         evidence.set(ev)
         ui.notification_show("Cross-section results attached to the hydraulics metrics.",
                              type="message", duration=4)
@@ -1667,7 +1749,7 @@ def server(input, output, session):
     # ---- exports + resumable session ----
     @render.download(filename="sfari-assessment.json")
     def save_session():
-        yield session.dump(delin() or {}, metric_scores(), function_scores(), evidence(), xs_geom())
+        yield session_io.dump(delin() or {}, metric_scores(), function_scores(), evidence(), xs_geom())
 
     @render.download(filename="sfari-report.csv")
     def dl_csv():
@@ -1681,9 +1763,9 @@ def server(input, output, session):
     def dl_pdf():
         yield report.build_pdf(delin() or {}, metric_scores(), function_scores(), evidence(), scored())
 
-    @render.download(filename="sfari-desktop-metrics.pdf")
+    @render.download(filename=lambda: report.field_forms_filename(delin() or {}))
     def dl_desktop_metrics():
-        yield report.build_desktop_metrics_pdf(delin() or {}, evidence())
+        yield report.build_field_forms_pdf(delin() or {}, evidence())
 
     @reactive.effect
     @reactive.event(input.load_session)
@@ -1693,7 +1775,7 @@ def server(input, output, session):
             return
         try:
             with open(finfo[0]["datapath"], encoding="utf-8") as fh:
-                st = session.load(fh.read())
+                st = session_io.load(fh.read())
         except Exception as exc:  # noqa: BLE001
             ui.notification_show(f"Could not load assessment: {exc}", type="error", duration=6)
             return
@@ -1702,6 +1784,7 @@ def server(input, output, session):
         metric_scores.set(st.get("metric_scores") or {})
         function_scores.set(st.get("function_scores") or {})
         evidence.set(st.get("evidence") or {})
+        xs_geom.set(st.get("cross_section"))
         if _HAS_MAP and d:
             for k in ("ws", "reach", "marker"):
                 _remove_layer(k)

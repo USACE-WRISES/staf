@@ -1,11 +1,24 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "assessmentId": "northeastern-highlands",
-  "assessmentName": "Northeastern Highlands",
-  "region": { "kind": "ecoregion", "code": "58", "name": "Northeastern Highlands" },
+  "assessmentName": "Northeastern Highlands reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "58",
+    "name": "Northeastern Highlands"
+  },
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "",
-  "latestVersion": 0,
-  "versions": []
+  "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-07-12T02:05:24Z",
+      "author": "STAF pilot",
+      "revisionNotes": "Preliminary reference curves from NRSA L3-58 response metrics.",
+      "contentDigest": "sha256:9b17d3bd159f4765618ac33e51641e87ee0e2cdf04afff7213c62fc8ac1727fa",
+      "supersedesVersion": null
+    }
+  ]
 }

@@ -69,6 +69,7 @@ def ev_impervious(ctx):
     if v is None:
         return EvidenceResult(mid, status="unavailable", source="EPA StreamCat", source_url=_SC_URL)
     return EvidenceResult(mid, value=round(v, 1), value_text=f"{v:.1f}% impervious (watershed)",
+                          field_value_text=f"Impervious {v:.1f}%",
                           confidence="H", source="EPA StreamCat pctimp2019ws", source_url=_SC_URL,
                           suggested_likert=likert.suggest(mid, v))
 
@@ -78,12 +79,14 @@ def ev_road_density(ctx):
     v = _sc(ctx).get("rddens")
     if v is not None:
         return EvidenceResult(mid, value=round(v, 2), value_text=f"{v:.2f} km/km² road density (watershed)",
+                              field_value_text=f"Roads {v:.2f} km/km2",
                               confidence="M", source="EPA StreamCat rddens", source_url=_SC_URL,
                               suggested_likert=likert.suggest(mid, v))
     roads = ctx.extras.get("tiger")
     if roads is not None:
         return EvidenceResult(mid, value=roads,
                               value_text=f"{roads} TIGER road feature(s) near the reach (crossing proxy)",
+                              field_value_text=f"Roads {roads} TIGER feature(s)",
                               confidence="L", source="Census TIGER roads (fallback)",
                               source_url="https://tigerweb.geo.census.gov/",
                               note="StreamCat road density unavailable; TIGER road count near the reach as a proxy.")
@@ -107,7 +110,10 @@ def ev_impoundments(ctx):
     if n is not None:
         sug = ("Strongly Agree" if n == 0 else "Agree" if n <= 2
                else "Disagree" if n <= 5 else "Strongly Disagree")
+    fvt = (f"Impoundments {n} dam(s)" if n is not None
+           else f"Impoundments storage {stor:.0f}" if stor else "Impoundments none")
     return EvidenceResult(mid, value=n, value_text="; ".join(parts) or "no dams found",
+                          field_value_text=fvt,
                           confidence="M", source="USACE NID + StreamCat damnrmstor",
                           source_url="https://nid.sec.usace.army.mil/", suggested_likert=sug)
 
@@ -120,6 +126,7 @@ def ev_wetland(ctx):
         return EvidenceResult(mid, status="unavailable", source="EPA StreamCat", source_url=_SC_URL)
     v = round((w1 or 0.0) + (w2 or 0.0), 1)
     return EvidenceResult(mid, value=v, value_text=f"{v:.1f}% wetland (watershed; woody+herbaceous)",
+                          field_value_text=f"Wetland {v:.1f}%",
                           confidence="M", source="EPA StreamCat pctwdwet+pcthbwet", source_url=_SC_URL,
                           note="Watershed wetland % — national-default proxy for the doc's "
                                "floodplain-area criterion (calibrate regionally).",
@@ -131,6 +138,7 @@ def _riparian(ctx, mid, extra=""):
     if fp is None:
         return EvidenceResult(mid, status="unavailable", source="EPA StreamCat riparian", source_url=_SC_URL)
     return EvidenceResult(mid, value=fp, value_text=f"{fp:.0f}% riparian forest (100 m buffer){extra}",
+                          field_value_text=f"Riparian forest {fp:.0f}%",
                           confidence="M", source="EPA StreamCat *wsrp100 forest", source_url=_SC_URL,
                           note="Riparian forest % — proxy for canopy/corridor (EnviroAtlas in Phase 4).",
                           suggested_likert=likert.suggest(mid, fp))
@@ -165,7 +173,9 @@ def ev_transport_capacity(ctx):
         parts.append(f"channel slope {slope:.4f} m/m")
     if ag is not None:
         parts.append(f"watershed agriculture {ag:.0f}%")
+    fvt = f"Slope {slope:.4f} m/m" if slope is not None else f"Agriculture {ag:.0f}%"
     return EvidenceResult(mid, value=slope, value_text="; ".join(parts),
+                          field_value_text=fvt,
                           confidence="L", source="NHDPlus VAA slope + StreamCat %ag", source_url=_SC_URL,
                           note="Screening context; run the cross-section tool for a Shields "
                                "transport-capacity analysis (Phase 5).")
@@ -183,7 +193,10 @@ def ev_np(ctx):
         parts.append(f"TN {tn} mg/L")
     if tp is not None:
         parts.append(f"TP {tp} mg/L")
+    short = " / ".join(s for s in [f"TN {tn}" if tn is not None else "",
+                                   f"TP {tp}" if tp is not None else ""] if s)
     return EvidenceResult(mid, value_text="observed median — " + "; ".join(parts),
+                          field_value_text=f"{short} mg/L",
                           confidence="M", source="EPA/USGS Water Quality Portal",
                           source_url="https://www.waterqualitydata.us/",
                           note="Observed medians; compare to ecoregion reference criteria to score "
@@ -196,6 +209,7 @@ def ev_channel_pattern(ctx):
     if sin is None:
         return EvidenceResult(mid, status="unavailable", source="NHDPlus flowline geometry")
     return EvidenceResult(mid, value=sin, value_text=f"sinuosity {sin}",
+                          field_value_text=f"Sinuosity {sin}",
                           confidence="L", source="NHDPlus flowline geometry",
                           note="Compare planform to local reference (multi-date imagery / TopoView) to score.")
 
@@ -207,6 +221,7 @@ def ev_dewatered(ctx):
         return EvidenceResult(mid, status="unavailable", source="NHDPlus FCODE")
     lab = FCODE_LABEL.get(fc, f"FCODE {fc}")
     return EvidenceResult(mid, value=fc, value_text=f"NHD flow permanence: {lab}",
+                          field_value_text=f"Flow class {lab}",
                           confidence="M", source="NHDPlus FCODE",
                           note="Natural intermittency is not artificial dewatering — check NWIS "
                                "zero-flow days and imagery.")
@@ -223,6 +238,7 @@ def ev_land_use_change(ctx):
     d = round(b - a, 1)
     sug = ("Strongly Agree" if d < 1 else "Agree" if d < 3 else "Disagree" if d < 6 else "Strongly Disagree")
     return EvidenceResult(mid, value=d, value_text=f"impervious {a:.1f}% (2001) → {b:.1f}% (2019), Δ {d:+.1f} pts",
+                          field_value_text=f"Impervious change {d:+.1f} pts",
                           confidence="M", source="EPA StreamCat pctimp2001/2019 (NLCD)", source_url=_SC_URL,
                           note="Impervious-cover change 2001→2019 as a proxy for land conversion.",
                           suggested_likert=sug)
@@ -240,6 +256,7 @@ def ev_flow_permanence(ctx):
            else "Disagree" if z < 0.1 else "Strongly Disagree")
     return EvidenceResult(mid, value=z,
                           value_text=f"{z*100:.1f}% zero-flow days at gage {f['site']} ({f['n_days']} d)",
+                          field_value_text=f"Zero-flow {z*100:.1f}%",
                           confidence="M", source=f"USGS NWIS {f['site']} {f['name']}".strip(),
                           source_url=f"https://waterdata.usgs.gov/monitoring-location/{f['site']}/",
                           note="Zero-flow-day fraction from the nearest comparable gage.",
@@ -254,6 +271,7 @@ def ev_flow_statistics(ctx):
                               source_url="https://waterdata.usgs.gov/nwis")
     return EvidenceResult(mid, value=f["q50"],
                           value_text=f"Q10 {f['q10']} / Q50 {f['q50']} / Q90 {f['q90']} cfs (gage {f['site']})",
+                          field_value_text=f"Q50 {f['q50']} cfs",
                           confidence="M", source=f"USGS NWIS {f['site']}",
                           source_url=f"https://waterdata.usgs.gov/monitoring-location/{f['site']}/",
                           note="Flow-duration percentiles (Qp = discharge exceeded p% of days).")
@@ -270,7 +288,14 @@ def ev_natural_flow_regime(ctx):
         parts.append(f"baseflow ratio Q90/Q50 = {f['baseflow_ratio']} (gage {f['site']})")
     if dam:
         parts.append(f"upstream dam storage {dam:.0f}")
+    if f and f.get("baseflow_ratio") is not None:
+        fvt = f"Baseflow ratio {f['baseflow_ratio']}"
+    elif dam:
+        fvt = f"Dam storage {dam:.0f}"
+    else:
+        fvt = "Flow regime limited context"
     return EvidenceResult(mid, value_text="; ".join(parts) or "limited flow context",
+                          field_value_text=fvt,
                           confidence="L", source="USGS NWIS + StreamCat dam storage",
                           note="Compare to a reference/unregulated regime (TNC IHA) to judge alteration.")
 
@@ -284,6 +309,7 @@ def ev_artificial_structures(ctx):
     n = len(nid)
     sug = ("Strongly Agree" if n == 0 else "Agree" if n <= 1 else "Disagree" if n <= 3 else "Strongly Disagree")
     return EvidenceResult(mid, value=n, value_text=f"{n} dam(s) within ~1 mi (also check NLD levees)",
+                          field_value_text=f"Structures {n} dam(s)",
                           confidence="M", source="USACE NID (dams) + National Levee Database",
                           source_url="https://levees.sec.usace.army.mil/",
                           note="Dams from NID; add levees from the National Levee Database (deep-link).",
@@ -299,6 +325,7 @@ def ev_barriers(ctx):
     n = len(nid)
     sug = ("Strongly Agree" if n == 0 else "Agree" if n <= 1 else "Disagree" if n <= 3 else "Strongly Disagree")
     return EvidenceResult(mid, value=n, value_text=f"{n} dam/barrier(s) within ~1 mi",
+                          field_value_text=f"Barriers {n} dam(s)",
                           confidence="M", source="USACE NID (+ National Aquatic Barrier Inventory)",
                           source_url="https://connectivity.sarpdata.com/",
                           note="Dam count near the reach; add road-crossing / aquatic barriers for passability.",
@@ -314,6 +341,7 @@ def ev_lateral_inundation(ctx):
                               note="Inspect NWI + 3DEP hillshade for floodplain features.")
     return EvidenceResult(mid, value=w["acres"],
                           value_text=f"{w['count']} NWI wetland feature(s), {w['acres']} ac near the reach",
+                          field_value_text=f"Floodplain {w['count']} NWI feature(s)",
                           confidence="L", source="USFWS National Wetlands Inventory",
                           source_url="https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper",
                           note="Adjacent wetland/floodplain features (screening; confirm inundation with 3DEP).")

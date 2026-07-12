@@ -27,6 +27,7 @@ from streamcurves.curves import (
     reference_curve_row_range_display,
     reference_curve_rows_for_export,
 )
+from streamcurves import curve_automation as ca
 from views import state as st
 from views import summary_state as ss
 from views.curve_plots import (
@@ -1017,6 +1018,10 @@ def phase4_server(
                 "phase4_curve_rows": curve_rows,
             },
         )
+
+        # Re-score this metric after a manual "mark all complete" so the guided
+        # review queue reflects the finalized strata (choke point, mirrors summary).
+        ca.sync_curve_review_after_recompute(state, [metric])
 
         ui.notification_show(
             f"{mc.get('display_name') or metric} — all {len(info['levels'])} "

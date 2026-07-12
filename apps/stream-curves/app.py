@@ -44,6 +44,7 @@ from views import summary_state as sst
 from views.analysis_workspace import analysis_workspace_server, analysis_workspace_ui
 from views.cross_section import cross_section_server, cross_section_ui
 from views.data_overview import data_overview_server, data_overview_ui
+from views.guided import guided_server, guided_ui
 from views.library import library_server, library_ui
 from views.phase1 import phase1_server, phase1_ui
 from views.phase2 import phase2_server, phase2_ui
@@ -119,28 +120,39 @@ def app_help_content():
 
 app_ui = ui.page_navbar(
     ui.nav_panel(
+        "Guided",
+        ui.div(guided_ui("guided"), class_="mt-3"),
+        value="guided",
+        icon=bi("bullseye"),
+    ),
+    ui.nav_panel(
         "Data & Setup",
         ui.div(data_overview_ui("data_overview"), class_="mt-3"),
+        value="data",
         icon=bi("database"),
     ),
     ui.nav_panel(
         "Reference Curves",
         ui.div(summary_page_ui("summary"), class_="mt-3"),
+        value="curves",
         icon=bi("table"),
     ),
     ui.nav_panel(
         "Regional Curves",
         ui.div(regional_curve_ui("regional"), class_="mt-3"),
+        value="regional",
         icon=bi("bezier2"),
     ),
     ui.nav_panel(
         "Cross-Sections",
         ui.div(cross_section_ui("xsec"), class_="mt-3"),
+        value="xsec",
         icon=bi("graph-down"),
     ),
     ui.nav_panel(
         "Library",
         ui.div(library_ui("library"), class_="mt-3"),
+        value="library",
         icon=bi("layers"),
     ),
     ui.nav_spacer(),
@@ -152,6 +164,7 @@ app_ui = ui.page_navbar(
         )
     ),
     id="main_navbar",
+    selected="guided",
     title="StreamCurves",
     window_title="StreamCurves - Reference & Regional Curve Development",
     theme=app_theme,
@@ -173,6 +186,7 @@ app_ui = ui.page_navbar(
 def server(input, output, session):
     state = AppState.fresh()
 
+    guided_server("guided", state)
     data_overview_server("data_overview", state)
     summary_page_server("summary", state)
     regional_curve_server("regional", state)
@@ -226,6 +240,16 @@ def server(input, output, session):
                 state.startup_discipline_function_mapping.set(
                     state.discipline_function_mapping()
                 )
+
+    # Root navigation: the guided home requests a tab switch via a nonce; the
+    # wizard step request is consumed inside the Data & Setup wizard itself.
+    @reactive.effect
+    @reactive.event(state.nav_request_nonce, ignore_init=True)
+    def _handle_nav_request():
+        with reactive.isolate():
+            target = state.nav_request()
+        if target:
+            ui.update_navs("main_navbar", selected=target)
 
     @reactive.effect
     @reactive.event(input.app_help)

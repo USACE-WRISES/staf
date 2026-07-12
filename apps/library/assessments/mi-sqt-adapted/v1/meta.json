@@ -1,0 +1,18 @@
+{
+  "assessmentId": "mi-sqt-adapted",
+  "assessmentName": "MI SQT Adapted",
+  "version": 1,
+  "updatedAt": "2026-07-12T01:57:25Z",
+  "author": "STAF SQT migration",
+  "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+  "region": {
+    "kind": "state",
+    "code": "MI",
+    "name": "Michigan"
+  },
+  "stateCode": "MI",
+  "stateName": "Michigan",
+  "sourceCitation": "Michigan SQT",
+  "contentDigest": "sha256:5d8e95677f0cf2bf4b18d1f089024b4fda8aefb21767fb89e2742ad819998e02",
+  "supersedesVersion": null
+}

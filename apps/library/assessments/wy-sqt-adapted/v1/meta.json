@@ -1,0 +1,18 @@
+{
+  "assessmentId": "wy-sqt-adapted",
+  "assessmentName": "WY SQT Adapted",
+  "version": 1,
+  "updatedAt": "2026-07-12T01:57:26Z",
+  "author": "STAF SQT migration",
+  "revisionNotes": "Migrated from the STAF metric library (detailed-adapted-assessments.json).",
+  "region": {
+    "kind": "state",
+    "code": "WY",
+    "name": "Wyoming"
+  },
+  "stateCode": "WY",
+  "stateName": "Wyoming",
+  "sourceCitation": "Wyoming SQT",
+  "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
+  "supersedesVersion": null
+}

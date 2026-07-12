@@ -1012,6 +1012,17 @@
 .landing-card-icon { font-size: 2rem; line-height: 1; margin-bottom: 0.5rem; }
 .landing-card-title { margin-bottom: 0.35rem; font-weight: 600; }
 .landing-card-blurb { min-height: 3rem; }
+
+/* Guided home stage cards */
+.guided-home { max-width: 880px; }
+.guided-card { background: #fff; transition: box-shadow 0.15s ease; }
+.guided-card:hover { box-shadow: 0 3px 12px rgba(20, 40, 80, 0.08); }
+.guided-step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.5rem; height: 1.5rem; border-radius: 50%;
+  background: #e7eef7; color: #243a61; font-size: 0.8rem; font-weight: 600;
+}
+.guided-checklist { background: #f8fafc; }
 .wizard-classify-scroll {
   max-height: 55vh;
   overflow-y: auto;

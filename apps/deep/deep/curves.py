@@ -55,6 +55,35 @@ def interp_curve(points: Sequence[dict], x: float) -> Optional[float]:
     return _clamp01(pts[-1]["y"])  # pragma: no cover — unreachable given the clamps above
 
 
+def domain_warning(points: Sequence[dict], x: float) -> Optional[str]:
+    """Advisory when ``x`` falls outside a curve's x-domain (its score is clamped).
+
+    :func:`interp_curve` silently clamps an out-of-domain value to the nearest
+    endpoint's index instead of interpolating. This surfaces that clamp as a short
+    human-readable message when ``x`` is strictly below the minimum or above the
+    maximum x over the curve's usable points (same ``x``/``y``-not-None filter as
+    interpolation), else ``None``. Curves with fewer than two usable points have no
+    meaningful domain, so they return ``None``.
+
+    Purely additive: it never changes the interpolated index — it only describes
+    the clamp that :func:`interp_curve` already performs.
+    """
+    xs = sorted(
+        float(p["x"])
+        for p in points
+        if p.get("x") is not None and p.get("y") is not None
+    )
+    if len(xs) < 2:
+        return None
+    lo, hi = xs[0], xs[-1]
+    xf = float(x)
+    if xf < lo:
+        return f"value {xf} is below the curve domain [{lo}, {hi}]; score clamped to the endpoint"
+    if xf > hi:
+        return f"value {xf} is above the curve domain [{lo}, {hi}]; score clamped to the endpoint"
+    return None
+
+
 def curve_strata(metric_spec: dict) -> list[str]:
     """Stratum labels for a metric's curve layers (empty list if single-curve)."""
     return [str(layer.get("stratum", "")) for layer in (metric_spec.get("curveLayers") or [])]
@@ -93,6 +122,20 @@ def metric_index(measured: Optional[MeasuredValue], metric_spec: dict) -> Option
         return None
     points = active_points(metric_spec, getattr(measured, "stratum", None))
     return interp_curve(points, float(measured.value))
+
+
+def metric_warning(measured: Optional[MeasuredValue], metric_spec: dict) -> Optional[str]:
+    """Endpoint-clamp advisory for one metric's measured value, or ``None``.
+
+    Mirrors :func:`metric_index`: ``None`` when the value is missing / Not
+    Applicable, otherwise flags when the value sits outside the active curve's
+    x-domain (where the interpolated index is clamped to an endpoint). The
+    measured value's ``stratum`` selects the curve layer, exactly as for scoring.
+    """
+    if measured is None or not measured.is_scored:
+        return None
+    points = active_points(metric_spec, getattr(measured, "stratum", None))
+    return domain_warning(points, float(measured.value))
 
 
 def function_index(
@@ -150,9 +193,15 @@ def score_site(assessment, measured: MeasuredInput) -> tuple[dict, dict[str, Fun
     function_results: dict[str, FunctionResult] = {}
     for fn in _metrics_by_function(assessment):
         fid = fn["functionId"]
-        score, indices = function_index(fn.get("metrics", []), measured_by_id)
+        fn_metrics = fn.get("metrics", [])
+        score, indices = function_index(fn_metrics, measured_by_id)
+        warnings = {
+            m["metricId"]: metric_warning(measured_by_id.get(m["metricId"]), m)
+            for m in fn_metrics
+        }
         function_results[fid] = FunctionResult(
-            function_id=fid, metric_indices=indices, score=score, na=score is None
+            function_id=fid, metric_indices=indices, score=score, na=score is None,
+            metric_warnings=warnings,
         )
         if score is not None:
             function_scores[fid] = score

@@ -17,6 +17,8 @@ from functools import lru_cache
 
 import requests
 
+from ..batch import diagnostics
+
 _PRIMARY = "https://api.epa.gov/StreamCat/streams/metrics"
 _MIRROR = "https://java.epa.gov/StreamCAT/metrics"
 _AOI_SUFFIX = {"watershed": "ws", "catchment": "cat",
@@ -30,8 +32,12 @@ def _request(url: str, params: dict, timeout: float, retries: int = 2) -> dict |
             r = requests.get(url, params=params, timeout=timeout)
             if r.status_code == 200:
                 return r.json()
+            # Report throttle/5xx to the batch retry side channel (no-op outside a
+            # batch run) so the scheduler can classify a partial result as transient.
+            diagnostics.record_response("EPA StreamCat", r.status_code)
             last = f"HTTP {r.status_code}"
         except Exception as exc:  # noqa: BLE001 - resilience by design
+            diagnostics.record_exception("EPA StreamCat", exc)
             last = repr(exc)
         time.sleep(0.6 * (attempt + 1))
     return None

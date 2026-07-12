@@ -61,6 +61,8 @@ class FunctionResult:
     metric_indices: dict[str, Optional[float]] = field(default_factory=dict)
     score: Optional[float] = None   # 0-15; None when NA (no metric scored)
     na: bool = True
+    # {metricId: endpoint-clamp warning | None} — additive scoring advisory
+    metric_warnings: dict[str, Optional[str]] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -68,4 +70,5 @@ class FunctionResult:
             "metricIndices": self.metric_indices,
             "score": self.score,
             "na": self.na,
+            "metricWarnings": self.metric_warnings,
         }

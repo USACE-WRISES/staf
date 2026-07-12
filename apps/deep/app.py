@@ -61,32 +61,6 @@ STEP_LABELS = [(STEP_IDENTIFY, "Identify"), (STEP_BASIN, "Basin"),
 CATEGORY_ORDER = list(config.CATEGORY_ORDER)
 _FNF_SHORT = {"Functioning": "F", "Functioning-at-Risk": "AR", "Non-Functioning": "NF"}
 
-# Predefined + library assessment catalog. Built fresh per render (not cached) so a
-# newly published library version shows up in dev/desktop without a DEEP restart; on
-# the cloud this just reads the baked registry.
-def _assessment_choices(applicable_ids=None) -> dict:
-    """Assessment-picker choices. With ``applicable_ids`` (the ids whose area of
-    applicability covers the clicked point, plus every assessment that specifies no area),
-    split into an 'Applicable here' optgroup first, then 'Other assessments'."""
-    all_choices: dict[str, str] = {}
-    for a in assessments.list_predefined():
-        label = (f'{a["assessmentName"]} — {a["sourceCitation"]} · '
-                 f'{a["metricCount"]} metrics · {a["functionCount"]}/20 functions')
-        if a.get("version"):
-            label += f' · v{a["version"]}'
-        all_choices[a["assessmentId"]] = label
-    if applicable_ids is None:
-        return all_choices
-    ids = set(applicable_ids)
-    applicable = {i: lbl for i, lbl in all_choices.items() if i in ids}
-    others = {i: lbl for i, lbl in all_choices.items() if i not in ids}
-    grouped: dict = {}
-    if applicable:
-        grouped["Applicable here"] = applicable
-    if others:
-        grouped["Other assessments"] = others
-    return grouped or all_choices
-
 # Detailed metricIds DEEP can desktop-compute (Phase 3).
 _COMPUTED_IDS = _computed.computable_ids()
 
@@ -356,12 +330,12 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=2"),
-                    ui.tags.link(rel="stylesheet", href="deep.css?v=5"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=3"),
+                    ui.tags.link(rel="stylesheet", href="deep.css?v=6"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="measure.js", defer=""),
+                    ui.tags.script(src="measure.js?v=1", defer=""),
                     ui.tags.script(src="coverage.js", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
@@ -406,6 +380,53 @@ app_ui = ui.page_fillable(
 )
 
 
+def _auto_measure_key(la, delineation):
+    """Cache key for the desktop auto-measure guard (``computed_for``).
+
+    Scopes the "already computed" check to the combination of assessment
+    identity + published version + delineated site, so re-running the SAME
+    assessment at a DIFFERENT site (or a newer library version) recomputes
+    instead of reusing the stale prefill. Site identity is the snapped COMID plus
+    snapped lat/lon rounded to 6 decimals (~0.1 m).
+    """
+    dl = (delineation or {}).get("delineation") or {}
+    lat = dl.get("snapped_lat")
+    lon = dl.get("snapped_lon")
+    version = ((getattr(la, "raw", None) or {}).get("library") or {}).get("version")
+    return (
+        la.assessment_id,
+        version,
+        dl.get("comid"),
+        None if lat is None else round(float(lat), 6),
+        None if lon is None else round(float(lon), 6),
+    )
+
+
+def _parse_assessment_ref(raw_ref):
+    """Parse an ``?assessment=`` deep-link value into ``(assessmentId, version|None)``.
+
+    Accepts a bare id (``co-sqt-adapted``) or ``id@version`` (``co-sqt-adapted@2``). A
+    missing/blank ref -> ``(None, None)``; a non-integer version -> version None (the id is
+    still honored). DEEP bakes only the latest version per id, so the version is advisory:
+    the caller loads the latest and notes any mismatch.
+    """
+    if not raw_ref:
+        return None, None
+    ref = str(raw_ref).strip()
+    if "@" in ref:
+        aid, _, ver = ref.rpartition("@")
+        aid = aid.strip()
+        ver = ver.strip()
+        req = None
+        if ver:
+            try:
+                req = int(ver)
+            except ValueError:
+                req = None
+        return (aid or None), req
+    return (ref or None), None
+
+
 def server(input, output, session_):  # noqa: C901
     current_step = reactive.value(STEP_IDENTIFY)
     snapped_point = reactive.value(None)
@@ -418,16 +439,19 @@ def server(input, output, session_):  # noqa: C901
     step_clicks = reactive.value({k: 0 for k, _ in STEP_LABELS})
 
     loaded_assessment = reactive.value(None)          # LoadedAssessment | None
+    selected_ref = reactive.value(None)               # "id@vN" chosen in the Assessment step
+    covering_cache = reactive.value([])               # covering_refs() entries for pick handlers
     measured_values = reactive.value({})              # {metricId: {value, na, note, origin, source}}
     current_fn = reactive.value(0)
     compute_nonce = reactive.value(0)          # bumped when desktop-compute merges values
-    computed_for = reactive.value(None)        # assessmentId already desktop-computed
+    computed_for = reactive.value(None)        # (assessmentId, version, site) already desktop-computed
 
     # One-shot deep-link ingest from the URL query string:
-    #   ?assessment=<libraryId>          -> load that predefined/library assessment
-    #   ?handoff=<local .deep.json path> -> load a draft bundle handed off by
-    #       StreamCurves' "Test in DEEP" (desktop; the file is local to this machine).
-    # Reuses the same loaders as the picker/upload, so no scoring UI is duplicated.
+    #   ?assessment=<assessmentId>            -> load that library/predefined assessment (latest)
+    #   ?assessment=<assessmentId>@<version>  -> same, noting when the requested version is not
+    #                                            the latest available (DEEP bakes only the latest)
+    # Id-based only: the arbitrary local-path ``?handoff=`` opener was removed (Part A4). A
+    # draft is previewed by publishing it, then opening it by id@version.
     _url_ingested = reactive.value(False)
 
     @reactive.effect
@@ -444,24 +468,34 @@ def server(input, output, session_):  # noqa: C901
         from urllib.parse import parse_qs
 
         params = parse_qs(search.lstrip("?"))
-        aid = (params.get("assessment") or [None])[0]
-        handoff = (params.get("handoff") or [None])[0]
+        aid, req_version = _parse_assessment_ref((params.get("assessment") or [None])[0])
+        if not aid:
+            return
+        # Resolve to an exact ref. A requested version that exists loads exactly; an
+        # absent one falls back to the default version with a warning.
+        requested_ref = f"{aid}@v{req_version}" if req_version is not None else None
+        resolved_ref = requested_ref if (requested_ref and config.load_ref(requested_ref)) \
+            else config.default_ref_for(aid)
+        if not resolved_ref:
+            ui.notification_show(f"Could not open the linked assessment {aid!r}.",
+                                 type="error", duration=8)
+            return
         try:
-            if handoff:
-                with open(handoff, encoding="utf-8") as fh:
-                    la = assessments.from_bundle(json.load(fh))
-            elif aid:
-                la = assessments.load_predefined(aid)
-            else:
-                return
+            la = assessments.load_ref(resolved_ref)
         except Exception as exc:  # noqa: BLE001
             ui.notification_show(f"Could not open the linked assessment: {exc}",
                                  type="error", duration=8)
             return
-        loaded_assessment.set(la); measured_values.set({}); current_fn.set(0)
+        loaded_assessment.set(la); selected_ref.set(resolved_ref)
+        measured_values.set({}); current_fn.set(0)
         current_step.set(STEP_ASSESS)
-        ui.notification_show(f"Loaded {la.assessment_name} from link.",
-                             type="message", duration=4)
+        if requested_ref and resolved_ref != requested_ref:
+            ui.notification_show(
+                f"Requested v{req_version} of {la.assessment_name} is not available; "
+                f"loaded {resolved_ref.split('@')[-1]} instead.", type="warning", duration=7)
+        else:
+            ui.notification_show(f"Loaded {la.assessment_name} from link.",
+                                 type="message", duration=4)
 
     # Coverage panel (www/coverage.js): reply to the client's ready handshake with the
     # available-assessment outlines. coverage.js draws them as client-side, non-interactive
@@ -804,6 +838,7 @@ def server(input, output, session_):  # noqa: C901
             _remove_layer(k)
         snapped_point.set(None); delin.set(None); stage.set("")
         loaded_assessment.set(None); measured_values.set({}); current_fn.set(0)
+        computed_for.set(None)
         ui.update_numeric("lat", value=None)
         ui.update_numeric("lon", value=None)
         if _HAS_MAP:
@@ -861,8 +896,8 @@ def server(input, output, session_):  # noqa: C901
                 "1. **Identify** — zoom in until blue stream lines appear and click a stream (or type "
                 "coordinates / search an address). Set the reach length and click **Delineate**.\n"
                 "2. **Basin** — review the watershed and reach.\n"
-                "3. **Assessment** — pick a predefined detailed assessment (or upload one built in "
-                "SPRING).\n"
+                "3. **Assessment** — pick a published detailed assessment whose area of "
+                "applicability covers your site (certified before preliminary).\n"
                 "4. **Measure** — enter each metric's measured value; the reference curve converts it "
                 "to an index and the function/outcome scores update live.\n"
                 "5. **Report** — review and export the detailed assessment."),
@@ -904,31 +939,7 @@ def server(input, output, session_):  # noqa: C901
                 ui.div(ui.input_action_button("clear_basin", "Clear", class_="btn-outline-secondary"),
                        ui.input_action_button("to_assess", "Choose assessment", class_="btn-primary"),
                        class_="easi-pane-actions"))
-        elif step == STEP_ASSESS:
-            with reactive.isolate():
-                pt = snapped_point()
-                dd = (delin() or {}).get("delineation") or {}
-            lat = pt[0] if pt else dd.get("snapped_lat")
-            lon = pt[1] if pt else dd.get("snapped_lon")
-            applicable = (assessments.applicable_assessments(lat, lon)
-                          if lat is not None and lon is not None else None)
-            has_regions = bool(assessments.library_region_features().get("features"))
-            body = ui.TagList(
-                ui.div("Choose a detailed assessment, or upload one you built in SPRING. Each "
-                       "defines the metrics and reference curves for scoring.", class_="easi-instr"),
-                *([ui.div("Assessments whose area of applicability covers your point are listed "
-                          "first. Hover a shaded region on the map for its details.",
-                          class_="easi-ac-credit")] if has_regions else []),
-                ui.input_select("assessment_id", "Detailed assessment",
-                                choices=_assessment_choices(applicable)),
-                ui.input_action_button("load_assessment", "Load this assessment",
-                                       class_="btn-primary btn-sm"),
-                ui.hr(),
-                ui.input_file("upload_assessment", "…or upload a built assessment (.json)",
-                              accept=[".json"], multiple=False),
-                ui.output_ui("assessment_preview"),
-            )
-        else:  # measure / report -> full-width worksheet overlay replaces the left pane
+        else:  # assess / measure / report -> full-width worksheet replaces the left pane
             return None
         head_label = dict(STEP_LABELS).get(step, "DEEP")
         return ui.TagList(
@@ -1002,62 +1013,167 @@ def server(input, output, session_):  # noqa: C901
     # ======================================================================= #
     # Assessment step
     # ======================================================================= #
-    @reactive.effect
-    @reactive.event(input.load_assessment)
-    def _load_assessment():
+    # Full-width Assessment step. covering_refs() groups the eligible versions per
+    # covering assessment id; each card carries a version chooser + a lifecycle badge.
+    _MAX_ASSESS_CARDS = 16
+
+    def _assess_site() -> dict:
+        with reactive.isolate():
+            pt = snapped_point()
+            dd = (delin() or {}).get("delineation") or {}
+        lat = pt[0] if pt else dd.get("snapped_lat")
+        lon = pt[1] if pt else dd.get("snapped_lon")
+        regions = (assessments.resolve_site_regions(lat, lon)
+                   if lat is not None and lon is not None else {})
+        return {"lat": lat, "lon": lon,
+                "level3": regions.get("level3") or {}, "state": regions.get("state") or {}}
+
+    @render.ui
+    def assess_context():
+        if current_step() != STEP_ASSESS:
+            return None
+        site = _assess_site()
+        l3, stt = site["level3"], site["state"]
+        bits = []
+        if site["lat"] is not None:
+            bits.append(f'Lat {site["lat"]:.4f}, Lon {site["lon"]:.4f}')
+        if stt.get("name") or stt.get("code"):
+            bits.append(str(stt.get("name") or stt.get("code")))
+        if l3.get("code"):
+            bits.append(f'Level III ecoregion {l3.get("code")}'
+                        + (f' ({l3.get("name")})' if l3.get("name") else ""))
+        return ui.div(
+            ui.div(_stepper(STEP_ASSESS), class_="deep-assess-stepper"),
+            ui.div("Choose a detailed assessment", class_="deep-assess-title"),
+            ui.div("Each assessment defines the metrics and reference curves used to score "
+                   "this site. Assessments whose area of applicability covers your point are "
+                   "shown below.", class_="deep-assess-sub"),
+            ui.div(ui.span("Site: "), " · ".join(bits) if bits else "No point selected",
+                   class_="deep-assess-context"),
+            class_="deep-assess-context-wrap")
+
+    @render.ui
+    def assess_cards():
+        if current_step() != STEP_ASSESS:
+            return None
+        site = _assess_site()
+        covering = (assessments.covering_refs(site["lat"], site["lon"], require_polygon=True)
+                    if site["lat"] is not None else [])
+        covering_cache.set(covering)
+        if not covering:
+            return ui.div(
+                ui.div("No assessment's area of applicability covers this point.",
+                       class_="deep-assess-empty-title"),
+                ui.div("Detailed scoring needs an assessment whose region contains your site. "
+                       "Try a point inside a published region, or ask the library maintainer "
+                       "to publish one for this area.", class_="deep-assess-empty-sub"),
+                class_="deep-assess-empty")
+        cards = []
+        for i, entry in enumerate(covering[:_MAX_ASSESS_CARDS]):
+            refs = entry["refs"]
+            ver_by_ref = entry["versionByRef"]
+            life_by_ref = entry["lifecycleByRef"]
+            ver_choices = {
+                ref: f'v{ver_by_ref.get(ref)} ({life_by_ref.get(ref, "preliminary")})'
+                for ref in refs
+            }
+            default_life = life_by_ref.get(entry["defaultRef"], "preliminary")
+            badge_cls = "deep-badge-cert" if default_life == "certified" else "deep-badge-prelim"
+            cards.append(ui.div(
+                ui.div(
+                    ui.span(entry["assessmentName"], class_="deep-card-name"),
+                    ui.span(default_life, class_=f"deep-card-badge {badge_cls}"),
+                    class_="deep-card-head"),
+                ui.div(entry.get("regionName") or "", class_="deep-card-region"),
+                ui.div(
+                    ui.span("Version", class_="deep-card-verlabel"),
+                    ui.input_select(f"assess_ver_{i}", None, choices=ver_choices,
+                                    selected=entry["defaultRef"], width="200px"),
+                    class_="deep-card-verrow"),
+                ui.input_action_button(f"assess_pick_{i}", "Select this assessment",
+                                       class_="btn btn-sm btn-outline-primary"),
+                class_="deep-assess-card"))
+        return ui.div(*cards, class_="deep-assess-cards")
+
+    @render.ui
+    def assess_detail():
+        if current_step() != STEP_ASSESS:
+            return None
+        la = loaded_assessment()
+        covering = covering_cache()
+        if la is None:
+            if not covering:
+                return ui.div(
+                    ui.input_action_button("to_measure", "Continue to measurements",
+                                           class_="btn-primary", disabled="disabled"),
+                    ui.div("Select an assessment above to continue.",
+                           class_="deep-assess-detail-hint"),
+                    class_="deep-assess-detail")
+            return ui.div("Select an assessment above to see its details.",
+                          class_="deep-assess-detail-hint")
+        nfun = len([fn for fn in la.metrics_by_function if fn.get("metrics")])
+        nmet = sum(len(fn.get("metrics", [])) for fn in la.metrics_by_function)
+        lib = la.raw.get("library") or {}
+        region = la.raw.get("region") or lib.get("region") or {}
+        life = session.lifecycle_status(la.raw)
+        ref = selected_ref() or ""
+        info = []
+        if region.get("name"):
+            info.append(ui.div(f"Region: {region['name']}", class_="deep-assess-detail-line"))
+        if lib.get("version"):
+            updated = (lib.get("updatedAt") or "")[:10]
+            info.append(ui.div(
+                f"Version v{lib['version']}" + (f" · updated {updated}" if updated else "")
+                + f" · {life}", class_="deep-assess-detail-line"))
+        if la.source_citation:
+            info.append(ui.div(f"Citation: {la.source_citation}",
+                               class_="deep-assess-detail-line"))
+        warn = None
+        if life != "certified":
+            warn = ui.div(
+                "This is a preliminary assessment. Its curves are not yet certified; "
+                "use results with appropriate caution.",
+                class_="deep-assess-warning")
+        return ui.div(
+            ui.div(ui.span("✓ ", class_="deep-ok"), la.assessment_name,
+                   class_="deep-assess-detail-name"),
+            ui.div(f"{nmet} metrics · {nfun}/20 functions" + (f" · {ref}" if ref else ""),
+                   class_="deep-assess-detail-line"),
+            *info,
+            warn,
+            ui.div(ui.input_action_button("to_measure", "Continue to measurements",
+                                          class_="btn-primary"),
+                   class_="deep-assess-detail-actions"),
+            class_="deep-assess-detail")
+
+    def _load_ref_into_state(ref: str):
         try:
-            la = assessments.load_predefined(input.assessment_id())
+            la = assessments.load_ref(ref)
         except Exception as exc:  # noqa: BLE001
             ui.notification_show(f"Could not load assessment: {exc}", type="error", duration=6)
             return
-        loaded_assessment.set(la); measured_values.set({}); current_fn.set(0)
-        ui.notification_show(f"Loaded {la.assessment_name}.", type="message", duration=3)
+        loaded_assessment.set(la)
+        selected_ref.set(ref)
+        measured_values.set({})
+        current_fn.set(0)
+        ui.notification_show(f"Selected {la.assessment_name}.", type="message", duration=3)
 
-    @reactive.effect
-    @reactive.event(input.upload_assessment)
-    def _upload_assessment():
-        finfo = input.upload_assessment()
-        if not finfo:
-            return
-        try:
-            with open(finfo[0]["datapath"], encoding="utf-8") as fh:
-                bundle = json.load(fh)
-            la = assessments.from_bundle(bundle)
-        except Exception as exc:  # noqa: BLE001
-            ui.notification_show(f"Invalid assessment bundle: {exc}", type="error", duration=8)
-            return
-        loaded_assessment.set(la); measured_values.set({}); current_fn.set(0)
-        ui.notification_show(f"Loaded uploaded assessment: {la.assessment_name}.",
-                             type="message", duration=3)
+    def _make_pick_handler(idx: int):
+        @reactive.effect
+        @reactive.event(input[f"assess_pick_{idx}"])
+        def _pick():
+            covering = covering_cache()
+            if idx >= len(covering):
+                return
+            entry = covering[idx]
+            try:
+                ref = input[f"assess_ver_{idx}"]()
+            except Exception:  # noqa: BLE001
+                ref = entry["defaultRef"]
+            _load_ref_into_state(ref or entry["defaultRef"])
 
-    @render.ui
-    def assessment_preview():
-        la = loaded_assessment()
-        if la is None:
-            return ui.p("Pick a predefined assessment or upload one, then continue.",
-                        class_="easi-snap-note")
-        nfun = len([fn for fn in la.metrics_by_function if fn.get("metrics")])
-        nmet = sum(len(fn.get("metrics", [])) for fn in la.metrics_by_function)
-        # Library provenance travels with the bundle (LoadedAssessment.raw): show the
-        # region of applicability and which version/when it was last updated.
-        lib = la.raw.get("library") or {}
-        region = la.raw.get("region") or lib.get("region") or {}
-        info_bits = []
-        if region.get("name"):
-            info_bits.append(ui.div(f"Region: {region['name']}", class_="easi-ac-credit"))
-        if lib.get("version"):
-            updated = lib.get("updatedAt") or ""
-            when = f" · updated {updated[:10]}" if updated else ""
-            info_bits.append(
-                ui.div(f"Library version v{lib['version']}{when}", class_="easi-ac-credit")
-            )
-        return ui.div(
-            ui.p(f"✓ {la.assessment_name}", class_="easi-snap-note ok"),
-            ui.div(f"{la.source_citation} · {nmet} metrics · {nfun}/20 functions",
-                   class_="easi-ac-credit"),
-            *info_bits,
-            ui.div(ui.input_action_button("to_measure", "Continue to measurements",
-                                          class_="btn-primary"), class_="easi-pane-actions"))
+    for _i in range(_MAX_ASSESS_CARDS):
+        _make_pick_handler(_i)
 
     # ======================================================================= #
     # Measure worksheet + live rollup + report
@@ -1155,14 +1271,15 @@ def server(input, output, session_):  # noqa: C901
         ci = d.get("ctx_inputs")
         if not ci:
             return
+        key = _auto_measure_key(la, d)
         with reactive.isolate():
-            if computed_for() == la.assessment_id:
+            if computed_for() == key:
                 return
         ids = [m["metricId"] for fn in la.metrics_by_function
                for m in fn.get("metrics", []) if m["metricId"] in _COMPUTED_IDS]
         if not ids:
             return
-        computed_for.set(la.assessment_id)
+        computed_for.set(key)
         compute_task(ci, ids)
         ui.notification_show("Computing desktop metrics (StreamCat / 3DEP)…", id="deep_compute",
                              type="message", duration=None)
@@ -1193,7 +1310,14 @@ def server(input, output, session_):  # noqa: C901
 
     @render.ui
     def worksheet():
-        if current_step() not in (STEP_MEASURE, STEP_REPORT):
+        step = current_step()
+        if step == STEP_ASSESS:
+            return ui.div(
+                ui.output_ui("assess_context"),
+                ui.output_ui("assess_cards"),
+                ui.output_ui("assess_detail"),
+                class_="deep-assess-shell")
+        if step not in (STEP_MEASURE, STEP_REPORT):
             return None
         return ui.div(
             ui.div(ui.output_ui("fn_nav"), class_="sfari-nav"),
@@ -1246,6 +1370,7 @@ def server(input, output, session_):  # noqa: C901
             cur_stratum = rc.get("stratum") or m.get("activeStratum") or (strata[0] if strata else None)
             points = curves.active_points(m, cur_stratum)
             midx = fr.metric_indices.get(mid) if fr else None
+            mwarn = fr.metric_warnings.get(mid) if fr else None
             idx_txt = "—" if midx is None else f"{midx:.2f}"
             idx_col = scoring.index_band_color(midx) if midx is not None else "#eef1f6"
             plot_val = None if (na or val in (None, "")) else float(val)
@@ -1281,6 +1406,10 @@ def server(input, output, session_):  # noqa: C901
                     ui.span(idx_txt, {"data-mid-idx": mid}, class_="deep-metric-index",
                             style=f"background:{idx_col};"),
                     class_="deep-measure-row"),
+                ui.div(mwarn or "",
+                       {"data-mid-warn": mid, "role": "status",
+                        **({} if mwarn else {"hidden": "hidden"})},
+                       class_="deep-domain-warn"),
                 (ui.div(ui.span("How to measure", class_="deep-howto-key"),
                         ui.span(m.get("howToMeasure", ""), class_="deep-howto-val"),
                         class_="deep-howto")
@@ -1464,24 +1593,33 @@ def server(input, output, session_):  # noqa: C901
         la = loaded_assessment()
         return la.raw if la is not None else {}
 
+    def _site_region():
+        """Resolved {level3, state} for the snapped site — stamped into the session and
+        reports so a completed assessment records where the point fell (Part D)."""
+        dd = (delin() or {}).get("delineation") or {}
+        return assessments.resolve_site_regions(dd.get("snapped_lat"), dd.get("snapped_lon"))
+
     @render.download(filename="deep-assessment.json")
     def save_session():
-        yield session.dump(delin() or {}, _assessment_raw(), measured_values())
+        yield session.dump(delin() or {}, _assessment_raw(), measured_values(),
+                           region=_site_region())
 
     @render.download(filename="deep-report.csv")
     def dl_csv():
         sc, _fr = scored()
-        yield report.build_csv(delin() or {}, loaded_assessment(), measured_values(), sc)
+        yield report.build_csv(delin() or {}, loaded_assessment(), measured_values(), sc,
+                               region=_site_region())
 
     @render.download(filename="deep-report.geojson")
     def dl_geojson():
         sc, _fr = scored()
-        yield report.build_geojson(delin() or {}, loaded_assessment(), sc)
+        yield report.build_geojson(delin() or {}, loaded_assessment(), sc, region=_site_region())
 
     @render.download(filename="deep-report.pdf")
     def dl_pdf():
         sc, _fr = scored()
-        yield report.build_pdf(delin() or {}, loaded_assessment(), measured_values(), sc)
+        yield report.build_pdf(delin() or {}, loaded_assessment(), measured_values(), sc,
+                               region=_site_region())
 
     @reactive.effect
     @reactive.event(input.load_session)
@@ -1498,6 +1636,7 @@ def server(input, output, session_):  # noqa: C901
         d = st.get("delineation") or {}
         delin.set(d)
         measured_values.set(st.get("measured_values") or {})
+        computed_for.set(None)  # restored site/version must recompute desktop metrics
         raw = st.get("assessment") or {}
         if raw:
             try:
