@@ -1,7 +1,7 @@
 """Turn the live StreamCurves session into publishable artifacts.
 
 One place to build the DEEP bundle and the session payload from ``AppState`` so the
-export screen (Finalize / Test in DEEP) and the Library tab (Publish) can't drift.
+export screen (Finalize / Test in DEEP) and the Publish page can't drift.
 """
 
 from __future__ import annotations
@@ -21,9 +21,25 @@ from views.state import AppState
 DEFAULT_SOURCE_CITATION = "StreamCurves reference-curve development"
 
 
+def region_label(region: dict | None) -> str:
+    """Short human label for a region_of_applicability dict (shared by the
+    Open dialog and the Publish page)."""
+    if not region or region.get("kind") == "none":
+        return "No region set"
+    kind = region.get("kind")
+    name = region.get("name") or region.get("code") or ""
+    if kind == "ecoregion":
+        return f"{name} (L3 {region.get('code')})"
+    if kind == "state":
+        return f"{name} (state)"
+    if kind == "polygon":
+        return "Custom drawn area"
+    return str(name)
+
+
 def run_snapshot(state: AppState) -> dict:
     """Snapshot of the current run for ``run_state.derive_stage_status`` /
-    ``is_ready_to_publish``. Shared by the guided home and the Library publish gate
+    ``is_ready_to_publish``. Shared by the stage banner and the Publish page gate
     so both read the same facts from AppState."""
     with reactive.isolate():
         region = state.region_of_applicability()

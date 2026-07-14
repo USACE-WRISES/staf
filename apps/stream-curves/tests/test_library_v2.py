@@ -317,6 +317,30 @@ def test_catalog_carries_validation_state(libroot):
     assert e["validationSummary"]["n_checks"] == 1
 
 
+def test_publish_final_writer_sequence(libroot):
+    """The Publish page's Final path: publish (seeds preliminary), attach a
+    validation record, mark validated, then certify. Pins the exact call order
+    the UI runs and the catalog pointers DEEP consumes."""
+    lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                        _session_payload(), _bundle())
+    lib.add_validation_record(
+        "ecbp", 1,
+        {"method": "independent recompute", "checker": "amy", "outcome": "match"},
+        actor="maintainer-jane", note="publish-time validation")
+    n_records = len(lib._validation_records_for("ecbp", 1))
+    lib.set_version_validation("ecbp", 1, "validated",
+                               {"n_records": n_records}, "maintainer-jane")
+    lib.set_version_status("ecbp", 1, "certified", "maintainer-jane",
+                           note="Published as Final; validated and certified at publish.")
+
+    assert lib.version_status("ecbp", 1) == "certified"
+    assert lib.version_validation_state("ecbp", 1) == "validated"
+    e = _entry("ecbp")
+    assert e["latestCertified"] == 1
+    assert e["defaultVersion"] == 1
+    assert e["validationState"] == "validated"
+
+
 def test_revision_stamps_supersedes_version(libroot):
     lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION}, _session_payload(), _bundle())
     v2 = lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},

@@ -13,7 +13,7 @@ filesystem, so nothing here can be imported across apps at runtime.
 
 | App | Access | When |
 |---|---|---|
-| StreamCurves (`streamcurves/library.py`) | read + **write** (publish) | Local/desktop only — the folder is reachable and writable there. On the cloud it degrades to "prepare a publish package" (a download). |
+| StreamCurves (`streamcurves/library.py`) | read + **write** (publish) | Local/desktop only — the folder is reachable and writable there. On the cloud it degrades to saving a Draft session file to send to the publisher. |
 | DEEP (`deep/library.py` + `scripts/build_deep_data.py`) | read | Dev/desktop: merges the live library over its baked registry. Cloud: reads only the baked snapshot in `apps/deep/data/deep-assessments.json`, produced by the bake step. |
 
 A **builder** develops curves (anywhere) and saves a StreamCurves `*.streamcurves.json`
@@ -32,7 +32,8 @@ apps/library/
       manifest.json               # identity + region + full version history
       v1/
         assessment.deep.json      # DEEP bundle (curves inlined) + embedded "library" block
-        session.streamcurves.json # full editable StreamCurves session (round-trip)
+        session.streamcurves.json # FULL editable StreamCurves session (round-trip): data,
+                                  # screening tables, curves, decisions — reopen and revise
         meta.json                 # this version's metadata (convenience copy)
       v2/
         ...
@@ -114,11 +115,17 @@ assessment info button shows version + last-updated).
 
 ## Publishing (summary)
 
-1. Builder saves a StreamCurves session and shares the file.
-2. Publisher (local/desktop) opens StreamCurves > **Library**, picks the session (live or
-   uploaded), confirms the assessment id + version notes, and **Publishes**. StreamCurves:
-   - writes `assessments/<id>/vN/` (bundle + session + meta),
-   - updates `manifest.json` + `catalog.json`,
+1. Builder saves a StreamCurves session (Save > Draft) and shares the file.
+2. Publisher (local/desktop) opens StreamCurves, opens the session (header **Open**), goes to
+   **Publish** (header **Save** or the stage banner), picks Preliminary or Final (Final =
+   validated + certified; certification requires the Validated box), and **Publishes**.
+   StreamCurves:
+   - writes `assessments/<id>/vN/` (bundle + full session + meta),
+   - updates `manifest.json` + `catalog.json` (+ `status.json` / `validation.json`),
    - re-bakes DEEP's registry (`apps/deep/scripts/build_deep_data.py`) so the cloud DEEP will
      ship the new latest version.
 3. Publisher commits `apps/library/**` and `apps/deep/data/**` and pushes; redeploy DEEP.
+
+Changing a published version's status later is republish-only: open the assessment, make any
+updates, and publish again at the new level (a new version). `set_version_status` remains
+available from Python for scripted actions such as retiring a version.

@@ -11,6 +11,7 @@ from views.import_map import (
     _region_choices,
     _state_choices,
     build_col_provenance,
+    wizard_seed_from_state,
 )
 
 
@@ -62,3 +63,38 @@ def test_build_col_provenance_nrsa_columns():
     # NRSA namespaced cols resolve via nrsa_source_for (category label)
     assert src["chem_PH"].startswith("NRSA")
     assert src["phab_XSLOPE"].startswith("NRSA")
+
+
+def test_wizard_seed_from_state_maps_each_region_kind():
+    eco = wizard_seed_from_state(
+        {"kind": "ecoregion", "code": "58", "name": "Northeastern Highlands"}
+    )
+    assert eco == {
+        "region_kind": "ecoregion",
+        "region_code": "58",
+        "region_name": "Northeastern Highlands",
+        "user_polygon": None,
+        "region_approach": "ecoregion",
+    }
+
+    state_seed = wizard_seed_from_state({"kind": "state", "code": "CO", "name": "Colorado"})
+    assert state_seed["region_kind"] == "state"
+    assert state_seed["region_approach"] == "state"
+    assert state_seed["region_code"] == "CO"
+
+    rings = {"type": "Polygon", "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 0]]]}
+    poly = wizard_seed_from_state({"kind": "polygon", "code": "USER", "polygon": rings})
+    assert poly["region_approach"] == "draw"
+    assert poly["user_polygon"] == rings
+
+    # polygon geometry never leaks onto non-polygon kinds
+    eco_with_poly = wizard_seed_from_state(
+        {"kind": "ecoregion", "code": "58", "polygon": rings}
+    )
+    assert eco_with_poly["user_polygon"] is None
+
+
+def test_wizard_seed_from_state_handles_missing_and_unknown():
+    assert wizard_seed_from_state(None)["region_kind"] == "none"
+    assert wizard_seed_from_state(None)["region_approach"] == "none"
+    assert wizard_seed_from_state({"kind": "galaxy"})["region_approach"] == "none"

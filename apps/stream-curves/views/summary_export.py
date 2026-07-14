@@ -276,9 +276,8 @@ def summary_export_server(input, output, session, state: AppState):
                         bi("magic"),
                         " This bundle is a testable snapshot. To make it a reusable, "
                         "versioned assessment that DEEP lists for everyone, open the ",
-                        ui.tags.strong("Library"),
-                        " tab and publish this session. To test scoring first, upload the "
-                        "downloaded bundle in DEEP (its assessment step accepts uploads).",
+                        ui.tags.strong("Publish"),
+                        " page (or click Save, top right) and publish this session.",
                         class_="alert alert-info mt-2 mb-0 small",
                     ),
                     class_="card-body",

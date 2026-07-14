@@ -44,8 +44,8 @@ from views import summary_state as sst
 from views.analysis_workspace import analysis_workspace_server, analysis_workspace_ui
 from views.cross_section import cross_section_server, cross_section_ui
 from views.data_overview import data_overview_server, data_overview_ui
-from views.guided import guided_server, guided_ui
-from views.library import library_server, library_ui
+from views.stagebar import stagebar_server, stagebar_ui
+from views.publish import publish_server, publish_ui
 from views.phase1 import phase1_server, phase1_ui
 from views.phase2 import phase2_server, phase2_ui
 from views.phase3 import phase3_server, phase3_ui
@@ -54,7 +54,7 @@ from views.regional_curve import regional_curve_server, regional_curve_ui
 from views.state import AppState
 from views.summary_export import summary_export_server, summary_export_ui
 from views.summary_page import summary_page_server, summary_page_ui
-from views.theme import app_theme, bi, staf_topnav, versioned_www_asset
+from views.theme import app_theme, bi, fa, staf_topnav, versioned_www_asset
 from views.workspace_modal import register_workspace_modal
 
 logger = logging.getLogger("streamcurves")
@@ -70,7 +70,7 @@ def app_help_content():
         ui.tags.p(
             "StreamCurves helps you develop ",
             ui.tags.strong("reference and regional curves"),
-            " for geomorphic stream metrics — from your own measurements and/or published ",
+            " for geomorphic stream metrics, from your own measurements and/or published ",
             "monitoring data. No pre-formatted workbook is required: add raw data and the app ",
             "helps you classify your columns and set everything up.",
         ),
@@ -79,22 +79,34 @@ def app_help_content():
         ui.tags.ul(
             ui.tags.li(
                 ui.tags.strong("Data & Setup"),
-                " — choose a region of applicability, bring or select site data, "
+                ": choose a region of applicability, bring or select site data, "
                 "pull metrics, and build the dataset.",
             ),
             ui.tags.li(
                 ui.tags.strong("Reference Curves"),
-                " — run the 4-phase evaluation for each metric.",
+                ": run the 4-phase evaluation for each metric.",
             ),
             ui.tags.li(
                 ui.tags.strong("Regional Curves"),
-                " — develop regional (e.g. bankfull) relationships.",
+                ": develop regional (e.g. bankfull) relationships.",
             ),
             ui.tags.li(
                 ui.tags.strong("Cross-Sections"),
-                " — build per-site geomorphic cross-sections on demand.",
+                ": build per-site geomorphic cross-sections on demand.",
+            ),
+            ui.tags.li(
+                ui.tags.strong("Publish"),
+                ": save your project as a Draft file, or publish it to the STAF "
+                "assessment library as Preliminary or Final for DEEP to score against.",
             ),
             class_="mb-2",
+        ),
+        ui.tags.p(
+            "Use ",
+            ui.tags.strong("New / Open / Save"),
+            " in the top right to start a project, resume a saved one (or a "
+            "library assessment), and save or publish your work.",
+            class_="text-muted mb-0",
         ),
         ui.tags.h6("The 4-phase evaluation", class_="fw-bold mt-3 mb-1"),
         ui.tags.p(
@@ -120,12 +132,6 @@ def app_help_content():
 
 app_ui = ui.page_navbar(
     ui.nav_panel(
-        "Guided",
-        ui.div(guided_ui("guided"), class_="mt-3"),
-        value="guided",
-        icon=bi("bullseye"),
-    ),
-    ui.nav_panel(
         "Data & Setup",
         ui.div(data_overview_ui("data_overview"), class_="mt-3"),
         value="data",
@@ -150,21 +156,44 @@ app_ui = ui.page_navbar(
         icon=bi("graph-down"),
     ),
     ui.nav_panel(
-        "Library",
-        ui.div(library_ui("library"), class_="mt-3"),
-        value="library",
-        icon=bi("layers"),
+        "Publish",
+        ui.div(publish_ui("publish"), class_="mt-3"),
+        value="publish",
+        icon=bi("file-earmark-arrow-up"),
     ),
     ui.nav_spacer(),
+    # Header actions (mirrors the SFARI/DEEP New / Open / Save idiom; the
+    # divider before Help is a border-left, not a glyph).
+    ui.nav_control(
+        ui.input_action_link(
+            "nav_new",
+            ui.TagList(bi("plus-circle-fill"), " New"),
+            class_="nav-link app-hdr-link",
+        )
+    ),
+    ui.nav_control(
+        ui.input_action_link(
+            "nav_open",
+            ui.TagList(bi("folder2-open"), " Open"),
+            class_="nav-link app-hdr-link",
+        )
+    ),
+    ui.nav_control(
+        ui.input_action_link(
+            "nav_save",
+            ui.TagList(fa("floppy-disk"), " Save"),
+            class_="nav-link app-hdr-link",
+        )
+    ),
     ui.nav_control(
         ui.input_action_link(
             "app_help",
             ui.TagList(bi("question-circle"), " Help"),
-            class_="nav-link app-help-link",
+            class_="nav-link app-help-link app-hdr-divider",
         )
     ),
     id="main_navbar",
-    selected="guided",
+    selected="data",
     title="StreamCurves",
     window_title="StreamCurves - Reference & Regional Curve Development",
     theme=app_theme,
@@ -175,6 +204,7 @@ app_ui = ui.page_navbar(
             ui.tags.script(src=versioned_www_asset("curves.js")),
         ),
         staf_topnav(),
+        stagebar_ui("stagebar"),
         # Static ipywidget/ipyleaflet deps (see views/widget_deps.py) — the
         # TagList renders nothing visible; its dependencies hoist into <head>.
         (static_ipywidget_dependencies() if _HAS_WIDGETS else None),
@@ -186,12 +216,12 @@ app_ui = ui.page_navbar(
 def server(input, output, session):
     state = AppState.fresh()
 
-    guided_server("guided", state)
+    stagebar_server("stagebar", state)
     data_overview_server("data_overview", state)
     summary_page_server("summary", state)
     regional_curve_server("regional", state)
     cross_section_server("xsec", state)
-    library_server("library", state)
+    publish_server("publish", state)
     summary_export_server("summary_export", state)
 
     # Standalone phase workspace instances (app.R:246-249); the analysis
@@ -241,7 +271,7 @@ def server(input, output, session):
                     state.discipline_function_mapping()
                 )
 
-    # Root navigation: the guided home requests a tab switch via a nonce; the
+    # Root navigation: the stage banner requests a tab switch via a nonce; the
     # wizard step request is consumed inside the Data & Setup wizard itself.
     @reactive.effect
     @reactive.event(state.nav_request_nonce, ignore_init=True)
@@ -249,7 +279,59 @@ def server(input, output, session):
         with reactive.isolate():
             target = state.nav_request()
         if target:
-            ui.update_navs("main_navbar", selected=target)
+            ui.update_navset("main_navbar", selected=target)
+
+    # ── header actions: New / Open / Save ────────────────────────────────────
+    def _do_new():
+        st.reset_app_to_startup(state)
+        with reactive.isolate():
+            state.nav_request.set("data")
+            state.nav_request_nonce.set((state.nav_request_nonce() or 0) + 1)
+            state.wizard_step_request.set(1)
+            state.wizard_step_nonce.set((state.wizard_step_nonce() or 0) + 1)
+
+    @reactive.effect
+    @reactive.event(input.nav_new)
+    def _nav_new():
+        with reactive.isolate():
+            loaded = bool(state.app_data_loaded())
+        if not loaded:
+            _do_new()
+            return
+        ui.modal_show(
+            ui.modal(
+                "Start a new project? Unsaved changes are lost. Save first "
+                "(top right) to keep the current one.",
+                title="Start a new project?",
+                easy_close=True,
+                footer=ui.TagList(
+                    ui.modal_button("Cancel"),
+                    ui.input_action_button(
+                        "nav_new_confirm", "Clear and start new", class_="btn btn-danger"
+                    ),
+                ),
+            )
+        )
+
+    @reactive.effect
+    @reactive.event(input.nav_new_confirm)
+    def _nav_new_confirm():
+        ui.modal_remove()
+        _do_new()
+
+    @reactive.effect
+    @reactive.event(input.nav_open)
+    def _nav_open():
+        with reactive.isolate():
+            state.open_dialog_nonce.set((state.open_dialog_nonce() or 0) + 1)
+
+    @reactive.effect
+    @reactive.event(input.nav_save)
+    def _nav_save():
+        # Save is the Publish page: Draft (file downloads), Preliminary, Final.
+        with reactive.isolate():
+            state.nav_request.set("publish")
+            state.nav_request_nonce.set((state.nav_request_nonce() or 0) + 1)
 
     @reactive.effect
     @reactive.event(input.app_help)

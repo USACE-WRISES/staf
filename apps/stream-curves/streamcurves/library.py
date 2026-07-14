@@ -574,8 +574,8 @@ def publish_version(
     README region block), optional ``stateCode`` / ``stateName`` / ``sourceCitation`` /
     ``author`` / ``revisionNotes``.
     ``session_payload``: the dict from :func:`session_io.dump_session_fields` (round-trip).
-    The publisher passes the *redacted* public session here; the full-detail session ships
-    only in the restricted package.
+    The publisher passes the *full* session here so every published version can be
+    reopened and revised in StreamCurves.
     ``bundle``: the dict from :func:`deep_export.build_deep_assessment_bundle`. This
     function stamps the authoritative ``library`` block and the stable ``assessmentId``
     onto it before writing.

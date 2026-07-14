@@ -84,6 +84,24 @@ def test_roundtrip_nested_cache_and_nan_scalars():
     assert out["phase2_ranking"] is None
 
 
+def test_roundtrip_list_and_array_cells():
+    # Finalized reference curves store list-valued cells (e.g. score_30_crossings);
+    # they must survive dump/restore rather than crash pd.isna() on an array.
+    df = pd.DataFrame(
+        {
+            "metric": ["m1"],
+            "score_30_crossings": [[4.5]],
+            "arr_cell": [np.array([1.0, 2.0])],
+            "empty_cell": [[]],
+        }
+    )
+    out = _roundtrip({"data": df, "session_name": "cells"})
+    r = out["data"]
+    assert r["score_30_crossings"].iloc[0] == [4.5]
+    assert list(r["arr_cell"].iloc[0]) == [1.0, 2.0]
+    assert r["empty_cell"].iloc[0] == []
+
+
 def test_dump_is_idempotent():
     fields = _sample_fields()
     once = _roundtrip(fields)
