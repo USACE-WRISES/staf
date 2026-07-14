@@ -137,6 +137,44 @@ def test_load_version_session_roundtrips(libroot):
     )
 
 
+def test_publish_stores_full_session_roundtrip(libroot):
+    """The library stores the FULL session (screening tables, curve state, stage
+    status) so a published version reopens ready to revise. Pins the store-full
+    contract the Open dialog depends on."""
+    screening = pd.DataFrame(
+        {
+            "site_id": ["NRS1", "NRS2"],
+            "lat": [44.1, 44.2],
+            "lon": [-72.1, -72.2],
+            "final_decision": ["retained", "excluded"],
+        }
+    )
+    fields = {
+        "data": pd.DataFrame({"site": ["a", "b"], "value": [1.0, 2.0]}),
+        "session_name": "ecbp-full",
+        "region_of_applicability": REGION,
+        "app_data_loaded": True,
+        "easi_screening_sites": screening,
+        "completed_metrics": {"perImperv": {"curve_status": "complete"}},
+        "run_stage_status": {"publish": {"status": "done", "label": "Published ECBP v1."}},
+        "screening_run": {"n_screened": 2, "n_retained": 1, "method": "direct_engine"},
+        "site_exclusions": [{"site_id": "NRS2", "reason": "reviewer"}],
+    }
+    payload = sio.dump_session_fields(fields, session_name="ecbp-full")
+    meta = {"assessmentName": "ECBP", "region": REGION}
+    lib.publish_version("eastern-corn-belt-plains", meta, payload, _bundle())
+
+    restored = sio.decode_session_fields(
+        lib.load_version_session("eastern-corn-belt-plains", 1)
+    )
+    pd.testing.assert_frame_equal(restored["easi_screening_sites"], screening)
+    assert restored["completed_metrics"] == {"perImperv": {"curve_status": "complete"}}
+    assert restored["run_stage_status"]["publish"]["status"] == "done"
+    assert restored["screening_run"]["n_retained"] == 1
+    assert restored["site_exclusions"] == [{"site_id": "NRS2", "reason": "reviewer"}]
+    assert not (restored.get("run_meta") or {}).get("redacted")
+
+
 def test_publish_requires_writable(tmp_path, monkeypatch):
     monkeypatch.setenv("STAF_LIBRARY_ROOT", str(tmp_path / "does-not-exist"))
     assert lib.writable() is False

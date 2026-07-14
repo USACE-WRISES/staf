@@ -143,6 +143,12 @@ def _encode_frame(df: pd.DataFrame) -> dict:
 def _encode_cell(v: Any) -> Any:
     if v is None:
         return None
+    # Non-scalar cells (a finalized curve's score_30_crossings list, a nested
+    # DataFrame/Series, a dict) round-trip through the full encoder; handle them
+    # before the scalar pd.isna() check, which raises "ambiguous truth value" on
+    # an array/frame. _decode_value inverts every form encode_value produces.
+    if isinstance(v, (list, tuple, set, np.ndarray, pd.DataFrame, pd.Series, dict)):
+        return encode_value(v)
     if isinstance(v, (np.floating, float)):
         f = float(v)
         if math.isnan(f):

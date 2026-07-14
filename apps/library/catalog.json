@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-12T02:05:24Z",
+  "generatedAt": "2026-07-14T16:46:12Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -108,7 +108,7 @@
       "stateCode": "",
       "stateName": "",
       "latestVersion": 1,
-      "latestUpdatedAt": "2026-07-12T02:05:24Z",
+      "latestUpdatedAt": "2026-07-14T16:46:12Z",
       "latestPreliminary": 1,
       "latestCertified": 0,
       "defaultVersion": 1,

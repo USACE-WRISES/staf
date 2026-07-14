@@ -3133,9 +3133,9 @@
   "library": {
     "libraryId": "northeastern-highlands",
     "version": 1,
-    "updatedAt": "2026-07-12T02:05:24Z",
+    "updatedAt": "2026-07-14T16:46:12Z",
     "author": "STAF pilot",
-    "revisionNotes": "Preliminary reference curves from NRSA L3-58 response metrics.",
+    "revisionNotes": "Full reopenable session: 71 NRSA L3-58 reference sites, 11 finalized curves, 8 STAF functions.",
     "region": {
       "kind": "ecoregion",
       "code": "58",

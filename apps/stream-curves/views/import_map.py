@@ -112,6 +112,28 @@ _STEP_LABELS = [
     "Region", "Add data", "Confirm sites", "Choose metrics",
     "Compile", "Classify", "Review & build",
 ]
+
+# region_of_applicability "kind" -> the step-1 region_approach radio value.
+_KIND_TO_APPROACH = {
+    "ecoregion": "ecoregion", "state": "state", "polygon": "draw", "none": "none",
+}
+
+
+def wizard_seed_from_state(region: dict | None) -> dict:
+    """Map a saved region_of_applicability onto the wizard's region widgets.
+
+    Pure so tests can pin the mapping; the hydration effect applies it."""
+    region = region or {}
+    kind = region.get("kind") or "none"
+    if kind not in _KIND_TO_APPROACH:
+        kind = "none"
+    return {
+        "region_kind": kind,
+        "region_code": region.get("code"),
+        "region_name": region.get("name"),
+        "user_polygon": region.get("polygon") if kind == "polygon" else None,
+        "region_approach": _KIND_TO_APPROACH[kind],
+    }
 _NRSA_SECTIONS = [
     ("chem", "Water chemistry"),
     ("phab", "Physical habitat"),
@@ -650,11 +672,18 @@ def import_map_server(
     @reactive.event(input.region_approach, ignore_init=True)
     def _swap_approach():
         kind = _inp("region_approach") or "ecoregion"
-        region_kind.set({"ecoregion": "ecoregion", "state": "state",
-                         "draw": "polygon", "none": "none"}.get(kind, "ecoregion"))
-        region_code.set(None)
-        region_name.set(None)
-        user_polygon.set(None)
+        mapped = {"ecoregion": "ecoregion", "state": "state",
+                  "draw": "polygon", "none": "none"}.get(kind, "ecoregion")
+        with reactive.isolate():
+            already_current = region_kind() == mapped
+        if not already_current:
+            # Hydration updates this radio to match a restored region; in that
+            # round-trip the kind is already current and clearing here would
+            # wipe the freshly seeded code/name/polygon.
+            region_kind.set(mapped)
+            region_code.set(None)
+            region_name.set(None)
+            user_polygon.set(None)
         if not _HAS_MAP:
             return
         for key in ("eco", "state", "selected", "draw"):
@@ -753,7 +782,7 @@ def import_map_server(
     @reactive.effect
     @reactive.event(state.wizard_step_nonce, ignore_init=True)
     def _wizard_step_from_root():
-        # The guided home routes here by requesting a wizard step (1-based).
+        # The stage banner routes here by requesting a wizard step (1-based).
         with reactive.isolate():
             req_step = state.wizard_step_request()
         if req_step is None:
@@ -769,6 +798,36 @@ def import_map_server(
                    col_source, col_function, saved_assignments):
             rv.set(None)
         region_kind.set("ecoregion")
+
+    @reactive.effect
+    @reactive.event(state.wizard_hydrate_nonce, ignore_init=True)
+    def _hydrate_from_state():
+        # Re-entry over a restored project (stage-banner click or header Open):
+        # seed the wizard's local widgets from the saved state so the steps show
+        # the project's region and candidate sites instead of blank defaults.
+        # No-op when there is nothing saved (a genuinely fresh wizard).
+        with reactive.isolate():
+            region = state.region_of_applicability()
+            sc = state.easi_screening_sites()
+        if region is None and sc is None:
+            return
+        if region is not None:
+            seed = wizard_seed_from_state(region)
+            region_kind.set(seed["region_kind"])
+            region_code.set(seed["region_code"])
+            region_name.set(seed["region_name"])
+            user_polygon.set(seed["user_polygon"])
+            # region_control renders from the radio input; _swap_approach skips
+            # its clearing when the kind is already current (see above).
+            ui.update_radio_buttons(
+                "region_approach", selected=seed["region_approach"], session=session
+            )
+        if sc is not None:
+            df = sc if isinstance(sc, pd.DataFrame) else pd.DataFrame(sc)
+            if len(df) and "site_id" in df.columns:
+                keep = [c for c in ("site_id", "lat", "lon", ".source", "state",
+                                    "ag_eco9", "huc8") if c in df.columns]
+                sites.set(df[keep].copy() if keep else df.copy())
 
     # ── upload (step 2) ────────────────────────────────────────────────────────
     @reactive.effect
@@ -859,7 +918,7 @@ def import_map_server(
         # No coordinate dedup: reference screening + reviewer overrides decide which
         # candidate sites continue, so every assembled row is preserved here.
         sites.set(asm)
-        # Publish the candidate count so the guided home can report it.
+        # Publish the candidate count so the stage banner can report it.
         meta = rs.touch_run_meta(state.run_meta())
         meta["n_candidates"] = int(len(asm))
         state.run_meta.set(meta)
@@ -890,7 +949,7 @@ def import_map_server(
             streamstats=bool(ss_codes), mmw=run_mmw,
         )
         # Per-source diagnostics feed run_stage_status["enrichment_build"] so the
-        # guided card can say which sources succeeded, retried, or were isolated.
+        # stage banner can say which sources succeeded, retried, or were isolated.
         diag = {"sources": {}, "isolated": [], "site_failures": {}}
 
         async def announce(source, *, site=None, n_sites=None):
@@ -1047,7 +1106,7 @@ def import_map_server(
             # separately in state.site_exclusions).
             state.site_mask_config.set(rs.site_mask_config_from_exclusions(
                 comp, exclusions or [], site_id_column="site_id"))
-            # Record enrichment diagnostics for the guided card.
+            # Record enrichment diagnostics for the stage banner.
             stage_status = dict(state.run_stage_status() or {})
             stage_status["enrichment_build"] = {
                 "status": "done",
@@ -1146,6 +1205,17 @@ def import_map_server(
         if kind == "polygon" and user_polygon() is not None:
             roa["polygon"] = user_polygon()
         return roa
+
+    @reactive.effect
+    def _publish_region_selection():
+        # Commit the region choice to AppState as soon as it is complete so the
+        # stage banner (and the Publish page) track the wizard live;
+        # wiz_build re-writes the same value at the end. Writes a value this
+        # effect never reads, so it cannot self-invalidate.
+        roa = _region_of_applicability()
+        if roa is not None and not (roa.get("code") or roa.get("name")):
+            roa = None  # region type picked but nothing selected yet
+        state.region_of_applicability.set(roa)
 
     @reactive.effect
     @reactive.event(input.wiz_build)
@@ -1448,7 +1518,11 @@ def import_map_server(
                     "note": r.get("reviewer_note"),
                 })
         state.site_exclusions.set(exclusions)
-        run = dict(state.screening_run() or {})
+        # Isolate the reads: reading a value this function also rewrites would
+        # register a self-invalidating dependency on any plain-effect caller.
+        with reactive.isolate():
+            run = dict(state.screening_run() or {})
+            prev_meta = state.run_meta()
         run.update({
             "n_screened": int(len(df)),
             "n_retained": int(len(retained_ids)),
@@ -1456,7 +1530,7 @@ def import_map_server(
             "method_version": rs.SCREENING_METHOD_VERSION,
         })
         state.screening_run.set(run)
-        state.run_meta.set(rs.touch_run_meta(state.run_meta()))
+        state.run_meta.set(rs.touch_run_meta(prev_meta))
 
     def _persist_screening(tables: dict, *, method: str | None = None) -> None:
         sites_df = pd.DataFrame(tables["easi_screening_sites"])
@@ -1470,6 +1544,7 @@ def import_map_server(
                           cancel: dict) -> dict:
         def on_event(stage, site_id, info):
             progress["stage"] = stage
+            progress["site"] = site_id or ""
             if stage == "site_done":
                 progress["done"] = progress.get("done", 0) + 1
 
@@ -1490,9 +1565,14 @@ def import_map_server(
                                  type="warning", duration=6)
             return
         preset = _inp("screening_preset") or "functional"
-        _screen_prog.update({"done": 0, "total": len(rows), "stage": "queued"})
+        _screen_prog.update({"done": 0, "total": len(rows), "stage": "queued",
+                             "site": ""})
         _screen_cancel["flag"] = False
         screen_task(rows, preset, _screen_prog, _screen_cancel)
+        with reactive.isolate():
+            tasks = dict(state.tasks_running() or {})
+        tasks["candidate_screening"] = True
+        state.tasks_running.set(tasks)
         ui.notification_show(f"Screening {len(rows)} candidate sites…", id="sc_screen",
                              type="message", duration=None)
 
@@ -1509,15 +1589,25 @@ def import_map_server(
             return
         reactive.invalidate_later(0.4)
         done, total = _screen_prog.get("done", 0), _screen_prog.get("total", 0)
-        ui.notification_show(f"Screening candidate sites… {done} of {total}",
+        site = _screen_prog.get("site") or ""
+        extra = f" ({site})" if site else ""
+        ui.notification_show(f"Screening candidate sites… {done} of {total}{extra}",
                              id="sc_screen", type="message", duration=None)
 
     @reactive.effect
+    @reactive.event(screen_task.status)
     def _screen_done():
+        # Event-guarded on the task status: the body persists to reactives it
+        # would otherwise depend on (run_meta gets a fresh dict every write),
+        # so an unguarded effect re-fires itself forever after success.
         status = screen_task.status()
         if status in ("initial", "running"):
             return
         ui.notification_remove("sc_screen")
+        with reactive.isolate():
+            tasks = dict(state.tasks_running() or {})
+        tasks.pop("candidate_screening", None)
+        state.tasks_running.set(tasks)
         try:
             tables = screen_task.result()
         except Exception as exc:  # noqa: BLE001
@@ -1528,7 +1618,7 @@ def import_map_server(
         keep = len(easi_screening.retained_site_ids(tables))
         note = " (cancelled early)" if _screen_cancel.get("flag") else ""
         ui.notification_show(f"Screened {n} sites, {keep} retained{note}.",
-                             type="message", duration=6)
+                             id="sc_screen_done", type="message", duration=6)
 
     @reactive.effect
     @reactive.event(input.screening_zip)

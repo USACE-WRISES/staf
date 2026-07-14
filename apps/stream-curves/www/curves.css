@@ -1013,16 +1013,49 @@
 .landing-card-title { margin-bottom: 0.35rem; font-weight: 600; }
 .landing-card-blurb { min-height: 3rem; }
 
-/* Guided home stage cards */
-.guided-home { max-width: 880px; }
-.guided-card { background: #fff; transition: box-shadow 0.15s ease; }
-.guided-card:hover { box-shadow: 0 3px 12px rgba(20, 40, 80, 0.08); }
-.guided-step-num {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 1.5rem; height: 1.5rem; border-radius: 50%;
-  background: #e7eef7; color: #243a61; font-size: 0.8rem; font-weight: 600;
+/* Workflow stage banner (below the STAF strip, visible on every tab) */
+.stage-bar-shell { background: #f8fafc; border-bottom: 1px solid #e3e8ef; padding: 0.35rem 1rem; }
+.stage-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 0.1rem; row-gap: 0.3rem; }
+.stage-pill { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.18rem 0.55rem;
+  border-radius: 999px; font-size: 0.8rem; color: #6c757d; text-decoration: none; cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease; }
+.stage-pill:hover { background: #eef2f7; color: #495057; text-decoration: none; }
+.stage-num { display: inline-flex; align-items: center; justify-content: center; width: 1.3rem;
+  height: 1.3rem; border-radius: 50%; background: #ced4da; color: #fff; font-weight: 600;
+  font-size: 0.7rem; flex: 0 0 auto; }
+.stage-connector { width: 1.3rem; height: 2px; background: #d9e0ea; flex: 0 0 auto; }
+.stage-pill.stage-done { color: #198754; }
+.stage-pill.stage-done .stage-num { background: #198754; }
+.stage-pill.stage-ready { color: #0b5ed7; font-weight: 600; }
+.stage-pill.stage-ready .stage-num { background: #1c7ed6; }
+.stage-pill.stage-running { color: #0b5ed7; font-weight: 600; }
+.stage-pill.stage-running .stage-num { background: #1c7ed6; animation: stage-pulse 1.2s ease-in-out infinite; }
+@keyframes stage-pulse { 50% { opacity: 0.45; } }
+.stage-pill.stage-attention { color: #b26a00; font-weight: 600; }
+.stage-pill.stage-attention .stage-num { background: #f39c12; }
+.stage-pill.stage-blocked { color: #adb5bd; }
+.stage-pill.stage-blocked .stage-num { background: #dee2e6; color: #8a93a3; }
+.stage-count { display: inline-flex; align-items: center; justify-content: center; min-width: 1.05rem;
+  height: 1.05rem; padding: 0 0.28rem; border-radius: 999px; background: #f39c12; color: #fff;
+  font-size: 0.66rem; font-weight: 700; }
+.stage-bar-hint { margin-top: 0.2rem; font-size: 0.75rem; color: #6c757d; }
+.publish-checklist { background: #f8fafc; }
+@media (max-width: 700px) {
+  .stage-label { display: none; }
+  .stage-connector { width: 0.7rem; }
 }
-.guided-checklist { background: #f8fafc; }
+
+/* Header actions (New / Open / Save, then a hairline divider before Help) */
+.navbar .app-hdr-divider { border-left: 1px solid rgba(255, 255, 255, 0.28);
+  padding-left: 0.9rem; margin-left: 0.35rem; }
+@media (max-width: 700px) {
+  .navbar .app-hdr-divider { border-left: none; padding-left: 0.5rem; margin-left: 0; }
+}
+
+/* Open dialog: compact library list */
+.open-dialog-list { max-height: 260px; overflow-y: auto; border: 1px solid #e9ecef;
+  border-radius: 0.375rem; }
+.open-dialog-list .list-group-item { padding: 0.4rem 0.75rem; }
 .wizard-classify-scroll {
   max-height: 55vh;
   overflow-y: auto;

@@ -16,24 +16,28 @@ manager, and the map-first import wizard (M7).
 from __future__ import annotations
 
 import hashlib
-import io
+import logging
 import re
 from datetime import date
 
 import pandas as pd
 from shiny import module, reactive, render, req, ui
 
+from streamcurves import library as lib
 from streamcurves import session_io as sio
 from streamcurves.cleaning import clean_data
 from streamcurves.derive import derive_variables
 from streamcurves.precheck import run_metric_precheck
-from streamcurves.workbook import read_input_workbook, write_input_workbook
+from streamcurves.workbook import read_input_workbook
+from views import assessment_publish as ap
 from views import state as st
 from views.discipline_map import discipline_map_server, discipline_map_ui
 from views.import_map import import_map_server, import_map_ui
 from views.state import AppState, deep_copy_value, empty_phase2_settings
-from views.theme import bi, fa
+from views.theme import STAF_LINKS, bi, fa
 from views.workbook_grid import workbook_grid_server, workbook_grid_ui
+
+logger = logging.getLogger("streamcurves")
 
 WORKSPACE_STEPS = [
     {"value": "workbook", "label": "Workbook"},
@@ -117,7 +121,9 @@ def data_overview_server(input, output, session, state: AppState):
     # The wizard's ipyleaflet comms open only while the wizard is mounted —
     # opening them at session init raced the leaflet bundle load and spammed
     # "Could not create a model" retries at page load.
-    import_map_server("import_map", state, active=lambda: entry_view() == "new")
+    import_map_server(
+        "import_map", state, active=lambda: entry_view() in ("new", "wizard")
+    )
     upload_error = reactive.value(None)
     metadata_status = reactive.value(None)
     ws_step = reactive.value("workbook")
@@ -137,6 +143,30 @@ def data_overview_server(input, output, session, state: AppState):
     @reactive.event(state.app_reset_nonce, ignore_init=True)
     def _closed():
         entry_view.set("landing")
+
+    @reactive.effect
+    @reactive.event(state.wizard_step_nonce, ignore_init=True)
+    def _wizard_request_opens_wizard():
+        # Stage-banner clicks target wizard steps; mount the wizard when it is
+        # not showing (fresh flow, or "wizard" re-entry over a loaded project)
+        # and ask it to hydrate its widgets from the saved state.
+        with reactive.isolate():
+            loaded = bool(state.app_data_loaded())
+            hydrate = (state.wizard_hydrate_nonce() or 0) + 1
+        entry_view.set("wizard" if loaded else "new")
+        state.wizard_hydrate_nonce.set(hydrate)
+
+    @reactive.effect
+    @reactive.event(state.workspace_refresh_nonce, ignore_init=True)
+    def _wizard_build_returns_to_workspace():
+        # The wizard's "Build dataset" (and any session restore) refreshes the
+        # workspace; when the wizard was opened over a loaded project, fall
+        # back to the workspace view.
+        with reactive.isolate():
+            loaded = bool(state.app_data_loaded())
+            cur = entry_view()
+        if loaded and cur == "wizard":
+            entry_view.set("landing")
 
     # ── workspace stepper (sections stay mounted; visibility via <style>) ────
     for s in WORKSPACE_STEPS:
@@ -194,7 +224,7 @@ def data_overview_server(input, output, session, state: AppState):
                             ui.div(bi("plus-circle-fill"), class_="landing-card-icon text-primary"),
                             ui.tags.h4("Start New Project", class_="landing-card-title"),
                             ui.tags.p(
-                                "Build a new stream reference-curve dataset — choose a region, "
+                                "Build a new stream reference-curve dataset: choose a region, "
                                 "gather monitoring sites, pull metrics, classify columns, and build.",
                                 class_="text-muted landing-card-blurb",
                             ),
@@ -206,55 +236,29 @@ def data_overview_server(input, output, session, state: AppState):
                         ),
                         class_="h-100 landing-card border-primary",
                     ),
-                    class_="col-12 col-lg-5",
-                ),
-                ui.div(
-                    ui.card(
-                        ui.card_body(
-                            ui.div(bi("folder2-open"), class_="landing-card-icon text-secondary"),
-                            ui.tags.h4("Open Project", class_="landing-card-title"),
-                            ui.tags.p(
-                                "Open a saved project — a StreamCurves workbook (.xlsx) or a "
-                                "saved session (.json).",
-                                class_="text-muted landing-card-blurb",
-                            ),
-                            ui.div(
-                                ui.tags.span("Workbook (.xlsx) or saved session (.json)"),
-                                ui.tooltip(
-                                    ui.tags.button(
-                                        "?", type="button", class_="upload-format-help",
-                                        aria_label="Expected file format",
-                                    ),
-                                    "Saved projects can be opened from a StreamCurves workbook "
-                                    "(.xlsx) or a saved session (.json) file.",
-                                    placement="right",
-                                ),
-                                class_="data-upload-label",
-                            ),
-                            ui.input_file(
-                                ns("open_project_file"),
-                                None,
-                                accept=[".xlsx", ".json"],
-                                button_label="Choose File",
-                                placeholder="No file selected",
-                            ),
-                            ui.output_ui(ns("upload_status")),
-                        ),
-                        class_="h-100 landing-card",
-                    ),
-                    class_="col-12 col-lg-5",
+                    class_="col-12 col-lg-6",
                 ),
                 class_="row g-3 justify-content-center align-items-stretch",
+            ),
+            ui.div(
+                bi("folder2-open"),
+                " Looking for saved work? Use ",
+                ui.tags.strong("Open"),
+                " in the top-right to load a saved project or a library assessment.",
+                class_="text-muted small text-center mt-3",
             ),
             class_="landing-shell",
         )
 
     def new_project_view():
+        back_label = (
+            " Back to workspace" if state.app_data_loaded() else " Back to start"
+        )
         return ui.TagList(
             ui.div(
                 ui.input_action_link(
                     ns("back_to_landing"),
-                    ui.TagList(bi("arrow-left"), " Back to start"),
+                    ui.TagList(bi("arrow-left"), back_label),
                     class_="small text-decoration-none",
                 ),
                 class_="mb-2",
@@ -279,11 +283,6 @@ def data_overview_server(input, output, session, state: AppState):
                     ui.tags.strong(ui.output_text(ns("workspace_title"), inline=True)),
                 ),
                 ui.div(
-                    ui.input_action_button(
-                        ns("save_project_menu"),
-                        ui.TagList(fa("floppy-disk"), " Save"),
-                        class_="btn btn-outline-primary btn-sm",
-                    ),
                     ui.input_action_button(
                         ns("reset_analysis"),
                         ui.TagList(fa("xmark"), " Close Project"),
@@ -311,12 +310,19 @@ def data_overview_server(input, output, session, state: AppState):
 
     @render.ui
     def main_content():
+        # "wizard" is the re-entry mode: the guided wizard shown over a loaded
+        # project (stage-banner clicks), hydrated from the saved state.
+        if entry_view() == "wizard":
+            return new_project_view()
         if state.app_data_loaded():
             return workspace_view()
         if entry_view() == "new":
             return new_project_view()
         return landing_view()
 
+    # suspend_when_hidden=False: this output binds inside the Open modal's
+    # insert frame; default suspension would leave it permanently stale.
+    @output(suspend_when_hidden=False)
     @render.ui
     def upload_status():
         err = upload_error()
@@ -508,10 +514,196 @@ def data_overview_server(input, output, session, state: AppState):
         st.notify_workspace_refresh(state)
         return session_name
 
+    # ── Open dialog (header "Open"): library picker + project-file upload ────
+    def _request_data_tab(wizard_step: int | None = None):
+        with reactive.isolate():
+            state.nav_request.set("data")
+            state.nav_request_nonce.set((state.nav_request_nonce() or 0) + 1)
+            if wizard_step is not None:
+                state.wizard_step_request.set(wizard_step)
+                state.wizard_step_nonce.set((state.wizard_step_nonce() or 0) + 1)
+
+    def _lib_assessments() -> list[dict]:
+        try:
+            return lib.list_assessments()
+        except Exception:  # noqa: BLE001
+            logger.exception("open dialog: reading catalog failed")
+            return []
+
+    def _open_library_list(items: list[dict]):
+        if not items:
+            return ui.div(
+                bi("info-circle"),
+                " No assessments in the library yet.",
+                class_="alert alert-secondary py-2 small",
+            )
+        deep_base = (STAF_LINKS.get("deep") or "").rstrip("/")
+        rows = []
+        for a in items:
+            latest = int(a.get("latestVersion") or 0)
+            badge = (
+                ui.tags.span(f"v{latest}", class_="badge bg-primary ms-1")
+                if latest > 0
+                else ui.tags.span("no versions", class_="badge bg-secondary ms-1")
+            )
+            region_txt = ap.region_label(a.get("region"))
+            deep_link = None
+            if latest > 0:
+                deep_link = ui.tags.a(
+                    ui.TagList(bi("arrow-right-circle"), " DEEP"),
+                    href=f"{deep_base}/?assessment={a.get('assessmentId')}",
+                    target="_blank",
+                    rel="noopener",
+                    class_="btn btn-sm btn-outline-primary ms-auto",
+                    title="Review this assessment read-only in DEEP",
+                )
+            rows.append(
+                ui.div(
+                    ui.div(
+                        ui.tags.strong(a.get("assessmentName") or a.get("assessmentId")),
+                        badge,
+                        ui.div(region_txt, class_="text-muted small"),
+                    ),
+                    deep_link,
+                    class_="list-group-item d-flex align-items-center",
+                )
+            )
+        return ui.div(*rows, class_="list-group list-group-flush open-dialog-list mb-2")
+
+    @reactive.effect
+    @reactive.event(state.open_dialog_nonce, ignore_init=True)
+    def _show_open_dialog():
+        items = _lib_assessments()
+        published = [a for a in items if int(a.get("latestVersion") or 0) > 0]
+        choices = {
+            a["assessmentId"]: (a.get("assessmentName") or a["assessmentId"])
+            for a in published
+        }
+        ui.modal_show(
+            ui.modal(
+                ui.tags.h6(
+                    ui.TagList(bi("layers"), " Assessment library"),
+                    class_="fw-bold mb-1",
+                ),
+                ui.p(
+                    "Open an assessment to review or keep working on it. Loading restores "
+                    "its saved session and replaces whatever is currently open. Use the "
+                    "DEEP links to review one read-only instead.",
+                    class_="text-muted small mb-2",
+                ),
+                _open_library_list(items),
+                ui.div(
+                    ui.div(
+                        ui.input_select(
+                            ns("open_assessment"), "Assessment",
+                            choices=choices or {"": "No published assessments yet"},
+                        ),
+                        class_="col-sm-7",
+                    ),
+                    ui.div(
+                        ui.input_select(ns("open_version"), "Version", choices={}),
+                        class_="col-sm-5",
+                    ),
+                    class_="row g-2",
+                ),
+                ui.input_action_button(
+                    ns("open_btn"),
+                    ui.TagList(bi("folder2-open"), " Open assessment"),
+                    class_="btn btn-primary btn-sm",
+                    disabled=None if published else "disabled",
+                ),
+                ui.tags.hr(class_="my-3"),
+                ui.tags.h6(
+                    ui.TagList(bi("file-earmark-arrow-up"), " Project file"),
+                    class_="fw-bold mb-1",
+                ),
+                ui.p(
+                    "A saved session (.streamcurves.json) or a StreamCurves workbook (.xlsx).",
+                    class_="text-muted small mb-1",
+                ),
+                ui.input_file(
+                    ns("open_project_file"),
+                    None,
+                    accept=[".xlsx", ".json"],
+                    button_label="Choose File",
+                    placeholder="No file selected",
+                ),
+                ui.output_ui(ns("upload_status")),
+                title=ui.TagList(bi("folder2-open"), " Open"),
+                easy_close=True,
+                footer=ui.modal_button("Close"),
+                size="l",
+            )
+        )
+
+    @reactive.effect
+    def _fill_open_version():
+        # Plain effect (not event-guarded): the open_assessment select is created
+        # fresh each time the Open modal mounts, and this must populate Version on
+        # that first render, not only on a later change.
+        try:
+            aid = input.open_assessment()
+        except Exception:  # noqa: BLE001 — select not mounted yet
+            return
+        if not aid:
+            ui.update_select("open_version", choices={})
+            return
+        manifest = lib.read_manifest(aid) or {}
+        latest = int(manifest.get("latestVersion") or 0)
+        versions = sorted(
+            (int(v.get("version") or 0) for v in (manifest.get("versions") or [])),
+            reverse=True,
+        )
+        choices = {
+            str(v): (f"v{v}" + (" (latest)" if v == latest else "")) for v in versions
+        }
+        ui.update_select(
+            "open_version", choices=choices, selected=str(latest) if latest else None
+        )
+
+    @reactive.effect
+    @reactive.event(input.open_btn)
+    def _open_from_library():
+        aid = input.open_assessment()
+        ver = input.open_version()
+        if not aid or not ver:
+            ui.notification_show(
+                "Pick an assessment and version to open.", type="warning", duration=5
+            )
+            return
+        try:
+            payload = lib.load_version_session(aid, int(ver))
+        except Exception as e:  # noqa: BLE001
+            ui.notification_show(
+                f"Could not open {aid} v{ver}: {e}", type="error", duration=8
+            )
+            return
+        manifest = lib.read_manifest(aid) or {}
+        name = manifest.get("assessmentName") or aid
+        try:
+            restore_session_into_state(payload, source_name=f"{name} v{ver}")
+        except Exception as e:  # noqa: BLE001
+            ui.notification_show(
+                f"Could not load the assessment: {e}", type="error", duration=8
+            )
+            return
+        ui.modal_remove()
+        with reactive.isolate():
+            has_data = state.data() is not None
+        # Region-only sessions (e.g. migrated SQTs) have no dataset; open the
+        # hydrated wizard at the Region step instead of the landing screen.
+        _request_data_tab(wizard_step=None if has_data else 1)
+        ui.notification_show(
+            f"Loaded {name} v{ver}. Everything from the saved run is restored; use the "
+            "stage banner to revisit any step.",
+            type="message",
+            duration=7,
+        )
+
     @reactive.effect
     @reactive.event(state.session_restore_nonce, ignore_init=True)
     def _restore_from_library_request():
-        # The Library tab loads a version's session payload and bumps the nonce;
+        # Out-of-module callers can load a session payload and bump the nonce;
         # reuse the exact same restore path as opening a .streamcurves.json file.
         with reactive.isolate():
             rq = state.session_restore_request()
@@ -556,8 +748,11 @@ def data_overview_server(input, output, session, state: AppState):
                 await session.send_custom_message(
                     "clearFileInput", {"id": ns("open_project_file")}
                 )
+                ui.modal_remove()
                 with reactive.isolate():
                     n_completed = len(state.completed_metrics() or {})
+                    has_data = state.data() is not None
+                _request_data_tab(wizard_step=None if has_data else 1)
                 ui.notification_show(
                     f"Session '{session_name}' loaded. {n_completed} completed metrics restored.",
                     type="message",
@@ -584,6 +779,9 @@ def data_overview_server(input, output, session, state: AppState):
             upload_error.set(str(e))
             metadata_status.set({"type": "danger", "text": f"Upload failed: {e}"})
             ui.notification_show(f"Upload failed: {e}", type="error", duration=8)
+            return
+        ui.modal_remove()
+        _request_data_tab()
 
     # ── workspace step panels ────────────────────────────────────────────────
     @render.ui
@@ -637,84 +835,8 @@ def data_overview_server(input, output, session, state: AppState):
             ),
         )
 
-    # ── session save / workbook save ─────────────────────────────────────────
-    # One Save button; the format choice (and its tradeoff) lives in a modal.
-    # The download handlers below are unchanged — only the buttons moved here.
-    @reactive.effect
-    @reactive.event(input.save_project_menu)
-    def _show_save_options():
-        ui.modal_show(
-            ui.modal(
-                ui.div(
-                    ui.download_button(
-                        ns("download_workbook"),
-                        ui.TagList(fa("file-excel"), " Workbook (.xlsx)"),
-                        class_="btn btn-primary w-100",
-                    ),
-                    ui.tags.small(
-                        "Data + setup sheets. Open and edit in Excel. Re-opening "
-                        "rebuilds the dataset and recomputes analyses from scratch.",
-                        class_="text-muted d-block mt-1",
-                    ),
-                    class_="mb-3",
-                ),
-                ui.div(
-                    ui.download_button(
-                        ns("download_session"),
-                        ui.TagList(fa("floppy-disk"), " Project (.json)"),
-                        class_="btn btn-outline-primary w-100",
-                    ),
-                    ui.tags.small(
-                        "Complete session — data, setup, and all analysis progress "
-                        "(screening results, curves, decisions, cross-sections). "
-                        "Resume exactly where you left off.",
-                        class_="text-muted d-block mt-1",
-                    ),
-                ),
-                title="Save your work",
-                easy_close=True,
-                footer=ui.modal_button("Close"),
-                size="m",
-            )
-        )
-
-    # suspend_when_hidden=False: these links live in the Save modal and bind
-    # during its insert frame (display:none) — default suspension would leave
-    # them permanently disabled (the bb98c92 wedge).
-    @output(suspend_when_hidden=False)
-    @render.download(
-        filename=lambda: _sanitize_file_stem(
-            state.isolate_get("session_name") or (input.session_name() if "session_name" in input else None),
-            state.isolate_get("upload_filename"),
-        )
-        + sio.SESSION_SUFFIX
-    )
-    def download_session():
-        with reactive.isolate():
-            req(state.app_data_loaded())
-            session_name = _default_session_name(
-                state.session_name(), state.upload_filename()
-            )
-            state.session_name.set(session_name)
-            fields = {name: state.get(name) for name in sio.SESSION_FIELDS}
-        payload = sio.dump_session_fields(fields, session_name=session_name)
-        yield sio.dumps_session(payload).encode("utf-8")
-
-    @output(suspend_when_hidden=False)
-    @render.download(
-        filename=lambda: _sanitize_file_stem(
-            state.isolate_get("session_name"), state.isolate_get("upload_filename")
-        )
-        + f"_workbook_{date.today():%Y%m%d}.xlsx"
-    )
-    def download_workbook():
-        with reactive.isolate():
-            req(state.app_data_loaded())
-            tables = state.input_metadata()
-        req(tables is not None)
-        buf = io.BytesIO()
-        write_input_workbook(tables, buf)
-        yield buf.getvalue()
+    # Session/workbook downloads live on the Publish page (views/publish.py,
+    # Draft pane); the header Save link navigates there.
 
     # ── close project ─────────────────────────────────────────────────────────
     @reactive.effect

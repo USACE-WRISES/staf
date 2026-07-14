@@ -184,9 +184,9 @@ class AppState:
     easi_screening_metrics: reactive.Value = _rv()      # list[dict] / DataFrame
     easi_screening_criteria: reactive.Value = _rv()     # dict snapshot
 
-    # ── guided-run state (streamcurves/run_state.py owns the shapes) ─────────
+    # ── staged-run state (streamcurves/run_state.py owns the shapes) ─────────
     # run_meta: {created, updated, method versions, region}; run_stage_status:
-    # {stage_key: {status, detail}} snapshot for the guided cards; curve_review:
+    # {stage_key: {status, detail}} snapshot for the stage banner; curve_review:
     # {metric: entry} flagged-review queue; screening_run: last direct-run
     # summary dict; site_exclusions: list[{site_id, reason, source, note}].
     run_meta: reactive.Value = _rv()
@@ -194,11 +194,15 @@ class AppState:
     curve_review: reactive.Value = _rv_factory(dict)
     screening_run: reactive.Value = _rv()
     site_exclusions: reactive.Value = _rv_factory(list)
+    # Live extended tasks by stage key ({stage_key: True}); feeds
+    # run_state.derive_stage_status(tasks_running=...) so the stage banner can
+    # show a running stage. Transient by design: not in SESSION_FIELDS.
+    tasks_running: reactive.Value = _rv_factory(dict)
     # Validation records (restricted): list[dict] of independent-check evidence
     # that a maintainer can attach before certifying a library version.
     validation_records: reactive.Value = _rv_factory(list)
 
-    # ── root navigation requests (guided home -> shell) ─────────────────────
+    # ── root navigation requests (stage banner -> shell) ────────────────────
     # nav_request: a nav_panel value to switch main_navbar to; wizard_step_request:
     # a 1-based Data & Setup wizard step to jump to. Both are nonce-driven so the
     # same request can fire twice.
@@ -206,9 +210,17 @@ class AppState:
     nav_request_nonce: reactive.Value = _rv(0)
     wizard_step_request: reactive.Value = _rv()
     wizard_step_nonce: reactive.Value = _rv(0)
+    # Wizard hydration: bumped when the Data & Setup wizard should seed its
+    # local widgets from the saved region/screening state (stage-banner clicks
+    # and header Open on restored sessions). Transient: not in SESSION_FIELDS.
+    wizard_hydrate_nonce: reactive.Value = _rv(0)
+    # Header "Open" asks Data & Setup to show the Open dialog (library picker
+    # plus project-file upload). Transient: not in SESSION_FIELDS.
+    open_dialog_nonce: reactive.Value = _rv(0)
 
-    # Cross-tab session restore request: the Library tab loads a library version's
-    # session payload and asks the Data & Setup tab to restore it (bump the nonce).
+    # Cross-tab session restore request: a view loads a session payload and asks
+    # the Data & Setup tab to restore it (bump the nonce). The Open dialog now
+    # calls the restore directly; this hook stays for out-of-module callers.
     session_restore_request: reactive.Value = _rv()
     session_restore_nonce: reactive.Value = _rv(0)
 
@@ -369,9 +381,10 @@ def reset_all_analysis(state: AppState) -> None:
     state.phase3_verification.set({})
     state.decision_log.set(pd.DataFrame())
     state.stratum_results.set({})
-    # Guided-run analysis outputs (curve classification + stage snapshot).
+    # Staged-run analysis outputs (curve classification + stage snapshot).
     state.curve_review.set({})
     state.run_stage_status.set({})
+    state.tasks_running.set({})
 
 
 def reset_app_to_startup(state: AppState) -> None:
