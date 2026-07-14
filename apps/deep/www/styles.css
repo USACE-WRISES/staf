@@ -345,7 +345,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 }
 .easi-header .easi-brand { font-family: var(--font-head); font-weight: 700; font-size: 1.05rem; }
 .easi-header .easi-brand small { font-weight: 400; opacity: .8; font-size: .8rem; margin-left: 8px; }
-.easi-header .easi-nav { margin-left: auto; display: flex; gap: 18px; }
+.easi-header .easi-nav { margin-left: auto; display: flex; gap: 18px; align-items: center; }
 .easi-header .easi-nav a { color: #cdd8ec; text-decoration: none; font-size: 13px; cursor: pointer; }
 .easi-header .easi-nav a:hover { color: #fff; }
 
@@ -697,10 +697,27 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 /* Polish pass: responsive, photos, progress, sticky report headers            */
 /* --------------------------------------------------------------------------- */
 
-/* header Save (download) button blends into the dark nav */
-.easi-nav .easi-nav-btn.btn { background: transparent; border: 1px solid #6b82ad; color: #cdd8ec;
-  font-size: 12px; font-weight: 500; padding: 2px 10px; border-radius: 5px; line-height: 1.5; }
-.easi-nav .easi-nav-btn.btn:hover { background: #33517f; color: #fff; border-color: #8ba0c8; }
+/* header Save (a Bootstrap download button) reads as a plain nav link like the others */
+.easi-nav .easi-nav-btn.btn { background: transparent; border: none; color: #cdd8ec;
+  font-size: 13px; font-weight: 400; padding: 0; border-radius: 0; line-height: inherit;
+  box-shadow: none; }
+.easi-nav .easi-nav-btn.btn:hover { background: transparent; color: #fff; }
+/* header Open (the load_session file input) collapses to just its button, styled as a
+   nav link — the filename box and upload bar are hidden; load feedback is the app's
+   "Assessment loaded" notification */
+.easi-nav .shiny-input-container { margin: 0; width: auto; }
+.easi-nav .input-group { width: auto; flex-wrap: nowrap; }
+/* the Browse wrapper label must not add its own line box around the Open span */
+.easi-nav .input-group label { display: flex; align-items: center; margin: 0; }
+.easi-nav .input-group .form-control { display: none; }
+.easi-nav .shiny-file-input-progress { display: none; }
+.easi-nav .btn-file { background: transparent; border: none; color: #cdd8ec;
+  font-size: 13px; font-weight: 400; padding: 0; border-radius: 0; line-height: 1.5;
+  box-shadow: none; cursor: pointer; }
+.easi-nav .btn-file:hover { color: #fff; }
+/* hairline divider groups the assessment file actions (New/Open/Save) from the info
+   links (About/Help) — same separator idiom as .staf-topnav */
+.easi-nav #nav_about { border-left: 1px solid rgba(255, 255, 255, .22); padding-left: 18px; }
 
 /* per-metric site photos */
 .sfari-photos { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 7px; }
