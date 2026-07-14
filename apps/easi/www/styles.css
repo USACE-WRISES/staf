@@ -65,10 +65,17 @@ h1, h2, h3, h4, h5, h6, .card-header { font-family: var(--font-head); }
   background-repeat: no-repeat; background-position: right 6px center; background-size: 10px 6px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23334155'/%3E%3C/svg%3E");
 }
-.easi-rate-sel.rate-Good { background-color: var(--band-good); color: #1f3f6e; }
-.easi-rate-sel.rate-Fair { background-color: var(--band-fair); color: #6b5310; }
-.easi-rate-sel.rate-Poor { background-color: var(--band-poor); color: #7a2e2e; }
-.easi-rate-sel.rate-auto { background-color: #eef2f8; color: #55607a; }
+.easi-rate-sel.rate-Good, .easi-rate-chip.rate-Good { background-color: var(--band-good); color: #1f3f6e; }
+.easi-rate-sel.rate-Fair, .easi-rate-chip.rate-Fair { background-color: var(--band-fair); color: #6b5310; }
+.easi-rate-sel.rate-Poor, .easi-rate-chip.rate-Poor { background-color: var(--band-poor); color: #7a2e2e; }
+.easi-rate-sel.rate-auto, .easi-rate-chip.rate-auto { background-color: #eef2f8; color: #55607a; }
+/* read-only rating chip (batch report modal): the select's look, no control */
+.easi-rate-chip { display: inline-block; border: 1px solid rgba(0, 0, 0, .22);
+  border-radius: 10px; padding: 2px 9px; font-weight: 600; font-size: 11.5px;
+  min-width: 46px; text-align: center; white-space: nowrap; }
+/* read-only report (batch): the note column carries no controls — hide it whole
+   (header, cells, and the rollup's alignment cell all share easi-note-cell) */
+.easi-report-ro .easi-note-cell { display: none; }
 /* the closed chip is colored, but the expanded option list stays neutral white */
 .easi-rate-sel option { background-color: #fff; color: #2a3344; }
 .easi-rate-cell { display: flex; align-items: center; gap: 5px; }
@@ -564,30 +571,48 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 
 /* ===== Batch workspace (full-width overlay below the 50px header) ===== */
 .easi-batch { position: absolute; top: 50px; left: 0; right: 0; bottom: 0;
-  z-index: 600; background: #f7f9fc; display: flex; flex-direction: column; }
+  /* above the single-site overlays (leftpane/readout/toast at 1100), below the header (1200) */
+  z-index: 1150; background: #f7f9fc; display: flex; flex-direction: column; }
 .easi-batch-head { display: flex; align-items: center; gap: 20px;
   padding: 10px 20px; background: #fff; border-bottom: 1px solid #e2e8f2; }
 .easi-batch-brand { font-family: var(--font-head); font-weight: 700; font-size: 1rem; }
-.easi-batch-head a { color: #4a6fb5; font-size: 13px; cursor: pointer; text-decoration: none; }
+.easi-batch-head a { color: var(--easi-accent); font-size: 13px; cursor: pointer;
+  text-decoration: none; }
 .easi-batch-head a:hover { text-decoration: underline; }
-.easi-batch-steps { margin-left: auto; display: flex; gap: 8px; }
-.easi-batch-step { font-size: 12px; color: #8794ac; padding: 3px 10px;
-  border-radius: 12px; background: #eef2f8; }
-.easi-batch-step.active { color: #fff; background: #4a6fb5; font-weight: 600; }
 .easi-batch-scroll { flex: 1; overflow: auto; padding: 22px 26px; }
 .easi-batch-scroll > div { max-width: 900px; margin: 0 auto; }
 .easi-batch-import-row { display: flex; gap: 16px; align-items: center;
   margin: 10px 0; flex-wrap: wrap; }
-.easi-batch-msg { margin: 6px 0; font-size: 13px; color: #4a6fb5; font-weight: 600; }
-.easi-batch-actions { margin-top: 18px; display: flex; gap: 12px; }
+/* The upload control is a plain button: uploads parse (into the textarea) on pick,
+   so the filename box and its progress strip are noise. */
+.easi-batch-import-row .input-group > .form-control { display: none; }
+.easi-batch-import-row .shiny-file-input-progress { display: none; }
+.easi-batch-import-row .shiny-input-container { margin-bottom: 0; width: auto; }
+.easi-batch-import-row .btn-file { background: #fff; border: 1px solid var(--card-border);
+  border-radius: 6px; padding: 4px 14px; font-size: 13px; color: #33415c;
+  font-weight: 600; cursor: pointer; }
+.easi-batch-import-row .btn-file:hover { border-color: var(--easi-accent);
+  color: var(--easi-accent); }
+.easi-batch-msg { margin: 6px 0; font-size: 13px; color: var(--easi-accent);
+  font-weight: 600; }
+.easi-batch-settings { margin-top: 14px; }
+.easi-batch-settings .shiny-input-container { width: 180px; margin-bottom: 0; }
+.easi-batch-settings label { font-size: 12.5px; color: #55607a; font-weight: 600; }
+.easi-batch-actions { margin-top: 18px; display: flex; gap: 12px; align-items: center; }
+.easi-batch-summary { margin: 12px 0 4px; font-size: 13px; color: #55607a;
+  font-weight: 600; }
 .easi-batch-preview-wrap, .easi-batch-results-wrap { margin: 14px 0; max-height: 360px;
   overflow: auto; border: 1px solid #e2e8f2; border-radius: 6px; }
 .easi-batch-preview, .easi-batch-results { width: 100%; font-size: 12.5px; }
+.easi-batch-ok { color: #2e7d4f; font-weight: 700; }
+.easi-batch-badge { font-size: 11px; font-weight: 600; padding: 2px 8px;
+  border-radius: 10px; background: #eef2f8; color: #55607a; }
+.easi-batch-badge.b-failed { background: #fbe4e4; color: #7a2e2e; }
+.easi-batch-badge.b-partial { background: #fdf0d4; color: #6b5310; }
+.easi-batch-report-link { color: var(--easi-accent); font-weight: 600;
+  cursor: pointer; text-decoration: none; white-space: nowrap; }
+.easi-batch-report-link:hover { text-decoration: underline; }
 .easi-batch-bar { height: 12px; background: #e2e8f2; border-radius: 6px;
   overflow: hidden; margin: 10px 0; }
-.easi-batch-bar-fill { height: 100%; background: #4a6fb5; transition: width .3s; }
-.easi-batch-stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
-.easi-batch-stat { background: #fff; border: 1px solid #e2e8f2; border-radius: 8px;
-  padding: 10px 16px; text-align: center; min-width: 84px; }
-.easi-batch-stat-v { font-size: 1.4rem; font-weight: 700; color: var(--eci-title); }
-.easi-batch-stat-l { font-size: 11px; color: #8794ac; text-transform: uppercase; }
+.easi-batch-bar-fill { height: 100%; background: var(--easi-accent);
+  transition: width .3s; }
