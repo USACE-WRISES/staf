@@ -330,7 +330,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=3"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=4"),
                     ui.tags.link(rel="stylesheet", href="deep.css?v=6"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -344,7 +344,9 @@ app_ui = ui.page_fillable(
                     class_="easi-brand"),
             staf_topnav(),
             ui.div(
-                ui.input_action_link("nav_new", "New assessment"),
+                ui.input_action_link("nav_new", "New"),
+                ui.input_file("load_session", None, accept=[".json"], multiple=False,
+                              button_label="Open"),
                 ui.download_button("save_session", "Save", class_="easi-nav-btn"),
                 ui.input_action_link("nav_about", "About"),
                 ui.input_action_link("nav_help", "Help"),
@@ -929,9 +931,6 @@ def server(input, output, session_):  # noqa: C901
                                               class_="btn-primary", disabled=not picked),
                        class_="easi-pane-actions"),
                 ui.output_text("busy_text"),
-                ui.hr(),
-                ui.input_file("load_session", "Resume a saved assessment (.json)",
-                              accept=[".json"], multiple=False),
             )
         elif step == STEP_BASIN:
             body = ui.TagList(
@@ -1665,7 +1664,7 @@ def server(input, output, session_):  # noqa: C901
                 pass
         current_fn.set(0)
         current_step.set(STEP_MEASURE if loaded_assessment() is not None else STEP_ASSESS)
-        ui.notification_show("Assessment loaded — resuming.", type="message", duration=4)
+        ui.notification_show("Assessment loaded. Resuming.", type="message", duration=4)
 
 
 app = App(app_ui, server, static_assets=Path(__file__).parent / "www")
