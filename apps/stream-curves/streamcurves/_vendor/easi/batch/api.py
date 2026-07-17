@@ -149,7 +149,7 @@ async def run_site(site: SiteRequest, *, metric_ids: Optional[list[str]] = None,
     _emit(on_event, "metrics", site.site_id)
     a = await pipeline.assess_only(ctx_inputs, metric_ids=metric_ids,
                                    sources=site.source_choices,
-                                   overrides=site.overrides)
+                                   overrides=site.overrides, prefetch=False)
     report = a["report"]
     delin.setdefault("delineation", {})["huc12"] = a.get("huc12")
     result = _build_site_result(site, delin, report)
