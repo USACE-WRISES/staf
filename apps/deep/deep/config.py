@@ -84,8 +84,23 @@ def _normalize_record(r: dict) -> dict:
     return r
 
 
+# Assessments hidden from every DEEP surface (map coverage, picker, version chooser, deep-links)
+# without touching the library: the SQT-adapted state assessments stay in apps/library/ (and remain
+# visible to StreamCurves) but are filtered out of DEEP by their id suffix. Reversible — drop the
+# suffix here to restore them.
+_HIDDEN_ID_SUFFIXES = ("-sqt-adapted",)
+
+
+def _is_hidden(rec: dict) -> bool:
+    return str(rec.get("assessmentId") or "").endswith(_HIDDEN_ID_SUFFIXES)
+
+
 def _registry_records() -> list[dict]:
-    """All (id, version) records, live-library-merged by ref (local/desktop only)."""
+    """All (id, version) records, live-library-merged by ref (local/desktop only).
+
+    Hidden assessments (see ``_HIDDEN_ID_SUFFIXES``) are filtered from every path here so no
+    downstream surface has to know about them.
+    """
     baked = [_normalize_record(r) for r in assessments_doc().get("assessments", [])]
     try:
         from . import library as _library  # local import avoids an import cycle
@@ -94,7 +109,7 @@ def _registry_records() -> list[dict]:
     except Exception:  # noqa: BLE001
         extra = []
     if not extra:
-        return baked
+        return [r for r in baked if not _is_hidden(r)]
     order = [r["assessmentRef"] for r in baked]
     by_ref = {r["assessmentRef"]: r for r in baked}
     for bundle in extra:
@@ -103,7 +118,7 @@ def _registry_records() -> list[dict]:
         if ref not in by_ref:
             order.append(ref)
         by_ref[ref] = rec
-    return [by_ref[ref] for ref in order if ref in by_ref]
+    return [by_ref[ref] for ref in order if ref in by_ref and not _is_hidden(by_ref[ref])]
 
 
 def library_catalog() -> dict[str, dict]:

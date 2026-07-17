@@ -100,6 +100,48 @@ def test_report_pdf_when_reportlab_available():
     assert isinstance(pdf, bytes) and pdf[:4] == b"%PDF"
 
 
+def _png_1x1_data_uri():
+    """A guaranteed-valid 1x1 PNG data-URI, built from stdlib so the gallery path is exercised
+    whenever reportlab can read PNGs (and degrades gracefully to a smoke test otherwise)."""
+    import base64 as b64
+    import struct
+    import zlib
+
+    def _chunk(typ, data):
+        return (struct.pack(">I", len(data)) + typ + data
+                + struct.pack(">I", zlib.crc32(typ + data) & 0xffffffff))
+
+    ihdr = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)   # 1x1, 8-bit truecolor RGB
+    idat = zlib.compress(b"\x00\x40\x80\xc0")             # filter byte + one RGB pixel
+    png = (b"\x89PNG\r\n\x1a\n" + _chunk(b"IHDR", ihdr)
+           + _chunk(b"IDAT", idat) + _chunk(b"IEND", b""))
+    return "data:image/png;base64," + b64.b64encode(png).decode()
+
+
+def test_field_forms_pdf_returns_pdf_bytes():
+    pytest.importorskip("reportlab")
+    la = assessments.from_bundle(_bundle())
+    pdf = report.build_field_forms_pdf(la, ref="spring-sample@v1")
+    assert isinstance(pdf, bytes) and pdf[:4] == b"%PDF"
+    assert len(pdf) > 1000                                # real content, not an empty doc
+    # tolerates a missing assessment (cover page only, no crash)
+    assert report.build_field_forms_pdf(None)[:4] == b"%PDF"
+    # filename derives from the assessment id
+    fn = report.field_forms_filename(la)
+    assert fn.startswith("deep-field-forms-") and fn.endswith(".pdf")
+
+
+def test_pdf_includes_photo_gallery():
+    pytest.importorskip("reportlab")
+    la = assessments.from_bundle(_bundle())
+    state = _midpoint_state(la)
+    mid = la.all_metrics()[0]["metricId"]
+    state[mid]["photos"] = [{"id": "p1", "uri": _png_1x1_data_uri()}]
+    sc, _ = curves.score_site(la, measure.measured_from_state(state))
+    pdf = report.build_pdf({}, la, state, sc)               # gallery loop must not crash
+    assert isinstance(pdf, bytes) and pdf[:4] == b"%PDF"
+
+
 def test_session_round_trip():
     la = assessments.from_bundle(_bundle())
     delin = {"delineation": {"comid": 123, "gnis_name": "Test Creek",

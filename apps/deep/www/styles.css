@@ -565,11 +565,14 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 /* --------------------------------------------------------------------------- */
 /* SFARI field-review worksheet (Phase 2)                                       */
 /* --------------------------------------------------------------------------- */
-.sfari-worksheet { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 1080;
+/* sits above the (empty) left workflow pane, the map readout, and the coverage panel (all
+   z 1100) so no Identify-step chrome bleeds through; still under the header (1200), modals
+   (1300), and tooltips (1400) */
+.sfari-worksheet { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 1150;
   background: var(--surface-soft); display: flex; overflow: hidden; }
 
 /* Full-width Assessment step (mirrors the worksheet overlay). */
-.deep-assess-shell { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 1080;
+.deep-assess-shell { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 1150;
   background: var(--surface-soft); overflow-y: auto; padding: 20px; }
 .deep-assess-context-wrap { max-width: 900px; margin: 0 auto 14px; }
 .deep-assess-stepper { margin-bottom: 12px; }
@@ -582,7 +585,12 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .deep-assess-cards { max-width: 900px; margin: 0 auto; display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
 .deep-assess-card { background: #fff; border: 1px solid var(--card-border); border-radius: 10px;
-  padding: 14px; display: flex; flex-direction: column; gap: 6px; }
+  padding: 14px; display: flex; flex-direction: column; gap: 6px;
+  transition: border-color .12s, box-shadow .12s, background .12s; }
+.deep-assess-card:hover { border-color: var(--easi-accent); box-shadow: 0 2px 10px rgba(31,63,110,.08); }
+.deep-assess-card.is-selected { border-color: var(--easi-accent); background: #f7faff;
+  box-shadow: inset 0 0 0 1px var(--easi-accent); }
+.deep-assess-card .btn { margin-top: auto; width: 100%; }
 .deep-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .deep-card-name { font-weight: 600; color: #223; }
 .deep-card-badge { font-size: 10.5px; font-weight: 700; text-transform: uppercase;
@@ -597,6 +605,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   background: #fff; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; }
 .deep-assess-empty-title { font-weight: 600; color: #a3521f; }
 .deep-assess-empty-sub, .deep-assess-detail-hint { color: #5a6478; font-size: 13px; margin-top: 4px; }
+.deep-assess-placeholder { max-width: 900px; margin: 14px auto 0; border: 1px dashed var(--card-border);
+  border-radius: 10px; padding: 22px; text-align: center; color: #8a93a3; font-size: 13px; }
 .deep-assess-detail-name { font-size: 16px; font-weight: 700; color: #223; }
 .deep-ok { color: #1f6b32; }
 .deep-assess-detail-line { font-size: 12.5px; color: #33415c; margin-top: 3px; }
@@ -604,7 +614,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   border-radius: 8px; padding: 8px 12px; font-size: 12.5px; color: #7a5b12; }
 .deep-assess-detail-actions { margin-top: 12px; }
 .sfari-nav { width: 240px; flex: none; background: #fff; border-right: 1px solid var(--card-border);
-  overflow-y: auto; padding: 6px 0 14px; }
+  overflow: hidden auto; padding: 0 0 14px; }
 .sfari-nav-cat { font-family: var(--font-head); font-size: 10.5px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .04em; color: #8a93a3; padding: 10px 14px 3px; }
 .sfari-nav-fn { display: flex; align-items: center; gap: 7px; padding: 5px 14px; font-size: 12.5px;
@@ -614,8 +624,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   font-weight: 600; color: var(--easi-accent); }
 .sfari-nav-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; background: #dfe4ec;
   border: 1px solid rgba(0,0,0,.12); }
-.sfari-fnpanel { flex: 1; overflow-y: auto; padding: 16px 22px 30px; }
-.sfari-fnpanel-inner { max-width: 720px; margin: 0 auto; }
+.sfari-fnpanel { flex: 1; overflow-y: auto; padding: 16px 22px 6px; }
+.sfari-fnpanel-inner { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; min-height: 100%; }
 .sfari-fn-title { font-family: var(--font-head); color: var(--eci-title); font-size: 1.18rem;
   font-weight: 700; margin: 0 0 3px; display: flex; align-items: center; gap: 8px; }
 .sfari-fn-counter { font-size: 12px; color: #8a93a3; font-weight: 500; margin-left: auto; }
@@ -677,11 +687,32 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-btn.primary { background: var(--easi-accent); color: #fff; border-color: var(--easi-accent); }
 .sfari-btn.primary:hover { background: var(--easi-accent-dark); color: #fff; }
 .sfari-btn[disabled] { opacity: .5; cursor: default; }
+/* left-rail stepper (ported from SFARI): fit each step to its label in the 240px rail.
+   DEEP has FIVE steps (SFARI has four), so the row is compacted (2px side padding + 2px gaps)
+   to hold all five on ONE line at 240px; flex-wrap stays only as an emergency fallback, since
+   the rail hides x-overflow and unusual font metrics would otherwise clip "Report" invisibly */
+.sfari-nav .easi-pane-head { border-radius: 0; }
+.sfari-nav-steps { padding: 8px 10px 0; }
+.sfari-nav-steps .easi-steps { margin-bottom: 4px; gap: 2px; flex-wrap: wrap; row-gap: 4px; }
+.sfari-nav-steps .easi-step { flex: 1 1 auto; white-space: nowrap; padding: 5px 2px 6px; }
+/* Get Field Forms — a Shiny download button renders <a class="btn btn-default ...>; the .btn
+   override reaches past Bootstrap the same way the header Save link does */
+.sfari-nav .sfari-nav-desktop.btn { display: block; width: calc(100% - 28px); margin: 8px 14px 6px;
+  padding: 8px 10px; font-size: 13.5px; font-weight: 600; text-align: center; text-decoration: none;
+  color: var(--easi-accent); background: #fff; border: 1px solid #b9c8e0; border-radius: 7px; box-shadow: none; }
+.sfari-nav .sfari-nav-desktop.btn:hover { border-color: var(--easi-accent); background: #eef2f8; }
+/* sticky navigation footer — always reachable without scrolling the metrics */
+.sfari-fn-footer { position: sticky; bottom: 0; z-index: 5; margin-top: auto;
+  background: var(--surface-soft); padding: 9px 0 10px;
+  box-shadow: 0 -10px 14px -10px rgba(20, 40, 80, .16); }
+.sfari-fn-footer .sfari-nav-actions { margin-top: 0; justify-content: space-between; align-items: center; }
+.sfari-foot-left { display: flex; gap: 8px; }
+.sfari-foot-status { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #98a1b1; }
+.sfari-foot-rated { color: #55607a; font-weight: 600; }
 /* rollup rail */
 .sfari-rollup { width: 302px; flex: none; background: #fff; border-left: 1px solid var(--card-border);
   overflow-y: auto; padding: 15px 17px; }
 .sfari-rollup h4 { font-family: var(--font-head); color: var(--eci-title); font-size: 13px; margin: 0 0 6px; }
-.sfari-rollup .stepper-wrap { margin-bottom: 14px; }
 .sfari-eci-box { text-align: center; background: var(--surface-soft); border: 1px solid var(--card-border);
   border-radius: 8px; padding: 10px; margin-bottom: 14px; }
 .sfari-eci { font-family: var(--font-head); font-size: 2.1rem; font-weight: 700; color: var(--eci-title); line-height: 1; }
@@ -692,6 +723,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-cat-chip .lab { color: #45506a; font-weight: 600; }
 .sfari-cat-chip .val { padding: 1px 8px; border-radius: 9px; font-size: 10.5px; }
 .sfari-progress { font-size: 11.5px; color: #8a93a3; margin-top: 12px; text-align: center; }
+/* the results column's call to action; turns primary once every function is scored */
+.sfari-rollup-report { display: block; width: 100%; margin-top: 12px; text-align: center; }
 
 /* --------------------------------------------------------------------------- */
 /* Polish pass: responsive, photos, progress, sticky report headers            */
@@ -743,24 +776,24 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 /* N/A control sits beside the score, subtle box */
 .sfari-na-row { justify-content: flex-end; }
 
-/* report modal: sticky column + category headers while scrolling the 82-row table */
-#sfari-report .easi-tbl thead th { position: sticky; top: 0; z-index: 3; }
-#sfari-report .easi-tbl tr.easi-disc td { position: sticky; top: 27px; z-index: 2; }
-#sfari-report .sfari-report-photos { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
-#sfari-report .sfari-report-photos img { width: 46px; height: 46px; object-fit: cover;
+/* report modal: sticky header while scrolling the metric table; per-metric photo thumbs */
+#deep-report .easi-tbl thead th { position: sticky; top: 0; z-index: 3; }
+#deep-report .sfari-report-photos { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+#deep-report .sfari-report-photos img { width: 46px; height: 46px; object-fit: cover;
   border-radius: 4px; border: 1px solid var(--card-border); }
 .sfari-minimap { border: 1px solid var(--card-border); border-radius: 6px; background: #fbfcfe; }
 
 /* --- Responsive: tablet / narrow windows --- */
 @media (max-width: 1024px) {
-  .sfari-nav { width: 200px; }
+  /* keep the rail at 240px (SFARI drops to 200) — DEEP's five-step stepper needs the width */
+  .sfari-nav { width: 240px; }
   .sfari-rollup { width: 264px; padding: 13px 14px; }
   .sfari-fnpanel { padding: 14px 16px 26px; }
   .easi-leftpane { width: 322px; }
 }
 @media (max-width: 820px) {
   .sfari-worksheet { flex-direction: column; }
-  .sfari-nav { width: 100%; max-height: 138px; order: 1; overflow-y: auto;
+  .sfari-nav { width: 100%; max-height: 210px; order: 1; overflow-y: auto;
     display: flex; flex-wrap: wrap; align-content: flex-start;
     border-right: none; border-bottom: 1px solid var(--card-border); padding: 4px 6px 8px; }
   .sfari-nav-cat { width: 100%; padding: 7px 8px 1px; }
@@ -771,7 +804,9 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   .sfari-fnpanel-inner { max-width: 100%; }
   .sfari-rollup { width: 100%; order: 3; max-height: 230px; border-left: none;
     border-top: 1px solid var(--card-border); }
-  .sfari-rollup .stepper-wrap { display: none; }              /* stepper already in the header flow */
+  .sfari-nav .sfari-nav-desktop.btn { flex: 1 1 100%; width: auto; margin: 4px 3px 2px; }
+  .sfari-nav .easi-pane-head, .sfari-nav-steps,
+  .sfari-nav > .shiny-html-output { flex: 1 1 100%; }         /* header + stepper span the strip */
   .easi-leftpane { width: auto; left: 8px; right: 8px; max-width: calc(100vw - 16px); }
   .easi-header .easi-nav { gap: 10px 12px; flex-wrap: wrap; }
 }

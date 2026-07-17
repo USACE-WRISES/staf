@@ -74,10 +74,6 @@
     if (v <= 0.69) return "Functioning-at-Risk";
     return "Functioning";
   }
-  function fmtNum(v) {
-    if (v == null || isNaN(v)) return "—";
-    return (v === Math.round(v)) ? String(Math.round(v)) : parseFloat(v.toFixed(2)).toString();
-  }
   function rawValue(metricEl) {
     var input = metricEl.querySelector(".deep-metric-input");
     var na = metricEl.querySelector(".deep-na");
@@ -108,21 +104,6 @@
               hh.setAttribute("y1", py.toFixed(1)); hh.setAttribute("y2", py.toFixed(1)); hh.removeAttribute("visibility"); }
     if (dot) { dot.setAttribute("cx", px.toFixed(1)); dot.setAttribute("cy", py.toFixed(1)); dot.removeAttribute("visibility"); }
   }
-  // Update the scoring table's highlighted "Your value" row.
-  function updateHereRow(metricEl, val, idx) {
-    var row = metricEl.querySelector(".deep-criteria-table .is-here");
-    if (!row) return;
-    var xc = row.querySelector(".deep-here-x"), ic = row.querySelector(".deep-here-idx"), bc = row.querySelector(".deep-here-band");
-    if (val == null || idx == null) {
-      if (xc) xc.textContent = "—";
-      if (ic) ic.textContent = "—";
-      if (bc) bc.innerHTML = '<span class="deep-band-dot" style="background:#e7ebf1;"></span>—';
-      return;
-    }
-    if (xc) xc.textContent = fmtNum(val);
-    if (ic) ic.textContent = idx.toFixed(2);
-    if (bc) bc.innerHTML = '<span class="deep-band-dot" style="background:' + idxColor(idx) + ';"></span>' + idxLabel(idx);
-  }
   // Toggle the metric's endpoint-clamp advisory (hidden when in-domain / unset).
   function updateWarn(metricEl, val) {
     var el = metricEl.querySelector(".deep-domain-warn");
@@ -135,9 +116,8 @@
     var val = rawValue(metricEl);
     var idx = (val == null) ? null : interp(pointsOf(metricEl), val);
     var chip = metricEl.querySelector(".deep-metric-index");
-    if (chip) { chip.textContent = (idx == null ? "—" : idx.toFixed(2)); chip.style.background = idxColor(idx); }
+    if (chip) { chip.textContent = (idx == null ? "—" : idx.toFixed(2) + " · " + idxLabel(idx)); chip.style.background = idxColor(idx); }
     updateMarker(metricEl, val, idx);
-    updateHereRow(metricEl, val, idx);
     updateWarn(metricEl, val);
   }
   function updateFunction() {
@@ -150,15 +130,67 @@
     });
     var num = card.querySelector(".deep-fscore-num");
     var band = card.querySelector(".deep-fscore-band");
+    var knob = card.querySelector(".deep-fscore-knob");
     if (!vals.length) {
+      card.classList.add("unset");
       if (num) num.textContent = "–";
       if (band) { band.textContent = "Not scored yet"; band.style.background = "#e7ebf1"; }
+      updateEnteredCount();
       return;
     }
+    card.classList.remove("unset");
     var score = (vals.reduce(function (a, b) { return a + b; }, 0) / vals.length) * 15;
     var b = fnBand(score);
     if (num) num.textContent = score.toFixed(1);
     if (band) { band.textContent = b.l; band.style.background = b.c; }
+    if (knob) knob.style.left = (score / 15 * 100).toFixed(1) + "%";
+    updateEnteredCount();
+  }
+  // Live "N/M entered" footer counter (the panel is isolated server-side, so it does not
+  // re-render on each keystroke — update it client-side instead). A metric is entered when
+  // it is marked N/A or holds a parseable value.
+  function updateEnteredCount() {
+    var panel = document.querySelector(".sfari-fnpanel-inner");
+    if (!panel) return;
+    var metrics = panel.querySelectorAll(".deep-metric"), entered = 0;
+    metrics.forEach(function (mEl) {
+      var na = mEl.querySelector(".deep-na");
+      var input = mEl.querySelector(".deep-metric-input");
+      if ((na && na.checked) || (input && input.value !== "" && !isNaN(parseFloat(input.value)))) entered++;
+    });
+    var foot = document.querySelector(".sfari-foot-rated");
+    if (foot) foot.textContent = entered + "/" + metrics.length + " entered";
+  }
+  function scrollPanelTop() {
+    var p = document.querySelector(".sfari-fnpanel");
+    if (p) p.scrollTop = 0;
+  }
+  // Downscale an image file to <= maxDim on its longest side, JPEG data-URI.
+  function downscale(file, maxDim, cb) {
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        var cw = Math.max(1, Math.round(img.width * scale)), ch = Math.max(1, Math.round(img.height * scale));
+        var c = document.createElement("canvas"); c.width = cw; c.height = ch;
+        c.getContext("2d").drawImage(img, 0, 0, cw, ch);
+        try { cb(c.toDataURL("image/jpeg", 0.82)); } catch (err) { cb(null); }
+      };
+      img.onerror = function () { cb(null); };
+      img.src = e.target.result;
+    };
+    reader.onerror = function () { cb(null); };
+    reader.readAsDataURL(file);
+  }
+  function thumbEl(mid, id, uri) {
+    var wrap = document.createElement("span");
+    wrap.className = "sfari-thumb-wrap"; wrap.dataset.id = id; wrap.dataset.mid = mid;
+    var img = document.createElement("img"); img.className = "sfari-thumb"; img.src = uri; wrap.appendChild(img);
+    var rm = document.createElement("button");
+    rm.className = "sfari-photo-rm"; rm.type = "button"; rm.textContent = "×";
+    rm.dataset.id = id; rm.dataset.mid = mid; wrap.appendChild(rm);
+    return wrap;
   }
 
   document.addEventListener("input", function (e) {
@@ -184,15 +216,59 @@
       send("measure_na", { mid: na.dataset.midNa, na: na.checked });
       return;
     }
+    // Metric photo(s) chosen -> downscale, add a thumbnail client-side, persist to server.
+    var photo = e.target.closest(".sfari-photo");
+    if (photo) {
+      var pmid = photo.dataset.mid;
+      var metricEl = photo.closest(".deep-metric");
+      var strip = metricEl ? metricEl.querySelector(".sfari-photos") : null;
+      var files = Array.prototype.slice.call(photo.files || []);
+      var used = strip ? strip.querySelectorAll(".sfari-thumb-wrap").length : 0;
+      files.forEach(function (file, i) {
+        if (used + i >= 6 || !/^image\//.test(file.type)) return;
+        downscale(file, 1024, function (uri) {
+          if (!uri) return;
+          var id = "p" + Date.now() + "-" + Math.round(Math.random() * 1e6);
+          if (strip) strip.insertBefore(thumbEl(pmid, id, uri), strip.querySelector(".sfari-photo-btn"));
+          send("metric_photo_add", { mid: pmid, id: id, uri: uri });
+        });
+      });
+      photo.value = "";
+      return;
+    }
   });
 
   document.addEventListener("click", function (e) {
     var rep = e.target.closest("[data-report]");
     if (rep) { send("open_report_evt", {}); return; }
+    // Prev / Next / jump. "Done" (Next on the last function) opens the report; every other
+    // move also scrolls the panel back to the top of the new function.
     var nav = e.target.closest("[data-nav]");
-    if (nav) { send("nav_move", { d: parseInt(nav.dataset.nav, 10) }); return; }
+    if (nav) {
+      var d = parseInt(nav.dataset.nav, 10);
+      var active = document.querySelector(".sfari-nav-fn.active");
+      var lastIdx = document.querySelectorAll(".sfari-nav-fn").length - 1;
+      if (d === 1 && active && parseInt(active.dataset.idx, 10) === lastIdx) {
+        send("open_report_evt", {});
+      } else {
+        scrollPanelTop();
+        send("nav_move", { d: d });
+      }
+      return;
+    }
     var jump = e.target.closest(".sfari-nav-fn");
-    if (jump && jump.dataset.idx !== undefined) { send("nav_jump", { i: parseInt(jump.dataset.idx, 10) }); return; }
+    if (jump && jump.dataset.idx !== undefined) {
+      scrollPanelTop();
+      send("nav_jump", { i: parseInt(jump.dataset.idx, 10) });
+      return;
+    }
+    // Remove a metric photo.
+    var prm = e.target.closest(".sfari-photo-rm");
+    if (prm) {
+      var pw = prm.closest(".sfari-thumb-wrap"); if (pw) pw.remove();
+      send("metric_photo_remove", { mid: prm.dataset.mid, id: prm.dataset.id });
+      return;
+    }
   });
 
   function debounce(el, fn) { clearTimeout(el._deb); el._deb = setTimeout(fn, 350); }

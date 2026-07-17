@@ -56,7 +56,7 @@ SNAP_TOL_FT = 150.0
 STEP_IDENTIFY, STEP_BASIN, STEP_ASSESS, STEP_MEASURE, STEP_REPORT = \
     "identify", "basin", "assess", "measure", "report"
 STEP_LABELS = [(STEP_IDENTIFY, "Identify"), (STEP_BASIN, "Basin"),
-               (STEP_ASSESS, "Assessment"), (STEP_MEASURE, "Measure"), (STEP_REPORT, "Report")]
+               (STEP_ASSESS, "Region"), (STEP_MEASURE, "Assessment"), (STEP_REPORT, "Report")]
 
 CATEGORY_ORDER = list(config.CATEGORY_ORDER)
 _FNF_SHORT = {"Functioning": "F", "Functioning-at-Risk": "AR", "Non-Functioning": "NF"}
@@ -81,12 +81,17 @@ def _chip(text, color):
     return ui.span(text, class_="easi-chip", style=f"background:{color};")
 
 
-def _info(text: str = None):
-    if not (text and text.strip()):
+def _info(text: str = None, *, html_tip: str = None):
+    """A small circled-'i'; the custom tooltip (www/tooltip.js) shows the tip. Pass
+    ``html_tip`` for a rich card (data-tip-html) or ``text`` for a plain tooltip."""
+    attrs = {"onclick": "event.preventDefault();event.stopPropagation();"}
+    if html_tip:
+        attrs["data-tip-html"] = html_tip
+    elif text and text.strip():
+        attrs["data-tip"] = text.strip()
+    else:
         return None
-    return ui.span("i", {"data-tip": text.strip(),
-                         "onclick": "event.preventDefault();event.stopPropagation();"},
-                   class_="easi-info")
+    return ui.span("i", attrs, class_="easi-info")
 
 
 def _fmt_num(v):
@@ -189,34 +194,46 @@ def _curve_svg(points, value=None, xlabel="", w=320, h=200):
     return "".join(P)
 
 
-def _criteria_table(points, value=None, midx=None):
-    """Scoring-criteria table beside the plot: the reference-curve breakpoints
-    (value -> index -> condition band) plus a highlighted 'Your value' row. The
-    here-row cells carry classes so ``www/measure.js`` can update them live."""
+def _criteria_table(points):
+    """Static reference-curve breakpoint legend beside the plot (value -> index ->
+    condition band). The measured value's index + condition is shown on the chip next
+    to the input instead, so this stays a read-only reference (it is NOT the site's row)."""
     pts = sorted(({"x": float(p["x"]), "y": float(p["y"])} for p in points
                   if p.get("x") is not None and p.get("y") is not None), key=lambda p: p["x"])
     if not pts:
         return ""
-    rows = ['<table class="deep-criteria-table"><thead><tr>'
+    rows = ['<table class="deep-criteria-table">'
+            '<caption>Reference curve breakpoints</caption><thead><tr>'
             '<th>Value</th><th>Index</th><th>Condition</th></tr></thead><tbody>']
     for p in pts:
         col = scoring.index_band_color(p["y"])
         lbl = html.escape(scoring.index_band_label(p["y"]))
         rows.append(f'<tr><td>{_fmt_num(p["x"])}</td><td>{p["y"]:.2f}</td>'
                     f'<td><span class="deep-band-dot" style="background:{col};"></span>{lbl}</td></tr>')
-    if value not in (None, "") and midx is not None:
-        hcol, hlbl = scoring.index_band_color(midx), html.escape(scoring.index_band_label(midx))
-        hx, hidx = _fmt_num(value), f"{midx:.2f}"
-        hband = f'<span class="deep-band-dot" style="background:{hcol};"></span>{hlbl}'
-    else:
-        hx, hidx = "—", "—"
-        hband = '<span class="deep-band-dot" style="background:#e7ebf1;"></span>—'
-    rows.append('<tr class="is-here" title="Your measured value">'
-                f'<td class="deep-here-x">{hx}</td>'
-                f'<td class="deep-here-idx">{hidx}</td>'
-                f'<td class="deep-here-band">{hband}</td></tr>')
     rows.append("</tbody></table>")
     return "".join(rows)
+
+
+def _metric_tip_html(m) -> str:
+    """Rich hover card for a metric: how to collect it. Pulls the assessment's
+    ``metricStatement`` / ``howToMeasure`` / ``methodContext`` prose (all optional).
+    Falls back to a muted note when the assessment carries none yet (raw text may hold
+    '<', '>', '&', so escape it)."""
+    name = m.get("metricName", m.get("metricId", ""))
+    parts = [f'<div class="easi-tip-title">{html.escape(name)}</div>']
+    any_sec = False
+    for lbl, key in (("", "metricStatement"), ("How to measure", "howToMeasure"),
+                     ("Method", "methodContext")):
+        txt = (m.get(key) or "").strip()
+        if not txt or txt == name:
+            continue
+        any_sec = True
+        head = f'<span class="easi-tip-lbl">{html.escape(lbl)}</span>' if lbl else ""
+        parts.append(f'<div class="easi-tip-sec">{head}{html.escape(txt)}</div>')
+    if not any_sec:
+        parts.append('<div class="easi-tip-sub">Field collection guidance has not been '
+                     'provided for this assessment yet.</div>')
+    return "".join(parts)
 
 
 def _source_line(m, rc):
@@ -330,12 +347,12 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=4"),
-                    ui.tags.link(rel="stylesheet", href="deep.css?v=6"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=8"),
+                    ui.tags.link(rel="stylesheet", href="deep.css?v=7"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="measure.js?v=1", defer=""),
+                    ui.tags.script(src="measure.js?v=2", defer=""),
                     ui.tags.script(src="coverage.js", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
@@ -898,10 +915,10 @@ def server(input, output, session_):  # noqa: C901
                 "1. **Identify** — zoom in until blue stream lines appear and click a stream (or type "
                 "coordinates / search an address). Set the reach length and click **Delineate**.\n"
                 "2. **Basin** — review the watershed and reach.\n"
-                "3. **Assessment** — pick a published detailed assessment whose area of "
+                "3. **Region** — pick a published detailed assessment whose area of "
                 "applicability covers your site (certified before preliminary).\n"
-                "4. **Measure** — enter each metric's measured value; the reference curve converts it "
-                "to an index and the function/outcome scores update live.\n"
+                "4. **Assessment** — enter each metric's measured value; the reference curve converts "
+                "it to an index and the function/outcome scores update live.\n"
                 "5. **Report** — review and export the detailed assessment."),
             title="How to use DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
@@ -966,7 +983,6 @@ def server(input, output, session_):  # noqa: C901
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
             row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
-            row("Watershed area", f'{d.get("watershed_area_sqkm")} km²'),
             row("Reach length", f'{d.get("reach_length_ft")} ft'),
             row("Stream order", d.get("stream_order")),
             row("COMID", d.get("comid")),
@@ -980,7 +996,10 @@ def server(input, output, session_):  # noqa: C901
 
     @render.ui
     def readout():
-        if not _HAS_MAP:
+        # The map is the workspace only on Identify/Basin; on the worksheet steps the
+        # overlay covers it, so hide the zoom/lat-lon readout there (it would poke over
+        # the worksheet's bottom-left corner otherwise).
+        if not _HAS_MAP or current_step() in (STEP_ASSESS, STEP_MEASURE, STEP_REPORT):
             return None
         z, c = _view()
         if not c:
@@ -1067,6 +1086,7 @@ def server(input, output, session_):  # noqa: C901
                        "Try a point inside a published region, or ask the library maintainer "
                        "to publish one for this area.", class_="deep-assess-empty-sub"),
                 class_="deep-assess-empty")
+        sel = selected_ref()
         cards = []
         for i, entry in enumerate(covering[:_MAX_ASSESS_CARDS]):
             refs = entry["refs"]
@@ -1078,6 +1098,9 @@ def server(input, output, session_):  # noqa: C901
             }
             default_life = life_by_ref.get(entry["defaultRef"], "preliminary")
             badge_cls = "deep-badge-cert" if default_life == "certified" else "deep-badge-prelim"
+            is_sel = sel is not None and sel in refs
+            pick_label = "✓ Selected" if is_sel else "Select this assessment"
+            pick_cls = "btn btn-sm btn-primary" if is_sel else "btn btn-sm btn-outline-primary"
             cards.append(ui.div(
                 ui.div(
                     ui.span(entry["assessmentName"], class_="deep-card-name"),
@@ -1089,9 +1112,8 @@ def server(input, output, session_):  # noqa: C901
                     ui.input_select(f"assess_ver_{i}", None, choices=ver_choices,
                                     selected=entry["defaultRef"], width="200px"),
                     class_="deep-card-verrow"),
-                ui.input_action_button(f"assess_pick_{i}", "Select this assessment",
-                                       class_="btn btn-sm btn-outline-primary"),
-                class_="deep-assess-card"))
+                ui.input_action_button(f"assess_pick_{i}", pick_label, class_=pick_cls),
+                class_="deep-assess-card is-selected" if is_sel else "deep-assess-card"))
         return ui.div(*cards, class_="deep-assess-cards")
 
     @render.ui
@@ -1103,13 +1125,13 @@ def server(input, output, session_):  # noqa: C901
         if la is None:
             if not covering:
                 return ui.div(
-                    ui.input_action_button("to_measure", "Continue to measurements",
+                    ui.input_action_button("to_measure", "Continue to assessment",
                                            class_="btn-primary", disabled="disabled"),
                     ui.div("Select an assessment above to continue.",
                            class_="deep-assess-detail-hint"),
                     class_="deep-assess-detail")
             return ui.div("Select an assessment above to see its details.",
-                          class_="deep-assess-detail-hint")
+                          class_="deep-assess-placeholder")
         nfun = len([fn for fn in la.metrics_by_function if fn.get("metrics")])
         nmet = sum(len(fn.get("metrics", [])) for fn in la.metrics_by_function)
         lib = la.raw.get("library") or {}
@@ -1124,23 +1146,13 @@ def server(input, output, session_):  # noqa: C901
             info.append(ui.div(
                 f"Version v{lib['version']}" + (f" · updated {updated}" if updated else "")
                 + f" · {life}", class_="deep-assess-detail-line"))
-        if la.source_citation:
-            info.append(ui.div(f"Citation: {la.source_citation}",
-                               class_="deep-assess-detail-line"))
-        warn = None
-        if life != "certified":
-            warn = ui.div(
-                "This is a preliminary assessment. Its curves are not yet certified; "
-                "use results with appropriate caution.",
-                class_="deep-assess-warning")
         return ui.div(
             ui.div(ui.span("✓ ", class_="deep-ok"), la.assessment_name,
                    class_="deep-assess-detail-name"),
             ui.div(f"{nmet} metrics · {nfun}/20 functions" + (f" · {ref}" if ref else ""),
                    class_="deep-assess-detail-line"),
             *info,
-            warn,
-            ui.div(ui.input_action_button("to_measure", "Continue to measurements",
+            ui.div(ui.input_action_button("to_measure", "Continue to assessment",
                                           class_="btn-primary"),
                    class_="deep-assess-detail-actions"),
             class_="deep-assess-detail")
@@ -1233,6 +1245,31 @@ def server(input, output, session_):  # noqa: C901
         compute_nonce.set(compute_nonce() + 1)   # re-render the panel with the chosen curve
 
     @reactive.effect
+    @reactive.event(input.metric_photo_add)
+    def _on_photo_add():
+        ev = input.metric_photo_add() or {}
+        mid, pid, uri = ev.get("mid"), ev.get("id"), ev.get("uri")
+        if not mid or not pid or not uri:
+            return
+        mvs = dict(measured_values()); cur = dict(mvs.get(mid, {}))
+        photos = list(cur.get("photos", []))
+        if len(photos) < 6 and not any(p.get("id") == pid for p in photos):
+            photos.append({"id": pid, "uri": uri})
+        cur["photos"] = photos
+        mvs[mid] = cur; measured_values.set(mvs)
+
+    @reactive.effect
+    @reactive.event(input.metric_photo_remove)
+    def _on_photo_remove():
+        ev = input.metric_photo_remove() or {}
+        mid, pid = ev.get("mid"), ev.get("id")
+        if not mid or not pid:
+            return
+        mvs = dict(measured_values()); cur = dict(mvs.get(mid, {}))
+        cur["photos"] = [p for p in cur.get("photos", []) if p.get("id") != pid]
+        mvs[mid] = cur; measured_values.set(mvs)
+
+    @reactive.effect
     @reactive.event(input.nav_move)
     def _nav_move():
         d = int((input.nav_move() or {}).get("d", 0) or 0)
@@ -1300,7 +1337,7 @@ def server(input, output, session_):  # noqa: C901
         for mid, entry in res.items():
             cur = mvs.get(mid) or {}
             if cur.get("value") in (None, "") and not cur.get("na"):
-                mvs[mid] = entry; n += 1
+                mvs[mid] = {**cur, **entry}; n += 1   # merge so a prior note/photo survives prefill
         if n:
             measured_values.set(mvs)
             compute_nonce.set(compute_nonce() + 1)
@@ -1319,7 +1356,14 @@ def server(input, output, session_):  # noqa: C901
         if step not in (STEP_MEASURE, STEP_REPORT):
             return None
         return ui.div(
-            ui.div(ui.output_ui("fn_nav"), class_="sfari-nav"),
+            ui.div(
+                ui.div("DEEP — Assessment", class_="easi-pane-head"),
+                ui.div(_stepper(step), class_="sfari-nav-steps"),
+                ui.download_button("dl_field_forms", "Get Field Forms",
+                                   class_="sfari-btn sfari-nav-desktop",
+                                   title="Print-ready field packet listing every metric to measure"),
+                ui.output_ui("fn_nav"),
+                class_="sfari-nav"),
             ui.div(ui.output_ui("fn_panel"), class_="sfari-fnpanel"),
             ui.div(ui.output_ui("rollup_rail"), class_="sfari-rollup"),
             class_="sfari-worksheet")
@@ -1370,18 +1414,15 @@ def server(input, output, session_):  # noqa: C901
             points = curves.active_points(m, cur_stratum)
             midx = fr.metric_indices.get(mid) if fr else None
             mwarn = fr.metric_warnings.get(mid) if fr else None
-            idx_txt = "—" if midx is None else f"{midx:.2f}"
+            idx_txt = "—" if midx is None else f"{midx:.2f} · {scoring.index_band_label(midx)}"
             idx_col = scoring.index_band_color(midx) if midx is not None else "#eef1f6"
             plot_val = None if (na or val in (None, "")) else float(val)
             src_line = _source_line(m, rc)
             metric_blocks.append(ui.div(
                 ui.div(m.get("metricName", mid),
                        ui.span(m.get("discipline", ""), class_="sfari-metric-scale"),
+                       _info(html_tip=_metric_tip_html(m)),
                        class_="sfari-metric-name"),
-                (ui.div(m.get("metricStatement", ""), class_="deep-metric-statement")
-                 if m.get("metricStatement") else None),
-                (ui.div(m.get("methodContext", ""), class_="deep-method")
-                 if m.get("methodContext") else None),
                 (ui.div(ui.span("Source", class_="deep-source-key"),
                         ui.span(src_line, class_="deep-source-val"),
                         class_="deep-source-row")
@@ -1409,13 +1450,9 @@ def server(input, output, session_):  # noqa: C901
                        {"data-mid-warn": mid, "role": "status",
                         **({} if mwarn else {"hidden": "hidden"})},
                        class_="deep-domain-warn"),
-                (ui.div(ui.span("How to measure", class_="deep-howto-key"),
-                        ui.span(m.get("howToMeasure", ""), class_="deep-howto-val"),
-                        class_="deep-howto")
-                 if m.get("howToMeasure") else None),
                 ui.div(
                     ui.HTML(_curve_svg(points, plot_val, m.get("xLabel", ""))),
-                    ui.HTML(_criteria_table(points, None if plot_val is None else val, midx)),
+                    ui.HTML(_criteria_table(points)),
                     class_="deep-plot-wrap"),
                 ui.div(ui.tags.label(
                     ui.tags.input({"type": "checkbox", "data-mid-na": mid,
@@ -1423,6 +1460,19 @@ def server(input, output, session_):  # noqa: C901
                     ui.span(" Not applicable")), class_="deep-na-row"),
                 ui.tags.textarea(note, {"data-mid-note": mid, "placeholder": "Note (optional)…"},
                                  class_="sfari-metric-note"),
+                ui.div(
+                    *[ui.span(
+                        ui.tags.img({"src": p.get("uri", "")}, class_="sfari-thumb"),
+                        ui.tags.button("×", {"data-mid": mid, "data-id": p.get("id"),
+                                             "type": "button"}, class_="sfari-photo-rm"),
+                        {"data-mid": mid, "data-id": p.get("id")}, class_="sfari-thumb-wrap")
+                      for p in (rc.get("photos") or [])],
+                    ui.tags.label("📷 Photo",
+                                  ui.tags.input({"type": "file", "accept": "image/*",
+                                                 "capture": "environment", "data-mid": mid},
+                                                class_="sfari-photo"),
+                                  class_="sfari-photo-btn"),
+                    {"data-mid": mid}, class_="sfari-photos"),
                 {"data-metric": mid, "data-points": json.dumps(points)},
                 class_="sfari-metric deep-metric"))
 
@@ -1432,33 +1482,52 @@ def server(input, output, session_):  # noqa: C901
             band_col = scoring.function_score_band_color(score)
         else:
             band_lbl = "Not scored yet"; band_col = "#e7ebf1"
+        fscore_tip = (
+            '<div class="easi-tip-sec">Computed automatically: the mean of the metric indices '
+            'above times 15.</div>'
+            '<div class="easi-tip-sec"><span class="easi-tip-lbl">Condition bands</span>'
+            '<div class="easi-tip-crit"><span class="easi-tip-dot poor"></span>'
+            '<span><b>0 to 5:</b> Non-Functioning</span></div>'
+            '<div class="easi-tip-crit"><span class="easi-tip-dot fair"></span>'
+            '<span><b>6 to 10:</b> Functioning-at-Risk</span></div>'
+            '<div class="easi-tip-crit"><span class="easi-tip-dot good"></span>'
+            '<span><b>11 to 15:</b> Functioning</span></div></div>')
+        knob_style = "" if score is None else f"left:{score / 15 * 100:.1f}%;"
         scorecard = ui.div(
-            ui.h4("Function score (0–15) — computed from the reference curves"),
-            ui.div("Automatically = mean of the metric indices above × 15. 11–15 Functioning · "
-                   "6–10 At-Risk · 0–5 Non-Functioning.", class_="hint"),
-            ui.div(ui.span("–" if score is None else f"{score:.1f}", class_="deep-fscore-num"),
-                   ui.span(band_lbl, class_="deep-fscore-band", style=f"background:{band_col};"),
-                   class_="deep-fscore-row"),
-            {"data-fn": fid}, class_="deep-scorecard")
+            ui.div(ui.span("Function score", class_="deep-fscore-lbl"),
+                   _info(html_tip=fscore_tip), class_="deep-fscore-head"),
+            ui.div(
+                ui.div(ui.div({"style": knob_style}, class_="deep-fscore-knob"),
+                       class_="deep-fscore-track"),
+                ui.span("–" if score is None else f"{score:.1f}", class_="deep-fscore-num"),
+                ui.span(band_lbl, class_="deep-fscore-band", style=f"background:{band_col};"),
+                class_="deep-fscore-row"),
+            {"data-fn": fid}, class_="deep-scorecard" + ("" if score is not None else " unset"))
 
         prev_attrs = {"data-nav": "-1", "type": "button"}
         if idx == 0:
             prev_attrs["disabled"] = "disabled"
+        total = len(fn.get("metrics", []))
+        entered = sum(1 for mm in fn.get("metrics", [])
+                      if (mvs.get(mm["metricId"]) or {}).get("na")
+                      or (mvs.get(mm["metricId"]) or {}).get("value") not in (None, ""))
         actions = ui.div(
-            ui.tags.button("‹ Previous", prev_attrs, class_="sfari-btn"),
-            ui.tags.button("Next ›" if idx < len(fns) - 1 else "Done",
+            ui.div(ui.tags.button("‹ Previous", prev_attrs, class_="sfari-btn"),
+                   class_="sfari-foot-left"),
+            ui.div(ui.span(f"{entered}/{total} entered", class_="sfari-foot-rated"),
+                   class_="sfari-foot-status"),
+            ui.tags.button("Next function ›" if idx < len(fns) - 1 else "Done",
                            {"data-nav": "1", "type": "button"}, class_="sfari-btn primary"),
-            ui.tags.button("Open report", {"data-report": "1", "type": "button"}, class_="sfari-btn"),
             class_="sfari-nav-actions")
         return ui.div(
             ui.div(ui.span(fn.get("functionName", "")),
                    ui.span(f"Function {idx + 1} / {len(fns)} · {fn.get('discipline', '')}",
                            class_="sfari-fn-counter"), class_="sfari-fn-title"),
-            ui.div("Enter each metric's measured value — the reference curve converts it to a 0–1 index.",
+            ui.div("Enter each metric's measured value. The reference curve converts it to a 0 to 1 index.",
                    class_="sfari-sec-lbl"),
             *metric_blocks,
             scorecard,
-            actions,
+            ui.div(actions, class_="sfari-fn-footer"),
             class_="sfari-fnpanel-inner")
 
     @render.ui
@@ -1483,8 +1552,8 @@ def server(input, output, session_):  # noqa: C901
                               style=f"background:{col};color:#33415c;")
             chips.append(ui.div(ui.span(cat, class_="lab"), val, class_="sfari-cat-chip"))
         pct = (n_scored / n_total * 100) if n_total else 0
+        report_primary = bool(n_total) and n_scored == n_total
         return ui.TagList(
-            ui.div(_stepper(current_step()), class_="stepper-wrap"),
             ui.h4("Live rollup"),
             ui.div(ui.div(f"{eci:.2f}", class_="sfari-eci"),
                    ui.div("Ecosystem Condition Index", class_="sfari-eci-lbl"), class_="sfari-eci-box"),
@@ -1495,6 +1564,8 @@ def server(input, output, session_):  # noqa: C901
             ui.div(*chips, class_="sfari-cat-chips"),
             ui.div(ui.tags.span(style=f"width:{pct:.0f}%;"), class_="sfari-progress-bar"),
             ui.div(f"{n_scored} / {n_total} functions scored", class_="sfari-progress"),
+            ui.tags.button("Open report", {"data-report": "1", "type": "button"},
+                           class_="sfari-btn sfari-rollup-report" + (" primary" if report_primary else "")),
         )
 
     # ---- report modal ----
@@ -1554,9 +1625,12 @@ def server(input, output, session_):  # noqa: C901
         mvs = measured_values()
         rows = []
         for fn, m, val, idx in report._rows(la, mvs):
+            ph = (mvs.get(m["metricId"]) or {}).get("photos") or []
             rows.append(ui.tags.tr(
                 ui.tags.td(fn.get("functionName", ""), style="color:#8a93a3;font-size:11px;"),
-                ui.tags.td(m.get("metricName", m["metricId"])),
+                ui.tags.td(m.get("metricName", m["metricId"]),
+                           (ui.div(*[ui.tags.img({"src": p.get("uri", "")}) for p in ph],
+                                   class_="sfari-report-photos") if ph else None)),
                 ui.tags.td("—" if val in (None, "") else str(val)),
                 ui.tags.td("—" if idx is None else f"{idx:.2f}",
                            style=f"background:{scoring.index_band_color(idx) if idx is not None else '#fff'};"),
@@ -1619,6 +1693,10 @@ def server(input, output, session_):  # noqa: C901
         sc, _fr = scored()
         yield report.build_pdf(delin() or {}, loaded_assessment(), measured_values(), sc,
                                region=_site_region())
+
+    @render.download(filename=lambda: report.field_forms_filename(loaded_assessment()))
+    def dl_field_forms():
+        yield report.build_field_forms_pdf(loaded_assessment(), ref=selected_ref() or "")
 
     @reactive.effect
     @reactive.event(input.load_session)

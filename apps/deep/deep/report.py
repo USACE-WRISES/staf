@@ -9,6 +9,7 @@ so the report is decoupled from the app's live state objects.
 """
 from __future__ import annotations
 
+import base64
 import csv
 import io
 import json
@@ -193,7 +194,8 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
     from reportlab.lib.units import inch
-    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    from reportlab.lib.utils import ImageReader
+    from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6 * inch, bottomMargin=0.6 * inch,
@@ -201,6 +203,18 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
                             title="DEEP Detailed Assessment Report")
     styles = getSampleStyleSheet()
     small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=7, leading=8.4)
+
+    def _img(uri, max_w, max_h):
+        """A base64 data-URI photo (from the measure state) scaled into a platypus Image."""
+        if not uri or "," not in uri:
+            return None
+        try:
+            raw = base64.b64decode(uri.split(",", 1)[1])
+            iw, ih = ImageReader(io.BytesIO(raw)).getSize()
+            s = min(max_w / iw, max_h / ih, 1.0)
+            return Image(io.BytesIO(raw), width=iw * s, height=ih * s)
+        except Exception:  # noqa: BLE001
+            return None
     grid = colors.HexColor("#d5deea")
     head_bg = colors.HexColor("#eef2f8")
     band_col = {"NF": "#f5b5b5", "AR": "#f5e7a6", "F": "#c8d9f2"}
@@ -261,5 +275,86 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
     story += [mt, Spacer(1, 8),
               Paragraph("Scores are computed automatically from the assessment's reference curves. "
                         "Confirm state/region applicability of the curve source.", styles["Italic"])]
+
+    # site-photo gallery — per-metric photos attached during measurement
+    gallery = []
+    for fn, m, _val, _idx in _rows(assessment, measured):
+        ph = (measured.get(m["metricId"]) or {}).get("photos") or []
+        imgs = [im for im in (_img(p.get("uri"), 1.3 * inch, 1.3 * inch) for p in ph) if im]
+        if imgs:
+            gallery.append(Paragraph(f"<b>{fn.get('functionName', '')}</b> - "
+                                     f"{m.get('metricName', m['metricId'])}", small))
+            gt = Table([imgs], colWidths=[1.42 * inch] * len(imgs), hAlign="LEFT")
+            gt.setStyle(TableStyle([("LEFTPADDING", (0, 0), (-1, -1), 0),
+                                    ("TOPPADDING", (0, 0), (-1, -1), 1),
+                                    ("BOTTOMPADDING", (0, 0), (-1, -1), 1)]))
+            gallery += [gt, Spacer(1, 6)]
+    if gallery:
+        story += [Spacer(1, 10), Paragraph("Site photos", styles["Heading3"])] + gallery
+
+    doc.build(story)
+    return buf.getvalue()
+
+
+def field_forms_filename(assessment) -> str:
+    """Filename for the downloadable field-forms packet."""
+    aid = _attr(assessment, "assessment_id", "assessmentId") or "assessment"
+    return f"deep-field-forms-{aid}.pdf"
+
+
+def build_field_forms_pdf(assessment, ref: str = "") -> bytes:
+    """Print-ready field packet: every metric in the assessment with a blank write-in
+    Value / Notes cell, grouped by function.
+
+    PLACEHOLDER — generated locally from the bundle's metric list so field crews have
+    something to carry today. Replace with the StreamCurves-authored field-form PDF
+    shipped inside the published bundle (a future bundle key) once that exists.
+    """
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=letter, topMargin=0.6 * inch, bottomMargin=0.6 * inch,
+                            leftMargin=0.6 * inch, rightMargin=0.6 * inch, title="DEEP Field Forms")
+    styles = getSampleStyleSheet()
+    small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=8, leading=10)
+    grid = colors.HexColor("#c3ccda")
+    head_bg = colors.HexColor("#eef2f8")
+
+    name = _attr(assessment, "assessment_name", "assessmentName") or "Detailed assessment"
+    cite = _attr(assessment, "source_citation", "sourceCitation")
+    sub = "  ·  ".join([p for p in (ref, cite) if p])
+    story = [Paragraph("DEEP Field Forms", styles["Title"]),
+             Paragraph(name, styles["Heading2"])]
+    if sub:
+        story.append(Paragraph(sub, styles["Italic"]))
+    story += [Paragraph("Record each metric's measured value in the field, then enter the values in "
+                        "DEEP to compute the reference-curve scores.", small), Spacer(1, 8)]
+
+    any_fn = False
+    for fn in _mbf(assessment):
+        any_fn = True
+        disc = fn.get("discipline", "")
+        head = fn.get("functionName", fn.get("functionId", ""))
+        if disc:
+            head = f"{head}  ({disc})"
+        story.append(Paragraph(head, styles["Heading3"]))
+        data = [["Metric", "Units / measure", "Value", "Notes"]]
+        for m in fn.get("metrics", []):
+            data.append([Paragraph(m.get("metricName", m.get("metricId", "")), small),
+                         Paragraph(m.get("xLabel", ""), small), "", ""])
+        t = Table(data, colWidths=[2.3 * inch, 1.9 * inch, 1.0 * inch, 2.1 * inch],
+                  rowHeights=[0.28 * inch] + [0.4 * inch] * (len(data) - 1), repeatRows=1)
+        t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 8),
+                               ("GRID", (0, 0), (-1, -1), 0.4, grid),
+                               ("BACKGROUND", (0, 0), (-1, 0), head_bg),
+                               ("VALIGN", (0, 0), (-1, -1), "TOP")]))
+        story += [t, Spacer(1, 10)]
+
+    if not any_fn:
+        story.append(Paragraph("This assessment has no metrics defined.", small))
     doc.build(story)
     return buf.getvalue()
