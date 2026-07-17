@@ -55,12 +55,16 @@ def test_figure_unit_scaling_ft_vs_m():
     assert "m" in m.layout.xaxis.title.text
 
 
-def test_figure_dragmode_zoom_and_symmetric_x():
+def test_figure_dragmode_zoom_and_windowed_x():
     s, e = _v_profile()
     fw = xsplotly.figure(s, e, thalweg=0.0, bankfull_stage=2.0)
     assert fw.layout.dragmode == "zoom"                       # drag-a-box zoom
     lo, hi = fw.layout.xaxis.range
-    assert lo == pytest.approx(-hi)                            # symmetric about the thalweg
+    assert lo == pytest.approx(-hi)                # symmetric profile -> symmetric window
+    # default view is windowed, not the full +/-50 m transect: the V walls cross the
+    # ceiling (1.5 x floodprone) 12 m out, so the 15 m min-half floor governs
+    full = 50.0 * xsplotly.FT_PER_M
+    assert hi < 0.5 * full
 
 
 def test_figure_no_fixed_height_and_trimmed_modebar():
@@ -69,10 +73,10 @@ def test_figure_no_fixed_height_and_trimmed_modebar():
     assert fw.layout.height is None                            # no fixed height -> fills container
     assert fw.layout.title.text is None                        # no in-figure title
     remove = set(fw.layout.modebar.remove or ())
-    # extra buttons removed; only zoom / pan / reset-axes kept
-    assert {"autoScale2d", "select2d", "lasso2d", "zoomIn2d", "zoomOut2d",
-            "toImage"} <= remove
-    assert not ({"zoom2d", "pan2d", "resetScale2d"} & remove)
+    # native reset/autoscale removed (the app supplies labeled Reset view / Full extent
+    # buttons); box-zoom, pan, and the +/- magnifiers are kept
+    assert {"resetScale2d", "autoScale2d", "select2d", "lasso2d", "toImage"} <= remove
+    assert not ({"zoom2d", "pan2d", "zoomIn2d", "zoomOut2d"} & remove)
 
 
 def test_water_fill_flat_top_on_sparse_steep_bank():
@@ -94,10 +98,74 @@ def test_water_fill_flat_top_on_sparse_steep_bank():
 
 
 def test_water_polygon_inserts_crossing():
-    x2, bed2, surf2 = xsplotly._water_polygon([0.0, 30.0], [0.0, 6.5], 2.0)
+    from easi import geomorph
+
+    span = geomorph.wetted_span([0.0, 30.0], [0.0, 6.5], 2.0)
+    x2, bed2, surf2 = xsplotly._water_polygon([0.0, 30.0], [0.0, 6.5], 2.0, span=span)
     assert 2.0 in bed2                                  # crossing bed value inserted
     assert x2[bed2.index(2.0)] == pytest.approx(30.0 * 2.0 / 6.5)  # true crossing (~9.2 ft)
     assert surf2 == [2.0, 2.0, 6.5]                     # flat at bf until the crossing, then bed
+
+
+def test_water_polygon_no_span_means_no_water():
+    x2, bed2, surf2 = xsplotly._water_polygon([0.0, 30.0], [0.0, 6.5], 2.0)
+    assert bed2 == surf2 == [0.0, 6.5]                  # surface hugs the bed (zero area)
+
+
+def test_water_fill_excludes_disconnected_pocket():
+    """A low pocket beyond the bank sits below bankfull but is walled off from the
+    channel: flow_width/flow_area never count it, so the plot must not shade it."""
+    stations = [-60.0, -50.0, -40.0, -20.0, 0.0, 20.0, 40.0]
+    elevs = [3.0, 0.5, 3.0, 3.0, 0.0, 3.0, 3.0]   # pocket at -50; channel V at 0
+    fw = xsplotly.figure(stations, elevs, thalweg=0.0, bankfull_stage=2.0, unit="m")
+    bed, surf = fw.data[2], fw.data[3]
+    # water present inside the channel span (+/-13.3 m around the thalweg)...
+    assert any(s > b + 1e-9 for xv, b, s in zip(bed.x, bed.y, surf.y) if -14 <= xv <= 14)
+    # ...but the pocket (and everything beyond the bank) stays dry: surface == bed
+    assert all(s == pytest.approx(b) for xv, b, s in zip(bed.x, bed.y, surf.y) if xv <= -40)
+
+
+def test_view_window_trims_high_valley_wall():
+    """A valley wall climbing far above the reference lines must not stretch the
+    default view: x stops where the terrain passes VIEW_HEADROOM x the highest
+    line, and y tops out at that ceiling (the wall exits the top of the plot)."""
+    stations = list(range(-100, 101, 2))
+    elevs = [1.5 if x < 0 else x * 0.2 for x in stations]   # flat left; 20 m wall right
+    fw = xsplotly.figure(stations, elevs, thalweg=0.0, bankfull_stage=2.0,
+                         floodplain_stage=None, unit="m")
+    x_lo, x_hi = fw.layout.xaxis.range
+    # ceiling = 1.5 * (2 x bankfull) = 6 m, crossed at x=+30 -> right side trimmed there
+    assert 29.0 <= x_hi <= 36.0
+    assert x_lo <= -100.0                       # flat side keeps its full extent
+    y_lo, y_hi = fw.layout.yaxis.range
+    assert y_hi < 8.0                           # capped near the 6 m ceiling, not 20 m
+
+
+def _annotations_by_text(fw):
+    return {a.text: a for a in fw.layout.annotations}
+
+
+def test_low_bank_label_shifts_left_when_overlapping_floodprone():
+    # low bank at the floodprone stage (the capped default): its label shifts left
+    # so it reads beside "floodprone" instead of overprinting it
+    s, e = _v_profile()
+    fw = xsplotly.figure(s, e, thalweg=0.0, bankfull_stage=2.0, floodplain_stage=4.0)
+    ann = _annotations_by_text(fw)
+    assert (ann["low bank"].xshift or 0) < 0
+    assert not ann["floodprone"].xshift and not ann["bankfull"].xshift
+
+
+def test_low_bank_label_shifts_left_when_overlapping_bankfull():
+    # the slope-break default can land at/near bankfull (a low bench)
+    s, e = _v_profile()
+    fw = xsplotly.figure(s, e, thalweg=0.0, bankfull_stage=2.0, floodplain_stage=2.0)
+    assert (_annotations_by_text(fw)["low bank"].xshift or 0) < 0
+
+
+def test_low_bank_label_normal_when_separated():
+    s, e = _v_profile()
+    fw = xsplotly.figure(s, e, thalweg=0.0, bankfull_stage=2.0, floodplain_stage=3.0)
+    assert not _annotations_by_text(fw)["low bank"].xshift
 
 
 def test_figure_source_caption():

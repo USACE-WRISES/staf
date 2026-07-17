@@ -31,6 +31,19 @@ def basin_characteristics(ctx) -> dict:
     if sin is not None:
         rows.append(["Sinuosity", f"{sin}"])
 
+    # EPA Level III ecoregion (bundled polygons, no network) — a location descriptor that helps
+    # interpret land-cover metrics (e.g. the natural riparian buffer is non-forest in grassland
+    # and arid ecoregions, so the detrital CPOM proxy counts grass/shrub there too).
+    try:
+        from . import geo
+        eco = geo.level3_at(getattr(ctx, "lat", None), getattr(ctx, "lon", None))
+    except Exception:  # noqa: BLE001 - resilience by design
+        eco = None
+    if eco and eco.get("name"):
+        code = eco.get("code")
+        rows.append(["EPA ecoregion (Level III)",
+                     f"{eco['name']} ({code})" if code else eco["name"]])
+
     # (Bankfull width/depth, entrenchment ratio, and bank-height ratio live in the
     # report's editable cross-section geometry table, not here.)
 

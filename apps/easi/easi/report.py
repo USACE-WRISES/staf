@@ -33,7 +33,6 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
         ("COMID", d.get("comid", "")),
         ("HUC12", d.get("huc12") or ""),
         ("Drainage area (km2)", d.get("drainage_area_sqkm", "")),
-        ("Watershed area (km2)", d.get("watershed_area_sqkm", "")),
         ("Reach length (ft)", d.get("reach_length_ft", "")),
         ("Snapped lat", d.get("snapped_lat", "")),
         ("Snapped lon", d.get("snapped_lon", "")),

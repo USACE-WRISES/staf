@@ -24,6 +24,19 @@ def test_basin_characteristics_from_ctx():
     assert all(isinstance(r[1], str) for r in rows)   # JSON-safe strings
 
 
-def test_basin_characteristics_empty_ctx():
+def test_basin_characteristics_only_ecoregion_when_no_physical(monkeypatch):
+    # no physical data at a CONUS point -> only the EPA ecoregion (location) row
+    from easi import geo
+    monkeypatch.setattr(geo, "level3_at",
+                        lambda lat, lon: {"code": "55", "name": "Eastern Corn Belt Plains"})
+    ctx = AnalysisContext(lat=40, lon=-83, comid=1)
+    rows = basin.basin_characteristics(ctx)["rows"]
+    assert [r[0] for r in rows] == ["EPA ecoregion (Level III)"]
+
+
+def test_basin_characteristics_empty_when_no_data(monkeypatch):
+    # off-CONUS / unresolved ecoregion + no physical data -> empty
+    from easi import geo
+    monkeypatch.setattr(geo, "level3_at", lambda lat, lon: None)
     ctx = AnalysisContext(lat=40, lon=-83, comid=1)
     assert basin.basin_characteristics(ctx)["rows"] == []

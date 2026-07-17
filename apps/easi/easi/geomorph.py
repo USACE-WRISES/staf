@@ -62,27 +62,26 @@ def top_width(stations: list[float], elevs: list[float], stage: float):
     return T, merged
 
 
-def flow_width(stations: list[float], elevs: list[float], stage: float,
-               *, thalweg_index: Optional[int] = None) -> tuple[float, bool]:
-    """Contiguous top width spanning the thalweg at a water-surface ``stage``.
+def wetted_span(stations: list[float], elevs: list[float], stage: float,
+                *, thalweg_index: Optional[int] = None
+                ) -> Optional[tuple[float, float, bool]]:
+    """Edge-of-water stations of the contiguous water body spanning the thalweg.
 
-    Rosgen edge-of-water to edge-of-water *across the channel*: from the thalweg,
-    walk outward each way to the first point that rises to/above ``stage``
-    (interpolating the exact crossing) and return ``right_edge - left_edge``.
-    Unlike :func:`top_width` (which sums every wetted segment across the whole
-    transect), this is the single water body containing the channel, so a
-    disconnected low pocket elsewhere is *not* counted and a dry bar *between* the
-    banks *is* (it is a width, not a wetted area). Returns ``(width_m,
-    edge_limited)``; ``edge_limited`` is True when a side never reaches the stage
-    within the sampled profile (DEM buffer too small). Width is 0 if ``stage`` is
-    at or below the thalweg.
+    The outward edge walk behind :func:`flow_width` / :func:`flow_area` (and the
+    plot water fill): from the thalweg, walk each way to the first point that
+    rises to/above ``stage`` and interpolate the exact crossing. Returns ``(left,
+    right, edge_limited)``; ``edge_limited`` is True when a side never reaches the
+    stage within the sampled profile (DEM buffer too small — that side's edge is
+    the profile end). Returns None when the profile is degenerate or ``stage`` is
+    at/below the thalweg (no water body). Unit-agnostic: works on any consistent
+    station/elevation coordinates.
     """
     n = len(stations)
     if n < 2:
-        return 0.0, False
+        return None
     ti = thalweg_index if thalweg_index is not None else min(range(n), key=lambda i: elevs[i])
     if elevs[ti] >= stage:
-        return 0.0, False
+        return None
 
     def edge(direction: int) -> tuple[float, bool]:
         i = ti
@@ -96,7 +95,62 @@ def flow_width(stations: list[float], elevs: list[float], stage: float,
 
     left, l_edge = edge(-1)
     right, r_edge = edge(+1)
-    return max(right - left, 0.0), (l_edge or r_edge)
+    return left, right, (l_edge or r_edge)
+
+
+def flow_width(stations: list[float], elevs: list[float], stage: float,
+               *, thalweg_index: Optional[int] = None) -> tuple[float, bool]:
+    """Contiguous top width spanning the thalweg at a water-surface ``stage``.
+
+    Rosgen edge-of-water to edge-of-water *across the channel*: the width of
+    :func:`wetted_span`. Unlike :func:`top_width` (which sums every wetted segment
+    across the whole transect), this is the single water body containing the
+    channel, so a disconnected low pocket elsewhere is *not* counted and a dry bar
+    *between* the banks *is* (it is a width, not a wetted area). Returns
+    ``(width_m, edge_limited)``; ``edge_limited`` is True when a side never
+    reaches the stage within the sampled profile (DEM buffer too small). Width is
+    0 if ``stage`` is at or below the thalweg.
+    """
+    span = wetted_span(stations, elevs, stage, thalweg_index=thalweg_index)
+    if span is None:
+        return 0.0, False
+    left, right, edge_limited = span
+    return max(right - left, 0.0), edge_limited
+
+
+# Display-window policy shared by the two mirrored plot renderers (xsplot PNG /
+# xsplotly interactive): show terrain up to VIEW_HEADROOM x the highest reference
+# line (floodprone or low bank), keeping at least VIEW_MIN_HALF_M metres of
+# station each side of the thalweg.
+VIEW_HEADROOM = 1.5
+VIEW_MIN_HALF_M = 15.0
+
+
+def display_window(stations: list[float], elevs: list[float], *,
+                   ceiling_stage: float, thalweg_index: Optional[int] = None,
+                   min_half: float = 15.0) -> tuple[float, float]:
+    """Station window around the thalweg for *display* — trims high valley sides.
+
+    Walk outward from the thalweg to the first interpolated crossing at/above
+    ``ceiling_stage``; a side that never reaches the ceiling keeps its full
+    extent. Each side keeps at least ``min_half`` (in station units, bounded by
+    the data extent) so entrenched profiles retain some bank context. Returns
+    ``(lo, hi)`` stations. Display-only: the profile itself (and every width/area
+    computation) is untouched. Unit-agnostic, like :func:`wetted_span`.
+    """
+    n = len(stations)  # len() so numpy arrays work (no ambiguous truthiness)
+    if n == 0:
+        return 0.0, 0.0
+    if n < 2:
+        return stations[0], stations[-1]
+    ti = thalweg_index if thalweg_index is not None else min(range(n), key=lambda i: elevs[i])
+    span = wetted_span(stations, elevs, ceiling_stage, thalweg_index=ti)
+    if span is None:  # ceiling at/below the thalweg — nothing sensible to trim
+        return stations[0], stations[-1]
+    left, right, _ = span
+    lo = min(left, stations[ti] - min_half)
+    hi = max(right, stations[ti] + min_half)
+    return max(lo, stations[0]), min(hi, stations[-1])
 
 
 def flow_area(stations: list[float], elevs: list[float], stage: float,
@@ -352,6 +406,78 @@ def top_of_bank_elev(stations: list[float], elevs: list[float]) -> Optional[floa
     return min(crest(-1), crest(+1))
 
 
+# Slope-break bank detection (drives the default low-bank height): walking outward
+# from the thalweg, the bank is the first *definitive* break in slope onto a flat
+# depositional surface (floodplain or bench). Tunable policy:
+BANK_ARM_RISE_M = 0.3      # must climb at least this above the thalweg ...
+BANK_ARM_RISE_FRAC = 0.25  # ... and this fraction of bankfull depth, before a flat counts
+BANK_FLAT_GRADE = 0.05     # |forward avg slope| under 5% reads as flat ...
+BANK_FLAT_REL = 0.25       # ... and it must be under 25% of the steepest climb so far
+BANK_FLAT_LEN_M = 3.0      # the flat must persist this long horizontally
+
+
+def bank_break_elev(stations: list[float], elevs: list[float], *, d_bf: float,
+                    thalweg_index: Optional[int] = None) -> Optional[float]:
+    """Lower first-bank elevation: the first definitive slope break onto a flat.
+
+    Walks outward from the thalweg computing point-to-point slopes. Once the
+    profile has climbed ``max(BANK_ARM_RISE_M, BANK_ARM_RISE_FRAC * d_bf)`` above
+    the thalweg (the implicit floor on the result), the first point whose forward
+    ``BANK_FLAT_LEN_M`` window is flat — |average slope| under ``BANK_FLAT_GRADE``
+    absolute AND under ``BANK_FLAT_REL`` of the steepest climbing segment walked so
+    far (a 4% shoulder after an 8% bank is not a *definitive* break) — marks that
+    side's bank: a climbing bank meeting a flat depositional surface. Low benches
+    count, so unlike :func:`top_of_bank_elev` (crest scan) the result can sit below
+    the bankfull stage. Returns the lower of the two sides' bank elevations; a side
+    with no break (valley wall, or the profile ends inside the flat window)
+    contributes nothing, and None is returned when neither side breaks.
+    """
+    n = len(stations)
+    if n < 5 or d_bf is None or d_bf <= 0:
+        return None
+    ti = thalweg_index if thalweg_index is not None else min(range(n), key=lambda i: elevs[i])
+    arm = elevs[ti] + max(BANK_ARM_RISE_M, BANK_ARM_RISE_FRAC * float(d_bf))
+
+    def z_ahead(i: int, direction: int) -> Optional[float]:
+        # elevation BANK_FLAT_LEN_M outward of point i (linear interpolation), or
+        # None when the profile ends inside the window
+        target = stations[i] + direction * BANK_FLAT_LEN_M
+        j = i
+        while 0 <= j + direction < n:
+            k = j + direction
+            if (stations[k] - target) * direction >= 0:  # k is at/past the target
+                x0, x1 = stations[j], stations[k]
+                if x1 == x0:
+                    return elevs[k]
+                t = (target - x0) / (x1 - x0)
+                return elevs[j] + t * (elevs[k] - elevs[j])
+            j = k
+        return None
+
+    def break_elev(direction: int) -> Optional[float]:
+        max_climb = 0.0
+        i = ti
+        while 0 <= i + direction < n:
+            j = i + direction
+            run = abs(stations[j] - stations[i])
+            rise = elevs[j] - elevs[i]           # positive = climbing away from the channel
+            if run > 0 and rise > 0:
+                max_climb = max(max_climb, rise / run)
+            i = j
+            if elevs[i] < arm or max_climb <= 0:
+                continue
+            z_end = z_ahead(i, direction)
+            if z_end is None:                    # window past the profile end
+                return None
+            avg = abs(z_end - elevs[i]) / BANK_FLAT_LEN_M
+            if avg < BANK_FLAT_GRADE and avg < BANK_FLAT_REL * max_climb:
+                return elevs[i]
+        return None
+
+    found = [b for b in (break_elev(-1), break_elev(+1)) if b is not None]
+    return min(found) if found else None
+
+
 def bank_height_ratio(stations: list[float], elevs: list[float],
                       d_bf: float) -> Optional[float]:
     """Bank-height ratio = (lowest top-of-bank - thalweg) / bankfull depth.
@@ -435,7 +561,10 @@ def summarize_profile(stations: list[float], elevs: list[float], da_sqkm: float,
     Bieger regional bankfull area (``bankfull_area_m2``, solved on this profile via
     :func:`stage_for_area`); without that target it falls back to thalweg + the Bieger
     regional depth (``bankfull`` (width, depth) or the national ``bankfull_geometry``).
-    Low-bank stage = the lower top-of-bank, clamped to bankfull. ER/BHR/widths are
+    Low-bank stage (exported as ``low_bank_stage_m``) = the first definitive slope
+    break onto a flat depositional surface (:func:`bank_break_elev`; may sit below
+    bankfull), capped at the floodprone stage (thalweg + 2x bankfull depth); crest
+    scan clamped to [bankfull, floodprone] when no break exists. ER/BHR/widths are
     measured on this profile (the editable cross-section + metrics share these).
     Returns the profile plus the keys the editable geometry block consumes.
     """
@@ -454,11 +583,23 @@ def summarize_profile(stations: list[float], elevs: list[float], da_sqkm: float,
     else:
         bankfull_stage = thalweg + d_bf
     tob = top_of_bank_elev(stations, elevs)
-    low_bank_stage = max(tob if tob is not None else bankfull_stage, bankfull_stage)
+    # Default low-bank stage: the first definitive slope break onto a flat
+    # depositional surface (bank_break_elev). Low benches count, so this can sit
+    # below the bankfull stage; the floodprone stage (2x max bankfull depth,
+    # Rosgen) stays the ceiling for the *default*. Where no break exists (valley
+    # walls, flat/short profiles) fall back to the crest scan with the legacy
+    # [bankfull, floodprone] clamp. The user can still edit the height freely.
+    brk = bank_break_elev(stations, elevs, d_bf=d_bf, thalweg_index=ti)
+    if brk is not None:
+        low_bank_stage = min(brk, thalweg + 2.0 * d_bf)
+    else:
+        low_bank_stage = min(max(tob if tob is not None else bankfull_stage, bankfull_stage),
+                             thalweg + 2.0 * d_bf)
     d = derive_from_stages(stations, elevs, thalweg=thalweg,
                            bankfull_stage=bankfull_stage, floodplain_stage=low_bank_stage)
     out: dict = {"profile": {"stations": list(stations), "elevs": list(elevs)},
                  "thalweg": thalweg, "fp_stage_m": thalweg + 2.0 * d_bf,
+                 "low_bank_stage_m": low_bank_stage,
                  "bankfull_width_m": d.get("bankfull_width_m") or round(w_bf, 1),
                  "bankfull_depth_m": round(d_bf, 2),
                  "flood_prone_width_m": d.get("flood_prone_width_m"),
