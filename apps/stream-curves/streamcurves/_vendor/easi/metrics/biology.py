@@ -33,7 +33,8 @@ def invasives(ctx: AnalysisContext) -> MetricResult:
         txt += f": {sample}"
     return MetricResult(INVASIVES_ID, value=n, value_text=txt, rating=rating,
                         confidence="M", source=f"USGS NAS ({scope})",
-                        note="presence-based proxy")
+                        note="presence-based proxy",
+                        scoring={"inputs": {"count": n}, "value": n, "model": "count"})
 
 
 def barriers(ctx: AnalysisContext) -> MetricResult:
@@ -46,7 +47,8 @@ def barriers(ctx: AnalysisContext) -> MetricResult:
     return MetricResult(BARRIERS_ID, value=n,
                         value_text=f"{n} dam(s) within ~1 mile (NID)", rating=rating,
                         confidence="M", source="USACE NID (proximity)",
-                        note="proximity proxy; upstream/downstream network trace refines")
+                        note="proximity proxy; upstream/downstream network trace refines",
+                        scoring={"inputs": {"count": n}, "value": n, "model": "count"})
 
 
 def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
@@ -62,7 +64,9 @@ def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
                                    f"(riparian {rip}%, order {so})",
                         rating=rating, confidence="L",
                         source="NHDPlus order/slope + riparian (proxy)",
-                        note="habitat-complexity proxy; field survey refines")
+                        note="habitat-complexity proxy; field survey refines",
+                        scoring={"inputs": {"riparian": rip, "stream_order": so},
+                                 "value": round(score, 2), "model": "combined"})
 
 
 def biological_integrity(ctx: AnalysisContext) -> MetricResult:
@@ -84,7 +88,9 @@ def biological_integrity(ctx: AnalysisContext) -> MetricResult:
             BIOINTEGRITY_ID, value=None,
             value_text="no landscape data — screening default",
             rating="Fair", confidence="L", source="default (no national IBI source)",
-            note="not a measured IBI; no inputs available — overrideable")
+            note="not a measured IBI; no inputs available — overrideable",
+            scoring={"inputs": {"riparian": rip, "impervious": imp, "agriculture": ag,
+                                "road_density": rd}, "value": None, "model": "combined"})
 
     support = min((rip or 0.0) / 60.0, 1.0)
     stress = (0.45 * min((imp or 0.0) / 25.0, 1.0)
@@ -99,4 +105,6 @@ def biological_integrity(ctx: AnalysisContext) -> MetricResult:
         rating=rating, confidence="L",
         source="Modeled habitat/stressor surrogate (landscape composite)",
         note="not a measured IBI — low-confidence national surrogate; "
-             "override with state biomonitoring/IBI where available")
+             "override with state biomonitoring/IBI where available",
+        scoring={"inputs": {"riparian": rip, "impervious": imp, "agriculture": ag,
+                            "road_density": rd}, "value": round(score, 2), "model": "combined"})

@@ -93,15 +93,20 @@ async def assess_only(ctx_inputs: dict,
                       metric_ids: Optional[list[str]] = None,
                       sources: Optional[dict[str, str]] = None,
                       overrides: Optional[dict[str, str]] = None,
+                      prefetch: bool = True,
                       progress: Optional[dict] = None) -> dict:
     """Run the selected metric adapters on a prior delineation.
 
+    ``prefetch`` (default True) has the multi-source metrics compute every source
+    variant up front (no extra network) so the single-site UI can swap sources
+    instantly; the batch path passes ``prefetch=False`` (its report is read-only).
     ``progress`` (a shared ``{"done","total"}`` dict) is updated as adapters
     finish so the UI can show live "X/N metrics computed" feedback.
     """
     ctx = _ctx_from_inputs(ctx_inputs)
     report = await assessment.assess(ctx, metric_ids=metric_ids, sources=sources,
-                                     overrides=overrides, progress=progress)
+                                     overrides=overrides, prefetch=prefetch,
+                                     progress=progress)
     return {"status": "ok", "report": report, "huc12": ctx.huc12}
 
 

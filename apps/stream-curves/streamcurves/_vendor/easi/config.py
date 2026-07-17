@@ -79,6 +79,19 @@ def metrics_by_id() -> dict[str, dict]:
     return {m["metricId"]: m for m in easi_metrics()["metrics"]}
 
 
+def criteria_bands(mid: str, indicator: str | None = None) -> dict:
+    """Good/Fair/Poor criteria strings for a metric, indicator-aware.
+
+    The catchment-hydrology land-cover metric is scored on whichever indicator is more
+    limiting for the watershed: the ``agriculture`` indicator uses its own breakpoints
+    (``criteriaAgriculture``); every other metric/indicator uses the default ``criteria``.
+    """
+    meta = metrics_by_id().get(mid, {})
+    if indicator == "agriculture" and meta.get("criteriaAgriculture"):
+        return meta["criteriaAgriculture"]
+    return meta.get("criteria") or {}
+
+
 # --- Per-metric automation registry (verified plan; keyed by metricId) ---
 # scale: 'W' watershed, 'R' reach, 'W/R' both
 # confidence: H / M / M/L / L   |   proxy/overrideable: bool
@@ -174,8 +187,9 @@ PLANNED_ALT_SOURCE: dict[str, str] = {
 # the STAF source data stays untouched; keep one short sentence per metric.
 METRIC_DEFINITIONS: dict[str, str] = {
     "catchment-hydrology-impervious-surface-cover":
-        "Share of the contributing watershed covered by impervious surfaces (roads, roofs, "
-        "parking), which speeds runoff and can degrade flow and water quality.",
+        "Watershed land-cover pressure on catchment hydrology. Scored automatically on the more "
+        "limiting of two indicators: impervious cover (speeds runoff) or agricultural cover "
+        "(where farming, not pavement, is the dominant hydrologic alteration).",
     "surface-water-storage-percent-wetlands-in-watershed":
         "Share of the watershed that is wetland, which stores water, buffers peak flows, and "
         "sustains baseflow.",
@@ -213,8 +227,9 @@ METRIC_DEFINITIONS: dict[str, str] = {
         "Whether stream temperature stays within ranges suitable for aquatic life (observed "
         "data, or riparian-shade/climate surrogate).",
     "carbon-processing-detrital-processing-cpom-retention-shredders":
-        "Capacity to capture and process coarse organic matter (leaf litter), supported by "
-        "riparian forest input.",
+        "Capacity to capture and process coarse organic matter (leaf litter and detritus), "
+        "supported by natural riparian vegetation (forest, shrub, grassland, or wetland) in the "
+        "stream buffer.",
     "nutrient-cycling-nitrogen-and-phosphorus-concentrations":
         "Whether nutrient (N and P) concentrations stay near reference levels rather than "
         "driving enrichment.",
@@ -258,6 +273,9 @@ METRIC_CALCULATIONS: dict[str, str] = {
         "Composite of stream power, soil erodibility, and riparian condition.",
     "sediment-continuity-sediment-supply-potential-watershed-banks":
         "Composite of watershed- and channel-bank sediment-supply potential.",
+    "carbon-processing-detrital-processing-cpom-retention-shredders":
+        "Percent of the 100 m riparian buffer in natural vegetation (forest + shrub + grassland "
+        "+ wetland).",
     "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl":
         "From the reach's Clean Water Act impaired-waters listing (303(d)/305(b)/TMDL).",
     "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity":

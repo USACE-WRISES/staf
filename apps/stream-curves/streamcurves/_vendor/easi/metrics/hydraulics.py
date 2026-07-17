@@ -68,13 +68,15 @@ def floodplain_engagement(ctx: AnalysisContext) -> MetricResult:
             rating=rating, confidence="L" if g.get("edge_limited") else "M",
             source="USGS 3DEP bank-height ratio (vertical incision → recurrence)",
             note="recurrence proxy from bank height above bankfull; "
-                 "gage/regional flood-frequency regression refines")
+                 "gage/regional flood-frequency regression refines",
+            scoring={"inputs": {"bhr": bhr}, "value": t_years, "model": "scalar"})
 
     return MetricResult(
         FLOODPLAIN_ENGAGEMENT_ID, value=None,
         value_text="insufficient terrain data — screening default",
         rating="Fair", confidence="L", source="default (no 3DEP cross-section)",
-        note="no usable cross-section; conservative screening default — overrideable")
+        note="no usable cross-section; conservative screening default — overrideable",
+        scoring={"inputs": {"bhr": bhr}, "value": None, "model": "scalar"})
 
 
 def rate_entrenchment(er):
@@ -112,7 +114,8 @@ def floodplain_access(ctx: AnalysisContext) -> MetricResult:
                         value_text=f"entrenchment ratio {er} — floodprone width / "
                                    f"bankfull width (representative cross-section)",
                         rating=rating, confidence="L" if edge else "M",
-                        source="USGS 3DEP cross-sections (Rosgen entrenchment ratio)", note=note)
+                        source="USGS 3DEP cross-sections (Rosgen entrenchment ratio)", note=note,
+                        scoring={"inputs": {"er": er}, "value": er, "model": "scalar"})
 
 
 def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
@@ -127,7 +130,8 @@ def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
     return MetricResult(LOW_FLOW_ID, value=fc,
                         value_text=f"{desc} (NHD FCODE {fc})", rating=rating,
                         confidence="L", source="NHDPlus flow permanence (FCODE)",
-                        note="permanence proxy for low-flow wetted connectivity")
+                        note="permanence proxy for low-flow wetted connectivity",
+                        scoring={"inputs": {"fcode": fc}, "value": fc, "model": "categorical"})
 
 
 def hyporheic(ctx: AnalysisContext) -> MetricResult:
@@ -144,4 +148,6 @@ def hyporheic(ctx: AnalysisContext) -> MetricResult:
                                    f"(slope {slope}, sinuosity {sin})",
                         rating=rating, confidence="L",
                         source="NHDPlus slope + sinuosity (proxy)",
-                        note="bedform/exchange proxy; field/SDA refinement later")
+                        note="bedform/exchange proxy; field/SDA refinement later",
+                        scoring={"inputs": {"slope": slope, "sinuosity": sin},
+                                 "value": round(score, 2), "model": "combined"})

@@ -48,6 +48,45 @@ def riparian_forest_pct(ctx: "AnalysisContext") -> Optional[float]:
     return round(sum(v or 0.0 for v in vals), 2)
 
 
+# Natural riparian vegetation classes in the 100 m buffer (StreamCat *wsrp100). Forest, shrub,
+# grassland, and wetland are the natural vegetative cover that supplies coarse organic matter;
+# developed, impervious, barren, water, and agriculture (crop/hay) are excluded (not natural buffer).
+_RIPARIAN_VEG_KEYS = {
+    "forest": ("pctconif2019wsrp100", "pctdecid2019wsrp100", "pctmxfst2019wsrp100"),
+    "shrub": ("pctshrb2019wsrp100",),
+    "grassland": ("pctgrs2019wsrp100",),
+    "wetland": ("pctwdwet2019wsrp100", "pcthbwet2019wsrp100"),
+}
+
+
+def riparian_veg_breakdown(ctx: "AnalysisContext") -> Optional[dict]:
+    """Per-group natural-vegetation cover in the 100 m riparian buffer, or None if no data.
+
+    Returns ``{forest, shrub, grassland, wetland, total}`` (percent). A group with no data
+    contributes 0; the result is None only when every class is absent.
+    """
+    s = sc(ctx)
+    groups: dict[str, float] = {}
+    any_present = False
+    for grp, keys in _RIPARIAN_VEG_KEYS.items():
+        vals = [s.get(k) for k in keys]
+        if any(v is not None for v in vals):
+            any_present = True
+        groups[grp] = round(sum(v or 0.0 for v in vals), 1)
+    if not any_present:
+        return None
+    groups["total"] = round(sum(groups[g] for g in _RIPARIAN_VEG_KEYS), 1)
+    return groups
+
+
+def riparian_natural_veg_pct(ctx: "AnalysisContext") -> Optional[float]:
+    """% of the 100 m riparian buffer in natural vegetation (forest + shrub + grassland +
+    wetland) as a CPOM / buffer-condition proxy. Unlike forest-only, it credits the natural
+    buffer of grassland and arid/xeric ecoregions."""
+    b = riparian_veg_breakdown(ctx)
+    return None if b is None else b["total"]
+
+
 def ag_pct(ctx: "AnalysisContext") -> Optional[float]:
     s = sc(ctx)
     vals = [s.get("pctcrop2019ws"), s.get("pcthay2019ws")]
@@ -78,7 +117,17 @@ class MetricResult:
     source: str = ""                  # data source label for the report
     status: str = "ok"                # 'ok' | 'unavailable' | 'override'
     note: str = ""
+    detail: Optional[dict] = None     # adapter-specific extra render data (e.g. land-cover indicators)
+    # Transparency trace for the worksheet "Scoring method" panel: the raw inputs the rating used,
+    # the computed value, and the method key (easi.methods mode / source variant). Additive — the
+    # rating/value math is unchanged; see easi/methods.py.
+    scoring: Optional[dict] = None    # {"inputs": {key: value|None}, "value": .., "model": ..}
     is_override: bool = False
+    # Multi-source metrics (config.SOURCE_OPTIONS) with ctx.extras["prefetch_variants"]
+    # set: every computed variant keyed by source value, plus which key produced THIS
+    # result — lets the UI swap sources instantly (assessment.apply_source_choices).
+    variants: Optional[dict[str, "MetricResult"]] = None
+    source_key: Optional[str] = None
 
 
 class MetricAdapter(Protocol):
