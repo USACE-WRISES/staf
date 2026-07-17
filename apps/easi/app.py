@@ -230,7 +230,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=33"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=34"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="report-controls.js", defer=""),
@@ -857,17 +857,12 @@ def _report_body(d, rep, notes, downloads):
         _basin_block(d, rep),
         _xs_readonly_block(rep),
         ui.div("Metrics", class_="easi-section-title"),
-        ui.div("Use the checkboxes to show more scoring detail. Ratings and notes are "
-               "edited in the Assessment worksheet.", class_="easi-instr"),
         _metric_toolbar(),
         _metric_table(rep.get("metricRows") or [], notes,
                       outcomes=rep.get("outcomes"),
                       eci=rep.get("ecosystemConditionIndex")),
         ui.div("Summary plots", class_="easi-section-title"),
         _summary_plots(rep),
-        ui.p("Generated from national datasets — a desktop screening estimate with "
-             "per-metric confidence, not a field-validated assessment.",
-             class_="easi-disclaimer"),
         downloads,
         id="easi-report", class_="show-slider",   # slider on by default (report-controls.js
     )                                             # reconciles with any saved preference)
@@ -879,8 +874,10 @@ def _report_modal(res, notes):
     d, rep = res["delineation"], res.get("report") or {}
     return ui.modal(
         _report_body(d, rep, notes, _dl_buttons()),
-        # ✕ lives in the modal header so it stays put when the body scrolls.
+        # ✕ lives in the modal header so it stays put when the body scrolls; the muted
+        # hint beside it cues that closing returns to the editable Assessment worksheet.
         title=ui.TagList("EASI Screening Report",
+                         ui.span("Close to review the Assessment", class_="easi-modal-hint"),
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
         size="xl", easy_close=True, footer=None,
     )
@@ -1430,7 +1427,14 @@ def server(input, output, session):
         _overrides.set({}); _notes.set({}); _source_choice.set({})
         _geom_owned.set(set()); _geom_text.set({}); _xs_sel.set(None)
         _xs_unit_prev.set("ft"); current_fn.set(0)
-        current_step.set(STEP_ASSESS)   # stay on the worksheet (no auto-modal)
+        # Fresh run complete: auto-open the screening report (same path as "Open report",
+        # so closing it lands on the Assessment worksheet either way). MUST stay isolated:
+        # _show_report_modal reads export_result() (base_result/scored/notes calcs), and
+        # without isolate this effect would gain those as dependencies and re-run — wiping
+        # overrides/notes and re-opening the modal — on every later edit.
+        current_step.set(STEP_REPORT)
+        with reactive.isolate():
+            _show_report_modal()
 
     # ---- step navigation ----
     @reactive.effect
@@ -2055,6 +2059,8 @@ def server(input, output, session):
                 # its CSS animation (the quarter-turn stutter).
                 return ui.div(ui.div(class_="easi-spinner"),
                               ui.output_text("assess_stage_label", inline=True),
+                              ui.div("The screening report opens automatically when it's ready.",
+                                     class_="easi-fn-compute-sub"),
                               class_="easi-fn-compute")
             if st == "error":
                 return ui.div(

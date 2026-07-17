@@ -233,7 +233,7 @@ h1, h2, h3, h4, h5, h6, .card-header { font-family: var(--font-head); }
   border: 1px solid var(--card-border); border-radius: 8px; padding: 8px;
   background: #fff; text-align: center; min-width: 0;
   display: flex; flex-direction: column; justify-content: flex-start;
-  flex: 1; min-height: 300px;              /* fill the column height (safety floor 300px) */
+  flex: 1; min-height: 200px;              /* fill the column height (safety floor) */
 }
 .easi-xsection img { max-width: 100%; height: auto; }
 .easi-xsection-cap { font-size: 11px; color: #667; margin: 4px 0 0; }
@@ -566,6 +566,12 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   color: #66708a; padding: 2px 9px; cursor: pointer;
 }
 .easi-modal-x:hover { color: var(--eci-title); }
+/* muted cue beside the X: closing the report returns to the Assessment worksheet */
+.easi-modal-hint {
+  position: absolute; top: 14px; right: 46px; z-index: 5;
+  font-size: 11.5px; color: #66708a; pointer-events: none; white-space: nowrap;
+}
+@media (max-width: 760px) { .easi-modal-hint { display: none; } }
 
 /* ===== Batch workspace (full-width overlay below the 50px header) ===== */
 .easi-batch { position: absolute; top: 50px; left: 0; right: 0; bottom: 0;
@@ -723,6 +729,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 /* compute / empty state */
 .easi-fn-compute { display: flex; flex-direction: column; align-items: center; gap: 12px;
   padding: 60px 20px; color: #55607a; font-size: 14px; }
+.easi-fn-compute-sub { font-size: 12px; color: #8a93a3; margin-top: -6px; }
 /* sticky navigation footer */
 .sfari-fn-footer { position: sticky; bottom: 0; z-index: 5; margin-top: auto;
   background: var(--surface-soft); padding: 9px 0 10px;

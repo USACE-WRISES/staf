@@ -70,6 +70,22 @@ def test_report_body_sections_and_notes():
     assert "show-slider" in body                     # slider visual on by default
     assert "easi-rate-sel" not in body               # fully read-only
     assert "data-rep-expand" not in body             # old expander controls are gone
+    # boilerplate removed from the popup (the PDF keeps its own disclaimer copy)
+    assert "Use the checkboxes" not in body
+    assert "Generated from national datasets" not in body
+    assert "easi-instr" not in body
+
+
+def test_report_modal_has_close_hint():
+    # the single-site modal header carries the ✕ plus a muted "close to review" cue
+    res = {"delineation": {"gnis_name": "Test Creek", "snapped_lat": 44.0,
+                           "snapped_lon": -123.0, "reach_length_ft": 1000, "comid": 1},
+           "report": {"metricRows": [], "outcomes": _outcomes(), "functionScores": {},
+                      "subIndices": {"physical": 0.6, "chemical": 0.7, "biological": 0.5},
+                      "ecosystemConditionIndex": 0.6}}
+    m = str(app._report_modal(res, {}))
+    assert "easi-modal-hint" in m and "Close to review the Assessment" in m
+    assert "close_modal_x" in m
 
 
 def test_xs_readonly_block():
