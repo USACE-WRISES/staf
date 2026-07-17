@@ -587,7 +587,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-nav-steps { padding: 10px 14px 0; }
 .sfari-nav-steps .easi-steps { margin-bottom: 4px; }
 /* the 240px rail is too narrow for four equal-width steps — size each to its label so
-   "Field review" stays on one line like on the Identify/Basin pane */
+   "Assessment" stays on one line like on the Identify/Basin pane */
 .sfari-nav-steps .easi-step { flex: 1 1 auto; white-space: nowrap; padding: 5px 4px 6px; }
 .sfari-nav-cat { font-family: var(--font-head); font-size: 12px; font-weight: 700;
   text-transform: uppercase; letter-spacing: .05em; color: #98a1b1; padding: 11px 14px 2px; }

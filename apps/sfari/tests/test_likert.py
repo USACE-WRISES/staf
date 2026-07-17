@@ -27,3 +27,15 @@ def test_numeric_map_matches_doc():
     assert config.LIKERT_NUMERIC == {
         "Strongly Agree": 14, "Agree": 11, "Neutral": 8, "Disagree": 5, "Strongly Disagree": 2
     }
+
+
+def test_agricultural_cover_ladder():
+    # Alternate catchment-hydrology indicator: watershed agriculture, LOW direction
+    # (Good <25 / Fair 25-50 / Poor >50 in EASI terms). Flagged proxy (calibrate regionally).
+    from sfari import likert
+    key = "catchment-hydrology-agricultural-cover"
+    assert likert.suggest(key, 10) == "Strongly Agree"     # <15
+    assert likert.suggest(key, 20) == "Agree"              # 15-25
+    assert likert.suggest(key, 40) == "Disagree"           # 25-50
+    assert likert.suggest(key, 70) == "Strongly Disagree"  # >50
+    assert likert.is_proxy(key) is True
