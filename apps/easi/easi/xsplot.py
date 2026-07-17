@@ -26,7 +26,7 @@ def _placeholder(msg: str = "cross-section unavailable") -> bytes:
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots(figsize=(6.5, 2.6))
+    fig, ax = plt.subplots(figsize=(6.5, 2.15))
     ax.text(0.5, 0.5, msg, ha="center", va="center", fontsize=11, color="#888")
     ax.axis("off")
     out = io.BytesIO()
@@ -95,7 +95,9 @@ def cross_section_png(stations, elevs, *, bankfull_stage: Optional[float] = None
             if lb_h is not None:
                 ymax = max(ymax, lb_h)
 
-        fig, ax = plt.subplots(figsize=(6.5, 2.6))
+        # 2.15 in tall + tight pads: trims the white bands above the title / below the
+        # x-label so the report's cross-section row takes less vertical space.
+        fig, ax = plt.subplots(figsize=(6.5, 2.15))
         ax.fill_between(xs, h, h.min() - 0.5, color="#efe9e1", zorder=1)        # ground
         ax.plot(xs, h, color="#5b4a3a", lw=1.6, zorder=3)                       # bed line
         ax.axhline(0.0, color="#b9aa97", lw=0.8, ls=":", zorder=2)             # bed datum
@@ -137,11 +139,11 @@ def cross_section_png(stations, elevs, *, bankfull_stage: Optional[float] = None
 
         ax.set_xlabel(f"Station ({ul})", fontsize=9)
         ax.set_ylabel(f"Height above bed ({ul})", fontsize=9)
-        ax.set_title(title, fontsize=10)
+        ax.set_title(title, fontsize=10, pad=5)
         ax.tick_params(labelsize=8)
         ax.set_xlim(x_lo, x_hi)
         ax.set_ylim(base, ymax + pady)
-        fig.tight_layout()
+        fig.tight_layout(pad=0.4)
         if source:  # small data-source caption, bottom-right (e.g., "USGS 3DEP 1 m DEM")
             fig.text(0.995, 0.01, source, ha="right", va="bottom", fontsize=6.5, color="#999")
         out = io.BytesIO()
