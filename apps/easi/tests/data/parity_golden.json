@@ -1,10 +1,10 @@
 {
   "computedCount": 19,
-  "ecosystemConditionIndex": 0.73,
+  "ecosystemConditionIndex": 0.72,
   "functionScores": {
     "bed-composition-bedform-dynamics": 8,
     "carbon-processing": 8,
-    "catchment-hydrology": 13,
+    "catchment-hydrology": 8,
     "channel-evolution": 13,
     "channel-floodplain-dynamics": 8,
     "community-dynamics": 13,
@@ -24,10 +24,10 @@
   },
   "metrics": [
     {
-      "functionScore": 13,
-      "index": 0.85,
+      "functionScore": 8,
+      "index": 0.545,
       "metricId": "catchment-hydrology-impervious-surface-cover",
-      "rating": "Good",
+      "rating": "Fair",
       "status": "ok"
     },
     {
@@ -166,8 +166,8 @@
   ],
   "subIndices": {
     "biological": 0.76,
-    "chemical": 0.74,
-    "physical": 0.7
+    "chemical": 0.73,
+    "physical": 0.68
   },
   "totalCount": 20
 }

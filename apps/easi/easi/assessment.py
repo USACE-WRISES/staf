@@ -28,6 +28,7 @@ async def assess(ctx: AnalysisContext, *,
                  metric_ids: Optional[list[str]] = None,
                  sources: Optional[dict[str, str]] = None,
                  overrides: Optional[dict[str, str]] = None,
+                 prefetch: bool = True,
                  progress: Optional[dict] = None) -> dict:
     """Score the selected EASI metrics for ``ctx``.
 
@@ -35,12 +36,16 @@ async def assess(ctx: AnalysisContext, *,
     unselected ones appear as ``status="excluded"`` and drop out of the rollup.
     ``sources`` maps metricId -> chosen data source for the few multi-source
     metrics (see ``config.SOURCE_OPTIONS``). ``overrides`` force Good/Fair/Poor.
+    ``prefetch`` (default True) asks the multi-source adapters to compute EVERY
+    source variant from data already in hand (no extra network) so the UI can swap
+    sources instantly via ``apply_source_choices``; the batch path passes False.
     ``progress`` is an optional shared dict updated as adapters finish
     (``{"done": int, "total": int}``) so the UI can show live "X/N" feedback.
     """
     overrides = {k: v for k, v in (overrides or {}).items() if v in VALID}
     selected = set(metric_ids) if metric_ids is not None else set(registry.REGISTRY)
     ctx.extras["source_choices"] = dict(sources or {})
+    ctx.extras["prefetch_variants"] = bool(prefetch)
     if progress is not None:
         progress["done"] = 0
         progress["total"] = sum(1 for m in registry.REGISTRY if m in selected)
@@ -127,17 +132,35 @@ async def assess(ctx: AnalysisContext, *,
             idx = scoring.rating_to_index(rating, meta.get("indexMidpoints"))
             fscore = scoring.function_score(idx)
 
-        rows.append({
+        # An adapter may attach a `detail` dict for a richer tooltip. Two shapes exist: the
+        # catchment-hydrology land-cover indicators (carries "governing", criteria follow it) and
+        # the detrital riparian-vegetation breakdown (kind="riparian_veg").
+        detail = res.detail if res else None
+        land_cover = detail if (detail and "governing" in detail) else None
+        rip_veg = detail if (detail and detail.get("kind") == "riparian_veg") else None
+        bands = config.criteria_bands(mid, (land_cover or {}).get("governing"))
+        row = {
             "metricId": mid, "name": meta["name"], "discipline": meta["discipline"],
             "functionId": meta["functionId"], "functionName": meta["functionName"],
             "scale": info.get("scale"), "confidence": confidence,
             "rating": rating, "generatedRating": generated,
             "index": round(idx, 3) if idx is not None else None,
             "functionScore": fscore, "valueText": value_text,
-            "criteria": meta.get("criteria", {}).get(rating, "") if rating in VALID else "",
+            "criteria": bands.get(rating, "") if rating in VALID else "",
+            "criteriaBands": bands,
+            "landCover": land_cover,
+            "ripVeg": rip_veg,
+            "scoring": res.scoring if res is not None else None,
             "source": source, "status": status, "note": note,
             "overrideable": bool(info.get("overrideable")),
-        })
+        }
+        # Multi-source metrics carry every prefetched variant so the UI can swap
+        # sources instantly (apply_source_choices); sourceChoice is the default used.
+        if res is not None and res.variants:
+            row["sourceVariants"] = {k: _serialize_variant(mid, meta, vr)
+                                     for k, vr in res.variants.items()}
+            row["sourceChoice"] = res.source_key
+        rows.append(row)
 
     result = _finalize(rows, len(meta_by_id), overrides)
     if cross_section:
@@ -163,15 +186,20 @@ def _xsection_geom_block(geom: dict, slope, fcode=None) -> Optional[dict]:
     d_bf, thalweg = geom.get("bankfull_depth_m"), geom.get("thalweg")
     if not profile or thalweg is None or not d_bf:
         return None
+    fp_stage = geom.get("fp_stage_m") or (thalweg + 2.0 * d_bf)
+    # Default low-bank stage: the slope-break bank exported by summarize_profile
+    # (first definitive flattening onto a depositional surface — a low bench can
+    # put it below bankfull), already capped at the floodprone stage. Legacy geom
+    # dicts without the export fall back to the crest scan clamped to [bankfull,
+    # floodprone]. The user can edit the height freely either way.
+    lb_stage = geom.get("low_bank_stage_m")
+    if lb_stage is None:
+        lb_stage = min(max(geom.get("top_of_bank_m") or fp_stage, thalweg + d_bf), fp_stage)
     return {
         "stations": list(profile["stations"]), "elevs": list(profile["elevs"]),
         "thalweg": thalweg, "slope": slope,
         "bankfull_stage": thalweg + d_bf,
-        # floodplain engages at/above bankfull — never below it (low measured banks +
-        # a regional bankfull estimate can otherwise put top-of-bank under bankfull),
-        # so the default bank-height ratio (engagement frequency) stays >= 1.
-        "floodplain_stage": max(geom.get("top_of_bank_m") or geom.get("fp_stage_m")
-                                or (thalweg + d_bf), thalweg + d_bf),
+        "floodplain_stage": lb_stage,
         "bankfull_width_m": geom.get("bankfull_width_m"),
         "bankfull_depth_m": geom.get("bankfull_depth_m"),
         "flood_prone_width_m": geom.get("flood_prone_width_m"),
@@ -323,6 +351,67 @@ def _finalize(rows: list[dict], total_count: int, overrides_applied) -> dict:
     }
 
 
+def _serialize_variant(mid: str, meta: dict, v) -> dict:
+    """Serialize one prefetched source variant (a MetricResult) into the compact
+    dict the worksheet card and read-only report read. ``available`` is False when
+    that source produced no rating (its ``<option>`` is disabled in the UI)."""
+    rating = v.rating
+    idx = fscore = None
+    if rating in VALID:
+        idx = scoring.rating_to_index(rating, meta.get("indexMidpoints"))
+        fscore = scoring.function_score(idx)
+    detail = v.detail
+    land_cover = detail if (detail and "governing" in detail) else None
+    rip_veg = detail if (detail and detail.get("kind") == "riparian_veg") else None
+    bands = config.criteria_bands(mid, (land_cover or {}).get("governing"))
+    return {
+        "rating": rating, "generatedRating": rating,
+        "index": round(idx, 3) if idx is not None else None,
+        "functionScore": fscore, "valueText": v.value_text,
+        "source": v.source, "confidence": v.confidence, "note": v.note,
+        "status": v.status,
+        "criteria": bands.get(rating, "") if rating in VALID else "",
+        "criteriaBands": bands, "landCover": land_cover, "ripVeg": rip_veg,
+        "scoring": v.scoring,
+        "available": rating in VALID,
+    }
+
+
+# fields a chosen source variant overwrites on its row (the generated view; a later
+# rescore() lets an explicit override win)
+_VARIANT_FIELDS = ("rating", "generatedRating", "index", "functionScore", "valueText",
+                   "source", "confidence", "note", "status", "criteria",
+                   "criteriaBands", "landCover", "ripVeg", "scoring")
+
+
+def apply_source_choices(base_report: dict, choices: Optional[dict[str, str]]) -> dict:
+    """Merge the chosen source variant into each matching row (pure / synchronous).
+
+    ``choices`` maps metricId -> source key (config.SOURCE_OPTIONS values). For each
+    row that carries prefetched ``sourceVariants`` and has a chosen, available variant,
+    the generated fields are overwritten from that variant; every other row passes
+    through unchanged. The rollup is NOT recomputed here — the UI composes this with
+    ``rescore`` (which re-runs ``_finalize``), so overrides still win downstream.
+    """
+    choices = choices or {}
+    if not choices:
+        return base_report
+    out = dict(base_report)
+    new_rows = []
+    for base in base_report.get("metricRows", []):
+        row = dict(base)
+        variants = row.get("sourceVariants") or {}
+        key = choices.get(row["metricId"])
+        chosen = variants.get(key) if key else None
+        if chosen and chosen.get("available") and key != row.get("sourceChoice"):
+            for f in _VARIANT_FIELDS:
+                row[f] = chosen.get(f)
+            row["sourceChoice"] = key
+        new_rows.append(row)
+    out["metricRows"] = new_rows
+    return out
+
+
 def rescore(base_report: dict, overrides: Optional[dict[str, str]]) -> dict:
     """Re-apply user overrides to a base report and recompute the rollup.
 
@@ -338,10 +427,12 @@ def rescore(base_report: dict, overrides: Optional[dict[str, str]]) -> dict:
         if mid in overrides:
             rating = overrides[mid]
             idx = scoring.rating_to_index(rating, meta[mid].get("indexMidpoints"))
+            # Keep criteria indicator-aware through overrides via the row's carried bands.
             row.update(rating=rating, status="override", source="user override",
                        valueText=f"user-provided: {rating}", note="overrides generated value",
                        index=round(idx, 3), functionScore=scoring.function_score(idx),
-                       criteria=meta[mid].get("criteria", {}).get(rating, ""))
+                       criteria=(base.get("criteriaBands")
+                                 or meta[mid].get("criteria", {})).get(rating, ""))
         else:
             row["rating"] = base.get("generatedRating")
         rows.append(row)

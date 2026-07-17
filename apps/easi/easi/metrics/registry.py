@@ -54,6 +54,7 @@ STREAMCAT_NAMES = [
     "pctimp2019", "pctwdwet2019", "pcthbwet2019",
     "pctcrop2019", "pcthay2019",
     "pctmxfst2019", "pctdecid2019", "pctconif2019",
+    "pctgrs2019", "pctshrb2019",  # grassland + shrub/scrub (riparian rp100 -> natural-veg CPOM proxy)
     "kffact", "rddens", "damdens", "damnrmstor",
     "tmean8110",  # PRISM 1981-2010 mean-annual air-temp normal (climate surrogate for stream temp)
 ]

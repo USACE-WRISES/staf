@@ -25,11 +25,12 @@ import anyio  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
 
 from easi import (assessment, batch_ui, bieger, config, delineation,  # noqa: E402
-                  geomorph, pipeline, report, scoring)
+                  geomorph, method_plot, methods as easi_methods, pipeline, report, scoring)
 from easi.batch import api as batch_api  # noqa: E402
 from easi.batch import contracts as batch_contracts  # noqa: E402
 from easi.batch import exports as batch_exports  # noqa: E402
 from easi.datasources import flowlines  # noqa: E402
+from easi.metrics import geomorphology, hydraulics  # noqa: E402  (cross-section metric ids)
 from easi.datasources.geocode import geocode_address  # noqa: E402
 from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
 
@@ -66,26 +67,29 @@ USGS_ATTR = "USGS The National Map"
 FLOW_ZOOM = 14          # NHD vectors appear at/above this zoom
 SNAP_TOL_FT = 150.0     # click must land within this distance of a flowline
 
-STEP_IDENTIFY, STEP_BASIN, STEP_CONFIGURE, STEP_REPORT = "identify", "basin", "configure", "report"
+STEP_IDENTIFY, STEP_BASIN, STEP_ASSESS, STEP_REPORT = "identify", "basin", "assess", "report"
 STEP_LABELS = [(STEP_IDENTIFY, "Identify"), (STEP_BASIN, "Basin"),
-               (STEP_CONFIGURE, "Configure"), (STEP_REPORT, "Report")]
+               (STEP_ASSESS, "Assessment"), (STEP_REPORT, "Report")]
 
 _METRICS = config.metrics_by_id()
 ALL_MIDS = list(_METRICS)
-SRC_INDEX = {i: mid for i, mid in enumerate(ALL_MIDS) if mid in config.SOURCE_OPTIONS}
 OVERRIDEABLE = [mid for mid, info in config.METRIC_REGISTRY.items() if info.get("overrideable")]
 OVERRIDEABLE_SET = set(OVERRIDEABLE)
+
+# Worksheet function ordering (functions.json is already discipline-grouped) and the
+# 1:1 function -> metric map (every EASI function has exactly one metric).
+_FUNCTIONS = config.functions()
+_METRIC_BY_FID = {m["functionId"]: m for m in _METRICS.values()}
+# The three functions whose metric rating derives from the editable cross-section; their
+# cards carry the cross-section editor (entrenchment, floodplain engagement, channel evolution).
+XS_METRIC_IDS = {hydraulics.ENTRENCHMENT_ID, hydraulics.FLOODPLAIN_ENGAGEMENT_ID,
+                 geomorphology.CHANNEL_EVOL_ID}
+XS_FUNCTION_IDS = {_METRICS[mid]["functionId"] for mid in XS_METRIC_IDS if mid in _METRICS}
 
 
 # --------------------------------------------------------------------------- #
 # UI helpers
 # --------------------------------------------------------------------------- #
-def _ds_label(mid: str) -> str:
-    ds = config.METRIC_REGISTRY.get(mid, {}).get("datasource", "")
-    primary = ds.split("|")[0].replace("proxy:", "").replace("streamcat:", "StreamCat ")
-    return primary.replace("+", " + ").replace("_", " ").strip() or "—"
-
-
 def _short(text: str, n: int = 46) -> str:
     text = (text or "").strip()
     return text if len(text) <= n else text[: n - 1] + "…"
@@ -108,10 +112,18 @@ def _info(text: str = None, *, html_tip: str = None):
     return ui.span("i", attrs, class_="easi-info")
 
 
-def _metric_tip_html(name, definition, source, calc, note, crit, default):
+def _metric_tip_html(name, definition, source, calc, note, crit, default, land_cover=None,
+                     riparian=None, include_criteria=True):
     """Build the report ⓘ tooltip card: definition, data source, calculation, then the
     scoring criteria. Source is where the input value comes from; Calculation is any extra
-    computation on top of it. All dynamic values are HTML-escaped; markup is app-controlled.
+    computation on top of it. ``land_cover`` (the catchment-hydrology land-cover metric) swaps
+    the single Scoring block for a two-indicator block showing impervious and agricultural
+    cover with their thresholds, marking the governing one. ``riparian`` (the detrital metric)
+    adds a natural-vegetation composition block (forest/shrub/grassland/wetland). All dynamic
+    values are HTML-escaped; markup is app-controlled.
+
+    ``include_criteria=False`` (the worksheet) drops the Scoring / land-cover / riparian blocks —
+    those move to the card's "Scoring method" panel — leaving definition, source, and calculation.
     """
     e = html.escape
     parts = [f'<div class="easi-tip-title">{e(name or "")}</div>']
@@ -119,22 +131,55 @@ def _metric_tip_html(name, definition, source, calc, note, crit, default):
         parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Definition</span>'
                      f'{e(definition)}</div>')
     if source:
-        sub = f'<div class="easi-tip-sub">{e(note)}</div>' if note else ""
+        # the land-cover block already states both values, so skip the redundant note sub-line there
+        sub = f'<div class="easi-tip-sub">{e(note)}</div>' if note and not land_cover else ""
         parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Source</span>'
                      f'{e(source)}{sub}</div>')
     if calc:
         parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Calculation</span>'
                      f'{e(calc)}</div>')
-    rows = []
-    for band in ("Good", "Fair", "Poor"):
-        c = crit.get(band)
-        if c:
-            rows.append(f'<div class="easi-tip-crit"><span class="easi-tip-dot {band.lower()}">'
-                        f'</span><b>{band}</b>&nbsp;{e(c)}</div>')
-    if rows:
-        dflt = f'<span class="easi-tip-default">default: {e(default)}</span>' if default else ""
-        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Scoring</span>'
-                     f'{dflt}{"".join(rows)}</div>')
+    if not include_criteria:
+        # Worksheet: the scoring criteria live in the card's "Scoring method" panel instead.
+        return "".join(parts)
+    if riparian:  # detrital metric: natural-vegetation composition of the 100 m buffer
+        veg_rows = [f'<div class="easi-tip-crit">{e(lbl)} {e(str(riparian.get(k, 0)))}%</div>'
+                    for k, lbl in (("forest", "Forest"), ("shrub", "Shrub"),
+                                   ("grassland", "Grassland"), ("wetland", "Wetland"))]
+        veg_rows.append('<div class="easi-tip-crit"><b>Natural vegetation '
+                        f'{e(str(riparian.get("total", 0)))}%</b></div>')
+        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Riparian vegetation'
+                     '</span>' + "".join(veg_rows) + "</div>")
+    if land_cover:
+        gov = land_cover.get("governing")
+        lc_rows = []
+        for key, label in (("impervious", "Impervious"), ("agriculture", "Agricultural")):
+            d = land_cover.get(key)
+            bands = land_cover.get(f"{key}_bands") or {}
+            thr = " / ".join(f"{b} {bands[b]}" for b in ("Good", "Fair", "Poor") if bands.get(b))
+            if d:
+                line = f"{e(label)} {e(str(d['pct']))}% &rarr; {e(d['rating'])}"
+                line += f" ({e(thr)})" if thr else ""
+                dot = (f'<span class="easi-tip-dot {d["rating"].lower()}"></span>'
+                       if d.get("rating") in ("Good", "Fair", "Poor") else "")
+            else:
+                line = f"{e(label)}: no data"
+                dot = ""
+            lc_rows.append('<div class="easi-tip-crit">' + dot
+                           + (f"<b>{line} [governs]</b>" if key == gov else line) + "</div>")
+        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Land-cover indicators'
+                     '</span><span class="easi-tip-default">more limiting governs</span>'
+                     + "".join(lc_rows) + "</div>")
+    else:
+        rows = []
+        for band in ("Good", "Fair", "Poor"):
+            c = crit.get(band)
+            if c:
+                rows.append(f'<div class="easi-tip-crit"><span class="easi-tip-dot {band.lower()}">'
+                            f'</span><b>{band}</b>&nbsp;{e(c)}</div>')
+        if rows:
+            dflt = f'<span class="easi-tip-default">default: {e(default)}</span>' if default else ""
+            parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Scoring</span>'
+                         f'{dflt}{"".join(rows)}</div>')
     return "".join(parts)
 
 
@@ -185,11 +230,12 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=25"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=33"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
-                    ui.tags.script(src="report-edit.js", defer=""),
                     ui.tags.script(src="report-controls.js", defer=""),
+                    ui.tags.script(src="report-edit.js", defer=""),
+                    ui.tags.script(src="worksheet.js?v=6", defer=""),
                     ui.tags.script(src="coord-entry.js", defer="")),
     # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
     # the bottom-right toast is the app's loading indicator (output spinners unaffected).
@@ -219,6 +265,7 @@ app_ui = ui.page_fillable(
             class_="easi-map-wrap",
         ),
         ui.div(ui.output_ui("leftpane"), class_="easi-leftpane"),
+        ui.output_ui("worksheet"),
         ui.output_ui("batch_workspace"),
         ui.output_ui("readout"),
         ui.output_ui("flow_loading"),
@@ -309,11 +356,11 @@ def _summary_plots(sc):
 
 
 def _rate_select(mid, r):
-    """Chip-styled native <select> that overrides an overrideable metric's rating.
+    """Neutral SFARI-style native <select> that overrides a metric's rating.
 
-    Looks like the colored rating chip; opening it shows Auto + Good/Fair/Poor with
-    their thresholds. Plain HTML (no Shiny binding) — www/report-edit.js posts the
-    choice via setInputValue, so it survives the table re-render.
+    Styled like SFARI's likert select (no rating colors; ``set`` marks an answered state).
+    Plain HTML (no Shiny binding) — www/report-edit.js posts the choice via setInputValue,
+    so it survives the worksheet card's re-render on scored().
     """
     eff = r.get("rating")                        # effective (override or generated)
     opts = []
@@ -322,9 +369,8 @@ def _rate_select(mid, r):
     for rt in ("Good", "Fair", "Poor"):
         opts.append(ui.tags.option(rt, value=rt, selected="selected") if rt == eff
                     else ui.tags.option(rt, value=rt))
-    # criteria + computed value live in the adjacent ⓘ (see _metric_table), so the
-    # chip stays narrow; just a short hint here.
-    return ui.tags.select(*opts, {"class": f"easi-rate-sel rate-{eff or 'auto'}",
+    # the criteria + computed value live in the metric-name ⓘ, so the control stays narrow.
+    return ui.tags.select(*opts, {"class": "easi-rate-sel" + (" set" if eff else ""),
                                   "data-mid": mid, "title": "Click to override rating"})
 
 
@@ -376,13 +422,200 @@ def _fnscore_cell(r, meta):
     return ui.tags.td(*kids, class_="easi-fs-cell")
 
 
-def _metric_table(rows, notes=None, *, outcomes=None, eci=None, read_only=False):
-    """The metric grid. Always emits every column/badge (Index, Physical/Chemical/Biological
-    mapping, F/AR/NF badge, auto cue) so the report's display checkboxes can reveal them
-    purely client-side (CSS class flips on #easi-report) with no Shiny re-render. When
-    ``outcomes`` is given the integrated rollup is appended flush below the table.
-    ``read_only`` (batch report modal) swaps the rating select for a static chip and
-    drops the note controls, so nothing posts to the single-site override handlers."""
+def _metric_card_tip(row, include_criteria=True):
+    """The ⓘ hover card for a metric — definition, data source, calculation, and the
+    Good/Fair/Poor criteria (the land-cover metric shows both indicators; the detrital metric
+    shows its riparian-vegetation breakdown). Pure: takes a scored/base metric row and returns
+    the ``_info`` span. Used by both the worksheet card and the read-only report row (and is the
+    retarget point for the tooltip test). ``include_criteria=False`` (worksheet) drops the scoring
+    blocks — they render in the card's "Scoring method" panel instead."""
+    mid = row["metricId"]
+    lc = row.get("landCover")
+    if lc:  # attach both indicators' threshold sets for the tooltip
+        lc = {**lc, "impervious_bands": config.criteria_bands(mid, "impervious"),
+              "agriculture_bands": config.criteria_bands(mid, "agriculture")}
+    tip_html = _metric_tip_html(
+        name=row.get("name"), definition=config.METRIC_DEFINITIONS.get(mid, ""),
+        source=row.get("source") or "", note=row.get("note") or "",
+        calc=(config.METRIC_CALCULATIONS.get(mid)
+              or "Dataset value used directly (binned to a rating)."),
+        crit=(row.get("criteriaBands") or _METRICS.get(mid, {}).get("criteria") or {}),
+        default=row.get("generatedRating") or "n/a", land_cover=lc,
+        riparian=row.get("ripVeg"), include_criteria=include_criteria)
+    return _info(html_tip=tip_html)
+
+
+# --------------------------------------------------------------------------- #
+# "Scoring method" panel (worksheet metric card) — reference-curve plot, inputs,
+# equation, what-if sliders, and the scoring criteria moved out of the ⓘ.
+# --------------------------------------------------------------------------- #
+_RANK_WORST = {"Poor": 0, "Fair": 1, "Good": 2}
+
+
+def _method_slider_id(j):
+    return f"msl_{j}"
+
+
+def _fmt_input(v, inp):
+    if v is None:
+        return "—"
+    try:
+        f = float(v)
+    except (TypeError, ValueError):
+        return str(v)
+    if inp.integer or f == int(f):
+        return str(int(round(f)))
+    return f"{f:g}"
+
+
+def _active_scoring(brow, src_choice):
+    """The scoring trace to render for a metric: the chosen source variant's (temperature /
+    impairment / wetlands), else the base row's."""
+    variants = brow.get("sourceVariants") or {}
+    key = src_choice or brow.get("sourceChoice")
+    v = variants.get(key) if key else None
+    return ((v or brow).get("scoring")) or {}
+
+
+def _worst_governing(method, inputs):
+    """Which indicator of a worst-of metric is the more limiting (worse) one."""
+    worst = worst_key = None
+    for key, rate_fn, _bands in method.per_input:
+        v = (inputs or {}).get(key)
+        if v is None:
+            continue
+        r = rate_fn(v)
+        if worst is None or _RANK_WORST[r] < _RANK_WORST[worst]:
+            worst, worst_key = r, key
+    return worst_key
+
+
+def _method_inputs_ui(method, site_inputs):
+    rows = []
+    for inp in method.inputs:
+        sv = (site_inputs or {}).get(inp.key)
+        val = _fmt_input(sv, inp) + (f" {inp.unit}" if inp.unit and sv is not None else "")
+        rows.append(ui.div(
+            ui.div(ui.span(inp.label, class_="easi-method-input-label"),
+                   (ui.span("context", class_="easi-method-input-context")
+                    if inp.context_only else None),
+                   class_="easi-method-input-name"),
+            ui.span(val, class_="easi-method-input-value"),
+            (ui.span(inp.source_label, class_="easi-method-input-source")
+             if inp.source_label else None),
+            class_="easi-method-input-row"))
+    return ui.div(ui.div("Inputs used", class_="easi-method-inputs-title"), *rows,
+                  class_="easi-method-inputs")
+
+
+def _method_criteria_ui(row, method=None):
+    """The Good/Fair/Poor scoring criteria (its own section below 'Scoring method'). Each row is a
+    colored swatch + the rating + the numeric value range that maps to it (from the same plot bands,
+    so the list and the reference curve can't disagree) + the curated narrative. Reads the row's
+    carried ``criteriaBands`` so it follows source swaps; the land-cover metric shows both indicators
+    and skips the range chip (its config text is already the numeric range)."""
+    mid = row["metricId"]
+    ranges = easi_methods.band_range_texts(method) if method is not None else {}
+    lc = row.get("landCover")
+    blocks = []
+
+    def _crow(b, text, rng=None):
+        return ui.div(ui.span(class_=f"easi-tip-dot {b.lower()}"), ui.tags.b(b),
+                      (ui.span(rng, class_="easi-method-crit-range") if rng else None),
+                      ui.span(text, class_="easi-method-crit-text"),
+                      class_="easi-method-crit-row")
+
+    if lc:
+        for key, label in (("impervious", "Impervious cover"),
+                           ("agriculture", "Agricultural cover")):
+            bands = config.criteria_bands(mid, key)
+            crows = [_crow(b, bands[b]) for b in ("Good", "Fair", "Poor") if bands.get(b)]
+            if crows:
+                blocks.append(ui.div(ui.div(label, class_="easi-method-crit-sub"), *crows))
+    else:
+        crit = row.get("criteriaBands") or _METRICS.get(mid, {}).get("criteria") or {}
+        crows = [_crow(b, crit[b], ranges.get(b))
+                 for b in ("Good", "Fair", "Poor") if crit.get(b)]
+        if crows:
+            blocks.append(ui.div(*crows))
+    if not blocks:
+        return None
+    return ui.div(*blocks, class_="easi-method-crit")
+
+
+def _method_body_ui(mid, method, row, trace, site_inputs, explored):
+    """Inputs-used + equation + the reference-curve plot (or the categorical decision table)."""
+    parts = []
+    site_rating = row.get("generatedRating")
+    if method.mode == "categorical":
+        return ui.HTML(method_plot.decision_html(method, site_rating))
+    parts.append(_method_inputs_ui(method, site_inputs))
+    if method.equation:
+        parts.append(ui.div(ui.span("Equation", class_="easi-method-equation-label"),
+                            ui.tags.code(method.equation), class_="easi-method-equation"))
+    if method.mode == "worst":
+        gov = _worst_governing(method, site_inputs)
+        parts.append(ui.HTML(method_plot.worst_svg(method, site_inputs, explored, gov)))
+    else:  # scalar | combined | count
+        ev = easi_methods.evaluate_method(method, explored)
+        parts.append(ui.HTML(method_plot.scalar_svg(
+            method, trace.get("value"), site_rating, ev.get("value"), ev.get("rating"))))
+    return ui.TagList(*parts)
+
+
+def _method_expander(mid, scoring_trace):
+    """The collapsed 'Scoring method' panel for a metric card (skeleton part). The plot + criteria
+    are nested output slots (so slider drags don't re-render the card / remount the XS widget); the
+    what-if sliders + 'Reset to site' live here, seeded from the site inputs."""
+    method = easi_methods.resolve(mid, (scoring_trace or {}).get("model"))
+    if method is None:
+        return None
+    site_inputs = (scoring_trace or {}).get("inputs") or {}
+    controls = None
+    specs = easi_methods.slider_specs(method, site_inputs)
+    if specs:
+        sliders = []
+        for j, (inp, sv, (lo, hi, step)) in enumerate(specs):
+            val = sv if sv is not None else lo
+            if inp.integer:
+                val, lo, hi = int(round(val)), int(lo), int(hi)
+            sliders.append(ui.input_slider(
+                _method_slider_id(j), inp.label, min=lo, max=hi, value=val, step=step,
+                ticks=False, post=(f" {inp.unit}" if inp.unit else None)))
+        controls = ui.div(
+            ui.div(ui.div(ui.span("Explore values", class_="easi-method-controls-title"),
+                          ui.span("does not change the report",
+                                  class_="easi-method-controls-sub")),
+                   ui.tags.button("Reset to site", {"type": "button", "data-mid": mid},
+                                  class_="easi-method-reset"),
+                   class_="easi-method-controls-head"),
+            *sliders, class_="easi-method-controls")
+    # Two stacked sections: the reference curve + what-if sliders (collapsed by default), then the
+    # scoring criteria (expanded by default). Both carry class "easi-method" so the JS toggle→resize
+    # listener fires for either; the criteria section has no sliders so its resize is a harmless no-op.
+    return ui.TagList(
+        ui.tags.details(
+            ui.tags.summary("Scoring method", class_="easi-rollup-sum"),
+            ui.output_ui("method_body"),
+            controls,
+            class_="easi-method", **{"data-mid": mid}),
+        ui.tags.details(
+            ui.tags.summary("Scoring criteria", class_="easi-rollup-sum"),
+            ui.output_ui("method_criteria"),
+            open=True, class_="easi-method easi-method-critsec", **{"data-mid": mid}))
+
+
+def _fmt2(x):
+    return "—" if x is None else f"{x:.2f}"
+
+
+def _metric_table(rows, notes=None, *, outcomes=None, eci=None):
+    """The read-only metric grid (STAF layout). Always emits every column/badge (Index,
+    Physical/Chemical/Biological mapping, F/AR/NF badge, auto cue) so the report's display
+    checkboxes can reveal them purely client-side (CSS class flips on #easi-report) with no
+    Shiny re-render. Ratings are static chips and notes plain text; edits happen only in the
+    Assessment worksheet, so this view never posts anything. When ``outcomes`` is given the
+    integrated rollup is appended flush below the table."""
     notes = notes or {}
     meta = config.metrics_by_id()
     mapping = config.cwa_mapping()
@@ -406,23 +639,11 @@ def _metric_table(rows, notes=None, *, outcomes=None, eci=None, read_only=False)
         if r["discipline"] not in seen:
             seen.append(r["discipline"])
             body.append(ui.tags.tr(ui.tags.td(r["discipline"], colspan=str(n_cols)),
-                                    class_="easi-disc"))
-        status = r.get("status")
-        is_ovr = status == "override"          # manual dropdown override — the only tinted row
+                                   class_="easi-disc"))
+        is_ovr = r.get("status") == "override"     # manual override — the only tinted row
         # (cross-section-derived rows, status "xs-derived", are NOT tinted: they aren't
         # manual overrides. Their provenance shows in the ⓘ tooltip's Source section.)
-        # Rating cell: override dropdown + an ⓘ whose hover shows the definition, the data
-        # source + how it's calculated, and the Good/Fair/Poor criteria. (The standalone
-        # Source column was dropped — its content now lives in the tooltip's Source section.)
-        crit = (_METRICS.get(mid, {}).get("criteria") or {})
-        tip_html = _metric_tip_html(
-            name=r.get("name"), definition=config.METRIC_DEFINITIONS.get(mid, ""),
-            source=r.get("source") or "", note=r.get("note") or "",
-            calc=(config.METRIC_CALCULATIONS.get(mid)
-                  or "Dataset value used directly (binned to a rating)."),
-            crit=crit, default=r.get("generatedRating") or "n/a")
-        rate_ctl = _rate_chip(r) if read_only else _rate_select(mid, r)
-        rating_cell = ui.tags.td(ui.div(rate_ctl, _info(html_tip=tip_html),
+        rating_cell = ui.tags.td(ui.div(_rate_chip(r), _metric_card_tip(r),
                                         class_="easi-rate-cell"))
         idx = r.get("index")
         idx_cell = ui.tags.td("—" if idx is None else f"{idx:.2f}", class_="easi-col-adv")
@@ -432,11 +653,7 @@ def _metric_table(rows, notes=None, *, outcomes=None, eci=None, read_only=False)
             txt, title = _MAP_CODE.get(codes.get(key, "-"), _MAP_CODE["-"])
             map_cells.append(ui.tags.td(txt, {"title": f"{key.capitalize()}: {title}"},
                                         class_="easi-col-map"))
-        note = notes.get(mid) or ""
-        note_btn = None if read_only else ui.tags.button("✎", {
-            "class": "easi-note-btn" + (" has-note" if note else ""), "data-mid": mid,
-            "type": "button", "title": ("Edit note" if note else "Add note"),
-            "aria-label": ("Edit note" if note else "Add note")})
+        note = notes.get(mid) or r.get("userNote") or ""
         body.append(ui.tags.tr(
             ui.tags.td(r["functionName"]),
             ui.tags.td(r["name"]),
@@ -445,17 +662,11 @@ def _metric_table(rows, notes=None, *, outcomes=None, eci=None, read_only=False)
             _fnscore_cell(r, meta),
             *map_cells,
             idx_cell,
-            ui.tags.td(note_btn, class_="easi-note-cell"),
+            ui.tags.td(note, class_="easi-note-cell easi-rep-note"),
             {"data-mid": mid},
             class_=("easi-row-ovr" if is_ovr else ""),
-            style=("" if r["rating"] else "color:#aaa;"),
+            style=("" if r.get("rating") else "color:#aaa;"),
         ))
-        if not read_only:
-            body.append(ui.tags.tr(
-                ui.tags.td(ui.tags.textarea(note, {
-                    "class": "easi-note-ta", "data-mid": mid, "rows": "2",
-                    "placeholder": "Add a note for this metric…"}), colspan=str(n_cols)),
-                {"data-mid": mid}, class_="easi-note-row"))
     if outcomes is None:
         return ui.tags.table(ui.tags.thead(head), ui.tags.tbody(*body), class_="easi-tbl")
     # The outcome rollup is rendered two ways, toggled purely by CSS on the mappings state so
@@ -470,7 +681,6 @@ def _metric_table(rows, notes=None, *, outcomes=None, eci=None, read_only=False)
     # the standalone (mappings-off) rollup carries its own Physical/Chemical/Biological
     # header — there are no mapping columns above to align to; the aligned tfoot omits it
     # (the table's own P/C/B headers serve).
-    # mappings-off standalone is full-width with room for the full outcome names
     sa_head = ui.tags.thead(ui.tags.tr(
         ui.tags.th(""), ui.tags.th("Physical"), ui.tags.th("Chemical"),
         ui.tags.th("Biological")))
@@ -569,58 +779,35 @@ def _basin_block(d, rep):
     )
 
 
-def _xsection_section(rep):
-    """Cross-section block: a summary table + the editable bankfull/low-bank height
-    inputs (left) beside the plot (right). The table's computed values (bankfull &
-    flood-prone width, ER, BHR) recompute live from the inputs via ``xs_summary``;
-    heights are above the channel bottom, defaulting to the Bieger bankfull and the
-    DEM low bank, in feet."""
+def _xs_readonly_block(rep):
+    """Read-only cross-section for the report modal: the geometry summary panel (left)
+    beside the static plot image (right), in the report's usual 300px|1fr grid. No inputs,
+    no live widget; the cross-section is edited in the Assessment worksheet."""
     xs = (rep or {}).get("crossSection") or {}
     if not xs.get("png_b64"):
         return None
     block = xs.get("geom") or {}
-    thalweg = block.get("thalweg")
-    if thalweg is None:  # no editable geometry — render the static image only
-        return ui.div(ui.tags.img(src=f"data:image/png;base64,{xs['png_b64']}"),
-                      class_="easi-xsection")
+    er = (xs.get("entrenchment_ratio") if xs.get("entrenchment_ratio") is not None
+          else block.get("entrenchment_ratio"))
+    bhr = (xs.get("bank_height_ratio") if xs.get("bank_height_ratio") is not None
+           else block.get("bank_height_ratio"))
 
-    def ft(stage):
-        return round((stage - thalweg) * FT_PER_M, 2) if stage is not None else None
+    def wd(m):
+        return f"{m * FT_PER_M:.1f} ft" if m is not None else "n/a"
 
-    bf_def = ft(block.get("bankfull_stage"))
-    lb_def = ft(block.get("floodplain_stage"))
-    bk_area = block.get("bankfull_area_m2")
-    area_txt = f"{bk_area:.1f} m² " if bk_area is not None else ""
-    bf_tip = (f"Default {bf_def} ft — the depth at which the channel cross-sectional area "
-              f"equals the Bieger et al. (2015) regional bankfull area "
-              f"({area_txt}for the {block.get('division') or 'national'} division). "
-              f"Edit to use a surveyed value.")
-    panel = ui.div(
-        ui.div("Cross-section geometry", class_="easi-xs-panel-title"),
-        ui.output_ui("xs_summary"),
-        ui.div(
-            ui.input_numeric("xs_bankfull", ui.span("Bankfull depth ", _info(text=bf_tip)),
-                             value=bf_def, min=0, step=0.1),
-            ui.input_numeric("xs_lowbank", "Low bank height", value=lb_def, min=0, step=0.1),
-            class_="easi-xs-fields",
-        ),
-        ui.input_radio_buttons("xs_unit", None, {"ft": "Feet", "m": "Meters"},
-                               selected="ft", inline=True),
-        class_="easi-xs-panel",
-    )
-    n_cands = len(xs.get("candidates") or [])
-    switch = ui.div(
-        ui.input_action_button("xs_prev", "◀", class_="easi-xs-arrow"),
-        ui.output_ui("xs_selector"),
-        ui.input_action_button("xs_next", "▶", class_="easi-xs-arrow"),
-        class_="easi-xs-switch",
-    ) if n_cands >= 2 else None
-    head = ui.div(ui.span("Representative cross-section", class_="easi-xs-plot-title"),
-                  switch, class_="easi-xs-plot-head")
-    plot = (ui.div(output_widget("xsection_plot", height="100%"), class_="easi-xsection")
-            if _HAS_PLOTLY else ui.output_ui("xsection"))
-    right = ui.div(head, plot, class_="easi-xs-right")
-    return ui.div(panel, right, class_="easi-xsection-wrap")
+    rows = [("Bieger region", block.get("division") or "National curve"),
+            ("Bankfull width", wd(block.get("bankfull_width_m"))),
+            ("Floodprone width", wd(block.get("flood_prone_width_m"))),
+            ("Entrenchment ratio", _fmt2(er)),
+            ("Bank-height ratio", _fmt2(bhr))]
+    table = ui.tags.table(
+        ui.tags.tbody(*[ui.tags.tr(ui.tags.th(lbl), ui.tags.td(val)) for lbl, val in rows]),
+        class_="easi-tbl easi-xs-tbl")
+    panel = ui.div(ui.div("Cross-section geometry", class_="easi-xs-panel-title"),
+                   table, class_="easi-xs-panel")
+    plot = ui.div(ui.tags.img(src=f"data:image/png;base64,{xs['png_b64']}"),
+                  class_="easi-xsection")
+    return ui.div(panel, plot, class_="easi-xsection-wrap")
 
 
 def _dl_buttons():
@@ -659,97 +846,68 @@ def _metric_toolbar():
     return ui.div(*items, class_="easi-metric-toolbar")
 
 
-def _report_modal(base):
-    """Static modal skeleton: override-independent chrome + dynamic output slots.
-
-    The dynamic body lives inside a stable ``#easi-report`` wrapper so the display-toggle
-    classes set by www/report-controls.js persist across the metric table's re-render on a
-    rating override (the re-rendered table inherits them via descendant CSS)."""
-    d, rep = base["delineation"], base.get("report")
-    body = ui.div(
+def _report_body(d, rep, notes, downloads):
+    """Read-only report body shared by the single-site and batch modals (STAF layout).
+    Ratings and notes are edited only in the Assessment worksheet, so this view never posts
+    anything: the dense metric table (display toggles reveal detail client-side), the static
+    cross-section, the two-panel summary below the table, and the export row (``downloads``).
+    The display-toggle classes live on the stable ``#easi-report`` wrapper."""
+    return ui.div(
         _summary_header(d),
         _basin_block(d, rep),
-        _xsection_section(rep),
+        _xs_readonly_block(rep),
         ui.div("Metrics", class_="easi-section-title"),
-        ui.div("Adjust a rating inline in the Rating column; click ✎ on any row to add a "
-               "note. Use the checkboxes above to show more scoring detail. Edits flow into "
-               "the report and exports.", class_="easi-instr"),
+        ui.div("Use the checkboxes to show more scoring detail. Ratings and notes are "
+               "edited in the Assessment worksheet.", class_="easi-instr"),
         _metric_toolbar(),
-        ui.output_ui("m_metrics"),          # metric table + integrated outcome rollup
+        _metric_table(rep.get("metricRows") or [], notes,
+                      outcomes=rep.get("outcomes"),
+                      eci=rep.get("ecosystemConditionIndex")),
         ui.div("Summary plots", class_="easi-section-title"),
-        ui.output_ui("m_scores"),           # moved below the table (STAF layout)
+        _summary_plots(rep),
         ui.p("Generated from national datasets — a desktop screening estimate with "
-             "per-metric confidence, not a field-validated assessment. Adjust field "
-             "metrics inline to incorporate local evidence.", class_="easi-disclaimer"),
-        _dl_buttons(),
+             "per-metric confidence, not a field-validated assessment.",
+             class_="easi-disclaimer"),
+        downloads,
         id="easi-report", class_="show-slider",   # slider on by default (report-controls.js
     )                                             # reconciles with any saved preference)
+
+
+def _report_modal(res, notes):
+    """Single-site report popup, built from an ``export_result()`` snapshot (current overrides,
+    swapped sources, and edited cross-section already folded in), so it is fully static."""
+    d, rep = res["delineation"], res.get("report") or {}
     return ui.modal(
-        body,
-        # ✕ lives in the modal header (anchors to .modal-content) so it sits at the
-        # popup's top-right corner and stays put when the body scrolls.
-        title=ui.TagList(
-            "EASI Screening Report",
-            ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x"),
-        ),
-        size="xl",
-        easy_close=True,
-        footer=None,
+        _report_body(d, rep, notes, _dl_buttons()),
+        # ✕ lives in the modal header so it stays put when the body scrolls.
+        title=ui.TagList("EASI Screening Report",
+                         ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
+        size="xl", easy_close=True, footer=None,
     )
 
 
 def _batch_report_modal(site_id, base):
-    """Read-only per-site report popup for batch results.
-
-    Same layout as ``_report_modal`` but built entirely from the pure builders (no
-    reactive output slots, which are welded to the single-site ``scored()`` state).
-    ``base`` is the site's ``metadata["_artifacts"]`` dict: the exact
-    ``{"delineation", "report"}`` shape the single-site report consumes. The
-    cross-section renders as its static image only; ratings show as chips and the
-    note column is hidden (``easi-report-ro``), so nothing here can post into the
-    single-site override/note handlers."""
+    """Read-only per-site report popup for batch results — the same body as the single-site
+    report. ``base`` is the site's ``metadata["_artifacts"]`` ``{"delineation","report"}`` dict."""
     d, rep = base.get("delineation") or {}, base.get("report") or {}
-    xs = rep.get("crossSection") or {}
-    xs_img = (ui.div(ui.tags.img(src=f"data:image/png;base64,{xs['png_b64']}"),
-                     class_="easi-xsection") if xs.get("png_b64") else None)
-    body = ui.div(
-        _summary_header(d),
-        _basin_block(d, rep),
-        xs_img,
-        ui.div("Metrics", class_="easi-section-title"),
-        ui.div("Use the checkboxes to show more scoring detail. Batch reports are "
-               "read-only; the batch ZIP carries the data files.", class_="easi-instr"),
-        _metric_toolbar(),
-        _metric_table(rep.get("metricRows") or [], outcomes=rep.get("outcomes"),
-                      eci=rep.get("ecosystemConditionIndex"), read_only=True),
-        ui.div("Summary plots", class_="easi-section-title"),
-        _summary_plots(rep),
-        ui.p("Generated from national datasets: a desktop screening estimate with "
-             "per-metric confidence, not a field-validated assessment.",
-             class_="easi-disclaimer"),
-        ui.div(
-            ui.download_button("dl_site_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
-            ui.download_button("dl_site_csv", "CSV", class_="btn-sm btn-outline-secondary"),
-            ui.download_button("dl_site_geojson", "GeoJSON",
-                               class_="btn-sm btn-outline-secondary"),
-            ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
-            class_="easi-modal-footer",
-        ),
-        id="easi-report", class_="show-slider easi-report-ro",
-    )
+    downloads = ui.div(
+        ui.download_button("dl_site_pdf", "PDF", class_="btn-sm btn-outline-secondary"),
+        ui.download_button("dl_site_csv", "CSV", class_="btn-sm btn-outline-secondary"),
+        ui.download_button("dl_site_geojson", "GeoJSON", class_="btn-sm btn-outline-secondary"),
+        ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
+        class_="easi-modal-footer")
     return ui.modal(
-        body,
-        title=ui.TagList(
-            f"EASI Screening Report: {site_id}",
-            ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x"),
-        ),
-        size="xl",
-        easy_close=True,
-        footer=None,
+        _report_body(d, rep, {}, downloads),
+        title=ui.TagList(f"EASI Screening Report: {site_id}",
+                         ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
+        size="xl", easy_close=True, footer=None,
     )
 
 
 def _stepper(active):
+    # Plain data-step anchors (not Shiny action links): www/worksheet.js delegates a
+    # click to the `step_nav` event, so one handler serves both the left-pane stepper and
+    # the worksheet stepper without duplicate action-button ids.
     done = True
     items = []
     for key, label in STEP_LABELS:
@@ -758,7 +916,7 @@ def _stepper(active):
             cls += " active"; done = False
         elif done:
             cls += " done"
-        items.append(ui.input_action_link(f"go_{key}", label, class_=cls))
+        items.append(ui.tags.a(label, {"data-step": key}, class_=cls))
     return ui.div(*items, class_="easi-steps")
 
 
@@ -773,16 +931,16 @@ def server(input, output, session):
     base_result = reactive.value(None)     # merged delineation + report dict
     stage = reactive.value("")             # progress label
     _assess_prog = {"done": 0, "total": 0, "waiting": {}}  # shared metric-progress state (poller reads)
-    _overrides = reactive.value({})        # {metricId: "Good"/"Fair"/"Poor"} from the table
-    _notes = reactive.value({})            # {metricId: note text} from the table
+    _overrides = reactive.value({})        # {metricId: "Good"/"Fair"/"Poor"} from the worksheet
+    _notes = reactive.value({})            # {metricId: note text} from the worksheet
+    _source_choice = reactive.value({})    # {metricId: source key} chosen in the metric card
     _geom_owned = reactive.value(set())    # metricIds whose rating is currently derived from
     #                                        an edited cross-section (vs a manual dropdown pick)
     _geom_text = reactive.value({})        # {metricId: value text} for those edited rows
-    modal_shown = reactive.value(False)
+    current_fn = reactive.value(0)         # index into _FUNCTIONS shown in the worksheet
     view_bbox = reactive.value(None)       # rounded bbox at zoom >= FLOW_ZOOM | None
     last_view_change = reactive.value(0.0)
     fetched_bbox = reactive.value(None)
-    step_clicks = reactive.value({k: 0 for k, _ in STEP_LABELS})  # stepper nav counters
 
     _layers: dict = {"flow": None, "marker": None, "ws": None, "reach": None}
 
@@ -1196,18 +1354,36 @@ def server(input, output, session):
         current_step.set(STEP_BASIN)
 
     @reactive.effect
-    @reactive.event(input.to_report)
-    def _start_assess():
-        d = delin()
+    @reactive.event(input.run_screening)
+    def _run_screening():
+        # The Basin "Run screening" button just advances to the Assessment worksheet;
+        # _autostart_assess kicks off the actual compute (single place that starts the task).
+        if delin() is None:
+            return
+        current_fn.set(0)
+        current_step.set(STEP_ASSESS)
+
+    @reactive.effect
+    def _autostart_assess():
+        # Landing on the Assessment step with a delineation but no screening yet starts the
+        # run — covers both the Basin button and stepper navigation. Depends only on
+        # current_step; the rest is isolated so it fires once per arrival, never on result.
+        if current_step() != STEP_ASSESS:
+            return
+        with reactive.isolate():
+            if base_result() is not None or assess_task.status() == "running":
+                return
+            d = delin()
         if not d:
             return
-        modal_shown.set(False)
         n = len(selected_metric_ids())
         _assess_prog["done"], _assess_prog["total"], _assess_prog["waiting"] = 0, n, {}
         stage.set(f"Computing metrics… 0/{n}")
         ui.notification_show(f"Computing metrics… 0/{n} — please wait", id="stage",
                              type="message", duration=None)
-        assess_task(d["ctx_inputs"], selected_metric_ids(), source_choices(), _assess_prog)
+        # sources={} -> each row's default variant; prefetch (default True) attaches all variants
+        # for instant in-card source swapping via apply_source_choices.
+        assess_task(d["ctx_inputs"], selected_metric_ids(), {}, _assess_prog)
 
     @reactive.effect
     def _assess_progress_poll():
@@ -1250,56 +1426,40 @@ def server(input, output, session):
         merged["delineation"] = {**d["delineation"], "huc12": res.get("huc12")}
         merged["report"] = res["report"]
         base_result.set(merged)
-        _overrides.set({}); _notes.set({})   # fresh report starts with no overrides/notes
+        # fresh screening: no overrides / notes / source swaps / geometry edits
+        _overrides.set({}); _notes.set({}); _source_choice.set({})
         _geom_owned.set(set()); _geom_text.set({}); _xs_sel.set(None)
-        current_step.set(STEP_REPORT)
-        if not modal_shown():
-            modal_shown.set(True)
-            _xs_unit_prev.set("ft")
-            ui.modal_show(_report_modal(merged))
+        _xs_unit_prev.set("ft"); current_fn.set(0)
+        current_step.set(STEP_ASSESS)   # stay on the worksheet (no auto-modal)
 
     # ---- step navigation ----
-    @reactive.effect
-    @reactive.event(input.to_configure)
-    def _go_configure():
-        current_step.set(STEP_CONFIGURE)
-
     @reactive.effect
     @reactive.event(input.back_to_basin)
     def _go_basin():
         current_step.set(STEP_BASIN)
 
     @reactive.effect
-    @reactive.event(input.back_to_configure)
-    def _go_configure2():
-        current_step.set(STEP_CONFIGURE)
-
-    @reactive.effect
-    def _stepper_nav():
-        # Stepper links live in the (re-rendering) left pane, so compare click
-        # counters and only navigate on a genuine increase (ignore reset-to-0).
-        cur = {}
-        for key, _ in STEP_LABELS:
-            try:
-                cur[key] = input[f"go_{key}"]() or 0
-            except Exception:
-                cur[key] = 0
+    @reactive.event(input.step_nav)
+    def _step_nav():
+        # One handler for both steppers (left pane + worksheet); www/worksheet.js posts the
+        # target step key on a data-step click. Guards mirror the old counter-based nav.
+        target = input.step_nav()
+        if target not in dict(STEP_LABELS):
+            return
         with reactive.isolate():
-            prev = step_clicks()
-            target = next((k for k, _ in STEP_LABELS if cur[k] > prev.get(k, 0)), None)
-            step_clicks.set(cur)
-            if target is None:
-                return
             has_delin = delin() is not None
             has_report = base_result() is not None
-            if target == STEP_IDENTIFY:
-                current_step.set(STEP_IDENTIFY)
-            elif target in (STEP_BASIN, STEP_CONFIGURE) and has_delin:
-                current_step.set(target)
-            elif target == STEP_REPORT and has_report:
-                current_step.set(STEP_REPORT)
-            else:
-                ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
+        if target == STEP_IDENTIFY:
+            current_step.set(STEP_IDENTIFY)
+        elif target == STEP_BASIN and has_delin:
+            current_step.set(STEP_BASIN)
+        elif target == STEP_ASSESS and has_delin:
+            current_step.set(STEP_ASSESS)         # _autostart_assess runs it if not yet done
+        elif target == STEP_REPORT and has_report:
+            current_step.set(STEP_REPORT)
+            _show_report_modal()                  # opening Report shows the read-only popup
+        else:
+            ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
 
     @reactive.effect
     @reactive.event(input.nav_new, input.clear_basin)
@@ -1307,7 +1467,9 @@ def server(input, output, session):
         for k in ("ws", "reach", "marker"):
             _remove_layer(k)
         snapped_point.set(None); delin.set(None); base_result.set(None)
-        modal_shown.set(False); stage.set("")
+        _overrides.set({}); _notes.set({}); _source_choice.set({})
+        _geom_owned.set(set()); _geom_text.set({}); current_fn.set(0)
+        stage.set("")
         current_step.set(STEP_IDENTIFY)
         try:
             ui.modal_remove()
@@ -1345,24 +1507,60 @@ def server(input, output, session):
                 "Switch basemaps and toggle the NHD overlay with the layers control (top-right)."),
             title="Help", easy_close=True))
 
-    # ---- selection + source choices (configure step) ----
     @reactive.calc
     def selected_metric_ids():
-        # All metrics always run — the per-metric checkboxes were removed from the
-        # Configure page, so this is no longer user-selectable.
+        # All 20 metrics always run (there is no per-metric selection).
         return list(ALL_MIDS)
 
-    @reactive.calc
-    def source_choices():
-        out = {}
-        for i, mid in SRC_INDEX.items():
-            try:
-                v = input[f"src_{i}"]()
-            except Exception:
-                v = None
-            if v:
-                out[mid] = v
-        return out
+    # ---- worksheet navigation + in-card source swap (posted by www/worksheet.js) ----
+    @reactive.effect
+    @reactive.event(input.nav_move)
+    def _nav_move():
+        ev = input.nav_move() or {}
+        try:
+            d = int(ev.get("d", 0))
+        except (TypeError, ValueError):
+            return
+        with reactive.isolate():
+            cur = current_fn()
+        current_fn.set(max(0, min(len(_FUNCTIONS) - 1, cur + d)))
+
+    @reactive.effect
+    @reactive.event(input.nav_jump)
+    def _nav_jump():
+        ev = input.nav_jump() or {}
+        try:
+            i = int(ev.get("i"))
+        except (TypeError, ValueError):
+            return
+        current_fn.set(max(0, min(len(_FUNCTIONS) - 1, i)))
+
+    @reactive.effect
+    @reactive.event(input.source_set)
+    def _apply_source():
+        ev = input.source_set() or {}
+        mid, src = ev.get("mid"), ev.get("source")
+        if not mid or not src:
+            return
+        cur = dict(_source_choice())
+        cur[mid] = src
+        _source_choice.set(cur)
+
+    def _show_report_modal():
+        res = export_result()
+        if not res:
+            ui.notification_show("Run a screening first.", type="message", duration=3)
+            return
+        with reactive.isolate():
+            notes = dict(_notes())
+        _xs_unit_prev.set("ft")
+        ui.modal_show(_report_modal(res, notes))
+
+    @reactive.effect
+    @reactive.event(input.open_report_evt)
+    def _open_report():
+        current_step.set(STEP_REPORT)
+        _show_report_modal()
 
     # ---- in-table overrides + notes (posted by www/report-edit.js) ----
     @reactive.calc
@@ -1548,7 +1746,9 @@ def server(input, output, session):
         base = base_result()
         if not base:
             return None
-        sc = assessment.rescore(base["report"], dict(current_overrides()))
+        # in-card source swaps rewrite the generated view; overrides then win on top
+        merged = assessment.apply_source_choices(base["report"], dict(_source_choice()))
+        sc = assessment.rescore(merged, dict(current_overrides()))
         owned = _geom_owned()
         if owned:  # relabel so an edited cross-section doesn't read as a manual override
             texts = _geom_text()
@@ -1604,6 +1804,8 @@ def server(input, output, session):
         if app_mode() == "batch":
             return None
         step = current_step()
+        if step in (STEP_ASSESS, STEP_REPORT):
+            return None            # the full-width Assessment worksheet replaces the left pane
         if step == STEP_IDENTIFY:
             # initial disabled state from the current point, without making the pane
             # re-render on every snap (the toggle effect updates it live)
@@ -1649,92 +1851,16 @@ def server(input, output, session):
                               # === END TEMP ===
                               ui.div(ui.input_action_button("clear_basin", "Clear",
                                                             class_="btn-outline-secondary"),
-                                     ui.input_action_button("to_configure", "Continue",
+                                     ui.input_action_button("run_screening", "Run screening",
                                                             class_="btn-primary"),
-                                     class_="easi-pane-actions"))
-        elif step == STEP_CONFIGURE:
-            body = ui.TagList(
-                ui.div("Explore the metrics and data sources used for each function.",
-                       class_="easi-instr"),
-                _configure_rows(),
-                ui.div(ui.input_action_button("back_to_basin", "Back", class_="btn-outline-secondary"),
-                       ui.input_action_button("to_report", "Compute & report", class_="btn-primary"),
-                       class_="easi-pane-actions"),
-                ui.output_text("busy_text"),
-            )
-        else:  # report
-            body = ui.TagList(
-                ui.div("Analysis complete. Open the report, adjust overrides, or export.",
-                       class_="easi-instr"),
-                ui.div(ui.input_action_button("show_report", "Open report", class_="btn-primary"),
-                       class_="easi-pane-actions"),
-                ui.div(ui.input_action_button("back_to_configure", "Back to configure",
-                                              class_="btn-outline-secondary"),
-                       class_="easi-pane-actions"),
-            )
+                                     class_="easi-pane-actions"),
+                              ui.output_text("busy_text"))
         active = current_step()
         head_label = dict(STEP_LABELS).get(active, "EASI")
         return ui.TagList(
             ui.div(f"EASI — {head_label}", class_="easi-pane-head"),
             ui.div(_stepper(active), body, class_="easi-pane-body"),
         )
-
-    def _configure_rows():
-        groups: dict[str, list] = {d: [] for d in _DISC_ORDER}
-        for i, mid in enumerate(ALL_MIDS):
-            meta = _METRICS[mid]
-            groups.setdefault(meta["discipline"], []).append((i, mid, meta))
-        out = []
-        for disc in _DISC_ORDER:
-            rows = groups.get(disc) or []
-            if not rows:
-                continue
-            # within a discipline, group metrics under their STAF function (encounter order)
-            fn_order: list[str] = []
-            by_fn: dict[str, list] = {}
-            for i, mid, meta in rows:
-                fn = meta.get("functionName") or "—"
-                if fn not in by_fn:
-                    by_fn[fn] = []
-                    fn_order.append(fn)
-                by_fn[fn].append((i, mid, meta))
-            blocks = []
-            for fn in fn_order:
-                members = by_fn[fn]
-                stmt = (members[0][2].get("functionStatement") or "").strip()
-                header = ui.div(ui.span(fn, class_="easi-fn-name"), _info(stmt),
-                                class_="easi-fn-group")
-                blocks.append(ui.div(
-                    header,
-                    *[_cfg_row(i, mid, meta) for i, mid, meta in members],
-                    class_="easi-fn-block"))
-            # collapsible discipline — no `open` attribute => collapsed by default
-            out.append(ui.tags.details(
-                ui.tags.summary(disc, class_="easi-cfg-group"),
-                ui.div(*blocks, class_="easi-disc-body"),
-                class_="easi-disc"))
-        return ui.div(*out)
-
-    def _cfg_row(i, mid, meta):
-        # All metrics always run, so there's no per-metric checkbox — the inline row is
-        # just the metric name + ⓘ hover (+ a source dropdown where alternatives exist).
-        crit = meta.get("criteria") or {}
-        tip = "\n".join(filter(None, [
-            f"Source: {_ds_label(mid)}",
-            (f"Alternative (planned): {config.PLANNED_ALT_SOURCE[mid]}"
-             if mid in config.PLANNED_ALT_SOURCE else ""),
-            (f"Good: {crit['Good']}" if crit.get("Good") else ""),
-            (f"Fair: {crit['Fair']}" if crit.get("Fair") else ""),
-            (f"Poor: {crit['Poor']}" if crit.get("Poor") else ""),
-        ]))
-        # ⓘ rides right after the metric name so it hugs the text.
-        name = ui.span(meta["name"], _info(tip)) if tip else ui.span(meta["name"])
-        children = [ui.span(name, class_="easi-metric-name")]
-        if mid in config.SOURCE_OPTIONS:            # interactive source choice stays visible
-            opts = {v: lbl for v, lbl in config.SOURCE_OPTIONS[mid]}
-            children.append(ui.input_select(f"src_{i}", None, choices=opts,
-                                            selected=next(iter(opts))))
-        return ui.div(*children, class_="easi-cfg-row")
 
     @render.ui
     def snap_status():
@@ -1755,7 +1881,6 @@ def server(input, output, session):
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
             row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
-            row("Watershed area", f'{d.get("watershed_area_sqkm")} km²'),
             row("Reach length", f'{d.get("reach_length_ft")} ft'),
             row("COMID", d.get("comid")),
             class_="easi-basin-card",
@@ -1808,23 +1933,387 @@ def server(input, output, session):
             ".easi-map-wrap .leaflet-container.leaflet-dragging .leaflet-grab"
             "{cursor:grabbing !important;}")
 
-    # ---- modal output slots (re-render in place on override change) ----
-    @render.ui
-    def m_scores():
-        sc = scored()
-        if not sc:
-            return None
-        return _summary_plots(sc)
+    # ==================================================================== #
+    # Assessment worksheet (full-width overlay: functions rail + one function
+    # at a time + roll-up rail). Ports the SFARI/DEEP layout to EASI.
+    # ==================================================================== #
+    def _cur_fn():
+        return _FUNCTIONS[max(0, min(len(_FUNCTIONS) - 1, current_fn()))]
+
+    def _xs_editor():
+        """The editable cross-section embedded in the 3 XS-metric cards. Same inputs/outputs
+        as the old report panel (so the whole XS reactive pipeline is reused verbatim), but
+        seeded from the LIVE input values so an edit persists when navigating among the XS
+        cards (Shiny retains an input's value across the fn-panel re-render)."""
+        with reactive.isolate():
+            block = _xs_block()
+            cands = _xs_candidates()
+            try:
+                bf_cur, lb_cur, unit_cur = input.xs_bankfull(), input.xs_lowbank(), input.xs_unit()
+            except Exception:  # noqa: BLE001 — inputs not created on the first XS-card visit
+                bf_cur = lb_cur = None
+                unit_cur = "ft"
+        if not block:
+            return ui.div("Cross-section geometry is unavailable for this reach.",
+                          class_="easi-instr")
+        unit0 = unit_cur or "ft"
+        per_m = FT_PER_M if unit0 == "ft" else 1.0
+        thal = block["thalweg"]
+        bf0 = bf_cur if bf_cur is not None else round((block["bankfull_stage"] - thal) * per_m, 2)
+        lb0 = lb_cur if lb_cur is not None else round((block["floodplain_stage"] - thal) * per_m, 2)
+        bk_area = block.get("bankfull_area_m2")
+        area_txt = f"{bk_area:.1f} m² " if bk_area is not None else ""
+        bf_tip = (f"The depth at which the channel cross-sectional area equals the Bieger et al. "
+                  f"(2015) regional bankfull area ({area_txt}for the "
+                  f"{block.get('division') or 'national'} division). Edit to use a surveyed value.")
+        lb_tip = ("The first break in slope to a flat depositional surface (bank) on the DEM "
+                  "profile, capped at the floodprone elevation. Drives the bank-height ratio. "
+                  "Edit to use a surveyed value.")
+        panel = ui.div(
+            ui.div("Cross-section geometry", class_="easi-xs-panel-title"),
+            ui.output_ui("xs_summary"),
+            ui.div(
+                ui.input_numeric("xs_bankfull", ui.span("Bankfull depth ", _info(text=bf_tip)),
+                                 value=bf0, min=0, step=0.1),
+                ui.input_numeric("xs_lowbank", ui.span("Low bank height ", _info(text=lb_tip)),
+                                 value=lb0, min=0, step=0.1),
+                class_="easi-xs-fields"),
+            ui.input_radio_buttons("xs_unit", None, {"ft": "Feet", "m": "Meters"},
+                                   selected=unit0, inline=True),
+            class_="easi-xs-panel")
+        switch = ui.div(
+            ui.input_action_button("xs_prev", "◀", class_="easi-xs-arrow"),
+            ui.output_ui("xs_selector"),
+            ui.input_action_button("xs_next", "▶", class_="easi-xs-arrow"),
+            class_="easi-xs-switch") if len(cands) >= 2 else None
+        # Hidden output publishing the windowed default view. www/worksheet.js injects
+        # "Zoom Home" (reframe to this window) and "Zoom to Extents" (autorange) into the
+        # plot's OWN modebar and handles the clicks via Plotly.relayout — plotly config
+        # can't carry JS click handlers through shinywidgets, the FigureWidget never
+        # captures a reliable _rangeInitial, and Python range traits go stale after a
+        # front-end zoom. Interactive widget only.
+        xs_win_pub = (ui.div(ui.output_text("xs_window_range"), class_="easi-xs-winrange")
+                      if _HAS_PLOTLY else None)
+        head = ui.div(ui.span("Representative cross-section", class_="easi-xs-plot-title"),
+                      switch, xs_win_pub, class_="easi-xs-plot-head")
+        plot = (ui.div(output_widget("xsection_plot", height="100%"), class_="easi-xsection")
+                if _HAS_PLOTLY else ui.output_ui("xsection"))
+        right = ui.div(head, plot, class_="easi-xs-right")
+        return ui.div(panel, right, class_="easi-xsection-wrap easi-xs-in-card")
 
     @render.ui
-    def m_metrics():
+    def worksheet():
+        if app_mode() == "batch":
+            return None
+        step = current_step()
+        if step not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        return ui.div(
+            ui.div(
+                ui.div("EASI — Assessment", class_="easi-pane-head"),
+                ui.div(_stepper(step), class_="sfari-nav-steps"),
+                ui.output_ui("fn_nav"),
+                class_="sfari-nav"),
+            ui.div(ui.output_ui("fn_panel"), class_="sfari-fnpanel"),
+            ui.div(ui.output_ui("rollup_rail"), class_="sfari-rollup"),
+            class_="sfari-worksheet")
+
+    @render.ui
+    def fn_nav():
+        if current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        sc = scored()
+        fscores = (sc or {}).get("functionScores", {})
+        cur = current_fn()
+        items = []
+        prev_disc = None
+        for i, fn in enumerate(_FUNCTIONS):
+            disc = fn.get("category", "")
+            if disc != prev_disc:
+                items.append(ui.div(disc, class_="sfari-nav-cat"))
+                prev_disc = disc
+            fs = fscores.get(fn["id"])
+            dot = scoring.function_score_band_color(fs) if fs is not None else "#dfe4ec"
+            cls = "sfari-nav-fn" + (" active" if i == cur else "")
+            items.append(ui.div(ui.span(class_="sfari-nav-dot", style=f"background:{dot};"),
+                                ui.span(fn.get("name", "")),
+                                {"data-idx": str(i)}, class_=cls))
+        return ui.TagList(*items)
+
+    @render.ui
+    def fn_panel():
+        # Skeleton: depends only on current_fn + compute-state, so the Plotly cross-section
+        # widget mounts once per XS-card visit; the live rating/score are nested slots that
+        # re-render on scored(). Notes + source select are seeded under isolate (no re-render).
+        if app_mode() == "batch" or current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        if base_result() is None:
+            st = assess_task.status()
+            if st in ("running", "initial"):
+                # The stage text is a nested output: reading stage() here would re-render
+                # this panel on every 0.3s poll, recreating the spinner node and restarting
+                # its CSS animation (the quarter-turn stutter).
+                return ui.div(ui.div(class_="easi-spinner"),
+                              ui.output_text("assess_stage_label", inline=True),
+                              class_="easi-fn-compute")
+            if st == "error":
+                return ui.div(
+                    ui.p("Metric computation failed."),
+                    ui.tags.button("Retry", {"data-step": "assess", "type": "button"},
+                                   class_="sfari-btn primary"),
+                    class_="easi-fn-compute")
+            return ui.div("Run a screening from the Basin step.", class_="easi-instr")
+        idx = max(0, min(len(_FUNCTIONS) - 1, current_fn()))
+        fn = _FUNCTIONS[idx]
+        fid = fn["id"]
+        meta = _METRIC_BY_FID.get(fid) or {}
+        mid = meta.get("metricId")
+        is_xs = fid in XS_FUNCTION_IDS
+        # Depend on _source_choice so a data-source swap re-renders the card, rebuilding the
+        # Scoring-method sliders for the chosen variant. Source swaps happen only on non-XS
+        # cards, so the XS widget's mount-once-per-visit guarantee is unaffected.
+        src_choice_all = _source_choice()
+        with reactive.isolate():
+            note0 = (_notes() or {}).get(mid, "")
+            src0 = (src_choice_all or {}).get(mid)
+            brow = next((r for r in ((base_result() or {}).get("report") or {}).get("metricRows", [])
+                         if r["metricId"] == mid), None) or {}
+        src_sel = None
+        if mid in config.SOURCE_OPTIONS:
+            variants = brow.get("sourceVariants") or {}
+            cur_src = src0 or brow.get("sourceChoice")
+            opts = []
+            for val, lbl in config.SOURCE_OPTIONS[mid]:
+                avail = (variants.get(val) or {}).get("available", True)
+                attrs = {"value": val}
+                if val == cur_src:
+                    attrs["selected"] = "selected"
+                if not avail:
+                    attrs["disabled"] = "disabled"
+                    lbl = f"{lbl} (no data)"
+                opts.append(ui.tags.option(lbl, attrs))
+            src_sel = ui.div(ui.span("Data source", class_="easi-src-key"),
+                             ui.tags.select(*opts, {"class": "easi-src-sel", "data-mid": mid}),
+                             class_="easi-src-row")
+        card = ui.div(
+            ui.div(ui.span("1", class_="sfari-step-num"),
+                   ui.span("Score this metric", class_="sfari-sec-title"),
+                   class_="sfari-sec-lbl"),
+            ui.div(ui.span(meta.get("name", ""), class_="easi-metric-title"),
+                   ui.output_ui("fn_metric_tip", inline=True),
+                   class_="sfari-metric-name"),
+            (ui.div(meta.get("metricStatement", ""), class_="sfari-metric-statement")
+             if meta.get("metricStatement") else None),
+            ui.output_ui("fn_metric_live"),
+            src_sel,
+            _method_expander(mid, _active_scoring(brow, src0)),
+            ui.tags.textarea(note0, {"class": "easi-note-ta", "data-mid": mid, "rows": "2",
+                                     "placeholder": "Add a note for this metric…"}),
+            _xs_editor() if is_xs else None,
+            class_="sfari-metric easi-metric-card")
+        prev_attrs = {"data-nav": "-1", "type": "button"}
+        if idx == 0:
+            prev_attrs["disabled"] = "disabled"
+        footer = ui.div(
+            ui.div(ui.tags.button("‹ Previous", prev_attrs, class_="sfari-btn"),
+                   class_="sfari-foot-left"),
+            ui.div(class_="sfari-foot-status"),
+            ui.tags.button("Next function ›" if idx < len(_FUNCTIONS) - 1 else "Done",
+                           {"data-nav": "1", "type": "button"}, class_="sfari-btn primary"),
+            class_="sfari-nav-actions")
+        return ui.div(
+            ui.div(ui.span(f"Function {idx + 1} of {len(_FUNCTIONS)} · {fn.get('category', '')}",
+                           class_="easi-fn-eyebrow"),
+                   ui.span(fn["name"], class_="easi-fn-name"), class_="easi-fn-head"),
+            card,
+            ui.output_ui("fn_scorecard"),
+            ui.div(footer, class_="sfari-fn-footer"),
+            class_="sfari-fnpanel-inner")
+
+    def _cur_row(sc):
+        fid = _cur_fn()["id"]
+        mid = (_METRIC_BY_FID.get(fid) or {}).get("metricId")
+        return mid, next((r for r in sc["metricRows"] if r["metricId"] == mid), None) or {}
+
+    @render.text
+    def assess_stage_label():
+        return stage() or "Computing metrics…"
+
+    @render.ui
+    def fn_metric_tip():
+        # The card's single metric ⓘ, kept live so its Source/value lines follow source swaps.
+        if current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
         sc = scored()
         if not sc:
             return None
-        with reactive.isolate():          # read notes without re-rendering on every keystroke
-            notes = dict(_notes())
-        return _metric_table(sc["metricRows"], notes,
-                             outcomes=sc["outcomes"], eci=sc["ecosystemConditionIndex"])
+        current_fn()
+        _mid, row = _cur_row(sc)
+        # Worksheet ⓘ: criteria moved to the "Scoring method" panel below the evidence row.
+        return _metric_card_tip(row, include_criteria=False) if row else None
+
+    @render.ui
+    def fn_metric_live():
+        # Desktop evidence + override select — re-renders on scored() (override / source swap / XS edit).
+        if current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        sc = scored()
+        if not sc:
+            return None
+        current_fn()  # depend on the active function so the slot follows navigation
+        mid, row = _cur_row(sc)
+        gen = row.get("generatedRating")
+        chip = (ui.tags.button(f"use {gen}", {"data-suggest": mid, "type": "button",
+                                              "title": f"Restore the desktop rating ({gen})"},
+                               class_="sfari-suggest-chip")
+                if gen and row.get("rating") != gen else None)
+        return ui.div(
+            ui.div(ui.span("desktop", class_="sfari-ev-tag"),
+                   ui.tags.b(row.get("valueText") or "—", class_="sfari-ev-val"),
+                   chip, class_="sfari-evidence"),
+            ui.div(_rate_select(mid, row), class_="easi-rate-cell"),
+            class_="easi-metric-live")
+
+    def _cur_method():
+        """(mid, row, method, site_inputs) for the active function's Scoring-method panel."""
+        sc = scored()
+        if not sc:
+            return None
+        current_fn()
+        mid, row = _cur_row(sc)
+        trace = (row or {}).get("scoring") or {}
+        method = easi_methods.resolve(mid, trace.get("model"))
+        if method is None:
+            return None
+        return mid, row, trace, method, trace.get("inputs") or {}
+
+    # suspend_when_hidden=False: these slots live inside a collapsed <details> (display:none),
+    # which Shiny would otherwise suspend (never compute) until first opened — so the plot and
+    # criteria would be blank on open. They read scored() + the what-if sliders and re-render in
+    # place, keeping slider drags off the fn_panel skeleton (the XS widget stays mounted).
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def method_body():
+        if current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        ctx = _cur_method()
+        if ctx is None:
+            return None
+        mid, row, trace, method, site_inputs = ctx
+        explored = dict(site_inputs)
+        for j, (inp, sv, _rng) in enumerate(easi_methods.slider_specs(method, site_inputs)):
+            try:
+                v = input[_method_slider_id(j)]()
+            except Exception:  # noqa: BLE001 — slider not created yet on first paint
+                v = sv
+            if v is not None:
+                explored[inp.key] = v
+        return _method_body_ui(mid, method, row, trace, site_inputs, explored)
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def method_criteria():
+        if current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        ctx = _cur_method()
+        if ctx is None:
+            return None
+        return _method_criteria_ui(ctx[1], ctx[3])
+
+    @reactive.effect
+    @reactive.event(input.method_reset)
+    def _method_reset():
+        ctx = _cur_method()
+        if ctx is None:
+            return
+        _mid, _row, _trace, method, site_inputs = ctx
+        for j, (inp, sv, (lo, _hi, _step)) in enumerate(
+                easi_methods.slider_specs(method, site_inputs)):
+            val = sv if sv is not None else lo
+            ui.update_slider(_method_slider_id(j), value=int(round(val)) if inp.integer else val)
+
+    @render.ui
+    def fn_scorecard():
+        # Read-only derived-score gauge (0-15), band pill, and an "(auto: N)" cue when overridden.
+        if current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        sc = scored()
+        if not sc:
+            return None
+        current_fn()
+        mid, row = _cur_row(sc)
+        fs = row.get("functionScore")
+        if fs is None:
+            band_lbl, band_col, knob = "Not scored yet", "#e7ebf1", None
+        else:
+            # written-out band label (Functioning / Functioning-at-Risk / Non-Functioning),
+            # matching SFARI's scorecard badge; the short F/AR/NF form stays report-only
+            band_lbl = scoring.index_band_label(fs / config.FUNCTION_SCORE_MAX)
+            band_col = scoring.function_score_band_color(fs)
+            knob = max(0.0, min(100.0, fs / config.FUNCTION_SCORE_MAX * 100))
+        cue = None
+        if row.get("status") == "override" and row.get("generatedRating") in config.RATINGS:
+            auto = scoring.function_score(
+                scoring.rating_to_index(row["generatedRating"],
+                                        _METRICS.get(mid, {}).get("indexMidpoints")))
+            cue = ui.span(f"(auto: {auto})", class_="easi-auto-cue")
+        stmt = (_METRICS.get(mid, {}).get("functionStatement")
+                or _cur_fn().get("function_statement") or "")
+        return ui.div(
+            ui.div(ui.span("2", class_="sfari-step-num"),
+                   ui.span("Function score", class_="easi-fscore-lbl"),
+                   _info(html_tip=(
+                       '<div class="easi-tip-sec">Calculated automatically from the metric '
+                       'rating; EASI derives the 0-15 score, so there is no manual scoring.'
+                       '</div>'
+                       '<div class="easi-tip-sec">'
+                       '<div class="easi-tip-crit"><span class="easi-tip-dot poor"></span>'
+                       '<span><b>0-5:</b> Non-Functioning (Poor rating)</span></div>'
+                       '<div class="easi-tip-crit"><span class="easi-tip-dot fair"></span>'
+                       '<span><b>6-10:</b> Functioning-at-Risk (Fair rating)</span></div>'
+                       '<div class="easi-tip-crit"><span class="easi-tip-dot good"></span>'
+                       '<span><b>11-15:</b> Functioning (Good rating)</span></div>'
+                       '</div>')),
+                   class_="easi-fscore-head"),
+            (ui.p(stmt, class_="sfari-fn-statement") if stmt else None),
+            ui.div(
+                ui.div(ui.div({"style": "" if knob is None else f"left:{knob:.1f}%;"},
+                              class_="easi-fscore-knob"), class_="easi-fscore-track"),
+                ui.span("–" if fs is None else str(fs), class_="easi-fscore-num"),
+                ui.span(band_lbl, class_="easi-fscore-band", style=f"background:{band_col};"),
+                cue, class_="easi-fscore-row"),
+            class_="easi-scorecard" + ("" if fs is not None else " unset"))
+
+    @render.ui
+    def rollup_rail():
+        if current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        sc = scored()
+        if not sc:
+            return ui.div("Run a screening to see the rollup.", class_="easi-instr")
+        eci = sc["ecosystemConditionIndex"]
+        sub = sc["subIndices"]
+        rows = sc["metricRows"]
+        n_total = len(rows)
+        n_scored = sum(1 for r in rows if r.get("rating"))
+        knob = max(2.0, min(98.0, (eci or 0.0) * 100))
+        report_primary = bool(n_total) and n_scored == n_total
+        pct = (n_scored / n_total * 100) if n_total else 0
+        return ui.TagList(
+            ui.div(ui.div("–" if eci is None else f"{eci:.2f}", class_="sfari-eci"),
+                   ui.div("Ecosystem Condition Index", class_="sfari-eci-lbl"),
+                   ui.div(ui.div(class_="sfari-eci-knob", style=f"left:{knob:.1f}%;"),
+                          class_="sfari-eci-track"),
+                   class_="sfari-eci-box"),
+            _bar("Physical", sub["physical"], scoring.index_band_color(sub["physical"])),
+            _bar("Chemical", sub["chemical"], scoring.index_band_color(sub["chemical"])),
+            _bar("Biological", sub["biological"], scoring.index_band_color(sub["biological"])),
+            ui.div(ui.tags.span(style=f"width:{pct:.0f}%;"), class_="sfari-progress-bar"),
+            ui.div(f"{n_scored} / {n_total} functions computed", class_="sfari-progress"),
+            ui.tags.button("Open report", {"data-report": "1", "type": "button"},
+                           class_="sfari-btn sfari-rollup-report"
+                           + (" primary" if report_primary else "")),
+        )
 
     @render.ui
     def xsection():
@@ -1863,18 +2352,13 @@ def server(input, output, session):
             fw._config = {"displaylogo": False}   # hide the Plotly logo (config-only)
             return fw
 
-        @reactive.effect
-        def _sync_xsection_plot():
-            """Update the live cross-section figure IN PLACE when the selected candidate,
-            edited heights, or unit change. Mutating the existing FigureWidget (rather than
-            returning a new one from the render) is what removes the flicker: no DOM
-            remount, and the trace count stays fixed (see ``xsplotly.figure``), so this is
-            a single batched restyle/relayout. ``xsection_plot.widget`` is reactive and
-            ``req()``-waits until the widget has first rendered, so ordering is safe."""
-            w = xsection_plot.widget      # reactive: req()-waits until the widget exists
+        def _xs_src_figure():
+            """Build a fresh source ``go.Figure`` (windowed default view) from the CURRENT
+            block + edited geometry. Shared by the in-place sync and the "Reset view" button
+            so both frame identically. Returns ``(block, src)`` or ``(None, None)``."""
             block = _xs_block()
-            if w is None or not block:
-                return
+            if not block:
+                return None, None
             g = current_geometry()
             unit = g["unit"] if g else "ft"
             bankfull_stage = g["bankfull_stage"] if g else block.get("bankfull_stage")
@@ -1884,6 +2368,34 @@ def server(input, output, session):
                 block["stations"], block["elevs"], thalweg=block["thalweg"],
                 bankfull_stage=bankfull_stage, floodplain_stage=floodplain_stage, unit=unit,
                 source=block.get("dem_source"))
+            return block, src
+
+        # suspend_when_hidden=False: this output lives in a display:none span, which Shiny
+        # would otherwise suspend (never compute), leaving the Reset view button no window.
+        @output(suspend_when_hidden=False)
+        @render.text
+        def xs_window_range():
+            """Publish the current windowed default view as JSON ``{"x":[lo,hi],"y":[lo,hi]}``
+            for the client "Reset view" button (www/worksheet.js). Recomputed from the live
+            geometry so reset targets the right window after edits / candidate switches."""
+            _block, src = _xs_src_figure()
+            if src is None:
+                return ""
+            return json.dumps({"x": list(src.layout.xaxis.range),
+                               "y": list(src.layout.yaxis.range)})
+
+        @reactive.effect
+        def _sync_xsection_plot():
+            """Update the live cross-section figure IN PLACE when the selected candidate,
+            edited heights, or unit change. Mutating the existing FigureWidget (rather than
+            returning a new one from the render) is what removes the flicker: no DOM
+            remount, and the trace count stays fixed (see ``xsplotly.figure``), so this is
+            a single batched restyle/relayout. ``xsection_plot.widget`` is reactive and
+            ``req()``-waits until the widget has first rendered, so ordering is safe."""
+            w = xsection_plot.widget      # reactive: req()-waits until the widget exists
+            block, src = _xs_src_figure()
+            if w is None or not block:
+                return
             with w.batch_update():        # one atomic client update -> no flash
                 for wt, st in zip(w.data, src.data):
                     wt.x, wt.y = st.x, st.y
@@ -1891,6 +2403,8 @@ def server(input, output, session):
                     wt.hovertemplate = st.hovertemplate  # carries the unit in the bed-line hover
                 w.layout.shapes = tuple(s.to_plotly_json() for s in src.layout.shapes)
                 w.layout.annotations = tuple(a.to_plotly_json() for a in src.layout.annotations)
+                w.layout.xaxis.autorange = False
+                w.layout.yaxis.autorange = False
                 w.layout.xaxis.range = src.layout.xaxis.range
                 w.layout.yaxis.range = src.layout.yaxis.range
                 w.layout.xaxis.title.text = src.layout.xaxis.title.text
@@ -1986,18 +2500,6 @@ def server(input, output, session):
             if v is not None:
                 ui.update_numeric(fid, value=round(float(v) * factor, 2))
         _xs_unit_prev.set(new)
-
-    @reactive.effect
-    @reactive.event(input.show_report)
-    def _reopen():
-        base = base_result()
-        if base is None:
-            ui.notification_show("Run an analysis first.", type="message", duration=3)
-            return
-        _xs_unit_prev.set("ft")  # modal recreated with feet-default inputs
-        _xs_sel.set(None)        # back to the default (middle) cross-section
-        _geom_owned.set(set()); _geom_text.set({})
-        ui.modal_show(_report_modal(base))
 
     # ---- downloads (reflect current overrides) ----
     @render.download(filename="easi_report.pdf")

@@ -74,6 +74,55 @@ def test_flow_width_edge_limited_when_never_rises():
     assert edge is True and w == pytest.approx(10.0, abs=0.01)
 
 
+def test_wetted_span_interpolates_banks():
+    # V channel, thalweg 0 at x=50, slope 0.5/unit -> stage 2 crosses at x=46 / x=54
+    stations = list(range(0, 101))
+    elevs = [abs(x - 50) * 0.5 for x in stations]
+    left, right, edge = geomorph.wetted_span(stations, elevs, 2.0)
+    assert left == pytest.approx(46.0) and right == pytest.approx(54.0)
+    assert edge is False
+    assert geomorph.flow_width(stations, elevs, 2.0)[0] == pytest.approx(right - left)
+
+
+def test_wetted_span_none_when_stage_at_or_below_thalweg():
+    stations = list(range(0, 11))
+    elevs = [abs(x - 5) * 0.5 for x in stations]
+    assert geomorph.wetted_span(stations, elevs, 0.0) is None
+
+
+def test_wetted_span_edge_limited_stops_at_profile_end():
+    stations = list(range(0, 11))
+    elevs = [0.1 * x for x in stations]            # thalweg at x=0; left side is the end
+    left, right, edge = geomorph.wetted_span(stations, elevs, 0.5)
+    assert edge is True
+    assert left == 0 and right == pytest.approx(5.0)
+
+
+def test_display_window_trims_climbing_side_keeps_flat_side():
+    # flat floodplain left of the thalweg (never reaches the ceiling); a valley wall
+    # right of it crosses the ceiling at x=+30 -> only that side is trimmed
+    stations = list(range(-100, 101))
+    elevs = [1.5 if x < 0 else x * 0.2 for x in stations]   # thalweg 0 at x=0
+    lo, hi = geomorph.display_window(stations, elevs, ceiling_stage=6.0)
+    assert lo == -100                              # flat side keeps its full extent
+    assert hi == pytest.approx(30.0)               # trimmed at the ceiling crossing
+
+
+def test_display_window_honors_min_half():
+    # gorge: both walls cross the ceiling 3 stations from the thalweg, but each side
+    # keeps at least min_half of station for bank context (bounded by the data)
+    stations = list(range(-50, 51))
+    elevs = [abs(x) * 2.0 for x in stations]
+    lo, hi = geomorph.display_window(stations, elevs, ceiling_stage=6.0, min_half=15.0)
+    assert lo == pytest.approx(-15.0) and hi == pytest.approx(15.0)
+
+
+def test_display_window_full_extent_when_ceiling_below_thalweg():
+    stations = list(range(0, 11))
+    elevs = [abs(x - 5) * 0.5 for x in stations]
+    assert geomorph.display_window(stations, elevs, ceiling_stage=-1.0) == (0, 10)
+
+
 def test_entrenchment_connected_vs_incised():
     stations = list(range(0, 101))
     # connected: low banks (floodplain at 10), channel depth 4 (thalweg 6)
@@ -116,6 +165,98 @@ def test_top_of_bank_elev_picks_lower_bank():
             elevs.append(15.0 if x >= 60 else 6 + (x - 50) * 0.9)
     tob = geomorph.top_of_bank_elev(stations, elevs)
     assert tob == pytest.approx(12.0, abs=0.5)   # the lower of the two banks
+
+
+# --- slope-break bank detection (default low-bank height) ------------------- #
+def _bench_profile():
+    # channel V (20%) to a flat bench at 0.8 m, then a 50% climb to a terrace:
+    # the FIRST definitive flat is the bench, below a 1 m bankfull depth
+    stations = list(range(-60, 61))
+    elevs = []
+    for x in stations:
+        ax = abs(x)
+        if ax <= 4:
+            elevs.append(ax * 0.2)
+        elif ax <= 20:
+            elevs.append(0.8)
+        elif ax <= 30:
+            elevs.append(0.8 + (ax - 20) * 0.5)
+        else:
+            elevs.append(5.8)
+    return stations, elevs
+
+
+def test_bank_break_detects_bench_below_bankfull():
+    stations, elevs = _bench_profile()
+    brk = geomorph.bank_break_elev(stations, elevs, d_bf=1.0)
+    assert brk == pytest.approx(0.8, abs=0.05)   # the bench, not the terrace
+
+
+def test_bank_break_ignores_valley_wall_side():
+    # left: short bank to a flat floodplain at 1.2 m; right: monotonic valley wall
+    # that never flattens -> only the left side yields a bank
+    stations = list(range(-60, 61))
+    elevs = [x * 0.5 if x >= 0 else (min(-x, 3) * 0.4 if -x <= 3 else 1.2)
+             for x in stations]
+    brk = geomorph.bank_break_elev(stations, elevs, d_bf=1.0)
+    assert brk == pytest.approx(1.2, abs=0.05)
+
+
+def test_bank_break_none_when_both_sides_wall():
+    stations = list(range(-50, 51))
+    elevs = [abs(x) * 0.5 for x in stations]     # pure V, no flat anywhere
+    assert geomorph.bank_break_elev(stations, elevs, d_bf=1.0) is None
+    # summarize_profile falls back to the crest scan clamped to [bankfull, floodprone]
+    s = geomorph.summarize_profile(stations, elevs, 50.0, bankfull=(10.0, 1.0))
+    assert s["low_bank_stage_m"] == pytest.approx(2.0, abs=1e-6)   # floodprone cap
+
+
+def test_bank_break_requires_definitive_flat():
+    # gentle 8% bank with a 4% shoulder: the shoulder passes the absolute flat test
+    # but not the relative one (4% is half the 8% climb, not under a quarter of it),
+    # so the break lands at the true flat (~1.4 m), not on the shoulder (0.8 m)
+    stations = list(range(-60, 61))
+    elevs = []
+    for x in stations:
+        ax = abs(x)
+        if ax <= 10:
+            elevs.append(0.08 * ax)
+        elif ax <= 25:
+            elevs.append(0.8 + 0.04 * (ax - 10))
+        else:
+            elevs.append(1.4)
+    brk = geomorph.bank_break_elev(stations, elevs, d_bf=1.0)
+    assert brk is not None and brk > 1.2
+    assert brk == pytest.approx(1.4, abs=0.1)
+
+
+def test_bank_break_ignores_subarm_flat():
+    # a flat at 0.2 m (below the arming rise) inside the channel is not a bank;
+    # the break lands on the terrace the profile climbs to afterwards
+    stations = list(range(-60, 61))
+    elevs = []
+    for x in stations:
+        ax = abs(x)
+        if ax <= 2:
+            elevs.append(0.1 * ax)
+        elif ax <= 8:
+            elevs.append(0.2)
+        elif ax <= 14:
+            elevs.append(0.2 + (ax - 8) * 0.5)
+        else:
+            elevs.append(3.2)
+    brk = geomorph.bank_break_elev(stations, elevs, d_bf=1.0)
+    assert brk == pytest.approx(3.2, abs=0.05)
+
+
+def test_summarize_profile_low_bank_can_sit_below_bankfull():
+    # the bench (0.8 m) sits below the 1 m bankfull depth: the default low bank may
+    # now land below the bankfull stage, so the default BHR drops below 1
+    stations, elevs = _bench_profile()
+    s = geomorph.summarize_profile(stations, elevs, 50.0, bankfull=(10.0, 1.0))
+    assert s["low_bank_stage_m"] == pytest.approx(0.8, abs=0.05)
+    assert s["bank_height_ratio"] == pytest.approx(0.8, abs=0.05)
+    assert s["low_bank_stage_m"] < s["thalweg"] + 1.0            # below bankfull
 
 
 def test_derive_from_stages_bhr_and_depth():
@@ -228,7 +369,7 @@ def test_reach_summary_widths_match_representative_profile():
     # (use the raw curve depth reach_summary used internally, not the rounded report value)
     _, d_bf = geomorph.bankfull_geometry(50.0)
     thal = rs["thalweg"]
-    low_bank = max(rs.get("top_of_bank_m") or thal + d_bf, thal + d_bf)
+    low_bank = rs["low_bank_stage_m"]   # the exported default low-bank stage
     d = geomorph.derive_from_stages(rs["profile"]["stations"], rs["profile"]["elevs"],
                                     thalweg=thal, bankfull_stage=thal + d_bf,
                                     floodplain_stage=low_bank)
@@ -245,12 +386,27 @@ def test_summarize_profile_matches_derive_from_stages():
     assert s["thalweg"] == pytest.approx(6.0, abs=1e-6)
     assert s["bankfull_division"] == "Interior Plains"
     _, d_bf = geomorph.bankfull_geometry(50.0)
-    low_bank = max(s.get("top_of_bank_m") or s["thalweg"] + d_bf, s["thalweg"] + d_bf)
+    low_bank = s["low_bank_stage_m"]    # the exported default low-bank stage
     d = geomorph.derive_from_stages(stations, elevs, thalweg=s["thalweg"],
                                     bankfull_stage=s["thalweg"] + d_bf, floodplain_stage=low_bank)
     assert s["entrenchment_ratio"] == d["entrenchment_ratio"]
     assert s["bank_height_ratio"] == d["bank_height_ratio"]
     assert s["flood_prone_width_m"] == d["flood_prone_width_m"]
+
+
+def test_summarize_profile_caps_default_low_bank_at_floodprone():
+    # valley-confined: the DEM top-of-bank sits far above the channel (plateau 4 m
+    # above the thalweg vs ~1 m regional bankfull depth), which used to inflate the
+    # default bank-height ratio. The *default* low-bank stage caps at the floodprone
+    # stage (2x max bankfull depth) -> BHR exactly 2.0; the raw crest is still
+    # reported, and the user can still edit the low-bank height above the cap.
+    stations = list(range(0, 101))
+    elevs = [10.0 if not (40 <= x <= 60) else 6 + abs(x - 50) * 0.4 for x in stations]
+    s = geomorph.summarize_profile(stations, elevs, 50.0)
+    _, d_bf = geomorph.bankfull_geometry(50.0)
+    assert 10.0 - 6.0 > 2.0 * d_bf                                # the cap actually binds
+    assert s["top_of_bank_m"] == pytest.approx(10.0, abs=0.5)     # raw crest kept
+    assert s["bank_height_ratio"] == pytest.approx(2.0, abs=0.01)
 
 
 def test_reach_summary_retains_profile_and_stages():

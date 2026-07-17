@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from easi import geomorph
+from easi import config, geomorph
 from easi.datasources import wqp
 from easi.metrics import biology, geomorphology, hydraulics, hydrology, physicochemistry
 from easi.metrics.base import AnalysisContext
@@ -454,3 +454,214 @@ def test_build_cross_section_threads_dem_source():
     cs = assessment._build_cross_section(geom, slope=0.004, fcode=None)
     assert cs["geom"]["dem_resolution_m"] == 1
     assert cs["geom"]["dem_source"] == "USGS 3DEP 1 m DEM"
+
+
+# --- catchment-hydrology land-cover: automatic more-limiting of impervious | agriculture --- #
+def _lc_ctx(crop=None, hay=None, imp=None, landcover=None):
+    sc = {}
+    if crop is not None:
+        sc["pctcrop2019ws"] = crop
+    if hay is not None:
+        sc["pcthay2019ws"] = hay
+    if imp is not None:
+        sc["pctimp2019ws"] = imp
+    return _ctx(streamcat=sc, landcover=landcover or {})
+
+
+def test_land_cover_impervious_governs_when_worse():
+    # impervious high (Poor), agriculture low (Good) -> impervious governs
+    r = hydrology.impervious(_lc_ctx(crop=5, imp=40))
+    assert r.rating == "Poor" and r.detail["governing"] == "impervious"
+    assert "impervious" in r.value_text
+
+
+def test_land_cover_agriculture_governs_when_worse():
+    # Idaho case: impervious near-zero (Good), agriculture dominant (Poor) -> agriculture governs
+    r = hydrology.impervious(_lc_ctx(crop=61, imp=2))
+    assert r.rating == "Poor" and r.detail["governing"] == "agriculture"
+    assert "agricultural land" in r.value_text and "crop+hay" in r.source
+
+
+@pytest.mark.parametrize("ag,expected", [(20, "Good"), (24.99, "Good"), (25, "Fair"),
+                                         (50, "Fair"), (50.1, "Poor"), (70, "Poor")])
+def test_land_cover_agriculture_bins(ag, expected):
+    # impervious absent -> agriculture governs and uses the 25/50 bins
+    r = hydrology.impervious(_lc_ctx(crop=ag))
+    assert r.rating == expected and r.detail["governing"] == "agriculture"
+
+
+def test_land_cover_tie_defaults_to_impervious():
+    # both Good -> tie -> impervious (the anchor) governs
+    r = hydrology.impervious(_lc_ctx(crop=10, imp=5))
+    assert r.rating == "Good" and r.detail["governing"] == "impervious"
+    assert "impervious" in r.value_text
+
+
+def test_land_cover_uses_only_available_indicator():
+    imp_only = hydrology.impervious(_lc_ctx(imp=40))               # no crop/hay in the row
+    assert imp_only.rating == "Poor" and imp_only.detail["governing"] == "impervious"
+    assert imp_only.detail["agriculture"] is None
+    ag_only = hydrology.impervious(_ctx(landcover={"ag_pct": 60}))  # NLCD ag, no impervious
+    assert ag_only.rating == "Poor" and ag_only.detail["governing"] == "agriculture"
+    assert "NLCD" in ag_only.source and ag_only.detail["impervious"] is None
+
+
+def test_land_cover_sums_crop_and_hay():
+    r = hydrology.impervious(_lc_ctx(crop=30, hay=25))            # 55 -> Poor (agriculture)
+    assert r.value == 55.0 and r.rating == "Poor"
+
+
+def test_land_cover_unavailable_without_data():
+    assert hydrology.impervious(_ctx()).status == "unavailable"
+
+
+def test_land_cover_detail_carries_both_indicators():
+    r = hydrology.impervious(_lc_ctx(crop=61, imp=2))
+    assert r.detail["impervious"] == {"pct": 2.0, "rating": "Good"}
+    assert r.detail["agriculture"] == {"pct": 61.0, "rating": "Poor"}
+    assert "impervious 2.0%" in r.note and "agricultural 61.0%" in r.note
+
+
+def test_criteria_bands_indicator_aware():
+    mid = hydrology.IMPERVIOUS_ID
+    assert config.criteria_bands(mid, "agriculture")["Poor"] == ">50%"
+    assert config.criteria_bands(mid, "impervious")["Poor"] == ">25%"
+    assert config.criteria_bands(mid, None)["Good"] == "<10%"
+
+
+def test_land_cover_metric_display_name_is_neutral():
+    assert config.metrics_by_id()[hydrology.IMPERVIOUS_ID]["name"] == "Watershed Land-Cover Pressure"
+
+
+def test_rescore_keeps_agriculture_criteria_through_override():
+    # an override on an agriculture-scored row must keep the agriculture criteria bands,
+    # not silently revert to the impervious thresholds.
+    from easi import assessment
+    mid = hydrology.IMPERVIOUS_ID
+    base_report = {"metricRows": [{
+        "metricId": mid, "name": "Watershed Land-Cover Pressure", "discipline": "Hydrology",
+        "functionId": "catchment-hydrology", "functionName": "Catchment hydrology",
+        "rating": "Poor", "generatedRating": "Poor", "criteria": ">50%",
+        "criteriaBands": {"Good": "<25%", "Fair": "25%-50%", "Poor": ">50%"},
+        "index": 0.195, "functionScore": 3, "valueText": "61.0% agricultural land (watershed)",
+        "source": "EPA StreamCat crop+hay (watershed)", "status": "ok", "overrideable": True,
+    }], "totalCount": 20}
+    row = assessment.rescore(base_report, {mid: "Fair"})["metricRows"][0]
+    assert row["rating"] == "Fair" and row["criteria"] == "25%-50%"
+
+
+# --- detrital processing: natural riparian vegetation (forest + shrub + grassland + wetland) --- #
+def test_detrital_forest_only_unchanged():
+    # forest 40% (conif+decid+mxfst), no grass/shrub/wetland -> 40% natural veg -> Fair (as before)
+    r = physicochemistry.detrital_cpom(_ctx(streamcat={
+        "pctconif2019wsrp100": 8, "pctdecid2019wsrp100": 20, "pctmxfst2019wsrp100": 12}))
+    assert r.value == 40.0 and r.rating == "Fair"
+    assert r.detail["forest"] == 40.0 and r.detail["total"] == 40.0
+
+
+def test_detrital_grassland_buffer_scores_good():
+    # grassland-region stream: ~0 forest but a dense grass/shrub buffer -> Good (was Poor forest-only)
+    r = physicochemistry.detrital_cpom(_ctx(streamcat={
+        "pctgrs2019wsrp100": 55, "pctshrb2019wsrp100": 10, "pctmxfst2019wsrp100": 2}))
+    assert r.value == 67.0 and r.rating == "Good"
+    assert r.detail["grassland"] == 55.0 and r.detail["shrub"] == 10.0 and r.detail["forest"] == 2.0
+
+
+def test_detrital_wetland_counts():
+    r = physicochemistry.detrital_cpom(_ctx(streamcat={
+        "pctwdwet2019wsrp100": 30, "pcthbwet2019wsrp100": 25}))  # 55 -> Good
+    assert r.detail["wetland"] == 55.0 and r.rating == "Good"
+
+
+@pytest.mark.parametrize("grass,expected", [(15, "Poor"), (20, "Poor"), (20.1, "Fair"),
+                                            (50, "Fair"), (50.1, "Good"), (60, "Good")])
+def test_detrital_bins_unchanged(grass, expected):
+    # thresholds unchanged: Good >50, Fair 20-50, Poor <=20 (applied to natural-veg %)
+    r = physicochemistry.detrital_cpom(_ctx(streamcat={"pctgrs2019wsrp100": grass}))
+    assert r.rating == expected
+
+
+def test_detrital_unavailable_without_veg_data():
+    assert physicochemistry.detrital_cpom(_ctx()).status == "unavailable"
+
+
+def test_detrital_note_and_kind():
+    r = physicochemistry.detrital_cpom(_ctx(streamcat={"pctgrs2019wsrp100": 60}))
+    assert "aerial basemap" in r.note and "natural riparian vegetation" in r.value_text
+    assert r.detail["kind"] == "riparian_veg"
+
+
+def test_riparian_natural_veg_pct_sums_all_groups():
+    from easi.metrics import base
+    v = base.riparian_natural_veg_pct(_ctx(streamcat={
+        "pctmxfst2019wsrp100": 10, "pctgrs2019wsrp100": 20, "pctshrb2019wsrp100": 5,
+        "pctwdwet2019wsrp100": 5}))
+    assert v == 40.0
+    assert base.riparian_natural_veg_pct(_ctx()) is None
+
+
+# --- prefetch-both source variants (worksheet instant source swap) ---------- #
+def _prefetch_ctx(**fields):
+    c = _ctx(**fields)
+    c.extras["prefetch_variants"] = True
+    return c
+
+
+def test_wetlands_prefetch_carries_both_variants():
+    # StreamCat sums to 3.0 (Fair); NLCD reads 8.0 (Good) — both from prefetched data.
+    ctx = _prefetch_ctx(streamcat={"pctwdwet2019ws": 2, "pcthbwet2019ws": 1},
+                        landcover={"wetland_pct": 8.0})
+    r = hydrology.wetlands(ctx)
+    assert r.source_key == "streamcat" and r.rating == "Fair"        # auto default
+    assert set(r.variants) == {"streamcat", "nlcd"}
+    assert r.variants["streamcat"].rating == "Fair"
+    assert r.variants["nlcd"].rating == "Good"
+
+
+def test_wetlands_no_variants_without_prefetch_flag():
+    r = hydrology.wetlands(_ctx(streamcat={"pctwdwet2019ws": 2, "pcthbwet2019ws": 1}))
+    assert r.variants is None and r.source_key is None                # byte-identical legacy path
+
+
+def test_temperature_prefetch_one_wqp_call_both_variants(monkeypatch):
+    calls = {"n": 0}
+
+    def counted(param, lat, lon):
+        calls["n"] += 1
+        return 18.0                                                   # observed -> Good
+
+    monkeypatch.setattr(physicochemistry.wqp, "median_value", counted)
+    ctx = _prefetch_ctx(streamcat={"tmean8110ws": 9.0, "pctconif2019wsrp100": 30})
+    r = physicochemistry.stream_temperature(ctx)
+    assert calls["n"] == 1                                            # WQP called exactly once
+    assert r.source_key == "wqp" and set(r.variants) == {"wqp", "surrogate"}
+    assert r.variants["wqp"].rating == "Good"
+    assert r.variants["surrogate"].rating in {"Good", "Fair", "Poor"}
+
+
+def test_temperature_prefetch_unavailable_wqp_falls_to_surrogate(monkeypatch):
+    monkeypatch.setattr(physicochemistry.wqp, "median_value", lambda *a: None)
+    ctx = _prefetch_ctx(streamcat={"tmean8110ws": 9.0})
+    r = physicochemistry.stream_temperature(ctx)
+    assert r.source_key == "surrogate"                               # no samples -> surrogate primary
+    assert r.variants["wqp"].rating is None                          # wqp variant flagged empty
+
+
+def test_impairment_prefetch_one_attains_chain_both_variants(monkeypatch):
+    calls = {"pt": 0, "near": 0}
+
+    def at_pt(lat, lon):
+        calls["pt"] += 1
+        return {"assessment_unit": "AU1", "overallstatus": "Fully Supporting", "ircategory": "1"}
+
+    def at_near(lat, lon):
+        calls["near"] += 1
+        return None
+
+    monkeypatch.setattr(physicochemistry.attains, "impairment_at_point", at_pt)
+    monkeypatch.setattr(physicochemistry.attains, "impairment_near_point", at_near)
+    ctx = _prefetch_ctx(streamcat={"pctimp2019ws": 3, "rddensws": 1})
+    r = physicochemistry.impairment(ctx)
+    assert calls["pt"] == 1 and calls["near"] == 0                   # at-point hit; no extra calls
+    assert r.source_key == "attains" and set(r.variants) == {"attains", "surrogate"}
+    assert r.variants["attains"].rating == "Good"

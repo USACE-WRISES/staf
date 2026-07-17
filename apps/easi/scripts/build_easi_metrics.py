@@ -25,6 +25,16 @@ BIN_TO_RATING = {1: "Poor", 2: "Fair", 3: "Good"}
 DEFAULT_RANGES = {"Good": [0.70, 1.0], "Fair": [0.40, 0.69], "Poor": [0.0, 0.39]}
 
 
+def _txt(v: str | None) -> str:
+    """Normalize a free-text TSV cell: trim whitespace and drop a matched pair of
+    wrapping straight quotes (some source cells are written as "..." and the quotes
+    would otherwise render verbatim in the apps). Internal quotes are kept."""
+    s = (v or "").strip()
+    if len(s) >= 2 and s[0] == '"' and s[-1] == '"':
+        s = s[1:-1].strip()
+    return s
+
+
 def parse_range(text: str) -> list[float] | None:
     """Parse a '0.40-0.69' style index-range cell into [min, max]."""
     if not text:
@@ -84,21 +94,21 @@ def main() -> int:
             "discipline": (row.get("Discipline") or "").strip(),
             "functionName": fn_name,
             "functionId": fn_id,
-            "functionStatement": (row.get("Function statement") or "").strip(),
-            "metricStatement": (row.get("Metric statement") or "").strip(),
-            "context": (row.get("Context") or "").strip(),
-            "method": (row.get("Method") or "").strip(),
-            "howToMeasure": (row.get("How to measure") or "").strip(),
+            "functionStatement": _txt(row.get("Function statement")),
+            "metricStatement": _txt(row.get("Metric statement")),
+            "context": _txt(row.get("Context")),
+            "method": _txt(row.get("Method")),
+            "howToMeasure": _txt(row.get("How to measure")),
             "criteria": {
-                "Good": (row.get("Good") or "").strip(),
-                "Fair": (row.get("Fair") or "").strip(),
-                "Poor": (row.get("Poor") or "").strip(),
+                "Good": _txt(row.get("Good")),
+                "Fair": _txt(row.get("Fair")),
+                "Poor": _txt(row.get("Poor")),
             },
             "indexRanges": ranges,
             "indexMidpoints": midpoints,
-            "references": (row.get("References") or "").strip(),
-            "source": (row.get("Source") or "").strip(),
-            "dataSource": (row.get("Metric Data Source") or "").strip(),
+            "references": _txt(row.get("References")),
+            "source": _txt(row.get("Source")),
+            "dataSource": _txt(row.get("Metric Data Source")),
         })
 
     out = {

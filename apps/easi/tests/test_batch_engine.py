@@ -51,7 +51,7 @@ def _stub_pipeline(monkeypatch):
         return _ok_delin(lat, lon, reach_ft, comid)
 
     async def fake_assess(ctx_inputs, metric_ids=None, sources=None,
-                          overrides=None, progress=None):
+                          overrides=None, prefetch=True, progress=None):
         rating = "Good" if ctx_inputs["lat"] >= 40.5 else "Poor"
         return {"status": "ok", "report": _report(rating), "huc12": "010203040506"}
 

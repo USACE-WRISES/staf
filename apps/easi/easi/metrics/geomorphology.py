@@ -38,7 +38,9 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
         return MetricResult(CHANNEL_EVOL_ID, value=ctx.fcode,
                             value_text=f"channelized reach (NHD FCODE {ctx.fcode})",
                             rating="Poor", confidence="M",
-                            source="NHD FCODE (canal/ditch)", note="artificial/channelized")
+                            source="NHD FCODE (canal/ditch)", note="artificial/channelized",
+                            scoring={"inputs": {"fcode": ctx.fcode}, "value": ctx.fcode,
+                                     "model": "categorical"})
     g = ctx.extras.get("reach_geomorph") or {}
     bhr = g.get("bank_height_ratio")
     if bhr is None:
@@ -48,7 +50,8 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
     return MetricResult(CHANNEL_EVOL_ID, value=bhr,
                         value_text=f"bank-height ratio {bhr} (3DEP {res} m)", rating=rating,
                         confidence="L", source="USGS 3DEP incision proxy",
-                        note="bank-height-ratio proxy for channel evolution stage")
+                        note="bank-height-ratio proxy for channel evolution stage",
+                        scoring={"inputs": {"bhr": bhr}, "value": bhr, "model": "scalar"})
 
 
 def sediment_supply(ctx: AnalysisContext) -> MetricResult:
@@ -65,7 +68,9 @@ def sediment_supply(ctx: AnalysisContext) -> MetricResult:
                                    f"(ag {ag}%, K {kf}, roads {rd})",
                         rating=rating, confidence="M",
                         source="EPA StreamCat (ag/erodibility/roads)",
-                        note="anthropogenic sediment-supply composite")
+                        note="anthropogenic sediment-supply composite",
+                        scoring={"inputs": {"agriculture": ag, "kffact": kf, "road_density": rd},
+                                 "value": round(score, 2), "model": "combined"})
 
 
 def substrate(ctx: AnalysisContext) -> MetricResult:
@@ -82,7 +87,9 @@ def substrate(ctx: AnalysisContext) -> MetricResult:
                                    f"(slope {slope}, ag {ag}%)",
                         rating=rating, confidence="L",
                         source="NHDPlus slope + StreamCat (proxy)",
-                        note="fines/embeddedness proxy; field pebble counts refine")
+                        note="fines/embeddedness proxy; field pebble counts refine",
+                        scoring={"inputs": {"slope": slope, "agriculture": ag, "kffact": kf},
+                                 "value": round(fines, 2), "model": "combined"})
 
 
 def bank_erosion(ctx: AnalysisContext) -> MetricResult:
@@ -99,4 +106,6 @@ def bank_erosion(ctx: AnalysisContext) -> MetricResult:
                                    f"(K {kf}, riparian {rip}%, slope {slope})",
                         rating=rating, confidence="L",
                         source="StreamCat K-factor + riparian (proxy)",
-                        note="stream-power/erodibility/riparian proxy")
+                        note="stream-power/erodibility/riparian proxy",
+                        scoring={"inputs": {"kffact": kf, "riparian": rip, "slope": slope},
+                                 "value": round(risk, 2), "model": "combined"})
