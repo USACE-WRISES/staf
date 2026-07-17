@@ -30,9 +30,9 @@ assessment bundles.
 
 **Phase 2 — interactive app (done):**
 
-- `app.py` — Shiny-for-Python app: **Identify → Basin → Assessment → Measure →
+- `app.py` — Shiny-for-Python app: **Identify → Basin → Region → Assessment →
   Report**. Identify/Basin + the map/delineation engine are reused from SFARI
-  (`deep/{delineation,pipeline}.py`, `deep/datasources/`); the Measure worksheet
+  (`deep/{delineation,pipeline}.py`, `deep/datasources/`); the Assessment worksheet
   is curve-based (numeric value → live index + computed 0–15 function score).
 - `deep/report.py` — CSV / GeoJSON / PDF exports. `deep/session.py` — save/resume
   (delineation + inlined assessment + measured values). `deep/measure.py` —
@@ -49,13 +49,13 @@ assessment bundles.
   and reach geomorphic ratios ER / BHR / W:D (3DEP DEM cross-section + Bieger
   bankfull, via copied `deep/{geomorph,bieger}.py` + `deep/datasources/threedep.py`).
 - `deep/measure.py` + `deep/pipeline.py` gain a `compute_metrics_only` stage;
-  the app runs it on entering **Measure** and prefills the computable metrics
+  the app runs it on entering **Assessment** and prefills the computable metrics
   with a source badge (values stay editable — editing flips origin to field).
   Auto-modeled geomorphic ratios are labelled "modeled" (confirm/override).
 
 **Phase 4 — stratified curves + deploy (done):**
 
-- Multi-stratum metrics carry `curveLayers` + `activeStratum`; the Measure step
+- Multi-stratum metrics carry `curveLayers` + `activeStratum`; the Assessment step
   shows a per-metric **stratum dropdown** and the chosen stratum's curve drives
   scoring (`curves.active_points` / `curve_strata`; `MeasuredValue.stratum`).
   `scripts/build_deep_data.py` emits layers from the STAF curves — 79 metrics

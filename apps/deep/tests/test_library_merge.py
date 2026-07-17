@@ -82,7 +82,11 @@ def libroot(tmp_path, monkeypatch):
 
 
 def _baked_ids():
-    return [a["assessmentId"] for a in config.assessments_doc()["assessments"]]
+    # Visible baked ids only. Hidden assessments (the SQTs) are filtered out of the
+    # registry by config._is_hidden, so the visible-baked set is what config.assessments()
+    # is compared against below.
+    return [a["assessmentId"] for a in config.assessments_doc()["assessments"]
+            if not config._is_hidden(a)]
 
 
 def test_absent_library_returns_baked(tmp_path, monkeypatch):

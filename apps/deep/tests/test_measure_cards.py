@@ -9,7 +9,7 @@ root on ``sys.path`` so this works under any pytest invocation.
 from __future__ import annotations
 
 import app
-from deep import assessments, config, curves
+from deep import assessments, config
 
 _PTS = [{"x": 0, "y": 1.0}, {"x": 35, "y": 0.7}, {"x": 50, "y": 0.3}]
 
@@ -18,16 +18,15 @@ _PTS = [{"x": 0, "y": 1.0}, {"x": 35, "y": 0.7}, {"x": 50, "y": 0.3}]
 # metricStatement carried through the regenerated predefined library
 # --------------------------------------------------------------------------- #
 def test_every_built_metric_has_a_statement():
-    # The state-SQT assessments guarantee a metricStatement on every metric (from the
-    # STAF metric library, whether baked by build_deep_data.py or migrated into the
-    # shared library). Other StreamCurves-published bundles may omit it — the measure
-    # card drops the statement div (app.py reads it with .get) — so only check the SQTs.
+    # The state-SQT assessments guarantee a metricStatement on every metric (from the STAF
+    # metric library). They are hidden from the registry now but retained in the baked data,
+    # so read them straight from the baked doc. Other StreamCurves-published bundles may omit
+    # the statement — the measure card drops the div (app.py reads it with .get).
     total = 0
-    for entry in assessments.list_predefined():
-        aid = entry["assessmentId"]
-        if not aid.endswith("-sqt-adapted"):
+    for a in config.assessments_doc()["assessments"]:
+        if not a["assessmentId"].endswith("-sqt-adapted"):
             continue
-        la = assessments.load_predefined(aid)
+        la = assessments.from_bundle(a)
         for fn in la.metrics_by_function:
             for m in fn["metrics"]:
                 total += 1
@@ -79,32 +78,45 @@ def test_curve_svg_empty_points_is_empty():
 
 
 # --------------------------------------------------------------------------- #
-# _criteria_table — breakpoints + highlighted your-location row
+# _criteria_table — static reference-curve breakpoint legend (no site row)
 # --------------------------------------------------------------------------- #
-def test_criteria_table_rows_and_here_row():
-    midx = curves.interp_curve(_PTS, 30)
-    tbl = app._criteria_table(_PTS, value=30, midx=midx)
-    # header + one row per breakpoint + the here-row
-    assert tbl.count("<tr") == 1 + len(_PTS) + 1
+def test_criteria_table_is_static_breakpoint_legend():
+    tbl = app._criteria_table(_PTS)
+    # header + one row per breakpoint, and NO highlighted "your value" row (the value's
+    # index + condition now lives on the chip next to the input, not in this table)
+    assert tbl.count("<tr") == 1 + len(_PTS)
     assert "<th>Value</th>" in tbl and "<th>Index</th>" in tbl and "<th>Condition</th>" in tbl
-    # your-location row cells carry the classes measure.js updates
-    assert 'class="is-here"' in tbl
+    assert "is-here" not in tbl
     for cls in ("deep-here-x", "deep-here-idx", "deep-here-band"):
-        assert cls in tbl
+        assert cls not in tbl
+    assert "Reference curve breakpoints" in tbl        # caption
     assert "deep-band-dot" in tbl
-    # a real index/band is shown for the supplied value (not an em dash)
-    assert f"{midx:.2f}" in tbl
-
-
-def test_criteria_table_here_row_blank_without_value():
-    tbl = app._criteria_table(_PTS, value=None, midx=None)
-    here = tbl[tbl.index('class="is-here"'):]
-    assert "—" in here                         # em-dash placeholders
-    assert 'class="is-here"' in tbl
 
 
 def test_criteria_table_empty_points_is_empty():
-    assert app._criteria_table([], value=1, midx=0.5) == ""
+    assert app._criteria_table([]) == ""
+
+
+# --------------------------------------------------------------------------- #
+# _metric_tip_html — how-to-collect hover card (statement / how / method) + fallback
+# --------------------------------------------------------------------------- #
+def test_metric_tip_html_sections_and_fallback():
+    populated = {"metricName": "Sand & fines",
+                 "metricStatement": "Percent of the streambed that is sand or finer.",
+                 "howToMeasure": "Pebble count on 100 particles.",
+                 "methodContext": "Wolman walk."}
+    tip = app._metric_tip_html(populated)
+    assert "easi-tip-title" in tip and "Sand &amp; fines" in tip      # name html-escaped
+    assert "Percent of the streambed" in tip
+    assert "How to measure" in tip and "Pebble count" in tip
+    assert "Method" in tip and "Wolman walk" in tip
+    assert "has not been provided" not in tip
+
+    # NH-style metric with no prose -> muted fallback line, no sections
+    empty = {"metricName": "Bare metric", "metricStatement": "", "howToMeasure": ""}
+    tip2 = app._metric_tip_html(empty)
+    assert "Field collection guidance has not been provided" in tip2
+    assert "How to measure" not in tip2
 
 
 # --------------------------------------------------------------------------- #
