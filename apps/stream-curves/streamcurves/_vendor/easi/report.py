@@ -243,8 +243,9 @@ def build_pdf(result: dict) -> bytes:
     if xs.get("png_b64"):
         import base64
         story.append(Paragraph("Representative cross-section", styles["Heading4"]))
+        # box matches the PNG's 6.5 x 2.15 in figure aspect (xsplot.py) so it isn't stretched
         story.append(Image(io.BytesIO(base64.b64decode(xs["png_b64"])),
-                           width=6.0 * inch, height=2.4 * inch))
+                           width=6.0 * inch, height=2.0 * inch))
         geom = xs.get("geom") or {}
         thal = geom.get("thalweg")
         ft = 3.28084  # metres -> feet for the report
