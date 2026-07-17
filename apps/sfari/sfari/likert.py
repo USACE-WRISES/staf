@@ -19,6 +19,14 @@ BREAKS: dict[str, dict] = {
     "catchment-hydrology-impervious-surface-area": {
         "dir": LOW, "breaks": [(5, "Strongly Agree"), (10, "Agree"),
                                (20, "Disagree"), (None, "Strongly Disagree")]},
+    # Watershed agricultural cover (StreamCat crop+hay) as an alternate catchment-hydrology
+    # indicator for agriculture-dominated watersheds. Higher breakpoints than impervious
+    # (agriculture is a weaker per-unit hydrologic stressor); national default, calibrate
+    # regionally. Used by evidence.ev_impervious to flag when agriculture is the more limiting
+    # land-cover pressure. Mirrors the EASI selectable indicator (easi/metrics/hydrology.py).
+    "catchment-hydrology-agricultural-cover": {
+        "dir": LOW, "breaks": [(15, "Strongly Agree"), (25, "Agree"),
+                               (50, "Disagree"), (None, "Strongly Disagree")], "proxy": True},
     "catchment-hydrology-road-density": {
         "dir": LOW, "breaks": [(0.5, "Strongly Agree"), (1.0, "Agree"),
                                (2.0, "Disagree"), (None, "Strongly Disagree")]},

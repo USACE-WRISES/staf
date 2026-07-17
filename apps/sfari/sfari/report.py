@@ -62,7 +62,6 @@ def _header_pairs(delin, sc):
         ("Latitude", dl.get("snapped_lat")), ("Longitude", dl.get("snapped_lon")),
         ("COMID", dl.get("comid")), ("HUC8", dl.get("huc8")),
         ("Drainage area (km2)", dl.get("drainage_area_sqkm")),
-        ("Watershed area (km2)", dl.get("watershed_area_sqkm")),
         ("Reach length (ft)", dl.get("reach_length_ft")),
         ("Ecosystem Condition Index", sc.get("ecosystemConditionIndex")),
         ("Physical sub-index", si.get("physical")),
@@ -166,7 +165,7 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
     story.append(Paragraph(dl.get("gnis_name") or "(unnamed reach)", styles["Heading2"]))
     hdr = [["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
            ["COMID / HUC8", f"{dl.get('comid')} / {dl.get('huc8')}"],
-           ["Drainage / watershed area", f"{dl.get('drainage_area_sqkm')} / {dl.get('watershed_area_sqkm')} km2"],
+           ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
            ["Reach length", f"{dl.get('reach_length_ft')} ft"],
            ["Ecosystem Condition Index", f"{sc.get('ecosystemConditionIndex')}"]]
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
@@ -327,8 +326,7 @@ def _site_header_table(delin):
     dl = (delin or {}).get("delineation", {})
     hdr = [["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
            ["COMID / HUC8", f"{dl.get('comid')} / {dl.get('huc8')}"],
-           ["Drainage / watershed area",
-            f"{dl.get('drainage_area_sqkm')} / {dl.get('watershed_area_sqkm')} km2"],
+           ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
            ["Reach length", f"{dl.get('reach_length_ft')} ft"]]
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
     t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9),

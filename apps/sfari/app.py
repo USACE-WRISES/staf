@@ -54,7 +54,7 @@ SNAP_TOL_FT = 150.0     # click must land within this distance of a flowline
 
 STEP_IDENTIFY, STEP_BASIN, STEP_REVIEW, STEP_REPORT = "identify", "basin", "review", "report"
 STEP_LABELS = [(STEP_IDENTIFY, "Identify"), (STEP_BASIN, "Basin"),
-               (STEP_REVIEW, "Field review"), (STEP_REPORT, "Report")]
+               (STEP_REVIEW, "Assessment"), (STEP_REPORT, "Report")]
 
 # --- function / metric ordering (from the generated data) ---
 FN_LIST = sorted(config.functions(), key=lambda f: f["order"])
@@ -739,7 +739,7 @@ def server(input, output, session):
                 "(or type coordinates / search an address). Set the reach length and click "
                 "**Delineate**.\n"
                 "2. **Basin** — review the watershed and reach.\n"
-                "3. **Field review** — for each function, review the pulled evidence, "
+                "3. **Assessment** — for each function, review the pulled evidence, "
                 "Likert-score each metric, and assign the 0–15 function score.\n"
                 "4. **Report** — review the screening report and export."),
             title="How to use SFARI", easy_close=True, footer=ui.modal_button("Close")))
@@ -777,7 +777,7 @@ def server(input, output, session):
                 ui.output_ui("basin_card"),
                 ui.div(ui.input_action_button("clear_basin", "Clear",
                                               class_="btn-outline-secondary"),
-                       ui.input_action_button("to_review", "Continue to field review",
+                       ui.input_action_button("to_review", "Continue to assessment",
                                               class_="btn-primary"),
                        class_="easi-pane-actions"))
         else:  # review / report -> the full-width worksheet overlay replaces the left pane
@@ -808,7 +808,6 @@ def server(input, output, session):
             return ui.div(ui.span(label), ui.tags.b(str(val)), class_="b-row")
         rows = [
             row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
-            row("Watershed area", f'{d.get("watershed_area_sqkm")} km²'),
             row("Reach length", f'{d.get("reach_length_ft")} ft'),
             row("Stream order", d.get("stream_order")),
             row("COMID", d.get("comid")),
@@ -1013,7 +1012,7 @@ def server(input, output, session):
             return None
         return ui.div(
             ui.div(
-                ui.div("SFARI — Field review", class_="easi-pane-head"),
+                ui.div("SFARI — Assessment", class_="easi-pane-head"),
                 ui.div(_stepper(current_step()), class_="sfari-nav-steps"),
                 ui.tags.button("Get Field Forms",
                                {"data-desktop-metrics": "1", "type": "button",
@@ -1335,7 +1334,6 @@ def server(input, output, session):
         # -- basin characteristics (EASI report format) --
         basin_rows = [("COMID", dl.get("comid")), ("HUC8", dl.get("huc8")),
                       ("Drainage area", f'{dl.get("drainage_area_sqkm")} km²'),
-                      ("Watershed area", f'{dl.get("watershed_area_sqkm")} km²'),
                       ("Stream order", dl.get("stream_order"))]
         basin = ui.tags.details(
             ui.tags.summary("Basin characteristics", class_="easi-section-title easi-rollup-sum"),
@@ -1807,7 +1805,7 @@ def server(input, output, session):
                 pass
         current_fn.set(0)
         current_step.set(STEP_REVIEW)
-        ui.notification_show("Assessment loaded. Resuming field review.", type="message", duration=4)
+        ui.notification_show("Assessment loaded. Resuming.", type="message", duration=4)
 
 
 app = App(app_ui, server, static_assets=Path(__file__).parent / "www")

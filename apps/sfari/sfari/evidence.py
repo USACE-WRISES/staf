@@ -28,7 +28,8 @@ from .models import EvidenceResult
 # pctimp2001 pairs with pctimp2019 for the land-use-change proxy.
 STREAMCAT_WS = ["pctimp2019", "pctimp2001", "rddens", "damdens", "damnrmstor",
                 "pctwdwet2019", "pcthbwet2019", "pctcrop2019", "pcthay2019", "kffact"]
-STREAMCAT_RP = ["pctmxfst2019", "pctdecid2019", "pctconif2019"]
+STREAMCAT_RP = ["pctmxfst2019", "pctdecid2019", "pctconif2019",
+                "pctgrs2019", "pctshrb2019", "pctwdwet2019", "pcthbwet2019"]  # natural-veg buffer classes
 
 FCODE_LABEL = {46006: "perennial", 46003: "intermittent", 46007: "ephemeral",
                55800: "artificial path", 33600: "canal/ditch"}
@@ -60,6 +61,39 @@ def _riparian_forest_pct(ctx) -> Optional[float]:
     return round(sum(v or 0.0 for v in vals), 1)
 
 
+# Natural riparian vegetation (100 m buffer): forest + shrub + grassland + wetland. Broader than
+# forest alone so grassland/arid streams are not falsely scored low for a non-forest but intact
+# natural buffer. Backs the buffer/corridor metrics; canopy shade stays forest-only (ev_canopy).
+_RIPARIAN_VEG_KEYS = ["pctconif2019wsrp100", "pctdecid2019wsrp100", "pctmxfst2019wsrp100",
+                      "pctgrs2019wsrp100", "pctshrb2019wsrp100",
+                      "pctwdwet2019wsrp100", "pcthbwet2019wsrp100"]
+
+
+def _riparian_natural_veg_pct(ctx) -> Optional[float]:
+    s = ctx.extras.get("streamcat_rp") or {}
+    vals = [s.get(k) for k in _RIPARIAN_VEG_KEYS]
+    if all(v is None for v in vals):
+        return None
+    return round(sum(v or 0.0 for v in vals), 1)
+
+
+# Alternate catchment-hydrology land-cover indicator: watershed agriculture (StreamCat
+# crop+hay). ``ev_impervious`` compares it against impervious and, when agriculture is the
+# more limiting land-cover pressure, advises scoring the function on agriculture instead
+# (mirrors the EASI selectable indicator). Likert order: lower rank = worse condition.
+_AG_COVER_KEY = "catchment-hydrology-agricultural-cover"
+_LIKERT_RANK = {"Strongly Disagree": 0, "Disagree": 1, "Neutral": 2,
+                "Agree": 3, "Strongly Agree": 4}
+
+
+def _watershed_ag_pct(ctx) -> Optional[float]:
+    s = _sc(ctx)
+    crop, hay = s.get("pctcrop2019ws"), s.get("pcthay2019ws")
+    if crop is None and hay is None:
+        return None
+    return round((crop or 0.0) + (hay or 0.0), 1)
+
+
 # --------------------------------------------------------------------------- #
 # adapters: AnalysisContext -> EvidenceResult
 # --------------------------------------------------------------------------- #
@@ -68,10 +102,24 @@ def ev_impervious(ctx):
     v = _sc(ctx).get("pctimp2019ws")
     if v is None:
         return EvidenceResult(mid, status="unavailable", source="EPA StreamCat", source_url=_SC_URL)
-    return EvidenceResult(mid, value=round(v, 1), value_text=f"{v:.1f}% impervious (watershed)",
+    imp_likert = likert.suggest(mid, v)
+    suggested = imp_likert
+    value_text = f"{v:.1f}% impervious (watershed)"
+    note = ""
+    # Compute watershed agriculture too and suggest whichever land-cover pressure is more limiting
+    # (the SFARI analog of EASI's automatic more-limiting scoring; the reviewer still scores).
+    ag = _watershed_ag_pct(ctx)
+    if ag is not None:
+        value_text = f"{v:.1f}% impervious; {ag:.1f}% agricultural land (watershed)"
+        ag_likert = likert.suggest(_AG_COVER_KEY, ag)
+        if ag_likert and _LIKERT_RANK.get(ag_likert, 9) < _LIKERT_RANK.get(imp_likert, 9):
+            suggested = ag_likert
+        note = (f"Land-cover indicators: impervious {v:.1f}% ({imp_likert}); "
+                f"agricultural {ag:.1f}% ({ag_likert}). The more limiting one is suggested.")
+    return EvidenceResult(mid, value=round(v, 1), value_text=value_text,
                           field_value_text=f"Impervious {v:.1f}%",
                           confidence="H", source="EPA StreamCat pctimp2019ws", source_url=_SC_URL,
-                          suggested_likert=likert.suggest(mid, v))
+                          suggested_likert=suggested, note=note)
 
 
 def ev_road_density(ctx):
@@ -144,20 +192,35 @@ def _riparian(ctx, mid, extra=""):
                           suggested_likert=likert.suggest(mid, fp))
 
 
+def _riparian_veg(ctx, mid):
+    """Buffer/corridor evidence from natural riparian vegetation (forest+shrub+grassland+wetland)."""
+    v = _riparian_natural_veg_pct(ctx)
+    if v is None:
+        return EvidenceResult(mid, status="unavailable", source="EPA StreamCat riparian", source_url=_SC_URL)
+    return EvidenceResult(mid, value=v, value_text=f"{v:.0f}% natural riparian vegetation (100 m buffer)",
+                          field_value_text=f"Riparian vegetation {v:.0f}%",
+                          confidence="M", source="EPA StreamCat *wsrp100 vegetation", source_url=_SC_URL,
+                          note="Natural riparian vegetation (forest, shrub, grassland, wetland) in the "
+                               "100 m buffer. In grassland or arid ecoregions the natural buffer is "
+                               "non-forest; verify on the aerial basemap.",
+                          suggested_likert=likert.suggest(mid, v))
+
+
 def ev_canopy(ctx):
+    # canopy shade is forest-specific (grass does not shade), so keep this one forest-only
     return _riparian(ctx, "light-thermal-regime-riparian-canopy-cover")
 
 
 def ev_corridor(ctx):
-    return _riparian(ctx, "carbon-processing-riparian-corridor-width-and-quality")
+    return _riparian_veg(ctx, "carbon-processing-riparian-corridor-width-and-quality")
 
 
 def ev_veg_corridor(ctx):
-    return _riparian(ctx, "nutrient-cycling-vegetated-riparian-corridor-width")
+    return _riparian_veg(ctx, "nutrient-cycling-vegetated-riparian-corridor-width")
 
 
 def ev_riparian_communities(ctx):
-    return _riparian(ctx, "community-dynamics-riparian-communities")
+    return _riparian_veg(ctx, "community-dynamics-riparian-communities")
 
 
 def ev_transport_capacity(ctx):
