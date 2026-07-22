@@ -28,9 +28,9 @@
 |  | Automated method | Nearby dam-proximity proxy |
 |  | Inputs | Mapped NID dams within one mile (mapped dams) |
 |  | Equation | Rating = bands(dams) |
-|  | Scoring | Good 0 mapped dams; Fair ≥1 mapped dam |
+|  | Scoring | Good 0 mapped dams; Fair 1 mapped dam; Poor ≥2 mapped dams |
 |  | Basis | dataset reference; confidence M; provisional screening transitions |
 |  | Source hierarchy | Single source; no fallback. |
-|  | Known limitations | Dam count alone cannot establish passability or severity and therefore cannot generate Poor.<br>NID does not comprehensively represent culverts, smaller structures, or passability.<br>Query failure is unscored, not Good. |
+|  | Known limitations | A mapped dam count is a proximity screen and cannot confirm passability or the severity of a barrier.<br>NID does not comprehensively represent culverts, smaller structures, or passability.<br>Query failure is unscored, not Good. |
 
 : Biology metrics {#tbl-metrics-biology}

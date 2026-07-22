@@ -224,7 +224,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=36"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=37"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="report-controls.js", defer=""),
@@ -621,9 +621,6 @@ def _method_docs_ui(row, trace):
               "This method assigns a class directly and has no numeric breakpoints."),
         ui.h6("Basis"),
         ui.p(entry.get("basisClass") or "—")]
-    if entry.get("provisional"):
-        parts.append(ui.p("These breakpoints are STAF screening transitions, not evidence of "
-                          "an ecological cliff.", class_="easi-method-provisional"))
 
     parts += [
         ui.h6("Known limitations"),

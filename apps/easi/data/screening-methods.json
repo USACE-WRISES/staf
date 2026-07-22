@@ -293,8 +293,7 @@
       ],
       "fieldReference": null,
       "limitations": [
-        "Natural wetland abundance varies substantially among regions.",
-        "The breakpoints are screening transitions, not evidence of an ecological cliff."
+        "Natural wetland abundance varies substantially among regions."
       ],
       "citations": [
         "streamcat"
@@ -3111,26 +3110,38 @@
         {
           "rating": "Fair",
           "min": 1,
+          "max": 1,
+          "minInclusive": true,
+          "maxInclusive": true,
+          "label": "1 mapped dam"
+        },
+        {
+          "rating": "Poor",
+          "min": 2,
           "max": null,
           "minInclusive": true,
           "maxInclusive": false,
-          "label": "≥1 mapped dam"
+          "label": "≥2 mapped dams"
         }
       ],
       "breakpoints": [
         {
           "label": "1 dam",
-          "description": "A mapped dam within one mile changes the automated result from Good to Fair/potential barrier."
+          "description": "A single mapped dam within one mile changes the automated result from Good to Fair."
+        },
+        {
+          "label": "2 dams",
+          "description": "Two or more mapped dams within one mile rate Poor."
         }
       ],
       "fieldReference": {
         "title": "Verified connectivity evidence",
         "criteria": {
-          "Poor": "Verified adverse passage or connectivity evidence recorded through manual override"
+          "Poor": "Verified adverse effect on aquatic organism passage within one mile"
         }
       },
       "limitations": [
-        "Dam count alone cannot establish passability or severity and therefore cannot generate Poor.",
+        "A mapped dam count is a proximity screen and cannot confirm passability or the severity of a barrier.",
         "NID does not comprehensively represent culverts, smaller structures, or passability.",
         "Query failure is unscored, not Good."
       ],

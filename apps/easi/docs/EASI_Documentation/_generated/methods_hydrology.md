@@ -15,7 +15,7 @@
 |  | Scoring | Good >5%; Fair 1–5%; Poor <1% |
 |  | Basis | provisional STAF screening judgment; confidence H; provisional screening transitions |
 |  | Source hierarchy | Single source; no fallback. |
-|  | Known limitations | Natural wetland abundance varies substantially among regions.<br>The breakpoints are screening transitions, not evidence of an ecological cliff. |
+|  | Known limitations | Natural wetland abundance varies substantially among regions. |
 | **Concentrated Runoff / Stormwater Inputs** | Function | Reach inflow |
 |  | Automated method | Road-density proxy for concentrated inflow pressure |
 |  | Inputs | Watershed road density (km/km²) |
