@@ -28,6 +28,16 @@ def _ordered_rows(rep: dict) -> list[dict]:
 def _summary_pairs(result: dict) -> list[tuple[str, str]]:
     d, rep = result["delineation"], result["report"]
     sub = rep["subIndices"]
+    coverage = rep.get("coverage") or {}
+    outcome_coverage = coverage.get("outcomes") or {}
+    profile = coverage.get("evidenceProfile") or {}
+
+    def shown(value):
+        return "—" if value is None else value
+
+    def pct(value):
+        return "—" if value is None else f"{100 * float(value):.0f}%"
+
     return [
         ("Stream", d.get("gnis_name", "")),
         ("COMID", d.get("comid", "")),
@@ -36,11 +46,24 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
         ("Reach length (ft)", d.get("reach_length_ft", "")),
         ("Snapped lat", d.get("snapped_lat", "")),
         ("Snapped lon", d.get("snapped_lon", "")),
-        ("Ecosystem Condition Index", rep.get("ecosystemConditionIndex", "")),
-        ("Physical sub-index", sub.get("physical", "")),
-        ("Chemical sub-index", sub.get("chemical", "")),
-        ("Biological sub-index", sub.get("biological", "")),
-        ("Metrics computed", f"{rep.get('computedCount')}/{rep.get('totalCount')}"),
+        ("Ecosystem Condition Index", shown(rep.get("ecosystemConditionIndex"))),
+        ("Physical sub-index", shown(sub.get("physical"))),
+        ("Chemical sub-index", shown(sub.get("chemical"))),
+        ("Biological sub-index", shown(sub.get("biological"))),
+        ("Metrics rated", f"{rep.get('computedCount')}/{rep.get('selectedCount', rep.get('totalCount'))}"),
+        ("Overall coverage", pct((coverage.get("overall") or {}).get("fraction"))),
+        ("Physical coverage", pct((outcome_coverage.get("physical") or {}).get("fraction"))),
+        ("Chemical coverage", pct((outcome_coverage.get("chemical") or {}).get("fraction"))),
+        ("Biological coverage", pct((outcome_coverage.get("biological") or {}).get("fraction"))),
+        ("Coverage status", coverage.get("statusMessage") or
+         ("Provisional — limited coverage" if rep.get("provisionalCoverage")
+          else "Sufficient coverage")),
+        ("Observed evidence metrics", profile.get("observed", 0)),
+        ("Connected/nearby evidence metrics", profile.get("connectedNearby", 0)),
+        ("Published-model metrics", profile.get("publishedModel", 0)),
+        ("Screening-proxy metrics", profile.get("screeningProxy", 0)),
+        ("Manual metrics", profile.get("manual", 0)),
+        ("Unavailable metrics", profile.get("unavailable", 0)),
         ("Overrides applied", ", ".join(rep.get("overridesApplied", [])) or "none"),
     ] + [(label, val) for label, val in (rep.get("basin") or {}).get("rows", [])]
 
@@ -58,15 +81,42 @@ def build_csv(result: dict) -> bytes:
     rows = _ordered_rows(result["report"])
     has_notes = any(r.get("userNote") for r in rows)   # only add the column if used
     header = ["Discipline", "Function", "Metric", "Value", "Rating", "Index",
-              "FunctionScore", "Confidence", "Source", "Status"]
+              "FunctionScore", "Confidence", "Source", "Status", "MethodKey",
+              "MethodKind", "BasisClass", "InputTrace", "CombinedValue",
+              "GoverningInput", "GeneratedRating", "GeneratedIndex", "Completeness",
+              "SourceTier", "EvidenceFamily", "UsedFallback",
+              "ObservedOverridesProxy", "RetainedProxyRating",
+              "OverallCoverage", "PhysicalCoverage", "ChemicalCoverage",
+              "BiologicalCoverage", "ProvisionalCoverage"]
     if has_notes:
         header.append("Notes")
     w.writerow(header)
+    rep = result["report"]
+    coverage = rep.get("coverage") or {}
+    outcome_coverage = coverage.get("outcomes") or {}
     for r in rows:
+        trace = r.get("scoring") or {}
         row = [r["discipline"], r["functionName"], r["name"], r["valueText"],
                r["rating"] or "", r["index"] if r["index"] is not None else "",
                r["functionScore"] if r["functionScore"] is not None else "",
-               r["confidence"] or "", r["source"] or "", r["status"]]
+               r["confidence"] or "", r["source"] or "", r["status"],
+               r.get("methodKey", ""), r.get("methodKind", ""),
+               r.get("basisClass", ""),
+               json.dumps(trace.get("inputs") or [], separators=(",", ":"), default=str),
+               trace.get("combinedValue"), trace.get("governingInput"),
+               r.get("generatedRating"), trace.get("generatedIndex"),
+               trace.get("completeness") or r.get("completeness", ""),
+               trace.get("sourceTier") or r.get("sourceTier"),
+               trace.get("evidenceFamily") or r.get("evidenceFamily"),
+               bool(trace.get("usedFallback", r.get("usedFallback", False))),
+               bool(trace.get("observedOverridesProxy",
+                              r.get("observedOverridesProxy", False))),
+               (r.get("proxyResult") or {}).get("rating"),
+               (coverage.get("overall") or {}).get("fraction"),
+               (outcome_coverage.get("physical") or {}).get("fraction"),
+               (outcome_coverage.get("chemical") or {}).get("fraction"),
+               (outcome_coverage.get("biological") or {}).get("fraction"),
+               bool(rep.get("provisionalCoverage"))]
         if has_notes:
             row.append(r.get("userNote", ""))
         w.writerow(row)
@@ -84,7 +134,14 @@ def build_geojson(result: dict) -> str:
         "huc12": d.get("huc12"), "drainage_area_sqkm": d.get("drainage_area_sqkm"),
         "ecosystem_condition_index": rep.get("ecosystemConditionIndex"),
         "sub_indices": rep.get("subIndices"),
-        "metrics_computed": f"{rep.get('computedCount')}/{rep.get('totalCount')}",
+        "metrics_computed": (
+            f"{rep.get('computedCount')}/{rep.get('selectedCount', rep.get('totalCount'))}"),
+        "coverage": rep.get("coverage"),
+        "evidence_profile": rep.get("evidenceProfile"),
+        "complete_screening_coverage": bool(rep.get("completeScreeningCoverage")),
+        "proxy_derived_ratings": bool(rep.get("proxyDerivedRatings")),
+        "correlation_notes": rep.get("correlationNotes") or [],
+        "provisional_coverage": bool(rep.get("provisionalCoverage")),
         "basin_characteristics": {lbl: val for lbl, val in (rep.get("basin") or {}).get("rows", [])},
     }
 
@@ -104,8 +161,25 @@ def build_geojson(result: dict) -> str:
     # per-metric ratings travel with the point/reach as a compact attribute table
     metrics = {}
     for r in rep.get("metricRows", []):
+        trace = r.get("scoring") or {}
         m = {"rating": r["rating"], "value": r["valueText"],
-             "confidence": r["confidence"], "source": r["source"]}
+             "confidence": r["confidence"], "source": r["source"],
+             "method_key": r.get("methodKey"),
+             "method_kind": r.get("methodKind"),
+             "basis_class": r.get("basisClass"),
+             "input_trace": trace.get("inputs") or [],
+             "combined_value": trace.get("combinedValue"),
+             "governing_input": trace.get("governingInput"),
+             "generated_rating": r.get("generatedRating"),
+             "generated_index": trace.get("generatedIndex"),
+             "completeness": trace.get("completeness") or r.get("completeness"),
+             "source_tier": trace.get("sourceTier") or r.get("sourceTier"),
+             "evidence_family": trace.get("evidenceFamily") or r.get("evidenceFamily"),
+             "used_fallback": bool(trace.get("usedFallback", r.get("usedFallback", False))),
+             "observed_overrides_proxy": bool(
+                 trace.get("observedOverridesProxy",
+                           r.get("observedOverridesProxy", False))),
+             "retained_proxy": r.get("proxyResult")}
         if r.get("userNote"):
             m["note"] = r["userNote"]
         metrics[r["metricId"]] = m
@@ -129,7 +203,7 @@ def _summary_plots_png(rep: dict) -> bytes:
 
     fscores = rep.get("functionScores") or {}
     sub = rep["subIndices"]
-    eci = rep.get("ecosystemConditionIndex") or 0
+    eci = rep.get("ecosystemConditionIndex")
 
     # left panel: a header row per category, then its four function bars
     rows = []  # (kind, label, value, color)
@@ -140,8 +214,8 @@ def _summary_plots_png(rep: dict) -> bytes:
         rows.append(("hdr", cat, None, None))
         for fn in fns:
             s = fscores.get(fn["id"])
-            rows.append(("bar", fn["name"], (s if s is not None else 0),
-                         function_score_band_color(s if s is not None else 0)))
+            rows.append(("bar", fn["name"], s,
+                         function_score_band_color(s) if s is not None else "#d7dce5"))
 
     fig, (axL, axR) = plt.subplots(
         1, 2, figsize=(7.2, 5.6), gridspec_kw={"width_ratios": [1.5, 1]})
@@ -152,8 +226,13 @@ def _summary_plots_png(rep: dict) -> bytes:
         if kind == "hdr":
             labels.append(text); weights.append("bold")
         else:
-            axL.barh(y, val, color=color, edgecolor="#888", height=0.66, zorder=3)
-            axL.text(min(val + 0.3, 14.4), y, f"{val:.0f}", va="center", fontsize=7)
+            if val is None:
+                axL.barh(y, 15, color="#eef0f4", edgecolor="#c7ccd5",
+                         height=0.66, zorder=2)
+                axL.text(0.35, y, "—", va="center", fontsize=8, color="#697386")
+            else:
+                axL.barh(y, val, color=color, edgecolor="#888", height=0.66, zorder=3)
+                axL.text(min(val + 0.3, 14.4), y, f"{val:.0f}", va="center", fontsize=7)
             labels.append("   " + text); weights.append("normal")
     axL.set_yticks(range(len(plot_rows)))
     axL.set_yticklabels(labels, fontsize=7.2)
@@ -171,11 +250,16 @@ def _summary_plots_png(rep: dict) -> bytes:
         axL.spines[sp].set_visible(False)
 
     # right panel: ECI parent on top, the three sub-indices indented beneath it
-    ci = [("Biological", sub["biological"]), ("Chemical", sub["chemical"]),
-          ("Physical", sub["physical"]), ("Ecosystem Condition Index", eci)]
+    ci = [("Biological", sub.get("biological")), ("Chemical", sub.get("chemical")),
+          ("Physical", sub.get("physical")), ("Ecosystem Condition Index", eci)]
     for y, (lab, val) in enumerate(ci):
-        axR.barh(y, val, color=index_band_color(val), edgecolor="#888", height=0.6, zorder=3)
-        axR.text(min(val + 0.02, 0.92), y, f"{val:.2f}", va="center", fontsize=8)
+        if val is None:
+            axR.barh(y, 1, color="#eef0f4", edgecolor="#c7ccd5", height=0.6, zorder=2)
+            axR.text(0.03, y, "—", va="center", fontsize=8, color="#697386")
+        else:
+            axR.barh(y, val, color=index_band_color(val), edgecolor="#888",
+                     height=0.6, zorder=3)
+            axR.text(min(val + 0.02, 0.92), y, f"{val:.2f}", va="center", fontsize=8)
     axR.set_yticks(range(4))
     axR.set_yticklabels(["   Biological", "   Chemical", "   Physical",
                          "Ecosystem Condition Index"], fontsize=8)
@@ -214,6 +298,35 @@ def build_pdf(result: dict) -> bytes:
     meta = f"Analysis point {pt} · Reach {d.get('reach_length_ft')} ft upstream"
     story.append(Paragraph(meta, styles["Normal"]))
     story.append(Spacer(1, 8))
+    if rep.get("provisionalCoverage"):
+        story.append(Paragraph(
+            "<b>Provisional — limited coverage.</b> One or more included coverage "
+            "measures are below 70%; missing domains are shown as a gray dash, not zero.",
+            styles["Normal"]))
+        story.append(Spacer(1, 6))
+    elif (rep.get("coverage") or {}).get("completeWithProxies"):
+        story.append(Paragraph(
+            "<b>Complete screening coverage — includes proxy-derived ratings.</b> "
+            "Use the evidence profile and per-metric source tier to distinguish "
+            "observations, models, and screening proxies.", styles["Normal"]))
+        story.append(Spacer(1, 6))
+    evidence_profile = (rep.get("coverage") or {}).get("evidenceProfile") or {}
+    if evidence_profile:
+        story.append(Paragraph(
+            "Evidence profile: "
+            + " · ".join([
+                f"observed {evidence_profile.get('observed', 0)}",
+                f"connected/nearby {evidence_profile.get('connectedNearby', 0)}",
+                f"published model {evidence_profile.get('publishedModel', 0)}",
+                f"screening proxy {evidence_profile.get('screeningProxy', 0)}",
+                f"manual {evidence_profile.get('manual', 0)}",
+                f"unavailable {evidence_profile.get('unavailable', 0)}",
+            ]), styles["Normal"]))
+        story.append(Spacer(1, 4))
+    for item in rep.get("correlationNotes") or []:
+        story.append(Paragraph(
+            f"<b>Shared evidence:</b> {item.get('text', '')}", styles["Normal"]))
+        story.append(Spacer(1, 3))
 
     # COMID/HUC12 moved out of the meta line into the basin table (the data exports still
     # carry them separately); drainage area is already a basin row.
@@ -243,9 +356,8 @@ def build_pdf(result: dict) -> bytes:
     if xs.get("png_b64"):
         import base64
         story.append(Paragraph("Representative cross-section", styles["Heading4"]))
-        # box matches the PNG's 6.5 x 2.15 in figure aspect (xsplot.py) so it isn't stretched
         story.append(Image(io.BytesIO(base64.b64decode(xs["png_b64"])),
-                           width=6.0 * inch, height=2.0 * inch))
+                           width=6.0 * inch, height=2.4 * inch))
         geom = xs.get("geom") or {}
         thal = geom.get("thalweg")
         ft = 3.28084  # metres -> feet for the report

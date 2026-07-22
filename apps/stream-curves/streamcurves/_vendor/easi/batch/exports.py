@@ -39,14 +39,30 @@ def _summary_csv(batch: BatchResult) -> str:
     w = csv.writer(buf)
     w.writerow(["site_id", "state", "comid", "stream", "drainage_area_sqkm",
                 "eci", "physical", "chemical", "biological",
-                "computed", "unavailable", "auto_decision", "final_decision",
+                "computed", "unavailable", "not_assessed", "overall_coverage",
+                "physical_coverage", "chemical_coverage", "biological_coverage",
+                "observed_evidence", "connected_nearby_evidence",
+                "published_model_evidence", "screening_proxy_evidence",
+                "manual_evidence", "unavailable_evidence",
+                "provisional_coverage", "auto_decision", "final_decision",
                 "partial_evidence"])
     for s in batch.sites:
         d, sub = s.delineation, s.sub_indices
+        coverage = s.coverage or {}
+        outcome_cov = coverage.get("outcomes") or {}
+        profile = coverage.get("evidenceProfile") or {}
         w.writerow([s.site_id, s.state, d.comid, d.gnis_name, d.drainage_area_sqkm,
                     s.eci, sub.get("physical"), sub.get("chemical"),
                     sub.get("biological"), s.completeness.computed,
-                    s.completeness.unavailable, s.qualification.auto,
+                    s.completeness.unavailable, s.completeness.not_assessed,
+                    (coverage.get("overall") or {}).get("fraction"),
+                    (outcome_cov.get("physical") or {}).get("fraction"),
+                    (outcome_cov.get("chemical") or {}).get("fraction"),
+                    (outcome_cov.get("biological") or {}).get("fraction"),
+                    profile.get("observed", 0), profile.get("connectedNearby", 0),
+                    profile.get("publishedModel", 0), profile.get("screeningProxy", 0),
+                    profile.get("manual", 0), profile.get("unavailable", 0),
+                    s.provisional_coverage, s.qualification.auto,
                     s.qualification.final, s.qualification.partial_evidence])
     return buf.getvalue()
 
@@ -57,13 +73,21 @@ def _metrics_csv(batch: BatchResult) -> str:
     w.writerow(["site_id", "metric_id", "discipline", "function", "rating",
                 "generated_rating", "index", "function_score", "band",
                 "confidence", "source", "source_mode", "status", "availability",
-                "missing_reason"])
+                "missing_reason", "method_key", "method_kind", "basis_class",
+                "input_trace", "combined_value", "governing_input",
+                "generated_index", "scoring_completeness", "source_tier",
+                "evidence_family", "used_fallback", "observed_overrides_proxy"])
     for s in batch.sites:
         for m in s.metrics:
             w.writerow([s.site_id, m.metric_id, m.discipline, m.function_name,
                         m.final_rating, m.generated_rating, m.index,
                         m.function_score, m.band, m.confidence, m.source,
-                        m.source_mode, m.status, m.availability, m.missing_reason])
+                        m.source_mode, m.status, m.availability, m.missing_reason,
+                        m.method_key, m.method_kind, m.basis_class,
+                        json.dumps(m.input_trace, separators=(",", ":"), default=str),
+                        m.combined_value, m.governing_input, m.generated_index,
+                        m.scoring_completeness, m.source_tier, m.evidence_family,
+                        m.used_fallback, m.observed_overrides_proxy])
     return buf.getvalue()
 
 

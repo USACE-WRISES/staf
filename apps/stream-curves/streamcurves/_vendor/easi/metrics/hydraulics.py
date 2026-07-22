@@ -1,153 +1,174 @@
 """Hydraulics-discipline EASI metric adapters."""
 from __future__ import annotations
 
+from .. import screening_methods
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
 
 LOW_FLOW_ID = "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity"
 HYPORHEIC_ID = "hyporheic-connectivity-hyporheic-exchange-indicators"
 ENTRENCHMENT_ID = "floodplain-connectivity-floodplain-access-entrenchment"
-FLOODPLAIN_ENGAGEMENT_ID = ("high-flow-dynamics-floodplain-engagement-frequency-"
-                            "bankfull-recurrence")
+FLOODPLAIN_ENGAGEMENT_ID = (
+    "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence")
 
 PERENNIAL, INTERMITTENT, EPHEMERAL = 46006, 46003, 46007
 
-# Generic dimensionless flood-frequency growth curve, normalized to bankfull≈Q1.5
-# (Q_T / Q_1.5). A documented national screening generalization — a gage analysis
-# or regional regression refines it; the metric is overrideable.
-_GROWTH = [(1.5, 1.0), (2.0, 1.2), (5.0, 1.9), (10.0, 2.6), (25.0, 3.6), (50.0, 4.4)]
-
-
-def _recurrence_from_ratio(ratio: float) -> float:
-    """Invert a Q_floodplain/Q_bankfull ratio into a recurrence interval (years)."""
-    if ratio <= 1.0:
-        return 1.5
-    for (t0, r0), (t1, r1) in zip(_GROWTH, _GROWTH[1:]):
-        if ratio <= r1:
-            frac = (ratio - r0) / (r1 - r0) if r1 > r0 else 0.0
-            return t0 + frac * (t1 - t0)
-    return _GROWTH[-1][0]
-
 
 def rate_engagement(bhr):
-    """Floodplain-engagement recurrence from the bank-height ratio (vertical axis).
+    """Direct BHR rating, retained as a small pure helper for cross-section edits.
 
-    BHR = top-of-bank height / bankfull depth — how far above bankfull flow must rise
-    to spill onto the floodplain. Converted to a discharge multiple by a wide-channel
-    Manning approximation (Q ~ depth^(5/3)) and then to a recurrence interval via the
-    regional growth curve: BHR~1 -> engages near bankfull (~1-2 yr, Good); higher BHR ->
-    incised, rarer engagement (Fair/Poor). Pure (no ctx/network) — reused by the metric
-    adapter and the editable cross-section recompute. Returns ``(rating, t_years)``, or
-    ``(None, None)`` if BHR is unavailable.
+    Returns ``(rating, BHR)`` for compatibility with the existing call shape;
+    no recurrence interval or fabricated flood-frequency transformation is used.
     """
-    if bhr is None or bhr <= 0:
-        return None, None
-    t_years = _recurrence_from_ratio(bhr ** (5.0 / 3.0))
-    rating = "Good" if t_years <= 2.0 else ("Fair" if t_years <= 5.0 else "Poor")
-    return rating, round(t_years, 1)
+    ev = screening_methods.evaluate(FLOODPLAIN_ENGAGEMENT_ID, {"bhr": bhr})
+    return ev.rating, ev.combined_value
 
 
 def floodplain_engagement(ctx: AnalysisContext) -> MetricResult:
-    """Floodplain engagement frequency (bankfull recurrence) — the vertical axis.
-
-    How *often* flows top the bank onto the floodplain, distinct from Floodplain
-    Access (which measures lateral entrenchment). The bank-height ratio (top-of-bank
-    height / bankfull depth) sets how far above bankfull flow must rise; it maps to a
-    recurrence interval (~1-2 yr = Good, ~3-5 yr = Fair, rarely = Poor). Conservative
-    screening default when no cross-section is available. Overrideable (e.g. with a
-    gage/xs-calc analysis).
-    """
-    g = ctx.extras.get("reach_geomorph") or {}
-    bhr = g.get("bank_height_ratio")
-    rating, t_years = rate_engagement(bhr)
-    if rating:
-        return MetricResult(
-            FLOODPLAIN_ENGAGEMENT_ID, value=t_years,
-            value_text=f"floodplain engaged by ~{t_years:.0f}-yr flow "
-                       f"(bank-height ratio {bhr} — how often flow tops the bank)",
-            rating=rating, confidence="L" if g.get("edge_limited") else "M",
-            source="USGS 3DEP bank-height ratio (vertical incision → recurrence)",
-            note="recurrence proxy from bank height above bankfull; "
-                 "gage/regional flood-frequency regression refines",
-            scoring={"inputs": {"bhr": bhr}, "value": t_years, "model": "scalar"})
-
+    """Floodplain engagement from bank-height ratio directly."""
+    geom = ctx.extras.get("reach_geomorph") or {}
+    bhr = geom.get("bank_height_ratio")
+    confidence = "L" if geom.get("edge_limited") else "M"
+    ev = screening_methods.evaluate(
+        FLOODPLAIN_ENGAGEMENT_ID, {"bhr": bhr},
+        input_meta={"bhr": {"source": "USGS 3DEP representative cross section"}},
+        confidence=confidence)
+    if ev.rating is None:
+        return unavailable(
+            FLOODPLAIN_ENGAGEMENT_ID,
+            "bank-height ratio unavailable for the representative cross section",
+            confidence, scoring=ev.trace)
+    warning = "; ".join(ev.trace.get("warnings") or [])
     return MetricResult(
-        FLOODPLAIN_ENGAGEMENT_ID, value=None,
-        value_text="insufficient terrain data — screening default",
-        rating="Fair", confidence="L", source="default (no 3DEP cross-section)",
-        note="no usable cross-section; conservative screening default — overrideable",
-        scoring={"inputs": {"bhr": bhr}, "value": None, "model": "scalar"})
+        FLOODPLAIN_ENGAGEMENT_ID, value=round(float(bhr), 3),
+        value_text=f"bank-height ratio {float(bhr):.2f} (low-bank height / max bankfull depth)",
+        rating=ev.rating, confidence=confidence,
+        source="USGS 3DEP representative cross section",
+        note=warning or "Direct BHR screen; surveyed cross-section geometry may refine.",
+        scoring=ev.trace)
 
 
 def rate_entrenchment(er):
-    """Lateral floodplain access from the entrenchment ratio (flood-prone width /
-    bankfull width): ER >= 2.2 Good, >= 1.4 Fair, else Poor. Pure — reused by the metric
-    adapter and the editable cross-section recompute. Returns the rating, or ``None`` if
-    ER is unavailable. (Incision / how often it floods is the separate High flow dynamics
-    metric — see ``rate_engagement``.)
-    """
-    if er is None:
-        return None
-    return "Good" if er >= 2.2 else ("Fair" if er >= 1.4 else "Poor")
+    """Direct entrenchment-ratio rating."""
+    return screening_methods.evaluate(ENTRENCHMENT_ID, {"er": er}).rating
 
 
 def floodplain_access(ctx: AnalysisContext) -> MetricResult:
-    """Rosgen entrenchment ratio from 3DEP cross-sections — lateral floodplain access.
-
-    ER = flood-prone width (~2x bankfull depth) / bankfull width: >= 2.2 a broad
-    accessible floodplain (Good); 1.4-2.2 moderate (Fair); < 1.4 entrenched (Poor).
-    Measures whether a floodplain is laterally *there* to access (a form question);
-    *how often* it floods is the separate High flow dynamics metric. DEM-derived with
-    curve-estimated bankfull -> approximate; overrideable with a user XS (e.g. xs-calc).
-    """
-    g = ctx.extras.get("reach_geomorph") or {}
-    er = g.get("entrenchment_ratio")
-    if er is None:
-        return unavailable(ENTRENCHMENT_ID, "3DEP entrenchment unavailable for reach", "M")
-    rating = rate_entrenchment(er)
-    edge = bool(g.get("edge_limited"))
-    res = g.get("dem_resolution_m") or 10
-    note = (f"DEM {res} m; bankfull from national curve; override via xs-calc"
-            + (" — floodprone reached buffer edge (ER likely under-estimated)"
-               if edge else ""))
-    return MetricResult(ENTRENCHMENT_ID, value=er,
-                        value_text=f"entrenchment ratio {er} — floodprone width / "
-                                   f"bankfull width (representative cross-section)",
-                        rating=rating, confidence="L" if edge else "M",
-                        source="USGS 3DEP cross-sections (Rosgen entrenchment ratio)", note=note,
-                        scoring={"inputs": {"er": er}, "value": er, "model": "scalar"})
+    """Lateral floodplain access from entrenchment ratio directly."""
+    geom = ctx.extras.get("reach_geomorph") or {}
+    er = geom.get("entrenchment_ratio")
+    edge = bool(geom.get("edge_limited"))
+    confidence = "L" if edge else "M"
+    ev = screening_methods.evaluate(
+        ENTRENCHMENT_ID, {"er": er},
+        input_meta={"er": {"source": "USGS 3DEP representative cross section"}},
+        confidence=confidence)
+    if ev.rating is None:
+        return unavailable(
+            ENTRENCHMENT_ID, "3DEP entrenchment ratio unavailable for reach",
+            confidence, scoring=ev.trace)
+    res = geom.get("dem_resolution_m") or 10
+    note = f"DEM {res} m; bankfull from national curve"
+    if edge:
+        note += "; flood-prone width reached the buffer edge and ER may be underestimated"
+    note += "; naturally confined valleys require field interpretation"
+    return MetricResult(
+        ENTRENCHMENT_ID, value=round(float(er), 3),
+        value_text=(f"entrenchment ratio {float(er):.2f} "
+                    "(flood-prone width / bankfull width)"),
+        rating=ev.rating, confidence=confidence,
+        source="USGS 3DEP representative cross section",
+        note=note, scoring=ev.trace)
 
 
 def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
-    """Flow-permanence proxy (NHD FCODE) for low-flow wetted connectivity."""
-    fc = ctx.fcode
-    if fc is None:
-        return unavailable(LOW_FLOW_ID, "no flow-permanence (FCODE) data", "L")
-    mapping = {PERENNIAL: ("Good", "perennial flow"),
-               INTERMITTENT: ("Fair", "intermittent flow"),
-               EPHEMERAL: ("Poor", "ephemeral flow")}
-    rating, desc = mapping.get(fc, ("Fair", f"FCODE {fc}"))
-    return MetricResult(LOW_FLOW_ID, value=fc,
-                        value_text=f"{desc} (NHD FCODE {fc})", rating=rating,
-                        confidence="L", source="NHDPlus flow permanence (FCODE)",
-                        note="permanence proxy for low-flow wetted connectivity",
-                        scoring={"inputs": {"fcode": fc}, "value": fc, "model": "categorical"})
+    """Observed NRSA wetted channel, then the StreamCat HYD fallback."""
+    fcode = ctx.fcode
+    descriptions = {
+        PERENNIAL: "perennial classification",
+        INTERMITTENT: "intermittent classification",
+        EPHEMERAL: "ephemeral classification",
+    }
+    regime = descriptions.get(fcode, f"FCODE {fcode}") if fcode is not None else "unknown regime"
+    nrsa = base.nrsa_evidence(ctx)
+    wetted = (nrsa or {}).get("wettedPct")
+    if wetted is not None:
+        connected = nrsa.get("matchType") == "connected_nearby"
+        source_tier = "connected-nearby" if connected else "observed"
+        confidence = nrsa.get("confidence") or ("M/L" if connected else "M")
+        source = (f"EPA NRSA 2018-19 site {nrsa.get('siteId')}"
+                  + (f" ({float(nrsa.get('distanceMi') or 0):.2f} mi connected)"
+                     if connected else " (exact COMID)"))
+        ev = screening_methods.evaluate(
+            LOW_FLOW_ID, {"wettedPct": wetted, "fcodeContext": fcode},
+            input_meta={
+                "wettedPct": {"source": source, "details": nrsa},
+                "fcodeContext": {"source": "NHDPlus FCODE"},
+            },
+            confidence=confidence, source_tier=source_tier,
+            evidence_family="nrsa_field", used_fallback=False)
+        if connected:
+            ev.trace["completeness"] = "partial"
+        note = (f"Survey date {nrsa.get('date')}; {regime}. "
+                "Interpret against the naturally expected flow regime.")
+        if nrsa.get("warning"):
+            note += f" {nrsa['warning']}"
+        return MetricResult(
+            LOW_FLOW_ID, value=float(wetted),
+            value_text=f"{float(wetted):.1f}% wetted channel — {regime}",
+            rating=ev.rating, confidence=confidence, source=source,
+            note=note, scoring=ev.trace)
+
+    hyd_cat, hyd_ws = base.integrity_pair(ctx, "hyd")
+    ev = screening_methods.evaluate(
+        LOW_FLOW_ID,
+        {"hydCatchment": hyd_cat, "hydWatershed": hyd_ws},
+        context={"fcode": fcode, "flowRegime": regime},
+        input_meta={
+            "hydCatchment": {"source": "EPA StreamCat HYDcat"},
+            "hydWatershed": {"source": "EPA StreamCat HYDws"},
+        },
+        confidence="L", variant_key="streamcat-hyd-integrity",
+        source_tier="screening-proxy", evidence_family="iwi_landscape",
+        used_fallback=True)
+    if ev.rating is None:
+        return unavailable(
+            LOW_FLOW_ID,
+            "eligible NRSA wetted-channel evidence and both StreamCat HYD components are unavailable",
+            "L", scoring=ev.trace,
+            value_text=f"low-flow evidence unavailable — {regime}")
+    value = float(ev.combined_value)
+    return MetricResult(
+        LOW_FLOW_ID, value=value,
+        value_text=(f"HYD integrity fallback {value:.2f} "
+                    f"(catchment {float(hyd_cat):.2f}; watershed {float(hyd_ws):.2f})"),
+        rating=ev.rating, confidence="L",
+        source="EPA StreamCat HYD catchment + watershed components",
+        note=("Landscape-integrity fallback, not observed wetted-channel condition; "
+              f"{regime}. The 0.40/0.70 classes are EASI integration tiers."),
+        scoring=ev.trace)
 
 
 def hyporheic(ctx: AnalysisContext) -> MetricResult:
-    """Hyporheic-exchange potential proxy from channel slope + sinuosity."""
-    slope, sin = ctx.slope, ctx.sinuosity
-    if slope is None and sin is None:
-        return unavailable(HYPORHEIC_ID, "no slope/sinuosity data", "L")
-    s = min((slope or 0.0) / 0.01, 1.0)
-    sn = max(min(((sin or 1.0) - 1.0) / 0.5, 1.0), 0.0)
-    score = 0.6 * s + 0.4 * sn
-    rating = base.band(score, good_below=0.6, fair_below=0.3, higher_is_worse=False)
-    return MetricResult(HYPORHEIC_ID, value=round(score, 2),
-                        value_text=f"exchange potential {score:.2f} "
-                                   f"(slope {slope}, sinuosity {sin})",
-                        rating=rating, confidence="L",
-                        source="NHDPlus slope + sinuosity (proxy)",
-                        note="bedform/exchange proxy; field/SDA refinement later",
-                        scoring={"inputs": {"slope": slope, "sinuosity": sin},
-                                 "value": round(score, 2), "model": "combined"})
+    """Provisional slope + sinuosity hyporheic-exchange proxy."""
+    slope, sinuosity = ctx.slope, ctx.sinuosity
+    ev = screening_methods.evaluate(
+        HYPORHEIC_ID, {"slope": slope, "sinuosity": sinuosity},
+        input_meta={
+            "slope": {"source": "NHDPlus slope"},
+            "sinuosity": {"source": "selected reach geometry"},
+        },
+        confidence="L")
+    if ev.rating is None:
+        return unavailable(
+            HYPORHEIC_ID, "both slope and sinuosity are required", "L",
+            scoring=ev.trace)
+    score = float(ev.combined_value)
+    return MetricResult(
+        HYPORHEIC_ID, value=round(score, 3),
+        value_text=(f"exchange-potential proxy {score:.2f} "
+                    f"(slope {float(slope):.4f}; sinuosity {float(sinuosity):.2f})"),
+        rating=ev.rating, confidence="L",
+        source="NHDPlus slope + selected reach geometry",
+        note="Provisional low-confidence proxy; bed permeability is unavailable.",
+        scoring=ev.trace)
