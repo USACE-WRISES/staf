@@ -113,7 +113,7 @@ def _info(text: str = None, *, html_tip: str = None):
 
 
 def _metric_tip_html(name, definition, source, calc, note, crit, default, land_cover=None,
-                     riparian=None, include_criteria=True):
+                     riparian=None):
     """Build the report ⓘ tooltip card: definition, data source, calculation, then the
     scoring criteria. Source is where the input value comes from; Calculation is any extra
     computation on top of it. ``land_cover`` (the catchment-hydrology land-cover metric) swaps
@@ -121,9 +121,6 @@ def _metric_tip_html(name, definition, source, calc, note, crit, default, land_c
     cover with their thresholds, marking the governing one. ``riparian`` (the detrital metric)
     adds a natural-vegetation composition block (forest/shrub/grassland/wetland). All dynamic
     values are HTML-escaped; markup is app-controlled.
-
-    ``include_criteria=False`` (the worksheet) drops the Scoring / land-cover / riparian blocks —
-    those move to the card's "Scoring method" panel — leaving definition, source, and calculation.
     """
     e = html.escape
     parts = [f'<div class="easi-tip-title">{e(name or "")}</div>']
@@ -138,9 +135,6 @@ def _metric_tip_html(name, definition, source, calc, note, crit, default, land_c
     if calc:
         parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Calculation</span>'
                      f'{e(calc)}</div>')
-    if not include_criteria:
-        # Worksheet: the scoring criteria live in the card's "Scoring method" panel instead.
-        return "".join(parts)
     if riparian:  # detrital metric: natural-vegetation composition of the 100 m buffer
         veg_rows = [f'<div class="easi-tip-crit">{e(lbl)} {e(str(riparian.get(k, 0)))}%</div>'
                     for k, lbl in (("forest", "Forest"), ("shrub", "Shrub"),
@@ -424,13 +418,12 @@ def _fnscore_cell(r, meta):
     return ui.tags.td(*kids, class_="easi-fs-cell")
 
 
-def _metric_card_tip(row, include_criteria=True):
+def _metric_card_tip(row):
     """The ⓘ hover card for a metric — definition, data source, calculation, and the
     Good/Fair/Poor criteria (the land-cover metric shows both indicators; the detrital metric
     shows its riparian-vegetation breakdown). Pure: takes a scored/base metric row and returns
-    the ``_info`` span. Used by both the worksheet card and the read-only report row (and is the
-    retarget point for the tooltip test). ``include_criteria=False`` (worksheet) drops the scoring
-    blocks — they render in the card's "Scoring method" panel instead."""
+    the ``_info`` span. Used by the read-only report row (and is the retarget point for the
+    tooltip test)."""
     mid = row["metricId"]
     lc = row.get("landCover")
     if lc:  # attach both indicators' threshold sets for the tooltip
@@ -447,7 +440,7 @@ def _metric_card_tip(row, include_criteria=True):
         calc=calc,
         crit=(row.get("criteriaBands") or _METRICS.get(mid, {}).get("criteria") or {}),
         default=row.get("generatedRating") or "n/a", land_cover=lc,
-        riparian=row.get("ripVeg"), include_criteria=include_criteria)
+        riparian=row.get("ripVeg"))
     return _info(html_tip=tip_html)
 
 
@@ -645,55 +638,9 @@ def _method_docs_ui(row, trace):
     return ui.div(*parts, class_="easi-method-docs")
 
 
-_TIER_LABEL = {
-    "observed": "observed evidence",
-    "connected-nearby": "connected/nearby evidence",
-    "published-model": "published model",
-    "screening-proxy": "screening proxy",
-    "manual": "manual evidence",
-    "unavailable": "unavailable",
-}
-
-
-def _method_provenance_ui(method, row, trace):
-    """What produced THIS number: source tier, confidence, completeness, warnings.
-
-    Run-specific only. The static half of the story — basis class, breakpoints, known
-    limitations and citations — lives in the 'Definition, rationale, and limitations'
-    section (:func:`_method_docs_ui`) so the two never repeat or drift apart.
-    """
-    entry = easi_methods.catalog_entry(row["metricId"], trace.get("methodKey"))
-    if entry is None:
-        return None
-    rows = []
-
-    def _line(label, value):
-        rows.append(ui.div(
-            ui.div(ui.span(label, class_="easi-method-input-label"),
-                   class_="easi-method-input-name"),
-            ui.span(value, class_="easi-method-input-value"),
-            class_="easi-method-input-row"))
-
-    tier = _TIER_LABEL.get(trace.get("sourceTier") or "", trace.get("sourceTier") or "—")
-    if trace.get("usedFallback"):
-        tier += " (fallback)"
-    if trace.get("observedOverridesProxy"):
-        tier += " — supersedes the generated proxy"
-    _line("Result from", tier)
-    _line("Confidence", trace.get("confidence") or entry.get("confidence", "—"))
-    completeness = trace.get("completeness")
-    if completeness and completeness != "complete":
-        _line("Completeness", completeness.replace("_", " "))
-    for warning in trace.get("warnings") or []:
-        rows.append(ui.div(warning, class_="easi-method-input-source"))
-
-    return ui.div(ui.div("Result provenance", class_="easi-method-inputs-title"),
-                  *rows, class_="easi-method-inputs")
-
-
 def _method_body_ui(mid, method, row, trace, site_inputs, explored):
     """Inputs-used + equation + the reference-curve plot (or the categorical decision
-    table), then the provenance of this particular result."""
+    table)."""
     parts = []
     site_rating = row.get("generatedRating")
     if method.mode == "categorical":
@@ -712,7 +659,6 @@ def _method_body_ui(mid, method, row, trace, site_inputs, explored):
             parts.append(ui.HTML(method_plot.scalar_svg(
                 method, trace.get("combinedValue"), site_rating,
                 ev.get("value"), ev.get("rating"))))
-    parts.append(_method_provenance_ui(method, row, trace))
     return ui.TagList(*parts)
 
 
@@ -2282,7 +2228,6 @@ def server(input, output, session):
                    ui.span("Score this metric", class_="sfari-sec-title"),
                    class_="sfari-sec-lbl"),
             ui.div(ui.span(meta.get("name", ""), class_="easi-metric-title"),
-                   ui.output_ui("fn_metric_tip", inline=True),
                    class_="sfari-metric-name"),
             (ui.div(meta.get("metricStatement", ""), class_="sfari-metric-statement")
              if meta.get("metricStatement") else None),
@@ -2320,19 +2265,6 @@ def server(input, output, session):
     @render.text
     def assess_stage_label():
         return stage() or "Computing metrics…"
-
-    @render.ui
-    def fn_metric_tip():
-        # The card's single metric ⓘ, kept live so its Source/value lines follow source swaps.
-        if current_step() not in (STEP_ASSESS, STEP_REPORT):
-            return None
-        sc = scored()
-        if not sc:
-            return None
-        current_fn()
-        _mid, row = _cur_row(sc)
-        # Worksheet ⓘ: criteria moved to the "Scoring method" panel below the evidence row.
-        return _metric_card_tip(row, include_criteria=False) if row else None
 
     @render.ui
     def fn_metric_live():
