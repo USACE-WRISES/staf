@@ -68,8 +68,8 @@ def barriers(ctx: AnalysisContext) -> MetricResult:
     return MetricResult(
         BARRIERS_ID, value=count, value_text=value_text,
         rating=ev.rating, confidence="M", source="USACE NID",
-        note=("Proximity only; dam count does not establish passability or severity. "
-              "Poor requires verified adverse connectivity evidence."),
+        note=("Proximity only. A mapped dam count does not establish passability or severity. "
+              "Two or more dams within a mile rate Poor as a screening flag to verify."),
         scoring=ev.trace)
 
 
