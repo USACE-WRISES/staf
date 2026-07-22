@@ -47,16 +47,16 @@ class OutcomeResult:
     indirect: int = 0
 
     @property
-    def sub_index(self) -> float:
-        return self.weighted / self.max if self.max > 0 else 0.0
+    def sub_index(self) -> float | None:
+        return self.weighted / self.max if self.max > 0 else None
 
 
 @dataclass
 class RollupResult:
     function_scores: dict[str, int]
     outcomes: dict[str, OutcomeResult]
-    ecosystem_condition_index: float
-    sub_indices: dict[str, float] = field(default_factory=dict)
+    ecosystem_condition_index: float | None
+    sub_indices: dict[str, float | None] = field(default_factory=dict)
 
 
 def rollup(
@@ -90,7 +90,8 @@ def rollup(
                 outcomes[key].max += config.FUNCTION_SCORE_MAX * weight
 
     sub_indices = {key: outcomes[key].sub_index for key in config.OUTCOMES}
-    eci = sum(sub_indices.values()) / len(config.OUTCOMES)
+    available = [value for value in sub_indices.values() if value is not None]
+    eci = sum(available) / len(available) if available else None
     return RollupResult(
         function_scores=dict(function_scores),
         outcomes=outcomes,
@@ -102,27 +103,33 @@ def rollup(
 # --------------------------------------------------------------------------- #
 # Presentation helpers
 # --------------------------------------------------------------------------- #
-def round2(value: float) -> float:
+def round2(value: float | None) -> float | None:
     """STAF display rounding (2 decimals)."""
-    return round(value * 100) / 100
+    return None if value is None else round(value * 100) / 100
 
 
-def index_band_color(value: float) -> str:
+def index_band_color(value: float | None) -> str:
+    if value is None:
+        return "#d7dce5"
     for threshold, color in config.INDEX_BANDS:
         if value <= threshold:
             return color
     return config.INDEX_BANDS[-1][1]
 
 
-def index_band_label(value: float) -> str:
+def index_band_label(value: float | None) -> str:
     """Index (0-1) -> STAF condition category (Non-Functioning/Functioning-at-Risk/Functioning), matching the color bands."""
+    if value is None:
+        return "Not assessed"
     for (threshold, _color), label in zip(config.INDEX_BANDS, config.INDEX_BAND_LABELS):
         if value <= threshold:
             return label
     return config.INDEX_BAND_LABELS[-1]
 
 
-def function_score_band_color(value: float) -> str:
+def function_score_band_color(value: float | None) -> str:
+    if value is None:      # unrated: neutral, never the Non-Functioning red
+        return "#d7dce5"
     for threshold, color in config.FUNCTION_SCORE_BANDS:
         if value <= threshold:
             return color

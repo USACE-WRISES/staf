@@ -35,17 +35,59 @@ class AnalysisContext:
 
 
 # --- shared StreamCat accessors used by multiple adapters --------------------
+# Every accessor below returns None when any expected source field is absent. A missing
+# class is unknown, not zero: summing an absent class as 0 would silently produce a
+# falsely favorable rating (low agriculture, low wetland) from missing data.
 def sc(ctx: "AnalysisContext") -> dict:
     return ctx.extras.get("streamcat") or {}
+
+
+def nrsa_evidence(ctx: "AnalysisContext") -> Optional[dict]:
+    """The exact or network-confirmed nearby NRSA record prefetched for this reach."""
+    value = ctx.extras.get("nrsa")
+    return value if isinstance(value, dict) else None
+
+
+def _integrity_value(value: Any) -> Optional[float]:
+    """A StreamCat integrity component, valid only on its documented 0-1 scale."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if 0.0 <= number <= 1.0 else None
+
+
+def integrity_pair(ctx: "AnalysisContext",
+                   component: str) -> tuple[Optional[float], Optional[float]]:
+    """Validated ``(catchment, watershed)`` StreamCat integrity components, e.g. CHYD/WHYD."""
+    key = str(component).strip().lower()
+    values = sc(ctx)
+    return (_integrity_value(values.get(f"{key}cat")),
+            _integrity_value(values.get(f"{key}ws")))
+
+
+def integrity_products(ctx: "AnalysisContext") -> Optional[dict[str, float]]:
+    """The six published integrity components behind the ICI/IWI products.
+
+    Returns None if any component is missing; they are never converted to zero.
+    """
+    values: dict[str, float] = {}
+    for component in ("hyd", "chem", "sed", "conn", "temp", "habt"):
+        catchment, watershed = integrity_pair(ctx, component)
+        if catchment is None or watershed is None:
+            return None
+        values[f"{component}Cat"] = catchment
+        values[f"{component}Ws"] = watershed
+    return values
 
 
 def riparian_forest_pct(ctx: "AnalysisContext") -> Optional[float]:
     s = sc(ctx)
     vals = [s.get("pctconif2019wsrp100"), s.get("pctdecid2019wsrp100"),
             s.get("pctmxfst2019wsrp100")]
-    if all(v is None for v in vals):
+    if any(v is None for v in vals):
         return None
-    return round(sum(v or 0.0 for v in vals), 2)
+    return round(sum(float(v) for v in vals), 2)
 
 
 # Natural riparian vegetation classes in the 100 m buffer (StreamCat *wsrp100). Forest, shrub,
@@ -60,23 +102,47 @@ _RIPARIAN_VEG_KEYS = {
 
 
 def riparian_veg_breakdown(ctx: "AnalysisContext") -> Optional[dict]:
-    """Per-group natural-vegetation cover in the 100 m riparian buffer, or None if no data.
+    """Per-group natural-vegetation cover in the 100 m riparian buffer, or None if incomplete.
 
-    Returns ``{forest, shrub, grassland, wetland, total}`` (percent). A group with no data
-    contributes 0; the result is None only when every class is absent.
+    Returns ``{forest, shrub, grassland, wetland, total}`` (percent). Every expected source
+    field is required — an absent class is unknown, not zero.
     """
     s = sc(ctx)
     groups: dict[str, float] = {}
-    any_present = False
     for grp, keys in _RIPARIAN_VEG_KEYS.items():
         vals = [s.get(k) for k in keys]
-        if any(v is not None for v in vals):
-            any_present = True
-        groups[grp] = round(sum(v or 0.0 for v in vals), 1)
-    if not any_present:
-        return None
+        if any(v is None for v in vals):
+            return None
+        groups[grp] = round(sum(float(v) for v in vals), 1)
     groups["total"] = round(sum(groups[g] for g in _RIPARIAN_VEG_KEYS), 1)
     return groups
+
+
+def riparian_woody_breakdown(ctx: "AnalysisContext") -> Optional[dict]:
+    """Forest + shrub + woody-wetland cover in the 100 m riparian corridor.
+
+    All five expected StreamCat fields are required. Grassland and herbaceous wetland are
+    excluded: they do not provide the canopy shade this supports.
+    """
+    s = sc(ctx)
+    groups = {
+        "forest": ("pctconif2019wsrp100", "pctdecid2019wsrp100", "pctmxfst2019wsrp100"),
+        "shrub": ("pctshrb2019wsrp100",),
+        "woodyWetland": ("pctwdwet2019wsrp100",),
+    }
+    out: dict[str, float] = {}
+    for group, keys in groups.items():
+        vals = [s.get(k) for k in keys]
+        if any(v is None for v in vals):
+            return None
+        out[group] = round(sum(float(v) for v in vals), 1)
+    out["total"] = round(sum(out.values()), 1)
+    return out
+
+
+def riparian_woody_pct(ctx: "AnalysisContext") -> Optional[float]:
+    breakdown = riparian_woody_breakdown(ctx)
+    return None if breakdown is None else breakdown["total"]
 
 
 def riparian_natural_veg_pct(ctx: "AnalysisContext") -> Optional[float]:
@@ -90,9 +156,9 @@ def riparian_natural_veg_pct(ctx: "AnalysisContext") -> Optional[float]:
 def ag_pct(ctx: "AnalysisContext") -> Optional[float]:
     s = sc(ctx)
     vals = [s.get("pctcrop2019ws"), s.get("pcthay2019ws")]
-    if all(v is None for v in vals):
+    if any(v is None for v in vals):
         return None
-    return round(sum(v or 0.0 for v in vals), 2)
+    return round(sum(float(v) for v in vals), 2)
 
 
 def band(value: float, good_below: float, fair_below: float,
@@ -118,10 +184,10 @@ class MetricResult:
     status: str = "ok"                # 'ok' | 'unavailable' | 'override'
     note: str = ""
     detail: Optional[dict] = None     # adapter-specific extra render data (e.g. land-cover indicators)
-    # Transparency trace for the worksheet "Scoring method" panel: the raw inputs the rating used,
-    # the computed value, and the method key (easi.methods mode / source variant). Additive — the
-    # rating/value math is unchanged; see easi/methods.py.
-    scoring: Optional[dict] = None    # {"inputs": {key: value|None}, "value": .., "model": ..}
+    # The canonical evaluation trace from screening_methods.evaluate(): method key/kind, basis,
+    # every input with its value+source, combined value, completeness, source tier, evidence
+    # family, fallback and observed-supersedes flags, limitations. Never overloaded into detail.
+    scoring: Optional[dict] = None
     is_override: bool = False
     # Multi-source metrics (config.SOURCE_OPTIONS) with ctx.extras["prefetch_variants"]
     # set: every computed variant keyed by source value, plus which key produced THIS
@@ -137,7 +203,14 @@ class MetricAdapter(Protocol):
         ...
 
 
-def unavailable(metric_id: str, note: str = "", confidence: str = "L") -> MetricResult:
-    """Helper for graceful degradation when a source has no data/errors."""
+def unavailable(metric_id: str, note: str = "", confidence: str = "L",
+                *, scoring: Optional[dict] = None,
+                value_text: str = "not available") -> MetricResult:
+    """Graceful degradation when a source fails or a required input is absent.
+
+    Pass ``scoring`` to keep the evaluation trace (which inputs were missing, and why the
+    metric could not be rated) even though no rating was produced.
+    """
     return MetricResult(metric_id=metric_id, rating=None, status="unavailable",
-                        confidence=confidence, note=note, value_text="not available")
+                        confidence=confidence, note=note, value_text=value_text,
+                        scoring=scoring)

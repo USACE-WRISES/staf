@@ -1,8 +1,11 @@
 """Physicochemistry-discipline EASI metric adapters."""
 from __future__ import annotations
 
-from . import base
+from concurrent.futures import ThreadPoolExecutor
+
+from .. import geo, screening_methods
 from ..datasources import attains, wqp
+from . import base
 from .base import AnalysisContext, MetricResult, unavailable
 
 IMPAIRMENT_ID = "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl"
@@ -11,229 +14,243 @@ NUTRIENTS_ID = "nutrient-cycling-nitrogen-and-phosphorus-concentrations"
 TEMPERATURE_ID = "light-and-thermal-regime-stream-temperature"
 
 
-def impairment(ctx: AnalysisContext) -> MetricResult:
-    """CWA 303(d)/305(b) use-support, always rated via a fallback chain.
-
-    EPA ATTAINS at the reach's catchment (exact, high confidence) -> nearby assessed
-    waters within ~2 km (keyless buffered query, medium confidence, not reach-specific)
-    -> a modeled landscape risk surrogate (low confidence). Source-selectable
-    (config.SOURCE_OPTIONS): "attains" (default chain) or "surrogate" (force modeled).
-    With ctx.extras["prefetch_variants"] set, both variants are computed (the one
-    ATTAINS chain the default already runs + the network-free surrogate) and attached
-    so the UI can swap sources instantly (assessment.apply_source_choices).
-    """
-    src = (ctx.extras.get("source_choices") or {}).get(IMPAIRMENT_ID)
-    prefetch = bool(ctx.extras.get("prefetch_variants"))
-    if src == "surrogate" and not prefetch:
-        return _impairment_surrogate(ctx)
-    attains_res = None
-    a = attains.impairment_at_point(ctx.lat, ctx.lon)
-    if a and a.get("assessment_unit"):
-        attains_res = _attains_result(
-            a, "H",
-            f"{a.get('overallstatus') or 'assessed'} (IR {a.get('ircategory') or '-'}) "
-            f"- AU {a['assessment_unit']}")
+def _attains_result(record: dict, confidence: str) -> MetricResult:
+    category = record.get("ircategory")
+    ev = screening_methods.evaluate(
+        IMPAIRMENT_ID, {"category": category},
+        input_meta={"category": {
+            "source": "EPA ATTAINS",
+            "details": {
+                "assessmentUnit": record.get("assessment_unit"),
+                "assessmentName": record.get("assessment_name"),
+                "overallStatus": record.get("overallstatus"),
+                "distanceM": record.get("distance_m"),
+                "matchType": record.get("match_type"),
+            },
+        }},
+        confidence=confidence,
+        source_tier=("connected-nearby" if record.get("match_type") == "nearby"
+                     else "observed"),
+        evidence_family="attains_assessment", used_fallback=False)
+    distance = record.get("distance_m")
+    if record.get("match_type") == "nearby":
+        prefix = f"nearest assessed unit {float(distance):,.0f} m away"
+        warning = "Nearby, not necessarily this reach."
     else:
-        near = attains.impairment_near_point(ctx.lat, ctx.lon)
-        if near and near.get("assessment_unit"):
-            attains_res = _attains_result(
-                near, "M",
-                f"nearest assessed waters within ~2 km: {near.get('overallstatus') or 'assessed'} "
-                f"(IR {near.get('ircategory') or '-'}, AU {near['assessment_unit']}); "
-                f"reach not individually assessed")
-    if not prefetch:
-        return attains_res if attains_res is not None else _impairment_surrogate(ctx)
-    variants = {
-        "attains": attains_res or unavailable(
-            IMPAIRMENT_ID, "no assessed waters in or near this reach (ATTAINS)", "M"),
-        "surrogate": _impairment_surrogate(ctx),
-    }
-    key = "surrogate" if (src == "surrogate" or attains_res is None) else "attains"
-    primary = variants[key]
-    primary.variants = variants
-    primary.source_key = key
-    return primary
-
-
-def _attains_result(a: dict, confidence: str, txt: str) -> MetricResult:
-    """Map an ATTAINS assessment dict to a Good/Fair/Poor MetricResult."""
-    ir = str(a.get("ircategory") or "")
-    impaired = str(a.get("isimpaired") or "").upper() == "Y"
-    status = str(a.get("overallstatus") or "")
-    if impaired or ir.startswith("5") or ir.startswith("4"):
-        rating = "Poor"
-    elif "Fully Supporting" in status:
-        rating = "Good"
-    else:
-        rating = "Fair"
-    return MetricResult(IMPAIRMENT_ID, value=ir, value_text=txt, rating=rating,
-                        confidence=confidence, source="EPA ATTAINS 303(d)/305(b)",
-                        scoring={"inputs": {"ir": ir}, "value": ir, "model": "attains"})
-
-
-def _impairment_surrogate(ctx: AnalysisContext) -> MetricResult:
-    """Modeled water-quality-impairment risk from landscape stressors (low confidence).
-
-    Where no assessed waters exist in/near the reach, combine already-fetched
-    StreamCat signals — impervious cover, agriculture, and road density raise NPS
-    pollution risk; a riparian buffer mitigates it. Explicitly NOT a regulatory
-    303(d) listing — a screening risk, overrideable with state data.
-    """
-    s = base.sc(ctx)
-    imp, ag, rd = s.get("pctimp2019ws"), base.ag_pct(ctx), s.get("rddensws")
-    rip = base.riparian_forest_pct(ctx)
-    if all(v is None for v in (imp, ag, rd, rip)):
+        prefix = "assessment unit intersects selected point"
+        warning = ""
+    text = (f"{prefix}: IR category {category or '—'}"
+            f" — AU {record.get('assessment_unit') or '—'}")
+    if ev.rating is None:
         return MetricResult(
-            IMPAIRMENT_ID, value=None,
-            value_text="not assessed (ATTAINS) and no landscape data — screening default",
-            rating="Fair", confidence="L", source="default (no ATTAINS / landscape data)",
-            note="not a regulatory 303(d) listing — overrideable",
-            scoring={"inputs": {"impervious": imp, "agriculture": ag, "road_density": rd,
-                                "riparian": rip}, "value": None, "model": "surrogate"})
-    stress = (0.45 * min((imp or 0.0) / 25.0, 1.0)
-              + 0.35 * min((ag or 0.0) / 60.0, 1.0)
-              + 0.20 * min((rd or 0.0) / 5.0, 1.0))
-    risk = max(0.0, min(1.0, stress - 0.15 * min((rip or 0.0) / 60.0, 1.0)))
-    rating = base.band(risk, good_below=0.25, fair_below=0.5, higher_is_worse=True)
+            IMPAIRMENT_ID, value=category, value_text=text, rating=None,
+            confidence=confidence, source="EPA ATTAINS", status="not_assessed",
+            note=("Category 3 has insufficient evidence and remains unscored. "
+                  + warning).strip(),
+            scoring=ev.trace)
     return MetricResult(
-        IMPAIRMENT_ID, value=round(risk, 2),
-        value_text=f"modeled impairment risk {risk:.2f} (impervious {imp}%, ag {ag}%) "
-                   f"— not ATTAINS-assessed",
-        rating=rating, confidence="L",
-        source="Modeled water-quality risk (landscape surrogate)",
-        note="no assessed waters in/near reach — modeled risk, not a regulatory 303(d) "
-             "listing; override with state data",
-        scoring={"inputs": {"impervious": imp, "agriculture": ag, "road_density": rd,
-                            "riparian": rip}, "value": round(risk, 2), "model": "surrogate"})
+        IMPAIRMENT_ID, value=category, value_text=text,
+        rating=ev.rating, confidence=confidence, source="EPA ATTAINS",
+        note=warning, scoring=ev.trace)
+
+
+def _chem_fallback(ctx: AnalysisContext, metric_id: str, *, reason: str) -> MetricResult:
+    chem_cat, chem_ws = base.integrity_pair(ctx, "chem")
+    variant = ("streamcat-chem-integrity-nutrient" if metric_id == NUTRIENTS_ID
+               else "streamcat-chem-integrity-regulatory")
+    ev = screening_methods.evaluate(
+        metric_id, {"chemCatchment": chem_cat, "chemWatershed": chem_ws},
+        context={"fallbackReason": reason},
+        input_meta={
+            "chemCatchment": {"source": "EPA StreamCat CHEMcat"},
+            "chemWatershed": {"source": "EPA StreamCat CHEMws"},
+        },
+        confidence="L", variant_key=variant,
+        source_tier="screening-proxy", evidence_family="iwi_landscape",
+        used_fallback=True)
+    label = ("nutrient-condition" if metric_id == NUTRIENTS_ID
+             else "water-quality condition")
+    if ev.rating is None:
+        return unavailable(
+            metric_id,
+            f"{reason}; both StreamCat CHEM components are also required",
+            "L", scoring=ev.trace,
+            value_text=f"{label} evidence unavailable")
+    value = float(ev.combined_value)
+    return MetricResult(
+        metric_id, value=value,
+        value_text=(f"CHEM integrity fallback {value:.2f} "
+                    f"(catchment {float(chem_cat):.2f}; watershed {float(chem_ws):.2f})"),
+        rating=ev.rating, confidence="L",
+        source="EPA StreamCat CHEM catchment + watershed components",
+        note=(f"{reason}. Landscape-integrity fallback for {label}; it is not "
+              "a measured concentration or regulatory determination. The 0.40/0.70 "
+              "classes are EASI integration tiers."),
+        scoring=ev.trace)
+
+
+def impairment(ctx: AnalysisContext) -> MetricResult:
+    """Conclusive ATTAINS category, then StreamCat CHEM condition context."""
+    exact = attains.impairment_at_point(ctx.lat, ctx.lon)
+    if exact.get("assessment_unit"):
+        result = _attains_result(exact, "H")
+        if result.rating:
+            return result
+        return _chem_fallback(
+            ctx, IMPAIRMENT_ID,
+            reason="intersecting ATTAINS Category 3 is inconclusive")
+    nearby = attains.impairment_near_point(ctx.lat, ctx.lon)
+    if nearby.get("assessment_unit"):
+        result = _attains_result(nearby, "M/L")
+        if result.rating:
+            return result
+        return _chem_fallback(
+            ctx, IMPAIRMENT_ID,
+            reason="nearby ATTAINS Category 3 is inconclusive")
+    return _chem_fallback(
+        ctx, IMPAIRMENT_ID,
+        reason="no qualifying ATTAINS assessed unit at the point or within 2 km")
 
 
 def detrital_cpom(ctx: AnalysisContext) -> MetricResult:
-    """Natural-riparian-vegetation proxy (100 m buffer) for CPOM input/retention.
-
-    Sums the natural vegetative cover (forest, shrub, grassland, wetland) in the buffer rather
-    than forest alone, so grassland and arid/xeric streams are not falsely scored Poor for a
-    non-forest but intact natural buffer. Thresholds unchanged (Good >50 / Fair 20-50 / Poor <=20).
-    """
-    b = base.riparian_veg_breakdown(ctx)
-    if b is None:
-        return unavailable(CPOM_ID, "no riparian vegetation data", "M")
-    veg = b["total"]
-    rating = base.band(veg, good_below=50, fair_below=20, higher_is_worse=False)
-    return MetricResult(CPOM_ID, value=round(veg, 1),
-                        value_text=f"{veg:.1f}% natural riparian vegetation (100 m buffer)",
-                        rating=rating, confidence="M",
-                        source="EPA StreamCat riparian vegetation (rp100)",
-                        note="Natural riparian vegetation (forest, shrub, grassland, wetland) as a "
-                             "CPOM proxy. In grassland or arid ecoregions the natural buffer is "
-                             "non-forest; verify the buffer on the aerial basemap.",
-                        detail={"kind": "riparian_veg", **b},
-                        scoring={"inputs": {"forest": b["forest"], "shrub": b["shrub"],
-                                            "grassland": b["grassland"], "wetland": b["wetland"]},
-                                 "value": round(veg, 1), "model": "combined"})
+    """Organic-matter supply potential from four complete riparian classes."""
+    breakdown = base.riparian_veg_breakdown(ctx)
+    values = ({
+        "forest": breakdown["forest"], "shrub": breakdown["shrub"],
+        "grassland": breakdown["grassland"], "wetland": breakdown["wetland"],
+    } if breakdown else {
+        "forest": None, "shrub": None, "grassland": None, "wetland": None,
+    })
+    ev = screening_methods.evaluate(
+        CPOM_ID, values,
+        input_meta={key: {"source": "EPA StreamCat rp100"}
+                    for key in values},
+        confidence="M")
+    if ev.rating is None:
+        return unavailable(
+            CPOM_ID,
+            "forest, shrub, grassland, and wetland source fields are all required",
+            "M", scoring=ev.trace)
+    total = float(ev.combined_value)
+    return MetricResult(
+        CPOM_ID, value=round(total, 1),
+        value_text=f"{total:.1f}% organic-matter supply potential (100 m corridor)",
+        rating=ev.rating, confidence="M",
+        source="EPA StreamCat riparian land cover (rp100)",
+        note=("Proxy for supply potential only; it does not measure CPOM retention "
+              "or shredder condition."),
+        detail={"kind": "riparian_veg", **breakdown},
+        scoring=ev.trace)
 
 
 def nutrients(ctx: AnalysisContext) -> MetricResult:
-    """Observed TN/TP near the reach (WQP), generic thresholds.
+    """Regional NRSA TN/TP condition from normalized WQP observations."""
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        tn_future = executor.submit(wqp.sample_summary, "tn", ctx.lat, ctx.lon)
+        tp_future = executor.submit(wqp.sample_summary, "tp", ctx.lat, ctx.lon)
+        tn_summary, tp_summary = tn_future.result(), tp_future.result()
 
-    Ecoregion reference criteria + SPARROW modeled backfill are later refinements.
-    """
-    # Fetch TN and TP concurrently so the metric waits max(tn, tp), not their sum
-    # (each WQP call can take several seconds; this runs on its own worker thread).
-    from concurrent.futures import ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        f_tn = ex.submit(wqp.median_value, "tn", ctx.lat, ctx.lon)
-        f_tp = ex.submit(wqp.median_value, "tp", ctx.lat, ctx.lon)
-        tn, tp = f_tn.result(), f_tp.result()
-    if tn is None and tp is None:
-        return unavailable(NUTRIENTS_ID, "no WQP TN/TP observations near reach", "M")
-    ratings = []
-    if tn is not None:
-        ratings.append(base.band(tn, good_below=0.5, fair_below=1.5, higher_is_worse=True))
-    if tp is not None:
-        ratings.append(base.band(tp, good_below=0.05, fair_below=0.10, higher_is_worse=True))
-    rating = "Poor" if "Poor" in ratings else ("Fair" if "Fair" in ratings else "Good")
+    region = geo.nars9_at(ctx.lat, ctx.lon)
+    region_code = (region or {}).get("code")
+    tn = (tn_summary or {}).get("value")
+    tp = (tp_summary or {}).get("value")
+    available = [summary for summary in (tn_summary, tp_summary)
+                 if summary and summary.get("value") is not None]
+    observations = sum(int(summary.get("observation_count") or 0) for summary in available)
+    nearest_values = [summary.get("nearest_distance_mi") for summary in available
+                      if summary.get("nearest_distance_mi") is not None]
+    nearest = min(nearest_values) if nearest_values else None
+    # A weak analyte must not inherit confidence from a better-sampled companion
+    # analyte when the lower index can govern the combined result.
+    confidence = (
+        "M" if available and all(
+            int(summary.get("observation_count") or 0) >= 3
+            and summary.get("nearest_distance_mi") is not None
+            and float(summary["nearest_distance_mi"]) <= 1
+            for summary in available)
+        else "L")
+    ev = screening_methods.evaluate(
+        NUTRIENTS_ID, {"tn": tn, "tp": tp},
+        context={"region": region_code, "regionName": (region or {}).get("name")},
+        input_meta={
+            "tn": {"source": "Water Quality Portal", "details": tn_summary},
+            "tp": {"source": "Water Quality Portal", "details": tp_summary},
+        },
+        confidence=confidence, source_tier="connected-nearby",
+        evidence_family="wqp_monitoring", used_fallback=False)
+
     parts = []
     if tn is not None:
-        parts.append(f"TN {tn} mg/L")
+        parts.append(f"TN {float(tn):.3f} mg/L")
     if tp is not None:
-        parts.append(f"TP {tp} mg/L")
-    return MetricResult(NUTRIENTS_ID, value={"tn": tn, "tp": tp},
-                        value_text="; ".join(parts), rating=rating, confidence="M",
-                        source="WQP observed (generic thresholds)",
-                        note="ecoregion criteria + SPARROW backfill refine",
-                        scoring={"inputs": {"tn": tn, "tp": tp}, "value": None, "model": "worst"})
+        parts.append(f"TP {float(tp):.4f} mg/L")
+    if not parts:
+        note = ("NARS region could not be resolved" if not region_code
+                else "no qualifying total-fraction WQP TN/TP observations")
+        return _chem_fallback(ctx, NUTRIENTS_ID, reason=note)
+    if ev.rating is None:
+        return _chem_fallback(
+            ctx, NUTRIENTS_ID,
+            reason="official NARS region is unavailable for WQP regional thresholds")
+
+    station_count = sum(int(summary.get("station_count") or 0) for summary in available)
+    excluded = sum(int(summary.get("excluded_count") or 0) for summary in
+                   (tn_summary, tp_summary) if summary)
+    dates = [d for summary in available
+             for d in (summary.get("date_start"), summary.get("date_end")) if d]
+    coverage = (
+        f"{observations} valid observation(s), {station_count} station(s)"
+        + (f", {min(dates)} to {max(dates)}" if dates else "")
+        + (f", nearest {nearest:.2f} mi" if nearest is not None else "")
+        + f"; {excluded} row(s) excluded")
+    return MetricResult(
+        NUTRIENTS_ID, value={"tn": tn, "tp": tp, "region": region_code},
+        value_text=f"{'; '.join(parts)} — {region_code} region",
+        rating=ev.rating, confidence=confidence,
+        source="Water Quality Portal + EPA NARS nine-region thresholds",
+        note=coverage, detail={"tn": tn_summary, "tp": tp_summary, "region": region},
+        scoring=ev.trace)
 
 
 def stream_temperature(ctx: AnalysisContext) -> MetricResult:
-    """Stream temperature: observed (WQP) with a climate/landscape surrogate fallback.
-
-    Primary: median observed 'Temperature, water' near the reach (WQP), binned on
-    generic coldwater thresholds. Where no nearby samples exist, fall back to a
-    coarse, clearly-labeled climate surrogate (PRISM mean-annual air-temp normal
-    tempered by riparian shading), so the metric is always rated and overrideable.
-
-    Source is user-selectable (config.SOURCE_OPTIONS): "wqp" (observed, default) or
-    "surrogate" (force the climate surrogate). With ctx.extras["prefetch_variants"]
-    set, both variants are returned (the surrogate is derived from prefetched
-    StreamCat, so no extra network call) for instant source swapping in the UI.
-    """
-    src = (ctx.extras.get("source_choices") or {}).get(TEMPERATURE_ID)
-    prefetch = ctx.extras.get("prefetch_variants")
-
-    def _wqp_variant() -> MetricResult:
-        t = wqp.median_value("temp", ctx.lat, ctx.lon)
-        if t is None:
-            return unavailable(TEMPERATURE_ID, "no WQP temperature samples near reach", "M")
-        rating = base.band(t, good_below=20, fair_below=25, higher_is_worse=True)
-        return MetricResult(TEMPERATURE_ID, value=t,
-                            value_text=f"median {t} °C (observed)", rating=rating,
-                            confidence="M", source="WQP observed temperature",
-                            note="generic coldwater thresholds; species/season criteria refine",
-                            scoring={"inputs": {"temp": t}, "value": t, "model": "wqp"})
-
-    if not prefetch:  # legacy path — WQP called once, surrogate only when needed
-        if src == "surrogate":
-            return _temperature_surrogate(ctx)
-        wqp_res = _wqp_variant()
-        return wqp_res if wqp_res.rating is not None else _temperature_surrogate(ctx)
-    # prefetch: WQP is one call; the surrogate is pure (prefetched StreamCat data)
-    wqp_res, surrogate = _wqp_variant(), _temperature_surrogate(ctx)
-    variants = {"wqp": wqp_res, "surrogate": surrogate}
-    key = "surrogate" if (src == "surrogate" or wqp_res.rating is None) else "wqp"
-    primary = variants[key]
-    primary.variants = variants
-    primary.source_key = key
-    return primary
-
-
-def _temperature_surrogate(ctx: AnalysisContext) -> MetricResult:
-    """Climate/landscape thermal surrogate when no WQP samples exist (low confidence).
-
-    Warmer climates raise baseline thermal stress; riparian canopy shades and
-    buffers it (credited up to ~2 deg C of relief at full cover). Banded on the
-    mean-annual air-temp normal, this is a coarse screening signal — explicitly
-    NOT a measured water temperature — and is overrideable with monitoring data.
-    """
-    tair = base.sc(ctx).get("tmean8110ws")            # PRISM mean-annual air temp (deg C)
-    rip = base.riparian_forest_pct(ctx)               # higher cover -> more shade/relief
-    if tair is None:
-        return MetricResult(
-            TEMPERATURE_ID, value=None,
-            value_text="no WQP samples and no climate data — screening default",
-            rating="Fair", confidence="L",
-            source="default (no WQP samples / StreamCat climate)",
-            note="not a measured temperature; conservative screening default — overrideable",
-            scoring={"inputs": {"air_temp": tair, "riparian": rip}, "value": None,
-                     "model": "surrogate"})
-    idx = tair - 2.0 * min((rip or 0.0) / 60.0, 1.0)
-    rating = base.band(idx, good_below=12.0, fair_below=17.0, higher_is_worse=True)
+    """Thermal-regulation vulnerability, not stream-temperature scoring."""
+    woody_breakdown = base.riparian_woody_breakdown(ctx)
+    woody = None if woody_breakdown is None else woody_breakdown["total"]
+    impervious = base.sc(ctx).get("pctimp2019ws")
+    # Temperature observations are retained as context only.
+    temperature = wqp.sample_summary("temp", ctx.lat, ctx.lon)
+    ev = screening_methods.evaluate(
+        TEMPERATURE_ID,
+        {"woodyRiparian": woody, "impervious": impervious},
+        input_meta={
+            "woodyRiparian": {
+                "source": "EPA StreamCat forest + shrub + woody wetland (rp100)",
+                "details": woody_breakdown,
+            },
+            "impervious": {"source": "EPA StreamCat pctimp2019ws"},
+        },
+        confidence="L")
+    ev.trace["context"]["wqpTemperature"] = temperature
+    if ev.rating is None:
+        return unavailable(
+            TEMPERATURE_ID,
+            "both woody riparian cover and watershed impervious cover are required",
+            "L", scoring=ev.trace)
+    inputs = {item["key"]: item for item in ev.trace["inputs"]}
+    governing = ev.trace["governingInput"]
+    context_note = ""
+    if temperature and temperature.get("value") is not None:
+        context_note = (
+            f" Nearby WQP temperature context: {float(temperature['value']):.1f} °C "
+            f"from {temperature.get('observation_count', 0)} observation(s); not scored.")
     return MetricResult(
-        TEMPERATURE_ID, value=round(idx, 1),
-        value_text=f"climate thermal index {idx:.1f} °C "
-                   f"(air-temp normal {tair:.1f} °C, riparian {rip}%)",
-        rating=rating, confidence="L",
-        source="Modeled climate/landscape surrogate (PRISM air-temp normal + riparian shade)",
-        note="no nearby WQP samples — coarse climate surrogate, not measured water "
-             "temperature; override with observed/continuous monitoring where available",
-        scoring={"inputs": {"air_temp": tair, "riparian": rip},
-                 "value": round(idx, 1), "model": "surrogate"})
+        TEMPERATURE_ID, value=float(ev.combined_value),
+        value_text=(f"thermal vulnerability: woody riparian {float(woody):.1f}%; "
+                    f"impervious {float(impervious):.1f}% — {governing} governs"),
+        rating=ev.rating, confidence="L",
+        source="EPA StreamCat woody riparian cover + watershed impervious cover",
+        note=("Vulnerability proxy for thermal loading and shade loss; not stream temperature."
+              + context_note),
+        detail={"woody": woody_breakdown, "temperatureContext": temperature,
+                "governing": governing, "inputs": inputs},
+        scoring=ev.trace)
