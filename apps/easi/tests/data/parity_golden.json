@@ -1,20 +1,21 @@
 {
-  "computedCount": 19,
-  "ecosystemConditionIndex": 0.72,
+  "computedCount": 20,
+  "ecosystemConditionIndex": 0.77,
   "functionScores": {
     "bed-composition-bedform-dynamics": 8,
-    "carbon-processing": 8,
+    "carbon-processing": 13,
     "catchment-hydrology": 8,
     "channel-evolution": 13,
-    "channel-floodplain-dynamics": 8,
+    "channel-floodplain-dynamics": 13,
     "community-dynamics": 13,
     "floodplain-connectivity": 13,
     "habitat-provision": 13,
     "high-flow-dynamics": 13,
     "hyporheic-connectivity": 8,
-    "light-thermal-regime": 13,
+    "light-thermal-regime": 8,
     "low-flow-baseflow-dynamics": 13,
-    "population-support": 8,
+    "nutrient-cycling": 13,
+    "population-support": 13,
     "reach-inflow": 8,
     "sediment-continuity": 8,
     "streamflow-regime": 13,
@@ -87,10 +88,10 @@
       "status": "ok"
     },
     {
-      "functionScore": 8,
-      "index": 0.545,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition",
-      "rating": "Fair",
+      "rating": "Good",
       "status": "ok"
     },
     {
@@ -108,25 +109,25 @@
       "status": "ok"
     },
     {
-      "functionScore": 13,
-      "index": 0.85,
-      "metricId": "light-and-thermal-regime-stream-temperature",
-      "rating": "Good",
-      "status": "ok"
-    },
-    {
       "functionScore": 8,
       "index": 0.545,
-      "metricId": "carbon-processing-detrital-processing-cpom-retention-shredders",
+      "metricId": "light-and-thermal-regime-stream-temperature",
       "rating": "Fair",
       "status": "ok"
     },
     {
-      "functionScore": null,
-      "index": null,
+      "functionScore": 13,
+      "index": 0.85,
+      "metricId": "carbon-processing-detrital-processing-cpom-retention-shredders",
+      "rating": "Good",
+      "status": "ok"
+    },
+    {
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "nutrient-cycling-nitrogen-and-phosphorus-concentrations",
-      "rating": null,
-      "status": "unavailable"
+      "rating": "Good",
+      "status": "ok"
     },
     {
       "functionScore": 13,
@@ -143,10 +144,10 @@
       "status": "ok"
     },
     {
-      "functionScore": 8,
-      "index": 0.545,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "population-support-biological-integrity-ibi-community-condition",
-      "rating": "Fair",
+      "rating": "Good",
       "status": "ok"
     },
     {
@@ -165,9 +166,9 @@
     }
   ],
   "subIndices": {
-    "biological": 0.76,
-    "chemical": 0.73,
-    "physical": 0.68
+    "biological": 0.83,
+    "chemical": 0.77,
+    "physical": 0.71
   },
   "totalCount": 20
 }

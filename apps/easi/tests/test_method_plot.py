@@ -5,6 +5,7 @@ from easi import method_plot, methods
 from easi.metrics.biology import INVASIVES_ID
 from easi.metrics.hydraulics import HYPORHEIC_ID, LOW_FLOW_ID
 from easi.metrics.hydrology import IMPERVIOUS_ID
+from easi.metrics.physicochemistry import IMPAIRMENT_ID
 
 
 def test_scalar_svg_regions_markers_breakpoints():
@@ -37,7 +38,18 @@ def test_worst_svg_flags_governing():
 
 
 def test_decision_html_highlights_site_category():
-    html = method_plot.decision_html(methods.METHODS[LOW_FLOW_ID], "Fair")
-    assert html.count("easi-method-decide-row") == 3
+    # Low flow is no longer a categorical FCODE lookup — it scores NRSA wetted channel
+    # with a StreamCat HYD fallback. Regulatory impairment is the categorical method now.
+    method = methods.METHODS[IMPAIRMENT_ID]
+    html = method_plot.decision_html(method, "Fair")
+    assert html.count("easi-method-decide-row") == len(method.decisions)
     assert "easi-method-decide-row on" in html          # exactly one highlighted row
     assert "this reach" in html
+
+
+def test_low_flow_is_a_scalar_wetted_channel_method():
+    method = methods.METHODS[LOW_FLOW_ID]
+    assert method.mode == "scalar"
+    assert method.decisions == ()
+    svg = method_plot.scalar_svg(method, 90.0, "Good")
+    assert svg.startswith("<svg") and "Site 90" in svg

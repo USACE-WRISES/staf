@@ -1,99 +1,117 @@
-"""assessment.apply_source_choices — instant, synchronous source swapping.
+"""Automatic source selection is a fixed hierarchy, not a user choice.
 
-The single-site worksheet lets the user switch a multi-source metric's data source
-(wetlands, temperature, impairment) with no re-run. ``assess(prefetch=True)`` attaches
-every variant to the row; ``apply_source_choices`` merges the chosen one into the
-generated view, and ``rescore`` (run after) still lets an explicit override win.
+Every metric now resolves one automatic method chain (connected observation ->
+published model -> named screening proxy), so no adapter emits competing automatic
+formulas for the user to pick between. ``apply_source_choices`` is retained for
+manually supplied evidence and must stay a safe no-op meanwhile: it is what the
+worksheet composes with ``rescore``, and an explicit override still wins.
 """
 from __future__ import annotations
 
-from easi import assessment, config, scoring
-from easi.metrics import hydrology
-from easi.metrics.base import AnalysisContext
+from easi import assessment, config, scoring, screening_methods
+from easi.metrics import hydrology, physicochemistry
+from easi.metrics.base import AnalysisContext, MetricResult
 
 WETLANDS_ID = hydrology.WETLANDS_ID
 
 
-def _wetlands_ctx():
-    """A context whose prefetched data makes StreamCat=Fair (3.0%) and NLCD=Good (8.0%)."""
+def _ctx(**extras):
     c = AnalysisContext(lat=40.0, lon=-83.0, comid=1)
-    c.extras["streamcat"] = {"pctwdwet2019ws": 2.0, "pcthbwet2019ws": 1.0}
-    c.extras["landcover"] = {"wetland_pct": 8.0}
-    c.extras["prefetch_variants"] = True
+    c.extras.update(extras)
+    c.extras.setdefault("prefetch_variants", True)
     return c
 
 
-def _row_from_result(res):
-    """Serialize a wetlands MetricResult into the row shape assess() would emit."""
-    meta = config.metrics_by_id()[WETLANDS_ID]
+def _row(mid, res):
+    meta = config.metrics_by_id()[mid]
+    idx = (scoring.rating_to_index(res.rating, meta.get("indexMidpoints"))
+           if res.rating in assessment.VALID else None)
     return {
-        "metricId": WETLANDS_ID, "functionId": meta["functionId"],
+        "metricId": mid, "functionId": meta["functionId"], "name": meta["name"],
         "rating": res.rating, "generatedRating": res.rating,
-        "index": round(scoring.rating_to_index(res.rating, meta.get("indexMidpoints")), 3),
-        "functionScore": scoring.function_score(
-            scoring.rating_to_index(res.rating, meta.get("indexMidpoints"))),
+        "index": None if idx is None else round(idx, 3),
+        "functionScore": None if idx is None else scoring.function_score(idx),
         "valueText": res.value_text, "source": res.source, "confidence": res.confidence,
         "note": res.note, "status": res.status, "criteria": "", "criteriaBands": {},
-        "landCover": None, "ripVeg": None,
-        "sourceVariants": {k: assessment._serialize_variant(WETLANDS_ID, meta, v)
-                           for k, v in res.variants.items()},
-        "sourceChoice": res.source_key,
+        "landCover": None, "ripVeg": None, "scoring": res.scoring,
+        "completeness": (res.scoring or {}).get("completeness", "complete"),
     }
 
 
-def _base_report():
-    res = hydrology.wetlands(_wetlands_ctx())
-    return {"metricRows": [_row_from_result(res)], "totalCount": 1}
+# --------------------------------------------------------------------------- #
+# The fixed-hierarchy contract
+# --------------------------------------------------------------------------- #
+def test_adapters_do_not_offer_competing_automatic_sources():
+    """No automatic result carries alternative source variants for the user to choose."""
+    res = hydrology.wetlands(_ctx(streamcat={"pctwdwet2019ws": 2.0,
+                                             "pcthbwet2019ws": 1.0}))
+    assert res.rating == "Fair"
+    assert res.variants is None and res.source_key is None
 
 
-def test_swap_overwrites_generated_view():
-    rep = _base_report()
-    assert rep["metricRows"][0]["rating"] == "Fair"          # StreamCat default
-    swapped = assessment.apply_source_choices(rep, {WETLANDS_ID: "nlcd"})
-    row = swapped["metricRows"][0]
-    assert row["rating"] == "Good" and row["generatedRating"] == "Good"
-    assert "NLCD" in row["source"] and row["sourceChoice"] == "nlcd"
-    assert row["functionScore"] == scoring.function_score(
-        scoring.rating_to_index("Good", None))               # score follows the swapped rating
+def test_wetlands_requires_both_classes_rather_than_swapping_source():
+    """A missing class is unknown, not an invitation to score a different source."""
+    res = hydrology.wetlands(_ctx(streamcat={"pctwdwet2019ws": 2.0},
+                                  landcover={"wetland_pct": 8.0}))
+    assert res.rating is None and res.status == "unavailable"
+    assert res.scoring["completeness"] == "not_assessed"
 
 
-def test_swap_is_pure_original_untouched():
-    rep = _base_report()
-    assessment.apply_source_choices(rep, {WETLANDS_ID: "nlcd"})
-    assert rep["metricRows"][0]["rating"] == "Fair"          # input dict not mutated
+def test_impairment_falls_back_by_hierarchy_not_by_user_choice(monkeypatch):
+    """Category 3 is inconclusive, so the documented CHEM fallback applies on its own."""
+    monkeypatch.setattr(physicochemistry.attains, "impairment_at_point",
+                        lambda *a, **k: {"assessment_unit": "AU-3", "ircategory": "3",
+                                         "distance_m": 0.0, "match_type": "intersect"})
+    monkeypatch.setattr(physicochemistry.attains, "impairment_near_point",
+                        lambda *a, **k: {})
+    res = physicochemistry.impairment(_ctx(streamcat={"chemcat": 0.8, "chemws": 0.75}))
+    assert res.rating == "Good"
+    assert res.variants is None
+    assert res.scoring["usedFallback"] is True
+    assert res.scoring["evidenceFamily"] == "iwi_landscape"
 
 
-def test_empty_or_unknown_choice_is_noop():
-    rep = _base_report()
-    assert assessment.apply_source_choices(rep, {}) is rep    # no choices -> same object
-    assert (assessment.apply_source_choices(rep, {WETLANDS_ID: "zzz"})["metricRows"][0]["rating"]
-            == "Fair")                                        # unknown key ignored
+# --------------------------------------------------------------------------- #
+# The retained merge path
+# --------------------------------------------------------------------------- #
+def test_apply_source_choices_is_a_noop_without_variants():
+    res = hydrology.wetlands(_ctx(streamcat={"pctwdwet2019ws": 2.0,
+                                             "pcthbwet2019ws": 1.0}))
+    base = assessment._finalize([_row(WETLANDS_ID, res)], 20, {})
+    merged = assessment.apply_source_choices(base, {WETLANDS_ID: "nlcd"})
+    assert merged["metricRows"][0]["rating"] == base["metricRows"][0]["rating"]
+    assert merged["metricRows"][0]["scoring"] == base["metricRows"][0]["scoring"]
 
 
-def test_explicit_override_wins_after_rescore():
-    rep = _base_report()
-    swapped = assessment.apply_source_choices(rep, {WETLANDS_ID: "nlcd"})   # -> Good
-    rescored = assessment.rescore(swapped, {WETLANDS_ID: "Poor"})           # user forces Poor
+def test_apply_source_choices_merges_a_supplied_variant_and_stays_pure():
+    """The merge path still works when a variant is present (manual evidence)."""
+    res = hydrology.wetlands(_ctx(streamcat={"pctwdwet2019ws": 2.0,
+                                             "pcthbwet2019ws": 1.0}))
+    meta = config.metrics_by_id()[WETLANDS_ID]
+    alt = MetricResult(WETLANDS_ID, rating="Good", value_text="8.0% wetland (manual)",
+                       source="field record", confidence="M",
+                       scoring=screening_methods.evaluate(
+                           WETLANDS_ID,
+                           {"woodyWetland": 6.0, "herbaceousWetland": 2.0},
+                           source_tier="manual").trace)
+    row = _row(WETLANDS_ID, res)
+    row["sourceVariants"] = {"manual": assessment._serialize_variant(WETLANDS_ID, meta, alt)}
+    row["sourceChoice"] = None
+    base = assessment._finalize([row], 20, {})
+
+    merged = assessment.apply_source_choices(base, {WETLANDS_ID: "manual"})
+    assert merged["metricRows"][0]["rating"] == "Good"
+    assert merged["metricRows"][0]["sourceChoice"] == "manual"
+    # pure: the original report is untouched
+    assert base["metricRows"][0]["rating"] == "Fair"
+
+
+def test_explicit_override_still_wins_after_a_merge():
+    res = hydrology.wetlands(_ctx(streamcat={"pctwdwet2019ws": 2.0,
+                                             "pcthbwet2019ws": 1.0}))
+    base = assessment._finalize([_row(WETLANDS_ID, res)], 20, {})
+    merged = assessment.apply_source_choices(base, {WETLANDS_ID: "manual"})
+    rescored = assessment.rescore(merged, {WETLANDS_ID: "Poor"})
     row = rescored["metricRows"][0]
     assert row["rating"] == "Poor" and row["status"] == "override"
-    # a non-overridden swap still shows through when no override is present
-    plain = assessment.rescore(swapped, {})
-    assert plain["metricRows"][0]["rating"] == "Good"
-
-
-def test_swap_carries_scoring_trace():
-    # each variant carries its own Scoring-method trace, and a swap brings it along so the
-    # panel's inputs/plot follow the chosen source.
-    rep = _base_report()
-    assert rep["metricRows"][0]["sourceVariants"]["streamcat"]["scoring"]["inputs"]["wetland"] == 3.0
-    row = assessment.apply_source_choices(rep, {WETLANDS_ID: "nlcd"})["metricRows"][0]
-    assert row["scoring"]["model"] == "scalar"
-    assert row["scoring"]["inputs"]["wetland"] == 8.0        # NLCD variant's input
-
-
-def test_swap_updates_rollup_via_rescore():
-    rep = _base_report()
-    lo = assessment.rescore(assessment.apply_source_choices(rep, {WETLANDS_ID: "streamcat"}), {})
-    hi = assessment.rescore(assessment.apply_source_choices(rep, {WETLANDS_ID: "nlcd"}), {})
-    # Good (NLCD) scores at least as high as Fair (StreamCat) on this single-metric report
-    assert hi["ecosystemConditionIndex"] >= lo["ecosystemConditionIndex"]
+    assert row["generatedRating"] == "Fair"      # the generated result is preserved

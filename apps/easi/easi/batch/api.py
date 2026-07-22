@@ -57,8 +57,10 @@ def _emit(cb: EventCb, stage: str, site_id: str, **info) -> None:
 
 
 def _availability(status: str) -> str:
-    return {"ok": "available", "override": "available", "unavailable": "unavailable",
-            "excluded": "excluded", "pending": "pending"}.get(status, status)
+    return {"ok": "available", "override": "available", "observed": "available",
+            "unavailable": "unavailable",
+            "excluded": "excluded", "pending": "pending",
+            "not_assessed": "not_assessed", "xs-derived": "available"}.get(status, status)
 
 
 def _metric_records(rows: list[dict], source_choices: dict) -> list[MetricRecord]:
@@ -70,6 +72,7 @@ def _metric_records(rows: list[dict], source_choices: dict) -> list[MetricRecord
         status = r.get("status", "")
         avail = _availability(status)
         missing = r.get("note", "") if avail in ("unavailable", "pending") else ""
+        trace = r.get("scoring") or {}
         out.append(MetricRecord(
             metric_id=r["metricId"], name=r.get("name", ""),
             discipline=r.get("discipline", ""), function_id=r.get("functionId", ""),
@@ -81,7 +84,23 @@ def _metric_records(rows: list[dict], source_choices: dict) -> list[MetricRecord
             source=r.get("source", ""),
             source_mode=(source_choices or {}).get(r["metricId"], ""),
             status=status, availability=avail, missing_reason=missing,
-            overrideable=bool(r.get("overrideable"))))
+            overrideable=bool(r.get("overrideable")),
+            method_key=r.get("methodKey", ""),
+            method_kind=r.get("methodKind", ""),
+            basis_class=r.get("basisClass", ""),
+            input_trace=list(trace.get("inputs") or []),
+            combined_value=trace.get("combinedValue"),
+            governing_input=trace.get("governingInput"),
+            generated_index=trace.get("generatedIndex"),
+            scoring_completeness=(trace.get("completeness")
+                                  or r.get("completeness", "")),
+            source_tier=trace.get("sourceTier") or r.get("sourceTier", ""),
+            evidence_family=(trace.get("evidenceFamily")
+                             or r.get("evidenceFamily", "")),
+            used_fallback=bool(trace.get("usedFallback", r.get("usedFallback", False))),
+            observed_overrides_proxy=bool(
+                trace.get("observedOverridesProxy",
+                          r.get("observedOverridesProxy", False)))))
     return out
 
 
@@ -94,9 +113,11 @@ def _completeness(records: list[MetricRecord]) -> Completeness:
             c.excluded += 1
         elif m.status in ("unavailable", "pending"):
             c.unavailable += 1
+        elif m.status == "not_assessed":
+            c.not_assessed += 1
         elif m.status == "ok" and (m.source or "").lower().startswith("default"):
             c.defaulted += 1
-        elif m.status == "ok":
+        elif m.status in ("ok", "xs-derived", "observed"):
             c.computed += 1
     return c
 
@@ -105,21 +126,31 @@ def _build_site_result(site: SiteRequest, delin: dict, report: dict) -> SiteResu
     d = delin.get("delineation", {})
     records = _metric_records(report.get("metricRows", []), site.source_choices)
     completeness = _completeness(records)
-    # raw (unrounded) ECI + sub-indices for qualification, from the same rollup the
-    # report used (function scores pass through rollup unchanged).
-    roll = scoring.rollup(report.get("functionScores", {}))
-    state = "partial" if completeness.unavailable > 0 else "succeeded"
+    state = ("partial" if completeness.unavailable > 0 or completeness.not_assessed > 0
+             else "succeeded")
+    # Older report objects predate explicit raw rollup fields. Reconstruct them
+    # from the additive function-score contract so archived/batch fixtures remain
+    # readable without changing the current report path.
+    legacy_rollup = scoring.rollup(dict(report.get("functionScores") or {}))
+    raw_eci = report.get("ecosystemConditionIndexRaw")
+    if raw_eci is None:
+        raw_eci = legacy_rollup.ecosystem_condition_index
+    raw_sub_indices = report.get("subIndicesRaw")
+    if raw_sub_indices is None:
+        raw_sub_indices = legacy_rollup.sub_indices
     return SiteResult(
         site_id=site.site_id, state=state,
         input={"lat": site.lat, "lon": site.lon, "comid": site.comid,
                "reach_length_ft": site.reach_length_ft, "metadata": site.metadata},
         delineation=DelineationSummary.from_dict(d),
         metrics=records,
-        raw_eci=roll.ecosystem_condition_index,
-        raw_sub_indices=dict(roll.sub_indices),
+        raw_eci=raw_eci,
+        raw_sub_indices=dict(raw_sub_indices or {}),
         eci=report.get("ecosystemConditionIndex"),
         sub_indices=dict(report.get("subIndices") or {}),
         function_scores=dict(report.get("functionScores") or {}),
+        coverage=dict(report.get("coverage") or {}),
+        provisional_coverage=bool(report.get("provisionalCoverage")),
         completeness=completeness,
         issues=[Issue(code="metric_unavailable", severity="info", stage="metrics",
                       metric_id=m.metric_id, site_id=site.site_id,
@@ -149,7 +180,7 @@ async def run_site(site: SiteRequest, *, metric_ids: Optional[list[str]] = None,
     _emit(on_event, "metrics", site.site_id)
     a = await pipeline.assess_only(ctx_inputs, metric_ids=metric_ids,
                                    sources=site.source_choices,
-                                   overrides=site.overrides, prefetch=False)
+                                   overrides=site.overrides)
     report = a["report"]
     delin.setdefault("delineation", {})["huc12"] = a.get("huc12")
     result = _build_site_result(site, delin, report)

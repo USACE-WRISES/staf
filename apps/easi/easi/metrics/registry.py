@@ -40,6 +40,8 @@ REGISTRY = {
 # reading prefetched StreamCat/NLCD/3DEP data). These are the slow tail of a run;
 # the assessment surfaces the friendly service name in its live progress label so a
 # slow service reads as "waiting on <service>" instead of a frozen counter.
+# Thermal regulation is scored entirely from the prefetched StreamCat row, but still queries
+# WQP for context-only temperature observations, so it remains a service the run waits on.
 EXTERNAL_SERVICE = {
     physicochemistry.IMPAIRMENT_ID: "EPA ATTAINS",
     physicochemistry.NUTRIENTS_ID: "Water Quality Portal",
@@ -55,6 +57,10 @@ STREAMCAT_NAMES = [
     "pctcrop2019", "pcthay2019",
     "pctmxfst2019", "pctdecid2019", "pctconif2019",
     "pctgrs2019", "pctshrb2019",  # grassland + shrub/scrub (riparian rp100 -> natural-veg CPOM proxy)
-    "kffact", "rddens", "damdens", "damnrmstor",
-    "tmean8110",  # PRISM 1981-2010 mean-annual air-temp normal (climate surrogate for stream temp)
+    "kffact", "rddens", "damnrmstor",
+    "runoff",                     # mm; the degree-of-regulation denominator
+    # Published integrity components (0-1). HYD/SED/CHEM back the low-flow, substrate and
+    # water-quality fallbacks; all six multiply into the ICI/IWI biological products.
+    "hyd", "sed", "chem", "conn", "temp", "habt",
+    "prG_BMMI",                   # modeled probability of good benthic condition
 ]

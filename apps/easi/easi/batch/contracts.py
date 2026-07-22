@@ -140,6 +140,7 @@ class Completeness:
     computed: int = 0
     defaulted: int = 0
     unavailable: int = 0
+    not_assessed: int = 0
     overridden: int = 0
     excluded: int = 0
 
@@ -150,7 +151,7 @@ class Completeness:
     def from_dict(cls, d: dict) -> "Completeness":
         return cls(**{k: int(d.get(k, 0)) for k in
                       ("total", "computed", "defaulted", "unavailable",
-                       "overridden", "excluded")})
+                       "not_assessed", "overridden", "excluded")})
 
 
 @dataclass
@@ -175,6 +176,18 @@ class MetricRecord:
     availability: str = ""          # available|unavailable|excluded|pending
     missing_reason: str = ""
     overrideable: bool = False
+    method_key: str = ""
+    method_kind: str = ""
+    basis_class: str = ""
+    input_trace: list[dict] = field(default_factory=list)
+    combined_value: Any = None
+    governing_input: Optional[str] = None
+    generated_index: Optional[float] = None
+    scoring_completeness: str = ""
+    source_tier: str = ""
+    evidence_family: str = ""
+    used_fallback: bool = False
+    observed_overrides_proxy: bool = False
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -235,10 +248,12 @@ class SiteResult:
     delineation: DelineationSummary = field(default_factory=DelineationSummary)
     metrics: list[MetricRecord] = field(default_factory=list)
     raw_eci: Optional[float] = None
-    raw_sub_indices: dict[str, float] = field(default_factory=dict)
+    raw_sub_indices: dict[str, Optional[float]] = field(default_factory=dict)
     eci: Optional[float] = None                     # 2-decimal display
-    sub_indices: dict[str, float] = field(default_factory=dict)
+    sub_indices: dict[str, Optional[float]] = field(default_factory=dict)
     function_scores: dict[str, int] = field(default_factory=dict)
+    coverage: dict[str, Any] = field(default_factory=dict)
+    provisional_coverage: bool = False
     completeness: Completeness = field(default_factory=Completeness)
     issues: list[Issue] = field(default_factory=list)
     qualification: Qualification = field(default_factory=Qualification)
@@ -253,6 +268,8 @@ class SiteResult:
             "raw_eci": self.raw_eci, "raw_sub_indices": self.raw_sub_indices,
             "eci": self.eci, "sub_indices": self.sub_indices,
             "function_scores": self.function_scores,
+            "coverage": self.coverage,
+            "provisional_coverage": self.provisional_coverage,
             "completeness": self.completeness.to_dict(),
             "issues": [i.to_dict() for i in self.issues],
             "qualification": self.qualification.to_dict(),
@@ -274,6 +291,8 @@ class SiteResult:
             raw_sub_indices=dict(d.get("raw_sub_indices") or {}),
             eci=d.get("eci"), sub_indices=dict(d.get("sub_indices") or {}),
             function_scores=dict(d.get("function_scores") or {}),
+            coverage=dict(d.get("coverage") or {}),
+            provisional_coverage=bool(d.get("provisional_coverage", False)),
             completeness=Completeness.from_dict(d.get("completeness") or {}),
             issues=[Issue.from_dict(i) for i in d.get("issues", [])],
             qualification=Qualification.from_dict(d.get("qualification") or {}),

@@ -1,111 +1,185 @@
-"""Geomorphology-discipline EASI metric adapters.
-
-Note: channel evolution stage (3DEP incision) is implemented in a later wave and
-remains pending.
-"""
+"""Geomorphology-discipline EASI metric adapters."""
 from __future__ import annotations
 
+from .. import screening_methods
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
 
 SEDIMENT_ID = "sediment-continuity-sediment-supply-potential-watershed-banks"
-SUBSTRATE_ID = ("bed-composition-and-large-wood-substrate-condition-grain-size-"
-                "embeddedness-fines-consolidation")
+SUBSTRATE_ID = (
+    "bed-composition-and-large-wood-substrate-condition-grain-size-"
+    "embeddedness-fines-consolidation")
 BANK_EROSION_ID = "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition"
 CHANNEL_EVOL_ID = "channel-evolution-channel-evolution-stage-and-trends"
-CHANNELIZED_FCODES = {33600, 33601, 33603}  # canal/ditch
+CHANNELIZED_FCODES = {33600, 33601, 33603}
 
 
-def rate_channel_evolution(bhr) -> "str | None":
-    """Bank-height ratio -> channel-evolution stage rating (incision proxy).
-
-    BHR ~1 floodplain-connected/stable (Good); 1.3-1.7 adjusting (Fair); >1.7
-    incised (Poor). Shared by the default metric and the editable cross-section
-    recompute so the two stay consistent.
-    """
-    if bhr is None:
-        return None
-    return "Good" if bhr < 1.3 else ("Fair" if bhr < 1.7 else "Poor")
+def rate_channel_evolution(bhr, er=None, fcode=None):
+    """Pure channel-adjustment proxy helper used by tests and geometry edits."""
+    variant = "channelized-fcode" if fcode in CHANNELIZED_FCODES else None
+    values = {"fcode": fcode} if variant else {"bhr": bhr, "er": er,
+                                                 "fcodeContext": fcode}
+    return screening_methods.evaluate(
+        CHANNEL_EVOL_ID, values, variant_key=variant,
+        evidence_family="incision_geometry", used_fallback=True).rating
 
 
 def channel_evolution(ctx: AnalysisContext) -> MetricResult:
-    """Channel evolution stage proxy: channelization flag + DEM bank-height ratio.
-
-    BHR ~1 floodplain-connected/stable (Good); 1.3-1.7 adjusting (Fair); >1.7
-    incised (Poor).
-    """
+    """Canal classification, otherwise the fixed BHR+ER susceptibility proxy."""
+    geom = ctx.extras.get("reach_geomorph") or {}
+    bhr = geom.get("bank_height_ratio")
+    er = geom.get("entrenchment_ratio")
+    edge = bool(geom.get("edge_limited"))
+    confidence = "L"
     if ctx.fcode in CHANNELIZED_FCODES:
-        return MetricResult(CHANNEL_EVOL_ID, value=ctx.fcode,
-                            value_text=f"channelized reach (NHD FCODE {ctx.fcode})",
-                            rating="Poor", confidence="M",
-                            source="NHD FCODE (canal/ditch)", note="artificial/channelized",
-                            scoring={"inputs": {"fcode": ctx.fcode}, "value": ctx.fcode,
-                                     "model": "categorical"})
-    g = ctx.extras.get("reach_geomorph") or {}
-    bhr = g.get("bank_height_ratio")
-    if bhr is None:
-        return unavailable(CHANNEL_EVOL_ID, "3DEP incision unavailable for reach", "L")
-    rating = rate_channel_evolution(bhr)
-    res = g.get("dem_resolution_m") or 10
-    return MetricResult(CHANNEL_EVOL_ID, value=bhr,
-                        value_text=f"bank-height ratio {bhr} (3DEP {res} m)", rating=rating,
-                        confidence="L", source="USGS 3DEP incision proxy",
-                        note="bank-height-ratio proxy for channel evolution stage",
-                        scoring={"inputs": {"bhr": bhr}, "value": bhr, "model": "scalar"})
+        ev = screening_methods.evaluate(
+            CHANNEL_EVOL_ID, {"fcode": ctx.fcode},
+            input_meta={"fcode": {"source": "NHDPlus FCODE"}},
+            confidence="M", variant_key="channelized-fcode",
+            source_tier="screening-proxy", evidence_family="channelization_class",
+            used_fallback=True)
+        return MetricResult(
+            CHANNEL_EVOL_ID, value=ctx.fcode,
+            value_text=f"canal/ditch classification (NHD FCODE {ctx.fcode})",
+            rating=ev.rating, confidence="M", source="NHDPlus FCODE",
+            note="Artificial channelization is directly identified; current adjustment severity is not measured.",
+            scoring=ev.trace)
+
+    ev = screening_methods.evaluate(
+        CHANNEL_EVOL_ID, {"bhr": bhr, "er": er, "fcodeContext": ctx.fcode},
+        input_meta={
+            "bhr": {"source": "USGS 3DEP representative cross section"},
+            "er": {"source": "USGS 3DEP representative cross section"},
+            "fcodeContext": {"source": "NHDPlus FCODE"},
+        },
+        confidence=confidence, source_tier="screening-proxy",
+        evidence_family="incision_geometry", used_fallback=True)
+    if ev.rating is None:
+        return unavailable(
+            CHANNEL_EVOL_ID,
+            "both BHR and ER are required for the channel-adjustment proxy",
+            confidence, scoring=ev.trace)
+    note = ("Low-confidence susceptibility proxy; BHR and ER are channel-evolution clues, "
+            "not a formal stage assessment. Observed stage evidence supersedes this result.")
+    if edge:
+        note += " Flood-prone width reached the DEM buffer edge; ER may be underestimated."
+    return MetricResult(
+        CHANNEL_EVOL_ID, value={"bhr": bhr, "er": er},
+        value_text=(f"channel-adjustment susceptibility — BHR {float(bhr):.2f}; "
+                    f"ER {float(er):.2f}; {ev.trace.get('governingInput')} governs"),
+        rating=ev.rating, confidence=confidence,
+        source="USGS 3DEP representative cross section + NHDPlus FCODE",
+        note=note,
+        scoring=ev.trace)
 
 
 def sediment_supply(ctx: AnalysisContext) -> MetricResult:
-    """Anthropogenic sediment-supply risk: agriculture + erodibility + roads."""
+    """Provisional agriculture + erodibility + road-density composite."""
     s = base.sc(ctx)
-    ag, kf, rd = base.ag_pct(ctx), s.get("kffactws"), s.get("rddensws")
-    if ag is None and kf is None and rd is None:
-        return unavailable(SEDIMENT_ID, "no StreamCat sediment inputs", "M")
-    score = (0.5 * min((ag or 0) / 50, 1) + 0.3 * min((kf or 0) / 0.4, 1)
-             + 0.2 * min((rd or 0) / 5, 1))
-    rating = base.band(score, good_below=0.33, fair_below=0.66, higher_is_worse=True)
-    return MetricResult(SEDIMENT_ID, value=round(score, 2),
-                        value_text=f"supply risk {score:.2f} "
-                                   f"(ag {ag}%, K {kf}, roads {rd})",
-                        rating=rating, confidence="M",
-                        source="EPA StreamCat (ag/erodibility/roads)",
-                        note="anthropogenic sediment-supply composite",
-                        scoring={"inputs": {"agriculture": ag, "kffact": kf, "road_density": rd},
-                                 "value": round(score, 2), "model": "combined"})
+    agriculture = base.ag_pct(ctx)
+    k_factor = s.get("kffactws")
+    road_density = s.get("rddensws")
+    ev = screening_methods.evaluate(
+        SEDIMENT_ID,
+        {"agriculture": agriculture, "kFactor": k_factor,
+         "roadDensity": road_density},
+        input_meta={
+            "agriculture": {"source": "EPA StreamCat crop + hay"},
+            "kFactor": {"source": "EPA StreamCat KffactWs"},
+            "roadDensity": {"source": "EPA StreamCat RddensWs"},
+        },
+        confidence="M")
+    if ev.rating is None:
+        return unavailable(
+            SEDIMENT_ID, "agriculture, K-factor, and road density are all required",
+            "M", scoring=ev.trace)
+    score = float(ev.combined_value)
+    return MetricResult(
+        SEDIMENT_ID, value=round(score, 3),
+        value_text=(f"sediment-supply potential {score:.2f} "
+                    f"(agriculture {float(agriculture):.1f}%; "
+                    f"K {float(k_factor):.2f}; roads {float(road_density):.2f} km/km²)"),
+        rating=ev.rating, confidence="M",
+        source="EPA StreamCat agriculture + K-factor + road density",
+        note="Directional inputs; weights, caps, and combined bands are provisional.",
+        scoring=ev.trace)
 
 
 def substrate(ctx: AnalysisContext) -> MetricResult:
-    """Fines/embeddedness risk from low gradient + ag fines supply + erodibility."""
-    s = base.sc(ctx)
-    kf, ag, slope = s.get("kffactws"), base.ag_pct(ctx), ctx.slope
-    if slope is None and kf is None and ag is None:
-        return unavailable(SUBSTRATE_ID, "no slope/erodibility data", "L")
-    fines = (0.4 * (1 - min((slope or 0) / 0.01, 1)) + 0.4 * min((ag or 0) / 50, 1)
-             + 0.2 * min((kf or 0) / 0.4, 1))
-    rating = base.band(fines, good_below=0.4, fair_below=0.7, higher_is_worse=True)
-    return MetricResult(SUBSTRATE_ID, value=round(fines, 2),
-                        value_text=f"fines/embedding risk {fines:.2f} "
-                                   f"(slope {slope}, ag {ag}%)",
-                        rating=rating, confidence="L",
-                        source="NHDPlus slope + StreamCat (proxy)",
-                        note="fines/embeddedness proxy; field pebble counts refine",
-                        scoring={"inputs": {"slope": slope, "agriculture": ag, "kffact": kf},
-                                 "value": round(fines, 2), "model": "combined"})
+    """Observed NRSA embeddedness, then the StreamCat SED fallback."""
+    nrsa = base.nrsa_evidence(ctx)
+    embeddedness = (nrsa or {}).get("embeddednessPct")
+    if embeddedness is not None:
+        connected = nrsa.get("matchType") == "connected_nearby"
+        confidence = nrsa.get("confidence") or ("M/L" if connected else "M")
+        source_tier = "connected-nearby" if connected else "observed"
+        source = (f"EPA NRSA 2018-19 site {nrsa.get('siteId')}"
+                  + (f" ({float(nrsa.get('distanceMi') or 0):.2f} mi connected)"
+                     if connected else " (exact COMID)"))
+        ev = screening_methods.evaluate(
+            SUBSTRATE_ID, {"embeddednessPct": embeddedness},
+            input_meta={"embeddednessPct": {"source": source, "details": nrsa}},
+            confidence=confidence, source_tier=source_tier,
+            evidence_family="nrsa_field", used_fallback=False)
+        if connected:
+            ev.trace["completeness"] = "partial"
+        note = f"NRSA survey date {nrsa.get('date')}; embeddedness is one component of substrate condition."
+        if nrsa.get("warning"):
+            note += f" {nrsa['warning']}"
+        return MetricResult(
+            SUBSTRATE_ID, value=float(embeddedness),
+            value_text=f"{float(embeddedness):.1f}% substrate embeddedness",
+            rating=ev.rating, confidence=confidence, source=source,
+            note=note, scoring=ev.trace)
+
+    sed_cat, sed_ws = base.integrity_pair(ctx, "sed")
+    ev = screening_methods.evaluate(
+        SUBSTRATE_ID, {"sedCatchment": sed_cat, "sedWatershed": sed_ws},
+        input_meta={
+            "sedCatchment": {"source": "EPA StreamCat SEDcat"},
+            "sedWatershed": {"source": "EPA StreamCat SEDws"},
+        },
+        confidence="L", variant_key="streamcat-sed-integrity",
+        source_tier="screening-proxy", evidence_family="iwi_landscape",
+        used_fallback=True)
+    if ev.rating is None:
+        return unavailable(
+            SUBSTRATE_ID,
+            "eligible NRSA embeddedness and both StreamCat SED components are unavailable",
+            "L", scoring=ev.trace)
+    value = float(ev.combined_value)
+    return MetricResult(
+        SUBSTRATE_ID, value=value,
+        value_text=(f"SED integrity fallback {value:.2f} "
+                    f"(catchment {float(sed_cat):.2f}; watershed {float(sed_ws):.2f})"),
+        rating=ev.rating, confidence="L",
+        source="EPA StreamCat SED catchment + watershed components",
+        note=("Landscape-integrity fallback, not observed embeddedness or bed composition; "
+              "the 0.40/0.70 classes are EASI integration tiers."),
+        scoring=ev.trace)
 
 
 def bank_erosion(ctx: AnalysisContext) -> MetricResult:
-    """Bank-erosion risk: erodibility x riparian-veg deficit x slope."""
-    kf = base.sc(ctx).get("kffactws")
-    rip, slope = base.riparian_forest_pct(ctx), ctx.slope
-    if kf is None and rip is None and slope is None:
-        return unavailable(BANK_EROSION_ID, "no erodibility/riparian/slope data", "L")
-    risk = (0.4 * min((kf or 0) / 0.4, 1) + 0.4 * (1 - min((rip or 0) / 100, 1))
-            + 0.2 * min((slope or 0) / 0.02, 1))
-    rating = base.band(risk, good_below=0.4, fair_below=0.7, higher_is_worse=True)
-    return MetricResult(BANK_EROSION_ID, value=round(risk, 2),
-                        value_text=f"erosion risk {risk:.2f} "
-                                   f"(K {kf}, riparian {rip}%, slope {slope})",
-                        rating=rating, confidence="L",
-                        source="StreamCat K-factor + riparian (proxy)",
-                        note="stream-power/erodibility/riparian proxy",
-                        scoring={"inputs": {"kffact": kf, "riparian": rip, "slope": slope},
-                                 "value": round(risk, 2), "model": "combined"})
+    """Low-confidence BHR bank-instability susceptibility fallback."""
+    geom = ctx.extras.get("reach_geomorph") or {}
+    bhr = geom.get("bank_height_ratio")
+    ev = screening_methods.evaluate(
+        BANK_EROSION_ID, {"bhr": bhr},
+        input_meta={"bhr": {"source": "USGS 3DEP representative cross section"}},
+        confidence="L", source_tier="screening-proxy",
+        evidence_family="incision_geometry", used_fallback=True)
+    if ev.rating is None:
+        return unavailable(
+            BANK_EROSION_ID,
+            "bank-height ratio unavailable for the bank-instability susceptibility proxy",
+            "L", scoring=ev.trace)
+    warning = "; ".join(ev.trace.get("warnings") or [])
+    return MetricResult(
+        BANK_EROSION_ID, value=float(bhr),
+        value_text=f"bank-instability susceptibility from BHR {float(bhr):.2f}",
+        rating=ev.rating, confidence="L",
+        source="USGS 3DEP representative cross section",
+        note=((warning + "; ") if warning else "")
+             + ("BHR does not detect armoring or directly measure erosion. Complete observed "
+                "erosion and armoring percentages supersede this proxy."),
+        scoring=ev.trace)
