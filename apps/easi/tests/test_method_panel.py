@@ -89,20 +89,20 @@ def test_criteria_text_describes_what_the_automation_measured():
     assert "outfall" not in m.lower()       # not the old field-observation wording
 
 
-def test_method_body_reports_run_provenance_only():
-    """The method panel carries what produced THIS number. The static basis, limitations and
-    sources moved to the docs section, so no metric card states them twice."""
+def test_method_body_has_no_provenance_or_static_docs():
+    """The method panel shows only how the number is computed: inputs, equation, curve.
+    The provenance block was removed, and the static basis, limitations and sources live
+    in the docs section, so no metric card states them twice."""
     row, trace = _row(SEDIMENT_ID,
                       {"agriculture": 20.0, "kFactor": 0.3, "roadDensity": 1.5}, "Fair")
     method = methods.resolve(SEDIMENT_ID, trace["methodKey"])
     values = app._trace_values(trace)
     m = str(app._method_body_ui(SEDIMENT_ID, method, row, trace, values, values))
-    assert "Result provenance" in m
-    assert "screening proxy" in m                 # how much weight the result carries
-    assert "Confidence" in m
-    assert "easi-method-inputs" in m              # reuses the existing panel styling
+    assert "easi-method-inputs" in m              # the inputs-used table
+    assert "Result provenance" not in m
+    assert "Confidence" not in m
     for moved in ("Known limitations", "Sources", "ecological cliff", "Basis and provenance"):
-        assert moved not in m, f"{moved!r} should now live only in the docs section"
+        assert moved not in m, f"{moved!r} should live only in the docs section"
 
 
 def test_docs_section_renders_every_subheading_for_all_twenty_metrics():

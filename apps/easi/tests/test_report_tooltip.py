@@ -1,7 +1,7 @@
-"""The metric card ⓘ tooltip builds a rich card: definition + calculation + scoring.
+"""The metric ⓘ tooltip builds a rich card: definition + calculation + scoring.
 
-``_metric_card_tip`` is the pure helper used by both the worksheet card and the read-only
-report row; it wraps ``_metric_tip_html`` (this was ``_metric_table`` before the worksheet rework)."""
+``_metric_card_tip`` is the pure helper behind the read-only report row's ⓘ (the worksheet
+card no longer has one); it wraps ``_metric_tip_html``."""
 from __future__ import annotations
 
 import html
@@ -84,18 +84,14 @@ def test_tooltip_land_cover_shows_both_indicators():
     assert '<span class="easi-tip-lbl">Scoring</span>' not in inner   # generic block replaced
 
 
-def test_worksheet_tooltip_omits_scoring_report_keeps_it():
-    # the read-only report ⓘ keeps the scoring criteria; the worksheet ⓘ drops them (they move
-    # to the card's "Scoring method" panel), keeping definition / source / calculation.
+def test_report_tooltip_includes_scoring():
+    # the read-only report ⓘ is the report's only definition/source/criteria detail, so its
+    # card always carries the full set including the scoring criteria.
     mid = "catchment-hydrology-impervious-surface-cover"
-    report = _tip_html(_row(mid))                       # default include_criteria=True
-    ws_raw = str(app._metric_card_tip(_row(mid), include_criteria=False))
-    m = re.search(r'data-tip-html="(.*?)"', ws_raw, re.S)
-    ws = html.unescape(m.group(1))
+    report = _tip_html(_row(mid))
     assert '<span class="easi-tip-lbl">Scoring</span>' in report
-    assert '<span class="easi-tip-lbl">Scoring</span>' not in ws
-    assert '<span class="easi-tip-lbl">Definition</span>' in ws
-    assert '<span class="easi-tip-lbl">Calculation</span>' in ws
+    assert '<span class="easi-tip-lbl">Definition</span>' in report
+    assert '<span class="easi-tip-lbl">Calculation</span>' in report
 
 
 def test_tooltip_riparian_vegetation_block():
