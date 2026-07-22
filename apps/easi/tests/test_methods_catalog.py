@@ -121,7 +121,8 @@ def test_band_range_texts_scalar_and_worst_and_categorical():
     assert "%" in worst["Good"]
 
     count = methods.band_range_texts(methods.METHODS[BARRIERS_ID])
-    assert count["Good"].startswith("0") and count["Fair"].startswith(">= 1")
+    assert (count["Good"].startswith("0") and count["Fair"].startswith("1")
+            and count["Poor"].startswith(">= 2"))
 
     assert methods.band_range_texts(methods.METHODS[IMPAIRMENT_ID]) == {}
 

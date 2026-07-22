@@ -249,10 +249,11 @@ def test_invasive_taxa_count_exact_boundaries(count, expected):
         biology.INVASIVES_ID, {"taxaCount": count}).rating == expected
 
 
-def test_barrier_count_never_generates_poor():
+def test_barrier_count_bands():
     assert sm.evaluate(biology.BARRIERS_ID, {"damCount": 0}).rating == "Good"
     assert sm.evaluate(biology.BARRIERS_ID, {"damCount": 1}).rating == "Fair"
-    assert sm.evaluate(biology.BARRIERS_ID, {"damCount": 20}).rating == "Fair"
+    assert sm.evaluate(biology.BARRIERS_ID, {"damCount": 2}).rating == "Poor"
+    assert sm.evaluate(biology.BARRIERS_ID, {"damCount": 20}).rating == "Poor"
 
 
 def test_channel_proxy_and_canal_variant_are_explicit():

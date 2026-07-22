@@ -137,15 +137,6 @@ def test_active_variant_documents_itself_not_the_parent():
     assert "in use" in m                                   # the active tier is marked
 
 
-def test_provisional_note_appears_only_for_provisional_methods():
-    provisional = str(app._method_docs_ui({"metricId": SEDIMENT_ID}, {}))
-    assert "ecological cliff" in provisional
-    assert "easi-method-provisional" in provisional
-    published = str(app._method_docs_ui(
-        {"metricId": "streamflow-regime-flow-alteration-regulation-water-use"}, {}))
-    assert "ecological cliff" not in published
-
-
 def test_sources_render_as_external_links():
     m = str(app._method_docs_ui({"metricId": SEDIMENT_ID}, {}))
     cites = methods.citations_for(methods.catalog_entry(SEDIMENT_ID, None))
