@@ -144,6 +144,42 @@
       ],
       "activeLayerId": "curve-catchment-hydrology-watershed-development-and-roads-infrastructure-screening-multiple-sqts"
     },
+    "catchment-hydrology-agricultural-land-cover": {
+      "name": "Screening criteria",
+      "xType": "qualitative",
+      "indexRange": true,
+      "units": "",
+      "layers": [
+        {
+          "id": "curve-catchment-hydrology-agricultural-land-cover-screening-multiple-sources",
+          "name": "Multiple Sources",
+          "points": [
+            {
+              "x": "Good",
+              "y": 0.85,
+              "yMin": 0.7,
+              "yMax": 1,
+              "description": "<25%"
+            },
+            {
+              "x": "Fair",
+              "y": 0.545,
+              "yMin": 0.4,
+              "yMax": 0.69,
+              "description": "25%-50%"
+            },
+            {
+              "x": "Poor",
+              "y": 0.195,
+              "yMin": 0,
+              "yMax": 0.39,
+              "description": ">50%"
+            }
+          ]
+        }
+      ],
+      "activeLayerId": "curve-catchment-hydrology-agricultural-land-cover-screening-multiple-sources"
+    },
     "surface-water-storage-floodplain-water-retention-storage": {
       "name": "Screening criteria",
       "xType": "qualitative",

@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "metricId": "catchment-hydrology-agricultural-land-cover",
+  "name": "Agricultural Land Cover",
+  "shortName": "Agricultural Land Cover",
+  "discipline": "Hydrology",
+  "function": "Catchment hydrology",
+  "functionStatement": "Runoff and infiltration sustain natural flow regime, carry appropriate sediment and nutrients from uplands, and reliably cue spawning/migration of aquatic life.",
+  "descriptionMarkdown": "Percent of the contributing watershed in agricultural land cover (cultivated crops plus hay/pasture). One of two Catchment hydrology land-cover indicators (with impervious cover); it captures agriculture-dominated watersheds, where farming (tile drainage, ditching, loss of perennial vegetation, soil compaction, diversions) drives hydrologic alteration more than impervious cover. The screening and rapid tools compute both indicators and score the function automatically on whichever is more limiting. Provisional thresholds; calibrate regionally with subject-matter-expert review.",
+  "methodContextMarkdown": "Context: Watershed\n\nMethod: Desktop (GIS/imagery and existing datasets)",
+  "howToMeasureMarkdown": "Delineate the contributing watershed and compute percent agricultural land cover (NLCD Cultivated Crops + Hay/Pasture, or EPA StreamCat pctcrop2019 + pcthay2019). Assign the condition class using the bin thresholds. The tools score Catchment hydrology on whichever of impervious or agricultural cover is more limiting for the watershed.",
+  "inputs": [
+    {
+      "label": "Agricultural Land Cover",
+      "type": "desktop (gis/imagery and existing datasets)",
+      "source": "Watershed",
+      "required": true,
+      "helpMarkdown": "Land-cover GIS: NLCD Cultivated Crops + Hay/Pasture, or EPA StreamCat pctcrop2019 + pcthay2019 (watershed boundary)."
+    }
+  ],
+  "profiles": [
+    {
+      "profileId": "screening-default",
+      "tier": "screening",
+      "status": "active",
+      "recommended": true,
+      "scoring": {
+        "type": "categorical",
+        "ratingScaleId": "threeBand",
+        "output": {
+          "kind": "rating",
+          "ratingScaleId": "threeBand"
+        },
+        "rubric": {
+          "levels": [
+            {
+              "label": "Good",
+              "ratingId": "good",
+              "criteriaMarkdown": "<25%"
+            },
+            {
+              "label": "Fair",
+              "ratingId": "fair",
+              "criteriaMarkdown": "25%-50%"
+            },
+            {
+              "label": "Poor",
+              "ratingId": "poor",
+              "criteriaMarkdown": ">50%"
+            }
+          ]
+        }
+      },
+      "curveIntegration": {
+        "enabled": true,
+        "curveSetRefs": [
+          "curve-catchment-hydrology-agricultural-land-cover-screening"
+        ]
+      }
+    }
+  ],
+  "references": [
+    "Allan 2004 (Landscapes and Riverscapes: The Influence of Land Use on Stream Ecosystems)",
+    "NLCD Land Cover (MRLC)",
+    "EPA StreamCat"
+  ],
+  "tags": [
+    "Hydrology",
+    "Catchment hydrology",
+    "screening"
+  ],
+  "status": "active",
+  "sourceMetadata": {
+    "importSource": "Metric Library Complete 2026-02-10.csv",
+    "sourceRows": [
+      291
+    ],
+    "sourceCitations": [
+      "STAF EASI selectable indicator",
+      "Allan 2004"
+    ],
+    "profileAvailability": {
+      "screening": true,
+      "rapid": false,
+      "detailed": false
+    }
+  }
+}

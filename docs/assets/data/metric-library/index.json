@@ -7553,6 +7553,55 @@
       "detailsRef": "metrics/high-flow-dynamics-width-depth-departure-mismatch-factor.json"
     },
     {
+      "metricId": "catchment-hydrology-agricultural-land-cover",
+      "name": "Agricultural Land Cover",
+      "shortName": "Agricultural Land Cover",
+      "discipline": "Hydrology",
+      "function": "Catchment hydrology",
+      "category": "Hydrology",
+      "tags": [
+        "Hydrology",
+        "Catchment hydrology",
+        "screening"
+      ],
+      "status": "active",
+      "minimumTier": "screening",
+      "profileAvailability": {
+        "screening": true,
+        "rapid": false,
+        "detailed": false
+      },
+      "recommendedTiers": [
+        "screening"
+      ],
+      "inputsSummary": {
+        "sources": [
+          "Watershed"
+        ],
+        "effort": "field + desktop",
+        "primaryUnit": ""
+      },
+      "profileSummaries": {
+        "screening": {
+          "profileId": "screening-default",
+          "scoringType": "categorical",
+          "scoringShape": "3 levels",
+          "rawOutput": "rating",
+          "normalizedOutput": "rating",
+          "curveSetCount": 1
+        }
+      },
+      "curvesSummary": {
+        "totalCurveSetCount": 1,
+        "byTier": {
+          "screening": 1,
+          "rapid": 0,
+          "detailed": 0
+        }
+      },
+      "detailsRef": "metrics/catchment-hydrology-agricultural-land-cover.json"
+    },
+    {
       "metricId": "catchment-hydrology-anthropogenic-land-cover",
       "name": "Anthropogenic Land Cover",
       "shortName": "Anthropogenic Land Cover",
