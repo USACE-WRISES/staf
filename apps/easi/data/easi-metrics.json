@@ -25,11 +25,6 @@
         "Fair": "10%-25%",
         "Poor": ">25%"
       },
-      "criteriaAgriculture": {
-        "Good": "<25%",
-        "Fair": "25%-50%",
-        "Poor": ">50%"
-      },
       "indexRanges": {
         "Poor": [
           0.0,

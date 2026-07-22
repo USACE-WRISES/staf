@@ -230,7 +230,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=34"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=36"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="report-controls.js", defer=""),
@@ -324,8 +324,10 @@ def _summary_plots(sc):
         groups.setdefault(fn["category"], []).append(fn)
     fn_blocks = []
     for cat, fns in groups.items():
+        # An unrated function keeps its neutral color: missing evidence must not read as
+        # a Non-Functioning (red) zero.
         bars = [_bar(fn["name"], fscores.get(fn["id"]),
-                     scoring.function_score_band_color(fscores.get(fn["id"]) or 0),
+                     scoring.function_score_band_color(fscores.get(fn["id"])),
                      vmax=config.FUNCTION_SCORE_MAX, value_fmt="{:.0f}")
                 for fn in fns]
         fn_blocks.append(ui.div(ui.div(cat, class_="easi-fn-group"), *bars,
@@ -343,7 +345,7 @@ def _summary_plots(sc):
         _plot_legend([(scoring.index_band_color(1.0), "Functioning 0.70–1.00"),
                       (scoring.index_band_color(0.5), "At-Risk 0.40–0.69"),
                       (scoring.index_band_color(0.0), "Non-Functioning 0.00–0.39")]),
-        _bar("Ecosystem Condition Index", eci, scoring.index_band_color(eci or 0)),
+        _bar("Ecosystem Condition Index", eci, scoring.index_band_color(eci)),
         _bar("Physical", sub["physical"], scoring.index_band_color(sub["physical"]),
              indent=True),
         _bar("Chemical", sub["chemical"], scoring.index_band_color(sub["chemical"]),
@@ -434,11 +436,15 @@ def _metric_card_tip(row, include_criteria=True):
     if lc:  # attach both indicators' threshold sets for the tooltip
         lc = {**lc, "impervious_bands": config.criteria_bands(mid, "impervious"),
               "agriculture_bands": config.criteria_bands(mid, "agriculture")}
+    # The equation comes from the trace that produced this rating, so a composite is never
+    # described as a dataset value used directly.
+    calc = ((row.get("scoring") or {}).get("equation")
+            or config.METRIC_CALCULATIONS.get(mid)
+            or "See the Scoring method panel for the equation and breakpoints.")
     tip_html = _metric_tip_html(
         name=row.get("name"), definition=config.METRIC_DEFINITIONS.get(mid, ""),
         source=row.get("source") or "", note=row.get("note") or "",
-        calc=(config.METRIC_CALCULATIONS.get(mid)
-              or "Dataset value used directly (binned to a rating)."),
+        calc=calc,
         crit=(row.get("criteriaBands") or _METRICS.get(mid, {}).get("criteria") or {}),
         default=row.get("generatedRating") or "n/a", land_cover=lc,
         riparian=row.get("ripVeg"), include_criteria=include_criteria)
@@ -469,12 +475,20 @@ def _fmt_input(v, inp):
 
 
 def _active_scoring(brow, src_choice):
-    """The scoring trace to render for a metric: the chosen source variant's (temperature /
-    impairment / wetlands), else the base row's."""
+    """The scoring trace to render for a metric: a chosen source variant's when one is
+    present, else the base row's."""
     variants = brow.get("sourceVariants") or {}
     key = src_choice or brow.get("sourceChoice")
     v = variants.get(key) if key else None
     return ((v or brow).get("scoring")) or {}
+
+
+def _trace_values(trace):
+    """``{input key: value}`` from a scoring trace, for the inputs table and the sliders.
+
+    The canonical trace records inputs as an ordered list of ``{key, value, source, ...}``
+    so provenance travels with each value; the renderers only need the values."""
+    return {item["key"]: item.get("value") for item in (trace or {}).get("inputs") or []}
 
 
 def _worst_governing(method, inputs):
@@ -509,14 +523,19 @@ def _method_inputs_ui(method, site_inputs):
 
 
 def _method_criteria_ui(row, method=None):
-    """The Good/Fair/Poor scoring criteria (its own section below 'Scoring method'). Each row is a
-    colored swatch + the rating + the numeric value range that maps to it (from the same plot bands,
-    so the list and the reference curve can't disagree) + the curated narrative. Reads the row's
-    carried ``criteriaBands`` so it follows source swaps; the land-cover metric shows both indicators
-    and skips the range chip (its config text is already the numeric range)."""
+    """The Good/Fair/Poor scoring criteria (its own section below 'Scoring method').
+
+    Every row is a colored swatch + the rating + the exact automated breakpoint, generated
+    from the same catalog bands the evaluator used, so the list, the reference curve, and
+    the rating can never disagree. Methods scored on more than one indicator (land cover,
+    thermal vulnerability, nutrients, observed bank condition) list each indicator under
+    its own sub-heading. Where the catalog carries a field profile it follows as a clearly
+    separate reference block, so field guidance is never mistaken for what the automation
+    actually tested.
+    """
     mid = row["metricId"]
-    ranges = easi_methods.band_range_texts(method) if method is not None else {}
-    lc = row.get("landCover")
+    criteria = row.get("methodCriteria") or {}
+    automated = criteria.get("automated") or []
     blocks = []
 
     def _crow(b, text, rng=None):
@@ -525,52 +544,187 @@ def _method_criteria_ui(row, method=None):
                       ui.span(text, class_="easi-method-crit-text"),
                       class_="easi-method-crit-row")
 
-    if lc:
-        for key, label in (("impervious", "Impervious cover"),
-                           ("agriculture", "Agricultural cover")):
-            bands = config.criteria_bands(mid, key)
-            crows = [_crow(b, bands[b]) for b in ("Good", "Fair", "Poor") if bands.get(b)]
-            if crows:
-                blocks.append(ui.div(ui.div(label, class_="easi-method-crit-sub"), *crows))
-    else:
-        crit = row.get("criteriaBands") or _METRICS.get(mid, {}).get("criteria") or {}
-        crows = [_crow(b, crit[b], ranges.get(b))
-                 for b in ("Good", "Fair", "Poor") if crit.get(b)]
+    if len(automated) == 1:
+        bands = automated[0].get("bands") or {}
+        field = ((criteria.get("fieldReference") or {}).get("criteria") or {})
+        crows = [_crow(b, field.get(b, ""), bands[b])
+                 for b in config.RATINGS if bands.get(b)]
         if crows:
             blocks.append(ui.div(*crows))
-    if not blocks:
-        return None
+    else:
+        for block in automated:
+            bands = block.get("bands") or {}
+            crows = [_crow(b, "", bands[b]) for b in config.RATINGS if bands.get(b)]
+            if crows:
+                unit = f" ({block['units']})" if block.get("units") else ""
+                blocks.append(ui.div(
+                    ui.div(f"{block.get('label', '')}{unit}", class_="easi-method-crit-sub"),
+                    *crows))
+        field = (criteria.get("fieldReference") or {}).get("criteria") or {}
+        if field:
+            title = (criteria.get("fieldReference") or {}).get("title") or "Field reference"
+            crows = [_crow(b, field[b]) for b in config.RATINGS if field.get(b)]
+            blocks.append(ui.div(ui.div(title, class_="easi-method-crit-sub"), *crows))
+
+    if not blocks:   # no numeric bands (a categorical method) — fall back to STAF field prose
+        crit = row.get("criteriaBands") or _METRICS.get(mid, {}).get("criteria") or {}
+        crows = [_crow(b, crit[b]) for b in config.RATINGS if crit.get(b)]
+        if not crows:
+            return None
+        blocks.append(ui.div(*crows))
     return ui.div(*blocks, class_="easi-method-crit")
 
 
+def _method_docs_ui(row, trace):
+    """Definition, rationale and limitations for the ACTIVE method/variant.
+
+    Reference material read straight off the catalog entry the evaluator used (``methodKey``
+    from the trace), so a fallback variant documents its own breakpoints, basis, limitations
+    and citations rather than the parent's — while the source hierarchy still lists every
+    tier, with the one in use marked. Nothing here moves with the what-if sliders. The
+    site-specific half of the story (which tier produced this number, confidence,
+    completeness, warnings) stays in 'Scoring method'.
+    """
+    mid = row["metricId"]
+    entry = easi_methods.catalog_entry(mid, trace.get("methodKey"))
+    if entry is None:
+        return None
+    active = entry.get("methodKey")
+
+    def _list(tag, items, empty):
+        """A <ul>/<ol> of ``items``, or an italic line when the catalog lists none. An empty
+        Tag is truthy, so the emptiness has to be tested on ``items``, not on the tag."""
+        return tag(*items) if items else ui.p(empty, class_="easi-method-docs-none")
+
+    parts = [ui.h6("Definition"),
+             ui.p(config.METRIC_DEFINITIONS.get(mid)
+                  or "No definition is recorded for this metric.")]
+
+    hierarchy = entry.get("sourceHierarchy") or []
+    if hierarchy:
+        parts += [
+            ui.h6("Automatic source hierarchy"),
+            ui.tags.ol(*[
+                ui.tags.li(
+                    ui.tags.b(f"{tier.get('label') or tier.get('methodKey') or 'Evidence tier'}: "),
+                    tier.get("description") or "—",
+                    (ui.span(" in use", class_="easi-method-docs-flag")
+                     if tier.get("methodKey") == active else None))
+                for tier in hierarchy])]
+
+    parts += [
+        ui.h6("Input rationale"),
+        _list(ui.tags.ul,
+              [ui.tags.li(ui.tags.b(f"{inp.get('label') or inp.get('key') or '—'}: "),
+                          inp.get("rationale") or "—",
+                          (ui.span(" context only", class_="easi-method-docs-flag")
+                           if inp.get("contextOnly") else None))
+               for inp in entry.get("inputs") or []],
+              "This method takes no automated inputs."),
+        ui.h6("Breakpoints"),
+        _list(ui.tags.ul,
+              [ui.tags.li(ui.tags.b(f"{bp.get('label') or '—'}: "), bp.get("description") or "—")
+               for bp in entry.get("breakpoints") or []],
+              "This method assigns a class directly and has no numeric breakpoints."),
+        ui.h6("Basis"),
+        ui.p(entry.get("basisClass") or "—")]
+    if entry.get("provisional"):
+        parts.append(ui.p("These breakpoints are STAF screening transitions, not evidence of "
+                          "an ecological cliff.", class_="easi-method-provisional"))
+
+    parts += [
+        ui.h6("Known limitations"),
+        _list(ui.tags.ul, [ui.tags.li(text) for text in entry.get("limitations") or []],
+              "None recorded."),
+        ui.h6("Sources"),
+        _list(ui.tags.ul,
+              [ui.tags.li(ui.tags.a(c.get("title") or c["key"], href=c["url"],
+                                    target="_blank", rel="noopener noreferrer"))
+               for c in easi_methods.citations_for(entry) if c.get("url")],
+              "No external source is cited.")]
+    return ui.div(*parts, class_="easi-method-docs")
+
+
+_TIER_LABEL = {
+    "observed": "observed evidence",
+    "connected-nearby": "connected/nearby evidence",
+    "published-model": "published model",
+    "screening-proxy": "screening proxy",
+    "manual": "manual evidence",
+    "unavailable": "unavailable",
+}
+
+
+def _method_provenance_ui(method, row, trace):
+    """What produced THIS number: source tier, confidence, completeness, warnings.
+
+    Run-specific only. The static half of the story — basis class, breakpoints, known
+    limitations and citations — lives in the 'Definition, rationale, and limitations'
+    section (:func:`_method_docs_ui`) so the two never repeat or drift apart.
+    """
+    entry = easi_methods.catalog_entry(row["metricId"], trace.get("methodKey"))
+    if entry is None:
+        return None
+    rows = []
+
+    def _line(label, value):
+        rows.append(ui.div(
+            ui.div(ui.span(label, class_="easi-method-input-label"),
+                   class_="easi-method-input-name"),
+            ui.span(value, class_="easi-method-input-value"),
+            class_="easi-method-input-row"))
+
+    tier = _TIER_LABEL.get(trace.get("sourceTier") or "", trace.get("sourceTier") or "—")
+    if trace.get("usedFallback"):
+        tier += " (fallback)"
+    if trace.get("observedOverridesProxy"):
+        tier += " — supersedes the generated proxy"
+    _line("Result from", tier)
+    _line("Confidence", trace.get("confidence") or entry.get("confidence", "—"))
+    completeness = trace.get("completeness")
+    if completeness and completeness != "complete":
+        _line("Completeness", completeness.replace("_", " "))
+    for warning in trace.get("warnings") or []:
+        rows.append(ui.div(warning, class_="easi-method-input-source"))
+
+    return ui.div(ui.div("Result provenance", class_="easi-method-inputs-title"),
+                  *rows, class_="easi-method-inputs")
+
+
 def _method_body_ui(mid, method, row, trace, site_inputs, explored):
-    """Inputs-used + equation + the reference-curve plot (or the categorical decision table)."""
+    """Inputs-used + equation + the reference-curve plot (or the categorical decision
+    table), then the provenance of this particular result."""
     parts = []
     site_rating = row.get("generatedRating")
     if method.mode == "categorical":
-        return ui.HTML(method_plot.decision_html(method, site_rating))
-    parts.append(_method_inputs_ui(method, site_inputs))
-    if method.equation:
-        parts.append(ui.div(ui.span("Equation", class_="easi-method-equation-label"),
-                            ui.tags.code(method.equation), class_="easi-method-equation"))
-    if method.mode == "worst":
-        gov = _worst_governing(method, site_inputs)
-        parts.append(ui.HTML(method_plot.worst_svg(method, site_inputs, explored, gov)))
-    else:  # scalar | combined | count
-        ev = easi_methods.evaluate_method(method, explored)
-        parts.append(ui.HTML(method_plot.scalar_svg(
-            method, trace.get("value"), site_rating, ev.get("value"), ev.get("rating"))))
+        parts.append(ui.HTML(method_plot.decision_html(method, site_rating)))
+    else:
+        parts.append(_method_inputs_ui(method, site_inputs))
+        if method.equation:
+            parts.append(ui.div(ui.span("Equation", class_="easi-method-equation-label"),
+                                ui.tags.code(method.equation),
+                                class_="easi-method-equation"))
+        if method.mode == "worst":
+            gov = _worst_governing(method, site_inputs)
+            parts.append(ui.HTML(method_plot.worst_svg(method, site_inputs, explored, gov)))
+        else:  # scalar | combined | count
+            ev = easi_methods.evaluate_method(method, explored)
+            parts.append(ui.HTML(method_plot.scalar_svg(
+                method, trace.get("combinedValue"), site_rating,
+                ev.get("value"), ev.get("rating"))))
+    parts.append(_method_provenance_ui(method, row, trace))
     return ui.TagList(*parts)
 
 
 def _method_expander(mid, scoring_trace):
-    """The collapsed 'Scoring method' panel for a metric card (skeleton part). The plot + criteria
-    are nested output slots (so slider drags don't re-render the card / remount the XS widget); the
-    what-if sliders + 'Reset to site' live here, seeded from the site inputs."""
-    method = easi_methods.resolve(mid, (scoring_trace or {}).get("model"))
+    """The three stacked method sections on a metric card (skeleton part). The plot, criteria and
+    docs are nested output slots (so slider drags don't re-render the card / remount the XS widget);
+    the what-if sliders + 'Reset to site' live here, seeded from the site inputs."""
+    method = easi_methods.resolve(mid, (scoring_trace or {}).get("methodKey"),
+                                  (scoring_trace or {}).get("context"))
     if method is None:
         return None
-    site_inputs = (scoring_trace or {}).get("inputs") or {}
+    site_inputs = _trace_values(scoring_trace)
     controls = None
     specs = easi_methods.slider_specs(method, site_inputs)
     if specs:
@@ -590,9 +744,11 @@ def _method_expander(mid, scoring_trace):
                                   class_="easi-method-reset"),
                    class_="easi-method-controls-head"),
             *sliders, class_="easi-method-controls")
-    # Two stacked sections: the reference curve + what-if sliders (collapsed by default), then the
-    # scoring criteria (expanded by default). Both carry class "easi-method" so the JS toggle→resize
-    # listener fires for either; the criteria section has no sliders so its resize is a harmless no-op.
+    # Three stacked sections, all collapsed by default so the card opens compact and the reviewer
+    # chooses what to read: the reference curve + what-if sliders, the scoring criteria, then the
+    # catalog definition/rationale/limitations. All carry class "easi-method" so the JS
+    # toggle→resize listener fires for any of them; only the first has sliders, so the other two
+    # resize to a harmless no-op.
     return ui.TagList(
         ui.tags.details(
             ui.tags.summary("Scoring method", class_="easi-rollup-sum"),
@@ -602,7 +758,11 @@ def _method_expander(mid, scoring_trace):
         ui.tags.details(
             ui.tags.summary("Scoring criteria", class_="easi-rollup-sum"),
             ui.output_ui("method_criteria"),
-            open=True, class_="easi-method easi-method-critsec", **{"data-mid": mid}))
+            class_="easi-method easi-method-critsec", **{"data-mid": mid}),
+        ui.tags.details(
+            ui.tags.summary("Definition, rationale, and limitations", class_="easi-rollup-sum"),
+            ui.output_ui("method_docs"),
+            class_="easi-method easi-method-docsec", **{"data-mid": mid}))
 
 
 def _fmt2(x):
@@ -934,6 +1094,9 @@ def server(input, output, session):
     _geom_owned = reactive.value(set())    # metricIds whose rating is currently derived from
     #                                        an edited cross-section (vs a manual dropdown pick)
     _geom_text = reactive.value({})        # {metricId: value text} for those edited rows
+    _geom_scoring = reactive.value({})      # {metricId: scoring trace} recomputed from the
+    #                                        edited stages, so the Scoring method panel shows
+    #                                        the geometry that actually produced the rating
     current_fn = reactive.value(0)         # index into _FUNCTIONS shown in the worksheet
     view_bbox = reactive.value(None)       # rounded bbox at zoom >= FLOW_ZOOM | None
     last_view_change = reactive.value(0.0)
@@ -1425,7 +1588,7 @@ def server(input, output, session):
         base_result.set(merged)
         # fresh screening: no overrides / notes / source swaps / geometry edits
         _overrides.set({}); _notes.set({}); _source_choice.set({})
-        _geom_owned.set(set()); _geom_text.set({}); _xs_sel.set(None)
+        _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); _xs_sel.set(None)
         _xs_unit_prev.set("ft"); current_fn.set(0)
         # Fresh run complete: auto-open the screening report (same path as "Open report",
         # so closing it lands on the Assessment worksheet either way). MUST stay isolated:
@@ -1472,7 +1635,7 @@ def server(input, output, session):
             _remove_layer(k)
         snapped_point.set(None); delin.set(None); base_result.set(None)
         _overrides.set({}); _notes.set({}); _source_choice.set({})
-        _geom_owned.set(set()); _geom_text.set({}); current_fn.set(0)
+        _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); current_fn.set(0)
         stage.set("")
         current_step.set(STEP_IDENTIFY)
         try:
@@ -1592,6 +1755,7 @@ def server(input, output, session):
         if mid in _geom_owned():             # a manual pick takes ownership from the geometry
             _geom_owned.set(_geom_owned() - {mid})
             _geom_text.set({k: v for k, v in _geom_text().items() if k != mid})
+            _geom_scoring.set({k: v for k, v in _geom_scoring().items() if k != mid})
 
     @reactive.effect
     @reactive.event(input.note_set)
@@ -1683,6 +1847,7 @@ def server(input, output, session):
         edits and candidate switching; ``_geom_text`` carries each row's value text."""
         cur = dict(_overrides())
         texts = dict(_geom_text())
+        traces = dict(_geom_scoring())
         owned = set(_geom_owned())
         if own and block:
             derived = assessment.rate_metrics_from_stages(block, bankfull_stage, floodplain_stage)
@@ -1691,12 +1856,15 @@ def server(input, output, session):
                 if info.get("rating"):
                     cur[mid] = info["rating"]
                     texts[mid] = info.get("valueText", "")
+                    traces[mid] = info.get("scoring")
                     new_owned.add(mid)
             for mid in owned - new_owned:
                 cur.pop(mid, None)
                 texts.pop(mid, None)
+                traces.pop(mid, None)
             _overrides.set(cur)
             _geom_text.set(texts)
+            _geom_scoring.set(traces)
             _geom_owned.set(new_owned)
         elif owned:  # back to the default candidate, unedited -> release
             for mid in owned:
@@ -1756,6 +1924,7 @@ def server(input, output, session):
         owned = _geom_owned()
         if owned:  # relabel so an edited cross-section doesn't read as a manual override
             texts = _geom_text()
+            traces = _geom_scoring()
             for row in sc["metricRows"]:
                 mid = row["metricId"]
                 if mid in owned:
@@ -1763,6 +1932,13 @@ def server(input, output, session):
                     row["source"] = "edited cross-section"
                     row["valueText"] = texts.get(mid) or f"from edited cross-section: {row['rating']}"
                     row["note"] = "recomputed from your bankfull/floodplain heights"
+                    # carry the recomputed trace so the Scoring method panel shows the
+                    # edited geometry, not the geometry the run started from
+                    trace = traces.get(mid)
+                    if trace:
+                        row["scoring"] = trace
+                        row["generatedRating"] = trace.get("generatedRating")
+                        row["completeness"] = trace.get("completeness", row.get("completeness"))
         return sc
 
     @reactive.calc
@@ -2188,14 +2364,14 @@ def server(input, output, session):
         current_fn()
         mid, row = _cur_row(sc)
         trace = (row or {}).get("scoring") or {}
-        method = easi_methods.resolve(mid, trace.get("model"))
+        method = easi_methods.resolve(mid, trace.get("methodKey"), trace.get("context"))
         if method is None:
             return None
-        return mid, row, trace, method, trace.get("inputs") or {}
+        return mid, row, trace, method, _trace_values(trace)
 
-    # suspend_when_hidden=False: these slots live inside a collapsed <details> (display:none),
-    # which Shiny would otherwise suspend (never compute) until first opened — so the plot and
-    # criteria would be blank on open. They read scored() + the what-if sliders and re-render in
+    # suspend_when_hidden=False: these three slots live inside a collapsed <details> (display:none),
+    # which Shiny would otherwise suspend (never compute) until first opened — so the plot, criteria
+    # and docs would be blank on open. They read scored() + the what-if sliders and re-render in
     # place, keeping slider drags off the fn_panel skeleton (the XS widget stays mounted).
     @output(suspend_when_hidden=False)
     @render.ui
@@ -2225,6 +2401,16 @@ def server(input, output, session):
         if ctx is None:
             return None
         return _method_criteria_ui(ctx[1], ctx[3])
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def method_docs():
+        if current_step() not in (STEP_ASSESS, STEP_REPORT):
+            return None
+        ctx = _cur_method()
+        if ctx is None:
+            return None
+        return _method_docs_ui(ctx[1], ctx[2])          # row, trace
 
     @reactive.effect
     @reactive.event(input.method_reset)
@@ -2296,7 +2482,7 @@ def server(input, output, session):
             return None
         sc = scored()
         if not sc:
-            return ui.div("Run a screening to see the rollup.", class_="easi-instr")
+            return None          # empty rail until there's a rollup to show
         eci = sc["ecosystemConditionIndex"]
         sub = sc["subIndices"]
         rows = sc["metricRows"]

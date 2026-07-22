@@ -29,15 +29,24 @@ _SC_WS = {
     "pctwdwet2019ws": 3.0, "pcthbwet2019ws": 2.0,   # wetlands sum 5.0 -> Fair
     "pctcrop2019ws": 15.0, "pcthay2019ws": 10.0,    # ag_pct 25
     "kffactws": 0.3, "rddensws": 1.2,
-    "damdensws": 0.1, "damnrmstorws": 5.0,          # storage/DA 0.1 -> Good
-    "tmean8110ws": 11.0,
+    "damnrmstorws": 5000.0, "runoffws": 400.0,      # DOR 1.25% -> Good
 }
-_SC_RP100 = {   # riparian forest (rp100 buffer) -> riparian_forest_pct = 40.0
+_SC_RP100 = {   # 100 m riparian buffer classes (all required by the veg accessors)
     "pctconif2019wsrp100": 8.0,
     "pctdecid2019wsrp100": 20.0,
     "pctmxfst2019wsrp100": 12.0,
+    "pctgrs2019wsrp100": 15.0,
+    "pctshrb2019wsrp100": 10.0,
+    "pctwdwet2019wsrp100": 3.0,
+    "pcthbwet2019wsrp100": 2.0,
 }
-STREAMCAT = {**_SC_WS, **_SC_RP100}
+_SC_INTEGRITY = {   # published StreamCat integrity components + biological model
+    "hydcat": 0.82, "hydws": 0.78, "sedcat": 0.55, "sedws": 0.52,
+    "chemcat": 0.74, "chemws": 0.71, "conncat": 0.90, "connws": 0.88,
+    "tempcat": 0.85, "tempws": 0.83, "habtcat": 0.80, "habtws": 0.77,
+    "prg_bmmiws": 0.71,
+}
+STREAMCAT = {**_SC_WS, **_SC_RP100, **_SC_INTEGRITY}
 
 REACH_GEOMORPH = {
     "entrenchment_ratio": 2.5,    # >= 2.2 -> Good (floodplain access)
@@ -61,13 +70,16 @@ def _stub(monkeypatch):
                         lambda *a, **k: dict(REACH_GEOMORPH))
     monkeypatch.setattr(assessment.bieger, "bankfull_geometry",
                         lambda *a, **k: dict(BIEGER))
+    # No connected NRSA visit for this synthetic reach, so low flow, substrate and
+    # biological integrity exercise their documented published fallbacks.
+    monkeypatch.setattr(assessment.nrsa, "evidence_for_reach", lambda *a, **k: None)
     # external services -> deterministic "no data" so those metrics take their
-    # documented surrogate/none branch offline (never a live network call).
+    # documented fallback branch offline (never a live network call).
     monkeypatch.setattr(physicochemistry.attains, "impairment_at_point",
                         lambda *a, **k: {})
     monkeypatch.setattr(physicochemistry.attains, "impairment_near_point",
                         lambda *a, **k: {})
-    monkeypatch.setattr(physicochemistry.wqp, "median_value", lambda *a, **k: None)
+    monkeypatch.setattr(physicochemistry.wqp, "sample_summary", lambda *a, **k: None)
     monkeypatch.setattr(biology.nas, "established_taxa", lambda *a, **k: [])
     monkeypatch.setattr(biology.nid_barriers, "barriers_near", lambda *a, **k: [])
 

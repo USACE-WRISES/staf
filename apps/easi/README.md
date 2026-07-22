@@ -52,23 +52,45 @@ The 20 metrics span five disciplines:
 
 | Discipline | Example metrics |
 |---|---|
-| **Hydrology** | Impervious surface cover · Percent wetlands · Concentrated runoff · Flow alteration |
-| **Hydraulics** | Low-flow wetted connectivity · Floodplain engagement frequency · Floodplain access / entrenchment · Hyporheic exchange |
-| **Geomorphology** | Channel-evolution stage · Bank erosion & armoring · Sediment supply · Substrate condition |
-| **Physicochemistry** | Stream temperature · CPOM / detrital processing · Nitrogen & phosphorus · Regulatory impairment (303(d)/305(b)) |
-| **Biology** | In-stream habitat complexity · Biological integrity (IBI surrogate) · Invasive species · Fish-passage barriers |
+| Discipline | Automated method |
+|---|---|
+| **Hydrology** | Land-cover pressure (worse of impervious / agriculture) · Wetland extent · Road-density inflow proxy · Degree of regulation (storage ÷ runoff) |
+| **Hydraulics** | Low-flow condition (NRSA wetted channel → StreamCat HYD) · Floodplain engagement (BHR) · Floodplain access (ER) · Hyporheic-exchange potential |
+| **Geomorphology** | Channel-adjustment susceptibility (FCODE + BHR/ER) · Bank-instability susceptibility (BHR; observed bank evidence supersedes) · Sediment-supply potential · Substrate condition (NRSA embeddedness → StreamCat SED) |
+| **Physicochemistry** | Thermal-regulation vulnerability (woody riparian + impervious) · Organic-matter supply potential · Nutrient condition (WQP vs NARS regional benchmarks → StreamCat CHEM) · Regulatory impairment (ATTAINS → StreamCat CHEM) |
+| **Biology** | Habitat-support potential · Biological integrity (measured NRSA → prG_BMMI → ICI/IWI) · Invasive-species pressure · Nearby dam proximity |
 
 Every metric produces a value; field- or low-confidence metrics show a confidence
 badge and can be **overridden** in the report.
+
+### Evidence hierarchy
+
+Each metric resolves **one fixed automatic hierarchy** — connected observation →
+published model → named screening proxy. Users improve the evidence rather than
+choosing between competing formulas. The exact inputs, operators, Good/Fair/Poor
+boundaries, basis, limitations and citations live in `data/screening-methods.json`,
+which `easi/screening_methods.py` evaluates and the worksheet panel renders, so the
+displayed criteria cannot drift from what produced the rating.
+
+Missing required data is never scored as zero: a metric with an absent input or a
+failed source stays explicitly unavailable, and an outcome with no evidence reports a
+dash rather than a red zero. Reports separate **availability coverage** (how many
+metrics were rated) from the **evidence profile** (how many came from observations,
+published models, or screening proxies), and flag correlated evidence — the same
+BHR/ER geometry and StreamCat integrity components feed several metrics, so 20/20 means
+complete availability, not 20 independent field observations.
 
 ## Cross-section & overrides
 
 - A **representative 3DEP cross-section** is sampled along the reach, re-datumed to
   the channel bottom, with a feet/metres toggle.
 - **Edit the bankfull and floodplain heights** to recompute the entrenchment ratio
-  (lateral → *Floodplain access / connectivity*) and the bank-height ratio
-  (vertical → *High flow dynamics* recurrence); the plot redraws and both metrics
-  re-rate live, while a manual rating pick still takes precedence until the next edit.
+  (lateral) and the bank-height ratio (vertical); the plot redraws and all four
+  geometry-driven metrics re-rate live — floodplain access (ER), floodplain engagement
+  (BHR), bank-instability susceptibility (BHR), and channel-adjustment susceptibility
+  (BHR + ER). A manual rating pick still takes precedence until the next edit, and where
+  observed bank or channel evidence is active it stays the effective result while the
+  generated proxy updates underneath it.
 - **Inline Good/Fair/Poor overrides** on any metric (pick the computed value to
   revert) plus **per-metric notes**, all carried into the exports.
 
@@ -78,19 +100,21 @@ badge and can be **overridden** in the report.
 |---|---|
 | **NHDPlus** via HyRiver (`pynhd`, NLDI / WaterData) | Stream vectors, point snap, watershed delineation, reach derivation, VAAs |
 | **USGS 3DEP** (`py3dep`) | DEM cross-sections → entrenchment, bank-height ratio, slope |
-| **EPA StreamCat** | Watershed landscape metrics (impervious, wetlands, roads, dams, riparian, erodibility, …) |
-| **NLCD** (via `pygeohydro`) | Land cover (alternative wetlands source) |
-| **EPA Water Quality Portal (WQP)** | Observed stream temperature, nutrients |
-| **EPA ATTAINS** (keyless `gispub` service) | 303(d)/305(b)/TMDL impaired-waters status (at point + nearby) |
-| **USACE National Inventory of Dams (NID)** | Fish-passage barriers |
-| **USGS Nonindigenous Aquatic Species (NAS)** | Invasive species presence |
+| **EPA StreamCat** | Watershed landscape metrics (impervious, wetlands, roads, dam storage, runoff, riparian, erodibility) plus the published HYD/SED/CHEM/CONN/TEMP/HABT integrity components and prG_BMMI |
+| **EPA NRSA 2018–19** (bundled extract) | Connected field evidence: wetted channel, embeddedness, benthic/fish condition |
+| **NLCD** (via `pygeohydro`) | Land cover (fallback where StreamCat is absent) |
+| **EPA Water Quality Portal (WQP)** | Total N / total P observations (normalized); context-only temperature |
+| **EPA NARS nine regions** (bundled) | Regional NRSA nutrient benchmarks |
+| **EPA ATTAINS** (keyless `gispub` service) | 303(d)/305(b)/TMDL category from the nearest assessed unit |
+| **USACE National Inventory of Dams (NID)** | Mapped dams within a one-mile geodesic radius |
+| **USGS Nonindigenous Aquatic Species (NAS)** | Established invasive taxa |
 | **USGS National Map** | Topo / Imagery basemaps + NHD overlay |
 | **Photon (Komoot) + Nominatim (OSM)** | Address / place geocoding |
 | **Bieger et al. (2015)** curves + **Fenneman** physiographic divisions (bundled) | Location-aware bankfull geometry |
 
-Where more than one source exists for a metric, the **Configure** step lets you
-choose (wetlands: StreamCat / NLCD · temperature: observed WQP / climate surrogate ·
-impairment: ATTAINS / modeled landscape surrogate).
+Source selection is automatic and fixed per metric (see **Evidence hierarchy** above);
+a fallback is recorded in the trace and shown in the Scoring method panel, so it is
+always visible which tier produced a rating.
 
 ## Tech stack
 
@@ -142,22 +166,31 @@ This repo is ready to deploy from GitHub — no build step or manifest required.
 ```
 app.py                     Shiny (Core) UI + server: map, workflow stepper, report modal, exports
 easi/
+  screening_methods.py     canonical evaluator: typed operators only, no arbitrary expressions
+  methods.py               display projection of the catalog for the "Scoring method" panel
   scoring.py               rating → index → function score → CWA rollup → sub-indices → ECI (STAF math)
   config.py                constants, CWA mapping, data loaders, per-metric registry + definitions
-  assessment.py            assemble report; rescore overrides; cross-section build/recompute
+  assessment.py            assemble report; rescore overrides; coverage; cross-section recompute
   pipeline.py              async orchestration (delineate / assess)
   delineation.py           watershed + upstream-reach derivation
   geomorph.py · bieger.py  cross-section geometry, entrenchment/bank-height, regional bankfull curves
   hydraulics.py · xsplot.py  channel hydraulics + cross-section plot (matplotlib)
   report.py                PDF / CSV / GeoJSON exports
   metrics/                 per-metric adapters (base.py contract) by discipline
-  datasources/             thin keyless clients (NHD, 3DEP, StreamCat, NLCD, WQP, ATTAINS, NID, NAS, geocode)
+  datasources/             thin keyless clients (NHD, 3DEP, StreamCat, NLCD, WQP, ATTAINS, NID,
+                           NAS, NRSA, geocode)
 data/
-  easi-metrics.json        20 metric defs + Good/Fair/Poor thresholds (generated from STAF)
+  screening-methods.json   the automated method catalog: inputs, operators, exact bands, source
+                           hierarchy, basis, limitations, citations (single source of truth)
+  easi-metrics.json        20 STAF metric defs + field criteria (generated from the STAF source TSV)
+  nrsa-2018-19-evidence.json.gz  deterministic NRSA extract for connected field evidence
+  nars-ecoregions-9.geojson.gz   EPA NARS nine regions (regional nutrient benchmarks)
   functions.json           function metadata · cwa-mapping.json  function → P/C/B weights
   physio_divisions.geojson Fenneman physiographic divisions (Bieger curve selection)
 www/                       styles.css + tooltip/report-edit/geocode JS (served as static assets)
 scripts/build_easi_metrics.py   regenerates data/easi-metrics.json from the STAF source TSV
+scripts/build_nrsa_evidence.py  rebuilds the NRSA extract from the four public EPA CSVs
+scripts/fetch_nars_ecoregions.py  refreshes the NARS nine-region polygon asset
 scripts/build_docs.py      one-command rebuild of the V&V documentation (assets + Quarto render → www/)
   run_sfari_sites.py · build_doc_assets.py · sfari_data.py   EASI runs, figures, and SFARI data join
 docs/EASI_Documentation/   V&V report source (Quarto) → www/documentation.html   (see its README)

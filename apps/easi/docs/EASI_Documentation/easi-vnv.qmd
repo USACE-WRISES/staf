@@ -137,116 +137,29 @@ supports site selection for the Rapid and Detailed tiers.
 
 ## Metrics
 
-EASI assigns one screening metric to each of the twenty functions. Each metric is
-computed from national data and rated against published thresholds. The metrics are
-listed by discipline in @tbl-metrics-hydrology through @tbl-metrics-biology. For each
-metric, the tables give its function, definition, how EASI computes it, and the Good,
-Fair, and Poor scoring criteria.
+EASI assigns one screening metric to each of the twenty functions. Each metric resolves
+one fixed automatic hierarchy: a connected field observation where one exists, then a
+published model, then a named screening proxy. The metrics are listed by discipline in
+@tbl-metrics-hydrology through @tbl-metrics-biology. For each metric, the tables give
+its function, the automated method, its inputs and equation, the exact Good, Fair, and
+Poor breakpoints, the basis for those breakpoints, the source hierarchy, and the known
+limitations.
 
-| Metric | Attribute | Detail |
-|:--------|:------------------|:----------------------------------------------------|
-| **Impervious Surface Cover** | Function | Catchment hydrology |
-|  | Definition | Share of the contributing watershed covered by impervious surfaces (roads, roofs, parking), which speeds runoff and can degrade flow and water quality. |
-|  | How EASI computes it | Percent impervious area in the delineated watershed from EPA StreamCat (NLCD-based imperviousness). Scale: Watershed. |
-|  | Scoring | Good: <10%<br>Fair: 10%-25%<br>Poor: >25% |
-| **Percent Wetlands in Watershed** | Function | Surface water storage |
-|  | Definition | Share of the watershed that is wetland, which stores water, buffers peak flows, and sustains baseflow. |
-|  | How EASI computes it | Percent wetland cover in the watershed from EPA StreamCat (woody plus herbaceous wetlands). NLCD 2021 is an optional alternative source. Scale: Watershed. |
-|  | Scoring | Good: >5% wetland coverage, or consistent with historical norm.<br>Fair: 1-5% wetland coverage.<br>Poor: <1% wetland coverage, or heavily drained wetlands. |
-| **Concentrated Runoff / Stormwater Inputs** | Function | Reach inflow |
-|  | Definition | Degree to which concentrated runoff (road-stream crossings, stormwater outfalls) delivers flashy, untreated flow directly to the reach. |
-|  | How EASI computes it | Screening proxy from road-stream crossing density (Census TIGER) and watershed road density (StreamCat). Scale: Reach. |
-|  | Scoring | Good: 0-1 outfall per 100 m, and no noticeable discharge effects.<br>Fair: 2-3 outfalls per 100 m, with some unmitigated runoff but partial buffering. / 4-5 outfalls per 100 m, with sediment or pollutant inputs.<br>Poor: More than 5 outfalls per 100 m, or major highway drains with concentrated discharge. |
-| **Flow Alteration (Regulation / Water Use)** | Function | Streamflow regime |
-|  | Definition | How much dams, diversions, and water use alter the natural magnitude and timing of streamflow. |
-|  | How EASI computes it | Upstream dam storage and density (StreamCat, from the National Inventory of Dams) with USGS NWIS gage comparison where available. Scale: Watershed/Reach. |
-|  | Scoring | Good: <10% difference from baseline.<br>Fair: 10-50% difference.<br>Poor: >50% difference. Near dewatering or strong hydropeaking. |
+These tables are generated from `data/screening-methods.json`, the same catalog the
+evaluator scores from, so the documented breakpoints cannot differ from the ones applied
+(`python scripts/build_method_tables.py`). Breakpoints described as provisional are STAF
+screening transitions, not evidence of an ecological threshold; those described as
+published carry the citation given in the source register.
 
-: Hydrology metrics {#tbl-metrics-hydrology}
+{{< include _generated/methods_hydrology.md >}}
 
-| Metric | Attribute | Detail |
-|:--------|:------------------|:----------------------------------------------------|
-| **Low-flow Wetted Connectivity** | Function | Low flow and baseflow dynamics |
-|  | Definition | Whether the channel stays wetted and longitudinally connected during low-flow periods (flow permanence). |
-|  | How EASI computes it | Screening proxy from NHD flow-permanence (F-code) and USGS NWIS zero-flow records. Scale: Reach. |
-|  | Scoring | Good: >75% of channel wetted at normal low flow (or dryness is normal if ephemeral).<br>Fair: 25-75% wetted.<br>Poor: <25% wetted, or mostly disconnected pools in a perennial reach. |
-| **Floodplain Engagement Frequency (bankfull recurrence)** | Function | High flow dynamics |
-|  | Definition | How often high flows top the bank and engage the floodplain (recurrence interval of overbank flooding). |
-|  | How EASI computes it | Bank-height ratio from a USGS 3DEP cross-section with regional bankfull curves and StreamStats peak-flow regressions. Recomputes when the cross-section is edited. Scale: Reach. |
-|  | Scoring | Good: About 1-2 yr floods engage the floodplain.<br>Fair: About 3-5 yr floods are needed. / About 5-10 yr floods are needed.<br>Poor: Floodplain is rarely inundated except during extreme events. |
-| **Floodplain Access / Entrenchment** | Function | Floodplain connectivity |
-|  | Definition | Whether the channel has lateral access to a floodplain, via the entrenchment ratio (flood-prone width divided by bankfull width). |
-|  | How EASI computes it | Entrenchment ratio (flood-prone width divided by bankfull width) from a USGS 3DEP cross-section. Recomputes when the cross-section is edited. Scale: Reach. |
-|  | Scoring | Good: Stable channel that is not incised or dredged with frequent floodplain access.<br>Fair: Slight channelization or partial dredging. / Heavily modified or incised channel with limited floodplain access.<br>Poor: Deeply dredged or channelized reach with little functional floodplain. |
-| **Hyporheic Exchange Indicators** | Function | Hyporheic connectivity |
-|  | Definition | Potential for surface water to exchange with the shallow subsurface (hyporheic zone), inferred from channel slope and sinuosity. |
-|  | How EASI computes it | Screening proxy from channel slope (3DEP), sinuosity, and soil saturated hydraulic conductivity (SSURGO). Scale: Reach. |
-|  | Scoring | Good: Well developed bedforms and strong potential for exchange.<br>Fair: Some bedform variety but partially uniform. / Mostly uniform run with limited exchange.<br>Poor: Featureless or silted bed with negligible exchange. |
+{{< include _generated/methods_hydraulics.md >}}
 
-: Hydraulics metrics {#tbl-metrics-hydraulics}
+{{< include _generated/methods_geomorphology.md >}}
 
-| Metric | Attribute | Detail |
-|:--------|:------------------|:----------------------------------------------------|
-| **Channel Evolution Stage & Trends** | Function | Channel evolution |
-|  | Definition | Whether the channel is stable or actively incising or widening, reflecting its stage in the channel-evolution sequence. |
-|  | How EASI computes it | Screening proxy from 3DEP incision indicators and NHD channelization. Scale: Reach. |
-|  | Scoring | Good: Stable or re-stabilized channel (Stage I or VI).<br>Fair: Partially recovered channel (often Stage V). / Actively widening or incising (often Stage III-IV).<br>Poor: Severe incision or destructive phases (often Stage II or severe III-IV). |
-| **Bank Erosion & Armoring Condition** | Function | Channel and floodplain dynamics |
-|  | Definition | Susceptibility to accelerated bank erosion or hardening, from stream power, soil erodibility, and riparian condition. |
-|  | How EASI computes it | Screening proxy from stream power (3DEP), soil erodibility (SSURGO K-factor), and riparian deficit. Scale: Reach. |
-|  | Scoring | Good: Predominantly natural banks with deeply rooted cover.<br>Fair: Some armoring or partial vegetation coverage. / Large portion of banks is armored or vegetation is sparse.<br>Poor: Failing armoring or widespread bare banks with severe instability. |
-| **Sediment Supply Potential (watershed/banks)** | Function | Sediment continuity |
-|  | Definition | Potential for excess sediment from watershed sources (cropland, roads) and channel banks relative to natural supply. |
-|  | How EASI computes it | Watershed proxy from soil erodibility, cropland and hay cover, road density, and upstream dam storage (StreamCat). Scale: Watershed. |
-|  | Scoring | Good: Low anthropogenic-caused sediment supply. Upstream bank erosion and surface runoff is minimal.<br>Fair: Moderate anthropogenic-caused sediment supply from upstream bank erosion and surface runoff.<br>Poor: High anthropogenic-caused sediment supply from upstream bank erosion and surface runoff. |
-| **Substrate Condition (grain size/embeddedness/fines/consolidation)** | Function | Bed composition and large wood |
-|  | Definition | Quality of the streambed substrate (grain size, embeddedness, fines) that supports habitat and spawning. |
-|  | How EASI computes it | Screening proxy from channel gradient (3DEP) and watershed erodibility (StreamCat). Scale: Reach. |
-|  | Scoring | Good: Open interstitial coarse bed with minimal fines.<br>Fair: Mild embedding or partial fine coverage. / Strong embedding or siltation limiting infiltration.<br>Poor: Predominantly fine or consolidated bed with little interstitial space. |
+{{< include _generated/methods_physicochemistry.md >}}
 
-: Geomorphology metrics {#tbl-metrics-geomorphology}
-
-| Metric | Attribute | Detail |
-|:--------|:------------------|:----------------------------------------------------|
-| **Stream Temperature** | Function | Light and thermal regime |
-|  | Definition | Whether stream temperature stays within ranges suitable for aquatic life (observed data, or riparian-shade/climate surrogate). |
-|  | How EASI computes it | Observed temperature from the EPA Water Quality Portal where available. Otherwise a climate-and-shade surrogate (StreamCat mean temperature plus riparian cover). Scale: Reach. |
-|  | Scoring | Good: Rarely surpasses local standard or typical seasonal maxima for the stream type.<br>Fair: Slightly exceeds thresholds occasionally.<br>Poor: Frequently near or above thresholds. / Consistently high or potentially lethal temperatures. |
-| **Detrital Processing (CPOM retention / shredders)** | Function | Carbon processing |
-|  | Definition | Capacity to capture and process coarse organic matter (leaf litter), supported by riparian forest input. |
-|  | How EASI computes it | Riparian forest extent within 100 m of the stream network (StreamCat) as a proxy for coarse organic-matter input. Scale: Reach. |
-|  | Scoring | Good: Abundant CPOM retention with stable leaf packs typical for the system.<br>Fair: Some retention but partially flushed out. / Sparse organic matter and limited retention.<br>Poor: Essentially no retained organic matter, or overload causing anoxia risk. |
-| **Nitrogen & Phosphorus Concentrations** | Function | Nutrient cycling |
-|  | Definition | Whether nutrient (N and P) concentrations stay near reference levels rather than driving enrichment. |
-|  | How EASI computes it | Observed total nitrogen and phosphorus from the EPA Water Quality Portal where available. Otherwise compared against ecoregion nutrient criteria. Scale: Reach/Watershed. |
-|  | Scoring | Good: Near background or guideline values.<br>Fair: Slightly elevated N or P. / Marked with ecological effects.<br>Poor: Significantly above guidelines indicating strong nutrient pollution. |
-| **Regulatory Impairment Status (305b/303d/TMDL)** | Function | Water and soil quality |
-|  | Definition | Whether the reach is on a Clean Water Act impaired-waters list (303(d)/305(b)/TMDL) for water-quality problems. |
-|  | How EASI computes it | Clean Water Act 303(d)/305(b)/TMDL status from EPA ATTAINS at the reach and nearby waters. Scale: Reach. |
-|  | Scoring | Good: In category 1, 2, or 3 or aquatic life uses not evaluated.<br>Fair: In Category 4 due to nonsupport of aquatic life uses and aquatic life impairment actively being mitigated.<br>Poor: In Category 5 due to nonsupport of aquatic life uses OR in Category 4 and aquatic life impairment not actively being mitigated. |
-
-: Physicochemistry metrics {#tbl-metrics-physicochemistry}
-
-| Metric | Attribute | Detail |
-|:--------|:------------------|:----------------------------------------------------|
-| **In-stream Habitat Complexity & Cover** | Function | Habitat provision |
-|  | Definition | Physical habitat diversity and cover (pools, riffles, structure, wood) available to aquatic organisms. |
-|  | How EASI computes it | Screening proxy from sinuosity, gradient variability, riparian cover, and stream order. Scale: Reach. |
-|  | Scoring | Good: Multiple habitat types well represented.<br>Fair: Some variety but key elements are missing. / Mostly uniform with only 1-2 distinct features.<br>Poor: Very uniform channel with limited structural diversity. |
-| **Biological Integrity (IBI / community condition)** | Function | Population support |
-|  | Definition | Overall condition of the aquatic biological community relative to reference (a screening surrogate for a measured IBI). |
-|  | How EASI computes it | StreamCat predicted biological condition, or the nearest NRSA / state bioassessment station. Scale: Reach. |
-|  | Scoring | Good: Multiple observations where historically expected.<br>Fair: Some presence but limited. / Rare or single individuals.<br>Poor: Absent where historically expected. |
-| **Invasive / Non-native Species Presence** | Function | Community dynamics |
-|  | Definition | Extent to which invasive or non-native species are present in the watershed and may displace natives. |
-|  | How EASI computes it | USGS Nonindigenous Aquatic Species (NAS) occurrences within the watershed (HUC). Scale: Watershed. |
-|  | Scoring | Good: <5% invasive presence.<br>Fair: 5-50% invasive presence.<br>Poor: >50% invasive presence or one invasive dominates. |
-| **Fish Passage & Barrier Effects (longitudinal connectivity)** | Function | Watershed connectivity |
-|  | Definition | Whether dams or barriers disrupt upstream-downstream movement of fish and aquatic organisms. |
-|  | How EASI computes it | Barrier inventories (USACE National Inventory of Dams, USGS NABD, USFWS/SARP) within the watershed. Scale: Reach. |
-|  | Scoring | Good: No barrier within watershed OR barriers provide beneficial effect on project area and allows for aquatic organism passage.<br>Fair: Barrier exists but does not adversely affect aquatic organism passage OR a small blockage exists creating minor passage barrier.<br>Poor: Aquatic organism barriers (including impoundment(s)) located within 1 mile upstream or downstream of project area has a negative effect on aquatic organism passage. |
-
-: Biology metrics {#tbl-metrics-biology}
+{{< include _generated/methods_biology.md >}}
 
 Metrics are computed from established national sources. These include the EPA
 StreamCat landscape summaries, USGS 3DEP elevation data, the EPA Water Quality
@@ -386,6 +299,19 @@ on Non-Functioning condition. @fig-xs-mc shows the EASI cross section and
 {{< include _generated/case_MC.md >}}
 
 # Validation
+
+::: {.callout-important}
+## These results predate the current method set
+
+The statistics in this section were computed with the metric methods EASI used before
+the 2026-07-18 revision. That revision replaced the flow-alteration calculation, the
+bank-height recurrence transform, the substrate and biological-integrity surrogates, and
+the thermal and nutrient methods, and it added connected NRSA evidence. The agreement
+reported below therefore describes the previous methods, not the ones documented in
+@sec-quantification. Refreshing it requires re-running the SFARI site corpus
+(`python scripts/build_doc_assets.py`, which needs network access to the federal
+services) and is outstanding.
+:::
 
 Validation asks whether EASI estimates agree with independent observations of
 stream condition. We used the SFARI field assessments as the reference. SFARI is

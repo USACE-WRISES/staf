@@ -84,6 +84,21 @@ def test_rollup_skips_unmapped_function():
     assert res.sub_indices["physical"] == pytest.approx(1.0)
 
 
+def test_rollup_empty_domains_are_none_not_zero():
+    mapping = {"f1": {"physical": "D", "chemical": "-", "biological": "-"}}
+    res = scoring.rollup({"f1": 15}, mapping)
+    assert res.sub_indices["physical"] == 1.0
+    assert res.sub_indices["chemical"] is None
+    assert res.sub_indices["biological"] is None
+    assert res.ecosystem_condition_index == 1.0
+
+
+def test_rollup_with_no_available_outcome_is_none():
+    res = scoring.rollup({}, {})
+    assert all(value is None for value in res.sub_indices.values())
+    assert res.ecosystem_condition_index is None
+
+
 # --- full assessment over the real 20 EASI metrics ------------------------- #
 def _all(rating: str) -> dict[str, str]:
     return {mid: rating for mid in config.metrics_by_id()}
