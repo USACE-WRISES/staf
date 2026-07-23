@@ -56,6 +56,8 @@ description: "How metrics roll up to functions, outcomes, and overall condition.
   <p>The screening proxy for <strong>Detrital processing (CPOM retention)</strong> is the percent of the 100 m riparian buffer in <strong>natural vegetation</strong> (forest, shrub, grassland, or wetland), not forest alone. In grassland and arid or xeric ecoregions the natural riparian buffer is non-forest, so counting only forest would wrongly score those streams low. The site's EPA Level III ecoregion is reported with the basin characteristics; verify the buffer on the aerial basemap, especially where the natural cover is non-forest.</p>
 </details>
 
+<p class="screening-ref-link">Looking for the detail behind these screens? The <a href="{{ site.baseurl }}/screening-metrics/">Screening Metric Reference</a> lists every screening metric with its definition, Good / Fair / Poor breakpoints, input rationale, known limitations, and sources.</p>
+
 <details class="tier-how-it-works">
   <summary>Understanding outcomes and ecosystem condition</summary>
 
