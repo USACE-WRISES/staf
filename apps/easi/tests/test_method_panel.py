@@ -1,19 +1,16 @@
 """The worksheet method-panel markup.
 
-Three stacked ``<details>`` on each metric card, all collapsed by default: the reference curve +
-what-if sliders, the scoring criteria, and the catalog definition/rationale/limitations. Every
-criteria row carries the exact automated breakpoint generated from the catalog bands that
-produced the rating, so the panel cannot describe a different quantity than the one that was
-scored; the docs section explains those same breakpoints without restating anything the method
-panel already shows.
+Two stacked ``<details>`` on each metric card, both collapsed by default: how the number is
+computed (inputs + equation, or the categorical decision table), then the scoring criteria. Every
+criteria row carries the exact automated breakpoint generated from the catalog bands that produced
+the rating, so the panel cannot describe a different quantity than the one that was scored. The
+definition, rationale and limitations moved to the docs site's Screening Metric Reference.
 See ``easi/methods.py`` / ``easi/method_plot.py``.
 """
 from __future__ import annotations
 
-import html
-
 import app
-from easi import config, methods, screening_methods as sm
+from easi import methods, screening_methods as sm
 from easi.metrics.geomorphology import SEDIMENT_ID
 from easi.metrics.hydraulics import LOW_FLOW_ID
 from easi.metrics.hydrology import IMPERVIOUS_ID, REACH_INFLOW_ID
@@ -31,20 +28,21 @@ def _row(mid, values, rating, **extra):
     return row, trace
 
 
-def test_expander_is_three_details_all_collapsed():
+def test_expander_is_two_details_all_collapsed():
     _, trace = _row(SEDIMENT_ID,
                     {"agriculture": 20.0, "kFactor": 0.3, "roadDensity": 1.5}, "Fair")
     m = str(app._method_expander(SEDIMENT_ID, trace))
-    assert m.count("<details") == 3
+    assert m.count("<details") == 2
     assert "Scoring method" in m and "Scoring criteria" in m
-    assert "Definition, rationale, and limitations" in m
+    # definition/rationale/limitations moved to the docs site — no third section
+    assert "Definition, rationale, and limitations" not in m
     # the card opens compact: no section carries `open`
     assert "open=" not in m
     assert '<details class="easi-method" data-mid=' in m
     assert '<details class="easi-method easi-method-critsec" data-mid=' in m
-    assert '<details class="easi-method easi-method-docsec" data-mid=' in m
-    # the what-if sliders + reset live in the (collapsed) method section
-    assert "easi-method-reset" in m and "js-range-slider" in m
+    assert "easi-method-docsec" not in m
+    # the what-if sliders + reset are gone
+    assert "easi-method-reset" not in m and "js-range-slider" not in m
 
 
 def test_criteria_rows_carry_the_catalog_breakpoint_and_colour_swatch():
@@ -89,56 +87,18 @@ def test_criteria_text_describes_what_the_automation_measured():
     assert "outfall" not in m.lower()       # not the old field-observation wording
 
 
-def test_method_body_has_no_provenance_or_static_docs():
-    """The method panel shows only how the number is computed: inputs, equation, curve.
-    The provenance block was removed, and the static basis, limitations and sources live
-    in the docs section, so no metric card states them twice."""
+def test_method_body_has_only_inputs_and_equation():
+    """The method panel shows only how the number is computed: inputs and equation. The
+    reference-curve plot was removed, and the static basis, limitations and sources live on the
+    docs site's Screening Metric Reference, so no metric card states them."""
     row, trace = _row(SEDIMENT_ID,
                       {"agriculture": 20.0, "kFactor": 0.3, "roadDensity": 1.5}, "Fair")
     method = methods.resolve(SEDIMENT_ID, trace["methodKey"])
     values = app._trace_values(trace)
-    m = str(app._method_body_ui(SEDIMENT_ID, method, row, trace, values, values))
+    m = str(app._method_body_ui(method, row, values))
     assert "easi-method-inputs" in m              # the inputs-used table
+    assert "easi-method-svg" not in m             # the Good/Fair/Poor plot is gone
     assert "Result provenance" not in m
     assert "Confidence" not in m
     for moved in ("Known limitations", "Sources", "ecological cliff", "Basis and provenance"):
-        assert moved not in m, f"{moved!r} should live only in the docs section"
-
-
-def test_docs_section_renders_every_subheading_for_all_twenty_metrics():
-    """The reference section is complete for every metric, including the categorical ones with
-    no numeric breakpoints — an empty catalog list must degrade to prose, not to an empty <ul>."""
-    for mid in config.METRIC_REGISTRY:
-        m = str(app._method_docs_ui({"metricId": mid}, {}))
-        for heading in ("Definition", "Input rationale", "Breakpoints", "Basis",
-                        "Known limitations", "Sources"):
-            assert f"<h6>{heading}</h6>" in m, f"{mid} is missing {heading}"
-        assert "easi-method-docs" in m
-        assert "<ul></ul>" not in m and "<ol></ol>" not in m
-
-
-def test_every_metric_shows_its_curated_definition():
-    for mid in config.METRIC_REGISTRY:
-        definition = config.METRIC_DEFINITIONS.get(mid) or ""
-        assert definition, f"{mid} has no definition"
-        m = str(app._method_docs_ui({"metricId": mid}, {}))
-        assert html.escape(definition, quote=False) in m
-
-
-def test_active_variant_documents_itself_not_the_parent():
-    """A fallback tier must describe its own limits; claiming the parent's would misstate what
-    the number is. The hierarchy still lists every tier, with the active one marked."""
-    mid = "population-support-biological-integrity-ibi-community-condition"
-    m = str(app._method_docs_ui({"metricId": mid},
-                                {"methodKey": "streamcat-integrity-products"}))
-    assert "landscape integrity" in m                      # the variant's own limitation
-    assert "connected nearby NRSA visit" not in m          # the parent's, suppressed
-    assert m.count("<li>") >= 3                            # all three tiers still listed
-    assert "in use" in m                                   # the active tier is marked
-
-
-def test_sources_render_as_external_links():
-    m = str(app._method_docs_ui({"metricId": SEDIMENT_ID}, {}))
-    cites = methods.citations_for(methods.catalog_entry(SEDIMENT_ID, None))
-    assert cites and m.count('target="_blank"') == len(cites)
-    assert 'rel="noopener noreferrer"' in m and 'href="https://' in m
+        assert moved not in m, f"{moved!r} lives only on the docs site now"

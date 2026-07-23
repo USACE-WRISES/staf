@@ -58,13 +58,6 @@
       return;
     }
 
-    var reset = t.closest(".easi-method-reset");
-    if (reset) {
-      // Snap the Scoring-method what-if sliders back to the site values (server: _method_reset)
-      send("method_reset", { mid: reset.getAttribute("data-mid") });
-      return;
-    }
-
     var view = t.closest("[data-xs-view]");
     if (view) {
       // Client-side cross-section view controls (no reliable FigureWidget _rangeInitial; Python
@@ -102,16 +95,6 @@
       send("source_set", { mid: s.getAttribute("data-mid"), source: s.value });
     }
   });
-
-  // The "Scoring method" sliders (ionRangeSlider) are created inside a collapsed <details>
-  // (display:none), so they initialize at zero width. Nudge them to recompute when the panel
-  // opens. 'toggle' does not bubble, so listen in the capture phase.
-  document.addEventListener("toggle", function (e) {
-    var d = e.target;
-    if (d && d.classList && d.classList.contains("easi-method") && d.open && window.dispatchEvent) {
-      window.dispatchEvent(new Event("resize"));
-    }
-  }, true);
 
   // ---- cross-section modebar: inject "Zoom Home" / "Zoom to Extents" into the plot's own
   // Plotly modebar. Custom modebar buttons need real JS click handlers, which shinywidgets'

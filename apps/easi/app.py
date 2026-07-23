@@ -224,12 +224,12 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=37"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=38"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="report-controls.js", defer=""),
                     ui.tags.script(src="report-edit.js", defer=""),
-                    ui.tags.script(src="worksheet.js?v=6", defer=""),
+                    ui.tags.script(src="worksheet.js?v=7", defer=""),
                     ui.tags.script(src="coord-entry.js", defer="")),
     # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
     # the bottom-right toast is the app's loading indicator (output spinners unaffected).
@@ -445,16 +445,10 @@ def _metric_card_tip(row):
 
 
 # --------------------------------------------------------------------------- #
-# "Scoring method" panel (worksheet metric card) — reference-curve plot, inputs,
-# equation, what-if sliders, and the scoring criteria moved out of the ⓘ.
+# "Scoring method" panel (worksheet metric card) — inputs, equation, and the
+# scoring criteria. Definition/rationale/limitations moved to the docs site's
+# Screening Metric Reference; the reference-curve plot and what-if sliders are gone.
 # --------------------------------------------------------------------------- #
-_RANK_WORST = {"Poor": 0, "Fair": 1, "Good": 2}
-
-
-def _method_slider_id(j):
-    return f"msl_{j}"
-
-
 def _fmt_input(v, inp):
     if v is None:
         return "—"
@@ -482,19 +476,6 @@ def _trace_values(trace):
     The canonical trace records inputs as an ordered list of ``{key, value, source, ...}``
     so provenance travels with each value; the renderers only need the values."""
     return {item["key"]: item.get("value") for item in (trace or {}).get("inputs") or []}
-
-
-def _worst_governing(method, inputs):
-    """Which indicator of a worst-of metric is the more limiting (worse) one."""
-    worst = worst_key = None
-    for key, rate_fn, _bands in method.per_input:
-        v = (inputs or {}).get(key)
-        if v is None:
-            continue
-        r = rate_fn(v)
-        if worst is None or _RANK_WORST[r] < _RANK_WORST[worst]:
-            worst, worst_key = r, key
-    return worst_key
 
 
 def _method_inputs_ui(method, site_inputs):
@@ -568,144 +549,40 @@ def _method_criteria_ui(row, method=None):
     return ui.div(*blocks, class_="easi-method-crit")
 
 
-def _method_docs_ui(row, trace):
-    """Definition, rationale and limitations for the ACTIVE method/variant.
-
-    Reference material read straight off the catalog entry the evaluator used (``methodKey``
-    from the trace), so a fallback variant documents its own breakpoints, basis, limitations
-    and citations rather than the parent's — while the source hierarchy still lists every
-    tier, with the one in use marked. Nothing here moves with the what-if sliders. The
-    site-specific half of the story (which tier produced this number, confidence,
-    completeness, warnings) stays in 'Scoring method'.
-    """
-    mid = row["metricId"]
-    entry = easi_methods.catalog_entry(mid, trace.get("methodKey"))
-    if entry is None:
-        return None
-    active = entry.get("methodKey")
-
-    def _list(tag, items, empty):
-        """A <ul>/<ol> of ``items``, or an italic line when the catalog lists none. An empty
-        Tag is truthy, so the emptiness has to be tested on ``items``, not on the tag."""
-        return tag(*items) if items else ui.p(empty, class_="easi-method-docs-none")
-
-    parts = [ui.h6("Definition"),
-             ui.p(config.METRIC_DEFINITIONS.get(mid)
-                  or "No definition is recorded for this metric.")]
-
-    hierarchy = entry.get("sourceHierarchy") or []
-    if hierarchy:
-        parts += [
-            ui.h6("Automatic source hierarchy"),
-            ui.tags.ol(*[
-                ui.tags.li(
-                    ui.tags.b(f"{tier.get('label') or tier.get('methodKey') or 'Evidence tier'}: "),
-                    tier.get("description") or "—",
-                    (ui.span(" in use", class_="easi-method-docs-flag")
-                     if tier.get("methodKey") == active else None))
-                for tier in hierarchy])]
-
-    parts += [
-        ui.h6("Input rationale"),
-        _list(ui.tags.ul,
-              [ui.tags.li(ui.tags.b(f"{inp.get('label') or inp.get('key') or '—'}: "),
-                          inp.get("rationale") or "—",
-                          (ui.span(" context only", class_="easi-method-docs-flag")
-                           if inp.get("contextOnly") else None))
-               for inp in entry.get("inputs") or []],
-              "This method takes no automated inputs."),
-        ui.h6("Breakpoints"),
-        _list(ui.tags.ul,
-              [ui.tags.li(ui.tags.b(f"{bp.get('label') or '—'}: "), bp.get("description") or "—")
-               for bp in entry.get("breakpoints") or []],
-              "This method assigns a class directly and has no numeric breakpoints."),
-        ui.h6("Basis"),
-        ui.p(entry.get("basisClass") or "—")]
-
-    parts += [
-        ui.h6("Known limitations"),
-        _list(ui.tags.ul, [ui.tags.li(text) for text in entry.get("limitations") or []],
-              "None recorded."),
-        ui.h6("Sources"),
-        _list(ui.tags.ul,
-              [ui.tags.li(ui.tags.a(c.get("title") or c["key"], href=c["url"],
-                                    target="_blank", rel="noopener noreferrer"))
-               for c in easi_methods.citations_for(entry) if c.get("url")],
-              "No external source is cited.")]
-    return ui.div(*parts, class_="easi-method-docs")
-
-
-def _method_body_ui(mid, method, row, trace, site_inputs, explored):
-    """Inputs-used + equation + the reference-curve plot (or the categorical decision
-    table)."""
-    parts = []
-    site_rating = row.get("generatedRating")
+def _method_body_ui(method, row, site_inputs):
+    """How the number is computed: inputs used plus equation, or (for categorical metrics) the
+    decision table. The reference-curve plot and what-if sliders were removed; the scoring
+    breakpoints live in 'Scoring criteria' and on the docs site's Screening Metric Reference."""
     if method.mode == "categorical":
-        parts.append(ui.HTML(method_plot.decision_html(method, site_rating)))
-    else:
-        parts.append(_method_inputs_ui(method, site_inputs))
-        if method.equation:
-            parts.append(ui.div(ui.span("Equation", class_="easi-method-equation-label"),
-                                ui.tags.code(method.equation),
-                                class_="easi-method-equation"))
-        if method.mode == "worst":
-            gov = _worst_governing(method, site_inputs)
-            parts.append(ui.HTML(method_plot.worst_svg(method, site_inputs, explored, gov)))
-        else:  # scalar | combined | count
-            ev = easi_methods.evaluate_method(method, explored)
-            parts.append(ui.HTML(method_plot.scalar_svg(
-                method, trace.get("combinedValue"), site_rating,
-                ev.get("value"), ev.get("rating"))))
+        return ui.HTML(method_plot.decision_html(method, row.get("generatedRating")))
+    parts = [_method_inputs_ui(method, site_inputs)]
+    if method.equation:
+        parts.append(ui.div(ui.span("Equation", class_="easi-method-equation-label"),
+                            ui.tags.code(method.equation),
+                            class_="easi-method-equation"))
     return ui.TagList(*parts)
 
 
 def _method_expander(mid, scoring_trace):
-    """The three stacked method sections on a metric card (skeleton part). The plot, criteria and
-    docs are nested output slots (so slider drags don't re-render the card / remount the XS widget);
-    the what-if sliders + 'Reset to site' live here, seeded from the site inputs."""
+    """The two stacked method sections on a metric card (skeleton part). Body and criteria are
+    nested output slots so a data-source swap re-renders in place without remounting the card or
+    the cross-section widget. Definition, rationale and limitations now live on the docs site's
+    Screening Metric Reference, and the reference-curve plot and what-if sliders were removed."""
     method = easi_methods.resolve(mid, (scoring_trace or {}).get("methodKey"),
                                   (scoring_trace or {}).get("context"))
     if method is None:
         return None
-    site_inputs = _trace_values(scoring_trace)
-    controls = None
-    specs = easi_methods.slider_specs(method, site_inputs)
-    if specs:
-        sliders = []
-        for j, (inp, sv, (lo, hi, step)) in enumerate(specs):
-            val = sv if sv is not None else lo
-            if inp.integer:
-                val, lo, hi = int(round(val)), int(lo), int(hi)
-            sliders.append(ui.input_slider(
-                _method_slider_id(j), inp.label, min=lo, max=hi, value=val, step=step,
-                ticks=False, post=(f" {inp.unit}" if inp.unit else None)))
-        controls = ui.div(
-            ui.div(ui.div(ui.span("Explore values", class_="easi-method-controls-title"),
-                          ui.span("does not change the report",
-                                  class_="easi-method-controls-sub")),
-                   ui.tags.button("Reset to site", {"type": "button", "data-mid": mid},
-                                  class_="easi-method-reset"),
-                   class_="easi-method-controls-head"),
-            *sliders, class_="easi-method-controls")
-    # Three stacked sections, all collapsed by default so the card opens compact and the reviewer
-    # chooses what to read: the reference curve + what-if sliders, the scoring criteria, then the
-    # catalog definition/rationale/limitations. All carry class "easi-method" so the JS
-    # toggle→resize listener fires for any of them; only the first has sliders, so the other two
-    # resize to a harmless no-op.
+    # Two stacked sections, both collapsed by default so the card opens compact: how the number is
+    # computed (inputs + equation, or the categorical decision table), then the scoring criteria.
     return ui.TagList(
         ui.tags.details(
             ui.tags.summary("Scoring method", class_="easi-rollup-sum"),
             ui.output_ui("method_body"),
-            controls,
             class_="easi-method", **{"data-mid": mid}),
         ui.tags.details(
             ui.tags.summary("Scoring criteria", class_="easi-rollup-sum"),
             ui.output_ui("method_criteria"),
-            class_="easi-method easi-method-critsec", **{"data-mid": mid}),
-        ui.tags.details(
-            ui.tags.summary("Definition, rationale, and limitations", class_="easi-rollup-sum"),
-            ui.output_ui("method_docs"),
-            class_="easi-method easi-method-docsec", **{"data-mid": mid}))
+            class_="easi-method easi-method-critsec", **{"data-mid": mid}))
 
 
 def _fmt2(x):
@@ -2298,10 +2175,10 @@ def server(input, output, session):
             return None
         return mid, row, trace, method, _trace_values(trace)
 
-    # suspend_when_hidden=False: these three slots live inside a collapsed <details> (display:none),
-    # which Shiny would otherwise suspend (never compute) until first opened — so the plot, criteria
-    # and docs would be blank on open. They read scored() + the what-if sliders and re-render in
-    # place, keeping slider drags off the fn_panel skeleton (the XS widget stays mounted).
+    # suspend_when_hidden=False: these two slots live inside a collapsed <details> (display:none),
+    # which Shiny would otherwise suspend (never compute) until first opened — so the body and
+    # criteria would be blank on open. They read scored() and re-render in place on a source swap
+    # or override, keeping the fn_panel skeleton (and the mounted cross-section widget) untouched.
     @output(suspend_when_hidden=False)
     @render.ui
     def method_body():
@@ -2310,16 +2187,8 @@ def server(input, output, session):
         ctx = _cur_method()
         if ctx is None:
             return None
-        mid, row, trace, method, site_inputs = ctx
-        explored = dict(site_inputs)
-        for j, (inp, sv, _rng) in enumerate(easi_methods.slider_specs(method, site_inputs)):
-            try:
-                v = input[_method_slider_id(j)]()
-            except Exception:  # noqa: BLE001 — slider not created yet on first paint
-                v = sv
-            if v is not None:
-                explored[inp.key] = v
-        return _method_body_ui(mid, method, row, trace, site_inputs, explored)
+        _mid, row, _trace, method, site_inputs = ctx
+        return _method_body_ui(method, row, site_inputs)
 
     @output(suspend_when_hidden=False)
     @render.ui
@@ -2330,28 +2199,6 @@ def server(input, output, session):
         if ctx is None:
             return None
         return _method_criteria_ui(ctx[1], ctx[3])
-
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def method_docs():
-        if current_step() not in (STEP_ASSESS, STEP_REPORT):
-            return None
-        ctx = _cur_method()
-        if ctx is None:
-            return None
-        return _method_docs_ui(ctx[1], ctx[2])          # row, trace
-
-    @reactive.effect
-    @reactive.event(input.method_reset)
-    def _method_reset():
-        ctx = _cur_method()
-        if ctx is None:
-            return
-        _mid, _row, _trace, method, site_inputs = ctx
-        for j, (inp, sv, (lo, _hi, _step)) in enumerate(
-                easi_methods.slider_specs(method, site_inputs)):
-            val = sv if sv is not None else lo
-            ui.update_slider(_method_slider_id(j), value=int(round(val)) if inp.integer else val)
 
     @render.ui
     def fn_scorecard():
