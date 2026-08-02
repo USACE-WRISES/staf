@@ -1,0 +1,18 @@
+{
+  "assessmentId": "northeastern-highlands",
+  "assessmentName": "Northeastern Highlands reference assessment",
+  "version": 2,
+  "updatedAt": "2026-07-29T17:26:39Z",
+  "author": "StreamCurves Regional Analysis Agent",
+  "revisionNotes": "Reference tier: least_disturbed (screening preset functional, method direct_engine). Retained 33 of 71 candidates.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "58",
+    "name": "Northeastern Highlands"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+  "contentDigest": "sha256:cdb68461dbed1333f2a96e9022a0013b8da0957cab8b902ae9e4780e35fe1f5f",
+  "supersedesVersion": 1
+}

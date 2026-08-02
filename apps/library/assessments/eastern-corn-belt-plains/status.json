@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "eastern-corn-belt-plains",
+  "history": [
+    {
+      "version": 1,
+      "status": "preliminary",
+      "actor": "StreamCurves Regional Analysis Agent",
+      "timestamp": "2026-07-28T19:52:29Z",
+      "note": "Published new version."
+    }
+  ]
+}

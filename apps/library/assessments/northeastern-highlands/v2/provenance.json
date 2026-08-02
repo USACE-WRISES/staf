@@ -1,0 +1,5283 @@
+{
+  "schemaVersion": 2,
+  "inputsDigest": "sha256:1e8f14dadffb0aa9f873fba678d6f4be47d4eeac4db9789f75427b8c28c3ddfd",
+  "manifest": {
+    "schemaVersion": 1,
+    "region": {
+      "kind": "ecoregion",
+      "code": "58",
+      "name": "Northeastern Highlands"
+    },
+    "startedAt": "2026-07-29T17:26:32.558565+00:00",
+    "finishedAt": "2026-07-29T17:26:38.558313+00:00",
+    "agent": {
+      "module": "streamcurves.regional_agent",
+      "agentVersion": "regional-agent-1",
+      "argv": [
+        "--l3",
+        "58",
+        "--name",
+        "Northeastern Highlands",
+        "--out",
+        "../../notes/2026-07-23_StreamCurves_Methodology/runs/nh-58",
+        "--screen",
+        "functional",
+        "--publish-root",
+        "../library",
+        "--maintainer",
+        "gtmenichino"
+      ],
+      "gitCommit": "dd4f2693373c5034ce0815124e436eca643dc02c",
+      "gitDirty": true,
+      "python": "3.12.9",
+      "packages": {
+        "pandas": "3.0.3",
+        "numpy": "2.4.6",
+        "scipy": "1.18.0",
+        "statsmodels": "0.14.6",
+        "pyarrow": "24.0.0"
+      }
+    },
+    "methodology": {
+      "methodology_version": "0.3-provisional",
+      "config_path": "config/methodology/methodology_config.yaml",
+      "config_sha256": "sha256:f6baa54ccb113e2708a1fa20088453b3a1832c9de27a5dfffa98f7c0091d0751",
+      "rule_catalog_path": "config/methodology/rule_catalog.json",
+      "rule_catalog_sha256": "sha256:ebf585a604d09c022895869201d814c55f64a02d06a0b051eadeb81aaabe7c07",
+      "curveMethodVersion": "iqr-seed-1",
+      "screeningMethodVersion": "easi-batch-1"
+    },
+    "configs": [
+      {
+        "path": "config/nrsa_response_directions.yaml",
+        "sha256": "sha256:979bf72b317ee3a866f239f664a9ad3a4445fe3eb2ac491138d8ad9361cb3ac0"
+      },
+      {
+        "path": "config/landscape_response_directions.yaml",
+        "sha256": "sha256:8c25b8a0e2f626344ee0db07f87b1a95ee228dd078807c8c05429caffb2ee441"
+      },
+      {
+        "path": "config/metric_map.yaml",
+        "sha256": "sha256:2a6fd86a5e15f4c71047117aa5d5e7f4c7d672f0e72cd69d2b07d079b647f6dc"
+      },
+      {
+        "path": "config/staf_functions.json",
+        "sha256": "sha256:6a1c10d20a99c552f3f2e4c73bc80911163aa1517ebac15ca7892a75cedd0724"
+      },
+      {
+        "path": "config/national_stratifier_registry.yaml",
+        "sha256": "sha256:2d08cf404957bc812a0ab8d26e25a686b99afd09f9b1f79a707eb5bf8df3ffaa"
+      }
+    ],
+    "inputs": {
+      "nrsa_values": {
+        "path": "data/nrsa_metrics.parquet",
+        "sha256": "sha256:fad9fe4ef8c0c60418759b4e4460a19b6e2366e473b8850684531ea6ef4140e2"
+      },
+      "nrsa_sites": {
+        "path": "data/nrsa_sites.csv",
+        "sha256": "sha256:7cf13e60fcf6ed7a46eda74e16b2770a28ae9e861a2f25606ebb5757b8b8da68"
+      },
+      "easi": {
+        "preset": "direct_engine",
+        "reference_tier": "least_disturbed",
+        "ref02_triggered": false,
+        "n_screened": 71,
+        "n_retained": 33,
+        "method_version": "easi-batch-1"
+      },
+      "streamcat": {
+        "source": "streamcat",
+        "requested": [
+          "bfi",
+          "damdens",
+          "elev",
+          "pctcrop2019",
+          "pcthbwet2019",
+          "pctimp2019",
+          "pctwdwet2019",
+          "precip8110",
+          "rdcrs",
+          "rddens",
+          "runoff"
+        ],
+        "status": "ok",
+        "n_columns": 11,
+        "reason": null,
+        "columns": [
+          "bfiws",
+          "damdensws",
+          "elevws",
+          "pctimp2019ws",
+          "pctcrop2019ws",
+          "pcthbwet2019ws",
+          "pctwdwet2019ws",
+          "precip8110ws",
+          "rddensws",
+          "rdcrsws",
+          "runoffws"
+        ]
+      }
+    },
+    "stratifiers": {
+      "registryVersion": 1,
+      "mode": "advisory",
+      "breakpointPolicy": "Pre-defined categories only. No data-derived binning, so STRAT-08 is satisfied by construction.",
+      "candidates": [
+        {
+          "stratification": "DrainageAreaClass",
+          "display_name": "Drainage Area Class",
+          "source_column": "land_WSAREASQKM",
+          "source_present": true,
+          "breakpoint_source": "pre-defined (national_stratifier_registry.yaml)",
+          "breakpoints": [
+            "<= 10",
+            "> 10 & <= 100",
+            "> 100"
+          ],
+          "levels_declared": [
+            "Headwater (<= 10 km2)",
+            "Small (10 to 100 km2)",
+            "Large (> 100 km2)"
+          ],
+          "levels_populated": [
+            "Headwater (<= 10 km2)",
+            "Small (10 to 100 km2)",
+            "Large (> 100 km2)"
+          ],
+          "level_counts": "Headwater (<= 10 km2)=12|Small (10 to 100 km2)=13|Large (> 100 km2)=8",
+          "min_group_size_rule": 5,
+          "min_populated_n": 8,
+          "eligible": true,
+          "reason": "eligible"
+        },
+        {
+          "stratification": "ChannelSlopeClass",
+          "display_name": "Channel Slope Class",
+          "source_column": "phab_XSLOPE_use",
+          "source_present": true,
+          "breakpoint_source": "pre-defined (national_stratifier_registry.yaml)",
+          "breakpoints": [
+            "<= 0.5",
+            "> 0.5 & <= 2",
+            "> 2"
+          ],
+          "levels_declared": [
+            "Low gradient (<= 0.5%)",
+            "Moderate (0.5 to 2%)",
+            "Steep (> 2%)"
+          ],
+          "levels_populated": [
+            "Low gradient (<= 0.5%)",
+            "Moderate (0.5 to 2%)",
+            "Steep (> 2%)"
+          ],
+          "level_counts": "Low gradient (<= 0.5%)=11|Moderate (0.5 to 2%)=12|Steep (> 2%)=10",
+          "min_group_size_rule": 5,
+          "min_populated_n": 10,
+          "eligible": true,
+          "reason": "eligible"
+        },
+        {
+          "stratification": "ElevationClass",
+          "display_name": "Elevation Class",
+          "source_column": "land_ELEVWS",
+          "source_present": true,
+          "breakpoint_source": "pre-defined (national_stratifier_registry.yaml)",
+          "breakpoints": [
+            "<= 300",
+            "> 300 & <= 1000",
+            "> 1000"
+          ],
+          "levels_declared": [
+            "Lowland (<= 300 m)",
+            "Upland (300 to 1000 m)",
+            "Montane (> 1000 m)"
+          ],
+          "levels_populated": [
+            "Lowland (<= 300 m)",
+            "Upland (300 to 1000 m)"
+          ],
+          "level_counts": "Lowland (<= 300 m)=1|Upland (300 to 1000 m)=32",
+          "min_group_size_rule": 5,
+          "min_populated_n": 1,
+          "eligible": false,
+          "reason": "sparse_level:Lowland (<= 300 m)(n=1)"
+        }
+      ]
+    },
+    "determinism": {
+      "randomSeeds": {},
+      "seedPolicy": "No stochastic step: IQR quantiles, Spearman and Pearson correlation, Kruskal-Wallis and Benjamini-Hochberg are all deterministic. Any future bootstrap (RED-06, STRAT-06 and STRAT-07) must record its seed here.",
+      "orderPolicy": "Metrics in metric_config order; stratifier candidates and their levels in registry-declared order, never data order; redundancy pairs by descending absolute Spearman."
+    },
+    "outputs": {
+      "assessmentId": "northeastern-highlands",
+      "nCurves": 32,
+      "nIntendedMetrics": 31
+    },
+    "inputsDigest": "sha256:1e8f14dadffb0aa9f873fba678d6f4be47d4eeac4db9789f75427b8c28c3ddfd"
+  },
+  "rules_applied": [
+    "CURVE-01",
+    "CURVE-05",
+    "CURVE-07",
+    "DATA-04",
+    "RED-01",
+    "REF-01",
+    "SELECT-01",
+    "STRAT-00",
+    "STRAT-08",
+    "STRAT-09"
+  ],
+  "rules_not_evaluated": [
+    {
+      "rule_id": "CONF-01",
+      "family": "CONF",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "CONF-02",
+      "family": "CONF",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "CURVE-02",
+      "family": "CURVE",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "CURVE-03",
+      "family": "CURVE",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "CURVE-04",
+      "family": "CURVE",
+      "implementation_status": "partial",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "CURVE-06",
+      "family": "CURVE",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "CURVE-07a",
+      "family": "CURVE",
+      "implementation_status": "implemented",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "CURVE-08",
+      "family": "CURVE",
+      "implementation_status": "implemented",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "DATA-01",
+      "family": "DATA",
+      "implementation_status": "partial",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "DATA-02",
+      "family": "DATA",
+      "implementation_status": "partial",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "DATA-03",
+      "family": "DATA",
+      "implementation_status": "partial",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "DATA-05",
+      "family": "DATA",
+      "implementation_status": "implemented",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "DATA-06",
+      "family": "DATA",
+      "implementation_status": "implemented",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "DATA-07",
+      "family": "DATA",
+      "implementation_status": "partial",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "DATA-08",
+      "family": "DATA",
+      "implementation_status": "partial",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "DATA-09",
+      "family": "DATA",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "RED-02",
+      "family": "RED",
+      "implementation_status": "partial",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "RED-03",
+      "family": "RED",
+      "implementation_status": "implemented",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "RED-04",
+      "family": "RED",
+      "implementation_status": "implemented",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "RED-05",
+      "family": "RED",
+      "implementation_status": "implemented",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "RED-06",
+      "family": "RED",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "RED-07",
+      "family": "RED",
+      "implementation_status": "partial",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "REF-02",
+      "family": "REF",
+      "implementation_status": "partial",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "REF-03",
+      "family": "REF",
+      "implementation_status": "implemented",
+      "reason": "implemented but not applicable to this run"
+    },
+    {
+      "rule_id": "SELECT-02",
+      "family": "SELECT",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "STRAT-01",
+      "family": "STRAT",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "STRAT-02",
+      "family": "STRAT",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "STRAT-03",
+      "family": "STRAT",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "STRAT-04",
+      "family": "STRAT",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "STRAT-05",
+      "family": "STRAT",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "STRAT-06",
+      "family": "STRAT",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    },
+    {
+      "rule_id": "STRAT-07",
+      "family": "STRAT",
+      "implementation_status": "not_yet_implemented",
+      "reason": "not implemented in the analysis pipeline"
+    }
+  ],
+  "records": [
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:REF-01:run:reference_screen",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "REF-01",
+      "rule_family": "REF",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "run",
+      "subject": "reference_screen",
+      "inputs": {
+        "preset": "direct_engine"
+      },
+      "thresholds_used": {
+        "ref_fallback_floor": 20
+      },
+      "computed": {
+        "reference_tier": "least_disturbed",
+        "n_retained": 33
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:bent_EPT_NTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bent_EPT_NTAX",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:bent_HPRIME",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bent_HPRIME",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:bent_TOLRPIND",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bent_TOLRPIND",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:bent_TOTLNTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bent_TOTLNTAX",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:chem_CHLA",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_CHLA",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:chem_COND",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_COND",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:chem_NTL_DISS",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_NTL_DISS",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:chem_PH",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_PH",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:chem_PTL",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_PTL",
+      "inputs": {
+        "n_reference": 32
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:chem_TURB",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_TURB",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:fish_NAT_TOTLNTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "fish_NAT_TOTLNTAX",
+      "inputs": {
+        "n_reference": 31
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_BFWD_RAT",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_BFWD_RAT",
+      "inputs": {
+        "n_reference": 32
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_LRBS_use",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_LRBS_use",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_LSUB_DMM",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_LSUB_DMM",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_LWDeqVolM100",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_LWDeqVolM100",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_PCT_FAST",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_PCT_FAST",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_PCT_SAFN",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_PCT_SAFN",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_RP100_cm",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_RP100_cm",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_SINU",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_SINU",
+      "inputs": {
+        "n_reference": 31
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_XBKF_H",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XBKF_H",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_XCDENMID",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XCDENMID",
+      "inputs": {
+        "n_reference": 31
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_XCMGW",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XCMGW",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_XEMBED",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XEMBED",
+      "inputs": {
+        "n_reference": 31
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:phab_XFC_NAT",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XFC_NAT",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:bfiws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bfiws",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:damdensws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "damdensws",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:pctcrop2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "pctcrop2019ws",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:pcthbwet2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "pcthbwet2019ws",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:pctimp2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "pctimp2019ws",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:pctwdwet2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "pctwdwet2019ws",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:rdcrsws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "rdcrsws",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:DATA-04:metric:rddensws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "DATA-04",
+      "rule_family": "DATA",
+      "threshold_status": "calibrated",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "rddensws",
+      "inputs": {
+        "n_reference": 33
+      },
+      "thresholds_used": {
+        "min_n_auto": 20,
+        "exploratory_n": 10
+      },
+      "computed": {
+        "disposition": "adequate"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:chem_COND|chem_PH",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "chem_COND|chem_PH",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.8643543940728003,
+        "pearson": 0.8153280730258549,
+        "same_function": true
+      },
+      "verdict": "review",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": true,
+      "review_triggers": [
+        "redundant_pair"
+      ],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:rdcrsws|rddensws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "rdcrsws|rddensws",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.795787079454044,
+        "pearson": 0.521562101786091,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:chem_PTL|chem_TURB",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "chem_PTL|chem_TURB",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.7898451137562919,
+        "pearson": 0.8446038526939025,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:phab_LSUB_DMM|phab_PCT_SAFN",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "phab_LSUB_DMM|phab_PCT_SAFN",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": -0.7885936860134068,
+        "pearson": -0.9442580957153197,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:phab_RP100_cm|phab_XCDENMID",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "phab_RP100_cm|phab_XCDENMID",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": -0.760560544242219,
+        "pearson": -0.6410648337603554,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:pctimp2019ws|rddensws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "pctimp2019ws|rddensws",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.738323703067675,
+        "pearson": 0.6957156897384764,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:phab_PCT_SAFN|phab_XEMBED",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "phab_PCT_SAFN|phab_XEMBED",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.7208155529733334,
+        "pearson": 0.7162733353682553,
+        "same_function": true
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:bent_HPRIME|bent_TOTLNTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "bent_HPRIME|bent_TOTLNTAX",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.7015675971808703,
+        "pearson": 0.7271444673616452,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:phab_LSUB_DMM|phab_PCT_FAST",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "phab_LSUB_DMM|phab_PCT_FAST",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.6704565297508479,
+        "pearson": 0.6461035453517222,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:pctcrop2019ws|rddensws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "pctcrop2019ws|rddensws",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.6700606320508372,
+        "pearson": 0.5502969044066586,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:chem_COND|pctimp2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "chem_COND|pctimp2019ws",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.6641564920792441,
+        "pearson": 0.6061130788145962,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:pctimp2019ws|rdcrsws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "RED-01",
+      "rule_family": "RED",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric_pair",
+      "subject": "pctimp2019ws|rdcrsws",
+      "inputs": {},
+      "thresholds_used": {
+        "strong_abs_spearman": 0.8
+      },
+      "computed": {
+        "spearman": 0.6501974598568058,
+        "pearson": 0.43807359716335553,
+        "same_function": false
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-08:stratifier:DrainageAreaClass",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "STRAT-08",
+      "rule_family": "STRAT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "stratifier",
+      "subject": "DrainageAreaClass",
+      "inputs": {
+        "source_column": "land_WSAREASQKM"
+      },
+      "thresholds_used": {
+        "max_bins": 3
+      },
+      "computed": {
+        "breakpoint_source": "pre-defined (national_stratifier_registry.yaml)",
+        "n_levels_declared": 3
+      },
+      "verdict": "pass",
+      "recommendation": "Breakpoints are declared constants, not sample-derived.",
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-00:stratifier:DrainageAreaClass",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "STRAT-00",
+      "rule_family": "STRAT",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "stratifier",
+      "subject": "DrainageAreaClass",
+      "inputs": {
+        "source_column": "land_WSAREASQKM",
+        "levels_populated": [
+          "Headwater (<= 10 km2)",
+          "Small (10 to 100 km2)",
+          "Large (> 100 km2)"
+        ]
+      },
+      "thresholds_used": {
+        "min_group_size": 5,
+        "fdr_q": 0.05
+      },
+      "computed": {
+        "eligible": true,
+        "level_counts": "Headwater (<= 10 km2)=12|Small (10 to 100 km2)=13|Large (> 100 km2)=8",
+        "reason": "eligible"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-08:stratifier:ChannelSlopeClass",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "STRAT-08",
+      "rule_family": "STRAT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "stratifier",
+      "subject": "ChannelSlopeClass",
+      "inputs": {
+        "source_column": "phab_XSLOPE_use"
+      },
+      "thresholds_used": {
+        "max_bins": 3
+      },
+      "computed": {
+        "breakpoint_source": "pre-defined (national_stratifier_registry.yaml)",
+        "n_levels_declared": 3
+      },
+      "verdict": "pass",
+      "recommendation": "Breakpoints are declared constants, not sample-derived.",
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-00:stratifier:ChannelSlopeClass",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "STRAT-00",
+      "rule_family": "STRAT",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "stratifier",
+      "subject": "ChannelSlopeClass",
+      "inputs": {
+        "source_column": "phab_XSLOPE_use",
+        "levels_populated": [
+          "Low gradient (<= 0.5%)",
+          "Moderate (0.5 to 2%)",
+          "Steep (> 2%)"
+        ]
+      },
+      "thresholds_used": {
+        "min_group_size": 5,
+        "fdr_q": 0.05
+      },
+      "computed": {
+        "eligible": true,
+        "level_counts": "Low gradient (<= 0.5%)=11|Moderate (0.5 to 2%)=12|Steep (> 2%)=10",
+        "reason": "eligible"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-08:stratifier:ElevationClass",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "STRAT-08",
+      "rule_family": "STRAT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "stratifier",
+      "subject": "ElevationClass",
+      "inputs": {
+        "source_column": "land_ELEVWS"
+      },
+      "thresholds_used": {
+        "max_bins": 3
+      },
+      "computed": {
+        "breakpoint_source": "pre-defined (national_stratifier_registry.yaml)",
+        "n_levels_declared": 3
+      },
+      "verdict": "pass",
+      "recommendation": "Breakpoints are declared constants, not sample-derived.",
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-00:stratifier:ElevationClass",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "STRAT-00",
+      "rule_family": "STRAT",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "stratifier",
+      "subject": "ElevationClass",
+      "inputs": {
+        "source_column": "land_ELEVWS",
+        "levels_populated": [
+          "Lowland (<= 300 m)",
+          "Upland (300 to 1000 m)"
+        ]
+      },
+      "thresholds_used": {
+        "min_group_size": 5,
+        "fdr_q": 0.05
+      },
+      "computed": {
+        "eligible": false,
+        "level_counts": "Lowland (<= 300 m)=1|Upland (300 to 1000 m)=32",
+        "reason": "sparse_level:Lowland (<= 300 m)(n=1)"
+      },
+      "verdict": "not_applicable",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-09:stratifier:DrainageAreaClass",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "STRAT-09",
+      "rule_family": "STRAT",
+      "threshold_status": "provisional",
+      "implementation_status": "implemented",
+      "subject_kind": "stratifier",
+      "subject": "DrainageAreaClass",
+      "inputs": {},
+      "thresholds_used": {
+        "fdr_q": 0.05
+      },
+      "computed": {
+        "n_metrics_tested": 32,
+        "n_significant": 13,
+        "consistency_score": 0.644,
+        "tier": "Broad-Use Candidate"
+      },
+      "verdict": "review",
+      "recommendation": "Passed STRAT-00 screening. The curves were built unstratified; applying it is a human decision.",
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": true,
+      "review_triggers": [
+        "advisory_stratifier_not_applied"
+      ],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-09:stratifier:ChannelSlopeClass",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "STRAT-09",
+      "rule_family": "STRAT",
+      "threshold_status": "provisional",
+      "implementation_status": "implemented",
+      "subject_kind": "stratifier",
+      "subject": "ChannelSlopeClass",
+      "inputs": {},
+      "thresholds_used": {
+        "fdr_q": 0.05
+      },
+      "computed": {
+        "n_metrics_tested": 32,
+        "n_significant": 9,
+        "consistency_score": 0.51,
+        "tier": "Broad-Use Candidate"
+      },
+      "verdict": "review",
+      "recommendation": "Passed STRAT-00 screening. The curves were built unstratified; applying it is a human decision.",
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": true,
+      "review_triggers": [
+        "advisory_stratifier_not_applied"
+      ],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:bent_EPT_NTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "bent_EPT_NTAX",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:bent_HPRIME",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "bent_HPRIME",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:bent_TOLRPIND",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "bent_TOLRPIND",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:bent_TOTLNTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "bent_TOTLNTAX",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:chem_CHLA",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "chem_CHLA",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:chem_COND",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "chem_COND",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:chem_NTL_DISS",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "chem_NTL_DISS",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:chem_PH",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "chem_PH",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:chem_PTL",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "chem_PTL",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:chem_TURB",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "chem_TURB",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:fish_NAT_TOTLNTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "fish_NAT_TOTLNTAX",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_BFWD_RAT",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_BFWD_RAT",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_LRBS_use",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_LRBS_use",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "degenerate",
+        "reasons": [
+          "Non-positive or non-finite Q25 produced a fallback curve."
+        ]
+      },
+      "verdict": "review",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": true,
+      "review_triggers": [
+        "curve_needs_review"
+      ],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_LSUB_DMM",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_LSUB_DMM",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_LWDeqVolM100",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_LWDeqVolM100",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_PCT_FAST",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_PCT_FAST",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_PCT_SAFN",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_PCT_SAFN",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_RP100_cm",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_RP100_cm",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_SINU",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_SINU",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_XBKF_H",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_XBKF_H",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_XCDENMID",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_XCDENMID",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_XCMGW",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_XCMGW",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_XEMBED",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_XEMBED",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_XFC_NAT",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_XFC_NAT",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:bfiws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "bfiws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:damdensws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "damdensws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:pctcrop2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "pctcrop2019ws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:pcthbwet2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "pcthbwet2019ws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:pctimp2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "pctimp2019ws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:pctwdwet2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "pctwdwet2019ws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:rdcrsws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "rdcrsws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:rddensws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-07",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "rddensws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "curve_status": "auto_ok",
+        "reasons": []
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:bent_EPT_NTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bent_EPT_NTAX",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:bent_HPRIME",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bent_HPRIME",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:bent_TOLRPIND",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bent_TOLRPIND",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:bent_TOTLNTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bent_TOTLNTAX",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:chem_CHLA",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_CHLA",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:chem_COND",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_COND",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:chem_NTL_DISS",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_NTL_DISS",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:chem_PH",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_PH",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:chem_PTL",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_PTL",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:chem_TURB",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "chem_TURB",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:fish_NAT_TOTLNTAX",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "fish_NAT_TOTLNTAX",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_BFWD_RAT",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_BFWD_RAT",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_LRBS_use",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_LRBS_use",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_LSUB_DMM",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_LSUB_DMM",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_LWDeqVolM100",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_LWDeqVolM100",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_PCT_FAST",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_PCT_FAST",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_PCT_SAFN",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_PCT_SAFN",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_RP100_cm",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_RP100_cm",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_SINU",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_SINU",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_XBKF_H",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XBKF_H",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_XCDENMID",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XCDENMID",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_XCMGW",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XCMGW",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_XEMBED",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XEMBED",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:phab_XFC_NAT",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "phab_XFC_NAT",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:bfiws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "bfiws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:damdensws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "damdensws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:pctcrop2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "pctcrop2019ws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:pcthbwet2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "pcthbwet2019ws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:pctimp2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "pctimp2019ws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:pctwdwet2019ws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "pctwdwet2019ws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:rdcrsws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "rdcrsws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-01:metric:rddensws",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-01",
+      "rule_family": "CURVE",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "subject_kind": "metric",
+      "subject": "rddensws",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "family": "iqr-seed piecewise-linear",
+        "method_version": "iqr-seed-1"
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-05:metric:chem_DOC",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-05",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "chem_DOC",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "reason": "uncertain"
+      },
+      "verdict": "review",
+      "recommendation": "No curated ecological direction; no curve was built.",
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": true,
+      "review_triggers": [
+        "direction_unresolved"
+      ],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-05:metric:phab_XBKA",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "CURVE-05",
+      "rule_family": "CURVE",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "metric",
+      "subject": "phab_XBKA",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "reason": "uncertain"
+      },
+      "verdict": "review",
+      "recommendation": "No curated ecological direction; no curve was built.",
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": true,
+      "review_triggers": [
+        "direction_unresolved"
+      ],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:catchment-hydrology",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "catchment-hydrology",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:surface-water-storage",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "surface-water-storage",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:reach-inflow",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "reach-inflow",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 1
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:streamflow-regime",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "streamflow-regime",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:low-flow-baseflow-dynamics",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "low-flow-baseflow-dynamics",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:high-flow-dynamics",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "high-flow-dynamics",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 1
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:floodplain-connectivity",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "floodplain-connectivity",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:hyporheic-connectivity",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "hyporheic-connectivity",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:channel-evolution",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "channel-evolution",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:channel-floodplain-dynamics",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "channel-floodplain-dynamics",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 1
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:sediment-continuity",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "sediment-continuity",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 1
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:bed-composition-bedform-dynamics",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "bed-composition-bedform-dynamics",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 3
+      },
+      "verdict": "review",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": true,
+      "review_triggers": [
+        "more_than_two_metrics"
+      ],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:light-thermal-regime",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "light-thermal-regime",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:carbon-processing",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "carbon-processing",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 1
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:nutrient-cycling",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "nutrient-cycling",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:water-soil-quality",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "water-soil-quality",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 3
+      },
+      "verdict": "review",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": true,
+      "review_triggers": [
+        "more_than_two_metrics"
+      ],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:habitat-provision",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "habitat-provision",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:population-support",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "population-support",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:community-dynamics",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "community-dynamics",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 3
+      },
+      "verdict": "review",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": true,
+      "review_triggers": [
+        "more_than_two_metrics"
+      ],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    },
+    {
+      "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:watershed-connectivity",
+      "run_id": "sha256:1e8f14dadffb0aa9",
+      "ecoregion_code": "58",
+      "rule_id": "SELECT-01",
+      "rule_family": "SELECT",
+      "threshold_status": "provisional",
+      "implementation_status": "partial",
+      "subject_kind": "function",
+      "subject": "watershed-connectivity",
+      "inputs": {},
+      "thresholds_used": {},
+      "computed": {
+        "n_metrics": 2
+      },
+      "verdict": "pass",
+      "recommendation": null,
+      "confidence": {
+        "score": null,
+        "label": null,
+        "basis": "categorical_proxy"
+      },
+      "review_required": false,
+      "review_triggers": [],
+      "timestamp": "2026-07-29T17:26:32.558565+00:00",
+      "reviewer": null,
+      "reviewer_action": null,
+      "reviewer_rationale": null,
+      "reviewed_at": null
+    }
+  ],
+  "counts": {
+    "total": 139,
+    "by_family": {
+      "REF": 1,
+      "DATA": 32,
+      "RED": 12,
+      "STRAT": 8,
+      "CURVE": 66,
+      "SELECT": 20
+    },
+    "by_verdict": {
+      "pass": 129,
+      "review": 9,
+      "not_applicable": 1
+    },
+    "review_required": 9
+  },
+  "reviewQueue": {
+    "schemaVersion": 1,
+    "inputsDigest": "sha256:1e8f14dadffb0aa9f873fba678d6f4be47d4eeac4db9789f75427b8c28c3ddfd",
+    "generatedAt": "2026-07-29T17:26:32.558565+00:00",
+    "protocol": "pilot",
+    "counts": {
+      "open": 9,
+      "blocking": 0,
+      "byPriority": {
+        "2": 3,
+        "3": 1,
+        "4": 5
+      }
+    },
+    "items": [
+      {
+        "item_id": "CURVE-07:phab_LRBS_use",
+        "priority": 2,
+        "priority_basis": {
+          "note": "Review Priority (impact x uncertainty x novelty) is CONF / not_yet_implemented. Ordering is by hard stop then impact tier, not an invented score."
+        },
+        "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-07:metric:phab_LRBS_use",
+        "rule_ids": [
+          "CURVE-07"
+        ],
+        "subject_kind": "metric",
+        "subject": "phab_LRBS_use",
+        "trigger": "curve_needs_review",
+        "evidence": {
+          "curve_status": "degenerate",
+          "reasons": [
+            "Non-positive or non-finite Q25 produced a fallback curve."
+          ]
+        },
+        "question": "Accept this curve as preliminary, adjust it, or drop the metric?",
+        "allowed_actions": [
+          "accept",
+          "accept_with_conditions",
+          "modify",
+          "reject",
+          "request_additional_analysis"
+        ],
+        "blocking": false,
+        "status": "open",
+        "reviewer": null,
+        "reviewer_action": null,
+        "reviewer_rationale": null,
+        "reviewed_at": null
+      },
+      {
+        "item_id": "STRAT-09:ChannelSlopeClass",
+        "priority": 2,
+        "priority_basis": {
+          "note": "Review Priority (impact x uncertainty x novelty) is CONF / not_yet_implemented. Ordering is by hard stop then impact tier, not an invented score."
+        },
+        "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-09:stratifier:ChannelSlopeClass",
+        "rule_ids": [
+          "STRAT-09"
+        ],
+        "subject_kind": "stratifier",
+        "subject": "ChannelSlopeClass",
+        "trigger": "advisory_stratifier_not_applied",
+        "evidence": {
+          "n_metrics_tested": 32,
+          "n_significant": 9,
+          "consistency_score": 0.51,
+          "tier": "Broad-Use Candidate"
+        },
+        "question": "This stratification is significant across metrics. Split the reference curves by it, or keep them unstratified?",
+        "allowed_actions": [
+          "accept",
+          "accept_with_conditions",
+          "modify",
+          "reject",
+          "request_additional_analysis"
+        ],
+        "blocking": false,
+        "status": "open",
+        "reviewer": null,
+        "reviewer_action": null,
+        "reviewer_rationale": null,
+        "reviewed_at": null
+      },
+      {
+        "item_id": "STRAT-09:DrainageAreaClass",
+        "priority": 2,
+        "priority_basis": {
+          "note": "Review Priority (impact x uncertainty x novelty) is CONF / not_yet_implemented. Ordering is by hard stop then impact tier, not an invented score."
+        },
+        "decision_id": "sha256:1e8f14dadffb0aa9:STRAT-09:stratifier:DrainageAreaClass",
+        "rule_ids": [
+          "STRAT-09"
+        ],
+        "subject_kind": "stratifier",
+        "subject": "DrainageAreaClass",
+        "trigger": "advisory_stratifier_not_applied",
+        "evidence": {
+          "n_metrics_tested": 32,
+          "n_significant": 13,
+          "consistency_score": 0.644,
+          "tier": "Broad-Use Candidate"
+        },
+        "question": "This stratification is significant across metrics. Split the reference curves by it, or keep them unstratified?",
+        "allowed_actions": [
+          "accept",
+          "accept_with_conditions",
+          "modify",
+          "reject",
+          "request_additional_analysis"
+        ],
+        "blocking": false,
+        "status": "open",
+        "reviewer": null,
+        "reviewer_action": null,
+        "reviewer_rationale": null,
+        "reviewed_at": null
+      },
+      {
+        "item_id": "RED-01:chem_COND|chem_PH",
+        "priority": 3,
+        "priority_basis": {
+          "note": "Review Priority (impact x uncertainty x novelty) is CONF / not_yet_implemented. Ordering is by hard stop then impact tier, not an invented score."
+        },
+        "decision_id": "sha256:1e8f14dadffb0aa9:RED-01:metric_pair:chem_COND|chem_PH",
+        "rule_ids": [
+          "RED-01"
+        ],
+        "subject_kind": "metric_pair",
+        "subject": "chem_COND|chem_PH",
+        "trigger": "redundant_pair",
+        "evidence": {
+          "spearman": 0.8643543940728003,
+          "pearson": 0.8153280730258549,
+          "same_function": true
+        },
+        "question": "These two metrics carry the same signal for one function. Which one is kept?",
+        "allowed_actions": [
+          "accept",
+          "accept_with_conditions",
+          "modify",
+          "reject",
+          "request_additional_analysis"
+        ],
+        "blocking": false,
+        "status": "open",
+        "reviewer": null,
+        "reviewer_action": null,
+        "reviewer_rationale": null,
+        "reviewed_at": null
+      },
+      {
+        "item_id": "CURVE-05:chem_DOC",
+        "priority": 4,
+        "priority_basis": {
+          "note": "Review Priority (impact x uncertainty x novelty) is CONF / not_yet_implemented. Ordering is by hard stop then impact tier, not an invented score."
+        },
+        "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-05:metric:chem_DOC",
+        "rule_ids": [
+          "CURVE-05"
+        ],
+        "subject_kind": "metric",
+        "subject": "chem_DOC",
+        "trigger": "direction_unresolved",
+        "evidence": {
+          "reason": "uncertain"
+        },
+        "question": "Supply a curated ecological direction, or leave this metric out?",
+        "allowed_actions": [
+          "accept",
+          "accept_with_conditions",
+          "modify",
+          "reject",
+          "request_additional_analysis"
+        ],
+        "blocking": false,
+        "status": "open",
+        "reviewer": null,
+        "reviewer_action": null,
+        "reviewer_rationale": null,
+        "reviewed_at": null
+      },
+      {
+        "item_id": "CURVE-05:phab_XBKA",
+        "priority": 4,
+        "priority_basis": {
+          "note": "Review Priority (impact x uncertainty x novelty) is CONF / not_yet_implemented. Ordering is by hard stop then impact tier, not an invented score."
+        },
+        "decision_id": "sha256:1e8f14dadffb0aa9:CURVE-05:metric:phab_XBKA",
+        "rule_ids": [
+          "CURVE-05"
+        ],
+        "subject_kind": "metric",
+        "subject": "phab_XBKA",
+        "trigger": "direction_unresolved",
+        "evidence": {
+          "reason": "uncertain"
+        },
+        "question": "Supply a curated ecological direction, or leave this metric out?",
+        "allowed_actions": [
+          "accept",
+          "accept_with_conditions",
+          "modify",
+          "reject",
+          "request_additional_analysis"
+        ],
+        "blocking": false,
+        "status": "open",
+        "reviewer": null,
+        "reviewer_action": null,
+        "reviewer_rationale": null,
+        "reviewed_at": null
+      },
+      {
+        "item_id": "SELECT-01:bed-composition-bedform-dynamics",
+        "priority": 4,
+        "priority_basis": {
+          "note": "Review Priority (impact x uncertainty x novelty) is CONF / not_yet_implemented. Ordering is by hard stop then impact tier, not an invented score."
+        },
+        "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:bed-composition-bedform-dynamics",
+        "rule_ids": [
+          "SELECT-01"
+        ],
+        "subject_kind": "function",
+        "subject": "bed-composition-bedform-dynamics",
+        "trigger": "more_than_two_metrics",
+        "evidence": {
+          "n_metrics": 3
+        },
+        "question": "This function carries more than two metrics. Approve or trim?",
+        "allowed_actions": [
+          "accept",
+          "accept_with_conditions",
+          "modify",
+          "reject",
+          "request_additional_analysis"
+        ],
+        "blocking": false,
+        "status": "open",
+        "reviewer": null,
+        "reviewer_action": null,
+        "reviewer_rationale": null,
+        "reviewed_at": null
+      },
+      {
+        "item_id": "SELECT-01:community-dynamics",
+        "priority": 4,
+        "priority_basis": {
+          "note": "Review Priority (impact x uncertainty x novelty) is CONF / not_yet_implemented. Ordering is by hard stop then impact tier, not an invented score."
+        },
+        "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:community-dynamics",
+        "rule_ids": [
+          "SELECT-01"
+        ],
+        "subject_kind": "function",
+        "subject": "community-dynamics",
+        "trigger": "more_than_two_metrics",
+        "evidence": {
+          "n_metrics": 3
+        },
+        "question": "This function carries more than two metrics. Approve or trim?",
+        "allowed_actions": [
+          "accept",
+          "accept_with_conditions",
+          "modify",
+          "reject",
+          "request_additional_analysis"
+        ],
+        "blocking": false,
+        "status": "open",
+        "reviewer": null,
+        "reviewer_action": null,
+        "reviewer_rationale": null,
+        "reviewed_at": null
+      },
+      {
+        "item_id": "SELECT-01:water-soil-quality",
+        "priority": 4,
+        "priority_basis": {
+          "note": "Review Priority (impact x uncertainty x novelty) is CONF / not_yet_implemented. Ordering is by hard stop then impact tier, not an invented score."
+        },
+        "decision_id": "sha256:1e8f14dadffb0aa9:SELECT-01:function:water-soil-quality",
+        "rule_ids": [
+          "SELECT-01"
+        ],
+        "subject_kind": "function",
+        "subject": "water-soil-quality",
+        "trigger": "more_than_two_metrics",
+        "evidence": {
+          "n_metrics": 3
+        },
+        "question": "This function carries more than two metrics. Approve or trim?",
+        "allowed_actions": [
+          "accept",
+          "accept_with_conditions",
+          "modify",
+          "reject",
+          "request_additional_analysis"
+        ],
+        "blocking": false,
+        "status": "open",
+        "reviewer": null,
+        "reviewer_action": null,
+        "reviewer_rationale": null,
+        "reviewed_at": null
+      }
+    ]
+  },
+  "version": 2,
+  "updatedAt": "2026-07-29T17:26:39Z",
+  "contentDigest": "sha256:cdb68461dbed1333f2a96e9022a0013b8da0957cab8b902ae9e4780e35fe1f5f"
+}
