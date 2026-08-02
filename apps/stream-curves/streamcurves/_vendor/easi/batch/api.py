@@ -162,8 +162,9 @@ def _failed_result(site: SiteRequest, delin: dict) -> SiteResult:
     return SiteResult(
         site_id=site.site_id, state="failed",
         input={"lat": site.lat, "lon": site.lon, "comid": site.comid},
-        issues=[Issue(code="delineation_failed", severity="error",
-                      stage="delineation", site_id=site.site_id, retryable=True,
+        issues=[Issue(code=delin.get("code") or "delineation_failed",
+                      severity="error", stage="delineation", site_id=site.site_id,
+                      retryable=bool(delin.get("retryable", True)),
                       message=delin.get("message", "delineation failed"))])
 
 

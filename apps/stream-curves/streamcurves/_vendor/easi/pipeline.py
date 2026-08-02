@@ -23,8 +23,9 @@ from .metrics.base import AnalysisContext
 DEFAULT_REACH_FT = delineation.DEFAULT_REACH_FT
 
 
-def _error(msg: str, lat: float, lon: float, reach_ft: float) -> dict:
-    return {"status": "error", "message": msg,
+def _error(msg: str, lat: float, lon: float, reach_ft: float, *,
+           code: str = "delineation_failed", retryable: bool = True) -> dict:
+    return {"status": "error", "code": code, "retryable": retryable, "message": msg,
             "input": {"lat": lat, "lon": lon, "reach_length_ft": reach_ft}}
 
 
@@ -43,12 +44,29 @@ async def delineate_only(lat: float, lon: float,
             lambda: delineation.run_delineation(
                 lat, lon, reach_length_ft,
                 comid=comid, snapped_lat=lat, snapped_lon=lon))
+    except ImportError as exc:            # ModuleNotFoundError is a subclass
+        # A missing geospatial dependency is a deployment fault, not a transient
+        # outage, so retrying only doubles the wall-clock of a run that cannot
+        # succeed.
+        return _error(f"geospatial engine dependency missing: {exc}", lat, lon,
+                      reach_length_ft, code="engine_dependency_missing",
+                      retryable=False)
     except Exception as exc:  # pragma: no cover - network guard
         return _error(f"delineation failed: {exc}", lat, lon, reach_length_ft)
 
     if d.comid is None:
+        if d.snap_error:
+            # Every snap endpoint errored. This is an outage, not a statement
+            # about the geometry, so it is worth retrying and must not be
+            # reported as "no stream here".
+            return _error(f"Could not reach the NHD snap service: {d.snap_error}",
+                          lat, lon, reach_length_ft,
+                          code="snap_service_error", retryable=True)
+        # The service answered and found nothing. That is a permanent fact about
+        # the geometry, so a second attempt only costs the caller a backoff.
         return _error("No NHD stream found near this point. Click on or near a "
-                      "mapped stream (CONUS only).", lat, lon, reach_length_ft)
+                      "mapped stream (CONUS only).", lat, lon, reach_length_ft,
+                      code="no_stream_found", retryable=False)
 
     ctx_inputs = {
         "lat": d.snapped_lat or lat, "lon": d.snapped_lon or lon, "comid": d.comid,

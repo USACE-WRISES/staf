@@ -49,6 +49,9 @@ class Delineation:
     reach_geojson: Optional[dict] = None
     reach_length_ft: Optional[float] = None
     warnings: list[str] = field(default_factory=list)
+    # Set when the snap SERVICE failed, as opposed to answering "no stream here".
+    # Callers must not report the two the same way: one is transient, one is not.
+    snap_error: Optional[str] = None
 
 
 # --------------------------------------------------------------------------- #
@@ -166,9 +169,40 @@ def flowline_attrs(comid: int) -> dict:
     return out
 
 
+def _comid_from_frame(frame) -> Optional[int]:
+    """First COMID in an NLDI result frame (the column name varies by version)."""
+    if frame is None or len(frame) == 0:
+        return None
+    for col in ("comid", "COMID", "nhdplus_comid", "featureid", "identifier"):
+        if col in frame.columns:
+            try:
+                return int(frame.iloc[0][col])
+            except (TypeError, ValueError):
+                continue
+    try:
+        return int(frame.iloc[0].get(frame.columns[0]))
+    except (TypeError, ValueError, IndexError):
+        return None
+
+
 def snap_point(lat: float, lon: float) -> dict:
-    """Snap (lat,lon) to the nearest NHDPlus COMID and read flowline context."""
+    """Snap (lat,lon) to the nearest NHDPlus COMID and read flowline context.
+
+    Two NLDI endpoints are tried in turn. ``comid_byloc`` (hydrolocation) comes
+    first because it also returns the snapped point geometry, but it runs a
+    server-side raindrop trace that intermittently 502s for points sitting a
+    little off-channel; pynhd then mistakes the error document for data and
+    raises. ``feature_byloc`` (comid/position) merely indexes the point, so it
+    answers when the first endpoint will not.
+
+    ``_snap_error`` is set only when every endpoint *errored*. That is a service
+    failure and must not be reported as "no stream near this point", which is a
+    permanent fact about the geometry. A clean empty result leaves both
+    ``comid`` and ``_snap_error`` unset, which is the genuine no-stream case.
+    """
     from pynhd import NLDI
+
+    from .batch import diagnostics
 
     out: dict[str, Any] = {"comid": None, "gnis_name": None,
                            "drainage_area_sqkm": None, "huc8": None,
@@ -176,38 +210,40 @@ def snap_point(lat: float, lon: float) -> dict:
                            "sinuosity": None,
                            "snapped_lat": None, "snapped_lon": None}
 
-    # NLDI raises (or returns an empty/columnless frame) when the point is far
-    # from any mapped flowline (e.g. offshore). Treat that as "no stream here"
-    # (comid stays None) so the caller shows the friendly guidance message.
-    try:
-        snapped = NLDI().comid_byloc((lon, lat))  # GeoDataFrame
-    except Exception:
-        return out
-    if snapped is None or len(snapped) == 0:
-        return out
-    # comid column name has varied across versions; find it defensively
-    comid = None
-    for col in ("comid", "COMID", "nhdplus_comid", "featureid"):
-        if col in snapped.columns:
-            try:
-                comid = int(snapped.iloc[0][col]); break
-            except (TypeError, ValueError):
-                continue
-    if comid is None:
-        try:
-            comid = int(snapped.iloc[0].get(snapped.columns[0]))
-        except (TypeError, ValueError, IndexError):
-            comid = None
-    out["comid"] = comid
-    try:
-        geom = snapped.iloc[0].geometry
-        if geom is not None and geom.geom_type == "Point":
-            out["snapped_lon"], out["snapped_lat"] = float(geom.x), float(geom.y)
-    except Exception:
-        pass
+    comid: Optional[int] = None
+    snapped_point: Optional[tuple[float, float]] = None
+    errors: list[str] = []
 
-    if comid is not None:
-        out.update(flowline_attrs(comid))
+    for endpoint in ("hydrolocation", "comid/position"):
+        try:
+            nldi = NLDI()
+            frame = (nldi.comid_byloc((lon, lat)) if endpoint == "hydrolocation"
+                     else nldi.feature_byloc((lon, lat)))
+        except Exception as exc:  # pragma: no cover - network guard
+            diagnostics.record_exception(f"nldi_snap[{endpoint}]", exc)
+            errors.append(f"{endpoint}: {exc}")
+            continue
+        comid = _comid_from_frame(frame)
+        if comid is None:
+            continue
+        if endpoint == "hydrolocation":
+            try:
+                geom = frame.iloc[0].geometry
+                if geom is not None and geom.geom_type == "Point":
+                    snapped_point = (float(geom.x), float(geom.y))
+            except Exception:
+                pass
+        break
+
+    if comid is None:
+        if errors:
+            out["_snap_error"] = "; ".join(errors)
+        return out
+
+    out["comid"] = comid
+    if snapped_point is not None:
+        out["snapped_lon"], out["snapped_lat"] = snapped_point
+    out.update(flowline_attrs(comid))
     return out
 
 
@@ -405,6 +441,7 @@ def run_delineation(lat: float, lon: float,
         d.sinuosity = snap.get("sinuosity")
         d.snapped_lat = snap.get("snapped_lat")
         d.snapped_lon = snap.get("snapped_lon")
+        d.snap_error = snap.get("_snap_error")
         if snap.get("_flowline_error"):
             d.warnings.append(f"flowline context: {snap['_flowline_error']}")
 

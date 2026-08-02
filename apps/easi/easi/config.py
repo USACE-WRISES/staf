@@ -128,7 +128,7 @@ METRIC_REGISTRY: dict[str, dict] = {
         "datasource": "streamcat:pctwdwet2019+pcthbwet2019|nwi"},
     "reach-inflow-concentrated-runoff-stormwater-inputs": {
         "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
-        "datasource": "proxy:tiger_crossings+streamcat:rddens"},
+        "datasource": "proxy:streamcat:rddens"},
     "streamflow-regime-flow-alteration-regulation-water-use": {
         "scale": "W/R", "confidence": "M", "proxy": True, "overrideable": True,
         "datasource": "nwis_waterdata|streamcat:damnrmstor,damdens"},
@@ -278,7 +278,8 @@ METRIC_DEFINITIONS: dict[str, str] = {
 # input are listed here; the rest fall back to the "used directly" default in the app.
 METRIC_CALCULATIONS: dict[str, str] = {
     "reach-inflow-concentrated-runoff-stormwater-inputs":
-        "From road–stream crossing and stormwater-outfall density along the reach.",
+        "From watershed road density, a directional proxy. It does not count outfalls "
+        "or road-stream crossings.",
     "streamflow-regime-flow-alteration-regulation-water-use":
         "From upstream dam, diversion, and water-use indicators.",
     "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity":

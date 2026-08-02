@@ -6,8 +6,12 @@ rating/confidence/availability/source-mode, and completeness). Evaluation is
 tri-state: True / False / None (the predicate's evidence is unavailable, so it is
 skipped, never counted as a failure). An empty rule is ``not_evaluable``.
 
-Two presets ship:
-  functional            raw ECI > 0.69
+Four presets ship. The three ECI-threshold presets cut at the ``config.INDEX_BANDS``
+boundaries, so each one selects exactly a ``config.INDEX_BAND_LABELS`` condition
+category (see ``scoring.index_band_label``):
+  functional            raw ECI > 0.69   (Functioning)
+  at_risk_or_better     raw ECI > 0.39   (Functioning or Functioning-at-Risk)
+  all_sites             raw ECI >= 0.0   (any site that scored)
   reference_condition   raw ECI > 0.69 AND every available sub-index > 0.69
                         AND every available function score > 10
 """
@@ -56,6 +60,13 @@ CRITERIA_FIELDS = {
 
 PRESETS: dict[str, dict] = {
     "functional": {"field": "eci", "cmp": ">", "value": 0.69},
+    "at_risk_or_better": {"field": "eci", "cmp": ">", "value": 0.39},
+    # No condition threshold: every site that produced an ECI qualifies. A site
+    # that never scored yields None here, so it stays not_evaluable rather than
+    # being retained on absent evidence.
+    "all_sites": {"field": "eci", "cmp": ">=", "value": 0.0},
+    # Kept resolvable for archived batch requests and saved sessions; not offered
+    # in the StreamCurves dropdown.
     "reference_condition": {"op": "and", "rules": [
         {"field": "eci", "cmp": ">", "value": 0.69},
         {"field": "every_sub_index", "cmp": ">", "value": 0.69},
