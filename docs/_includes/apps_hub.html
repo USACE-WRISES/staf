@@ -8,6 +8,9 @@
     </div>
     <p class="apps-hub-fullname">{{ app.full_name }}</p>
     <p class="apps-hub-desc">{{ app.description }}</p>
+    {% if app.walkthrough %}
+    <a class="apps-hub-walkthrough" href="{{ app.walkthrough | relative_url }}">Watch the walkthrough</a>
+    {% endif %}
     <a class="btn btn-primary apps-hub-launch" href="{{ app.url }}" target="_blank" rel="noopener">Launch {{ app.name }} &#8599;</a>
   </div>
   {% endunless %}

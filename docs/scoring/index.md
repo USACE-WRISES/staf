@@ -46,19 +46,6 @@ description: "How metrics roll up to functions, outcomes, and overall condition.
 </details>
 
 <details class="tier-how-it-works">
-  <summary>Two-indicator scoring (Catchment hydrology)</summary>
-  <p>Most functions are assessed with a single indicator per tier. <strong>Catchment hydrology</strong> uses two, because either urban or agricultural land cover can drive the hydrologic alteration: <strong>impervious cover</strong> (Good below 10%, Fair 10 to 25%, Poor above 25%; the Center for Watershed Protection Impervious Cover Model) and <strong>agricultural land cover</strong> (Good below 25%, Fair 25 to 50%, Poor above 50%), for watersheds where farming (tile drainage, ditching, loss of perennial vegetation, soil compaction, diversions), not pavement, is the dominant pressure.</p>
-  <p>Both indicators are computed from the delineated watershed, and the function is scored automatically on whichever is <strong>more limiting</strong> (the worse rating), because catchment hydrology is impaired if either pressure is high. The report names the governing driver and shows both values. The agricultural thresholds are provisional and meant to be calibrated regionally with subject-matter-expert review.</p>
-</details>
-
-<details class="tier-how-it-works">
-  <summary>Natural riparian vegetation (Detrital processing)</summary>
-  <p>The screening proxy for <strong>Detrital processing (CPOM retention)</strong> is the percent of the 100 m riparian buffer in <strong>natural vegetation</strong> (forest, shrub, grassland, or wetland), not forest alone. In grassland and arid or xeric ecoregions the natural riparian buffer is non-forest, so counting only forest would wrongly score those streams low. The site's EPA Level III ecoregion is reported with the basin characteristics; verify the buffer on the aerial basemap, especially where the natural cover is non-forest.</p>
-</details>
-
-<p class="screening-ref-link">Looking for the detail behind these screens? The <a href="{{ site.baseurl }}/screening-metrics/">Screening Metric Reference</a> lists every screening metric with its definition, Good / Fair / Poor breakpoints, input rationale, known limitations, and sources.</p>
-
-<details class="tier-how-it-works">
   <summary>Understanding outcomes and ecosystem condition</summary>
 
   <p><strong>Outcomes</strong> are observable or quantifiable results that are linked to how one or more stream functions operate.</p>

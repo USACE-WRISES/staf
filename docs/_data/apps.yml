@@ -14,6 +14,7 @@
   description: Automated desktop screening using commonly used, nationally applicable metrics.
   url: https://gtmenichino-easi.share.connect.posit.cloud/
   status: live
+  walkthrough: /walkthroughs/easi/
 - id: sfari
   name: SFARI
   full_name: Stream Functions Assessment and Rapid Index
@@ -41,4 +42,4 @@
   description: Builds the reference-curve assessments that DEEP runs. For assessment developers rather than day-to-day users.
   url: https://gtmenichino-stream-curves.share.connect.posit.cloud/
   status: live
-  advanced: true # builder app: linked from Downloads and resources, not shown as a launch card
+  advanced: true # builder app: not shown as a launch card or linked on the site; reachable via the /stream-curves redirect

@@ -1,9 +1,16 @@
 ---
-title: Screening Metric Reference
-nav_order: 6.5
-description: "Per-metric definitions, scoring breakpoints, rationale, and limitations for the 20 automated EASI screening metrics."
+title: EASI Walkthrough
+nav_order: 10
+description: "Video walkthrough of the EASI screening app, with the full reference for its 20 automated screening metrics."
 ---
 {% include staf_page_chrome.html %}
+
+<p>A guided tour of running a screening assessment in EASI (Ecosystem Assessment Screening Index).</p>
+
+<video class="walkthrough-video" controls preload="metadata" src="{{ '/assets/videos/easi-walkthrough.mp4' | relative_url }}?v=20260802">
+  Your browser cannot play this video. <a href="{{ '/assets/videos/easi-walkthrough.mp4' | relative_url }}">Download the video</a> instead.
+</video>
+
 <!--
   Reference content for the Screening tier metrics computed automatically by the EASI app.
   Canonical source (edit there first, then mirror any change here):
@@ -12,10 +19,12 @@ description: "Per-metric definitions, scoring breakpoints, rationale, and limita
   This is a hand-authored static page and does not read the app at build time.
 -->
 
-<p class="metric-ref-intro">The Screening tier rates twenty stream-function metrics automatically from national desktop data, as described on the <a href="{{ site.baseurl }}/scoring/">Scoring and Condition</a> page. The screening app shows the inputs, equation, and Good / Fair / Poor criteria for each metric while you work. This page is the fuller reference: what each metric measures, where its scoring boundaries come from, why each input is used, and the limits to keep in mind when reading a result.</p>
+## Screening metric reference
+
+<p class="metric-ref-intro">The Screening tier rates twenty stream-function metrics automatically from national desktop data, as described on the <a href="{{ site.baseurl }}/scoring/">Scoring and Condition</a> page. The screening app shows the inputs, equation, and Good / Fair / Poor criteria for each metric while you work. The reference below is the fuller detail: what each metric measures, where its scoring boundaries come from, why each input is used, and the limits to keep in mind when reading a result.</p>
 
 
-## Hydrology
+### Hydrology
 
 
 <details class="metric-ref">
@@ -91,7 +100,7 @@ description: "Per-metric definitions, scoring breakpoints, rationale, and limita
 </div></details>
 
 
-## Hydraulics
+### Hydraulics
 
 
 <details class="metric-ref">
@@ -168,7 +177,7 @@ description: "Per-metric definitions, scoring breakpoints, rationale, and limita
 </div></details>
 
 
-## Geomorphology
+### Geomorphology
 
 
 <details class="metric-ref">
@@ -247,7 +256,7 @@ description: "Per-metric definitions, scoring breakpoints, rationale, and limita
 </div></details>
 
 
-## Physicochemistry
+### Physicochemistry
 
 
 <details class="metric-ref">
@@ -324,7 +333,7 @@ description: "Per-metric definitions, scoring breakpoints, rationale, and limita
 </div></details>
 
 
-## Biology
+### Biology
 
 
 <details class="metric-ref">

@@ -1,7 +1,7 @@
 ---
 title: Launch the Apps
 nav_order: 7
-description: "Launch the STAF web applications or download STAF Desktop."
+description: "Launch the STAF web applications."
 ---
 {% include staf_page_chrome.html %}
 
@@ -9,21 +9,11 @@ description: "Launch the STAF web applications or download STAF Desktop."
 
 {% include apps_hub.html %}
 
-## STAF Desktop
-
-STAF Desktop runs the same four tools locally on Windows. Same interface, same results, no admin rights needed. Requires Windows 10/11 and an internet connection; the first launch downloads about 310 MB.
-
-<ul class="tools-downloads">
-  <li><a class="btn btn-primary" href="https://github.com/USACE-WRISES/staf/releases/latest/download/StafDesktop-win-Portable.zip">Download STAF Desktop (zip)</a> <span class="tools-download-note">Extract anywhere and run <code>STAF Desktop.exe</code>.</span></li>
-</ul>
-
 ## Downloads and resources
 
-{% assign curves_app = site.data.apps | where: "id", "curves" | first %}
-<ul class="tools-downloads">
-  <li><button type="button" class="btn btn-primary" data-metric-toolbox-download>Metric Toolbox (Excel)</button> <span class="tools-download-note">The full STAF metric library as a spreadsheet.</span></li>
-  <li><a class="btn" href="{{ site.baseurl }}/assets/docs/STAF_Factsheet.pdf">STAF Factsheet (PDF)</a> <span class="tools-download-note">One-page overview of the framework.</span></li>
-  <li><a class="btn" href="{{ curves_app.url }}" target="_blank" rel="noopener">stream-curves &#8599;</a> <span class="tools-download-note">Reference and Regional Curve Builder web app. For assessment developers.</span></li>
+<ul class="tools-resources">
+  <li><button type="button" class="tools-resource-link" data-metric-toolbox-download>Metric Toolbox (Excel)</button> <span class="tools-resource-note">The full STAF metric library as a spreadsheet.</span></li>
+  <li><a class="tools-resource-link" href="{{ '/assets/docs/STAF_Factsheet.pdf' | relative_url }}">STAF Factsheet (PDF)</a> <span class="tools-resource-note">Overview of the framework.</span></li>
 </ul>
 
 ## References
