@@ -32,6 +32,7 @@ SQT_SUFFIX = "-sqt-adapted"
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
+from streamcurves import deep_export  # noqa: E402
 from streamcurves import geo  # noqa: E402
 from streamcurves import library as lib  # noqa: E402
 from streamcurves import session_io as sio  # noqa: E402
@@ -230,7 +231,35 @@ def _build_bundle(assessment: dict, resolver: Resolver) -> tuple[dict, int, int]
         "applicability": assessment.get("applicability", ""),
         "metricsByFunction": mbf_out,
     }
+    bundle["functionCoverage"] = _inherited_coverage(assessment, mbf_out, default_citation)
     return bundle, resolved, total
+
+
+def _inherited_coverage(assessment: dict, mbf_out: list[dict], citation: str) -> dict:
+    """Coverage block for an SQT transcription.
+
+    These assessments are not derived here -- they transcribe a published state
+    Stream Quantification Tool, so the functions they omit are omitted by the
+    issuing state's workbook. That is a documented inheritance, not a defect, and
+    it must be on the record rather than blocking the publish gate: synthesizing
+    curves for the gaps would fabricate content the state never published.
+    """
+    source = citation or assessment.get("sourceCitation") or "the source SQT"
+    exclusions = [
+        {
+            "functionId": fid,
+            "reason": "no-suitable-metric",
+            "justification": (
+                f"Not addressed by {source}, which this assessment transcribes. "
+                "Coverage is inherited from the source workbook; no metric was "
+                "synthesized for it here."
+            ),
+            "recordedBy": "STAF SQT migration",
+        }
+        for fid in (assessment.get("missingFunctionIds") or [])
+    ]
+    return deep_export.function_coverage(
+        mbf_out, deep_export.deep_read_staf_crosswalk(), exclusions)
 
 
 def _session_payload(assessment: dict, region: dict) -> dict:

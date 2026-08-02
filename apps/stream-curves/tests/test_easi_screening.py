@@ -146,3 +146,164 @@ def test_screen_sites_direct_async_runs_with_stubbed_engine(monkeypatch):
     assert result["criteria"] == "functional"
     assert calls["cancel_is_callable"] is True
     assert ticks["n"] == 1
+
+
+# --- preset wiring ---------------------------------------------------------- #
+def test_preset_choices_resolve_to_engine_presets():
+    # An unknown preset name resolves to None in the engine, which silently marks
+    # every site not_evaluable and retains nothing. Keep the UI and engine in step.
+    from streamcurves._vendor.easi.batch import qualify
+    assert set(easi_screening.SCREENING_PRESET_CHOICES) <= set(qualify.PRESETS)
+    assert easi_screening.DEFAULT_SCREENING_PRESET in qualify.PRESETS
+
+
+def test_preset_choice_labels_are_the_condition_bands():
+    assert list(easi_screening.SCREENING_PRESET_CHOICES.values()) == [
+        "Only Functioning", "Functioning or Functioning-at-Risk", "All sites"]
+
+
+# --- condition band + failure reporting ------------------------------------- #
+def _tables(*sites):
+    from streamcurves._vendor.easi.batch import contracts as C
+    batch = C.BatchResult(sites=list(sites), criteria="functional")
+    return easi_screening.to_screening_tables(batch.to_dict())
+
+
+def _scored(site_id, eci, raw=None):
+    from streamcurves._vendor.easi.batch import contracts as C
+    return C.SiteResult(site_id=site_id, state="succeeded", eci=eci,
+                        raw_eci=eci if raw is None else raw)
+
+
+def test_condition_column_labels_each_band():
+    rows = _tables(_scored("HI", 0.82), _scored("MID", 0.53),
+                   _scored("LO", 0.20))["easi_screening_sites"]
+    assert {r["site_id"]: r["condition"] for r in rows} == {
+        "HI": "Functioning", "MID": "Functioning-at-Risk", "LO": "Non-Functioning"}
+
+
+def test_condition_uses_raw_eci_not_the_rounded_display():
+    # Both display as 0.69, but they fall on opposite sides of the band boundary.
+    # Banding on the rounded value would contradict the retained set.
+    rows = _tables(_scored("UP", 0.69, raw=0.694),
+                   _scored("DOWN", 0.69, raw=0.688))["easi_screening_sites"]
+    by_id = {r["site_id"]: r for r in rows}
+    assert by_id["UP"]["condition"] == "Functioning"
+    assert by_id["DOWN"]["condition"] == "Functioning-at-Risk"
+    assert by_id["UP"]["eci"] == by_id["DOWN"]["eci"] == 0.69
+
+
+def _failed(site_id, message="delineation failed: No module named 'pynhd'"):
+    from streamcurves._vendor.easi.batch import contracts as C
+    return C.SiteResult(
+        site_id=site_id, state="failed",
+        issues=[C.Issue(code="engine_dependency_missing", severity="error",
+                        stage="delineation", site_id=site_id, message=message)],
+        qualification=C.Qualification(auto="not_evaluable", final="pending",
+                                      reasons=["eci > 0.69: skip (no data)"]))
+
+
+def test_failed_site_reports_the_real_cause_not_the_criteria_text():
+    row = _tables(_failed("BAD"))["easi_screening_sites"][0]
+    assert row["issue_code"] == "engine_dependency_missing"
+    assert "pynhd" in row["issue"]
+    # The reason column is what the user reads; it must not say "skip (no data)".
+    assert "pynhd" in row["reason"]
+    assert "skip (no data)" not in row["reason"]
+    assert row["condition"] is None
+
+
+def test_partial_site_is_not_treated_as_failed():
+    # A partial site carries info-level metric_unavailable issues; those are not
+    # the blocking cause and must not overwrite its criteria reason.
+    from streamcurves._vendor.easi.batch import contracts as C
+    site = C.SiteResult(
+        site_id="P", state="partial", eci=0.82, raw_eci=0.82,
+        issues=[C.Issue(code="metric_unavailable", severity="info", stage="metrics",
+                        site_id="P", message="no data")],
+        qualification=C.Qualification(auto="qualified", final="retained",
+                                      reasons=["eci > 0.69: pass"]))
+    row = _tables(site)["easi_screening_sites"][0]
+    assert row["issue"] == ""
+    assert row["reason"] == "eci > 0.69: pass"
+
+
+def test_diagnostics_reach_the_criteria_table():
+    from streamcurves._vendor.easi.batch import contracts as C
+    batch = C.BatchResult(sites=[_scored("A", 0.82)], criteria="functional")
+    batch.diagnostics = {"retries": 2, "timeouts": 1}
+    tables = easi_screening.to_screening_tables(batch.to_dict())
+    assert tables["easi_screening_criteria"]["diagnostics"]["retries"] == 2
+
+
+# --- outcome accounting ----------------------------------------------------- #
+def test_summarize_keeps_unassessed_separate_from_excluded():
+    rows = [
+        {"site_id": "A", "state": "succeeded", "final_decision": "retained"},
+        {"site_id": "B", "state": "succeeded", "final_decision": "excluded"},
+        {"site_id": "C", "state": "failed", "final_decision": "pending"},
+        {"site_id": "D", "state": "cancelled", "final_decision": "pending"},
+    ]
+    c = easi_screening.summarize_screening_rows(rows)
+    assert c["n_screened"] == 4
+    assert c["n_retained"] == 1
+    assert c["n_excluded"] == 1          # not 3: the engine failures are not screen-outs
+    assert c["n_unresolved"] == 2
+    assert c["n_failed"] == 1 and c["n_cancelled"] == 1
+
+
+def test_exclusion_records_tag_provenance():
+    rows = [
+        {"site_id": "A", "state": "succeeded", "final_decision": "retained"},
+        {"site_id": "B", "state": "succeeded", "final_decision": "excluded",
+         "reason": "eci > 0.69: fail"},
+        {"site_id": "C", "state": "failed", "final_decision": "pending",
+         "issue": "No module named 'pynhd'", "reason": "No module named 'pynhd'"},
+        {"site_id": "D", "state": "succeeded", "final_decision": "excluded",
+         "reviewer": "reviewer", "reason": "manual", "reviewer_note": "off-network"},
+    ]
+    by_id = {r["site_id"]: r for r in easi_screening.exclusion_records(rows)}
+    assert "A" not in by_id                       # retained sites are not exclusions
+    assert by_id["B"]["source"] == "screening"
+    assert by_id["C"]["source"] == "unresolved"   # never assessed, not screened out
+    assert "pynhd" in by_id["C"]["reason"]
+    assert by_id["D"]["source"] == "reviewer"
+
+
+# --- seeded COMIDs ---------------------------------------------------------- #
+def test_bundled_nrsa_comids_cover_the_site_that_failed_to_snap():
+    # NRS18_OH_10043's live snap 502s intermittently; EPA already publishes its
+    # reach, so screening should never need to snap it at all.
+    from streamcurves._vendor.easi.datasources.nrsa import comid_by_site_id
+    seeded = comid_by_site_id()
+    assert seeded["NRS18_OH_10043"] == 18509814
+    assert len(seeded) > 1800
+
+
+def test_bundled_nrsa_comids_omit_synthetic_ids():
+    # Some bundled records carry a HUC-derived placeholder for sites that were
+    # never matched to the network. Handing one back as a reach would delineate
+    # nonsense, so they must be dropped and left to snap live.
+    from streamcurves._vendor.easi.datasources.nrsa import comid_by_site_id
+    assert all(c < 1_000_000_000 for c in comid_by_site_id().values())
+    assert "NRS18_KS_10043" not in comid_by_site_id()
+
+
+# --- engine availability guard ---------------------------------------------- #
+def test_engine_available_probes_the_geospatial_stack(monkeypatch):
+    # Regression: the old probe only imported batch.api, which succeeds without
+    # the geo stack because the engine imports it function-locally. That fail-open
+    # let the cloud render Run screening and then fail every site.
+    import importlib.util as ilu
+    real = ilu.find_spec
+
+    def no_pynhd(name, *a, **k):
+        return None if name == "pynhd" else real(name, *a, **k)
+
+    easi_screening.missing_engine_requirements.cache_clear()
+    monkeypatch.setattr(ilu, "find_spec", no_pynhd)
+    try:
+        assert "pynhd" in easi_screening.missing_engine_requirements()
+        assert easi_screening.engine_available() is False
+    finally:
+        easi_screening.missing_engine_requirements.cache_clear()

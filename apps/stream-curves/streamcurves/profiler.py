@@ -631,6 +631,32 @@ def _build_metrics_editor_df(tables) -> pd.DataFrame:
     return metrics_df[_metadata_editor_columns()]
 
 
+def _reattach_extra_metric_columns(prior, metrics_df: pd.DataFrame) -> pd.DataFrame:
+    """Local twin of ``workbook_tables._reattach_extra_metric_columns``.
+
+    Kept private here for the same reason the other workbook helpers are: this
+    module deliberately carries its own copies rather than importing them.
+    """
+    if prior is None or len(prior) == 0 or "metric_key" not in getattr(prior, "columns", []):
+        return metrics_df
+    extras = [
+        c for c in prior.columns
+        if c not in metrics_df.columns and c not in _metadata_editor_columns()
+    ]
+    if not extras:
+        return metrics_df
+
+    def _txt(v) -> str:
+        return "" if (s := as_character_scalar(v)) is None else s
+
+    metrics_df = metrics_df.copy()
+    keys = [_txt(k) for k in prior["metric_key"]]
+    for col in extras:
+        by_key = dict(zip(keys, (_txt(v) for v in prior[col])))
+        metrics_df[col] = [by_key.get(_txt(mk), "") for mk in metrics_df["metric_key"]]
+    return metrics_df
+
+
 def _expanded_removed_strat_keys(stratifications_df, removed_keys) -> list[str]:
     """Cascade: paired strats whose primary/secondary is removed go too."""
     removed = compact_chr(removed_keys)
@@ -669,6 +695,10 @@ def _delete_rows_from_tables(tables, tab_key: str, selected_rows) -> dict:
         keep = keep[
             [c for c in keep.columns if c not in ("allowed_predictors", "allowed_stratifications")]
         ]
+        # _build_metrics_editor_df projects to the editor column list, which omits
+        # curve_form by design; carry it (and any other extra) back or unchecking
+        # one metric column silently turns every two-sided metric monotone.
+        keep = _reattach_extra_metric_columns(tables.get("metrics"), keep)
         tables["metrics"] = _ensure_workbook_sheet_columns(keep, "metrics")
         mp = _metadata_table_to_editor_df(tables.get("metric_predictors"), "metric_predictors")
         tables["metric_predictors"] = _ensure_workbook_sheet_columns(
@@ -1302,6 +1332,159 @@ def reconcile_role_membership(tables, assignments, opts=None) -> dict:
         )
         tables = _add_allow_all_links(tables, fresh)
 
+    return _normalize_workbook_tables(tables)
+
+
+# ---------------------------------------------------------------------------
+# reconcile_tables_with_new_data(...) -> delta-safe wizard rebuild
+# ---------------------------------------------------------------------------
+
+
+def _cell_str(v) -> str:
+    """Editor-df cell to a stripped string ('' for blank/NA)."""
+    s = as_character_scalar(v)
+    return s.strip() if s else ""
+
+
+def _producible_columns(tables, data_cols: set) -> set:
+    """Columns ``derive_variables`` will create over ``data_cols``.
+
+    Honors derive's sequential semantics: derived predictors run first in sheet
+    order (a later one may source an earlier one's output), factor recodes next
+    (sourced on raw columns), custom groups last (may source raw columns,
+    derived outputs, or live recode targets). Dead rows contribute nothing, so a
+    metric or stratification pointed at a dead recode's target is correctly
+    seen as unproducible and pruned.
+    """
+    out: set = set()
+    pdf = _metadata_table_to_editor_df(tables.get("predictors"), "predictors")
+    for _, r in pdf.iterrows():
+        if not _role_flag_true(r.get("derived")):
+            continue
+        srcs = [s.strip() for s in _cell_str(r.get("source_columns")).split(",") if s.strip()]
+        cn = _cell_str(r.get("column_name"))
+        if cn and srcs and all(s in data_cols or s in out for s in srcs):
+            out.add(cn)
+    rdf = _metadata_table_to_editor_df(tables.get("factor_recodes"), "factor_recodes")
+    for src, tgt in zip(rdf["source_column"], rdf["target_column"]):
+        if _cell_str(src) in data_cols and _cell_str(tgt):
+            out.add(_cell_str(tgt))
+    sdf = _metadata_table_to_editor_df(tables.get("stratifications"), "stratifications")
+    for _, r in sdf.iterrows():
+        if _cell_str(r.get("strat_type")) != "custom_group":
+            continue
+        src = _cell_str(r.get("source_column"))
+        dcn = _cell_str(r.get("derived_column_name"))
+        if dcn and src and (src in data_cols or src in out):
+            out.add(dcn)
+    return out
+
+
+def _site_mask_sheets_for_new_data(tables, new_data: pd.DataFrame,
+                                   site_mask_config) -> dict:
+    """Replacement site_masks/site_mask_settings sheets for a swapped-in frame.
+
+    Mask ids are 1-based row positions into the data sheet, so the preserved
+    sheet is never transplantable across a frame swap: after a re-compile the
+    same position names a different site (or none). The screening-derived
+    config from the compile step IS valid against the new frame by
+    construction, so it wins; with no fresh config the masks reset to empty
+    (they are already baked into the compiled frame) and only the label-column
+    choice is carried, when that column still exists.
+    """
+    from . import workbook as wb
+
+    if site_mask_config:
+        cfg = dict(site_mask_config)
+        label = _cell_str(cfg.get("site_label_column"))
+        if not label or label not in new_data.columns:
+            cfg["site_label_column"] = wb.default_site_label_source_column(new_data)
+        n = len(new_data)
+        cfg["masked_site_ids"] = [
+            int(i) for i in (cfg.get("masked_site_ids") or []) if 1 <= int(i) <= n
+        ]
+        return wb.site_mask_tables_from_config(new_data, cfg)
+
+    settings_tbl = None
+    settings = _metadata_table_to_editor_df(
+        tables.get("site_mask_settings"), "site_mask_settings"
+    )
+    if len(settings):
+        cand = _cell_str(settings["site_label_column"].iloc[0])
+        if cand and cand in new_data.columns:
+            settings_tbl = pd.DataFrame({"site_label_column": [cand]})
+    return {
+        "site_masks": _ensure_workbook_sheet_columns(None, "site_masks"),
+        "site_mask_settings": _ensure_workbook_sheet_columns(
+            settings_tbl, "site_mask_settings"
+        ),
+    }
+
+
+def reconcile_tables_with_new_data(tables, new_data, assignments,
+                                   site_mask_config=None, opts=None) -> dict:
+    """Reconcile existing workbook ``tables`` onto a freshly compiled data frame.
+
+    The wizard-rebuild twin of :func:`reconcile_role_membership`: that one
+    reconciles role checkboxes over an unchanged frame (the workbook grid's
+    Apply); this one first swaps ``new_data`` in as the data sheet, prunes rows
+    whose raw reference no longer exists anywhere in it, then delegates the
+    role deltas to :func:`reconcile_role_membership` -- so a Build over a
+    loaded project preserves everything the grid preserves (derived predictors,
+    factor recodes, custom_group / paired stratifications, curated
+    metric-predictor / metric-stratification links, function mappings) instead
+    of regenerating every sheet from scratch.
+
+    Pruning details: derived predictor rows are never pruned (derive skips a
+    dormant one and it revives when its sources return); factor recodes are
+    kept even when dead for the same reason; custom_group stratifications with
+    a vanished source MUST be pruned because ``derive_variables`` raises on
+    them. ``site_mask_config`` is the screening-derived config computed against
+    ``new_data`` (or None when the frame was not re-compiled this session); see
+    :func:`_site_mask_sheets_for_new_data` for why the preserved mask sheet
+    never survives a frame swap.
+    """
+    tables = _normalize_workbook_tables(tables)
+    new_data = pd.DataFrame(new_data).copy()
+    tables["data"] = new_data
+    cols = {str(c) for c in new_data.columns}
+    present = cols | _producible_columns(tables, cols)
+
+    # -- prune rows whose raw reference vanished (each editor df is rebuilt
+    #    after the previous delete so positions stay aligned) --
+    mdf = _build_metrics_editor_df(tables)
+    pos = [
+        i for i, cn in enumerate(mdf["column_name"])
+        if _cell_str(cn) and _cell_str(cn) not in present
+    ]
+    if pos:
+        tables = _delete_rows_from_tables(tables, "metrics", pos)
+    pdf = _metadata_table_to_editor_df(tables.get("predictors"), "predictors")
+    pos = [
+        i for i, (cn, d) in enumerate(zip(pdf["column_name"], pdf["derived"]))
+        if not _role_flag_true(d) and _cell_str(cn) and _cell_str(cn) not in present
+    ]
+    if pos:
+        tables = _delete_rows_from_tables(tables, "predictors", pos)
+    sdf = _metadata_table_to_editor_df(tables.get("stratifications"), "stratifications")
+    pos = [
+        i for i, (st, sc) in enumerate(zip(sdf["strat_type"], sdf["source_column"]))
+        if _cell_str(st) in ("raw_single", "custom_group")
+        and _cell_str(sc) and _cell_str(sc) not in present
+    ]
+    if pos:
+        tables = _delete_rows_from_tables(tables, "stratifications", pos)
+
+    # -- role deltas over the new frame --
+    asg = pd.DataFrame(assignments).copy()
+    if "family" not in asg.columns:
+        # The hydration shape (current_role_membership) has no family column;
+        # reconcile's add path indexes it unconditionally.
+        asg["family"] = None
+    asg = asg.loc[[str(c) in cols for c in asg["column"]]].reset_index(drop=True)
+    tables = reconcile_role_membership(tables, asg, opts)
+
+    tables.update(_site_mask_sheets_for_new_data(tables, new_data, site_mask_config))
     return _normalize_workbook_tables(tables)
 
 

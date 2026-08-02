@@ -24,8 +24,10 @@ import pandas as pd
 from shiny import module, reactive, render, req, ui
 
 from streamcurves.curves import (
+    CURVE_FORM_MONOTONE,
     build_reference_curve,
     build_reference_curve_from_points,
+    curve_form_of,
     empty_reference_curve_points,
     hydrate_reference_curve_result,
     normalize_reference_curve_points,
@@ -43,7 +45,7 @@ from views.curve_plots import (
 )
 from views.state import AppState
 from views.theme import fa
-from views.uihelpers import explanation_card, status_badge
+from views.uihelpers import explanation_card, response_shape_label, status_badge
 
 logger = logging.getLogger("streamcurves")
 
@@ -222,7 +224,8 @@ def reference_curve_editor_ui(title: str = "Manual Curve Editor"):
 
 @module.server
 def reference_curve_editor_server(
-    input, output, session, current_result, higher_is_better, on_apply, on_reset
+    input, output, session, current_result, higher_is_better, on_apply, on_reset,
+    curve_form=None,
 ):
     editor_table = reactive.value(reference_curve_editor_table_df(None))
     validation_message = reactive.value(None)
@@ -431,7 +434,10 @@ def reference_curve_editor_server(
         with reactive.isolate():
             table_df = editor_table()
         points = reference_curve_editor_points_from_table(table_df)
-        validation = validate_reference_curve_points(points, higher_is_better())
+        validation = validate_reference_curve_points(
+            points, higher_is_better(),
+            curve_form=(curve_form() if curve_form else CURVE_FORM_MONOTONE),
+        )
 
         if not validation["valid"]:
             validation_message.set(" ".join(validation["errors"]))
@@ -605,10 +611,13 @@ def ref_curve_server(input, output, session, state: AppState, workspace_scope: s
     reference_curve_editor_server(
         "curve_editor",
         current_result=curve_results,
-        higher_is_better=lambda: bool(
+        higher_is_better=lambda: (
             ((state.metric_config() or {}).get(state.current_metric()) or {}).get(
                 "higher_is_better"
-            )
+            ) is True
+        ),
+        curve_form=lambda: curve_form_of(
+            (state.metric_config() or {}).get(state.current_metric()) or {}
         ),
         on_apply=_on_apply,
         on_reset=_on_reset,
@@ -745,11 +754,10 @@ def ref_curve_server(input, output, session, state: AppState, workspace_scope: s
                             ),
                             ui.tags.tr(
                                 ui.tags.td(ui.tags.strong("Direction")),
-                                ui.tags.td(
-                                    "Higher is better"
-                                    if mc.get("higher_is_better") is True
-                                    else "Lower is better"
-                                ),
+                                # A two-sided metric's null direction used to fall
+                                # through to "Lower is better", labelling a trapezoid
+                                # as monotone-decreasing right beside the curve.
+                                ui.tags.td(response_shape_label(mc)),
                             ),
                             ui.tags.tr(
                                 ui.tags.td(ui.tags.strong("Curve points")),

@@ -103,7 +103,7 @@ Dev loop: launch `StafDesktop.exe` from a checkout and it runs the four apps fro
 2. Setup.exe: per-user install, no elevation prompt.
 3. First run: runtime downloads with progress; kill the network mid-download, relaunch → resumes.
 4. All four apps launch; EASI delineation runs; PDF/CSV/GeoJSON exports raise save dialogs.
-5. The STAF link in an app's top banner focuses the launcher; external links open the browser.
+5. The STAF link in an app's header focuses the launcher; external links open the browser.
 6. Close everything → Task Manager shows no stray `python.exe`.
 7. Publish a `desktop-payload-*` tag → footer chip appears; Install applies; apps restart onto it.
 8. Install the previous shell version → in-app "Restart & update" lands on the new one.

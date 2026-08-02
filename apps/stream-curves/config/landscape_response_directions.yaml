@@ -1,0 +1,59 @@
+# Curated ecological direction for LANDSCAPE (StreamCat / StreamStats / MMW) metrics.
+#
+# Companion to nrsa_response_directions.yaml, which covers only the NRSA field and lab
+# responses. The functions in the Hydrology discipline (and Watershed connectivity, and
+# High flow dynamics) have no NRSA metric at all: config/metric_map.yaml notes that
+# "Hydrology/Hydraulics lean on StreamCAT because NRSA landscape metrics only exist at
+# NRSA sites, while StreamCAT covers every site via COMID". Without a curated direction
+# for those codes the Regional Analysis Agent cannot build their curves, and the six
+# affected functions silently drop out of every published assessment.
+#
+# Same discipline as the NRSA file:
+#   source: expert  -> curated here from the metric definition and standard ecology
+#   confidence: high | moderate  -> how settled the direction is
+# Metrics with `review:` set have NO agreed monotone direction and are never auto-built.
+#
+# ROLE. Landscape variables default to role "both" in metric_map.yaml (usable as a scored
+# metric and as a predictor). `role: predictor` here overrides that to predictor-only:
+# the variable is scaling/climate CONTEXT, not a condition indicator, so scoring it would
+# assert that a naturally wet or naturally large catchment is degraded. Those variables
+# still earn their keep as predictors for the metrics that do get scored.
+#
+# Codes are StreamCat BASE names. The live data columns carry an area-of-interest suffix
+# (watershed -> "ws", e.g. pctimp2019 -> pctimp2019ws); metric_map._code_candidates and
+# the lookup in this file both tolerate that suffix.
+
+metrics:
+  # --- Hydrology: Catchment hydrology ---
+  pctimp2019:   {higher_is_better: false, metric_family: proportion, source: expert, confidence: high,     note: "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology."}
+  pctcrop2019:  {higher_is_better: false, metric_family: proportion, source: expert, confidence: high,     note: "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing."}
+
+  # --- Hydrology: Surface water storage ---
+  pctwdwet2019: {higher_is_better: true,  metric_family: proportion, source: expert, confidence: high,     note: "Watershed woody wetland (%); wetlands store surface water and attenuate flow peaks."}
+  pcthbwet2019: {higher_is_better: true,  metric_family: proportion, source: expert, confidence: high,     note: "Watershed herbaceous wetland (%); wetlands store surface water and attenuate flow peaks."}
+
+  # --- Hydrology: Streamflow regime ---
+  bfi:          {higher_is_better: true,  metric_family: continuous, source: expert, confidence: high,     note: "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime."}
+  damdens:      {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network."}
+
+  # --- Hydrology: Reach inflow ---
+  # Reach inflow's published detailed metric is a field count of concentrated flow
+  # points (ditches, pipes, outfalls), which has no national dataset and so cannot be
+  # curve-fitted from NRSA. Road density is the standing STAF surrogate: EASI scores
+  # this same function from the same StreamCat variable (apps/easi/easi/metrics/
+  # hydrology.py reach_inflow, bands Good <1, Fair 1-<3, Poor >=3 km/sq km). Held at
+  # moderate confidence because it is a directional proxy, not an outfall count --
+  # EASI carries it as provisional at confidence "L" for the same reason.
+  rddens:       {higher_is_better: false, metric_family: continuous, source: expert, confidence: moderate, note: "Watershed road density; roads concentrate and route runoff to the channel, so higher density means more concentrated inflow pressure. Directional proxy shared with the EASI screening metric; it does not count outfalls."}
+
+  # --- Biology: Watershed connectivity ---
+  rdcrs:        {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage."}
+
+  # --- Context / scaling variables: predictors, never scored ---
+  # Reviewed 2026-07-24: mean annual runoff and precipitation describe where a site sits
+  # in the regional climate/water-balance gradient. A naturally wetter catchment is not
+  # degraded, so a condition score over these would be meaningless. They remain valuable
+  # as predictors (drainage-area and climate scaling for the metrics that ARE scored).
+  runoff:       {role: predictor, source: expert, confidence: high, note: "Mean annual runoff; scaling/climate context, not a condition indicator. Predictor only."}
+  precip8110:   {role: predictor, source: expert, confidence: high, note: "Mean annual precipitation (1981-2010 normal); scaling/climate context, not a condition indicator. Predictor only."}
+  elev:         {role: predictor, source: expert, confidence: high, note: "Mean watershed elevation; physiographic scaling context. Predictor only."}

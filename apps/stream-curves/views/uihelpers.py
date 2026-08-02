@@ -5,8 +5,62 @@ from __future__ import annotations
 
 from shiny import ui
 
+from streamcurves.curves import CURVE_FORM_MONOTONE, CURVE_FORM_OPTIMUM, curve_form_of
 from views.state import PHASE_LABELS
 from views.theme import fa
+
+# ── response shape ────────────────────────────────────────────────────────────
+# A metric's curve direction and form are one question -- which shape scores well
+# -- carried by two config fields, `higher_is_better` and `curve_form`. Written
+# independently they could contradict: an optimum form with a TRUE direction reads
+# as "higher is better" over a two-sided curve, and a null direction with the
+# monotone form makes the metric silently unbuildable. Kept here so the settings
+# control and every place that labels a direction agree, without views/phase4.py
+# and views/ref_curve.py having to import each other.
+SHAPE_HIGHER = "higher"
+SHAPE_LOWER = "lower"
+SHAPE_OPTIMUM = "optimum"
+
+RESPONSE_SHAPE_CHOICES = {
+    SHAPE_HIGHER: "Higher is better",
+    SHAPE_LOWER: "Lower is better",
+    SHAPE_OPTIMUM: "Two-sided (best mid-range)",
+}
+
+#: shape -> (higher_is_better, curve_form)
+RESPONSE_SHAPE_CONFIG = {
+    SHAPE_HIGHER: (True, CURVE_FORM_MONOTONE),
+    SHAPE_LOWER: (False, CURVE_FORM_MONOTONE),
+    SHAPE_OPTIMUM: (None, CURVE_FORM_OPTIMUM),
+}
+
+SHAPE_UNDER_REVIEW_LABEL = "Under review"
+
+
+def response_shape_of(metric_entry) -> str | None:
+    """The metric's current shape, or None when its direction is still under review.
+
+    A curated entry with no agreed direction carries ``higher_is_better: None`` with
+    the monotone form, and the engine deliberately builds no curve for it. That is a
+    real state, so it reads back as unset rather than being forced into an answer.
+    """
+    mc = metric_entry or {}
+    if curve_form_of(mc) == CURVE_FORM_OPTIMUM:
+        return SHAPE_OPTIMUM
+    hib = mc.get("higher_is_better")
+    if hib is True:
+        return SHAPE_HIGHER
+    if hib is False:
+        return SHAPE_LOWER
+    return None
+
+
+def response_shape_label(metric_entry) -> str:
+    """Display label for a metric's direction. Never says "lower is better" about a
+    two-sided curve, which is what `bool(higher_is_better)` used to produce."""
+    return RESPONSE_SHAPE_CHOICES.get(
+        response_shape_of(metric_entry), SHAPE_UNDER_REVIEW_LABEL
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -49,22 +103,76 @@ def explanation_card(title, *body):
     )
 
 
-def no_data_alert():
+# --------------------------------------------------------------------------- #
+# "Not ready yet" panels.
+#
+# Every workflow stage is reachable at any time (the strip's pills stay clickable
+# so you can look ahead), so every stage has to be able to say honestly that its
+# inputs are not there yet. One component, one look, and a button that goes to the
+# stage that actually supplies what is missing -- rather than a half-rendered
+# screen, a blank map, or the silence a failed req() produces.
+# --------------------------------------------------------------------------- #
+
+# Root-level input the shell listens on (app.py). Fixed rather than namespaced so a
+# panel rendered inside any module can request the jump without wiring of its own.
+WORKFLOW_GOTO_INPUT = "workflow_goto"
+
+
+def _goto_onclick(nav: str, step: int | None) -> str:
+    """Inline handler for a not-ready panel's action button (house channel idiom)."""
+    payload = f"{{nav:'{nav}'" + (f",step:{int(step)}" if step is not None else "") + "}"
+    return (
+        f"Shiny.setInputValue('{WORKFLOW_GOTO_INPUT}',{payload},{{priority:'event'}})"
+    )
+
+
+def not_ready_panel(
+    title: str,
+    *message,
+    action_label: str | None = None,
+    goto_nav: str | None = None,
+    goto_step: int | None = None,
+    icon: str = "database",
+):
+    """A centered "this stage is not ready" panel, optionally with a jump button.
+
+    ``message`` takes the same varargs a ui.tags.p does, so callers can bold parts
+    of the sentence. The button is rendered only when both ``action_label`` and
+    ``goto_nav`` are supplied.
+    """
+    action = None
+    if action_label and goto_nav:
+        action = ui.tags.button(
+            action_label,
+            class_="btn btn-outline-primary btn-sm mt-2",
+            onclick=_goto_onclick(goto_nav, goto_step),
+            type="button",
+        )
     return ui.div(
         ui.div(
-            fa("database", height="3em"),
-            ui.tags.h4("No Data Loaded", class_="mt-3"),
-            ui.tags.p(
-                "Go to the ",
-                ui.tags.strong("Data & Setup"),
-                " tab and click ",
-                ui.tags.strong("Load Data"),
-                " to get started.",
-            ),
+            fa(icon, height="3em"),
+            ui.tags.h4(title, class_="mt-3"),
+            ui.tags.p(*message),
+            action,
             class_="text-center text-muted",
         ),
         class_="d-flex justify-content-center align-items-center",
         style="min-height: 300px;",
+    )
+
+
+def no_data_alert():
+    """The no-dataset case: the shared panel, pointing back at the first stage."""
+    return not_ready_panel(
+        "No Data Loaded",
+        "Start at ",
+        ui.tags.strong("Region & data"),
+        " in the workflow strip above, or use ",
+        ui.tags.strong("Open"),
+        " (top right) to load a saved project.",
+        action_label="Go to Region & data",
+        goto_nav="data",
+        goto_step=1,
     )
 
 

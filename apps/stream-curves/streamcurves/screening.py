@@ -534,3 +534,89 @@ def run_all_stratification_screening(
         "pairwise": all_pairwise,
         "plot_specs": plot_specs,
     }
+
+
+# --------------------------------------------------------------------------- #
+# Phase-1 candidate table
+#
+# Lives here rather than in views/ because the headless regional agent builds the
+# same table and must never import shiny; views/summary_state.py re-exports both
+# functions so its own call sites are unchanged.
+# --------------------------------------------------------------------------- #
+
+
+def _first_value(df, column, default=None):
+    if df is None or not isinstance(df, pd.DataFrame) or column not in df.columns or len(df) == 0:
+        return default
+    value = df[column].iloc[0]
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return default
+    return value
+
+
+def auto_phase1_candidate_status(p_val, es_label) -> str:
+    p_ok = p_val is not None and not (isinstance(p_val, float) and math.isnan(p_val))
+    if p_ok and p_val < 0.05 and es_label in ("medium", "large"):
+        return "promising"
+    if p_ok and p_val < 0.10:
+        return "possible"
+    return "not_promising"
+
+
+def build_metric_phase1_candidate_table_from_sources(
+    metric: str,
+    allowed,
+    existing: pd.DataFrame | None = None,
+    l1: pd.DataFrame | None = None,
+    l2: pd.DataFrame | None = None,
+    include_all_allowed: bool = True,
+) -> pd.DataFrame:
+    strat_keys: list[str] = []
+
+    def add(keys):
+        for k in keys:
+            if k not in strat_keys:
+                strat_keys.append(k)
+
+    if include_all_allowed:
+        add(allowed or [])
+    if existing is not None and len(existing) > 0:
+        add(existing["stratification"].astype(str).tolist())
+    if l1 is not None and len(l1) > 0:
+        add(l1["stratification"].astype(str).tolist())
+    if not strat_keys:
+        return pd.DataFrame()
+
+    def first_match(df, sk):
+        if df is None or len(df) == 0:
+            return pd.DataFrame()
+        return df[df["stratification"] == sk].head(1)
+
+    rows = []
+    for sk in strat_keys:
+        existing_row = first_match(existing, sk)
+        p_row = first_match(l1, sk)
+        es_row = first_match(l2, sk)
+        p_val = _first_value(existing_row, "p_value", _first_value(p_row, "p_value", np.nan))
+        es_label = _first_value(
+            existing_row, "effect_size_label",
+            _first_value(es_row, "effect_size_label", "negligible"),
+        )
+        rows.append(
+            {
+                "metric": metric,
+                "stratification": sk,
+                "p_value": p_val if p_val is not None else np.nan,
+                "epsilon_squared": _first_value(
+                    existing_row, "epsilon_squared",
+                    _first_value(es_row, "epsilon_squared", np.nan),
+                ),
+                "effect_size_label": es_label,
+                "min_group_n": _first_value(
+                    existing_row, "min_group_n", _first_value(p_row, "min_group_n", np.nan)
+                ),
+                "candidate_status": auto_phase1_candidate_status(p_val, es_label),
+                "reviewer_note": "",
+            }
+        )
+    return pd.DataFrame(rows)

@@ -82,6 +82,39 @@ def _metric_link_text(link_df: pd.DataFrame, metric_key: str, value_col: str) ->
     return collapse_pipe_text(rows[value_col])
 
 
+def _reattach_extra_metric_columns(prior, metrics_df: pd.DataFrame) -> pd.DataFrame:
+    """Carry metrics-sheet columns the editor does not show back onto a saved sheet.
+
+    The metrics grid is the only one that projects to a fixed column list
+    (``metadata_editor_columns``), and metrics is the only sheet that carries an
+    extra column by design: ``curve_form``, deliberately kept out of
+    ``workbook_sheet_columns`` so a pre-existing workbook does not gain an all-NA
+    column. Without this, editing any cell on the Metrics tab dropped
+    ``curve_form`` from every row, and the reader then took a blank direction to
+    mean TRUE -- silently turning every two-sided metric into a
+    monotone-increasing one.
+
+    Matched on ``metric_key``, so a row added in the grid gets a blank and a
+    deleted row's value goes away with it.
+    """
+    if prior is None or len(prior) == 0 or "metric_key" not in getattr(prior, "columns", []):
+        return metrics_df
+    extras = [
+        c for c in prior.columns
+        if c not in metrics_df.columns and c not in metadata_editor_columns()
+    ]
+    if not extras:
+        return metrics_df
+    metrics_df = metrics_df.copy()
+    keys = [_as_editor_str(k) for k in prior["metric_key"]]
+    for col in extras:
+        by_key = dict(zip(keys, (_as_editor_str(v) for v in prior[col])))
+        metrics_df[col] = [
+            by_key.get(_as_editor_str(mk), "") for mk in metrics_df["metric_key"]
+        ]
+    return metrics_df
+
+
 def build_metrics_editor_df(tables: dict) -> pd.DataFrame:
     metrics_df = metadata_table_to_editor_df(tables.get("metrics"), "metrics")
     preds_df = metadata_table_to_editor_df(tables.get("metric_predictors"), "metric_predictors")
@@ -108,7 +141,7 @@ def apply_metrics_editor_df(tables: dict, editor_df: pd.DataFrame) -> dict:
         if col not in editor_df.columns:
             editor_df[col] = ""
     metric_cols = workbook_sheet_columns()["metrics"]
-    metrics_df = editor_df[metric_cols]
+    metrics_df = _reattach_extra_metric_columns(tables.get("metrics"), editor_df[metric_cols])
 
     pred_rows, strat_rows = [], []
     for _, row in editor_df.iterrows():
@@ -451,7 +484,11 @@ def delete_rows_from_tables(tables: dict, tab_key: str, selected_rows) -> dict:
         removed = compact_chr(editor["metric_key"].iloc[idx0])
         keep = editor.drop(index=[i for i in idx0 if i < len(editor)])
         tables["metrics"] = ensure_workbook_sheet_columns(
-            keep[[c for c in keep.columns if c not in ("allowed_predictors", "allowed_stratifications")]],
+            _reattach_extra_metric_columns(
+                tables.get("metrics"),
+                keep[[c for c in keep.columns
+                      if c not in ("allowed_predictors", "allowed_stratifications")]],
+            ),
             "metrics",
         )
         mp = metadata_table_to_editor_df(tables.get("metric_predictors"), "metric_predictors")

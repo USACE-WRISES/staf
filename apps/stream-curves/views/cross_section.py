@@ -647,7 +647,9 @@ def cross_section_server(input, output, session, state: AppState):
     @output(suspend_when_hidden=False)
     @render.ui
     def panel():
-        if not state.app_data_loaded():
+        # data() is None, not app_data_loaded: matches Reference curves, Regional
+        # Curves and phase1-4, which all gate on the frame itself.
+        if state.data() is None:
             return no_data_alert()
         g = geo()
         data = state.data()

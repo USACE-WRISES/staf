@@ -8,6 +8,89 @@
  *   - streamcurves_reset_hidden (all channels send {priority:'event'})
  *   - DataTables columns.adjust branch (DT died with the port)
  */
+/* Leaflet: never invalidateSize() a map that currently measures 0x0.
+ *
+ * Leaflet registers ONE global window-resize listener (trackResize) and
+ * getSize() reads the DOM directly, so a resize reaches every map on the page
+ * including those inside a display:none block, where the container measures
+ * 0x0. invalidateSize() then computes offset = (oldSize - newSize) / 2 and
+ * _rawPanBy()s the map pane by half the last real viewport. The pan is NOT
+ * recoverable: the next invalidateSize() re-measures oldSize fresh, so the
+ * arithmetic never cancels, and jupyter-leaflet does not write a resize-driven
+ * move back to the widget model -- so the Python side still holds the correct
+ * center while the browser shows somewhere else entirely, which is why this
+ * cannot be repaired from the server. That is what left the wizard's region map
+ * centered on the Caribbean after navigating between stages.
+ *
+ * We removed our own resize dispatch (an "invalidateLeafletSize" handler used
+ * to live here -- do not reintroduce it), but that is not sufficient: the
+ * dispatches come from vendored code we do not control. Two fire on every stage
+ * switch, confirmed by stack trace:
+ *   - shinywidgets' output.ts, from Bootstrap's shown.bs.tab
+ *   - bslib's components.min.js, from a ResizeObserver
+ *
+ * So add the guard Leaflet itself lacks. A zero-sized map has nothing
+ * meaningful to measure, and skipping it is what Leaflet would do if the
+ * listener were per-map. Once the container is shown again it has its real
+ * size, so the next invalidateSize() is a correct no-op (oldSize == newSize)
+ * and the view is exactly where the user left it.
+ *
+ * L is published globally by the jupyter-leaflet bundle, which loads
+ * asynchronously, so this waits for it. It sits FIRST in this file on purpose:
+ * anything above it that threw would take the patch down with it, and a
+ * silently unpatched Leaflet looks exactly like the original bug. */
+(function () {
+  if (window.__streamcurvesLeafletSizeGuard) return;
+
+  function apply(L) {
+    if (window.__streamcurvesLeafletSizeGuard) return true;
+    if (!L || !L.Map || !L.Map.prototype || !L.Map.prototype.invalidateSize) return false;
+    var original = L.Map.prototype.invalidateSize;
+    L.Map.prototype.invalidateSize = function (options) {
+      var el = this._container;
+      if (el && (el.clientWidth === 0 || el.clientHeight === 0)) {
+        return this; // hidden: measuring it would pan the pane off-target
+      }
+      return original.call(this, options);
+    };
+    window.__streamcurvesLeafletSizeGuard = true;
+    return true;
+  }
+
+  if (apply(window.L)) return;
+
+  /* Patch the moment the bundle publishes L, so no map can be created -- let
+     alone resized -- against an unpatched prototype. */
+  var pending;
+  try {
+    Object.defineProperty(window, "L", {
+      configurable: true,
+      get: function () {
+        return pending;
+      },
+      set: function (value) {
+        pending = value;
+        try {
+          if (apply(value)) {
+            delete window.L; // restore a plain property, keeping the value
+            window.L = value;
+          }
+        } catch (e) {
+          /* fall through to the poll below */
+        }
+      },
+    });
+  } catch (e) {
+    /* defineProperty refused; the poll below is the fallback */
+  }
+
+  var attempts = 0;
+  (function poll() {
+    if (apply(window.L)) return;
+    if (attempts++ < 1200) window.setTimeout(poll, 100); // ~2 min, then give up
+  })();
+})();
+
 (function () {
   if (typeof Shiny === "undefined" || typeof $ === "undefined") {
     return;
@@ -225,16 +308,5 @@
   Shiny.addCustomMessageHandler("scrollToSetupWizard", function () {
     var el = document.querySelector(".setup-wizard-card");
     if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-})();
-
-/* Nudge leaflet maps to repaint after their container is shown again (the import
-   wizard's Region step is hidden via display:none on other steps). */
-(function () {
-  if (!window.Shiny || typeof Shiny.addCustomMessageHandler !== "function") return;
-  Shiny.addCustomMessageHandler("invalidateLeafletSize", function () {
-    setTimeout(function () {
-      window.dispatchEvent(new Event("resize"));
-    }, 120);
   });
 })();

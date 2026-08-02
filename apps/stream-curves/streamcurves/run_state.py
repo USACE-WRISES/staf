@@ -28,17 +28,120 @@ STAGE_KEYS = [
     "region_sources",
     "candidate_screening",
     "enrichment_build",
+    "refine_map",
     "curve_review",
     "publish",
 ]
 
 STAGE_LABELS = {
-    "region_sources": "Region & Sources",
-    "candidate_screening": "Candidate Sites & EASI Screening",
-    "enrichment_build": "Enrichment, Build & Classification",
-    "curve_review": "Curve Analysis & Flagged Review",
-    "publish": "Preliminary Package & Publish",
+    "region_sources": "Region & Data Sources",
+    "candidate_screening": "Screen Candidate Sites (EASI)",
+    "enrichment_build": "Build Dataset: Metrics, Compile & Classify",
+    "refine_map": "Refine Workbook, Map Functions & Validate",
+    "curve_review": "Reference Curves & Flagged Review",
+    "publish": "Package & Publish",
 }
+
+# ── Workflow navigation vocabulary ─────────────────────────────────────────
+# The workflow strip is the app's primary navigation: six stages, where
+# stages 1-3 group the Data & Setup wizard's seven internal steps, stage 4 is
+# the opened-project workspace, and stages 5-6 are whole pages. Everything
+# here is pure so the strip, the wizard, and tests share one mapping.
+
+# stage key -> ordered (wizard_step, sub-step label) pairs. Only the wizard
+# stages have sub-steps; labels match import_map._STEP_LABELS.
+STAGE_SUBSTEPS: dict[str, list[tuple[int, str]]] = {
+    "region_sources": [(1, "Region"), (2, "Add data")],
+    "candidate_screening": [(3, "Screen sites")],
+    "enrichment_build": [
+        (4, "Choose metrics"),
+        (5, "Compile"),
+        (6, "Classify"),
+        (7, "Review & build"),
+    ],
+}
+
+# stage key -> ordered (section value, label) pairs. Sections are the panels of
+# a page stage, NOT wizard steps -- refine_map's are the workspace panels, and
+# keeping them out of STAGE_SUBSTEPS is what keeps stage_for_wizard_step and
+# the wizard's [1..7] step space honest.
+STAGE_SECTIONS: dict[str, list[tuple[str, str]]] = {
+    "refine_map": [
+        ("workbook", "Workbook"),
+        ("mapping", "Function mapping"),
+        ("redundancy", "Metric redundancy"),
+        ("validation", "Pre-run validation"),
+    ],
+}
+
+# stage key -> (main_navbar nav value, wizard step to land on or None).
+# Wizard stages land on their first sub-step; page stages just switch panels
+# (refine_map additionally closes any open wizard -- the strip fires the
+# workspace_open nonce so Data & Setup falls back to the workspace view).
+STAGE_LANDINGS: dict[str, tuple[str, Optional[int]]] = {
+    "region_sources": ("data", 1),
+    "candidate_screening": ("data", 3),
+    "enrichment_build": ("data", 4),
+    "refine_map": ("data", None),
+    "curve_review": ("curves", None),
+    "publish": ("publish", None),
+}
+
+
+def stage_for_wizard_step(step: Optional[int]) -> Optional[str]:
+    """Map a 1-based wizard step to the stage that owns it (None if unknown)."""
+    if step is None:
+        return None
+    for key, subs in STAGE_SUBSTEPS.items():
+        if any(s == int(step) for s, _ in subs):
+            return key
+    return None
+
+
+def stage_landing(stage_key: str) -> tuple[str, Optional[int]]:
+    """Uniform click target for a stage: ``(nav_value, wizard_step | None)``."""
+    return STAGE_LANDINGS[stage_key]
+
+
+def current_stage(
+    tab: Optional[str],
+    data_setup_view: Optional[str],
+    wizard_step: Optional[int],
+) -> Optional[str]:
+    """Which stage the user is on right now (None on the tool tabs).
+
+    ``tab`` is the active main_navbar value, ``data_setup_view`` the Data &
+    Setup view mode (landing/new/wizard/workspace), ``wizard_step`` the
+    wizard's current 1-based step.
+    """
+    if tab == "curves":
+        return "curve_review"
+    if tab == "publish":
+        return "publish"
+    if tab != "data":
+        return None  # Regional Curves / Cross-Sections tools
+    if data_setup_view in ("new", "wizard"):
+        return stage_for_wizard_step(wizard_step) or "region_sources"
+    if data_setup_view == "workspace":
+        return "refine_map"  # the opened-project workspace IS stage 4
+    return "region_sources"  # landing: the natural starting point
+
+
+# Side analyses: real work surfaces that need a built dataset but sit outside the
+# numbered sequence. They produce no stage status and gate no publish, so they stay
+# out of STAGE_KEYS / STAGE_LANDINGS -- the strip renders them as unnumbered chips
+# after the five stages, and current_stage() keeps returning None while one is open.
+TOOL_KEYS = ["regional", "xsec"]  # == their main_navbar nav values
+TOOL_LABELS = {
+    "regional": "Regional curves",
+    "xsec": "Cross-sections",
+}
+
+
+def current_tool(tab: Optional[str]) -> Optional[str]:
+    """Which side analysis is open, or None while in the staged workflow."""
+    return tab if tab in TOOL_KEYS else None
+
 
 # Stage status vocabulary (badge colors are chosen in the view).
 STAGE_BLOCKED = "blocked"
@@ -55,6 +158,7 @@ CURVE_STATUS_INSUFFICIENT = "insufficient_data"
 CURVE_STATUS_DEGENERATE = "degenerate"
 CURVE_STATUS_UNMAPPED = "unmapped"
 CURVE_STATUS_STRAT_REVIEW = "strat_review"
+CURVE_STATUS_MULTI_CROSSING = "multi_crossing"
 CURVE_STATUS_ERROR = "error"
 
 CURVE_STATUSES = [
@@ -63,6 +167,7 @@ CURVE_STATUSES = [
     CURVE_STATUS_DEGENERATE,
     CURVE_STATUS_UNMAPPED,
     CURVE_STATUS_STRAT_REVIEW,
+    CURVE_STATUS_MULTI_CROSSING,
     CURVE_STATUS_ERROR,
 ]
 
@@ -80,9 +185,13 @@ IN_SCOPE_DECISIONS = {DECISION_AUTO, DECISION_FINALIZED}
 REVIEW_REASONS = {
     "insufficient_data": "Fewer than 5 reference observations in a stratum.",
     "degenerate_q25": "Non-positive or non-finite Q25 produced a fallback curve.",
-    "degenerate_curve": "The IQR seed did not validate as a monotone curve.",
+    "degenerate_curve": "The IQR seed did not validate as a scoring curve.",
     "unmapped": "Metric is not assigned to a STAF function.",
     "strat_review": "Stratification needs review before the curve is trusted.",
+    "multi_crossing": (
+        "The curve crosses a scoring threshold more than twice, so its condition "
+        "bands cannot be expressed as ranges."
+    ),
     "build_error": "The curve build raised an error.",
 }
 
@@ -193,6 +302,16 @@ def derive_stage_status(
             "status": STAGE_RUNNING,
             "detail": "Enriching retained sites...",
         }
+    elif s.get("enriched") and int(s.get("n_missing_diagnostics") or 0) > 0:
+        # The dataset is built; the stratifier analysis this stage owns is not.
+        # Without this the strip read "done" while every analysis tab reported
+        # that nothing had run. Still counts as enriched downstream: stages 4 to
+        # 6 gate on the build, not on the diagnostics.
+        n_missing = int(s["n_missing_diagnostics"])
+        out["enrichment_build"] = {
+            "status": STAGE_ATTENTION,
+            "detail": f"{n_missing} metric(s) have no screening or verification result.",
+        }
     elif s.get("enriched"):
         out["enrichment_build"] = {
             "status": STAGE_DONE,
@@ -209,7 +328,37 @@ def derive_stage_status(
             "detail": "Retain at least one screened site first.",
         }
 
-    # 4 - Curve analysis & flagged review
+    # 4 - Refine workbook, map functions & validate (the workspace). No async
+    # task, so no RUNNING state. Coverage here is mapping-level (functions with
+    # no assigned metric and no documented exception) -- the bundle-level
+    # snapshot["coverage"] is None until a curve is finalized, which happens
+    # after this stage.
+    n_unmapped = int(s.get("n_unmapped_functions") or 0)
+    if not s.get("enriched"):
+        out["refine_map"] = {
+            "status": STAGE_BLOCKED,
+            "detail": "Build a dataset first.",
+        }
+    elif n_unmapped > 0:
+        out["refine_map"] = {
+            "status": STAGE_ATTENTION,
+            "detail": (
+                f"{n_unmapped} function(s) need a metric or a documented "
+                "exception."
+            ),
+        }
+    elif not s.get("mapping_confirmed"):
+        out["refine_map"] = {
+            "status": STAGE_READY,
+            "detail": "Review the workbook and confirm the function mapping.",
+        }
+    else:
+        out["refine_map"] = {
+            "status": STAGE_DONE,
+            "detail": "Function mapping confirmed.",
+        }
+
+    # 5 - Curve analysis & flagged review
     if running.get("curve_review"):
         out["curve_review"] = {
             "status": STAGE_RUNNING,
@@ -236,7 +385,7 @@ def derive_stage_status(
             "detail": f"{len(intended)} curve(s) in scope.",
         }
 
-    # 5 - Preliminary package & publish
+    # 6 - Preliminary package & publish
     if s.get("published"):
         out["publish"] = {
             "status": STAGE_DONE,
@@ -304,10 +453,42 @@ def classify_curve_proposal(
         # dict.fromkeys keeps first-seen order, de-duplicated.
         return CURVE_STATUS_DEGENERATE, [REVIEW_REASONS[d] for d in dict.fromkeys(degen)]
 
+    # The curve engine escalates an over-wiggly curve to unsupported_multi_crossing;
+    # without a bucket here it fell through to auto_ok and shipped unreviewed.
+    if any(st == "unsupported_multi_crossing" for st in statuses):
+        return CURVE_STATUS_MULTI_CROSSING, [REVIEW_REASONS["multi_crossing"]]
+
     if not strat_ok:
         return CURVE_STATUS_STRAT_REVIEW, [REVIEW_REASONS["strat_review"]]
 
     return CURVE_STATUS_AUTO_OK, []
+
+
+def _curve_points_digest(value: Any) -> Any:
+    """The seed points as a plain, order-preserving list of (x, y) pairs.
+
+    Real curve rows carry the points as a nested DataFrame under ``curve_points``;
+    json.dumps(default=str) would stringify that to an unstable repr, so normalize it
+    here instead.
+    """
+    if value is None:
+        return None
+    to_dict = getattr(value, "to_dict", None)
+    if to_dict is not None and hasattr(value, "columns"):
+        try:
+            rows = value.to_dict(orient="records")
+        except TypeError:
+            return None
+    elif isinstance(value, (list, tuple)):
+        rows = [r for r in value if isinstance(r, dict)]
+    else:
+        return None
+    out = []
+    for r in rows:
+        x = r.get("metric_value", r.get("x"))
+        y = r.get("index_score", r.get("y"))
+        out.append([None if x is None else float(x), None if y is None else float(y)])
+    return out
 
 
 def _normalize_curve_rows(curve_rows: Any) -> list[dict]:
@@ -315,6 +496,7 @@ def _normalize_curve_rows(curve_rows: Any) -> list[dict]:
     keep = (
         "stratum",
         "curve_status",
+        "curve_form",
         "n_reference",
         "min_val",
         "q25",
@@ -322,11 +504,19 @@ def _normalize_curve_rows(curve_rows: Any) -> list[dict]:
         "q75",
         "max_val",
         "iqr",
-        "points",
     )
     out = []
     for r in _as_rows(curve_rows):
-        out.append({k: r.get(k) for k in keep if k in r})
+        entry = {k: r.get(k) for k in keep if k in r}
+        # The seed points ARE the proposal: a manual tweak (or a monotone -> optimum
+        # reshape) that leaves the summary stats untouched must still force re-review.
+        # The historical key here was "points", which no real row has, so every edit
+        # silently kept its old fingerprint.
+        points = r.get("curve_points", r.get("points"))
+        digest = _curve_points_digest(points)
+        if digest is not None:
+            entry["points"] = digest
+        out.append(entry)
     return out
 
 
@@ -536,6 +726,13 @@ def readiness_checklist(snapshot: dict) -> list[dict]:
             "ok": bool(s.get("enriched")),
         },
         {
+            "key": "mapping",
+            "label": "Function mapping confirmed",
+            "ok": bool(s.get("mapping_confirmed")),
+            # Mirrors the hard gate in views/publish.py so the requirement shows
+            # up in the checklist instead of only as a failed publish click.
+        },
+        {
             "key": "curves",
             "label": "At least one curve in scope",
             "ok": len(intended) > 0,
@@ -544,6 +741,15 @@ def readiness_checklist(snapshot: dict) -> list[dict]:
             "key": "review",
             "label": "No unresolved flagged curves",
             "ok": len(unresolved) == 0,
+        },
+        {
+            "key": "coverage",
+            "label": "Every STAF function covered or documented as excluded",
+            "ok": int(((s.get("coverage") or {}).get("missing")) or 0) == 0,
+            # Mirrors the gate in library.publish_version so the shortfall shows up
+            # in the checklist rather than only as a failed publish. Absent coverage
+            # in the snapshot reads as ok: a run that has not built a bundle yet has
+            # nothing to judge, and the publisher re-checks from the bundle anyway.
         },
     ]
 

@@ -188,10 +188,81 @@ def test_site_mask_config_empty_when_no_exclusions():
     assert cfg["masked_site_ids"] == []
 
 
+# --- workflow navigation vocabulary ------------------------------------------ #
+def test_stage_substeps_cover_wizard_steps_once():
+    seen = [s for subs in rs.STAGE_SUBSTEPS.values() for s, _ in subs]
+    assert sorted(seen) == [1, 2, 3, 4, 5, 6, 7]
+    assert set(rs.STAGE_SUBSTEPS) <= set(rs.STAGE_KEYS)
+
+
+def test_stage_landings_cover_every_stage():
+    assert set(rs.STAGE_LANDINGS) == set(rs.STAGE_KEYS)
+    # Wizard stages land on their first sub-step; page stages have no step.
+    for key, (nav, step) in rs.STAGE_LANDINGS.items():
+        if key in rs.STAGE_SUBSTEPS:
+            assert nav == "data"
+            assert step == rs.STAGE_SUBSTEPS[key][0][0]
+        else:
+            assert step is None
+    assert rs.stage_landing("curve_review") == ("curves", None)
+    assert rs.stage_landing("publish") == ("publish", None)
+
+
+def test_stage_for_wizard_step():
+    assert rs.stage_for_wizard_step(1) == "region_sources"
+    assert rs.stage_for_wizard_step(2) == "region_sources"
+    assert rs.stage_for_wizard_step(3) == "candidate_screening"
+    for s in (4, 5, 6, 7):
+        assert rs.stage_for_wizard_step(s) == "enrichment_build"
+    assert rs.stage_for_wizard_step(None) is None
+    assert rs.stage_for_wizard_step(99) is None
+
+
+def test_current_stage_pages_and_tools():
+    assert rs.current_stage("curves", "landing", 1) == "curve_review"
+    assert rs.current_stage("publish", "workspace", 7) == "publish"
+    # Tool tabs highlight no stage.
+    assert rs.current_stage("regional", "workspace", 5) is None
+    assert rs.current_stage("xsec", "landing", 1) is None
+
+
+def test_current_stage_data_views():
+    # Wizard (fresh "new" or re-entry "wizard") follows the wizard step.
+    assert rs.current_stage("data", "new", 1) == "region_sources"
+    assert rs.current_stage("data", "wizard", 3) == "candidate_screening"
+    assert rs.current_stage("data", "wizard", 6) == "enrichment_build"
+    # Unknown step falls back to the first stage.
+    assert rs.current_stage("data", "new", None) == "region_sources"
+    # Opened-project workspace is the Refine & map surface.
+    assert rs.current_stage("data", "workspace", 7) == "refine_map"
+    # Landing: the natural starting point.
+    assert rs.current_stage("data", "landing", 1) == "region_sources"
+
+
+def test_tool_vocabulary_is_labelled_and_separate_from_the_stages():
+    assert set(rs.TOOL_LABELS) == set(rs.TOOL_KEYS)
+    assert all(rs.TOOL_LABELS[k].strip() for k in rs.TOOL_KEYS)
+    # The side analyses are not steps: keeping them out of the stage vocabulary is
+    # what stops the strip numbering them, derive_stage_status scoring them, and
+    # readiness_checklist gating publish on them.
+    assert set(rs.TOOL_KEYS).isdisjoint(rs.STAGE_KEYS)
+    assert set(rs.TOOL_KEYS).isdisjoint(rs.STAGE_LANDINGS)
+    assert set(rs.TOOL_KEYS).isdisjoint(rs.STAGE_SUBSTEPS)
+
+
+def test_current_tool_is_the_inverse_of_current_stage():
+    for key in rs.TOOL_KEYS:
+        assert rs.current_tool(key) == key
+        assert rs.current_stage(key, "workspace", 5) is None
+    for tab in ("data", "curves", "publish", None):
+        assert rs.current_tool(tab) is None
+
+
 # --- readiness -------------------------------------------------------------- #
 def test_readiness_blocks_until_complete():
     snap = {"has_region": True, "has_screening": True, "n_retained": 5,
-            "enriched": True, "curve_review": _review_map()}
+            "enriched": True, "mapping_confirmed": True,
+            "curve_review": _review_map()}
     # mC is still pending -> not ready
     assert not rs.is_ready_to_publish(snap)
     cr = dict(_review_map())
@@ -204,8 +275,23 @@ def test_readiness_needs_region_and_retained():
     assert not rs.is_ready_to_publish({})
     checklist = rs.readiness_checklist({})
     assert {i["key"] for i in checklist} == {
-        "region", "screening", "enriched", "curves", "review"
+        "region", "screening", "enriched", "mapping", "curves", "review",
+        "coverage",
     }
+
+
+def test_readiness_mapping_item_blocks_until_confirmed():
+    """The publish page hard-gates on the confirmed flag; the checklist item
+    mirrors it so the requirement shows before the click."""
+    snap = {"has_region": True, "has_screening": True, "n_retained": 5,
+            "enriched": True}
+    cr = dict(_review_map())
+    cr["mC"] = rs.apply_review_decision(cr["mC"], rs.DECISION_REMOVED)
+    snap["curve_review"] = cr
+    assert not rs.is_ready_to_publish(snap)
+    item = next(i for i in rs.readiness_checklist(snap) if i["key"] == "mapping")
+    assert item["ok"] is False
+    assert rs.is_ready_to_publish(dict(snap, mapping_confirmed=True))
 
 
 # --- stage status ----------------------------------------------------------- #
@@ -235,3 +321,125 @@ def test_derive_stage_status_flagged_review_attention():
         {"enriched": True, "n_retained": 5, "curve_review": _review_map()}
     )
     assert out["curve_review"]["status"] == rs.STAGE_ATTENTION
+
+
+def test_derive_stage_status_refine_map():
+    # Blocked until a dataset exists.
+    out = rs.derive_stage_status({})
+    assert out["refine_map"]["status"] == rs.STAGE_BLOCKED
+    base = {"has_region": True, "has_screening": True, "n_retained": 5,
+            "enriched": True}
+    # Attention: functions with neither a metric nor a documented exception.
+    out = rs.derive_stage_status(dict(base, n_unmapped_functions=3))
+    assert out["refine_map"]["status"] == rs.STAGE_ATTENTION
+    assert "3" in out["refine_map"]["detail"]
+    # Ready: everything mapped, confirmation still pending.
+    out = rs.derive_stage_status(dict(base, n_unmapped_functions=0))
+    assert out["refine_map"]["status"] == rs.STAGE_READY
+    # Done: mapping confirmed.
+    out = rs.derive_stage_status(
+        dict(base, n_unmapped_functions=0, mapping_confirmed=True)
+    )
+    assert out["refine_map"]["status"] == rs.STAGE_DONE
+    # Every stage the strip renders has a status.
+    assert set(out) == set(rs.STAGE_KEYS)
+
+
+# --- workspace resolves to a stage that can show its section chips ---------- #
+def test_workspace_view_resolves_to_the_refine_map_stage():
+    # The strip marks this stage current for a reopened project sitting on the
+    # workspace, so it has to be a stage that HAS sections -- otherwise the
+    # current pill is a dead end with nothing under it (which is what users hit
+    # back when the workspace resolved to a sub-stepless stage).
+    assert rs.current_stage("data", "workspace", 1) == "refine_map"
+    assert len(rs.STAGE_SECTIONS["refine_map"]) >= 2
+
+
+def test_stage_sections_vocabulary():
+    # Sections are page panels, never wizard steps: a key carrying sections must
+    # be a real stage and must NOT also carry sub-steps, or the strip would
+    # render two chip rows and stage_for_wizard_step would lie.
+    assert set(rs.STAGE_SECTIONS) <= set(rs.STAGE_KEYS)
+    assert set(rs.STAGE_SECTIONS).isdisjoint(rs.STAGE_SUBSTEPS)
+    for key, secs in rs.STAGE_SECTIONS.items():
+        values = [v for v, _ in secs]
+        assert len(values) == len(set(values)), key
+        assert all(label.strip() for _, label in secs), key
+    # A sectioned stage is a page stage: it lands with no wizard step.
+    for key in rs.STAGE_SECTIONS:
+        nav, step = rs.stage_landing(key)
+        assert step is None, key
+    assert rs.stage_landing("refine_map") == ("data", None)
+
+
+def test_every_stage_the_strip_can_mark_current_is_known():
+    for view in ("new", "wizard", "workspace", "landing"):
+        key = rs.current_stage("data", view, 1)
+        assert key in rs.STAGE_LABELS, (view, key)
+
+
+def test_readiness_coverage_item_blocks_on_an_undocumented_gap():
+    """Mirrors the publish gate so the shortfall shows in the checklist, not only
+    as a failed publish."""
+    base = {"has_region": True, "has_screening": True, "n_retained": 12,
+            "enriched": True, "mapping_confirmed": True, "curve_review": {}}
+    cr = dict(_review_map())
+    cr["mC"] = rs.apply_review_decision(cr["mC"], rs.DECISION_REMOVED)
+    base["curve_review"] = cr
+
+    ok = dict(base, coverage={"total": 20, "covered": 20, "excluded": 0, "missing": 0})
+    assert rs.is_ready_to_publish(ok)
+
+    gap = dict(base, coverage={"total": 20, "covered": 12, "excluded": 0, "missing": 8})
+    assert not rs.is_ready_to_publish(gap)
+    item = next(i for i in rs.readiness_checklist(gap) if i["key"] == "coverage")
+    assert item["ok"] is False
+
+    documented = dict(base, coverage={"total": 20, "covered": 12, "excluded": 8, "missing": 0})
+    assert rs.is_ready_to_publish(documented)
+
+
+def test_readiness_coverage_is_ok_before_a_bundle_can_be_built():
+    """A run with nothing to judge yet must not report a fake shortfall."""
+    base = {"has_region": True, "has_screening": True, "n_retained": 12,
+            "enriched": True}
+    cr = dict(_review_map())
+    cr["mC"] = rs.apply_review_decision(cr["mC"], rs.DECISION_REMOVED)
+    base["curve_review"] = cr
+    item = next(i for i in rs.readiness_checklist(base) if i["key"] == "coverage")
+    assert item["ok"] is True
+
+
+def test_derive_stage_status_missing_diagnostics_is_attention():
+    """The agent stamped this stage done while every analysis tab reported that
+    nothing had run. The stage owns the stratifier screening, so a build with no
+    diagnostics is attention, not done."""
+    base = {"has_region": True, "has_screening": True, "n_retained": 5,
+            "enriched": True, "n_enriched": 5}
+    out = rs.derive_stage_status(dict(base, n_missing_diagnostics=4))
+    assert out["enrichment_build"]["status"] == rs.STAGE_ATTENTION
+    assert "4" in out["enrichment_build"]["detail"]
+
+    out = rs.derive_stage_status(dict(base, n_missing_diagnostics=0))
+    assert out["enrichment_build"]["status"] == rs.STAGE_DONE
+
+
+def test_missing_diagnostics_does_not_block_later_stages():
+    """derive_stage_status gates stages 4 to 6 on `enriched`, so the attention
+    state must not be read as "no dataset" or a complete assessment would show
+    "Build a dataset first"."""
+    out = rs.derive_stage_status({
+        "has_region": True, "has_screening": True, "n_retained": 5,
+        "enriched": True, "n_missing_diagnostics": 2,
+        "n_unmapped_functions": 0, "mapping_confirmed": True,
+    })
+    assert out["enrichment_build"]["status"] == rs.STAGE_ATTENTION
+    assert out["refine_map"]["status"] == rs.STAGE_DONE
+
+
+def test_redundancy_is_a_refine_map_section():
+    sections = dict(rs.STAGE_SECTIONS["refine_map"])
+    assert sections["redundancy"] == "Metric redundancy"
+    # It sits beside function mapping, where a flagged pair is actionable.
+    keys = [k for k, _ in rs.STAGE_SECTIONS["refine_map"]]
+    assert keys.index("redundancy") == keys.index("mapping") + 1

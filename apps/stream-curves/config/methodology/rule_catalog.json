@@ -1,0 +1,464 @@
+{
+  "meta": {
+    "methodology_version": "0.3-provisional",
+    "date": "2026-07-24",
+    "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots' real EASI-screened reference sizes (NH-58=33 Functioning, ECBP-55=0 Functioning/16 best-available) and the regional_agent now enforces them.",
+    "status_legend": {
+      "threshold_status": {
+        "provisional": "Operating default, not yet calibrated. Never describe as validated.",
+        "calibrated": "Adjusted using the pilot ecoregions or other validation data.",
+        "approved": "Formally accepted by the scientific team for operational use."
+      },
+      "implementation_status": {
+        "implemented": "A real StreamCurves function performs this today (see maps_to).",
+        "partial": "Related machinery exists but diverges from the rule as written (see note).",
+        "not_yet_implemented": "Specified here; no code performs it yet. Route affected decisions to human review."
+      }
+    },
+    "override_permission_values": ["none", "human_review", "maintainer"]
+  },
+  "rules": [
+    {
+      "id": "DATA-01", "family": "DATA", "name": "Missing observations (auto)",
+      "purpose": "Gate variables with acceptable missingness into automated analysis.",
+      "test": "missing_fraction <= max_missingness_auto", "threshold": "<= 0.20",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "streamcurves/precheck.py (flag_low_n / missingness flags)",
+      "note": "Precheck flags missingness but the 0.20 cutoff is not the wired action threshold today.",
+      "outcomes": {"pass": "eligible if other checks pass", "review": "n/a", "fail": "see DATA-02/03"},
+      "confidence_effect": "full data_adequacy_quality points when pass",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "DATA-02", "family": "DATA", "name": "Moderate missingness",
+      "purpose": "Analyze-with-caution band for partial coverage.",
+      "test": "0.20 < missing_fraction <= 0.40", "threshold": "(0.20, 0.40]",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "streamcurves/precheck.py",
+      "outcomes": {"pass": "analyze with caution", "review": "targeted review + confidence penalty", "fail": "n/a"},
+      "confidence_effect": "penalty to data_adequacy_quality; targeted review",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "DATA-03", "family": "DATA", "name": "High missingness",
+      "purpose": "Prevent auto-recommendation on sparse coverage.",
+      "test": "missing_fraction > 0.40", "threshold": "> 0.40",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "streamcurves/precheck.py",
+      "outcomes": {"pass": "n/a", "review": "human review or exclusion", "fail": "do not auto-recommend"},
+      "confidence_effect": "hard-stop from automation",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "DATA-04", "family": "DATA", "name": "Minimum unstratified sample",
+      "purpose": "Floor for automated curve evaluation.",
+      "test": "n >= 20", "threshold": ">= 20",
+      "threshold_status": "calibrated", "implementation_status": "implemented",
+      "maps_to": "streamcurves/regional_agent.py MIN_N_AUTO (sample_size_disposition); curves.py hard floor n<5",
+      "note": "Calibrated v0.3 from 50 -> 20 on the pilots' real reference sizes (IQR quartiles are stable near n=20). regional_agent flags every curve below this as exploratory/insufficient.",
+      "outcomes": {"pass": "eligible for automated curve evaluation", "review": "n/a", "fail": "see DATA-05/06"},
+      "confidence_effect": "cap 59 if below minimum (sample_below_minimum)",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "DATA-05", "family": "DATA", "name": "Exploratory unstratified sample",
+      "purpose": "Exploratory-only band.",
+      "test": "10 <= n < 20", "threshold": "[10, 20)",
+      "threshold_status": "calibrated", "implementation_status": "implemented",
+      "maps_to": "streamcurves/regional_agent.py MIN_N_EXPLORATORY (sample_size_disposition)",
+      "note": "Calibrated v0.3 from [30,50) to [10,20). Curves in this band publish as preliminary but carry an 'exploratory' flag and a confidence cap; certification requires human approval.",
+      "outcomes": {"pass": "n/a", "review": "exploratory: flag + confidence cap, preliminary only unless approved", "fail": "n/a"},
+      "confidence_effect": "cap 59",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "DATA-06", "family": "DATA", "name": "Insufficient unstratified sample",
+      "purpose": "Do not auto-fit below this floor.",
+      "test": "n < 10", "threshold": "< 10",
+      "threshold_status": "calibrated", "implementation_status": "implemented",
+      "maps_to": "streamcurves/regional_agent.py MIN_N_FLOOR; curves.py (n<5 -> insufficient_data); run_state CURVE_STATUS_INSUFFICIENT",
+      "note": "Calibrated v0.3 from 30 to 10. 5 <= n < 10 builds but is flagged 'insufficient' for mandatory review; n < 5 is the engine's hard insufficient_data.",
+      "outcomes": {"pass": "n/a", "review": "insufficient: flag for mandatory review", "fail": "n < 5 do not fit (engine)"},
+      "confidence_effect": "hard-stop; flagged review",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "DATA-07", "family": "DATA", "name": "Minimum sample per stratum",
+      "purpose": "Floor for automated stratified evaluation.",
+      "test": "n_stratum >= 15", "threshold": ">= 15",
+      "threshold_status": "calibrated", "implementation_status": "partial",
+      "maps_to": "config/stratification_registry.yaml min_group_size (default 5); feasibility.py",
+      "note": "Calibrated v0.3 from 30 to 15. Not exercised in the v1 agent (no stratification yet).",
+      "outcomes": {"pass": "eligible for stratified evaluation", "review": "n/a", "fail": "see DATA-08"},
+      "confidence_effect": "cap 59 per stratum if below minimum",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "DATA-08", "family": "DATA", "name": "Very small stratum",
+      "purpose": "Reject automatic stratification on thin groups.",
+      "test": "n_stratum < 8 OR n_stratum < 0.10 * n_region", "threshold": "< 8 or < 10%",
+      "threshold_status": "calibrated", "implementation_status": "partial",
+      "maps_to": "feasibility.py (sparse-cell detection); run_state CURVE_STATUS_STRAT_REVIEW",
+      "outcomes": {"pass": "n/a", "review": "reject auto-stratification unless externally defined + approved", "fail": "reject"},
+      "confidence_effect": "flagged review (strat_review)",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "DATA-09", "family": "DATA", "name": "Repeated observations (grouped folds)",
+      "purpose": "Prevent leakage: one site cannot appear in both train and test folds.",
+      "test": "site-grouped validation splits", "threshold": "required",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (no CV in code; bundled NRSA is one-row-per-site, so no revisits exist yet)",
+      "note": "Moot on current data (de-duplicated to one row per site) but required before any revisit or multi-year data is used.",
+      "outcomes": {"pass": "n/a", "review": "n/a", "fail": "block CV if leakage possible"},
+      "confidence_effect": "cap 39 if unresolved leakage",
+      "override_permission": "human_review"
+    },
+
+    {
+      "id": "RED-01", "family": "RED", "name": "Strong pairwise association",
+      "purpose": "Flag strong empirical redundancy between two metrics.",
+      "test": "abs(Spearman rho) >= 0.80", "threshold": ">= 0.80",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "streamcurves/cross_metric.py (computes Pearson + Spearman; flags on |Pearson| > 0.80)",
+      "note": "DIVERGENCE: code flags on |Pearson|>0.80; methodology primary flag is |Spearman|>=0.80. Switch the flag column to reach implemented.",
+      "outcomes": {"pass": "not strongly redundant", "review": "n/a", "fail": "strong redundancy flag -> evaluate function overlap (RED matrix)"},
+      "confidence_effect": "informs redundancy decision confidence",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "RED-02", "family": "RED", "name": "Moderate pairwise association",
+      "purpose": "Investigate function overlap and stability.",
+      "test": "0.65 <= abs(Spearman rho) < 0.80", "threshold": "[0.65, 0.80)",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "streamcurves/cross_metric.py (correlations computed; moderate-band action net-new)",
+      "outcomes": {"pass": "n/a", "review": "investigate overlap + stability", "fail": "n/a"},
+      "confidence_effect": "moderate uncertainty flag",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "RED-03", "family": "RED", "name": "Low pairwise association",
+      "purpose": "Not redundant on correlation alone.",
+      "test": "abs(Spearman rho) < 0.65", "threshold": "< 0.65",
+      "threshold_status": "provisional", "implementation_status": "implemented",
+      "maps_to": "streamcurves/cross_metric.py",
+      "outcomes": {"pass": "retain as distinct if otherwise eligible", "review": "n/a", "fail": "n/a"},
+      "confidence_effect": "supports non-redundancy",
+      "override_permission": "none"
+    },
+    {
+      "id": "RED-04", "family": "RED", "name": "Multicollinearity review",
+      "purpose": "Review a proposed multimetric set for collinearity.",
+      "test": "VIF > 5", "threshold": "> 5",
+      "threshold_status": "provisional", "implementation_status": "implemented",
+      "maps_to": "streamcurves/diagnostics.py::_car_vif (caution band 5-10)",
+      "outcomes": {"pass": "ok", "review": "review the metric set", "fail": "see RED-05"},
+      "confidence_effect": "penalty to statistical_strength",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "RED-05", "family": "RED", "name": "Severe multicollinearity",
+      "purpose": "Do not retain the combination without justification.",
+      "test": "VIF > 10", "threshold": "> 10",
+      "threshold_status": "provisional", "implementation_status": "implemented",
+      "maps_to": "streamcurves/diagnostics.py::_car_vif (fail band >=10)",
+      "outcomes": {"pass": "n/a", "review": "explicit justification required", "fail": "do not retain combination"},
+      "confidence_effect": "penalty to statistical_strength",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "RED-06", "family": "RED", "name": "Stability of redundancy classification",
+      "purpose": "Redundancy category should be stable across resamples.",
+      "test": "same category in >= 80% of bootstrap resamples", "threshold": ">= 0.80",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (no bootstrap in code)",
+      "outcomes": {"pass": "supports confidence", "review": "unstable -> review", "fail": "n/a"},
+      "confidence_effect": "robustness_out_of_sample points",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "RED-07", "family": "RED", "name": "Multiple testing (redundancy)",
+      "purpose": "Control false discovery across many association tests.",
+      "test": "FDR-adjusted q <= 0.05", "threshold": "<= 0.05",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "streamcurves/screening.py (statsmodels multipletests BH, used for stratifier screening)",
+      "note": "BH-FDR exists for stratifier screening; applying it to the pairwise redundancy matrix is net-new.",
+      "outcomes": {"pass": "supporting evidence", "review": "n/a", "fail": "effect size remains primary"},
+      "confidence_effect": "supporting only; effect size primary",
+      "override_permission": "none"
+    },
+
+    {
+      "id": "STRAT-00", "family": "STRAT", "name": "Existing stratifier screen (KW + effect + feasibility)",
+      "purpose": "Current operational gate for choosing a stratifier per metric.",
+      "test": "Kruskal-Wallis + pairwise Wilcoxon (BH) + effect size + feasibility + composite score",
+      "threshold": "composite score, one stratifier per metric",
+      "threshold_status": "approved", "implementation_status": "implemented",
+      "maps_to": "screening.py, effects.py, consistency.py, feasibility.py, decision.py::make_stratification_decisions",
+      "outcomes": {"pass": "selected", "review": "needs_review (tied/ sparse/ borderline)", "fail": "not_selected / rejected_sparse"},
+      "confidence_effect": "decision.total_score (0-1) is the current numeric proxy",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "STRAT-01", "family": "STRAT", "name": "CV error improvement (minimum)",
+      "purpose": "Minimum cross-validated evidence supporting stratification.",
+      "test": ">= 10% reduction in CV RMSE or MAE", "threshold": ">= 0.10",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (no CV / RMSE / MAE in code)",
+      "outcomes": {"pass": "supports stratification", "review": "below threshold -> review", "fail": "insufficient"},
+      "confidence_effect": "robustness_out_of_sample points",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "STRAT-02", "family": "STRAT", "name": "CV error improvement (strong)",
+      "purpose": "Strong cross-validated evidence.",
+      "test": ">= 15% reduction in CV RMSE or MAE", "threshold": ">= 0.15",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new",
+      "outcomes": {"pass": "strong support", "review": "n/a", "fail": "n/a"},
+      "confidence_effect": "robustness_out_of_sample points",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "STRAT-03", "family": "STRAT", "name": "Change in CV explained variation",
+      "purpose": "Supporting evidence via delta R-squared.",
+      "test": "delta CV R-squared >= 0.05", "threshold": ">= 0.05",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (models.py reports in-sample adj-R2, not CV R2)",
+      "outcomes": {"pass": "supporting", "review": "n/a", "fail": "n/a"},
+      "confidence_effect": "supporting only",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "STRAT-04", "family": "STRAT", "name": "Information criterion (AICc)",
+      "purpose": "Supporting IC evidence.",
+      "test": "delta AICc >= 4", "threshold": ">= 4",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (models.py uses BIC, not AICc; BIC could serve as a documented proxy)",
+      "outcomes": {"pass": "supporting", "review": "n/a", "fail": "n/a"},
+      "confidence_effect": "supporting only",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "STRAT-05", "family": "STRAT", "name": "Information criterion (strong)",
+      "purpose": "Strong IC evidence.",
+      "test": "delta AICc >= 10", "threshold": ">= 10",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (BIC proxy available)",
+      "outcomes": {"pass": "strong support", "review": "n/a", "fail": "n/a"},
+      "confidence_effect": "supporting only",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "STRAT-06", "family": "STRAT", "name": "Resampling stability",
+      "purpose": "Improvement should recur across resamples.",
+      "test": "improvement in >= 80% of resamples", "threshold": ">= 0.80",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (no bootstrap); consistency.py measures cross-metric stability, not resample stability",
+      "outcomes": {"pass": "robust", "review": "unstable -> review", "fail": "n/a"},
+      "confidence_effect": "robustness_out_of_sample points",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "STRAT-07", "family": "STRAT", "name": "Breakpoint stability",
+      "purpose": "Reproducible continuous stratification.",
+      "test": "estimated split in same approved interval in >= 70% of resamples", "threshold": ">= 0.70",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (no data-derived breakpoint estimation; DACAT bins are pre-defined)",
+      "outcomes": {"pass": "stable breakpoint", "review": "unstable -> reject/review", "fail": "reject"},
+      "confidence_effect": "robustness_out_of_sample points",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "STRAT-08", "family": "STRAT", "name": "Maximum data-derived bins",
+      "purpose": "Limit data-derived stratum count.",
+      "test": "data-derived bins <= 3", "threshold": "<= 3",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "config/stratification_registry.yaml (DACAT is 3 pre-defined categories; no data-derived binning today)",
+      "outcomes": {"pass": "ok", "review": "more than 3 -> strong rationale + human approval", "fail": "reject"},
+      "confidence_effect": "penalty for over-binning",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "STRAT-09", "family": "STRAT", "name": "Group-difference test",
+      "purpose": "Supporting evidence that curves differ by group.",
+      "test": "FDR-adjusted q <= 0.05", "threshold": "<= 0.05",
+      "threshold_status": "provisional", "implementation_status": "implemented",
+      "maps_to": "streamcurves/screening.py (Kruskal-Wallis + pairwise Wilcoxon + BH)",
+      "outcomes": {"pass": "supporting", "review": "n/a", "fail": "not supporting"},
+      "confidence_effect": "supporting only",
+      "override_permission": "none"
+    },
+
+    {
+      "id": "CURVE-01", "family": "CURVE", "name": "Model family on approved list",
+      "purpose": "Only approved curve families may be fit.",
+      "test": "family in approved_families", "threshold": "iqr_seed_piecewise_linear",
+      "threshold_status": "approved", "implementation_status": "implemented",
+      "maps_to": "streamcurves/curves.py::build_reference_curve (the sole Approved family)",
+      "outcomes": {"pass": "eligible", "review": "n/a", "fail": "reject or request method change"},
+      "confidence_effect": "n/a",
+      "override_permission": "maintainer"
+    },
+    {
+      "id": "CURVE-02", "family": "CURVE", "name": "Out-of-sample validation",
+      "purpose": "Grouped cross-validation completed before automated acceptance.",
+      "test": "grouped CV completed", "threshold": "required",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (no CV). Current acceptance is geometric validation (CURVE-07a).",
+      "outcomes": {"pass": "eligible for auto-accept", "review": "missing CV -> review", "fail": "block auto-accept"},
+      "confidence_effect": "cap 59 if required CV absent",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "CURVE-03", "family": "CURVE", "name": "Parsimony (one standard error)",
+      "purpose": "Choose the simplest model within 1 SE of best validated performance.",
+      "test": "one-standard-error rule over validated performance", "threshold": "default selection rule",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (single family today, so moot until multiple families exist)",
+      "outcomes": {"pass": "select parsimonious", "review": "n/a", "fail": "n/a"},
+      "confidence_effect": "n/a",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "CURVE-04", "family": "CURVE", "name": "Influence sensitivity",
+      "purpose": "Mandatory review if one influential point moves a key parameter or the decision.",
+      "test": "drop-one changes key parameter by > 20% or flips the decision", "threshold": "> 0.20",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "streamcurves/diagnostics.py (Cook's distance on regression models, not wired to curve auto-review)",
+      "outcomes": {"pass": "ok", "review": "mandatory review", "fail": "n/a"},
+      "confidence_effect": "robustness_out_of_sample penalty; mandatory review",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "CURVE-05", "family": "CURVE", "name": "Direction or shape conflict",
+      "purpose": "Do not silently override an approved ecological expectation.",
+      "test": "estimated direction conflicts with approved expectation", "threshold": "any conflict",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "streamcurves/curves.py (higher_is_better inversion + degenerate detection); expected-shape input not stored",
+      "note": "Direction is handled by inversion, but there is no stored per-metric expected-shape to check against (Unresolved Input 3).",
+      "outcomes": {"pass": "consistent", "review": "mandatory review", "fail": "do not silently override"},
+      "confidence_effect": "ecological_plausibility; mandatory review on conflict",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "CURVE-06", "family": "CURVE", "name": "Uncertainty reported",
+      "purpose": "Confidence or prediction intervals must be reported.",
+      "test": "interval reported", "threshold": "required",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new for IQR curves (regional.py has a 95% CI for the separate power-law feature only)",
+      "outcomes": {"pass": "ok", "review": "missing interval -> review", "fail": "block release"},
+      "confidence_effect": "robustness_out_of_sample",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "CURVE-07", "family": "CURVE", "name": "Residual structure",
+      "purpose": "No meaningful systematic residual pattern remains.",
+      "test": "residual diagnostics acceptable", "threshold": "no systematic pattern",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "streamcurves/diagnostics.py (Shapiro / Breusch-Pagan on regression, not on the IQR curve)",
+      "outcomes": {"pass": "ok", "review": "pattern -> revise/stratify/transform", "fail": "reject"},
+      "confidence_effect": "statistical_strength",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "CURVE-07a", "family": "CURVE", "name": "Geometric validation (current acceptance gate)",
+      "purpose": "The IQR-seed curve must validate geometrically.",
+      "test": ">=2 points; metric non-decreasing; index in [0,1]; spans 0.30 and 0.70; <=2 crossings of each band",
+      "threshold": "geometric",
+      "threshold_status": "approved", "implementation_status": "implemented",
+      "maps_to": "streamcurves/curves.py::validate_reference_curve_points",
+      "outcomes": {"pass": "auto_ok candidate", "review": "degenerate/multi-crossing -> flagged", "fail": "degenerate_curve"},
+      "confidence_effect": "gates auto_ok",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "CURVE-08", "family": "CURVE", "name": "Reproducibility",
+      "purpose": "Same inputs + seed + method version reproduce the curve.",
+      "test": "deterministic reproduction", "threshold": "required before release",
+      "threshold_status": "approved", "implementation_status": "implemented",
+      "maps_to": "streamcurves/curves.py (deterministic numpy/pandas); run_state method-version stamps; library.py content_digest",
+      "outcomes": {"pass": "reproducible", "review": "n/a", "fail": "block release"},
+      "confidence_effect": "rule_completeness_agreement",
+      "override_permission": "maintainer"
+    },
+
+    {
+      "id": "REF-01", "family": "REF", "name": "Primary reference tier (least-disturbed)",
+      "purpose": "Default reference population = Functioning sites.",
+      "test": "EASI functional preset (raw ECI > 0.69)", "threshold": "ECI > 0.69",
+      "threshold_status": "approved", "implementation_status": "implemented",
+      "maps_to": "_vendor/easi/batch/qualify.PRESETS['functional']; easi_screening.SCREENING_PRESET_CHOICES (default)",
+      "outcomes": {"pass": "site qualifies as reference", "review": "n/a", "fail": "excluded from reference pool"},
+      "confidence_effect": "no cap; least-disturbed reference can score High",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "REF-02", "family": "REF", "name": "Reference-tier fallback (best-available)",
+      "purpose": "When the Functioning-only pool is too small, include Functioning-at-Risk sites, explicitly and under review.",
+      "test": "IF least-disturbed pool fails DATA-04/DATA-06 for a metric or stratum THEN switch to at_risk_or_better (ECI > 0.39)",
+      "threshold": "ECI > 0.39 (fallback only)",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "_vendor/easi/batch/qualify.PRESETS['at_risk_or_better'] (preset exists; the fallback trigger + provenance stamp + confidence cap are net-new policy/automation)",
+      "note": "Reconciles with revision_plan 'never relax the ECI threshold': that forbade SILENT/AUTOMATIC weakening to chase sample size. REF-02 is explicit, reviewed, provenance-stamped, confidence-capped, and user-authorized. Shifts the baseline from least-disturbed to best-available reference (degraded-baseline bias risk).",
+      "outcomes": {"pass": "n/a (never auto-passes)", "review": "MANDATORY human review of every affected curve", "fail": "n/a"},
+      "confidence_effect": "cap 59 (best_available_reference); mandatory review; stamp reference_tier per curve + bundle",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "REF-03", "family": "REF", "name": "Reference floor",
+      "purpose": "Never build reference curves from below Functioning-at-Risk.",
+      "test": "reference tier in {least_disturbed, best_available}; never all_sites",
+      "threshold": "floor = at_risk_or_better",
+      "threshold_status": "approved", "implementation_status": "implemented",
+      "maps_to": "easi_screening.SCREENING_PRESET_CHOICES (all_sites offered for exploration, not for reference curves, by policy)",
+      "outcomes": {"pass": "ok", "review": "n/a", "fail": "block: all_sites is not a reference pool"},
+      "confidence_effect": "hard-stop below floor",
+      "override_permission": "none"
+    },
+
+    {
+      "id": "CONF-01", "family": "CONF", "name": "0-100 confidence score",
+      "purpose": "Workflow-triage score for every decision.",
+      "test": "weighted sum of six components (see config confidence_rules.components)", "threshold": "0-100",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (current triage is categorical: run_state curve statuses + boolean needs_review)",
+      "outcomes": {"pass": "High 80-100 streamlined", "review": "Moderate 60-79 targeted; Low <60 detailed", "fail": "n/a"},
+      "confidence_effect": "defines the confidence band",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "CONF-02", "family": "CONF", "name": "Confidence caps",
+      "purpose": "Hard caps regardless of subtotal.",
+      "test": "apply caps: 59 (no ecology / no OOS validation / below min n / best-available reference); 39 (leakage/circularity)",
+      "threshold": "caps 59 / 39",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (ties to REF-02, DATA-04/09, CURVE-02/05)",
+      "outcomes": {"pass": "n/a", "review": "capped -> review band", "fail": "n/a"},
+      "confidence_effect": "caps override subtotal",
+      "override_permission": "human_review"
+    },
+
+    {
+      "id": "SELECT-01", "family": "SELECT", "name": "Compact portfolio size",
+      "purpose": "One primary metric per function; at most one complementary secondary.",
+      "test": "metrics_per_function <= 2 (>2 requires human approval)", "threshold": "<= 2",
+      "threshold_status": "provisional", "implementation_status": "partial",
+      "maps_to": "views/summary_state.eligible_summary_metrics + run_state intended_metrics_for_publish (scope exists; the 100-point metric score is net-new)",
+      "note": "The NH pilot already carries two metrics for Nutrient cycling and three for Community dynamics; three requires explicit human approval under this rule.",
+      "outcomes": {"pass": "portfolio ok", "review": ">2 per function -> human approval", "fail": "n/a"},
+      "confidence_effect": "metric_score ranks candidates within a function",
+      "override_permission": "human_review"
+    },
+    {
+      "id": "SELECT-02", "family": "SELECT", "name": "100-point metric score",
+      "purpose": "Rank candidates within a function (not an automatic decision).",
+      "test": "weighted sum (see config metric_portfolio.metric_score_weights)", "threshold": "0-100",
+      "threshold_status": "provisional", "implementation_status": "not_yet_implemented",
+      "maps_to": "net-new (no metric score in code)",
+      "outcomes": {"pass": "ranked", "review": "tradeoffs visible for review", "fail": "n/a"},
+      "confidence_effect": "informs portfolio confidence",
+      "override_permission": "human_review"
+    }
+  ]
+}

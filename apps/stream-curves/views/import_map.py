@@ -1,7 +1,10 @@
 """Map-first data-import wizard — port of app/modules/mod_import_map.R.
 
 A single self-contained flow for building a new dataset: 1 Region → 2 Add data
-→ 3 Confirm sites → 4 Choose metrics → 5 Compile → 6 Classify → 7 Review & build.
+→ 3 Screen sites → 4 Choose metrics → 5 Compile → 6 Classify → 7 Review & build.
+The steps have no stepper of their own: the workflow strip (views/stagebar.py)
+groups them under its stages and renders the sub-step chips; internal step
+numbers stay 1-7 here.
 Step 1 defines the region of applicability (EPA Level III ecoregion, state, a
 drawn area, or none); all data entry, metric selection, classification and the
 build happen inside the wizard. Classify/Build reuse the shared classify UI and
@@ -22,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 from functools import lru_cache
 
 import numpy as np
@@ -58,8 +62,9 @@ from streamcurves.datasources.streamcat import streamcat_metrics
 from streamcurves.datasources.streamstats import ss_basin_characteristics, ss_core_bcs
 from streamcurves.geo import point_in_polygon_rings, state_abbr_from_name, state_at
 from streamcurves.geomorph import bieger_division_abbr, bieger_geometry
+from streamcurves import metric_picker as mpick
+from streamcurves import workbook as wb
 from streamcurves.metric_map import (
-    metric_map_default_codes,
     metric_map_function_label,
     metric_map_functions_for,
 )
@@ -72,8 +77,10 @@ from streamcurves.nrsa import (
 from streamcurves.paths import DATA_DIR
 from streamcurves.profiler import (
     build_config_tables_from_roles,
+    current_role_membership,
     profile_and_suggest,
     profile_columns,
+    reconcile_tables_with_new_data,
 )
 from streamcurves.sites import (
     assemble_sites,
@@ -93,6 +100,7 @@ from views.state import AppState
 from views.theme import bi, fa
 from views.uihelpers import (
     CompileProgress,
+    not_ready_panel,
     remove_final_loading_notification,
     show_final_loading_notification,
 )
@@ -103,13 +111,12 @@ logger = logging.getLogger("streamcurves")
 _ECOREGIONS = DATA_DIR / "ecoregions_l3.geojson"
 _CROSSWALK = DATA_DIR / "ecoregion_code_crosswalk.csv"
 _NRSA_SITES = DATA_DIR / "nrsa_sites.csv"
-_STREAMCAT_CATALOG = DATA_DIR / "streamcat_metrics.csv"
 _PHYSIO = DATA_DIR / "physio_divisions.geojson"
 _STATES = DATA_DIR / "us_states.geojson"
 
 N_STEPS = 7
 _STEP_LABELS = [
-    "Region", "Add data", "Confirm sites", "Choose metrics",
+    "Region", "Add data", "Screen sites", "Choose metrics",
     "Compile", "Classify", "Review & build",
 ]
 
@@ -142,6 +149,14 @@ _NRSA_SECTIONS = [
     ("land", "Landscape"),
 ]
 
+# Fixed STAF discipline order (matches streamcurves.mapping.fixed_discipline_order).
+_DISCIPLINE_ORDER = ["Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology"]
+
+
+def _js1(s) -> str:
+    """Escape a string for embedding in a single-quoted JS literal."""
+    return str(s).replace("\\", "\\\\").replace("'", "\\'")
+
 _USGS_TOPO = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 _USGS_IMAGERY = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
 _CARTO_LIGHT = "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
@@ -153,13 +168,51 @@ _HOVER_STYLE = {"weight": 2, "color": "#243a61", "fillColor": "#8fb4dd", "fillOp
 _SELECTED_STYLE = {"weight": 3, "color": "#243a61", "opacity": 1, "fillColor": "#2f4b7c", "fillOpacity": 0.55}
 _SITE_POINT_STYLE = {"radius": 6, "weight": 1.5, "color": "#7a2a12", "fillColor": "#e2603a", "fillOpacity": 0.9}
 
+# Nominal pixel size of the sites map (it renders full-width in the wizard card).
+# Only affects how tight the fitted zoom is, never correctness.
+_MAP_VIEWPORT_PX = (1200, 440)
+_MAP_ZOOM_RANGE = (3, 12)
+
+
+def _mercator_y(lat: float) -> float:
+    """Web Mercator northing, normalized to 0..1 over the projected world."""
+    lat = max(min(lat, 85.05112878), -85.05112878)
+    s = math.sin(math.radians(lat))
+    return 0.5 - math.log((1 + s) / (1 - s)) / (4 * math.pi)
+
+
+def _view_for_extent(lat_min: float, lat_max: float, lon_min: float,
+                     lon_max: float, *, pad: float = 1.25):
+    """Center and zoom that frame a lat/lon extent -> ``(center, zoom)``.
+
+    Deliberately synchronous. ipyleaflet's ``fit_bounds`` schedules a coroutine
+    that sets a center and then decrements zoom in a loop, awaiting a client
+    ``bounds`` event each pass. The wizard hides inactive steps with
+    ``display:none`` rather than unmounting them, so the map can be unsized when
+    the call is made, the awaited event never arrives, and the parked loop
+    resumes later (when a panel re-render reflows the map) and runs its
+    zoom-out to completion. Assigning center/zoom pushes state one way with
+    nothing to await, so nothing can fire late.
+    """
+    center = ((lat_min + lat_max) / 2.0, (lon_min + lon_max) / 2.0)
+    vw, vh = _MAP_VIEWPORT_PX
+    lo, hi = _MAP_ZOOM_RANGE
+    lon_span = max(abs(lon_max - lon_min), 1e-6) * pad
+    lat_span = max(abs(_mercator_y(lat_max) - _mercator_y(lat_min)), 1e-9) * pad
+    zoom = min(math.log2(vw * 360.0 / (lon_span * 256.0)),
+               math.log2(vh / (lat_span * 256.0)))
+    return center, int(max(lo, min(hi, math.floor(zoom))))
+
 
 # --------------------------------------------------------------------------- #
 # Reference data (loaded once).
 # --------------------------------------------------------------------------- #
 
 
-@lru_cache(maxsize=1)
+# maxsize covers every bundled file at once: callers alternate between the
+# ecoregion and state collections, and a single slot evicted on every switch,
+# re-parsing multiple MB of json each time a highlight was rebuilt.
+@lru_cache(maxsize=4)
 def _load_geojson(path_str: str) -> dict:
     with open(path_str, encoding="utf-8") as f:
         return json.load(f)
@@ -200,31 +253,119 @@ def _nrsa_all() -> pd.DataFrame | None:
         return None
 
 
+def _known_nrsa_site_ids() -> set[str]:
+    """Every NRSA site id the app can recognize offline: the bundled candidate
+    catalog plus the vendored screening-evidence file."""
+    ids: set[str] = set(_nrsa_comids().keys())
+    d = _nrsa_all()
+    if d is not None and "site_id" in d.columns:
+        ids.update(str(v) for v in d["site_id"].tolist())
+    return ids
+
+
+def _restore_candidate_sites(candidates, screening, nrsa_ids=None):
+    """Rebuild the wizard's candidate frame on project re-entry.
+
+    ``candidates`` is the verbatim saved frame and is always preferred. Sessions
+    saved without it (older schema, or runs where the wizard never assembled
+    sites) only have the screening table, which is a lossy stand-in: its
+    ``state`` column is the EASI run state (``succeeded``/``failed``), not the
+    US state the candidate frame means by that name. Copying ``state`` across
+    therefore silently mislabels every row, so the fallback drops it and takes
+    only columns that mean the same thing in both tables. The screening table
+    also carries no ``.source``; the fallback re-derives it from the site id
+    (known NRSA ids -> "nrsa", everything else -> "upload") so the sites
+    summary and the NRSA metric pool survive re-entry. ``nrsa_ids`` overrides
+    the known-id lookup for tests. Returns ``None`` when nothing can be
+    restored.
+    """
+    if candidates is not None:
+        df = (candidates if isinstance(candidates, pd.DataFrame)
+              else pd.DataFrame(candidates))
+        if len(df):
+            return df.copy()
+    if screening is None:
+        return None
+    df = (screening if isinstance(screening, pd.DataFrame)
+          else pd.DataFrame(screening))
+    if not len(df) or "site_id" not in df.columns:
+        return None
+    keep = [c for c in ("site_id", "lat", "lon", ".source", "ag_eco9", "huc8")
+            if c in df.columns]
+    out = df[keep].copy()
+    if ".source" not in out.columns:
+        known = _known_nrsa_site_ids() if nrsa_ids is None else set(nrsa_ids)
+        out[".source"] = [
+            "nrsa" if str(sid) in known else "upload"
+            for sid in out["site_id"].tolist()
+        ]
+    return out
+
+
 @lru_cache(maxsize=1)
-def _streamcat_catalog() -> pd.DataFrame:
+def _nrsa_comids() -> dict[str, int]:
+    """Published EPA reach per NRSA site id, from the bundled evidence file.
+
+    Offline and stdlib-only, so it stays importable without the geo stack.
+    Empty dict when unavailable, which just means every site snaps live.
+    """
     try:
-        return pd.read_csv(_STREAMCAT_CATALOG)
+        from streamcurves._vendor.easi.datasources.nrsa import comid_by_site_id
+        return comid_by_site_id()
     except Exception:  # noqa: BLE001
-        return pd.DataFrame(columns=["name", "label", "domain", "default"])
-
-
-def _default_streamcat() -> list[str]:
-    cdf = _streamcat_catalog()
-    if len(cdf) == 0:
-        return []
-    return [n for n in cdf["name"] if n in set(metric_map_default_codes("streamcat"))]
-
-
-def _nrsa_default_sel() -> list[str]:
-    cdf = load_nrsa_catalog()
-    if cdf is None or len(cdf) == 0:
-        return []
-    rec = set(metric_map_default_codes("nrsa"))
-    return [n for n in cdf["name"] if n in rec]
+        return {}
 
 
 def _js_geojson(path) -> dict:
     return _load_geojson(str(path))
+
+
+def _polygon_rings(polygon) -> list[list[list[float]]]:
+    """Coordinate rings from either shape a drawn region is held in.
+
+    The draw control stores a bare list of rings as numpy arrays; a region
+    restored from a saved session carries whatever was written to
+    region_of_applicability["polygon"], which may be a full
+    {"type": "Polygon", "coordinates": [...]} geometry. Accept both, and drop
+    rings too short to enclose anything.
+    """
+    if polygon is None:
+        return []
+    if isinstance(polygon, dict):
+        if str(polygon.get("type") or "").lower() != "polygon":
+            return []  # MultiPolygon etc.: the draw control never makes one
+        polygon = polygon.get("coordinates") or []
+    rings = []
+    for ring in polygon:
+        pts = [[float(p[0]), float(p[1])] for p in ring if len(p) >= 2]
+        if len(pts) >= 3:
+            rings.append(pts)
+    return rings
+
+
+def _region_features(kind, code, polygon=None) -> list[dict]:
+    """GeoJSON features for a region selection; empty when there is nothing to draw.
+
+    Shared by the region map's selected-region highlight and the sites map's
+    region-context outline, which each resolved this lookup independently.
+    """
+    if kind == "polygon":
+        rings = _polygon_rings(polygon)
+        if not rings:
+            return []
+        return [{"type": "Feature", "properties": {},
+                 "geometry": {"type": "Polygon", "coordinates": rings}}]
+    if not code:
+        return []
+    if kind == "ecoregion":
+        path, prop = _ECOREGIONS, "US_L3CODE"
+    elif kind == "state":
+        path, prop = _STATES, "state"
+    else:
+        return []
+    feats = _js_geojson(path)["features"]
+    return [f for f in feats
+            if str((f.get("properties") or {}).get(prop)) == str(code)]
 
 
 # --------------------------------------------------------------------------- #
@@ -281,7 +422,9 @@ def import_map_ui():
         )
     return ui.div(
         ui.div(
-            ui.tags.span(bi("geo-alt-fill"), " Start a new project"),
+            # Reopening a project mounts this same wizard, so a fixed "Start a
+            # new project" claimed the user was doing something they weren't.
+            ui.output_ui("wizard_header_title"),
             ui.tags.span(
                 "Define the region, gather sites, pull metrics, build",
                 class_="text-muted small",
@@ -289,12 +432,10 @@ def import_map_ui():
             class_="card-header data-setup-card-header d-flex justify-content-between align-items-center",
         ),
         ui.div(
-            ui.output_ui("stepper"),
-            ui.tags.hr(class_="mt-2 mb-3"),
             ui.output_ui("step_style"),
             # Region block (step 1) — persistent so the map survives step nav.
             ui.div(
-                ui.tags.h5("1. Region of applicability"),
+                ui.tags.h5("Region of applicability"),
                 ui.tags.p(
                     "Define where these reference curves apply. Choose how to set the "
                     "region, then pick it from the list or draw it on the map. You can "
@@ -322,19 +463,39 @@ def import_map_ui():
                 class_="wiz-step-block wiz-step-block-1",
             ),
             # Confirm-sites block (step 3) — persistent for the same reason.
+            #
+            # The sites map lives here permanently and is shown/hidden with a CSS
+            # class, never swapped in and out of an output. shinywidgets' output.js
+            # calls create_view on every re-bind and prunes only surplus DOM, so the
+            # previous view is never removed from model.views and its L.Map keeps
+            # running at 0x0, still writing center/zoom into the shared model. Every
+            # destroy/recreate of this div therefore leaks a map that fights the real
+            # one for control of the view.
             ui.div(
-                ui.tags.h5("3. Confirm sites"),
-                ui.tags.p("These are the sites we'll pull data for.", class_="text-muted"),
-                ui.output_ui("sites_summary"),
+                ui.tags.h5("Screen and confirm sites"),
+                ui.output_ui("step3_blocker"),
                 ui.div(
-                    ui.input_radio_buttons(
-                        "sites_view", None, choices={"map": "Map", "table": "Table"},
-                        selected="map", inline=True,
+                    ui.tags.p("These are the sites we'll pull data for.",
+                              class_="text-muted"),
+                    ui.output_ui("sites_summary"),
+                    ui.div(
+                        ui.input_radio_buttons(
+                            "sites_view", None, choices={"map": "Map", "table": "Table"},
+                            selected="map", inline=True,
+                        ),
+                        class_="sites-view-toggle d-flex justify-content-end mb-2",
                     ),
-                    class_="sites-view-toggle d-flex justify-content-end mb-2",
+                    # Both views are always mounted; sites_view_style toggles them.
+                    ui.div(output_widget("sites_map", height="460px")
+                           if _HAS_MAP else
+                           ui.div("Map requires ipyleaflet.", class_="text-muted"),
+                           class_="sites-view sites-view-map"),
+                    ui.div(ui.output_data_frame("sites_table"),
+                           class_="sites-view sites-view-table"),
+                    ui.output_ui("easi_screening_panel"),
+                    class_="step3-live",
                 ),
-                ui.output_ui("sites_view_body"),
-                ui.output_ui("easi_screening_panel"),
+                ui.output_ui("step3_style"),
                 class_="wiz-step-block wiz-step-block-3",
             ),
             ui.output_ui("body"),
@@ -373,7 +534,13 @@ def import_map_server(
     nrsa_sel = reactive.value(None)
     ss_sel = reactive.value(None)
     mmw_sel = reactive.value(None)
+    picker_sel = reactive.value(None)  # step-4 unified selection: set[code]
     compiled = reactive.value(None)
+    # Whether compiled() came from a compile run THIS session (vs hydrated from
+    # state.data). Decides if the screening-derived site_mask_config is valid
+    # against the frame -- mask ids are row positions, so a hydrated frame
+    # (masks already applied) must not have them re-applied.
+    compiled_is_fresh = reactive.value(False)
     coverage = reactive.value(None)
     unmatched = reactive.value(0)
     col_source = reactive.value(None)
@@ -417,7 +584,10 @@ def import_map_server(
                 return None
             return d[d["state"].astype(str) == str(region_name())]
         if kind == "polygon":
-            rings = user_polygon()
+            # Normalised, so a region restored from a saved session (which may
+            # carry a full Polygon geometry rather than bare rings) filters the
+            # same as one just drawn.
+            rings = _polygon_rings(user_polygon())
             if not rings:
                 return None
             mask = [
@@ -433,33 +603,68 @@ def import_map_server(
             return []
         return [c for c in u.columns if c not in (id_col(), lat_col(), lon_col())]
 
-    def collect_metric_selection() -> list[str]:
-        cdf = _streamcat_catalog()
-        doms = list(dict.fromkeys(cdf["domain"])) if len(cdf) else []
-        out: list[str] = []
-        for k in range(len(doms)):
-            out += list(_inp(f"metric_dom_{k}") or [])
-        return out
+    # ── step-4 metric picker (unified table across all catalog sources) ───────
+    def _use_nrsa() -> bool:
+        # The checkbox lives in step 2's body, which never mounts when the
+        # user jumps straight to a later step (stage-strip re-entry). An
+        # unmounted input reads None; treat that as the checkbox's own mount
+        # default (True) so the NRSA metric pool survives direct entry.
+        v = _inp("use_nrsa")
+        return True if v is None else bool(v)
 
-    def collect_nrsa_selection() -> list[str]:
-        out: list[str] = []
-        for code, _ in _NRSA_SECTIONS:
-            out += list(_inp(f"nrsa_core_{code}") or [])
-            out += list(_inp(f"nrsa_more_{code}") or [])
-        return out
+    def _mmw_catalog() -> dict:
+        try:
+            return mmw_core_metrics() if mmw_available() else {}
+        except Exception:  # noqa: BLE001
+            return {}
+
+    @reactive.calc
+    def _picker_table():
+        # Static across a session (the catalogs don't change): built once. MMW
+        # rows appear only when a key is configured, so they never dead-select.
+        try:
+            return mpick.build_metric_picker_table(
+                streamstats=ss_core_bcs(), mmw=_mmw_catalog())
+        except Exception:  # noqa: BLE001
+            logger.exception("metric picker table build failed")
+            return mpick.build_metric_picker_table(streamstats={}, mmw={})
+
+    def _selectable_table() -> pd.DataFrame:
+        """The picker table minus sources the current run can't use (NRSA metrics
+        need NRSA site data)."""
+        t = _picker_table()
+        if not _use_nrsa():
+            t = t[t["source_key"] != "nrsa"]
+        return t
+
+    def _default_codes() -> list[str]:
+        return mpick.default_selected_codes(_selectable_table())
+
+    def _sel_now() -> set[str]:
+        s = picker_sel()
+        if s is None:
+            return set(_default_codes())
+        # keep only codes still selectable (e.g. after a source toggle)
+        valid = set(_selectable_table()["code"].astype(str))
+        return {c for c in s if c in valid}
+
+    def _split_now() -> dict:
+        return mpick.split_selection_by_source(_sel_now(), _picker_table())
 
     def n_metrics_selected() -> int:
-        return (
-            len(collect_metric_selection())
-            + len(collect_nrsa_selection())
-            + len(_inp("ss_sel") or [])
-            + len(_inp("mmw_sel") or [])
-            + sum(bool(_inp(f)) for f in ("want_da", "want_regional", "want_elev"))
-        )
+        return len(_sel_now()) + sum(
+            bool(_inp(f)) for f in ("want_da", "want_regional", "want_elev"))
 
-    # ── persistent maps (built once) ──────────────────────────────────────────
+    # ── persistent maps (built once, each when its own step first shows) ──────
     _rlayers: dict = {"eco": None, "state": None, "selected": None, "draw": None}
     _slayers: dict = {"region": None, "sites": None}
+    # Last (kind, code) the highlight was built for, so re-running the effect
+    # (it now re-runs on every _maps_built_nonce bump) does not re-scan the
+    # ecoregion collection to rebuild a layer that is already correct.
+    _hl_key: dict = {"v": None}
+    # Bumped when a map object comes into existence, so the layer-reconciling
+    # effects re-run against a map they can actually add to.
+    _maps_built_nonce = reactive.value(0)
 
     if _HAS_MAP:
 
@@ -561,26 +766,111 @@ def import_map_server(
             dc.on_draw(_on_draw)
             return dc
 
-        def _add_default_region_overlay():
-            # Seed the default ecoregion polygons AFTER the region map's first
-            # flush (registered from _ensure_maps_built). Skip if the user has
-            # already switched approach in the brief interim.
+        # region_kind value -> (layer slot, builder). "none" maps to nothing.
+        def _region_layer_specs():
+            return (
+                ("eco", "ecoregion", _eco_layer),
+                ("state", "state", _state_layer),
+                ("draw", "polygon", _draw_control),
+            )
+
+        def _apply_region_layers(kind) -> None:
+            """Reconcile the region map's base overlay to ``kind``. Idempotent.
+
+            Deliberately not "remove all four, add the one for this kind": that
+            shape wiped the `selected` highlight on every call and left an empty
+            map when kind was "none", with nothing to re-seed it. It also fired
+            spuriously -- a re-mounted radio re-sends its default with force=True
+            (shiny applies re-sent client values forcibly), so rebuilding the
+            wizard DOM used to blank the polygons outright. Reconciling instead
+            makes a repeat call a no-op.
+            """
+            if _REGION_MAP is None:
+                return
+            for slot, want_kind, builder in _region_layer_specs():
+                if kind == want_kind:
+                    if _rlayers.get(slot) is None:
+                        _add(_rlayers, _REGION_MAP, slot, builder())
+                elif _rlayers.get(slot) is not None:
+                    _rm(_rlayers, _REGION_MAP, slot)
+
+        def _apply_selected_highlight(kind, code, polygon=None) -> None:
+            """Reconcile the "selected region" highlight. Idempotent.
+
+            Deliberately NOT folded into _apply_region_layers: the base sheet and
+            the highlight have different lifetimes, and owning both in one pass is
+            what used to wipe the highlight on every reconcile (the separation is
+            pinned by test_reconcile_never_touches_the_selected_highlight).
+            """
+            if _REGION_MAP is None:
+                return
+            # A drawn polygon always reports the same (kind, code) -- "polygon"
+            # and "USER" -- so it must not take the fast path when redrawn. Its
+            # geometry is a handful of vertices, so rebuilding is free anyway.
+            key = (kind, code)
+            if (kind != "polygon" and key == _hl_key["v"]
+                    and _rlayers.get("selected") is not None):
+                return
+            feats = _region_features(kind, code, polygon)
+            if feats:
+                _add(_rlayers, _REGION_MAP, "selected",
+                     GeoJSON(data={"type": "FeatureCollection", "features": feats},
+                             style=_SELECTED_STYLE, name="Selected region"))
+            else:
+                _rm(_rlayers, _REGION_MAP, "selected")
+            _hl_key["v"] = key
+
+        # Both seeds run post-flush (registered from the builders), i.e. outside the
+        # render context -- which is also why the nonce is bumped here rather than in
+        # the builder: writing a reactive value from inside a @render_widget body is
+        # the self-invalidation footgun documented in views/stagebar.py.
+        def _seed_region_layers():
             with reactive.isolate():
                 kind = region_kind()
-            if kind == "ecoregion" and _rlayers.get("eco") is None:
-                _add(_rlayers, _REGION_MAP, "eco", _eco_layer())
+                _apply_region_layers(kind)
+                # Backfill the highlight for the same reason _seed_sites_layers
+                # backfills markers: re-entry over a restored project seeds the
+                # region before this map exists, so the highlight had nothing to
+                # attach to. Doing it here (rather than leaving it to the nonce
+                # bump below) lands it in the same flush as the base sheet.
+                _apply_selected_highlight(kind, region_code(), user_polygon())
+                _maps_built_nonce.set(_maps_built_nonce() + 1)
 
-        def _ensure_maps_built():
-            # Run-once assembly, inside a live session but only when the wizard
-            # is actually shown — the leaflet bundle (loaded eagerly at page
-            # parse, views/widget_deps.py) is ready long before this.
-            nonlocal _REGION_MAP, _SITES_MAP, _hover_readout
+        def _seed_sites_layers():
+            # The sites map is built when step 3 first shows, which is normally
+            # AFTER _refresh_sites_map already computed markers for it. Re-run that
+            # reconciliation now that there is a map to add them to.
+            _refresh_sites_map_now()
+            with reactive.isolate():
+                _maps_built_nonce.set(_maps_built_nonce() + 1)
+
+        # Each map is built when ITS OWN step first becomes visible, not both at
+        # once. A Leaflet map created inside a display:none container measures its
+        # viewport as 0x0 and stays that way until something calls
+        # invalidateSize(); building the sites map alongside the region map (while
+        # step 3 was hidden) is what used to leave it unrendered until the window
+        # was resized. Its own output is suspend_when_hidden, so this runs exactly
+        # when step 3 is shown -- and a map measured correctly on creation never
+        # needs a resize nudge, which is what makes it safe to have none (see the
+        # note on Leaflet's global trackResize listener below).
+        def _ensure_region_map():
+            nonlocal _REGION_MAP, _hover_readout
             if _REGION_MAP is not None:
                 return
             _REGION_MAP = _base_map()
             _hover_readout = IPHTML("<div style='padding:2px 6px'>Hover a region</div>")
             _REGION_MAP.add(WidgetControl(widget=_hover_readout, position="bottomleft"))
+            # The base overlay is a GeoJSON child; attaching it to the map's
+            # INITIAL widget state trips a shinywidgets 0.8.1 bug (client logs
+            # "Could not create a model" and the polygons never render). Every
+            # later change adds its layer as a post-display update and works, so
+            # seed the same way: just after this render's flush reaches the client.
+            session.on_flushed(_seed_region_layers, once=True)
 
+        def _ensure_sites_map():
+            nonlocal _SITES_MAP
+            if _SITES_MAP is not None:
+                return
             _SITES_MAP = Map(center=(38, -96), zoom=4, scroll_wheel_zoom=True,
                              layout=Layout(height="100%"))
             _SITES_MAP.clear_layers()
@@ -593,24 +883,29 @@ def import_map_server(
                                      attribution=_USGS_ATTR, max_native_zoom=16,
                                      max_zoom=18))
             _SITES_MAP.add(LayersControl(position="topright"))
-            # The default ecoregion overlay is a GeoJSON child; attaching it to
-            # the region map's INITIAL widget state trips a shinywidgets 0.8.1
-            # bug (client logs "Could not create a model" and the polygons never
-            # render). Every later approach/selection change adds its layer as a
-            # post-display update and works, so seed the default the same way:
-            # just after this render's flush reaches the client.
-            session.on_flushed(_add_default_region_overlay, once=True)
+            # Same post-display rule as above, and it also backfills the site
+            # markers/region outline that _refresh_sites_map computed before this
+            # map existed.
+            session.on_flushed(_seed_sites_layers, once=True)
 
+        # reactive.isolate on the gate: `active` reads entry_view(), and taking it
+        # as a dependency made shinywidgets register every widget built inside this
+        # render for close() on the next invalidation (WidgetRenderContext.on_close).
+        # Since the builders early-return, the closed widgets were handed straight
+        # back with an OrphanedShinyComm and no new comm_open -- so Start New
+        # Project -> Back to start -> Start New Project killed both maps.
         @render_widget
         def region_map():  # noqa: A001
-            req(active is None or active())
-            _ensure_maps_built()
+            with reactive.isolate():
+                req(active is None or active())
+            _ensure_region_map()
             return _REGION_MAP
 
         @render_widget
         def sites_map():  # noqa: A001
-            req(active is None or active())
-            _ensure_maps_built()
+            with reactive.isolate():
+                req(active is None or active())
+            _ensure_sites_map()
             return _SITES_MAP
 
     # ── region selection ──────────────────────────────────────────────────────
@@ -684,16 +979,17 @@ def import_map_server(
             region_code.set(None)
             region_name.set(None)
             user_polygon.set(None)
-        if not _HAS_MAP:
-            return
-        for key in ("eco", "state", "selected", "draw"):
-            _rm(_rlayers, _REGION_MAP, key)
-        if kind == "ecoregion":
-            _add(_rlayers, _REGION_MAP, "eco", _eco_layer())
-        elif kind == "state":
-            _add(_rlayers, _REGION_MAP, "state", _state_layer())
-        elif kind == "draw":
-            _add(_rlayers, _REGION_MAP, "draw", _draw_control())
+        # Layers are NOT touched here: _reconcile_region_layers below derives them
+        # from region_kind, so this effect firing spuriously (see _apply_region_layers)
+        # can no longer blank the map.
+
+    @reactive.effect
+    def _reconcile_region_layers():
+        # Same dependency-before-guard rule as _refresh_sites_map below.
+        kind = region_kind()
+        _maps_built_nonce()
+        if _HAS_MAP:
+            _apply_region_layers(kind)
 
     @reactive.effect
     @reactive.event(input.region_pick, ignore_init=True)
@@ -711,28 +1007,40 @@ def import_map_server(
 
     @reactive.effect
     def _highlight_selected():
-        code, kind = region_code(), region_kind()
+        # Every dependency BEFORE the guard, and _maps_built_nonce() so this
+        # re-runs once a map exists to add to -- the same rule as
+        # _reconcile_region_layers above and _refresh_sites_map below. Re-entry
+        # over a restored project sets region_code in a flush where _REGION_MAP is
+        # still None (data_overview flips entry_view and bumps the hydrate nonce in
+        # one effect, so hydration beats the map's first render), and _add silently
+        # no-ops on a None map. Without the nonce the highlight was built, dropped,
+        # and never rebuilt -- region_kind/region_code do not change again, because
+        # the radio round-trip hits _swap_approach's already_current guard and the
+        # re-sent selectize hits _pick_eco's equality guard.
+        kind, code, poly = region_kind(), region_code(), user_polygon()
+        _maps_built_nonce()
         if not _HAS_MAP:
             return
-        _rm(_rlayers, _REGION_MAP, "selected")
-        if not code:
-            return
-        if kind == "ecoregion":
-            feats = _js_geojson(_ECOREGIONS)["features"]
-            sel = [f for f in feats if str((f.get("properties") or {}).get("US_L3CODE")) == str(code)]
-        elif kind == "state":
-            feats = _js_geojson(_STATES)["features"]
-            sel = [f for f in feats if str((f.get("properties") or {}).get("state")) == str(code)]
-        else:
-            return
-        if sel:
-            layer = GeoJSON(
-                data={"type": "FeatureCollection", "features": sel},
-                style=_SELECTED_STYLE, name="Selected region",
-            )
-            _add(_rlayers, _REGION_MAP, "selected", layer)
+        _apply_selected_highlight(kind, code, poly)
 
     # ── step navigation ───────────────────────────────────────────────────────
+    @reactive.effect
+    def _mirror_step():
+        # Location mirror for the workflow strip (its sub-step row and the
+        # "you are here" highlight). One writer: this effect.
+        state.wizard_current_step.set(int(step()))
+
+    # NOTE: there is deliberately no "nudge leaflet to re-measure" resize here.
+    # Leaflet's trackResize listener is global and unguarded, so a dispatched
+    # window resize also reaches whichever map is currently display:none, where
+    # getSize() reads 0x0 and invalidateSize() pans the pane by half the old
+    # viewport; jupyter-leaflet then commits that bogus center into the shared
+    # ipywidget model on a ~200ms-debounced moveend, which is how the region map
+    # ended up in the Caribbean with its polygons gone. The nudge is unnecessary
+    # now that each map is created while its own step is visible (see
+    # _ensure_region_map / _ensure_sites_map) and therefore measures correctly
+    # from the start.
+
     @render.ui
     def step_style():
         cur = step()
@@ -759,10 +1067,11 @@ def import_map_server(
                 )
                 return
         if cur == 4:
-            metric_sel.set(collect_metric_selection())
-            nrsa_sel.set(collect_nrsa_selection())
-            ss_sel.set(list(_inp("ss_sel") or []))
-            mmw_sel.set(list(_inp("mmw_sel") or []))
+            split = _split_now()
+            metric_sel.set(split["streamcat"])
+            nrsa_sel.set(split["nrsa"])
+            ss_sel.set(split["streamstats"])
+            mmw_sel.set(split["mmw"])
         if cur == 6:
             live = classify_assignments_from_input(input, _classify_profile())
             if int(live["is_metric"].sum()) < 1:
@@ -793,11 +1102,38 @@ def import_map_server(
     @reactive.event(state.app_reset_nonce, ignore_init=True)
     def _reset():
         step.set(1)
+        # id/lat/lon were omitted here, so an uploaded table's column mapping
+        # leaked into the next project.
         for rv in (region_code, region_name, user_polygon, upload_df, upload_source,
-                   sites, metric_sel, nrsa_sel, ss_sel, mmw_sel, compiled, coverage,
-                   col_source, col_function, saved_assignments):
+                   picker_sel, metric_sel, nrsa_sel, ss_sel, mmw_sel, compiled,
+                   coverage, col_source, col_function, saved_assignments,
+                   id_col, lat_col, lon_col):
             rv.set(None)
+        compiled_is_fresh.set(False)
+        unmatched.set(0)
+        # Clear the persisted mirror too, or a later hydrate restores the
+        # candidates this reset was meant to discard.
+        _set_sites(None)
         region_kind.set("ecoregion")
+
+    def _set_sites(df) -> None:
+        """Set the wizard's candidate frame and mirror it into persisted state.
+
+        The mirror is what makes re-entry work: the screening table drops lat/lon
+        and reuses ``state`` for the EASI run state, so it cannot rebuild these
+        candidates.
+        """
+        sites.set(df)
+        state.candidate_sites.set(None if df is None else df.copy())
+
+    @render.ui
+    def wizard_header_title():
+        if state.app_data_loaded():
+            name = (state.session_name() or "").strip()
+            return ui.tags.span(
+                bi("geo-alt-fill"), " Editing ", ui.tags.strong(name or "this project"),
+            )
+        return ui.tags.span(bi("geo-alt-fill"), " Start a new project")
 
     @reactive.effect
     @reactive.event(state.wizard_hydrate_nonce, ignore_init=True)
@@ -809,7 +1145,16 @@ def import_map_server(
         with reactive.isolate():
             region = state.region_of_applicability()
             sc = state.easi_screening_sites()
-        if region is None and sc is None:
+            cand = state.candidate_sites()
+            data = state.data()
+            tables = state.input_metadata()
+            saved_sources = state.column_sources()
+            saved_functions = state.column_functions()
+            picker_untouched = picker_sel() is None
+            compile_untouched = compiled() is None
+        # `data is None` too: a built project with no region/sites still needs
+        # its step 4-7 seeding, which the old region-only test skipped.
+        if region is None and sc is None and cand is None and data is None:
             return
         if region is not None:
             seed = wizard_seed_from_state(region)
@@ -822,12 +1167,47 @@ def import_map_server(
             ui.update_radio_buttons(
                 "region_approach", selected=seed["region_approach"], session=session
             )
-        if sc is not None:
-            df = sc if isinstance(sc, pd.DataFrame) else pd.DataFrame(sc)
-            if len(df) and "site_id" in df.columns:
-                keep = [c for c in ("site_id", "lat", "lon", ".source", "state",
-                                    "ag_eco9", "huc8") if c in df.columns]
-                sites.set(df[keep].copy() if keep else df.copy())
+        restored = _restore_candidate_sites(cand, sc)
+        if restored is not None:
+            # _set_sites (not sites.set): re-mirror into state.candidate_sites
+            # so a project restored via the lossy screening fallback saves the
+            # full-fidelity frame (with .source) from here on.
+            _set_sites(restored)
+        # Seed the step-4 selection from the metrics the project actually
+        # pulled (its dataset columns), so Choose metrics shows the real
+        # selection and coverage instead of the recommended defaults. Only
+        # when untouched this session: hydrate refires on every stage click
+        # and must never clobber in-session tweaks.
+        if picker_untouched and data is not None:
+            seeded = mpick.codes_for_columns(data.columns, _picker_table())
+            if seeded:
+                picker_sel.set(seeded)
+                # The per-source split is otherwise only computed on the step-4
+                # "Next" click (_next below), so arriving at Compile straight
+                # from the stage strip left these empty -- the step reported
+                # "0 StreamCAT + 0 NRSA" and, worse, re-compiling would have
+                # pulled nothing. Seed them the same way _next does.
+                split = mpick.split_selection_by_source(set(seeded), _picker_table())
+                metric_sel.set(split["streamcat"])
+                nrsa_sel.set(split["nrsa"])
+                ss_sel.set(split["streamstats"])
+                mmw_sel.set(split["mmw"])
+        # Steps 6 and 7 key off `compiled`/`saved_assignments`, which only the
+        # compile worker ever wrote -- so a reopened project had both replaced
+        # by a "Nothing compiled yet" panel and no way back in short of
+        # re-pulling every metric. The built dataset IS the compiled table, and
+        # the restored workbook tables carry the roles that were classified, so
+        # rebuild both rather than making the user re-run the pull.
+        if compile_untouched and data is not None:
+            compiled.set(data)
+            compiled_is_fresh.set(False)  # hydrated frame: masks already applied
+            col_source.set(dict(saved_sources or {}))
+            col_function.set(dict(saved_functions or {}))
+            if tables:
+                try:
+                    saved_assignments.set(current_role_membership(tables))
+                except Exception:  # noqa: BLE001
+                    pass  # unusable tables: leave step 7 to its blocker
 
     # ── upload (step 2) ────────────────────────────────────────────────────────
     @reactive.effect
@@ -907,17 +1287,26 @@ def import_map_server(
         if use_nrsa:
             nr = nrsa_in_region()
             if nr is not None and len(nr):
+                site_ids = nr["site_id"].astype(str)
+                # Screening delineates from the published EPA reach where one
+                # exists, instead of snapping each point live. The live snap is
+                # slower and its endpoint intermittently 502s, which used to
+                # surface as "no NHD stream found near this point".
+                seeded = _nrsa_comids()
                 nrsa_part = pd.DataFrame({
-                    "site_id": nr["site_id"].astype(str), "lat": nr["lat"], "lon": nr["lon"],
+                    "site_id": site_ids, "lat": nr["lat"], "lon": nr["lon"],
                     "state": nr["state"], "ag_eco9": nr["ag_eco9"], "huc8": nr["huc8"],
+                    "comid": site_ids.map(seeded),
                 })
+                nrsa_part["comid_source"] = np.where(
+                    nrsa_part["comid"].notna(), "epa_nrsa", "live_snap")
         if upload_part is None and nrsa_part is None:
-            sites.set(None)
+            _set_sites(None)
             return
         asm = assemble_sites(upload=upload_part, nrsa=nrsa_part)
         # No coordinate dedup: reference screening + reviewer overrides decide which
         # candidate sites continue, so every assembled row is preserved here.
-        sites.set(asm)
+        _set_sites(asm)
         # Publish the candidate count so the stage banner can report it.
         meta = rs.touch_run_meta(state.run_meta())
         meta["n_candidates"] = int(len(asm))
@@ -1096,6 +1485,7 @@ def import_map_server(
 
             unmatched.set(n_unmatched)
             compiled.set(comp)
+            compiled_is_fresh.set(True)
             col_source.set(csrc)
             col_function.set(cfun)
             saved_assignments.set(None)
@@ -1188,11 +1578,48 @@ def import_map_server(
     # ── classify + build ──────────────────────────────────────────────────────
     def _classify_profile():
         req(compiled() is not None)
-        return profile_and_suggest(compiled())
+        prof = profile_and_suggest(compiled())
+        asg = saved_assignments()
+        if asg is None or "column" not in getattr(asg, "columns", []):
+            return prof
+        # classify_selected_role_set() honors explicit role_* columns and only
+        # falls back to fresh suggestions without them. A reopened project has
+        # real roles, so seed them: otherwise Classify proposes roles the
+        # project never had (a categorical column offered as a stratifier) and
+        # stepping past it would bake the suggestion into the rebuild.
+        for role in ("metric", "predictor", "stratifier"):
+            col = f"is_{role}"
+            known = (
+                {str(c): bool(v) for c, v in zip(asg["column"], asg[col])}
+                if col in asg.columns else {}
+            )
+            prof[f"role_{role}"] = [known.get(str(c), False) for c in prof["column"]]
+        return prof
 
     def _built_tables():
         req(compiled() is not None and saved_assignments() is not None)
-        return build_config_tables_from_roles(compiled(), saved_assignments())
+        prev = state.input_metadata()
+        if prev:
+            # Loaded project: reconcile the existing tables onto the new frame
+            # instead of regenerating from roles, which silently discarded
+            # derived predictors, factor recodes, site masks, custom/paired
+            # stratifications and curated allow-lists. The screening-derived
+            # mask config is only valid when the frame was compiled this
+            # session -- a hydrated frame already has its masks applied.
+            tables = reconcile_tables_with_new_data(
+                prev, compiled(), saved_assignments(),
+                site_mask_config=(
+                    state.site_mask_config() if compiled_is_fresh() else None
+                ),
+            )
+        else:
+            tables = build_config_tables_from_roles(compiled(), saved_assignments())
+        # build_config_tables_from_roles only knows which columns are metrics, so
+        # it fills every setting with a default -- higher_is_better TRUE for all.
+        # Rebuilding a restored project that way inverts every "more is worse"
+        # metric it already had, so put the project's own settings back first.
+        # (A no-op over rows the reconcile branch preserved.)
+        return wb.overlay_metric_settings(tables, state.metric_config())
 
     def _region_of_applicability():
         """Snapshot the wizard's region selection so it can ride into the
@@ -1235,24 +1662,12 @@ def import_map_server(
             state.column_functions.set(dict(col_function() or {}))
             state.region_of_applicability.set(_region_of_applicability())
             ui.notification_show(
-                "Dataset built. Open Reference Curves, or refine in the Workbook below.",
+                "Dataset built. Continue to Reference curves in the workflow "
+                "strip, or refine in the Workbook below.",
                 type="message", duration=7,
             )
 
-    # ── stepper + nav ─────────────────────────────────────────────────────────
-    @render.ui
-    def stepper():
-        cur = step()
-        chips = []
-        for i, label in enumerate(_STEP_LABELS, start=1):
-            cls = "wizard-step active" if i == cur else "wizard-step done" if i < cur else "wizard-step"
-            chips.append(ui.div(
-                ui.tags.span(str(i), class_="wizard-step-num"),
-                ui.tags.span(label, class_="wizard-step-label"),
-                class_=cls,
-            ))
-        return ui.div(*chips, class_="wizard-stepper d-flex flex-wrap gap-3")
-
+    # ── nav (the workflow strip owns the stepper; Back/Next live here) ───────
     @render.ui
     def nav():
         cur = step()
@@ -1261,20 +1676,88 @@ def import_map_server(
                                    class_="btn btn-outline-secondary")
             if cur > 1 else ui.tags.span()
         )
+        # A step whose prerequisite is missing must not offer an enabled button that
+        # silently does nothing: wiz_build, the step-6 Next, and do_compile all used
+        # to return early with no feedback at all.
+        blocker = _step_blocker(cur)
+        blocked_kwargs = (
+            {"disabled": "disabled", "title": blocker["message"]} if blocker else {}
+        )
         if cur == 7:
-            right = ui.input_action_button("wiz_build", ui.TagList(fa("check"), " Build dataset"),
-                                           class_="btn btn-success")
+            right = ui.input_action_button(
+                "wiz_build", ui.TagList(fa("check"), " Build dataset"),
+                class_="btn btn-success", **blocked_kwargs)
         elif cur == 5:
             kwargs = {"class_": "btn btn-primary"}
             if compiled() is None:
                 kwargs["disabled"] = "disabled"
+                kwargs["title"] = "Pull and compile the data first."
             right = ui.input_action_button("to_next", ui.TagList("Next: Classify ", fa("arrow-right")), **kwargs)
         else:
             right = ui.input_action_button(
                 "to_next", ui.TagList(f"Next: {_STEP_LABELS[cur]} ", fa("arrow-right")),
-                class_="btn btn-primary",
+                class_="btn btn-primary", **blocked_kwargs,
             )
         return ui.div(left, right, class_="d-flex justify-content-between")
+
+    # ── prerequisites ─────────────────────────────────────────────────────────
+    def _has_sites() -> bool:
+        s = sites()
+        return s is not None and len(s) > 0
+
+    def _step_blocker(cur: int) -> dict | None:
+        """What step ``cur`` is missing, or None when it is ready to use.
+
+        Declared once so the body renderers and the nav/action buttons agree: a step
+        that shows a not-ready panel must never also offer a button that silently
+        does nothing. Steps 1 and 2 have no prerequisite -- a new project starts
+        there.
+        """
+        if cur in (3, 4) and not _has_sites():
+            return {
+                "title": "No sites yet",
+                "message": (
+                    "Add candidate sites first: choose a region, then pick published "
+                    "NRSA sites and/or upload your own site table."
+                ),
+                "action_label": "Go to Add data",
+                "goto_step": 2,
+            }
+        if cur == 5:
+            if not _has_sites():
+                return {
+                    "title": "No sites yet",
+                    "message": ("Add candidate sites before compiling: choose a region, "
+                                "then pick NRSA sites and/or upload your own table."),
+                    "action_label": "Go to Add data", "goto_step": 2,
+                }
+            if n_metrics_selected() < 1:
+                return {
+                    "title": "No metrics selected",
+                    "message": "Choose at least one metric to pull for each site.",
+                    "action_label": "Go to Choose metrics", "goto_step": 4,
+                }
+        if cur in (6, 7) and compiled() is None:
+            return {
+                "title": "Nothing compiled yet",
+                "message": ("Pull and compile the data for your sites first; the columns "
+                            "it returns are what you classify and build from."),
+                "action_label": "Go to Compile", "goto_step": 5,
+            }
+        if cur == 7 and saved_assignments() is None:
+            return {
+                "title": "Columns not classified yet",
+                "message": "Mark at least one column as a Metric before reviewing the build.",
+                "action_label": "Go to Classify", "goto_step": 6,
+            }
+        return None
+
+    def _blocker_panel(blocker: dict):
+        return not_ready_panel(
+            blocker["title"], blocker["message"],
+            action_label=blocker.get("action_label"),
+            goto_nav="data", goto_step=blocker.get("goto_step"),
+        )
 
     # ── body (steps 2, 4, 5, 6, 7) ────────────────────────────────────────────
     @render.ui
@@ -1282,21 +1765,31 @@ def import_map_server(
         cur = step()
         if cur == 2:
             return _body_step2()
+        if cur not in (4, 5, 6, 7):
+            return None
+        blocker = _step_blocker(cur)
+        if blocker is not None:
+            # Replace the step body entirely. Rendering the heading over an empty
+            # area (what a bare req() produced) reads as a broken screen, and the
+            # step-4 picker rendered with its recommended defaults pre-checked made
+            # an empty project look finished.
+            return ui.TagList(
+                ui.tags.h5(_STEP_LABELS[cur - 1]),
+                _blocker_panel(blocker),
+            )
         if cur == 4:
             return _body_step4()
         if cur == 5:
             return _body_step5()
         if cur == 6:
             return _body_step6()
-        if cur == 7:
-            return _body_step7()
-        return None
+        return _body_step7()
 
     def _body_step2():
         nr = nrsa_in_region()
         n_nrsa = 0 if nr is None else len(nr)
         return ui.TagList(
-            ui.tags.h5(f"2. Add data{' — ' + region_label() if region_code() else ''}"),
+            ui.tags.h5(f"Add data{' — ' + region_label() if region_code() else ''}"),
             ui.tags.p("Where should the site data come from? You can combine both.", class_="text-muted"),
             ui.input_checkbox("use_nrsa", f"Published NRSA monitoring sites in this region ({n_nrsa} available)", value=True),
             ui.tags.hr(class_="my-2"),
@@ -1307,52 +1800,63 @@ def import_map_server(
         )
 
     def _body_step4():
+        src_choices = {"": "All sources", "NRSA": "NRSA", "StreamCat": "StreamCat",
+                       "StreamStats": "StreamStats", "MMW": "Model My Watershed"}
+        disc_choices = {"": "All disciplines"}
+        for d in _DISCIPLINE_ORDER:
+            disc_choices[d] = d
+        disc_choices["Unmapped"] = "Unmapped (no function)"
+        sort_choices = {"recommended": "Sort: recommended", "name": "Sort: name",
+                        "source": "Sort: source", "discipline": "Sort: discipline",
+                        "function": "Sort: function"}
         return ui.TagList(
-            ui.tags.h5("4. Choose metrics"),
-            ui.tags.p("Metrics are grouped by data source. A recommended set is pre-selected; "
-                      "expand any source to add more.", class_="text-muted"),
+            ui.tags.h5("Choose metrics"),
+            ui.tags.p("Pick the metrics to pull for each site. Every metric shows the STAF "
+                      "function it informs, and the matrix tracks how many of the 20 functions "
+                      "your selection covers.", class_="text-muted"),
+            ui.output_ui("coverage_panel"),
             ui.output_ui("metric_selected_count"),
+            ui.div(
+                ui.input_text("pick_search", None, placeholder="Search name or code…"),
+                ui.input_select("pick_source", None, choices=src_choices),
+                ui.input_select("pick_discipline", None, choices=disc_choices),
+                ui.input_select("pick_sort", None, choices=sort_choices),
+                ui.div(ui.input_switch("pick_rec_only", "Recommended only", value=False),
+                       class_="metric-filter-switch"),
+                ui.input_action_button("pick_select_all", "Select shown",
+                                       class_="btn btn-outline-secondary btn-sm"),
+                ui.input_action_button("pick_clear", "Clear shown",
+                                       class_="btn btn-outline-secondary btn-sm"),
+                class_="metric-filter-bar d-flex flex-wrap gap-2 align-items-center mb-2",
+            ),
+            ui.div(ui.output_ui("metric_table"), class_="metric-table-scroll"),
             ui.accordion(
                 ui.accordion_panel(
-                    ui.TagList(bi("clipboard2-data"), " NRSA field & lab data ",
-                               ui.tags.span(ui.output_text("cnt_nrsa", inline=True), class_="metric-count-badge")),
-                    ui.output_ui("nrsa_section"), value="nrsa",
+                    ui.TagList(bi("table"), " Advanced: all NRSA metrics (codes only)"),
+                    # The search input is static (outside the reactive output) so
+                    # typing does not re-render and clear it.
+                    ui.input_text("adv_search", None,
+                                  placeholder="Search NRSA code or category…", width="100%"),
+                    ui.output_ui("advanced_nrsa"), value="adv",
                 ),
                 ui.accordion_panel(
-                    ui.TagList(bi("layers"), " EPA StreamCAT ",
-                               ui.tags.span(ui.output_text("cnt_streamcat", inline=True), class_="metric-count-badge")),
-                    ui.output_ui("metric_catalog"), value="streamcat",
-                ),
-                ui.accordion_panel(
-                    ui.TagList(bi("water"), " USGS StreamStats ",
-                               ui.tags.span(ui.output_text("cnt_streamstats", inline=True), class_="metric-count-badge")),
-                    ui.output_ui("streamstats_section"), value="streamstats",
-                ),
-                ui.accordion_panel(
-                    ui.TagList(bi("globe-americas"), " Model My Watershed ",
-                               ui.tags.span(ui.output_text("cnt_mmw", inline=True), class_="metric-count-badge")),
-                    ui.output_ui("mmw_section"), value="mmw",
-                ),
-                ui.accordion_panel(
-                    ui.TagList(bi("rulers"), " Computed — USGS NLDI / 3DEP / regional curves ",
-                               ui.tags.span(ui.output_text("cnt_computed", inline=True), class_="metric-count-badge")),
+                    ui.TagList(bi("rulers"), " Computed — USGS NLDI / 3DEP / regional curves"),
                     ui.input_checkbox("want_da", "Drainage area (NLDI basin)", value=False),
                     ui.input_checkbox("want_regional", "Regional bankfull predictions (Bieger curves)", value=False),
                     ui.input_checkbox("want_elev", "Site elevation (USGS 3DEP point)", value=False),
                     value="computed",
                 ),
                 ui.accordion_panel(
-                    ui.TagList(bi("file-earmark-arrow-up"), " From your uploaded file ",
-                               ui.tags.span(ui.output_text("cnt_upload", inline=True), class_="metric-count-badge")),
+                    ui.TagList(bi("file-earmark-arrow-up"), " From your uploaded file"),
                     ui.output_ui("uploaded_cols_picker"), value="upload",
                 ),
-                id="metric_sources", open=False, multiple=True,
+                id="metric_extra", open=False, multiple=True,
             ),
         )
 
     def _body_step5():
         return ui.TagList(
-            ui.tags.h5("5. Compile"),
+            ui.tags.h5("Compile"),
             ui.output_ui("compile_intro"),
             ui.div(
                 ui.input_action_button("do_compile", ui.TagList(fa("cloud-arrow-down"), " Pull & compile data"),
@@ -1366,7 +1870,7 @@ def import_map_server(
 
     def _body_step6():
         return ui.TagList(
-            ui.tags.h5("6. Classify columns"),
+            ui.tags.h5("Classify columns"),
             ui.tags.p("We guessed a role for each column. A column can have more than one role. "
                       "Mark what you want to build curves for as Metric.", class_="text-muted"),
             ui.output_ui("role_summary"),
@@ -1375,7 +1879,7 @@ def import_map_server(
 
     def _body_step7():
         return ui.TagList(
-            ui.tags.h5("7. Review & build"),
+            ui.tags.h5("Review & build"),
             ui.tags.p("Here's the setup we'll create; fine-tune later in the Workbook.", class_="text-muted"),
             ui.output_ui("build_summary"),
             ui.navset_pill(
@@ -1447,12 +1951,26 @@ def import_map_server(
 
     # ── sites (step 3) ─────────────────────────────────────────────────────────
     @render.ui
-    def sites_view_body():
-        if _inp("sites_view") == "table":
-            return ui.output_data_frame("sites_table")
-        return output_widget("sites_map", height="460px") if _HAS_MAP else ui.div(
-            "Map requires ipyleaflet.", class_="text-muted"
-        )
+    def step3_blocker():
+        blocker = _step_blocker(3)
+        return None if blocker is None else _blocker_panel(blocker)
+
+    @render.ui
+    def step3_style():
+        """Show the live body or the not-ready panel, and pick the Map/Table view.
+
+        Both are CSS toggles rather than swapped outputs: the sites map must never
+        leave the DOM, or shinywidgets creates a second view over the same model and
+        the abandoned 0x0 Leaflet map keeps writing center/zoom into it.
+        """
+        blocked = _step_blocker(3) is not None
+        table = _inp("sites_view") == "table"
+        css = [".step3-live{display:block;}"]
+        if blocked:
+            css = [".step3-live{display:none;}"]
+        css.append(".sites-view-map{display:%s;}" % ("none" if table else "block"))
+        css.append(".sites-view-table{display:%s;}" % ("block" if table else "none"))
+        return ui.tags.style(" ".join(css))
 
     @render.ui
     def sites_summary():
@@ -1501,31 +2019,18 @@ def import_map_server(
         summary from the current sites table (called after every screen or
         reviewer override)."""
         df = sites_df if hasattr(sites_df, "columns") else pd.DataFrame(sites_df)
-        has_final = "final_decision" in df.columns
-        retained_ids = (
-            set(df.loc[df["final_decision"] == "retained", "site_id"].astype(str))
-            if has_final else set()
-        )
-        exclusions: list[dict] = []
-        for _, r in df.iterrows():
-            sid = str(r.get("site_id"))
-            if not has_final or r.get("final_decision") != "retained":
-                by_reviewer = bool(r.get("reviewer"))
-                exclusions.append({
-                    "site_id": sid,
-                    "reason": r.get("reason") or "screened out",
-                    "source": "reviewer" if by_reviewer else "screening",
-                    "note": r.get("reviewer_note"),
-                })
-        state.site_exclusions.set(exclusions)
+        rows = df.to_dict("records")
+        # Everything not retained still stays out of enrichment, but a site the
+        # engine never assessed is recorded as unresolved rather than as a
+        # deliberate screen-out.
+        state.site_exclusions.set(easi_screening.exclusion_records(rows))
         # Isolate the reads: reading a value this function also rewrites would
         # register a self-invalidating dependency on any plain-effect caller.
         with reactive.isolate():
             run = dict(state.screening_run() or {})
             prev_meta = state.run_meta()
         run.update({
-            "n_screened": int(len(df)),
-            "n_retained": int(len(retained_ids)),
+            **easi_screening.summarize_screening_rows(rows),
             "method": method or run.get("method") or "zip_import",
             "method_version": rs.SCREENING_METHOD_VERSION,
         })
@@ -1534,6 +2039,13 @@ def import_map_server(
 
     def _persist_screening(tables: dict, *, method: str | None = None) -> None:
         sites_df = pd.DataFrame(tables["easi_screening_sites"])
+        # The engine does not know where a reach came from, but we do: record it
+        # per site so a reviewer can tell a published EPA reach from a live snap.
+        s = sites()
+        if (s is not None and len(sites_df) and "comid_source" in getattr(s, "columns", [])
+                and "site_id" in sites_df.columns):
+            src = dict(zip(s["site_id"].astype(str), s["comid_source"]))
+            sites_df["comid_source"] = sites_df["site_id"].astype(str).map(src)
         state.easi_screening_sites.set(sites_df)
         state.easi_screening_metrics.set(pd.DataFrame(tables["easi_screening_metrics"]))
         state.easi_screening_criteria.set(tables["easi_screening_criteria"])
@@ -1564,7 +2076,8 @@ def import_map_server(
             ui.notification_show("No candidate sites have coordinates to screen.",
                                  type="warning", duration=6)
             return
-        preset = _inp("screening_preset") or "functional"
+        preset = (_inp("screening_preset")
+                  or easi_screening.DEFAULT_SCREENING_PRESET)
         _screen_prog.update({"done": 0, "total": len(rows), "stage": "queued",
                              "site": ""})
         _screen_cancel["flag"] = False
@@ -1614,11 +2127,15 @@ def import_map_server(
             ui.notification_show(f"Screening failed: {exc}", type="error", duration=8)
             return
         _persist_screening(tables, method="direct_engine")
-        n = len(tables["easi_screening_sites"])
-        keep = len(easi_screening.retained_site_ids(tables))
+        c = easi_screening.summarize_screening_rows(tables["easi_screening_sites"])
         note = " (cancelled early)" if _screen_cancel.get("flag") else ""
-        ui.notification_show(f"Screened {n} sites, {keep} retained{note}.",
-                             id="sc_screen_done", type="message", duration=6)
+        msg = (f"Screened {c['n_screened']} sites, {c['n_retained']} retained, "
+               f"{c['n_excluded']} excluded")
+        if c["n_unresolved"]:
+            msg += f", {c['n_unresolved']} not assessed"
+        ui.notification_show(
+            f"{msg}{note}.", id="sc_screen_done",
+            type="warning" if c["n_unresolved"] else "message", duration=6)
 
     @reactive.effect
     @reactive.event(input.screening_zip)
@@ -1696,10 +2213,40 @@ def import_map_server(
         sc = state.easi_screening_sites()
         req(sc is not None)
         df = sc if hasattr(sc, "columns") else pd.DataFrame(sc)
-        cols = [c for c in ("site_id", "state", "eci", "auto_decision",
-                            "final_decision", "reviewer", "reason") if c in df.columns]
+        cols = [c for c in ("site_id", "state", "eci", "condition", "auto_decision",
+                            "final_decision", "reviewer", "comid_source", "reason")
+                if c in df.columns]
         return render.DataGrid(df[cols].reset_index(drop=True), height="260px",
                                selection_mode="rows", width="100%")
+
+    def _screening_failure_note(df, counts: dict):
+        """Say what actually broke when sites could not be assessed.
+
+        Without this the table only shows the criteria predicate, which for a site
+        that never scored reads "skip (no data)" and explains nothing.
+        """
+        if not counts["n_failed"] and not counts["n_cancelled"]:
+            return None
+        msgs, seen = [], set()
+        if "issue" in df.columns:
+            for m in df.loc[df["state"] == "failed", "issue"].tolist():
+                if m and m not in seen:
+                    seen.add(m)
+                    msgs.append(m)
+        bits = []
+        if counts["n_failed"]:
+            head = f"{counts['n_failed']} site(s) could not be assessed"
+            bits.append(f"{head}: {msgs[0]}" if msgs else head)
+            if len(msgs) > 1:
+                bits.append(f"(+{len(msgs) - 1} other error(s))")
+        if counts["n_cancelled"]:
+            bits.append(f"{counts['n_cancelled']} cancelled")
+        diag = (state.easi_screening_criteria() or {}).get("diagnostics") or {}
+        stats = [f"{k} {diag[k]}" for k in ("retries", "timeouts", "throttled",
+                                            "server_errors") if diag.get(k)]
+        if stats:
+            bits.append("Service issues: " + ", ".join(stats) + ".")
+        return ui.tags.p(" ".join(bits), class_="text-danger small mb-2")
 
     @render.ui
     def easi_screening_panel():
@@ -1714,9 +2261,9 @@ def import_map_server(
                     ui.div(
                         ui.input_select(
                             ns("screening_preset"), None,
-                            choices={"functional": "Functional preset",
-                                     "reference_condition": "Reference-condition preset"},
-                            selected="functional", width="220px"),
+                            choices=easi_screening.SCREENING_PRESET_CHOICES,
+                            selected=easi_screening.DEFAULT_SCREENING_PRESET,
+                            width="320px"),
                         ui.input_action_button(
                             ns("screening_run_direct"), "Run screening",
                             class_="btn btn-sm btn-primary ms-2"),
@@ -1724,13 +2271,19 @@ def import_map_server(
                             ns("screening_cancel"), "Cancel",
                             class_="btn btn-sm btn-outline-secondary ms-1"),
                         class_="d-flex align-items-center mb-2"),
-                    ui.tags.p("Runs the EASI batch engine on this machine over your "
-                              "candidate sites, keeping only qualifying reference sites.",
+                    ui.tags.p("Scores each candidate site with the EASI batch engine. "
+                              "Only Functioning keeps sites scoring above 0.69; "
+                              "Functioning or Functioning-at-Risk keeps those above 0.39; "
+                              "All sites keeps every site that scored, so you can exclude "
+                              "them yourself below. Large batches take a while, so try a "
+                              "few sites first.",
                               class_="text-muted small mb-2"),
                 )
                 if engine_ok else
-                ui.div("The EASI engine is not available here. Import a finalized "
-                       "batch ZIP produced on a machine that has it.",
+                ui.div("The EASI engine cannot run here: "
+                       f"{', '.join(easi_screening.missing_engine_requirements())} "
+                       "is not installed. Import a finalized batch ZIP produced "
+                       "somewhere that has it.",
                        class_="text-muted small mb-2")
             )
             return ui.div(
@@ -1742,13 +2295,18 @@ def import_map_server(
                 ui.input_file(ns("screening_zip"), None, accept=[".zip"]),
                 class_="easi-screening-panel border rounded p-2 mt-3")
         df = sc if hasattr(sc, "columns") else pd.DataFrame(sc)
-        retained = int((df["final_decision"] == "retained").sum()) \
-            if "final_decision" in df.columns else 0
+        c = easi_screening.summarize_screening_rows(df.to_dict("records"))
+        unresolved = c["n_unresolved"]
+        summary = (f"{c['n_screened']} screened · {c['n_retained']} retained · "
+                   f"{c['n_excluded']} excluded")
+        if unresolved:
+            summary += f" · {unresolved} not assessed"
         return ui.div(
             ui.tags.h6("EASI screening results", class_="mb-1"),
-            ui.div(f"{len(df)} screened · {retained} retained · "
-                   f"{len(df) - retained} excluded. Retained sites continue to enrichment.",
-                   class_="alert alert-info py-2 mb-2"),
+            ui.div(summary,
+                   class_=("alert alert-warning py-2 mb-2" if unresolved
+                           else "alert alert-info py-2 mb-2")),
+            _screening_failure_note(df, c),
             ui.output_data_frame("screening_table"),
             ui.div(
                 ui.input_text(ns("screening_note"), None,
@@ -1763,23 +2321,38 @@ def import_map_server(
                                    class_="btn btn-sm btn-outline-secondary mt-2"),
             class_="easi-screening-panel border rounded p-2 mt-3")
 
+    def _refresh_sites_map_now():
+        """Reconcile the sites map now, outside the reactive graph.
+
+        Called from _seed_sites_layers once the map exists: it is built when step 3
+        first shows, which is normally after _refresh_sites_map already computed
+        markers there was no map to attach.
+        """
+        if not _HAS_MAP or _SITES_MAP is None:
+            return
+        with reactive.isolate():
+            _apply_sites_layers(sites(), region_code(), region_kind(), user_polygon())
+
     @reactive.effect
     def _refresh_sites_map():
-        if not _HAS_MAP:
+        # Read every dependency BEFORE the existence check: bailing first would
+        # register no dependencies at all and leave this effect permanently dead
+        # for the (normal) case where sites arrive before step 3 is ever shown.
+        s, code, kind, poly = sites(), region_code(), region_kind(), user_polygon()
+        _maps_built_nonce()
+        if not _HAS_MAP or _SITES_MAP is None:
             return
-        s = sites()
+        _apply_sites_layers(s, code, kind, poly)
+
+    def _apply_sites_layers(s, code, kind, polygon=None):
         _rm(_slayers, _SITES_MAP, "sites")
         _rm(_slayers, _SITES_MAP, "region")
-        # region polygon for context
-        code, kind = region_code(), region_kind()
-        if code and kind in ("ecoregion", "state"):
-            feats = _js_geojson(_ECOREGIONS if kind == "ecoregion" else _STATES)["features"]
-            keyp = "US_L3CODE" if kind == "ecoregion" else "state"
-            sel = [f for f in feats if str((f.get("properties") or {}).get(keyp)) == str(code)]
-            if sel:
-                _add(_slayers, _SITES_MAP, "region",
-                     GeoJSON(data={"type": "FeatureCollection", "features": sel},
-                             style={"weight": 2, "color": "#243a61", "fillColor": "#2f4b7c", "fillOpacity": 0.12}))
+        # region outline for context -- fainter than the region map's highlight
+        feats = _region_features(kind, code, polygon)
+        if feats:
+            _add(_slayers, _SITES_MAP, "region",
+                 GeoJSON(data={"type": "FeatureCollection", "features": feats},
+                         style={"weight": 2, "color": "#243a61", "fillColor": "#2f4b7c", "fillOpacity": 0.12}))
         if s is None or len(s) == 0:
             return
         g = s[np.isfinite(s["lat"]) & np.isfinite(s["lon"])]
@@ -1797,99 +2370,167 @@ def import_map_server(
         _add(_slayers, _SITES_MAP, "sites",
              GeoJSON(data=pts, point_style=_SITE_POINT_STYLE, name="Sites"))
         try:
-            _SITES_MAP.fit_bounds([[float(g["lat"].min()), float(g["lon"].min())],
-                                   [float(g["lat"].max()), float(g["lon"].max())]])
+            _SITES_MAP.center, _SITES_MAP.zoom = _view_for_extent(
+                float(g["lat"].min()), float(g["lat"].max()),
+                float(g["lon"].min()), float(g["lon"].max()))
         except Exception:  # noqa: BLE001
             pass
 
-    # ── metric selection outputs (step 4) ─────────────────────────────────────
-    # These render even while their accordion panel is collapsed (all panels
-    # start closed) — otherwise the checkbox inputs never initialise, so the
-    # default selections + header count badges read 0 (R's outputOptions
-    # suspendWhenHidden=FALSE).
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def metric_catalog():
-        cdf = _streamcat_catalog()
-        if len(cdf) == 0:
-            return ui.div("No metric catalog available.", class_="text-muted")
-        doms = list(dict.fromkeys(cdf["domain"]))
-        sel = set(metric_sel() or _default_streamcat())
-        panels = []
-        for k, dom in enumerate(doms):
-            sub = cdf[cdf["domain"] == dom]
-            ch = {r["name"]: r["label"] for _, r in sub.iterrows()}
-            panels.append(ui.div(
-                ui.tags.div(str(dom), class_="small text-uppercase text-muted fw-semibold"),
-                ui.input_checkbox_group(f"metric_dom_{k}", None, choices=ch,
-                                        selected=[n for n in sub["name"] if n in sel], inline=True),
-                class_="mb-2",
-            ))
-        return ui.TagList(*panels)
+    # ── metric picker outputs (step 4) ────────────────────────────────────────
+    def _filtered_named() -> pd.DataFrame:
+        """Named metrics passing the current search / source / discipline / rec
+        filters (unsorted). Shared by the table render and Select/Clear shown."""
+        tbl = _selectable_table()
+        view = tbl[tbl["named"]]
+        if len(view) == 0:
+            return view
+        q = (_inp("pick_search") or "").strip().lower()
+        src = _inp("pick_source") or ""
+        disc = _inp("pick_discipline") or ""
+        if q:
+            view = view[view.apply(
+                lambda r: q in str(r["name"]).lower() or q in str(r["code"]).lower(), axis=1)]
+        if src:
+            view = view[view["source"] == src]
+        if disc == "Unmapped":
+            view = view[view["disciplines"].map(len) == 0]
+        elif disc:
+            view = view[view["disciplines"].map(lambda ds: disc in ds)]
+        if bool(_inp("pick_rec_only")):
+            view = view[view["recommended"]]
+        return view
 
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def nrsa_section():
-        if not bool(_inp("use_nrsa")):
-            return ui.div("Choose NRSA as a data source in step 2 to include its measured metrics.",
-                          class_="text-muted small")
-        cdf = load_nrsa_catalog()
-        if cdf is None or len(cdf) == 0:
-            return ui.div("NRSA metric catalog not available.", class_="text-muted small")
-        sel0 = set(nrsa_sel() or _nrsa_default_sel())
-        rec = set(metric_map_default_codes("nrsa"))
-        blocks = []
-        for code, label in _NRSA_SECTIONS:
-            sub = cdf[cdf["name"].str.startswith(f"{code}_")]
-            if len(sub) == 0:
-                continue
-            core = sub[sub["name"].isin(rec)]
-            more = sub[~sub["name"].isin(rec)]
-            core_ch = {
-                r["name"]: (f"{r['label']} ({r['units']})" if r.get("units") else r["label"])
-                for _, r in core.iterrows()
-            }
-            more_ch = {r["name"]: r["label"] for _, r in more.iterrows()}
-            parts = [ui.tags.div(label, ui.tags.span(f" — {len(sub)} metrics", class_="text-muted"),
-                                 class_="fw-semibold small")]
-            if len(core):
-                parts.append(ui.input_checkbox_group(
-                    f"nrsa_core_{code}", None, choices=core_ch,
-                    selected=[n for n in core["name"] if n in sel0], inline=True))
-            if len(more):
-                parts.append(ui.input_selectize(
-                    f"nrsa_more_{code}", "Add more from this category", choices=more_ch,
-                    selected=[n for n in more["name"] if n in sel0], multiple=True, width="100%"))
-            blocks.append(ui.div(*parts, class_="mb-3 pb-2 border-bottom"))
-        return ui.TagList(*blocks)
+    def _sort_named(view: pd.DataFrame, sort_by: str) -> pd.DataFrame:
+        v = view.copy()
+        v["_disc0"] = v["disciplines"].map(
+            lambda ds: _DISCIPLINE_ORDER.index(ds[0])
+            if ds and ds[0] in _DISCIPLINE_ORDER else 99)
+        v["_fn0"] = v["functions"].map(lambda fs: fs[0] if fs else "~")
+        v["_name"] = v["name"].astype(str).str.lower()
+        if sort_by == "name":
+            return v.sort_values(["_name"])
+        if sort_by == "source":
+            return v.sort_values(["source", "_name"])
+        if sort_by == "discipline":
+            return v.sort_values(["_disc0", "_fn0", "_name"])
+        if sort_by == "function":
+            return v.sort_values(["_fn0", "_name"])
+        v["_rec"] = ~v["recommended"]  # recommended first
+        return v.sort_values(["_rec", "_disc0", "_fn0", "_name"])
 
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def streamstats_section():
-        ch = ss_core_bcs()
-        return ui.TagList(
-            ui.div("Basin characteristics, computed per site. Pulled only if selected (slower). "
-                   "Coverage varies by state.", class_="small text-muted mb-1"),
-            ui.input_checkbox_group("ss_sel", None, choices=ch, selected=list(ss_sel() or [])),
+    def _pick_checkbox(code: str, checked: bool, extra_class: str = ""):
+        oc = (f"Shiny.setInputValue('{ns('pick_toggle')}',"
+              f"{{code:'{_js1(code)}',on:this.checked}},{{priority:'event'}})")
+        attrs = {"checked": "checked"} if checked else {}
+        return ui.tags.input(
+            type="checkbox", class_=f"form-check-input {extra_class}".strip(),
+            onchange=oc, **attrs)
+
+    def _fn_chips(funcs):
+        if not funcs:
+            return ui.tags.span("—", class_="text-muted")
+        return ui.TagList(*[ui.tags.span(f, class_="metric-fn-chip") for f in funcs])
+
+    def _metric_row(r, checked: bool):
+        code = str(r["code"])
+        star = (ui.tags.span("★", class_="metric-rec-star", title="Recommended default")
+                if bool(r["recommended"]) else "")
+        disc = ", ".join(r["disciplines"]) if r["disciplines"] else "—"
+        return ui.tags.tr(
+            ui.tags.td(_pick_checkbox(code, checked, "metric-pick-cb"), class_="metric-cb-cell"),
+            ui.tags.td(ui.tags.span(r["name"], class_="metric-name"), " ", star),
+            ui.tags.td(ui.tags.code(code, class_="metric-code")),
+            ui.tags.td(r["source"], class_="metric-src"),
+            ui.tags.td(r["units"] or "", class_="metric-units"),
+            ui.tags.td(_fn_chips(r["functions"]), class_="metric-fns"),
+            ui.tags.td(disc, class_="metric-disc"),
+            class_="metric-row" + (" metric-row-on" if checked else ""),
         )
 
     @output(suspend_when_hidden=False)
     @render.ui
-    def mmw_section():
+    def coverage_panel():
+        tbl = _picker_table()
+        label_of = dict(zip(tbl["code"].astype(str), tbl["name"].astype(str)))
+        codes = sorted(_sel_now())
+        fn_metrics = mpick.coverage_by_function(codes, label_of=lambda c: label_of.get(c, c))
+        summ = mpick.coverage_summary(codes)
+        n, total = summ["n_covered"], summ["total"]
+        badges = []
+        for d in _DISCIPLINE_ORDER:
+            cov, tot = summ["per_discipline"].get(d, (0, 0))
+            mod = " is-full" if tot and cov == tot else (" is-none" if cov == 0 else "")
+            badges.append(ui.tags.span(f"{d} {cov}/{tot}", class_="metric-disc-badge" + mod))
+        pct = int(round(100 * n / total)) if total else 0
+        header = ui.div(
+            ui.div(
+                ui.tags.strong(f"{n} / {total} STAF functions covered"),
+                ui.div(ui.div(class_="metric-cov-fill", style=f"width:{pct}%"),
+                       class_="metric-cov-track"),
+                class_="metric-cov-headline",
+            ),
+            ui.div(*badges, class_="metric-disc-badges"),
+            class_="metric-cov-summary mb-2",
+        )
+        return ui.div(header, _coverage_table_ui(fn_metrics),
+                      class_="metric-coverage-panel border rounded p-2 mb-3")
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def metric_table():
+        notes = []
+        if not _use_nrsa():
+            notes.append(ui.div(
+                bi("info-circle"), " NRSA field metrics are hidden — NRSA was not chosen as a "
+                "data source in step 2.", class_="text-muted small mb-1"))
         if not mmw_available():
-            return ui.div(ui.TagList("Model My Watershed requires an API key. Set ",
-                                     ui.tags.code("MMW_API_KEY"),
-                                     " or put the key in ",
-                                     ui.tags.code("scripts/.mmw_api_key"),
-                                     " to enable land cover, soils, terrain, climate and drainage-area metrics."),
-                          class_="text-muted small")
-        mc = mmw_core_metrics()
-        ch = {k: v["label"] for k, v in mc.items()}
+            notes.append(ui.div(
+                bi("info-circle"), " Model My Watershed metrics need an API key and are omitted.",
+                class_="text-muted small mb-1"))
+        view = _filtered_named()
+        if view is None or len(view) == 0:
+            return ui.TagList(*notes, ui.div("No metrics match your filters.",
+                                             class_="text-muted p-2"))
+        sel = _sel_now()
+        view = _sort_named(view, _inp("pick_sort") or "recommended")
+        header = ui.tags.thead(ui.tags.tr(
+            ui.tags.th(""), ui.tags.th("Metric"), ui.tags.th("Code"), ui.tags.th("Source"),
+            ui.tags.th("Units"), ui.tags.th("Function(s)"), ui.tags.th("Discipline"),
+        ))
+        body = ui.tags.tbody(*[_metric_row(r, str(r["code"]) in sel) for _, r in view.iterrows()])
         return ui.TagList(
-            ui.div("Per-site watershed metrics (NLCD land cover, soils, terrain, climate), CONUS only. "
-                   "Slow for large watersheds.", class_="small text-muted mb-1"),
-            ui.input_checkbox_group("mmw_sel", None, choices=ch, selected=list(mmw_sel() or [])),
+            *notes,
+            ui.tags.table(header, body, class_="table table-sm align-middle metric-pick-table"),
         )
+
+    @render.ui
+    def advanced_nrsa():
+        tbl = _picker_table()
+        un = tbl[(~tbl["named"]) & (tbl["source_key"] == "nrsa")]
+        note = ui.div(
+            f"{len(un)} NRSA metrics carry only a code (no name or units in the dataset). "
+            "Search to add a specific one.", class_="text-muted small mb-1")
+        q = (_inp("adv_search") or "").strip().lower()
+        if not q:
+            return note
+        hit = un[un.apply(
+            lambda r: q in str(r["code"]).lower() or q in str(r["category"]).lower(), axis=1)]
+        if len(hit) == 0:
+            return ui.TagList(note, ui.div("No codes match.", class_="text-muted small"))
+        sel = _sel_now()
+        cap = 200
+        rows = []
+        for _, r in hit.head(cap).iterrows():
+            code = str(r["code"])
+            rows.append(ui.tags.label(
+                _pick_checkbox(code, code in sel, "me-2"),
+                ui.tags.code(code, class_="metric-code me-2"),
+                ui.tags.span(r["category"], class_="text-muted small"),
+                class_="metric-adv-row d-flex align-items-center gap-1",
+            ))
+        more = (ui.div(f"Showing {cap} of {len(hit)} matches — refine your search.",
+                       class_="text-muted small mt-1") if len(hit) > cap else None)
+        return ui.TagList(note, ui.div(*rows, class_="metric-adv-list"), more)
 
     @output(suspend_when_hidden=False)
     @render.ui
@@ -1902,45 +2543,72 @@ def import_map_server(
             ui.input_checkbox_group("upload_cols", None, choices=cols, selected=cols, inline=True),
         )
 
+    @output(suspend_when_hidden=False)
     @render.ui
     def metric_selected_count():
         return ui.div(ui.tags.strong(str(n_metrics_selected())), " metric(s) selected across sources.",
                       class_="alert alert-light border py-1 px-2 small mb-2")
 
-    @render.text
-    def cnt_nrsa():
-        return f"{len(collect_nrsa_selection())} selected"
+    # ── metric picker events ──────────────────────────────────────────────────
+    @reactive.effect
+    @reactive.event(input.pick_toggle)
+    def _pick_toggle():
+        p = input.pick_toggle() or {}
+        code = str(p.get("code") or "")
+        if not code:
+            return
+        cur = set(_sel_now())
+        if bool(p.get("on")):
+            cur.add(code)
+        else:
+            cur.discard(code)
+        picker_sel.set(cur)
 
-    @render.text
-    def cnt_streamcat():
-        return f"{len(collect_metric_selection())} selected"
+    @reactive.effect
+    @reactive.event(input.pick_select_all)
+    def _pick_select_all():
+        view = _filtered_named()
+        codes = [] if view is None else list(view["code"].astype(str))
+        picker_sel.set(set(_sel_now()) | set(codes))
 
-    @render.text
-    def cnt_streamstats():
-        return f"{len(_inp('ss_sel') or [])} selected"
-
-    @render.text
-    def cnt_mmw():
-        return f"{len(_inp('mmw_sel') or [])} selected"
-
-    @render.text
-    def cnt_computed():
-        return f"{sum(bool(_inp(f)) for f in ('want_da', 'want_regional', 'want_elev'))} selected"
-
-    @render.text
-    def cnt_upload():
-        return f"{len(_inp('upload_cols') or [])} selected"
+    @reactive.effect
+    @reactive.event(input.pick_clear)
+    def _pick_clear():
+        view = _filtered_named()
+        codes = set() if view is None else set(view["code"].astype(str))
+        picker_sel.set(set(_sel_now()) - codes)
 
     # ── compile outputs (step 5) ──────────────────────────────────────────────
+    def _compile_site_count() -> int:
+        """How many sites the pull would actually touch.
+
+        _compile filters to the screening-retained ids, so counting the whole
+        candidate frame here told users "71 sites" for a run that would compile
+        33. Mirror the handler's own filter instead.
+        """
+        s = sites()
+        if s is None:
+            return 0
+        sc = state.easi_screening_sites()
+        if sc is None or (hasattr(sc, "empty") and sc.empty):
+            return len(s)
+        try:
+            rows = (sc if hasattr(sc, "columns") else pd.DataFrame(sc)).to_dict("records")
+            retained = set(easi_screening.retained_site_ids({"easi_screening_sites": rows}))
+        except Exception:  # noqa: BLE001
+            return len(s)
+        if not retained:
+            return 0
+        return int(s["site_id"].astype(str).isin(retained).sum())
+
     @render.ui
     def compile_intro():
-        s = sites()
         computed = [lbl for flag, lbl in (("want_da", "drainage area"),
                                           ("want_regional", "regional bankfull"),
                                           ("want_elev", "3DEP elevation")) if _inp(flag)]
         n_ss, n_mmw = len(ss_sel() or []), len(mmw_sel() or [])
         return ui.div(
-            f"Ready to compile {0 if s is None else len(s)} sites with "
+            f"Ready to compile {_compile_site_count()} sites with "
             f"{len(metric_sel() or [])} StreamCAT + {len(nrsa_sel() or [])} NRSA"
             + (f" + {n_ss} StreamStats" if n_ss else "")
             + (f" + {n_mmw} MMW" if n_mmw else "")
@@ -2038,25 +2706,9 @@ def _re_lon(c: str) -> bool:
     return bool(_re.search(r"^lon|lon$|long|longitude", str(c), _re.I))
 
 
-def _compile_coverage_mapping(cov):
-    """Read-only Discipline -> Function -> Metric coverage for the compiled metrics,
-    rendered with the same ``wb-table`` markup as the workbench so the two views look
-    identical. Each compiled metric appears under EVERY function it serves in
-    metric_map.yaml (canonicalized via staf_functions.json aliases); functions with no
-    compiled metric show a dash."""
-    metric_cols = [
-        str(m)
-        for m in (cov["metric"].tolist() if cov is not None else [])
-        if str(m) not in ("lat", "lon", "comid", "site_id")
-    ]
-    fn_metrics: dict[str, list[str]] = {}
-    for m in metric_cols:
-        for ff in metric_map_functions_for(m):
-            canon = staf_canonical_function(ff.get("function_name"))
-            if canon is None:
-                continue
-            fn_metrics.setdefault(canon["name"], []).append(m)
-
+def _coverage_table_ui(fn_metrics: dict):
+    """Render a ``{function_name: [metric labels]}`` map as the shared ``wb-table``
+    Discipline -> Function -> Metric matrix (dash for uncovered functions)."""
     by_disc = staf_functions_by_discipline()
 
     def fn_cell(fn: str):
@@ -2077,6 +2729,18 @@ def _compile_coverage_mapping(cov):
         return ui.tags.td(*chips, class_="wb-metrics")
 
     return render_wb_table(by_disc, fn_cell=fn_cell, metrics_cell=metrics_cell)
+
+
+def _compile_coverage_mapping(cov):
+    """Read-only Discipline -> Function -> Metric coverage for the compiled metrics,
+    rendered with the same ``wb-table`` markup as the workbench and the Choose-metrics
+    coverage panel (all three share ``coverage_by_function`` + ``_coverage_table_ui``)."""
+    metric_cols = [
+        str(m)
+        for m in (cov["metric"].tolist() if cov is not None else [])
+        if str(m) not in ("lat", "lon", "comid", "site_id")
+    ]
+    return _coverage_table_ui(mpick.coverage_by_function(metric_cols))
 
 
 def _plain_table(df: pd.DataFrame):

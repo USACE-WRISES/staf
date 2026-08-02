@@ -39,6 +39,8 @@ import pandas as pd
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
 
+from .precheck import DEFAULT_MIN_SAMPLE_SIZE
+
 logger = logging.getLogger("streamcurves")
 
 __all__ = [
@@ -397,7 +399,9 @@ def build_model_candidates(
         "%s: %d complete cases for modeling (of %d total)", metric_key, n_complete, len(data)
     )
 
-    if n_complete < mc["min_sample_size"]:
+    # .get(): metric_config from a headless session or a tables_from_configs
+    # reconstruction omits min_sample_size (see precheck.DEFAULT_MIN_SAMPLE_SIZE).
+    if n_complete < mc.get("min_sample_size", DEFAULT_MIN_SAMPLE_SIZE):
         logger.warning("%s: insufficient complete cases (%d)", metric_key, n_complete)
         return _empty_result()
 

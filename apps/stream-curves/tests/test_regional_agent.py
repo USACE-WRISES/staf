@@ -1,0 +1,331 @@
+"""Tests for the headless Regional Analysis Agent (pure stages, no network)."""
+from __future__ import annotations
+
+import pandas as pd
+import pytest
+
+from streamcurves import regional_agent as ra
+
+
+# --------------------------------------------------------------------------- #
+# Candidate selection (reimplemented nrsa_in_region)
+# --------------------------------------------------------------------------- #
+def test_select_candidates_l3_counts():
+    nh = ra.select_candidates("58")
+    ecbp = ra.select_candidates("55")
+    assert len(nh) == 71          # Northeastern Highlands
+    assert len(ecbp) == 18        # Eastern Corn Belt Plains (sparse)
+    for col in ("site_id", "lat", "lon"):
+        assert col in nh.columns
+
+
+def test_select_candidates_empty_region():
+    assert len(ra.select_candidates("does-not-exist")) == 0
+
+
+# --------------------------------------------------------------------------- #
+# Curated direction map
+# --------------------------------------------------------------------------- #
+def test_build_metric_config_applies_curated_directions():
+    directions = ra.load_directions()
+    cols = ["chem_PTL", "bent_EPT_NTAX", "phab_PCT_SAFN", "phab_XBKA"]
+    mc, flagged = ra.build_metric_config(cols, directions)
+    # correct ecological directions, not the naive higher-is-better default
+    assert mc["chem_PTL"]["higher_is_better"] is False       # phosphorus: lower is better
+    assert mc["bent_EPT_NTAX"]["higher_is_better"] is True   # richness: higher is better
+    assert mc["phab_PCT_SAFN"]["higher_is_better"] is False  # sand/fines: lower is better
+    # a metric with neither a direction nor a declared shape is flagged, never guessed
+    assert "phab_XBKA" in {f["metric"] for f in flagged}
+    assert "phab_XBKA" not in mc
+
+
+def test_two_sided_metrics_build_instead_of_being_flagged():
+    # These degrade at BOTH extremes. Before the optimum form existed they had no
+    # representable shape, so they were dropped -- taking Floodplain connectivity and
+    # Channel evolution out of every published assessment with them.
+    directions = ra.load_directions()
+    mc, flagged = ra.build_metric_config(["chem_PH", "phab_BFWD_RAT", "phab_XBKF_H"], directions)
+    flagged_metrics = {f["metric"] for f in flagged}
+    for code in ("chem_PH", "phab_BFWD_RAT", "phab_XBKF_H"):
+        assert code in mc, f"{code} should build as a two-sided curve"
+        assert code not in flagged_metrics
+        assert mc[code]["curve_form"] == "optimum"
+        # no "better" direction is the whole point of a two-sided response
+        assert mc[code]["higher_is_better"] is None
+
+
+# --------------------------------------------------------------------------- #
+# Landscape (StreamCat) metrics — the 12-of-20 coverage defect
+# --------------------------------------------------------------------------- #
+def test_landscape_split_scores_condition_metrics_and_keeps_context_as_predictors():
+    d = ra.load_landscape_directions()
+    scored, predictors = ra.select_landscape_codes(d)
+    # condition indicators with an unambiguous direction are scored
+    for code in ("pctimp2019", "pctcrop2019", "pctwdwet2019", "bfi", "damdens", "rdcrs"):
+        assert code in scored
+    # climate/scaling context is never scored, but is not discarded either
+    for code in ("runoff", "precip8110"):
+        assert code in predictors and code not in scored
+
+
+def test_landscape_metric_config_keys_by_the_suffixed_column():
+    # StreamCat returns pctimp2019 as the column pctimp2019ws; the config must key by
+    # the column that actually exists or nothing downstream can find it.
+    d = ra.load_landscape_directions()
+    mc, missing = ra.build_landscape_metric_config(["pctimp2019ws", "bfiws"], d)
+    assert mc["pctimp2019ws"]["higher_is_better"] is False   # impervious: lower is better
+    assert mc["pctimp2019ws"]["column_name"] == "pctimp2019ws"
+    assert mc["bfiws"]["higher_is_better"] is True           # base-flow index: higher is better
+    # codes with no column present are reported, never silently dropped
+    assert {m["metric"] for m in missing} and "pctimp2019" not in {m["metric"] for m in missing}
+
+
+def test_predictor_config_covers_the_context_variables():
+    d = ra.load_landscape_directions()
+    pc = ra.build_predictor_config(["runoffws", "precip8110ws", "pctimp2019ws"], d)
+    assert set(pc) == {"runoffws", "precip8110ws"}   # scored metrics are not predictors here
+    assert pc["runoffws"]["type"] == "continuous"
+
+
+def test_streamcat_failure_is_reported_not_silently_na():
+    d = ra.load_landscape_directions()
+    data = pd.DataFrame({"site_id": ["a"], "comid": [123], "chem_PTL": [10.0]})
+
+    def _boom(*a, **k):
+        raise RuntimeError("service unreachable")
+
+    out, report = ra.enrich_streamcat(data, d, fetch=_boom)
+    assert report["status"] == "failed" and "unreachable" in report["reason"]
+    assert list(out.columns) == list(data.columns)      # untouched
+
+
+def test_streamcat_enrichment_joins_by_comid():
+    d = ra.load_landscape_directions()
+    data = pd.DataFrame({"site_id": ["a", "b"], "comid": [1, 2], "chem_PTL": [10.0, 20.0]})
+    wide = pd.DataFrame({"COMID": [1, 2], "pctimp2019ws": [3.5, 9.0]})
+    out, report = ra.enrich_streamcat(data, d, fetch=lambda *a, **k: wide)
+    assert report["status"] == "ok" and report["n_columns"] == 1
+    assert list(out["pctimp2019ws"]) == [3.5, 9.0]
+
+
+def test_streamcat_without_comid_reports_rather_than_raising():
+    d = ra.load_landscape_directions()
+    data = pd.DataFrame({"site_id": ["a"], "chem_PTL": [10.0]})
+    out, report = ra.enrich_streamcat(data, d, fetch=lambda *a, **k: pd.DataFrame())
+    assert report["status"] == "failed" and "comid" in report["reason"]
+    assert out is data
+
+
+# --------------------------------------------------------------------------- #
+# Curve building honors direction (lower-is-better inverts)
+# --------------------------------------------------------------------------- #
+def _synthetic(col: str, values: list[float]) -> pd.DataFrame:
+    return pd.DataFrame({"site_id": [f"s{i}" for i in range(len(values))], col: values})
+
+
+def test_build_curves_lower_is_better_inverts():
+    data = _synthetic("chem_PTL", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    mc = {"chem_PTL": {"column_name": "chem_PTL", "higher_is_better": False,
+                       "metric_family": "continuous", "display_name": "TP"}}
+    rows = ra.build_curves(data, mc)
+    pts = rows["chem_PTL"]["curve_points"]
+    # index score must fall as the (lower-is-better) metric rises
+    assert float(pts["index_score"].iloc[0]) > float(pts["index_score"].iloc[-1])
+    assert rows["chem_PTL"]["curve_status"] == "complete"
+
+
+def test_review_flags_degenerate_and_scopes_clean():
+    # a clean higher-is-better metric + a degenerate one (all non-positive Q25)
+    data = pd.DataFrame({
+        "site_id": [f"s{i}" for i in range(10)],
+        "good": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        "bad": [-5, -4, -3, -2, -1, 0, 0, 0, 0, 0],
+    })
+    mc = {
+        "good": {"column_name": "good", "higher_is_better": True, "metric_family": "continuous"},
+        "bad": {"column_name": "bad", "higher_is_better": True, "metric_family": "continuous"},
+    }
+    rows = ra.build_curves(data, mc)
+    review = ra.review_curves(rows, {"good": "Biology: Habitat provision", "bad": "Biology: Habitat provision"})
+    from streamcurves import run_state as rs
+    intended = rs.intended_metrics_for_publish(review)
+    flagged = rs.flagged_metrics(review)
+    assert "good" in intended
+    assert "bad" in flagged            # degenerate_q25 -> flagged, not published
+
+
+def test_review_flags_unmapped():
+    data = _synthetic("m", list(range(1, 11)))
+    mc = {"m": {"column_name": "m", "higher_is_better": True, "metric_family": "continuous"}}
+    rows = ra.build_curves(data, mc)
+    review = ra.review_curves(rows, {"m": ""})   # no function assigned
+    assert review["m"]["status"] == "unmapped"
+
+
+# --------------------------------------------------------------------------- #
+# Redundancy (RED-01 Spearman-primary)
+# --------------------------------------------------------------------------- #
+def test_redundancy_red01_spearman_flag():
+    # a and b are a perfect monotone transform -> Spearman 1.0 -> RED-01 flag
+    data = pd.DataFrame({"a": [1, 2, 3, 4, 5, 6, 7, 8], "b": [1, 4, 9, 16, 25, 36, 49, 64]})
+    mc = {"a": {"column_name": "a"}, "b": {"column_name": "b"}}
+    red = ra.redundancy_matrix(data, mc, {"a": "F1", "b": "F2"})
+    assert len(red) == 1
+    assert bool(red.iloc[0]["red01_spearman_flag"]) is True
+    assert abs(red.iloc[0]["spearman"]) >= 0.99
+
+
+# --------------------------------------------------------------------------- #
+# Portfolio (SELECT-01)
+# --------------------------------------------------------------------------- #
+def test_portfolio_select01_flag_over_two():
+    cf = {"m1": "Biology: Community dynamics", "m2": "Biology: Community dynamics",
+          "m3": "Biology: Community dynamics", "m4": "Biology: Habitat provision"}
+    port = ra.compact_portfolio(["m1", "m2", "m3", "m4"], cf, {})
+    by_fn = {p["function"]: p for p in port}
+    assert by_fn["Community dynamics"]["select01_flag"] is True
+    assert by_fn["Habitat provision"]["select01_flag"] is False
+
+
+def test_portfolio_enumerates_all_twenty_functions_including_gaps():
+    """A metric-less function used to be structurally invisible here, so a document
+    titled "Compact Metric Portfolio" read as complete when it was partial."""
+    port = ra.compact_portfolio(["m1"], {"m1": "Biology: Community dynamics"}, {})
+    assert len(port) == 20
+    by_fn = {p["function"]: p for p in port}
+    assert by_fn["Community dynamics"]["coverage"] == "covered"
+    assert by_fn["Reach inflow"]["coverage"] == "GAP"
+    assert by_fn["Reach inflow"]["n_metrics"] == 0
+    assert by_fn["Reach inflow"]["primary_metric"] is None
+    assert by_fn["Reach inflow"]["discipline"] == "Hydrology"
+
+
+def test_portfolio_resolves_both_label_shapes():
+    """column_functions carries "Discipline: Function"; the crosswalk is keyed on the
+    bare name. Getting this wrong yields 20 empty rows plus the covered ones."""
+    prefixed = ra.compact_portfolio(["m1"], {"m1": "Hydrology: Reach inflow"}, {})
+    bare = ra.compact_portfolio(["m1"], {"m1": "Reach inflow"}, {})
+    for port in (prefixed, bare):
+        assert len(port) == 20
+        assert {p["function"]: p for p in port}["Reach inflow"]["coverage"] == "covered"
+
+
+def test_portfolio_keeps_unmapped_metrics_visible():
+    port = ra.compact_portfolio(["m1"], {"m1": "Not A Real Function"}, {})
+    assert len(port) == 21
+    unmapped = [p for p in port if p["coverage"] == "unmapped"]
+    assert unmapped and unmapped[0]["metrics"] == ["m1"]
+
+
+def test_uncovered_functions_pairs_each_gap_with_its_candidate_metrics():
+    port = ra.compact_portfolio(["m1"], {"m1": "Biology: Community dynamics"}, {})
+    gaps = ra.uncovered_functions(port)
+    assert len(gaps) == 19
+    reach = next(g for g in gaps if g["function"] == "Reach inflow")
+    # metric_map.yaml maps road density here; a reviewer needs the way out, not
+    # just the news that something is missing.
+    assert any(c.startswith("rddens") for c in reach["candidate_metrics"])
+
+
+def test_uncovered_functions_is_empty_when_everything_is_covered():
+    from streamcurves import deep_export as de
+    cf = {f"m{i}": str(f["name"]) for i, f in enumerate(de.deep_read_staf_crosswalk())}
+    port = ra.compact_portfolio(list(cf), cf, {})
+    assert all(p["coverage"] == "covered" for p in port)
+    assert ra.uncovered_functions(port) == []
+
+
+# --------------------------------------------------------------------------- #
+# Reference-tier ladder (REF-01/02/03), screening mocked
+# --------------------------------------------------------------------------- #
+def test_choose_reference_tier_ref01_when_pool_adequate(monkeypatch):
+    def fake(rows, preset, on_event=None, cache_path=None):
+        ids = [f"s{i}" for i in range(40)]  # 40 functioning >= floor
+        return {"tables": {}, "sites": [], "retained_ids": ids,
+                "counts": {"n_retained": 40}, "preset": preset}
+    monkeypatch.setattr(ra, "screen_pool", fake)
+    tier = ra.choose_reference_tier([], "functional")
+    assert tier["reference_tier"] == ra.TIER_LEAST_DISTURBED
+    assert tier["ref02_triggered"] is False
+
+
+def test_choose_reference_tier_ref02_fallback(monkeypatch):
+    calls = []
+
+    def fake(rows, preset, on_event=None, cache_path=None):
+        calls.append(preset)
+        n = 5 if preset == "functional" else 25   # too few functioning -> fallback
+        return {"tables": {}, "sites": [], "retained_ids": [f"s{i}" for i in range(n)],
+                "counts": {"n_retained": n}, "preset": preset}
+    monkeypatch.setattr(ra, "screen_pool", fake)
+    tier = ra.choose_reference_tier([], "functional")
+    assert tier["reference_tier"] == ra.TIER_BEST_AVAILABLE
+    assert tier["ref02_triggered"] is True
+    assert calls == ["functional", "at_risk_or_better"]   # explicit, ordered fallback
+    assert tier["review_flags"]                            # mandatory review recorded
+
+
+def test_choose_reference_tier_rejects_below_floor():
+    with pytest.raises(ValueError):
+        ra.choose_reference_tier([], "all_sites")   # REF-03: never below at_risk_or_better
+
+
+# --------------------------------------------------------------------------- #
+# Sample-size gate (DATA-04/05/06, calibrated v0.3)
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("n,expected", [
+    (25, "adequate"), (20, "adequate"),          # DATA-04: n >= 20
+    (19, "exploratory"), (10, "exploratory"),    # DATA-05: 10 <= n < 20
+    (9, "insufficient"), (5, "insufficient"),    # DATA-06: 5 <= n < 10
+    (4, "too_few"), (None, "unknown"),           # engine hard floor / no data
+])
+def test_sample_size_disposition_calibrated_bands(n, expected):
+    assert ra.sample_size_disposition(n) == expected
+
+
+def test_run_offline_end_to_end_no_screen():
+    """Full pipeline offline (do_screen=False): curves + a valid bundle, no network."""
+    res = ra.run("58", "Northeastern Highlands", do_screen=False)
+    assert res["n_candidates"] == 71
+    assert res["screening_method"] == "unscreened_test"
+    assert res["bundle"] is not None
+    assert len(res["intended_metrics"]) > 0
+    assert res["reference_pool_disposition"] == "adequate"   # n=71 under calibrated floors
+    for mk in res["intended_metrics"]:
+        assert res["sample_sizes"][mk]["disposition"] in (
+            "adequate", "exploratory", "insufficient", "too_few", "unknown")
+
+
+def test_portfolio_credits_every_function_a_metric_informs():
+    """A metric listed under two functions must cover both.
+
+    column_functions holds metric_map_function_label's FIRST match only; the
+    bundle is built from the full set. Reading the label here made the run report
+    name High flow dynamics as a gap in the very run whose bundle covered it.
+    """
+    cf = {"pctimp2019ws": "Hydrology: Catchment hydrology"}
+    port = ra.compact_portfolio(["pctimp2019ws"], cf, {})
+    by_fn = {p["function"]: p for p in port}
+    assert by_fn["Catchment hydrology"]["coverage"] == "covered"
+    assert by_fn["High flow dynamics"]["coverage"] == "covered", (
+        "impervious cover informs High flow dynamics too")
+
+
+def test_portfolio_agrees_with_the_bundles_coverage():
+    """The report's two coverage numbers come from different code paths; they
+    must not be able to contradict each other."""
+    from streamcurves import deep_export as de
+
+    codes = ["pctimp2019ws", "rddensws", "damdensws", "phab_BFWD_RAT"]
+    cf = {c: ra.metric_map.metric_map_function_label(c) for c in codes}
+    port = ra.compact_portfolio(codes, cf, {})
+    from_portfolio = {p["function_id"] for p in port if p["coverage"] == "covered"}
+
+    from_map = set()
+    for c in codes:
+        for f in ra.metric_map.metric_map_functions_for(c):
+            fid = ra._canonical_function_id(f.get("function_name"))
+            if fid:
+                from_map.add(fid)
+    assert from_portfolio == from_map
+    assert len(de.deep_read_staf_crosswalk()) == len(port)

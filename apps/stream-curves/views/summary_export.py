@@ -212,7 +212,7 @@ def summary_export_server(input, output, session, state: AppState):
                     bi("exclamation-triangle-fill"),
                     " The Discipline → Function → Metric mapping must be reviewed and "
                     "saved (and cover every summary metric) before exports unlock. "
-                    "Open the mapping on the Reference Curves page.",
+                    "Open Refine & map in the workflow strip, then Function mapping.",
                     class_="alert alert-warning",
                 )
             )

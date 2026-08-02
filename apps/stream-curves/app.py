@@ -54,7 +54,8 @@ from views.regional_curve import regional_curve_server, regional_curve_ui
 from views.state import AppState
 from views.summary_export import summary_export_server, summary_export_ui
 from views.summary_page import summary_page_server, summary_page_ui
-from views.theme import app_theme, bi, fa, staf_topnav, versioned_www_asset
+from views.theme import STAF_LINKS, app_theme, bi, fa, versioned_www_asset
+from views.uihelpers import WORKFLOW_GOTO_INPUT
 from views.workspace_modal import register_workspace_modal
 
 logger = logging.getLogger("streamcurves")
@@ -75,31 +76,46 @@ def app_help_content():
             "helps you classify your columns and set everything up.",
         ),
         ui.tags.h6("How it works", class_="fw-bold mt-3 mb-1"),
-        ui.tags.p("Work left to right through the tabs:", class_="text-muted mb-1"),
+        ui.tags.p(
+            "Follow the numbered workflow strip at the top; each stage is a page:",
+            class_="text-muted mb-1",
+        ),
         ui.tags.ul(
             ui.tags.li(
-                ui.tags.strong("Data & Setup"),
-                ": choose a region of applicability, bring or select site data, "
-                "pull metrics, and build the dataset.",
+                ui.tags.strong("1. Region & data"),
+                ": choose a region of applicability and gather candidate sites "
+                "(published NRSA monitoring sites and/or your own upload).",
             ),
             ui.tags.li(
-                ui.tags.strong("Reference Curves"),
-                ": run the 4-phase evaluation for each metric.",
+                ui.tags.strong("2. Screen sites"),
+                ": run EASI reference screening and confirm the sites to keep.",
             ),
             ui.tags.li(
-                ui.tags.strong("Regional Curves"),
-                ": develop regional (e.g. bankfull) relationships.",
+                ui.tags.strong("3. Build dataset"),
+                ": choose metrics, pull and compile data, classify columns, "
+                "and build.",
             ),
             ui.tags.li(
-                ui.tags.strong("Cross-Sections"),
-                ": build per-site geomorphic cross-sections on demand.",
+                ui.tags.strong("4. Reference curves"),
+                ": run the 4-phase evaluation for each metric and resolve any "
+                "flagged curves.",
             ),
             ui.tags.li(
-                ui.tags.strong("Publish"),
+                ui.tags.strong("5. Publish"),
                 ": save your project as a Draft file, or publish it to the STAF "
                 "assessment library as Preliminary or Final for DEEP to score against.",
             ),
             class_="mb-2",
+        ),
+        ui.tags.p(
+            ui.tags.strong("Tools"),
+            " (top bar): ",
+            ui.tags.strong("Regional Curves"),
+            " develops regional (e.g. bankfull) relationships and ",
+            ui.tags.strong("Cross-Sections"),
+            " builds per-site geomorphic cross-sections. Both are optional and "
+            "ride into the published assessment.",
+            class_="text-muted mb-0",
         ),
         ui.tags.p(
             "Use ",
@@ -131,6 +147,10 @@ def app_help_content():
 
 
 app_ui = ui.page_navbar(
+    # The navset is a page container, not navigation: every tab header is hidden
+    # in curves.css and the workflow strip (views/stagebar.py) does the switching
+    # via ui.update_navset. What is left in the top bar is the brand plus the
+    # header actions below -- the header shape EASI, SFARI and DEEP all use.
     ui.nav_panel(
         "Data & Setup",
         ui.div(data_overview_ui("data_overview"), class_="mt-3"),
@@ -144,6 +164,15 @@ app_ui = ui.page_navbar(
         icon=bi("table"),
     ),
     ui.nav_panel(
+        "Publish",
+        ui.div(publish_ui("publish"), class_="mt-3"),
+        value="publish",
+        icon=bi("file-earmark-arrow-up"),
+    ),
+    # Side analyses (run_state.TOOL_KEYS). They need the built dataset but are not
+    # stages, so the strip renders them as unnumbered chips past a divider rather
+    # than as steps 6 and 7 -- keep these nav values in sync with TOOL_KEYS.
+    ui.nav_panel(
         "Regional Curves",
         ui.div(regional_curve_ui("regional"), class_="mt-3"),
         value="regional",
@@ -154,12 +183,6 @@ app_ui = ui.page_navbar(
         ui.div(cross_section_ui("xsec"), class_="mt-3"),
         value="xsec",
         icon=bi("graph-down"),
-    ),
-    ui.nav_panel(
-        "Publish",
-        ui.div(publish_ui("publish"), class_="mt-3"),
-        value="publish",
-        icon=bi("file-earmark-arrow-up"),
     ),
     ui.nav_spacer(),
     # Header actions (mirrors the SFARI/DEEP New / Open / Save idiom; the
@@ -185,11 +208,24 @@ app_ui = ui.page_navbar(
             class_="nav-link app-hdr-link",
         )
     ),
+    # The divider sits here so it separates the file actions from the two meta
+    # links. target=_blank keeps an unsaved session from being replaced by the
+    # docs site, and is the path the desktop shell turns into "focus launcher"
+    # (STAF_LINKS["home"] is rewritten to staf-desktop://home there).
+    ui.nav_control(
+        ui.tags.a(
+            "STAF",
+            href=STAF_LINKS["home"],
+            target="_blank",
+            rel="noopener",
+            class_="nav-link app-hdr-link app-hdr-divider",
+        )
+    ),
     ui.nav_control(
         ui.input_action_link(
             "app_help",
             ui.TagList(bi("question-circle"), " Help"),
-            class_="nav-link app-help-link app-hdr-divider",
+            class_="nav-link app-help-link",
         )
     ),
     id="main_navbar",
@@ -203,7 +239,6 @@ app_ui = ui.page_navbar(
             ui.tags.link(rel="stylesheet", href=versioned_www_asset("curves.css")),
             ui.tags.script(src=versioned_www_asset("curves.js")),
         ),
-        staf_topnav(),
         stagebar_ui("stagebar"),
         # Static ipywidget/ipyleaflet deps (see views/widget_deps.py) — the
         # TagList renders nothing visible; its dependencies hoist into <head>.
@@ -271,8 +306,8 @@ def server(input, output, session):
                     state.discipline_function_mapping()
                 )
 
-    # Root navigation: the stage banner requests a tab switch via a nonce; the
-    # wizard step request is consumed inside the Data & Setup wizard itself.
+    # Root navigation: the workflow strip requests a page switch via a nonce;
+    # the wizard step request is consumed inside the Data & Setup wizard itself.
     @reactive.effect
     @reactive.event(state.nav_request_nonce, ignore_init=True)
     def _handle_nav_request():
@@ -280,6 +315,29 @@ def server(input, output, session):
             target = state.nav_request()
         if target:
             ui.update_navset("main_navbar", selected=target)
+
+    # Not-ready panels ask to jump to the stage that supplies what they are missing.
+    # One root-level channel (uihelpers.WORKFLOW_GOTO_INPUT) so a panel rendered
+    # inside any module needs no wiring of its own.
+    @reactive.effect
+    @reactive.event(input[WORKFLOW_GOTO_INPUT])
+    def _workflow_goto():
+        payload = input[WORKFLOW_GOTO_INPUT]() or {}
+        target = payload.get("nav")
+        if not target:
+            return
+        with reactive.isolate():
+            state.nav_request.set(target)
+            state.nav_request_nonce.set((state.nav_request_nonce() or 0) + 1)
+            step = payload.get("step")
+            if step is not None:
+                state.wizard_step_request.set(int(step))
+                state.wizard_step_nonce.set((state.wizard_step_nonce() or 0) + 1)
+
+    # Location mirror for the workflow strip's "you are here" highlight.
+    @reactive.effect
+    def _mirror_current_tab():
+        state.current_tab.set(input.main_navbar())
 
     # ── header actions: New / Open / Save ────────────────────────────────────
     def _do_new():

@@ -1,0 +1,291 @@
+# StreamCurves Regional-Model Methodology: machine-readable configuration
+#
+# This file is the single editable, version-controlled home for every configurable
+# operating threshold, weight, and band cutoff named in the methodology. Prose lives
+# in ../methodology.md; the per-rule catalog (with outcomes, confidence effects, and
+# override permissions) lives in ./rule_catalog.json. Keep the three in sync.
+#
+# STATUS DISCIPLINE
+#   Every value here is threshold_status: provisional until the two pilots calibrate
+#   it (see pilots:) and the scientific team approves methodology_version 1.0. A
+#   provisional value is an operating default, never a validated ecological truth.
+#   Per-rule threshold_status and implementation_status live in rule_catalog.json.
+#
+# HOW TO EDIT
+#   1. Change a value here and bump methodology_version (semantic: patch = a single
+#      provisional threshold move; minor = a new rule or a status promotion; major =
+#      a frozen release such as 1.0).
+#   2. Mirror the change in rule_catalog.json (value + threshold_status).
+#   3. Record the change and its rationale in the Decision and Provenance Log.
+#   4. Re-run the pilot regression fixtures before promoting any status.
+
+meta:
+  methodology_version: "0.3-provisional"
+  threshold_status: "provisional"        # global default; rules may override
+  date: "2026-07-24"
+  calibration_note: >
+    v0.3 recalibrated the DATA sample-size floors against the two pilots' REAL
+    EASI-screened reference sizes (NH-58 = 33 Functioning sites; ECBP-55 = 0 Functioning,
+    16 best-available). The prior floors (auto n>=50, exploratory 30-50, insufficient <30)
+    were unreachable at the L3 ecoregion scale with NRSA 2018-19, so both pilots fell below
+    the auto-fit band. Floors are now tied to what IQR/quartile estimation actually needs
+    (~20 for stable quartiles, ~10 minimum). The DATA rules below are threshold_status
+    calibrated on this evidence; the broader methodology stays provisional until the full
+    pilot benchmark validation (Section 11) completes.
+  authority: "STAF scientific team (human sign-off required for status promotion)"
+  spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
+  taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
+  curve_engine: "apps/stream-curves/streamcurves/curves.py::build_reference_curve"
+  curve_method_version: "iqr-seed-1"     # matches run_state.CURVE_METHOD_VERSION
+  screening_method_version: "easi-batch-1"
+
+# --------------------------------------------------------------------------- #
+# Data adequacy (rule family DATA). Sample-size floors scale with the number of
+# fitted parameters; the IQR-seed curve fits a fixed small geometry, so treat its
+# "parameters" as the quantiles it consumes (see methodology.md, Statistical
+# Protocol, Phase 1).
+# --------------------------------------------------------------------------- #
+data_rules:
+  # threshold_status: calibrated (v0.3, on the two pilots' real reference sizes).
+  # See meta.calibration_note. Prior provisional values shown in parentheses.
+  max_missingness_auto: 0.20             # DATA-01: <=20% eligible for automation
+  max_missingness_review: 0.40           # DATA-03: >40% do not auto-recommend
+  min_n_unstratified: 20                 # DATA-04 (was 50): n>=20 eligible for automated curve eval
+  exploratory_n_unstratified: 10         # DATA-05 (was 30): 10 <= n < 20 exploratory only
+  insufficient_n_unstratified: 10        # DATA-06 (was 30): n < 10 do not auto-fit
+  min_n_stratum: 15                      # DATA-07 (was 30)
+  very_small_stratum_n: 8                # DATA-08 (was 20): n < 8 (or < 10% of region)
+  very_small_stratum_frac: 0.10          # DATA-08
+  observations_per_parameter: 10         # DATA-04/07 multiplier
+  # IQR-seed engine floor already enforced in code (curves.py: n<5 -> insufficient_data).
+  curve_engine_hard_floor_n: 5
+
+# --------------------------------------------------------------------------- #
+# Predictor and redundancy analysis (rule family RED).
+# NOTE divergence: cross_metric.py currently flags redundancy on |Pearson| > 0.80.
+# The methodology's primary flag is |Spearman| >= 0.80 (RED-01). Both are computed;
+# the Spearman-primary flag is implementation_status: partial until the flag column
+# is switched. See rule_catalog.json RED-01.
+# --------------------------------------------------------------------------- #
+redundancy_rules:
+  strong_abs_spearman: 0.80              # RED-01 strong redundancy flag
+  moderate_abs_spearman: 0.65            # RED-02 investigate
+  # RED-03: below moderate -> not redundant on correlation alone
+  vif_review: 5                          # RED-04 (diagnostics.py: caution band)
+  vif_fail: 10                           # RED-05 (diagnostics.py: fail band)
+  bootstrap_stability: 0.80              # RED-06 (net-new: no bootstrap in code yet)
+  fdr_q: 0.05                            # RED-07 (screening.py uses BH already)
+
+# --------------------------------------------------------------------------- #
+# Stratifier acceptance (rule family STRAT). The CV-based improvement rules are
+# net-new (no cross-validation in the curve or stratifier path today); the KW +
+# effect-size + feasibility screen that DOES exist (screening.py, effects.py,
+# decision.py, feasibility.py) is the current operational gate. See rule_catalog.
+# --------------------------------------------------------------------------- #
+stratifier_rules:
+  min_cv_error_improvement: 0.10         # STRAT-01 (net-new)
+  strong_cv_error_improvement: 0.15      # STRAT-02 (net-new)
+  min_delta_cv_r2: 0.05                  # STRAT-03 (net-new)
+  min_delta_aicc: 4                      # STRAT-04 (net-new; models.py uses BIC, not AICc)
+  strong_delta_aicc: 10                  # STRAT-05 (net-new)
+  min_resample_support: 0.80             # STRAT-06 (net-new)
+  breakpoint_interval_support: 0.70      # STRAT-07 (net-new)
+  max_data_derived_bins: 3               # STRAT-08
+  group_difference_fdr_q: 0.05           # STRAT-09 (screening.py BH already)
+  min_group_size_current: 5              # implemented today: stratification_registry.yaml
+  # Registry stratifiers already defined in config/stratification_registry.yaml:
+  registered_stratifiers:
+    - Ecoregion
+    - DACAT
+    - Ecoregion_x_DACAT
+    - StreamType2
+    - valleytype
+    - Bedmaterial
+    - FlowRegime
+    - BEHIcombined
+    - BEHIeroding
+
+# --------------------------------------------------------------------------- #
+# Reference curve acceptance (rule family CURVE). For the pilots the sole Approved
+# curve family is the empirical IQR-seed curve; its acceptance gate is geometric
+# validation (implemented). CV, one-standard-error selection, and CI reporting are
+# specified but net-new.
+# --------------------------------------------------------------------------- #
+curve_rules:
+  approved_families: ["iqr_seed_piecewise_linear"]   # CURVE-01 (the only Approved family)
+  # Geometric validation gate (implemented in validate_reference_curve_points):
+  index_low_band: 0.30                   # curve must span 0.30 (drawing band)
+  index_high_band: 0.70                  # curve must span 0.70 (drawing band)
+  max_band_crossings: 2                  # <=2 crossings of each band
+  require_monotone_metric: true
+  # Influence and shape review:
+  influence_param_change_frac: 0.20      # CURVE-04 mandatory review trigger (net-new automation)
+  require_direction_check: true          # CURVE-05 (higher_is_better inversion is checked)
+  require_uncertainty_interval: false    # CURVE-06 -> net-new for IQR curves (true once implemented)
+  require_reproducible_seed: true        # CURVE-08 (deterministic engine; stamp seed + versions)
+  # DEEP scoring contract bands (deep_export.py; distinct from the drawing bands):
+  deep_index_bands: [0.39, 0.69]
+  deep_function_score_bands: [5, 10]
+  deep_function_score_max: 15
+
+# --------------------------------------------------------------------------- #
+# Reference-tier ladder (rule family REF). Encodes the user-authorized ECBP
+# fallback as an explicit, reviewed, provenance-stamped decision mapped onto the
+# EXISTING EASI presets in _vendor/easi/batch/qualify.py. No new screening code.
+# --------------------------------------------------------------------------- #
+reference_tiers:
+  # Tier definitions map 1:1 onto qualify.PRESETS.
+  tiers:
+    minimally_disturbed:
+      preset: "reference_condition"      # ECI>0.69 AND every sub-index>0.69 AND every fn score>10
+      label: "Minimally-disturbed reference"
+      offered_in_ui: false               # resolvable but not in the StreamCurves dropdown
+    least_disturbed:
+      preset: "functional"               # raw ECI > 0.69 (Functioning)
+      label: "Least-disturbed reference"
+      offered_in_ui: true
+    best_available:
+      preset: "at_risk_or_better"        # raw ECI > 0.39 (Functioning or Functioning-at-Risk)
+      label: "Best-available reference"
+      offered_in_ui: true
+  primary_tier: "least_disturbed"        # REF-01 default for both pilots
+  fallback_tier: "best_available"        # REF-02 fallback target
+  floor_tier: "best_available"           # REF-03: never below this for reference curves
+  fallback_trigger: "least_disturbed pool fails DATA-04 or DATA-06 for a metric or stratum"
+  fallback_is_hard_stop: true            # mandatory human review whenever REF-02 is used
+  fallback_confidence_cap: 59            # best-available reference cannot score High
+  stamp_reference_tier_per_curve: true   # provenance on every curve + published bundle
+  never_relax_silently: true
+  never_relax_to_hit_count_when_adequate: true
+
+# --------------------------------------------------------------------------- #
+# Confidence scoring (0-100). Net-new: no numeric confidence exists in code today;
+# the current triage is categorical (run_state curve statuses + boolean needs_review).
+# --------------------------------------------------------------------------- #
+confidence_rules:
+  components:                            # points must sum to 100
+    data_adequacy_quality: 20
+    statistical_strength: 25
+    robustness_out_of_sample: 20
+    ecological_plausibility: 20
+    interpretability_feasibility: 10
+    rule_completeness_agreement: 5
+  bands:
+    high_minimum: 80                     # 80-100 High
+    moderate_minimum: 60                 # 60-79 Moderate; <60 Low
+  caps:
+    no_ecological_rationale: 59
+    no_out_of_sample_validation: 59
+    sample_below_minimum: 59
+    best_available_reference: 59         # ties REF-02 to the confidence cap
+    unresolved_leakage_or_circularity: 39
+  high_confidence_audit_rate: 0.10       # production drift audit
+  # Review Priority = Impact x Uncertainty x Novelty (net-new; scales in methodology.md)
+
+# --------------------------------------------------------------------------- #
+# Final metric portfolio (rule family SELECT). The 100-point metric score is
+# net-new (no metric score exists in code today).
+# --------------------------------------------------------------------------- #
+metric_portfolio:
+  default_primary_metrics_per_function: 1
+  default_maximum_metrics_per_function: 2
+  more_than_two_requires_human_approval: true
+  metric_score_weights:                  # must sum to 100
+    ecological_relevance_coverage: 25
+    data_quality_support_coverage: 20
+    curve_performance_stability: 20
+    nonredundancy_complementarity: 15
+    interpretability_management: 10
+    operational_availability_reproducibility: 10
+
+# --------------------------------------------------------------------------- #
+# EASI reference-condition presets (mirror of _vendor/easi/batch/qualify.PRESETS;
+# do not edit here without editing the engine). ECI cuts sit on config.INDEX_BANDS.
+# --------------------------------------------------------------------------- #
+easi_presets:
+  functional: {field: eci, cmp: ">", value: 0.69}          # Functioning
+  at_risk_or_better: {field: eci, cmp: ">", value: 0.39}   # Functioning or Functioning-at-Risk
+  all_sites: {field: eci, cmp: ">=", value: 0.0}
+  reference_condition:
+    op: and
+    rules:
+      - {field: eci, cmp: ">", value: 0.69}
+      - {field: every_sub_index, cmp: ">", value: 0.69}
+      - {field: every_function_score, cmp: ">", value: 10}
+
+# --------------------------------------------------------------------------- #
+# Ecological-function taxonomy: 20 functions in 5 disciplines. Source of truth is
+# apps/stream-curves/config/staf_functions.json; listed here for machine access.
+# --------------------------------------------------------------------------- #
+ecological_functions:
+  source_of_truth: "apps/stream-curves/config/staf_functions.json"
+  by_discipline:
+    Hydrology: [catchment-hydrology, surface-water-storage, reach-inflow, streamflow-regime]
+    Hydraulics: [low-flow-baseflow-dynamics, high-flow-dynamics, floodplain-connectivity, hyporheic-connectivity]
+    Geomorphology: [channel-evolution, channel-floodplain-dynamics, sediment-continuity, bed-composition-bedform-dynamics]
+    Physicochemistry: [light-thermal-regime, carbon-processing, nutrient-cycling, water-soil-quality]
+    Biology: [habitat-provision, population-support, community-dynamics, watershed-connectivity]
+
+# --------------------------------------------------------------------------- #
+# Workflow states (the file's abstract model) mapped onto StreamCurves' real
+# guided stages (run_state.STAGE_KEYS) and analysis phases (state.PHASE_LABELS).
+# --------------------------------------------------------------------------- #
+workflow_states:
+  # abstract_state: [real_guided_stage, real_analysis_phase_if_any]
+  RUN_CREATED: {stage: region_sources}
+  INPUTS_VALIDATED: {stage: region_sources}
+  DATA_QC_COMPLETE: {stage: enrichment_build, phase: Exploratory}
+  VARIABLE_ROLES_CLASSIFIED: {stage: enrichment_build}    # classify step
+  PREDICTOR_ANALYSIS_COMPLETE: {stage: enrichment_build, phase: "Cross-Metric Analysis"}
+  REDUNDANCY_REVIEW_COMPLETE: {stage: enrichment_build, phase: "Cross-Metric Analysis"}
+  STRATIFIER_ANALYSIS_COMPLETE: {stage: enrichment_build, phase: Verification}
+  CURVES_FIT: {stage: curve_review, phase: "Reference Curves"}
+  CURVES_EVALUATED: {stage: curve_review}
+  METRIC_PORTFOLIO_PROPOSED: {stage: curve_review}
+  AI_REVIEW_COMPLETE: {stage: curve_review}
+  HUMAN_REVIEW_COMPLETE: {stage: curve_review}
+  APPROVED_FOR_RELEASE: {stage: publish}
+
+# --------------------------------------------------------------------------- #
+# Library lifecycle + publish gate (implemented in library.py).
+# --------------------------------------------------------------------------- #
+lifecycle:
+  version_statuses: [preliminary, under_review, certified, revised, retired]
+  default_status: preliminary
+  validation_states: [unvalidated, validated]
+  deep_eligible_statuses: [preliminary, certified]
+  publish_gate:
+    env_flag: "STAF_LIBRARY_PUBLISH=1"
+    requires_writable_library: true
+    requires_maintainer_audit_name: true
+
+# --------------------------------------------------------------------------- #
+# Pilots. NH-58 is published (preliminary, unvalidated). ECBP-55 is the fallback
+# stress test. Neither calibration is complete; all thresholds remain provisional.
+# --------------------------------------------------------------------------- #
+pilots:
+  northeastern_highlands:
+    l3_code: "58"
+    name: "Northeastern Highlands"
+    status: "agent_preliminary_staging"    # regional_agent real-screen run, 2026-07-24
+    reference_tier: "least_disturbed"      # functional preset, ECI>0.69
+    nrsa_candidates: 71
+    real_screen: {method: direct_engine, n_functioning: 33, n_excluded: 38, n_failed: 0}
+    reference_n: 33                        # >= min_n_unstratified (20) -> auto-eligible
+    library_id: "northeastern-highlands"
+    prior_pilot_note: "The earlier published v1 used a REPRESENTED screen (all 71 kept); this run screened for real."
+  eastern_corn_belt_plains:
+    l3_code: "55"
+    name: "Eastern Corn Belt Plains"
+    status: "agent_preliminary_staging"   # regional_agent real-screen run, 2026-07-24
+    reference_tier: "best_available"      # REF-02 FIRED: 0 Functioning sites of 18
+    real_screen: {method: direct_engine, n_functioning: 0, n_best_available: 16, n_excluded: 2, n_failed: 0}
+    reference_n: 16                       # 10 <= n < 20 -> exploratory (DATA-05); per-metric 9-16
+    expected_fallback: "best_available"   # REF-02 confirmed, per user (agricultural region)
+    fallback_rationale: >
+      Heavily agricultural region; most sites screen as Not Functioning or
+      Functioning-at-Risk. If the Functioning-only pool cannot meet DATA-04/DATA-06
+      for a metric or stratum, fall back to at_risk_or_better, flag every affected
+      curve for mandatory review, cap confidence at best_available, and stamp the
+      reference tier into provenance. This is a deliberate stress test of REF-02.
+    note: "Was a deleted demonstration seed (ECBP); re-introduced only as a pilot region."

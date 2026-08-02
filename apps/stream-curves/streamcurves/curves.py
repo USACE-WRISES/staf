@@ -35,7 +35,38 @@ import pandas as pd
 
 logger = logging.getLogger("streamcurves")
 
+# --------------------------------------------------------------------------- #
+# Curve form (no R equivalent).
+#
+# The R engine only ever seeded MONOTONE curves, keyed off a boolean
+# higher_is_better, so a metric that degrades at BOTH extremes (bankfull
+# width:depth ratio, pH) had no representable shape and was excluded from every
+# assessment. "optimum" declares the two-sided form explicitly rather than
+# leaving it to be inferred from the y-values: the scoring math downstream
+# (interp_curve here and in DEEP, the band intervals, the manual editor) was
+# already shape-agnostic, so only the seed and the declaration were missing.
+# --------------------------------------------------------------------------- #
+CURVE_FORM_MONOTONE = "monotone"
+CURVE_FORM_OPTIMUM = "optimum"
+CURVE_FORMS = (CURVE_FORM_MONOTONE, CURVE_FORM_OPTIMUM)
+
+# Optimum seed geometry, as multiples of the IQR out from the quartiles.
+# Score 1.0 across the reference interquartile core, falling to 0 in both tails.
+_OPTIMUM_OFFSETS = (0.35, 1.0, 2.0)   # 0.70 / 0.30 / 0.00 crossings
+
+
+def curve_form_of(metric_entry: Mapping | None) -> str:
+    """The declared curve form for a metric_config entry (default monotone)."""
+    form = str((metric_entry or {}).get("curve_form") or CURVE_FORM_MONOTONE).strip().lower()
+    return form if form in CURVE_FORMS else CURVE_FORM_MONOTONE
+
+
 __all__ = [
+    "CURVE_FORM_MONOTONE",
+    "CURVE_FORM_OPTIMUM",
+    "CURVE_FORMS",
+    "curve_form_of",
+    "build_optimum_curve_points",
     "empty_reference_curve_points",
     "normalize_reference_curve_points",
     "empty_reference_curve_intervals",
@@ -698,10 +729,19 @@ def reference_curve_metric_at_score(points: Any, target_score: float, prefer: st
 # --------------------------------------------------------------------------- #
 
 
-def validate_reference_curve_points(points: Any, higher_is_better: Any) -> dict:
-    """Validate a (manual or auto) point set. ``higher_is_better`` is accepted
-    for signature parity but unused by the checks (as in R). Returns
-    ``{"valid": bool, "errors": list[str], "points": DataFrame}``."""
+def validate_reference_curve_points(
+    points: Any, higher_is_better: Any, curve_form: str = CURVE_FORM_MONOTONE
+) -> dict:
+    """Validate a (manual or auto) point set. Returns
+    ``{"valid": bool, "errors": list[str], "points": DataFrame}``.
+
+    ``higher_is_better`` is accepted for signature parity and unused by the checks
+    (as in R): direction is carried by the y-values, and the shared "at most two
+    threshold crossings" rule already admits a two-sided curve. ``curve_form`` adds
+    the one check R had no need for -- an ``optimum`` curve must actually be
+    single-peaked -- so a declared two-sided curve cannot silently be a monotone one
+    or a W. Defaults to monotone, which is the historical behavior exactly.
+    """
     points = normalize_reference_curve_points(points)
     errors: list[str] = []
     tol = 1e-9
@@ -742,6 +782,42 @@ def validate_reference_curve_points(points: Any, higher_is_better: Any) -> dict:
         score_max = float(np.max(isc))
         if score_min > (0.30 + tol) or score_max < (0.70 - tol):
             errors.append("Curve points must span index scores 0.30 and 0.70.")
+
+    if not errors:
+        resolved_form = str(curve_form).strip().lower()
+        diffs = np.diff(isc)
+        moves = diffs[np.abs(diffs) > tol]
+        rose = bool((moves > 0).any())
+        fell = bool((moves < 0).any())
+
+        if resolved_form == CURVE_FORM_OPTIMUM:
+            # Single-peaked: scores rise (weakly), may plateau at the optimum, then
+            # fall. Anything that resumes rising after falling is a W, which no
+            # scoring band geometry can express.
+            falling = False
+            for d in moves:
+                if d < 0:
+                    falling = True
+                elif falling:
+                    errors.append(
+                        "An optimum curve must peak once: index scores may rise, "
+                        "plateau, then fall, but must not rise again."
+                    )
+                    break
+            if not errors and not falling:
+                errors.append(
+                    "An optimum curve must fall on both sides of its peak; this curve "
+                    "only rises. Use the monotone form instead."
+                )
+        elif rose and fell:
+            # The mirror of the check above, and the reason it exists: a monotone
+            # metric's band scalars are read off one limb, so a two-sided drawing
+            # stored here describes only half the curve. Name the fix rather than
+            # accepting it silently.
+            errors.append(
+                "This curve rises and then falls. Set Response shape to two-sided "
+                "for a metric that is best mid-range."
+            )
 
     return {"valid": len(errors) == 0, "errors": errors, "points": points}
 
@@ -806,6 +882,29 @@ _STATS_KEYS = (
 )
 
 
+def _band_scalars_from_intervals(band_ranges: Mapping) -> dict[str, float]:
+    """The six scalar band columns derived from the classified intervals.
+
+    Used for two-sided curves, where the monotone shortcut below (pick one crossing
+    and read outward) describes only one limb: a bell's at-risk and not-functioning
+    bands are each TWO disjoint intervals. A band with a single interval yields that
+    interval exactly; a band with several yields NaN, because one min/max pair cannot
+    honestly express disjoint ranges -- the ``*_ranges_display`` string carries the
+    full truth and every exporter shows it alongside.
+    """
+    out: dict[str, float] = {}
+    for band in ("functioning", "at_risk", "not_functioning"):
+        iv = band_ranges.get(band)
+        n = 0 if iv is None else len(iv)
+        if n == 1:
+            out[f"{band}_min"] = float(iv["min"].iloc[0])
+            out[f"{band}_max"] = float(iv["max"].iloc[0])
+        else:
+            out[f"{band}_min"] = float("nan")
+            out[f"{band}_max"] = float("nan")
+    return out
+
+
 def build_reference_curve_row(
     metric_key: str,
     metric_config: Mapping,
@@ -818,6 +917,7 @@ def build_reference_curve_row(
     """The one-row registry record every exporter consumes."""
     mc = metric_config.get(metric_key) or {}
     higher_is_better = mc.get("higher_is_better") is True
+    curve_form = curve_form_of(mc)
     points = normalize_reference_curve_points(curve_points)
 
     if len(points) > 0:
@@ -843,7 +943,15 @@ def build_reference_curve_row(
     score_70_crossings_display = reference_curve_crossings_text(score_70_crossing_values)
     score_100_crossings_display = reference_curve_crossings_text(score_100_crossing_values)
 
-    if higher_is_better:
+    if curve_form == CURVE_FORM_OPTIMUM:
+        _scalars = _band_scalars_from_intervals(band_ranges)
+        functioning_min = _scalars["functioning_min"]
+        functioning_max = _scalars["functioning_max"]
+        at_risk_min = _scalars["at_risk_min"]
+        at_risk_max = _scalars["at_risk_max"]
+        not_functioning_min = _scalars["not_functioning_min"]
+        not_functioning_max = _scalars["not_functioning_max"]
+    elif higher_is_better:
         functioning_min = score_70_metric
         functioning_max = points_max if math.isnan(score_100_metric) else score_100_metric
         at_risk_min = score_30_metric
@@ -916,6 +1024,9 @@ def build_reference_curve_row(
     row["not_functioning_ranges_display"] = [
         reference_curve_interval_ranges_text(band_ranges["not_functioning"])
     ]
+    # NOTE(parity): curve_form is deliberately NOT a row column. The registry row is
+    # the R-parity anchor (tests/golden), and every consumer that needs the form has
+    # the metric_config entry it came from — use curves.curve_form_of(mc).
     row["curve_status"] = [curve_status]
     row["stratum"] = [stratum]
     _assign_cell(row, "curve_points", points)
@@ -1239,6 +1350,29 @@ def build_reference_curve_from_components(
     }
 
 
+def build_optimum_curve_points(stats: Mapping, *, non_negative: bool = True) -> pd.DataFrame:
+    """The two-sided ("optimum") IQR seed: 1.0 across the reference core, 0 in both tails.
+
+    Eight points, symmetric about the interquartile range, mirroring the monotone seeds'
+    0.30 / 0.70 / 1.00 ladder outward from each quartile. Yields exactly two crossings of
+    0.30 and of 0.70, which is what ``validate_reference_curve_points`` allows.
+    """
+    q25, q75, iqr = float(stats["q25"]), float(stats["q75"]), float(stats["iqr"])
+    near, mid, far = _OPTIMUM_OFFSETS
+    lows = [q25 - far * iqr, q25 - mid * iqr, q25 - near * iqr]
+    if non_negative:
+        lows = [max(0.0, v) for v in lows]
+    values = lows + [q25, q75,
+                     q75 + near * iqr, q75 + mid * iqr, q75 + far * iqr]
+    return pd.DataFrame(
+        {
+            "point_order": list(range(1, 9)),
+            "metric_value": values,
+            "index_score": [0.00, 0.30, 0.70, 1.00, 1.00, 0.70, 0.30, 0.00],
+        }
+    )
+
+
 def build_reference_curve(
     data: Any,
     metric_key: str,
@@ -1250,12 +1384,15 @@ def build_reference_curve(
 
     n<5 non-NA values -> "insufficient_data" (empty points). Higher-is-better
     with non-finite or <=0 Q25 -> 3-point "degenerate_q25" curve. Non-finite
-    IQR -> "degenerate_curve" (empty points). Otherwise the 5-point IQR seed,
-    validated; invalid seeds keep their points but get "degenerate_curve".
+    IQR -> "degenerate_curve" (empty points). Otherwise the IQR seed for the
+    metric's declared curve form (5-point monotone, or the 8-point two-sided
+    "optimum" seed), validated; invalid seeds keep their points but get
+    "degenerate_curve".
     """
     mc = metric_config.get(metric_key) or {}
     col_name = mc.get("column_name")
     higher_is_better = mc.get("higher_is_better") is True
+    curve_form = curve_form_of(mc)
     ref_values = _column_values(data, col_name)
     stats = reference_curve_summary_stats(ref_values)
 
@@ -1279,7 +1416,12 @@ def build_reference_curve(
             "curve_plot": None,
         }
 
-    if higher_is_better and (not math.isfinite(stats["q25"]) or stats["q25"] <= 0):
+    # The degenerate-Q25 guard is a monotone higher-is-better concern (its 3-point
+    # fallback rises from the origin); a two-sided curve is centered on the IQR and
+    # has no such origin anchor, so it falls through to the IQR check below.
+    if (curve_form == CURVE_FORM_MONOTONE
+            and higher_is_better
+            and (not math.isfinite(stats["q25"]) or stats["q25"] <= 0)):
         logger.warning(f"{metric_key}: Q25 <= 0, scoring curve is degenerate")
         return build_reference_curve_from_components(
             data=data,
@@ -1298,7 +1440,10 @@ def build_reference_curve(
             build_plots=build_plots,
         )
 
-    if not math.isfinite(stats["iqr"]) or stats["iqr"] < 0:
+    # A two-sided curve needs a strictly positive IQR: at iqr == 0 every seed point
+    # collapses onto one x and the curve cannot span its thresholds.
+    _iqr_floor = 0 if curve_form == CURVE_FORM_MONOTONE else 1
+    if not math.isfinite(stats["iqr"]) or stats["iqr"] < _iqr_floor * np.finfo(float).tiny:
         return build_reference_curve_from_components(
             data=data,
             metric_key=metric_key,
@@ -1310,7 +1455,12 @@ def build_reference_curve(
             build_plots=build_plots,
         )
 
-    if higher_is_better:
+    if curve_form == CURVE_FORM_OPTIMUM:
+        auto_points = build_optimum_curve_points(
+            stats, non_negative=bool(math.isfinite(stats["min_val"])
+                                     and stats["min_val"] >= 0)
+        )
+    elif higher_is_better:
         auto_points = pd.DataFrame(
             {
                 "point_order": [1, 2, 3, 4, 5],
@@ -1339,7 +1489,8 @@ def build_reference_curve(
             }
         )
 
-    validation = validate_reference_curve_points(auto_points, higher_is_better)
+    validation = validate_reference_curve_points(
+        auto_points, higher_is_better, curve_form=curve_form)
     status = "complete" if validation["valid"] else "degenerate_curve"
 
     return build_reference_curve_from_components(
@@ -1364,8 +1515,13 @@ def build_reference_curve_from_points(
 ) -> dict:
     """Manual-curve path: validation failure raises ValueError with the joined
     error strings (R stop())."""
-    higher_is_better = (metric_config.get(metric_key) or {}).get("higher_is_better") is True
-    validation = validate_reference_curve_points(curve_points, higher_is_better)
+    mc = metric_config.get(metric_key) or {}
+    higher_is_better = mc.get("higher_is_better") is True
+    # The declared form has to reach the validator or a hand-drawn shape is never
+    # checked against it: the auto path already passes it, this one did not.
+    validation = validate_reference_curve_points(
+        curve_points, higher_is_better, curve_form=curve_form_of(mc)
+    )
     if not validation["valid"]:
         raise ValueError(" ".join(validation["errors"]))
 
@@ -1394,16 +1550,23 @@ def run_all_reference_curves(
     all_models: Any = None,
 ) -> dict:
     """Build reference curves for every eligible metric (non-categorical with a
-    declared higher_is_better). Extra arguments are accepted for signature
+    declared scoring shape). Extra arguments are accepted for signature
     parity and unused, as in R. The R furrr parallel branch is not ported —
-    metrics are mapped sequentially."""
+    metrics are mapped sequentially.
+
+    Eligibility is "the metric declares a shape we can seed": a monotone direction, or
+    the two-sided ``curve_form: optimum``, which legitimately has no direction. Gating
+    on ``higher_is_better`` alone (the R behavior) silently excluded every two-sided
+    metric.
+    """
     logger.info("Building reference curves for all metrics...")
 
     eligible = [
         mk
         for mk in metric_config
         if (metric_config[mk] or {}).get("metric_family") != "categorical"
-        and (metric_config[mk] or {}).get("higher_is_better") is not None
+        and ((metric_config[mk] or {}).get("higher_is_better") is not None
+             or curve_form_of(metric_config[mk]) == CURVE_FORM_OPTIMUM)
     ]
 
     logger.info(f"Processing {len(eligible)} metrics...")

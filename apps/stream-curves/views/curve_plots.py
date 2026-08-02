@@ -43,6 +43,43 @@ def _finite(v) -> bool:
         return False
 
 
+def _crossing_values(cell) -> list[float]:
+    """Finite threshold-crossing x values from a row's crossings list cell."""
+    if cell is None or isinstance(cell, float):
+        return []
+    try:
+        return [float(v) for v in cell if _finite(v)]
+    except TypeError:
+        return []
+
+
+_BAND_FILL = {
+    "functioning_ranges": "#2ca25f",
+    "at_risk_ranges": "#f0ad4e",
+    "not_functioning_ranges": "#d9534f",
+}
+
+
+def _band_zone_rects(row, zone_rect):
+    """Shading rects straight from the row's classified band intervals, or None.
+
+    Shape-agnostic: a monotone curve yields one interval per band (the same picture
+    the half-plane shortcut draws) and a two-sided curve yields two intervals for the
+    at-risk and not-functioning bands, which the shortcut cannot express at all.
+    """
+    rects = []
+    saw_any = False
+    for key, fill in _BAND_FILL.items():
+        iv = row.get(key)
+        if iv is None or not hasattr(iv, "columns") or "min" not in getattr(iv, "columns", []):
+            continue
+        saw_any = True
+        for lo, hi in zip(iv["min"], iv["max"]):
+            if _finite(lo) and _finite(hi):
+                rects.append(zone_rect(float(lo), float(hi), fill))
+    return rects if saw_any else None
+
+
 def _band_annotations(x_range, alpha: float):
     return [
         annotate("rect", xmin=x_range[0], xmax=x_range[1], ymin=0.70, ymax=1.00,
@@ -104,19 +141,28 @@ def build_reference_distribution_plot(
         return annotate("rect", xmin=xmin, xmax=xmax, ymin=0, ymax=y_top,
                         fill=fill, alpha=0.12)
 
+    # Zone shading comes from the classified band intervals when the row carries them:
+    # they are correct for any curve shape, whereas the half-plane shortcut below
+    # ("everything right of x70 is functioning") paints the wrong halves for a
+    # two-sided curve, whose good zone is in the MIDDLE and whose bad zones are both
+    # tails. The shortcut stays as the fallback for rows without the interval columns.
     rects = []
-    if x70 is not None:
-        rects.append(
-            _zone_rect(x70, x_range[1], "#2ca25f") if higher_is_better
-            else _zone_rect(x_range[0], x70, "#2ca25f")
-        )
-    if x30 is not None and x70 is not None:
-        rects.append(_zone_rect(min(x30, x70), max(x30, x70), "#f0ad4e"))
-    if x30 is not None:
-        rects.append(
-            _zone_rect(x_range[0], x30, "#d9534f") if higher_is_better
-            else _zone_rect(x30, x_range[1], "#d9534f")
-        )
+    band_rects = _band_zone_rects(row, _zone_rect)
+    if band_rects is not None:
+        rects = band_rects
+    else:
+        if x70 is not None:
+            rects.append(
+                _zone_rect(x70, x_range[1], "#2ca25f") if higher_is_better
+                else _zone_rect(x_range[0], x70, "#2ca25f")
+            )
+        if x30 is not None and x70 is not None:
+            rects.append(_zone_rect(min(x30, x70), max(x30, x70), "#f0ad4e"))
+        if x30 is not None:
+            rects.append(
+                _zone_rect(x_range[0], x30, "#d9534f") if higher_is_better
+                else _zone_rect(x30, x_range[1], "#d9534f")
+            )
     rects = [r for r in rects if r is not None]
 
     suffix = f" ({stratum_label})" if stratum_label else ""
@@ -192,22 +238,23 @@ def build_reference_curve_plot(
         + minimal_plot_theme(profile="large_analysis")
     )
 
-    if _finite(row.get("score_30_metric")):
-        x30 = float(row["score_30_metric"])
-        p = (
-            p
-            + geom_vline(xintercept=x30, linetype="dashed", color="#b22222", size=0.7)
-            + annotate("label", x=x30, y=0.03, label=f"0.30 = {round(x30, 2)}",
-                       size=ann_size, color="#b22222", fill="white", alpha=0.75)
-        )
-    if _finite(row.get("score_70_metric")):
-        x70 = float(row["score_70_metric"])
-        p = (
-            p
-            + geom_vline(xintercept=x70, linetype="dashed", color="#1b7837", size=0.7)
-            + annotate("label", x=x70, y=0.03, label=f"0.70 = {round(x70, 2)}",
-                       size=ann_size, color="#1b7837", fill="white", alpha=0.75)
-        )
+    # Mark EVERY threshold crossing, not just the one the scalar column picked: a
+    # two-sided curve crosses 0.30 and 0.70 twice each, and drawing one line hides
+    # half the scoring geometry. The crossing lists are already on the row.
+    for key, scalar_key, color, label in (
+        ("score_30_crossings", "score_30_metric", "#b22222", "0.30"),
+        ("score_70_crossings", "score_70_metric", "#1b7837", "0.70"),
+    ):
+        xs = _crossing_values(row.get(key))
+        if not xs and _finite(row.get(scalar_key)):
+            xs = [float(row[scalar_key])]
+        for x in xs:
+            p = (
+                p
+                + geom_vline(xintercept=x, linetype="dashed", color=color, size=0.7)
+                + annotate("label", x=x, y=0.03, label=f"{label} = {round(x, 2)}",
+                           size=ann_size, color=color, fill="white", alpha=0.75)
+            )
 
     return (
         p

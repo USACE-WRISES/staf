@@ -19,8 +19,11 @@ import pandas as pd
 from shiny import module, reactive, render, req, ui
 
 from streamcurves.curves import (
+    CURVE_FORM_MONOTONE,
+    CURVE_FORM_OPTIMUM,
     build_reference_curve,
     build_reference_curve_from_points,
+    curve_form_of,
     hydrate_reference_curve_result,
     normalize_reference_curve_points,
     normalize_reference_curve_result,
@@ -44,7 +47,15 @@ from views.ref_curve import (
 )
 from views.state import AppState
 from views.theme import fa
-from views.uihelpers import no_data_alert, status_badge
+from views.uihelpers import (
+    RESPONSE_SHAPE_CHOICES,
+    RESPONSE_SHAPE_CONFIG,
+    SHAPE_HIGHER,
+    no_data_alert,
+    response_shape_label,
+    response_shape_of,
+    status_badge,
+)
 
 logger = logging.getLogger("streamcurves")
 
@@ -156,6 +167,11 @@ def phase4_server(
                     "transform", selected=mc.get("preferred_transform") or "none",
                     session=session,
                 )
+                shape = response_shape_of(mc)
+                if shape is not None:
+                    ui.update_radio_buttons(
+                        "response_shape", selected=shape, session=session
+                    )
                 await st.task_flush()
             except Exception:  # noqa: BLE001
                 logger.exception("phase4 settings sync failed")
@@ -186,6 +202,18 @@ def phase4_server(
                                 choices={"none": "None", "log": "Log"},
                                 selected="none",
                             ),
+                            # One control for direction AND form. They are the same
+                            # question -- which shape scores well -- and as two
+                            # independent fields they could contradict: an optimum
+                            # form with a TRUE direction reads as "higher is better"
+                            # over a two-sided curve, and a blank direction with a
+                            # monotone form makes the metric silently unbuildable.
+                            ui.input_radio_buttons(
+                                ns("response_shape"), "Response shape:",
+                                choices=RESPONSE_SHAPE_CHOICES,
+                                selected=SHAPE_HIGHER,
+                            ),
+                            ui.output_ui(ns("response_shape_note")),
                             class_="workspace-phase-settings",
                         ),
                         width=1 / 2,
@@ -495,6 +523,64 @@ def phase4_server(
     def _write_transform():
         _write_back_config("preferred_transform", input.transform())
 
+    @reactive.effect
+    @reactive.event(input.response_shape, ignore_init=True)
+    def _write_response_shape():
+        shape = input.response_shape()
+        if shape not in RESPONSE_SHAPE_CONFIG:
+            return
+        higher_is_better, curve_form = RESPONSE_SHAPE_CONFIG[shape]
+        with reactive.isolate():
+            metric = state.current_metric()
+            mc = state.metric_config() or {}
+        if not metric or mc.get(metric) is None:
+            return
+        entry = mc[metric]
+        if (entry.get("higher_is_better") == higher_is_better
+                and curve_form_of(entry) == curve_form):
+            return
+
+        # Both keys in one update: a half-applied pair is exactly the contradiction
+        # this control exists to prevent.
+        mc = dict(mc)
+        updated = dict(entry)
+        updated["higher_is_better"] = higher_is_better
+        updated["curve_form"] = curve_form
+        mc[metric] = updated
+        state.metric_config.set(mc)
+
+        # The phase-4 signature carries only the data fingerprint, config version and
+        # stratification decision, so a shape change does not invalidate anything on
+        # its own -- the metric would keep showing a curve built for the old shape.
+        # Rebuild just this metric; bumping config_version would invalidate every
+        # metric and wipe all analysis state.
+        try:
+            ss.recompute_metric_phase4(state, metric)
+        except Exception:  # noqa: BLE001 — the row falls back to "recompute required"
+            logger.exception("Curve rebuild after a response-shape change failed")
+        st.notify_workspace_refresh(state)
+        ui.notification_show(
+            f"Response shape set to {RESPONSE_SHAPE_CHOICES[shape].lower()}; "
+            "the reference curve was rebuilt.",
+            type="message", duration=5,
+        )
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def response_shape_note():
+        metric = state.current_metric()
+        req(metric)
+        mc = (state.metric_config() or {}).get(metric)
+        req(mc)
+        if response_shape_of(mc) is not None:
+            return None
+        # No agreed direction: the engine builds no curve until one is chosen.
+        return ui.tags.p(
+            "Direction is under review for this metric, so no curve is built. "
+            "Choose a response shape to resolve it.",
+            class_="text-muted small mb-0",
+        )
+
     # ── metric info card (R:483-524) ──────────────────────────────────────────
     @output(suspend_when_hidden=False)
     @render.ui
@@ -511,11 +597,9 @@ def phase4_server(
                 n_obs = rows["n_obs"].iloc[0]
         completed = metric in (state.completed_metrics() or {})
 
-        direction = "Neutral"
-        if mc.get("higher_is_better") is True:
-            direction = "Higher is better"
-        elif mc.get("higher_is_better") is False:
-            direction = "Lower is better"
+        # "Neutral" was misleading for a two-sided metric, whose null direction is
+        # deliberate: the reference distribution itself is the optimum.
+        direction = response_shape_label(mc)
 
         def _row(label, value):
             return ui.tags.tr(
@@ -714,11 +798,17 @@ def phase4_server(
             results = all_strata_results()
             return results.get(stratum_level)
 
-        def _higher_is_better():
+        def _metric_entry() -> dict:
             with reactive.isolate():
                 metric = state.current_metric()
-                mc = (state.metric_config() or {}).get(metric) or {}
-            return bool(mc.get("higher_is_better"))
+                return (state.metric_config() or {}).get(metric) or {}
+
+        def _higher_is_better():
+            # `is True`, not bool(): a two-sided metric carries a deliberate None.
+            return _metric_entry().get("higher_is_better") is True
+
+        def _curve_form():
+            return curve_form_of(_metric_entry())
 
         def _rebuild(points=None):
             with reactive.isolate():
@@ -758,6 +848,7 @@ def phase4_server(
             child_editor_id,
             current_result=_current,
             higher_is_better=_higher_is_better,
+            curve_form=_curve_form,
             on_apply=_on_apply,
             on_reset=_on_reset,
         )
