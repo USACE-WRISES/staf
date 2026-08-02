@@ -85,8 +85,14 @@ def _baked_ids():
     # Visible baked ids only. Hidden assessments (the SQTs) are filtered out of the
     # registry by config._is_hidden, so the visible-baked set is what config.assessments()
     # is compared against below.
-    return [a["assessmentId"] for a in config.assessments_doc()["assessments"]
-            if not config._is_hidden(a)]
+    #
+    # Deduped by id: the registry carries one entry per baked VERSION (an assessment
+    # with v1 and v2 appears twice), while config.assessments() resolves each id to a
+    # single record. Counting raw entries here compares a per-version list against a
+    # per-assessment one, which fails as soon as anything has a second version.
+    ids = [a["assessmentId"] for a in config.assessments_doc()["assessments"]
+           if not config._is_hidden(a)]
+    return list(dict.fromkeys(ids))
 
 
 def test_absent_library_returns_baked(tmp_path, monkeypatch):

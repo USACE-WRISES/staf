@@ -14,7 +14,7 @@ import csv
 import io
 import json
 
-from . import curves, scoring, session
+from . import assessments, curves, scoring, session
 
 
 def _mbf(assessment) -> list[dict]:
@@ -108,10 +108,27 @@ def _header_pairs(delin, assessment, sc, region=None):
         ("Drainage area (km2)", dl.get("drainage_area_sqkm")),
         ("Reach length (ft)", dl.get("reach_length_ft")),
         ("Ecosystem Condition Index", sc.get("ecosystemConditionIndex")),
+        # An export outlives the session, so the index's denominator travels with it:
+        # scoring correctly excludes uncovered functions from both numerator and
+        # denominator, which makes a partial-coverage ECI look directly comparable to
+        # a full-framework one unless the coverage is stated alongside it.
+        ("STAF function coverage", _coverage_label(assessment)),
         ("Physical sub-index", si.get("physical")),
         ("Chemical sub-index", si.get("chemical")),
         ("Biological sub-index", si.get("biological")),
     ]
+
+
+def _coverage_label(assessment) -> str:
+    """``"12 of 20 (8 documented exclusions)"`` / ``"... (not declared)"``."""
+    cov = assessments.coverage_of(assessment)
+    base = f"{cov['covered']} of {cov['total']}"
+    if cov["covered"] >= cov["total"]:
+        return base
+    if cov["declared"]:
+        n = cov["excluded"]
+        return f"{base} ({n} documented exclusion{'' if n == 1 else 's'})"
+    return f"{base} (not declared)"
 
 
 def _function_rows(assessment, sc):
@@ -152,6 +169,7 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
     for k in ("physical", "chemical", "biological"):
         w.writerow([k.title(), sc.get("subIndices", {}).get(k)])
     w.writerow(["Ecosystem Condition Index", sc.get("ecosystemConditionIndex")])
+    w.writerow(["STAF function coverage", _coverage_label(assessment)])
     return out.getvalue()
 
 
@@ -165,7 +183,8 @@ def build_geojson(delin, assessment, sc, region=None) -> str:
              "content_digest": digest,
              "stream": dl.get("gnis_name"), "comid": dl.get("comid"), "huc8": dl.get("huc8"),
              "drainage_area_sqkm": dl.get("drainage_area_sqkm"),
-             "ecosystem_condition_index": sc.get("ecosystemConditionIndex")}
+             "ecosystem_condition_index": sc.get("ecosystemConditionIndex"),
+             "staf_function_coverage": _coverage_label(assessment)}
     for k, v in sc.get("subIndices", {}).items():
         props[f"subindex_{k}"] = v
     feats = []
@@ -234,7 +253,8 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
            ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
            ["Reach length", f"{dl.get('reach_length_ft')} ft"],
            ["Content digest", digest or "(none)"],
-           ["Ecosystem Condition Index", f"{sc.get('ecosystemConditionIndex')}"]]
+           ["Ecosystem Condition Index", f"{sc.get('ecosystemConditionIndex')}"],
+           ["STAF function coverage", _coverage_label(assessment)]]
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
     t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9), ("GRID", (0, 0), (-1, -1), 0.3, grid),
                            ("BACKGROUND", (0, 0), (0, -1), head_bg)]))

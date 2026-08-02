@@ -96,3 +96,77 @@ def test_bundle_validation_rejects_bad_curve():
     }
     problems = assessments.validate_bundle(bad)
     assert any("out of [0,1]" in p for p in problems)
+
+
+# --------------------------------------------------------------------------- #
+# STAF function coverage
+# --------------------------------------------------------------------------- #
+def _bundle_with(n_functions: int, declared: dict | None = None) -> dict:
+    b = {
+        "assessmentId": "cov",
+        "assessmentName": "Coverage",
+        "metricsByFunction": [
+            {"functionId": f"fn-{i}", "metrics": [{"metricId": f"m-{i}"}]}
+            for i in range(n_functions)
+        ],
+    }
+    if declared is not None:
+        b["functionCoverage"] = declared
+    return b
+
+
+def test_coverage_of_derives_for_a_legacy_bundle():
+    """Bundles published before the coverage gate carry no block; the framework
+    denominator is still 20, and the gaps are undeclared rather than chosen."""
+    cov = assessments.coverage_of(_bundle_with(12))
+    assert cov["total"] == 20
+    assert cov["covered"] == 12
+    assert cov["missing"] == 8
+    assert cov["excluded"] == 0
+    assert cov["declared"] is False
+
+
+def test_coverage_of_reads_a_declared_block():
+    declared = {"framework": "staf-20", "total": 20, "covered": 12, "excluded": 8,
+                "missing": 0, "exclusions": [{"functionId": "reach-inflow"}]}
+    cov = assessments.coverage_of(_bundle_with(12, declared))
+    assert cov["declared"] is True
+    assert (cov["covered"], cov["excluded"], cov["missing"]) == (12, 8, 0)
+    assert cov["exclusions"][0]["functionId"] == "reach-inflow"
+
+
+def test_coverage_of_accepts_a_loaded_assessment():
+    la = assessments.LoadedAssessment.from_dict(_bundle_with(12))
+    assert assessments.coverage_of(la)["covered"] == 12
+
+
+def test_a_function_block_with_no_metrics_is_not_covered():
+    b = {"metricsByFunction": [{"functionId": "a", "metrics": []},
+                               {"functionId": "b", "metrics": [{"metricId": "m"}]}]}
+    assert assessments.coverage_of(b)["covered"] == 1
+
+
+def test_coverage_caption_distinguishes_documented_from_undeclared():
+    full = {"total": 20, "covered": 20, "excluded": 0, "missing": 0, "declared": True}
+    assert assessments.coverage_caption(full) == "Assessment covers 20 of 20 STAF functions"
+
+    documented = {"total": 20, "covered": 12, "excluded": 8, "missing": 0, "declared": True}
+    assert "8 documented exclusions" in assessments.coverage_caption(documented)
+
+    legacy = {"total": 20, "covered": 12, "excluded": 0, "missing": 8, "declared": False}
+    assert "coverage not declared" in assessments.coverage_caption(legacy)
+
+
+def test_validate_bundle_accepts_a_bundle_without_function_coverage():
+    """Back-compat guarantee for the upload path: every published bundle predates
+    the coverage block, and requiring it would reject all of them."""
+    b = _bundle_with(1)
+    b["metricsByFunction"] = [{
+        "functionId": "catchment-hydrology",
+        "functionName": "Catchment hydrology",
+        "metrics": [{"metricId": "m", "metricName": "M",
+                     "curve": {"points": [{"x": 0, "y": 1}, {"x": 1, "y": 0}]}}],
+    }]
+    assert "functionCoverage" not in b
+    problems = assessments.validate_bundle(b)
+    assert not [p for p in problems if "coverage" in p.lower()]
