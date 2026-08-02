@@ -33,7 +33,7 @@ from views import assessment_publish as ap
 from views.data_overview import _default_session_name, _sanitize_file_stem
 from views.state import AppState
 from views.theme import STAF_LINKS, bi, fa
-from views.uihelpers import explanation_card
+from views.uihelpers import not_ready_panel
 
 logger = logging.getLogger("streamcurves")
 
@@ -52,44 +52,37 @@ def _is_desktop() -> bool:
     return bool(os.environ.get("STAF_LINKS_OVERRIDES"))
 
 
+def _maintainer_name() -> str:
+    """Who to record as the publisher, derived rather than asked for.
+
+    Same chain views/discipline_map.py uses for a coverage exception's author. The
+    page used to carry a "Maintainer name (for the canonical publish audit trail)"
+    field pre-filled from the first of these, which asked the publisher to retype
+    something the environment already knows.
+    """
+    return (os.environ.get("STAF_LIBRARY_MAINTAINER")
+            or os.environ.get("USERNAME") or os.environ.get("USER") or "").strip()
+
+
+def _publish_block_reason() -> str | None:
+    """One plain sentence when publishing cannot work here, else None.
+
+    library.publish_gate_reason explains how to switch publishing on, in terms of
+    an env var and a repository checkout. That belongs in the runbook, not over a
+    form, so its branches are mapped to short copy and the Publish button carries
+    the state by being disabled. The not-writable branch has no case here:
+    _publish_pane already replaces the whole form for that.
+    """
+    if not lib.publish_gate_reason(_maintainer_name()):
+        return None
+    if not _maintainer_name():
+        return "No publisher name is available for the audit trail."
+    return "Publishing is off in this session."
+
+
 @module.ui
 def publish_ui():
-    return ui.div(
-        explanation_card(
-            "Save & Publish",
-            ui.tags.p(
-                "Save your work as a project file, or promote the open project into "
-                "the shared, versioned STAF assessment library. DEEP scores against "
-                "published versions.",
-                class_="mb-2",
-            ),
-            ui.tags.ul(
-                ui.tags.li(
-                    ui.tags.strong("Draft"),
-                    ": a file on your computer (full session or Excel workbook). "
-                    "Nothing is published.",
-                ),
-                ui.tags.li(
-                    ui.tags.strong("Preliminary"),
-                    ": a new library version DEEP can score against. Optionally "
-                    "mark it validated with independent-check evidence.",
-                ),
-                ui.tags.li(
-                    ui.tags.strong("Final"),
-                    ": a validated and certified library version. Certification "
-                    "requires validation.",
-                ),
-                class_="mb-1",
-            ),
-            ui.tags.p(
-                "To change a published version's status, open it (top right), make "
-                "any updates, and publish again at the new level.",
-                class_="text-muted small mb-0",
-            ),
-        ),
-        ui.output_ui("publish_body"),
-        class_="mt-3",
-    )
+    return ui.div(ui.output_ui("publish_body"), class_="mt-3")
 
 
 @module.server
@@ -117,21 +110,40 @@ def publish_server(input, output, session, state: AppState):
         state.run_stage_status()
         state.data()
         state.curve_review()
+        # The mapping item's inputs (run_snapshot isolates its own reads).
+        state.discipline_function_mapping()
+        state.discipline_function_mapping_confirmed()
+        state.function_coverage_exceptions()
+        state.metric_config()
+        # Stratifier diagnostics: they drive the enrichment_build attention state.
+        state.strat_config()
+        state.all_layer1_results()
+        state.phase2_ranking()
+        state.summary_available_overrides()
         snap = ap.run_snapshot(state)
         if not snap.get("curve_review"):
             return None
         items = rs.readiness_checklist(snap)
-        k = sum(1 for i in items if i["ok"])
+        # Only the failing items say anything. Printing all seven meant six green
+        # ticks of noise above the form on every render.
+        outstanding = [i for i in items if not i["ok"]]
+        if not outstanding:
+            return ui.div(
+                ui.tags.span("✓ ", class_="fw-bold"),
+                "Ready to publish.",
+                class_="publish-checklist border rounded p-2 mb-3 small text-success",
+            )
+        n = len(outstanding)
         return ui.div(
-            ui.tags.h6(f"Publish checklist ({k} of {len(items)})", class_="mb-1"),
+            ui.tags.h6(
+                f"{n} item{'' if n == 1 else 's'} left before publishing", class_="mb-1"
+            ),
             ui.tags.ul(
-                *[ui.tags.li(
-                    ui.tags.span("✓ " if i["ok"] else "○ ", class_="fw-bold"),
-                    i["label"],
-                    class_="text-success" if i["ok"] else "text-muted")
-                  for i in items],
-                class_="list-unstyled small mb-0"),
-            class_="publish-checklist border rounded p-2 mb-3")
+                *[ui.tags.li(i["label"]) for i in outstanding],
+                class_="small mb-0",
+            ),
+            class_="publish-checklist border rounded p-2 mb-3",
+        )
 
     # ── save-level pane visibility (CSS, so form inputs keep their values) ────
     @render.ui
@@ -162,9 +174,7 @@ def publish_server(input, output, session, state: AppState):
                     class_="btn btn-primary w-100",
                 ),
                 ui.tags.small(
-                    "Complete session: data, setup, and all analysis progress "
-                    "(screening results, curves, decisions, cross-sections). "
-                    "Resume exactly where you left off.",
+                    "Full session. Reopen and continue where you left off.",
                     class_="text-muted d-block mt-1",
                 ),
                 class_="mb-3",
@@ -176,8 +186,7 @@ def publish_server(input, output, session, state: AppState):
                     class_="btn btn-outline-primary w-100",
                 ),
                 ui.tags.small(
-                    "Data + setup sheets. Open and edit in Excel. Re-opening "
-                    "rebuilds the dataset and recomputes analyses from scratch.",
+                    "Data and setup sheets for Excel. Reopening rebuilds the analysis.",
                     class_="text-muted d-block mt-1",
                 ),
             ),
@@ -185,7 +194,7 @@ def publish_server(input, output, session, state: AppState):
             style="max-width: 420px;",
         )
 
-    def _publish_pane(loaded: bool, session_name: str, region: dict | None):
+    def _publish_pane(session_name: str, region: dict | None):
         if not lib.writable():
             return ui.div(
                 ui.div(
@@ -206,72 +215,52 @@ def publish_server(input, output, session, state: AppState):
         target_choices[_NEW] = "New assessment..."
 
         body = [
-            ui.p(
-                "Promote the currently open session into a new library version. "
-                "Requires a confirmed Discipline to Function mapping and at least "
-                "one finalized curve.",
-                class_="text-muted small",
-            ),
             ui.input_select(
                 "pub_assessment",
-                "Update an existing assessment, or create a new one",
+                "Assessment",
                 choices=target_choices,
                 selected=_NEW,
             ),
-            ui.input_text(
-                "pub_new_id",
-                "New assessment id (only when creating new; letters, numbers, hyphens)",
-                value="",
-                placeholder="eastern-corn-belt-plains",
-            ),
+            # Only rendered when the target is a new assessment; the field is inert
+            # when updating one, and its old label carried that as a parenthetical.
+            ui.output_ui("new_id_field"),
             ui.input_text("pub_name", "Assessment name", value=session_name),
             ui.div(
                 ui.tags.label("Region of applicability", class_="form-label mb-0"),
                 ui.div(ap.region_label(region), class_="text-muted small"),
-                ui.div(
-                    "Set in the Data & Setup import wizard; it travels with the assessment.",
-                    class_="text-muted",
-                    style="font-size:0.72rem;",
-                ),
                 class_="mb-2",
             ),
-            ui.input_text(
-                "pub_citation", "Source citation", value=ap.DEFAULT_SOURCE_CITATION
-            ),
-            ui.input_text("pub_author", "Author (optional)", value=""),
             ui.input_text_area(
-                "pub_notes", "Revision notes (what changed in this version)", value="", rows=2
+                "pub_notes", "Revision notes", value="", rows=2,
+                placeholder="What changed in this version",
             ),
-            ui.input_text(
-                "pub_maintainer",
-                "Maintainer name (for the canonical publish audit trail)",
-                value=os.environ.get("STAF_LIBRARY_MAINTAINER", ""),
+            # Both have fallbacks on submit (citation to DEFAULT_SOURCE_CITATION,
+            # author to the publisher name), so neither needs to be on screen.
+            ui.accordion(
+                ui.accordion_panel(
+                    "Optional details",
+                    ui.input_text(
+                        "pub_citation", "Source citation",
+                        value=ap.DEFAULT_SOURCE_CITATION,
+                    ),
+                    ui.input_text("pub_author", "Author", value=""),
+                    value="optional",
+                ),
+                id="pub_optional", open=False, class_="mb-2",
             ),
             # Validation: optional for Preliminary, required for Final. Detail
             # fields + the certify control are server-rendered (output_ui) off
             # pub_validated, which is more robust than a namespaced client-side
             # conditionalPanel inside a module.
             ui.tags.hr(class_="my-2"),
-            ui.input_checkbox(
-                "pub_validated",
-                "Validated (independent check completed for this version)",
-                value=False,
+            ui.input_checkbox("pub_validated", "Validated", value=False),
+            ui.div(
+                "An independent check was completed for this version.",
+                class_="text-muted small mb-2",
             ),
             ui.output_ui("validation_detail"),
             ui.div(ui.output_ui("final_certify"), class_="pub-final-only"),
         ]
-        # writable() is already True in this branch, so a non-None reason here means
-        # canonical publishing is off (the STAF_LIBRARY_PUBLISH flag is not set).
-        canonical_off = lib.publish_gate_reason("_probe_")
-        if canonical_off:
-            body.append(
-                ui.div(
-                    bi("lock"),
-                    " ",
-                    canonical_off,
-                    class_="alert alert-secondary mt-2 mb-0 small",
-                )
-            )
         if _is_desktop():
             body.append(
                 ui.div(
@@ -286,21 +275,27 @@ def publish_server(input, output, session, state: AppState):
                         "draft_to_deep",
                         ui.TagList(bi("arrow-right-circle"), " Prepare draft for DEEP"),
                         class_="btn btn-outline-primary btn-sm",
-                        disabled=None if loaded else "disabled",
                     ),
                     ui.output_ui("draft_deep_link"),
                     ui.hr(class_="mt-2 mb-2"),
                     class_="mt-2",
                 )
             )
+        # The button carries the blocked state. Previously it stayed enabled and
+        # green while an alert explained the env var, so the only way to find out
+        # was to fill the form and read a warning toast. The gate reads env vars
+        # only, so it cannot change mid-session and this can stay static.
+        blocked = _publish_block_reason()
         body.append(
             ui.input_action_button(
                 "publish_btn",
                 ui.TagList(bi("file-earmark-arrow-up"), " Publish new version"),
                 class_="btn btn-success",
-                disabled=None if loaded else "disabled",
+                disabled="disabled" if blocked else None,
             )
         )
+        if blocked:
+            body.append(ui.div(blocked, class_="text-muted small mt-1"))
         return ui.div(*body, class_="pub-pane pub-pane-publish")
 
     def _validated_checked() -> bool:
@@ -308,6 +303,26 @@ def publish_server(input, output, session, state: AppState):
             return bool(input.pub_validated())
         except Exception:  # noqa: BLE001 — checkbox not mounted yet
             return False
+
+    def _new_id_value() -> str:
+        """The typed id, or "" when the field is not on screen (updating, not new)."""
+        try:
+            return (input.pub_new_id() or "").strip()
+        except Exception:  # noqa: BLE001 — input absent unless the target is new
+            return ""
+
+    @render.ui
+    def new_id_field():
+        try:
+            target = input.pub_assessment()
+        except Exception:  # noqa: BLE001 — select not bound yet
+            target = _NEW
+        if target != _NEW:
+            return None
+        return ui.input_text(
+            "pub_new_id", "New assessment id", value="",
+            placeholder="letters, numbers and hyphens",
+        )
 
     @output(suspend_when_hidden=False)
     @render.ui
@@ -332,8 +347,8 @@ def publish_server(input, output, session, state: AppState):
             ui.input_select("pub_val_outcome", "Outcome",
                             choices={"match": "Matches", "minor": "Minor differences",
                                      "major": "Major differences"}),
-            ui.input_text_area("pub_val_note",
-                               "Validation note (aggregate only, no site data)", rows=2),
+            ui.input_text_area("pub_val_note", "Validation note", rows=2,
+                               placeholder="Aggregate only, no site data"),
             class_="border rounded p-2 mb-2 bg-light",
         )
 
@@ -343,10 +358,12 @@ def publish_server(input, output, session, state: AppState):
         # Final only (the parent div is CSS-gated on save_level==final): the
         # certify checkbox once Validated is checked, else a nudge to validate.
         if _validated_checked():
-            return ui.input_checkbox(
-                "pub_certified",
-                "Certify this version (EcoPCX independent review is complete)",
-                value=False,
+            return ui.TagList(
+                ui.input_checkbox("pub_certified", "Certify this version", value=False),
+                ui.div(
+                    "EcoPCX independent review is complete.",
+                    class_="text-muted small mb-2",
+                ),
             )
         return ui.div(
             fa("triangle-exclamation"),
@@ -363,34 +380,38 @@ def publish_server(input, output, session, state: AppState):
         refresh()
         loaded = bool(state.app_data_loaded())
         if not loaded:
-            return ui.div(
-                bi("info-circle"),
-                " Load or start a project first: use New or Open in the top right. "
-                "Once a project is open, save it here as a Draft file or publish it "
-                "to the assessment library.",
-                class_="alert alert-warning",
+            return not_ready_panel(
+                "Nothing to publish yet",
+                "Build a project first. Once one is open you can save it here as a "
+                "Draft file, or publish it to the shared STAF assessment library.",
+                action_label="Go to Region & data",
+                goto_nav="data",
+                goto_step=1,
+                icon="file-arrow-up",
             )
         with reactive.isolate():
             session_name = _default_session_name(
                 state.session_name(), state.upload_filename()
             )
             region = state.region_of_applicability()
-        return ui.card(
-            ui.card_header(
-                ui.TagList(bi("file-earmark-arrow-up"), " Save or publish: ",
-                           ui.tags.strong(session_name))
-            ),
-            ui.card_body(
-                ui.output_ui("publish_checklist"),
-                ui.input_radio_buttons(
-                    "save_level", "Save level", choices=_LEVEL_CHOICES,
-                    selected="draft",
+        return ui.TagList(
+            ui.card(
+                ui.card_header(
+                    ui.TagList(bi("file-earmark-arrow-up"), " Save or publish: ",
+                               ui.tags.strong(session_name))
                 ),
-                ui.output_ui("level_style"),
-                _draft_pane(),
-                _publish_pane(True, session_name, region),
+                ui.card_body(
+                    ui.output_ui("publish_checklist"),
+                    ui.input_radio_buttons(
+                        "save_level", "Save level", choices=_LEVEL_CHOICES,
+                        selected="draft",
+                    ),
+                    ui.output_ui("level_style"),
+                    _draft_pane(),
+                    _publish_pane(session_name, region),
+                ),
+                class_="mb-3",
             ),
-            class_="mb-3",
         )
 
     # ── Draft downloads (moved from the Data & Setup Save modal) ──────────────
@@ -470,7 +491,7 @@ def publish_server(input, output, session, state: AppState):
 
         target = input.pub_assessment()
         if target == _NEW:
-            aid = lib.slugify(input.pub_new_id() or input.pub_name() or "")
+            aid = lib.slugify(_new_id_value() or input.pub_name() or "")
         else:
             aid = target
         if not aid:
@@ -487,15 +508,17 @@ def publish_server(input, output, session, state: AppState):
             return
         if not confirmed:
             ui.notification_show(
-                "Confirm the Discipline to Function to Metric mapping on the Reference "
-                "Curves page before publishing.",
+                "Confirm the function mapping first: Refine & map in the workflow "
+                "strip, Function mapping, then Save mapping.",
                 type="warning",
                 duration=8,
             )
             return
 
-        # Canonical-publish gate: STAF_LIBRARY_PUBLISH=1 + writable + maintainer name.
-        maintainer = (input.pub_maintainer() or "").strip()
+        # Canonical-publish gate: STAF_LIBRARY_PUBLISH=1 + writable + publisher name.
+        # The button is already disabled when this fails, so reaching here needs a
+        # deliberate DOM edit; keep the technical reason for that case.
+        maintainer = _maintainer_name()
         gate_reason = lib.publish_gate_reason(maintainer)
         if gate_reason:
             ui.notification_show(gate_reason, type="warning", duration=10)

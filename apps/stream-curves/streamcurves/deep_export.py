@@ -26,6 +26,7 @@ from typing import Any, Optional
 import numpy as np
 import pandas as pd
 
+from . import curves
 from .paths import CONFIG_DIR
 
 logger = logging.getLogger("streamcurves")
@@ -109,6 +110,168 @@ def deep_function_lookup(crosswalk: list[dict]) -> dict[str, dict]:
 
 def deep_map_function(label: Any, lookup: dict[str, dict]) -> Optional[dict]:
     return lookup.get(deep_norm_label(label))  # None if no match
+
+
+# ---- STAF function coverage -------------------------------------------------
+# docs/tiered-approach.md: the 20 functions are "a comprehensive starting point.
+# Regional tools may consolidate or tailor the list, but changes should be
+# documented and traceable back to these functions to preserve comparability."
+# So a function may be left uncovered -- but only on the record. Every function
+# resolves to covered, excluded (justified), or missing; the library publisher
+# refuses to mint a version while anything is still `missing`.
+
+#: Controlled vocabulary for why a function carries no metric, so gaps stay
+#: queryable across the library instead of being free prose in each bundle.
+FUNCTION_EXCLUSION_REASONS = (
+    "not-applicable-to-region",   # the function does not operate in this setting
+    "no-suitable-metric",         # nothing in the crosswalk measures it here
+    "data-unavailable",           # a metric exists but the source has no coverage
+    "direction-unresolved",       # a metric exists but its ecological direction is under review
+    "consolidated-into",          # folded into another function (set consolidatedInto)
+    "deferred-to-other-tier",     # assessed at screening/rapid instead
+)
+
+_MIN_JUSTIFICATION_CHARS = 20
+
+
+def validate_coverage_exceptions(exceptions, crosswalk: list[dict]) -> list[dict]:
+    """Normalize and check documented function exclusions.
+
+    Raises ``ValueError`` naming the offending field: a gap recorded with an
+    unknown function, an off-vocabulary reason, or a placeholder justification is
+    not documentation, and letting it through would defeat the publish gate.
+    """
+    if not exceptions:
+        return []
+    by_id = {str(f.get("id")): f for f in crosswalk}
+    out: list[dict] = []
+    seen: set[str] = set()
+    for i, raw in enumerate(exceptions):
+        if not isinstance(raw, dict):
+            raise ValueError(f"coverage exception {i}: expected an object, got {type(raw).__name__}")
+        fid = str(raw.get("functionId") or "").strip()
+        if fid not in by_id:
+            raise ValueError(
+                f"coverage exception {i}: functionId {fid!r} is not one of the "
+                f"{len(by_id)} canonical STAF functions"
+            )
+        if fid in seen:
+            raise ValueError(f"coverage exception {i}: duplicate entry for {fid!r}")
+        reason = str(raw.get("reason") or "").strip()
+        if reason not in FUNCTION_EXCLUSION_REASONS:
+            raise ValueError(
+                f"coverage exception {fid!r}: reason {reason!r} is not one of "
+                f"{', '.join(FUNCTION_EXCLUSION_REASONS)}"
+            )
+        justification = str(raw.get("justification") or "").strip()
+        if len(justification) < _MIN_JUSTIFICATION_CHARS:
+            raise ValueError(
+                f"coverage exception {fid!r}: justification must explain the gap "
+                f"(at least {_MIN_JUSTIFICATION_CHARS} characters, got {len(justification)})"
+            )
+        recorded_by = str(raw.get("recordedBy") or "").strip()
+        if not recorded_by:
+            raise ValueError(f"coverage exception {fid!r}: recordedBy is required")
+        fn = by_id[fid]
+        entry = {
+            "functionId": fid,
+            "functionName": fn.get("name"),
+            "discipline": fn.get("category"),
+            "reason": reason,
+            "justification": justification,
+            "recordedBy": recorded_by,
+            "recordedAt": str(raw.get("recordedAt") or "").strip() or None,
+        }
+        if reason == "consolidated-into":
+            target = str(raw.get("consolidatedInto") or "").strip()
+            if target not in by_id:
+                raise ValueError(
+                    f"coverage exception {fid!r}: consolidated-into requires "
+                    "consolidatedInto naming a canonical function"
+                )
+            entry["consolidatedInto"] = target
+        seen.add(fid)
+        out.append(entry)
+    return out
+
+
+def function_coverage(metrics_by_function, crosswalk: list[dict],
+                      exceptions=None) -> dict:
+    """Coverage of the fixed STAF function skeleton by a bundle's metric blocks.
+
+    ``missing`` is what the publish gate reads: functions with neither a metric
+    nor a documented exclusion. An exception naming a function that IS covered is
+    dropped rather than raising -- coverage wins, and a stale justification left
+    behind after a metric was added is not an error worth blocking a publish for.
+    """
+    ordered_ids = [str(f.get("id")) for f in crosswalk]
+    covered = [
+        str(b.get("functionId"))
+        for b in (metrics_by_function or [])
+        if b.get("metrics")
+    ]
+    covered_set = {c for c in covered if c in set(ordered_ids)}
+    validated = validate_coverage_exceptions(exceptions, crosswalk)
+    excluded = [e for e in validated if e["functionId"] not in covered_set]
+    excluded_ids = {e["functionId"] for e in excluded}
+    missing = [f for f in ordered_ids if f not in covered_set and f not in excluded_ids]
+    return {
+        "framework": "staf-20",
+        "total": len(ordered_ids),
+        "covered": len(covered_set),
+        "excluded": len(excluded),
+        "missing": len(missing),
+        "coveredFunctionIds": [f for f in ordered_ids if f in covered_set],
+        "missingFunctionIds": missing,
+        "exclusions": excluded,
+    }
+
+
+def coverage_gap_message(coverage: dict, crosswalk: list[dict]) -> str:
+    """Human-readable naming of the uncovered functions, for the publish error."""
+    names = {str(f.get("id")): f.get("name") for f in crosswalk}
+    gaps = [f"{names.get(fid, fid)} ({fid})" for fid in coverage.get("missingFunctionIds") or []]
+    return "; ".join(gaps)
+
+
+def _mapping_cell_blank(v: Any) -> bool:
+    """Blank mapping cell: None/NaN or whitespace-only."""
+    if v is None:
+        return True
+    if isinstance(v, float) and pd.isna(v):
+        return True
+    return str(v).strip() == ""
+
+
+def uncovered_functions_from_mapping(mapping, metric_config,
+                                     exceptions=None) -> list[tuple[str, str]]:
+    """[(function_id, function_name)] with no assigned metric and no documented
+    exception, judged from the discipline-function mapping alone.
+
+    The mapping-level twin of :func:`function_coverage`: that one judges a built
+    bundle's metric blocks (and so cannot exist until a curve is finalized);
+    this one judges the editable mapping, so the workspace stage and its strip
+    status can show the shortfall while there is still time to fix it. Rows
+    whose metric_key is not in ``metric_config`` do not count as coverage -- a
+    mapping entry for a metric that carries no data covers nothing.
+    """
+    metric_config = metric_config or {}
+    crosswalk = deep_read_staf_crosswalk()
+    lookup = deep_function_lookup(crosswalk)
+    covered: set[str] = set()
+    if mapping is not None and len(mapping) > 0:
+        for _, r in mapping.iterrows():
+            mk, label = r.get("metric_key"), r.get("function_label")
+            if _mapping_cell_blank(mk) or _mapping_cell_blank(label):
+                continue
+            if str(mk) not in metric_config:
+                continue
+            fn = deep_map_function(label, lookup)
+            if fn is not None:
+                covered.add(str(fn.get("id")))
+    excused = {str(e.get("functionId")) for e in (exceptions or [])}
+    return [(str(f.get("id")), str(f.get("name"))) for f in crosswalk
+            if str(f.get("id")) not in covered and str(f.get("id")) not in excused]
 
 
 # ---- curve points -----------------------------------------------------------
@@ -362,6 +525,11 @@ def build_deep_assessment_bundle(
             "curve": {
                 "layerName": meta.get("sourceCitation"),
                 "stratification": stratum,
+                # "form" is additive metadata: DEEP's interp_curve reads only the
+                # points and is shape-agnostic, so an older reader ignores this and
+                # still scores a two-sided curve correctly. It exists so the bundle
+                # states the intended shape rather than leaving it to be inferred.
+                "form": curves.curve_form_of(cfg),
                 "points": points,
             },
         }
@@ -460,13 +628,25 @@ def build_deep_assessment_bundle(
         "applicability": meta.get("applicability"),
         "metricsByFunction": metrics_by_function,
     }
+    # Coverage of the 20-function skeleton travels WITH the bundle so DEEP knows the
+    # real denominator (it otherwise infers one from the blocks present, and reports a
+    # 12-function assessment as "12 / 12 functions scored"). Computed always, never
+    # raised on -- this path also builds drafts and the "Test in DEEP" handoff. The
+    # publish gate in library.publish_version is what refuses an undocumented gap.
+    # Excluded from content_digest (which hashes only metricsByFunction + region code),
+    # so adding it cannot re-mint an existing version's fingerprint.
+    bundle["functionCoverage"] = function_coverage(
+        metrics_by_function, crosswalk, meta.get("functionCoverageExceptions"))
     # Scoring contract: the method a DEEP consumer applies to these curves. Mirrors
     # apps/deep/deep/config.py (INDEX_BANDS thresholds, FUNCTION_SCORE_BANDS,
     # FUNCTION_SCORE_MAX, indirect weight). Excluded from content_digest (which hashes
     # only metricsByFunction + region code), so it never perturbs a version fingerprint.
     bundle["scoringContract"] = {
         "method": "STAF detailed reference-curve scoring",
-        "methodVersion": "iqr-seed-v1",
+        # v2 adds the two-sided ("optimum") curve form alongside the monotone seed.
+        # Scoring itself is unchanged (interp_curve was always shape-agnostic); the
+        # bump records that a bundle may now contain curves that fall in both tails.
+        "methodVersion": "iqr-seed-v2",
         "indexBands": [0.39, 0.69],
         "functionScoreBands": [5, 10],
         "functionScoreMax": 15,

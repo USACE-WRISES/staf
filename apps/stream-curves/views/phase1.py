@@ -54,7 +54,6 @@ from views.screening_plots import build_screening_plot_from_spec
 from views.state import AppState
 from views.theme import fa
 from views.uihelpers import (
-    explanation_card,
     no_data_alert,
     p_value_badge,
     status_badge,
@@ -960,24 +959,6 @@ def phase1_server(
             return no_data_alert()
 
         return ui.div(
-            explanation_card(
-                "Exploratory Analysis",
-                ui.tags.p(
-                    "Which stratifications show meaningful group separation for "
-                    "this metric?"
-                ),
-                ui.tags.p(
-                    "Run screening to test for statistical significance "
-                    "(Kruskal-Wallis) and effect sizes (epsilon-squared) in a single "
-                    "pass. Review boxplots and summary statistics to identify "
-                    "stratifications that may be useful for downstream analysis."
-                ),
-                ui.tags.p(
-                    ui.tags.strong("Effect size thresholds:"),
-                    " <0.01 negligible, 0.01–0.06 small, 0.06–0.14 medium, "
-                    ">0.14 large.",
-                ),
-            ),
             ui.card(
                 ui.card_body(
                     ui.input_selectize(
@@ -1695,7 +1676,16 @@ def phase1_server(
         if effect_sizes is not None and len(effect_sizes) > 0:
             effect_card = ui.card(
                 ui.card_header("Effect Size by Stratification"),
-                ui.card_body(ui.output_plot(ns("effect_bar"), height="300px")),
+                ui.card_body(
+                    ui.output_plot(ns("effect_bar"), height="300px"),
+                    # The plot and the results table both show the epsilon-squared
+                    # label; this is the only place the cut points themselves appear.
+                    ui.tags.p(
+                        "Epsilon-squared: <0.01 negligible, 0.01-0.06 small, "
+                        "0.06-0.14 medium, >0.14 large.",
+                        class_="text-muted small mb-0",
+                    ),
+                ),
                 class_="mb-3",
             )
 

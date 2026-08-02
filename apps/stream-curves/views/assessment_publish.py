@@ -15,8 +15,14 @@ from streamcurves.deep_export import (
     build_deep_assessment_bundle,
     deep_collect_curve_rows,
     deep_slug,
+    uncovered_functions_from_mapping,
 )
 from views.state import AppState
+from views.summary_state import eligible_summary_metrics, get_metric_allowed_strats
+
+
+def _has_rows(frame) -> bool:
+    return frame is not None and len(frame) > 0
 
 DEFAULT_SOURCE_CITATION = "StreamCurves reference-curve development"
 
@@ -37,6 +43,21 @@ def region_label(region: dict | None) -> str:
     return str(name)
 
 
+def coverage_from_state(state: AppState) -> dict | None:
+    """STAF function coverage the current session would publish, or None if it
+    cannot build a bundle yet.
+
+    Reads the same builder the publisher uses so the checklist and the publish gate
+    can never disagree; a build failure (no finalized curve yet) is not a coverage
+    verdict, so it reports None rather than a fake shortfall.
+    """
+    try:
+        bundle = build_bundle_from_state(state)
+    except Exception:  # noqa: BLE001 - nothing to judge until a curve is finalized
+        return None
+    return bundle.get("functionCoverage")
+
+
 def run_snapshot(state: AppState) -> dict:
     """Snapshot of the current run for ``run_state.derive_stage_status`` /
     ``is_ready_to_publish``. Shared by the stage banner and the Publish page gate
@@ -48,6 +69,12 @@ def run_snapshot(state: AppState) -> dict:
         stage_status = state.run_stage_status() or {}
         data = state.data()
         curve_review = state.curve_review() or {}
+        mapping = state.discipline_function_mapping()
+        metric_config = state.metric_config() or {}
+        mapping_confirmed = bool(state.discipline_function_mapping_confirmed())
+        coverage_exceptions = state.function_coverage_exceptions() or []
+        layer1 = state.all_layer1_results() or {}
+        ranking = state.phase2_ranking()
     kind = (region or {}).get("kind") if region else None
     n_candidates = int(meta.get("n_candidates") or 0)
     has_screening = sc is not None and not (hasattr(sc, "empty") and sc.empty)
@@ -59,6 +86,28 @@ def run_snapshot(state: AppState) -> dict:
         n_candidates = max(n_candidates, int(len(df)))
     enr = stage_status.get("enrichment_build") or {}
     pub = stage_status.get("publish") or {}
+    # Mapping-level coverage for the Refine & map stage: judged from the editable
+    # mapping, so it exists before any curve is finalized (unlike "coverage"
+    # below, which is bundle-based and None until then). No metrics yet -> 0:
+    # the stage is blocked on the build anyway, not on unmapped functions.
+    n_unmapped = (
+        len(uncovered_functions_from_mapping(
+            mapping, metric_config, coverage_exceptions))
+        if metric_config
+        else 0
+    )
+    # Metrics that have a stratification to screen but no screening result. A
+    # metric with nothing to screen must not count: the strip would then report
+    # missing work on an assessment where none is possible.
+    n_missing_diagnostics = sum(
+        1
+        for metric in eligible_summary_metrics(metric_config)
+        if get_metric_allowed_strats(state, metric)
+        and not _has_rows(layer1.get(metric))
+    )
+    if sum(1 for df in layer1.values() if _has_rows(df)) >= 2 and not _has_rows(ranking):
+        n_missing_diagnostics += 1
+
     return {
         "has_region": region is not None and kind not in (None, "none"),
         "region_is_ecoregion": kind == "ecoregion",
@@ -68,11 +117,18 @@ def run_snapshot(state: AppState) -> dict:
         "n_candidates": n_candidates,
         "has_screening": has_screening,
         "n_retained": n_retained,
-        "enriched": bool(data is not None and enr.get("status") == "done"),
+        # "attention" still means a build happened; it flags missing diagnostics,
+        # not a missing dataset. Reading it as not-enriched would block stages 4
+        # to 6 and show "Build a dataset first" over a complete dataset.
+        "enriched": bool(data is not None and enr.get("status") in ("done", "attention")),
         "n_enriched": int(enr.get("n_enriched") or 0),
         "curve_review": curve_review,
         "published": bool(pub.get("status") == "done"),
         "published_label": pub.get("label"),
+        "coverage": coverage_from_state(state),
+        "mapping_confirmed": mapping_confirmed,
+        "n_unmapped_functions": n_unmapped,
+        "n_missing_diagnostics": n_missing_diagnostics,
     }
 
 
@@ -109,6 +165,7 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
         metric_config = state.metric_config() or {}
         session_name = state.session_name()
         region = state.region_of_applicability()
+        exceptions = state.function_coverage_exceptions() or []
 
     curve_rows = deep_collect_curve_rows(completed)
     if not curve_rows:
@@ -121,6 +178,7 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
         "assessmentId": deep_slug(session_name or "spring-assessment"),
         "assessmentName": session_name or "Spring Assessment",
         "sourceCitation": DEFAULT_SOURCE_CITATION,
+        "functionCoverageExceptions": exceptions,
     }
     if region:
         full_meta["region"] = region

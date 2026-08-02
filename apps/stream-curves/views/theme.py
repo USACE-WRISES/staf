@@ -1,8 +1,8 @@
-"""App theme, icons, STAF cross-app nav, and www asset versioning.
+"""App theme, icons, STAF cross-app URLs, and www asset versioning.
 
 Ports ``app/helpers/theme.R`` (bslib flatly theme) and the shell helpers from
-``app/app.R`` (``staf_topnav``, ``versioned_www_asset``). The STAF nav is a
-small per-app copy by convention — same as EASI/SFARI/DEEP.
+``app/app.R`` (``versioned_www_asset``). ``STAF_LINKS`` is a small per-app copy
+by convention — same as EASI/SFARI/DEEP.
 """
 
 from __future__ import annotations
@@ -95,11 +95,15 @@ def versioned_www_asset(asset_name: str) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# STAF top-banner strip — a single link back to the STAF site; cross-links to
-# the other tier apps were removed to keep the banner minimal. STAF_LINKS
-# still carries every app URL: the library view deep-links into DEEP from it,
-# it is the in-app half of the URL mirror (see README), and the desktop shell
-# rewrites all entries via STAF_LINKS_OVERRIDES.
+# Cross-app URLs. The "home" entry is the STAF link in the navbar (app.py); it
+# used to have a dedicated banner strip below the navbar, which cost ~28px of
+# height for one link -- EASI/SFARI/DEEP have always carried the same link
+# inline in their header, so this now matches them.
+#
+# The rest of the dict is not the link's: the library view deep-links into DEEP
+# from it, it is the in-app half of the URL mirror (see README), and the desktop
+# shell rewrites all entries via STAF_LINKS_OVERRIDES -- which views/publish.py
+# also reads as its "am I running on the desktop" flag.
 # --------------------------------------------------------------------------- #
 
 STAF_LINKS = {
@@ -112,14 +116,3 @@ STAF_LINKS = {
 _staf_links_overrides = os.environ.get("STAF_LINKS_OVERRIDES")
 if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on web deploys
     STAF_LINKS.update(json.loads(_staf_links_overrides))
-
-
-def staf_topnav():
-    link = ui.tags.a(
-        "STAF",
-        href=STAF_LINKS["home"],
-        class_="staf-topnav-link",
-        target="_blank",
-        rel="noopener",
-    )
-    return ui.tags.div(ui.tags.div(link, class_="staf-topnav"), class_="staf-topnav-strip")

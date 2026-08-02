@@ -1,0 +1,156 @@
+# ── National Stratifier Registry ────────────────────────────────────────────
+# Candidate stratifications the Regional Analysis Agent screens on every run,
+# for any EPA Level 3 ecoregion. Source columns come from the offline NRSA
+# bundle (data/nrsa_metrics.parquet), so a run needs no network access and two
+# runs of the same region see the same candidates.
+#
+# This is deliberately NOT config/stratification_registry.yaml. That file is the
+# Ohio field-survey registry (Rosgen stream type, BEHI, valley type, bed
+# material); none of its columns exist in NRSA data, and the governing
+# methodology pins its own `registered_stratifiers` list to exactly those keys.
+#
+# STRAT-08 compliance: every breakpoint below is a fixed constant declared here
+# and is never computed from the sample being analysed. Reordering or subsetting
+# the input rows cannot change which class a site lands in.
+#
+# Each `candidates` entry is a runtime strat_config entry as-is. It is copied
+# through to derive.materialize_custom_stratifications, screening.py, effects.py
+# and feasibility.py without translation, so there is no second shape to drift.
+
+version: 1
+applies_to: nrsa-l3-ecoregion
+source_dataset: data/nrsa_metrics.parquet
+
+candidates:
+
+  DrainageAreaClass:
+    display_name: "Drainage Area Class"
+    column_name: DrainageAreaClass
+    derived_column_name: DrainageAreaClass
+    type: single
+    is_custom_grouping: true
+    source_column: land_WSAREASQKM
+    source_data_type: continuous
+    source_units: km2
+    min_group_size: 5
+    levels:
+      - "Headwater (<= 10 km2)"
+      - "Small (10 to 100 km2)"
+      - "Large (> 100 km2)"
+    group_definitions:
+      - group_label: "Headwater (<= 10 km2)"
+        source_values: []
+        rule_expression: "<= 10"
+        sort_order: 1
+      - group_label: "Small (10 to 100 km2)"
+        source_values: []
+        rule_expression: "> 10 & <= 100"
+        sort_order: 2
+      - group_label: "Large (> 100 km2)"
+        source_values: []
+        rule_expression: "> 100"
+        sort_order: 3
+    notes: "Watershed drainage area class. Breakpoints 10 and 100 km2 are fixed constants."
+    rationale: >
+      Drainage area is the primary scaling variable for channel geometry,
+      discharge and assemblage composition. 10 km2 separates headwaters from
+      wadeable small streams; 100 km2 separates small streams from larger
+      wadeable rivers. Both are conventional round-number breaks in NRSA and
+      NHDPlus practice, not sample quantiles.
+
+  ChannelSlopeClass:
+    display_name: "Channel Slope Class"
+    column_name: ChannelSlopeClass
+    derived_column_name: ChannelSlopeClass
+    type: single
+    is_custom_grouping: true
+    source_column: phab_XSLOPE_use
+    source_data_type: continuous
+    source_units: percent
+    min_group_size: 5
+    levels:
+      - "Low gradient (<= 0.5%)"
+      - "Moderate (0.5 to 2%)"
+      - "Steep (> 2%)"
+    group_definitions:
+      - group_label: "Low gradient (<= 0.5%)"
+        source_values: []
+        rule_expression: "<= 0.5"
+        sort_order: 1
+      - group_label: "Moderate (0.5 to 2%)"
+        source_values: []
+        rule_expression: "> 0.5 & <= 2"
+        sort_order: 2
+      - group_label: "Steep (> 2%)"
+        source_values: []
+        rule_expression: "> 2"
+        sort_order: 3
+    notes: "Reach channel slope class. Breakpoints 0.5 and 2 percent are fixed constants."
+    rationale: >
+      Channel slope controls stream power, substrate sorting and channel type.
+      0.5 and 2 percent are the conventional low gradient, moderate and steep
+      breaks used in Rosgen-family and Montgomery-Buffington channel typing.
+      National median slope is near 0.13 percent, so this ladder is eligible in
+      roughly half of L3 ecoregions; it is screened where it qualifies and
+      excluded with a recorded reason where it does not.
+
+  ElevationClass:
+    display_name: "Elevation Class"
+    column_name: ElevationClass
+    derived_column_name: ElevationClass
+    type: single
+    is_custom_grouping: true
+    source_column: land_ELEVWS
+    source_data_type: continuous
+    source_units: m
+    min_group_size: 5
+    levels:
+      - "Lowland (<= 300 m)"
+      - "Upland (300 to 1000 m)"
+      - "Montane (> 1000 m)"
+    group_definitions:
+      - group_label: "Lowland (<= 300 m)"
+        source_values: []
+        rule_expression: "<= 300"
+        sort_order: 1
+      - group_label: "Upland (300 to 1000 m)"
+        source_values: []
+        rule_expression: "> 300 & <= 1000"
+        sort_order: 2
+      - group_label: "Montane (> 1000 m)"
+        source_values: []
+        rule_expression: "> 1000"
+        sort_order: 3
+    notes: "Mean watershed elevation class. Breakpoints 300 and 1000 m are fixed constants."
+    rationale: >
+      Elevation proxies thermal regime, precipitation phase and growing season
+      length. 300 and 1000 m are conventional lowland, upland and montane
+      breaks. Within a single ecoregion this often collapses to two populated
+      classes, which the eligibility screen handles.
+
+# Variables considered as stratifiers and deliberately not registered. Recorded
+# here so the reasoning is inspectable rather than buried in a commit message.
+rejected:
+
+  state:
+    reason: administrative
+    detail: >
+      State boundaries are political, not ecological. Within one L3 ecoregion a
+      significant result on state is confounded with sampling crew, laboratory
+      and state-level land use policy, and cannot be read as an effect modifier.
+      It would also qualify in nearly every region, crowding the cross-metric
+      ranking with a candidate no reviewer can act on.
+
+  huc8:
+    reason: too_fine
+    detail: >
+      Within a single L3 ecoregion a HUC8 typically carries one to three sites,
+      so almost no region has two HUC8s above the minimum group size on the
+      retained reference subset.
+
+  ag_eco9:
+    reason: circular
+    detail: >
+      The NARS aggregated nine-region code is an aggregation of the L3 ecoregion
+      being analysed. It is constant within the region in nearly every case and
+      would be excluded by the constancy rule regardless.

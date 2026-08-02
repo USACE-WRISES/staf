@@ -26,7 +26,6 @@ from views import summary_state as ss
 from views.state import AppState
 from views.theme import fa
 from views.uihelpers import (
-    explanation_card,
     no_data_alert,
     remove_final_loading_notification,
     show_final_loading_notification,
@@ -99,20 +98,6 @@ def tier_card(tier_name: str, color: str, tier_data: pd.DataFrame):
 @module.ui
 def phase2_ui():
     return ui.TagList(
-        explanation_card(
-            "Cross-Metric Analysis",
-            ui.tags.p("Which stratifications perform consistently across multiple metrics?"),
-            ui.tags.p(
-                "After completing exploratory screening for at least 2 metrics, compare "
-                "stratification performance using a support score heatmap. Identify "
-                "broad-use candidates that work across most metrics vs. metric-specific "
-                "ones."
-            ),
-            ui.tags.p(
-                ui.tags.strong("Requires:"),
-                " Exploratory screening complete for ≥ 2 metrics.",
-            ),
-        ),
         ui.output_ui("consistency_ui", class_="phase2-consistency-shell-output"),
     )
 
@@ -507,13 +492,20 @@ def phase2_server(input, output, session, state: AppState, workspace_scope: str 
                         ui.tags.p(
                             "Broad-use candidates are surfaced automatically here for the "
                             "current metric. Choose the final curve stratification on the "
-                            "Reference Curves tab.",
+                            "Reference curves page.",
                             class_="text-muted",
                         ),
                         (
                             ui.div(
-                                "No broad-use candidates are currently highlighted for "
-                                "this metric.",
+                                # This card only renders once a ranking exists, so
+                                # "never ran" is unreachable here: either the metric
+                                # has no stratification to rank, or nothing reached
+                                # broad-use in the run that did happen.
+                                "Cross-metric analysis needs at least one stratification "
+                                "for this metric. None are available."
+                                if not ss.get_metric_allowed_strats(state, metric)
+                                else "No stratification reached broad-use for this metric "
+                                     "in this run.",
                                 class_="text-muted",
                             )
                             if not highlighted

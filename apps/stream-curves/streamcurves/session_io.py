@@ -81,6 +81,13 @@ SESSION_FIELDS = [
     "discipline_function_mapping_confirmed",
     "mapping_user_touched",
     "workbook_provided_mapping",
+    # Documented reasons a STAF function carries no metric. The publish gate
+    # (library.publish_version) refuses a version while any of the 20 is neither
+    # covered nor listed here, so these have to survive a save/reopen or a
+    # revision would have to re-argue every gap. Absent in an older session ->
+    # None -> "no exceptions", which is the correct reading of a file written
+    # before gaps had to be justified.
+    "function_coverage_exceptions",
     # custom groupings + misc
     "custom_groupings",
     "custom_grouping_counter",
@@ -90,6 +97,9 @@ SESSION_FIELDS = [
     "column_sources",
     "column_functions",
     "region_of_applicability",
+    # Assembled candidate sites (schema v2, additive) — the only place the
+    # wizard's coordinates survive a save; the screening table drops them.
+    "candidate_sites",
     # EASI reference-condition screening (schema v2)
     "easi_screening_sites",
     "easi_screening_metrics",
@@ -101,6 +111,10 @@ SESSION_FIELDS = [
     "screening_run",
     "site_exclusions",
     "validation_records",
+    # RED-01 pairwise metric redundancy (schema v2, additive). Absent in every
+    # session written before it existed; decode_session_fields returns None for a
+    # field a payload does not carry, so no migration is needed.
+    "metric_redundancy",
 ]
 
 ## Fields whose dict payloads may contain non-serializable cached objects
@@ -346,7 +360,8 @@ def _migrate_v1_to_v2(payload: dict) -> dict:
     analysis results untouched.
     """
     fields = payload.setdefault("fields", {})
-    for name in ("easi_screening_sites", "easi_screening_metrics",
+    for name in ("candidate_sites",
+                 "easi_screening_sites", "easi_screening_metrics",
                  "easi_screening_criteria",
                  "run_meta", "run_stage_status", "curve_review",
                  "screening_run", "site_exclusions", "validation_records"):

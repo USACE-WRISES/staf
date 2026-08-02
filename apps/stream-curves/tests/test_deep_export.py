@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from streamcurves import deep_export
 from streamcurves.deep_export import (
     build_deep_assessment_bundle,
     deep_collect_curve_rows,
@@ -570,3 +571,150 @@ def test_deep_contract_stratified_layers_score(bundle):
         models.MeasuredValue(metric_id="spring-wdrstrat", value=16.0, stratum="E Streams"), m
     )
     assert idx == pytest.approx(0.7)
+
+
+# --------------------------------------------------------------------------- #
+# STAF function coverage
+# --------------------------------------------------------------------------- #
+def _crosswalk():
+    return deep_export.deep_read_staf_crosswalk()
+
+
+def _blocks(*function_ids):
+    return [{"functionId": f, "metrics": [{"metricId": f + "-m"}]} for f in function_ids]
+
+
+def test_coverage_counts_the_fixed_twenty_function_skeleton():
+    cov = deep_export.function_coverage(_blocks("reach-inflow"), _crosswalk())
+    assert cov["framework"] == "staf-20"
+    assert cov["total"] == 20
+    assert cov["covered"] == 1
+    assert cov["missing"] == 19
+    assert cov["coveredFunctionIds"] == ["reach-inflow"]
+    assert "catchment-hydrology" in cov["missingFunctionIds"]
+    assert "reach-inflow" not in cov["missingFunctionIds"]
+
+
+def test_a_function_block_with_no_metrics_does_not_count_as_covered():
+    cov = deep_export.function_coverage(
+        [{"functionId": "reach-inflow", "metrics": []}], _crosswalk())
+    assert cov["covered"] == 0
+    assert "reach-inflow" in cov["missingFunctionIds"]
+
+
+# --------------------------------------------------------------------------- #
+# Mapping-level coverage (the Refine & map stage / workspace panel signal)
+# --------------------------------------------------------------------------- #
+def _mapping_df(rows):
+    return pd.DataFrame(rows, columns=["metric_key", "discipline",
+                                       "function_label", "sort_order"])
+
+
+def test_uncovered_from_mapping_counts_assigned_functions():
+    mapping = _mapping_df([
+        {"metric_key": "mA", "discipline": "Hydrology",
+         "function_label": "Reach inflow", "sort_order": 1},
+    ])
+    gaps = deep_export.uncovered_functions_from_mapping(mapping, {"mA": {}})
+    ids = {fid for fid, _ in gaps}
+    assert len(gaps) == 19
+    assert "reach-inflow" not in ids
+    assert "catchment-hydrology" in ids
+    # (id, name) pairs, ready to print.
+    assert all(name.strip() for _, name in gaps)
+
+
+def test_uncovered_from_mapping_ignores_blank_rows_and_dataless_metrics():
+    mapping = _mapping_df([
+        # Blank function label: scaffold row, covers nothing.
+        {"metric_key": "mA", "discipline": None,
+         "function_label": None, "sort_order": 1},
+        # Metric not in metric_config: carries no data, covers nothing.
+        {"metric_key": "ghost", "discipline": "Hydrology",
+         "function_label": "Reach inflow", "sort_order": 2},
+    ])
+    gaps = deep_export.uncovered_functions_from_mapping(mapping, {"mA": {}})
+    assert len(gaps) == 20
+
+
+def test_uncovered_from_mapping_drops_excused_functions():
+    gaps = deep_export.uncovered_functions_from_mapping(
+        _mapping_df([]), {"mA": {}},
+        exceptions=[{"functionId": "reach-inflow"}])
+    ids = {fid for fid, _ in gaps}
+    assert len(gaps) == 19
+    assert "reach-inflow" not in ids
+
+
+def test_uncovered_from_mapping_handles_empty_inputs():
+    assert len(deep_export.uncovered_functions_from_mapping(None, {})) == 20
+    assert len(deep_export.uncovered_functions_from_mapping(
+        _mapping_df([]), None)) == 20
+
+
+def test_exclusions_move_functions_out_of_missing():
+    exc = [{"functionId": "watershed-connectivity", "reason": "data-unavailable",
+            "justification": "No barrier inventory covers this region at usable resolution.",
+            "recordedBy": "gtmenichino"}]
+    cov = deep_export.function_coverage(_blocks("reach-inflow"), _crosswalk(), exc)
+    assert cov["excluded"] == 1
+    assert cov["missing"] == 18
+    assert "watershed-connectivity" not in cov["missingFunctionIds"]
+    rec = cov["exclusions"][0]
+    assert rec["functionName"] == "Watershed connectivity"
+    assert rec["discipline"] == "Biology"
+
+
+def test_an_exclusion_for_a_covered_function_is_dropped_not_raised():
+    """A justification left behind after a metric was added is stale, not an error."""
+    exc = [{"functionId": "reach-inflow", "reason": "no-suitable-metric",
+            "justification": "Stale note from before road density was mapped here.",
+            "recordedBy": "gtmenichino"}]
+    cov = deep_export.function_coverage(_blocks("reach-inflow"), _crosswalk(), exc)
+    assert cov["excluded"] == 0
+    assert cov["exclusions"] == []
+    assert cov["covered"] == 1
+
+
+@pytest.mark.parametrize(
+    "bad,match",
+    [
+        ({"functionId": "not-a-function", "reason": "no-suitable-metric",
+          "justification": "x" * 30, "recordedBy": "g"}, "canonical STAF functions"),
+        ({"functionId": "reach-inflow", "reason": "just because",
+          "justification": "x" * 30, "recordedBy": "g"}, "is not one of"),
+        ({"functionId": "reach-inflow", "reason": "no-suitable-metric",
+          "justification": "n/a", "recordedBy": "g"}, "must explain the gap"),
+        ({"functionId": "reach-inflow", "reason": "no-suitable-metric",
+          "justification": "x" * 30, "recordedBy": ""}, "recordedBy is required"),
+        ({"functionId": "reach-inflow", "reason": "consolidated-into",
+          "justification": "x" * 30, "recordedBy": "g"}, "consolidatedInto"),
+    ],
+)
+def test_invalid_exclusions_are_rejected(bad, match):
+    with pytest.raises(ValueError, match=match):
+        deep_export.validate_coverage_exceptions([bad], _crosswalk())
+
+
+def test_duplicate_exclusions_for_one_function_are_rejected():
+    rec = {"functionId": "reach-inflow", "reason": "no-suitable-metric",
+           "justification": "A perfectly adequate justification string.",
+           "recordedBy": "g"}
+    with pytest.raises(ValueError, match="duplicate"):
+        deep_export.validate_coverage_exceptions([rec, dict(rec)], _crosswalk())
+
+
+def test_bundle_stamps_the_coverage_block(bundle):
+    cov = bundle["functionCoverage"]
+    assert cov["total"] == 20
+    present = {b["functionId"] for b in bundle["metricsByFunction"] if b.get("metrics")}
+    assert set(cov["coveredFunctionIds"]) == present
+    assert cov["covered"] + cov["excluded"] + cov["missing"] == 20
+    assert set(cov["coveredFunctionIds"]) & set(cov["missingFunctionIds"]) == set()
+
+
+def test_covered_ids_are_canonical_function_ids(bundle):
+    canonical = {str(f["id"]) for f in _crosswalk()}
+    cov = bundle["functionCoverage"]
+    assert set(cov["coveredFunctionIds"]) <= canonical
+    assert set(cov["missingFunctionIds"]) <= canonical

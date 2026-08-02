@@ -37,17 +37,26 @@ sessions are not readable here — keep the R app around for those).
 `requirements.txt` is the pinned runtime for deployment; `requirements-dev.txt`
 adds pytest and other dev-only tooling.
 
-## Tabs
+## Navigation
 
-- **Data & Setup** — landing (open a workbook/session), the map-first import
-  wizard (region → sites → metrics → compile → classify → build), the editable
-  workbook grid, discipline→function mapping, validation/QA.
-- **Reference Curves** — the per-metric summary mega-table and the 4-phase
-  workspace (explore → verify → confirm → finalize), the curve editor, and the
-  export hub (OH List-of-Metrics + SQT Reference Curves workbooks, the Science
-  Support HTML, and a DEEP assessment bundle).
-- **Regional Curves** — power-function (log-log) bankfull-vs-drainage-area curves.
-- **Cross-Sections** — on-demand geomorphic cross-sections (NLDI snap + 3DEP terrain).
+The workflow strip under the top bar is the primary navigation: five numbered
+stages, each a page. Stages 1-3 open the Data & Setup wizard at the matching
+step; two supplementary tools sit in the top bar, outside the numbered stages.
+
+- **1 Region & data / 2 Screen sites / 3 Build dataset** — the Data & Setup
+  page: landing (open a workbook/session), the map-first import wizard
+  (region → add data → screen sites → choose metrics → compile → classify →
+  build), the editable workbook grid, discipline→function mapping,
+  validation/QA.
+- **4 Reference curves** — the flagged-curve review queue, the per-metric
+  summary mega-table and the 4-phase workspace (explore → verify → confirm →
+  finalize), the curve editor, and the export hub (OH List-of-Metrics + SQT
+  Reference Curves workbooks, the Science Support HTML, and a DEEP assessment
+  bundle).
+- **5 Publish** — Draft file downloads and Preliminary/Final publishing into
+  the STAF assessment library.
+- **Regional Curves** (top bar) — power-function (log-log) bankfull-vs-drainage-area curves.
+- **Cross-Sections** (top bar) — on-demand geomorphic cross-sections (NLDI snap + 3DEP terrain).
 
 The import wizard and cross-sections tab pull from public REST services (USGS
 NLDI/3DEP, EPA StreamCAT, USGS StreamStats, and Model My Watershed); each source
@@ -67,4 +76,5 @@ Connect Cloud UI pointed at this repo. Interactive maps need `ipyleaflet` +
 
 Follows the DEEP app's py-shiny conventions: core (non-Express) syntax, pinned
 `requirements.txt` for Posit Connect Cloud, shared `www/styles.css` STAF design tokens
-under the app-specific `www/curves.css`, per-app copy of `STAF_LINKS` + `staf_topnav()` (STAF banner link).
+under the app-specific `www/curves.css`, per-app copy of `STAF_LINKS` (the "home" entry is the
+STAF link in the navbar; the rest drive the DEEP deep links and the desktop overrides).

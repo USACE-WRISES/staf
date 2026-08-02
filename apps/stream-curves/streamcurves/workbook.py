@@ -46,6 +46,8 @@ import numpy as np
 import pandas as pd
 from openpyxl import Workbook
 
+from .curves import CURVE_FORM_OPTIMUM
+
 logger = logging.getLogger("streamcurves")
 
 # R/00_input_workbook.R:15-16
@@ -139,6 +141,13 @@ def workbook_sheet_specs() -> dict[str, dict]:
 def workbook_sheet_columns() -> dict[str, list[str] | None]:
     return {
         "data": None,
+        # ``curve_form`` is deliberately NOT listed here. It carries the two-sided
+        # ("optimum") form, whose direction is a deliberate null -- without
+        # somewhere to record it, higher_is_better reads back as TRUE and a
+        # two-sided curve silently becomes monotone-increasing. It rides as an
+        # extra column (ensure_workbook_sheet_columns appends extras) so a
+        # pre-existing workbook does not gain an all-NA column it never had,
+        # which would not survive an xlsx write/read round trip.
         "metrics": [
             "metric_key", "display_name", "column_name", "units", "metric_family",
             "higher_is_better", "monotonic_linear", "preferred_transform",
@@ -294,6 +303,15 @@ def auto_pairwise_values(levels) -> list[list[str]]:
     if len(levels) < 2:
         return []
     return [list(pair) for pair in combinations(levels, 2)]
+
+
+def _blank_cell(value) -> bool:
+    """True when a workbook cell is empty/NA — i.e. carries no assertion at all."""
+    vals = _values(value)
+    if not vals or all(_is_na(v) for v in vals):
+        return True
+    raw = _as_character(vals[0])
+    return raw is None or not raw.strip()
 
 
 def coerce_flag(value, default: bool = False) -> bool:
@@ -1071,12 +1089,20 @@ def build_metric_config_from_workbook(
         if column_name is None:
             raise ValueError(f"Metric '{metric_key}' is missing column_name.")
 
+        curve_form = (scalar_text(row.get("curve_form"), None)
+                      if "curve_form" in cols else None)
         config[metric_key] = {
             "display_name": scalar_text(row.get("display_name"), metric_key),
             "column_name": column_name,
             "units": scalar_text(row.get("units"), "") if "units" in cols else "",
             "metric_family": scalar_text(row.get("metric_family"), "continuous"),
-            "higher_is_better": coerce_flag(row.get("higher_is_better"), default=True),
+            # A two-sided curve degrades at BOTH extremes, so it has no monotone
+            # direction; the blank cell means null, not "default to TRUE".
+            "higher_is_better": (
+                None if (curve_form == CURVE_FORM_OPTIMUM
+                         and _blank_cell(row.get("higher_is_better")))
+                else coerce_flag(row.get("higher_is_better"), default=True)
+            ),
             "monotonic_linear": coerce_flag(row.get("monotonic_linear"), default=True),
             "allowed_predictors": compact_chr(predictor_rows.get("predictor_key")),
             "allowed_stratifications": compact_chr(strat_rows.get("strat_key")),
@@ -1093,6 +1119,8 @@ def build_metric_config_from_workbook(
             ),
             "notes": scalar_text(row.get("notes"), "") if "notes" in cols else "",
         }
+        if curve_form:
+            config[metric_key]["curve_form"] = curve_form
     return config
 
 
@@ -1293,6 +1321,286 @@ def build_function_mappings_from_tables(tables, metric_keys) -> pd.DataFrame | N
     }
     result.attrs["covers_all_metrics"] = len(set(metric_keys) - assigned_keys) == 0
     return result
+
+
+# --------------------------------------------------------------------------- #
+# Config -> tables (the inverse of build_input_bundle_from_tables below)
+# --------------------------------------------------------------------------- #
+
+
+def _flag_text(value, default: bool) -> str:
+    """Workbook sheets store flags as the strings coerce_flag() parses."""
+    if value is None or _is_na(value):
+        return "TRUE" if default else "FALSE"
+    return "TRUE" if coerce_flag(value, default=default) else "FALSE"
+
+
+def _pipe_text(values) -> str:
+    """Workbook sheets store multi-values as the "a|b|c" parse_pipe_values() reads."""
+    return "|".join(compact_chr(values))
+
+
+def _pairwise_text(pairs) -> str:
+    """Workbook sheets store pair lists as the "g1~g2|g3~g4" parse_pairwise_values()
+    reads. A bool or blank means "no explicit pairs"; the reader then derives them
+    from the levels via auto_pairwise_values()."""
+    if pairs is None or isinstance(pairs, (bool, np.bool_)):
+        return ""
+    out = []
+    for pair in _values(pairs):
+        members = compact_chr(pair)
+        if len(members) == 2:
+            out.append("~".join(members))
+    return "|".join(out)
+
+
+def tables_from_configs(
+    data,
+    metric_config=None,
+    predictor_config=None,
+    strat_config=None,
+    factor_recode_config=None,
+) -> dict:
+    """Rebuild workbook ``tables`` from a built project's configs.
+
+    The inverse of :func:`build_input_bundle_from_tables`, for sessions that
+    carry the OUTCOME of a build but not the workbook that produced it -- every
+    published library assessment, because the headless writers never had a
+    workbook to save.
+
+    Deliberately not ``build_config_tables_from_roles``: that regenerates every
+    per-metric setting from defaults (``higher_is_better`` TRUE for all), which
+    silently flips the direction of every "more is worse" metric the moment
+    anyone rebuilds. Here each sheet value comes from the config, and only keys
+    the config genuinely lacks fall back -- to the same defaults
+    ``build_metric_config_from_workbook`` applies, so config -> tables -> config
+    is stable.
+    """
+    metric_config = metric_config or {}
+    predictor_config = predictor_config or {}
+    strat_config = strat_config or {}
+    factor_recode_config = factor_recode_config or {}
+
+    if data is None:
+        data = pd.DataFrame()
+    elif not isinstance(data, pd.DataFrame):
+        data = pd.DataFrame(data)
+
+    metric_rows, mp_rows, ms_rows = [], [], []
+    for metric_key, cfg in metric_config.items():
+        cfg = cfg or {}
+        family = _as_character(cfg.get("metric_family")) or "continuous"
+        curve_form = _as_character(cfg.get("curve_form")) or ""
+        two_sided = curve_form == CURVE_FORM_OPTIMUM
+        metric_rows.append({
+            "metric_key": metric_key,
+            "display_name": _as_character(cfg.get("display_name")) or metric_key,
+            "column_name": _as_character(cfg.get("column_name")) or metric_key,
+            "units": _as_character(cfg.get("units")) or "",
+            "metric_family": family,
+            # A two-sided curve has no monotone direction; write the blank the
+            # reader turns back into null instead of defaulting it to TRUE.
+            "higher_is_better": ("" if (two_sided and cfg.get("higher_is_better") is None)
+                                 else _flag_text(cfg.get("higher_is_better"), True)),
+            "curve_form": curve_form,
+            "monotonic_linear": _flag_text(cfg.get("monotonic_linear"), True),
+            "preferred_transform": _as_character(cfg.get("preferred_transform")) or "none",
+            "min_sample_size": int(_or(cfg.get("min_sample_size"), 10)),
+            "best_subsets_allowed": _flag_text(cfg.get("best_subsets_allowed"), True),
+            # The reader defaults count_model to False, so derive it from the
+            # family rather than leaving a count metric silently continuous.
+            "count_model": _flag_text(cfg.get("count_model"), family == "count"),
+            "stratification_mode": _as_character(cfg.get("stratification_mode")) or "subset",
+            "include_in_summary": _flag_text(cfg.get("include_in_summary"), True),
+            "missing_data_rule": _as_character(cfg.get("missing_data_rule")) or "",
+            "notes": _as_character(cfg.get("notes")) or "",
+        })
+        # Only keys the companion sheets actually define. build_input_bundle_from_tables
+        # validates these as foreign keys, so emitting a row for a predictor or
+        # stratification that was not passed in makes the workbook unreadable --
+        # which is easy to hit, because a metric_config carries allowed_predictors
+        # and allowed_stratifications whether or not the caller supplied the
+        # matching configs.
+        for i, pk in enumerate(
+            k for k in compact_chr(cfg.get("allowed_predictors")) if k in predictor_config
+        ):
+            mp_rows.append({"metric_key": metric_key, "predictor_key": pk, "sort_order": i + 1})
+        for i, sk in enumerate(
+            k for k in compact_chr(cfg.get("allowed_stratifications")) if k in strat_config
+        ):
+            ms_rows.append({"metric_key": metric_key, "strat_key": sk, "sort_order": i + 1})
+
+    pred_rows = []
+    for key, cfg in predictor_config.items():
+        cfg = cfg or {}
+        pred_rows.append({
+            "predictor_key": key,
+            "display_name": _as_character(cfg.get("display_name")) or key,
+            "column_name": _as_character(cfg.get("column_name")) or key,
+            "type": _as_character(cfg.get("type")) or "continuous",
+            "derived": _flag_text(cfg.get("derived"), False),
+            "derivation_method": _as_character(cfg.get("derivation_method")) or "",
+            "source_columns": ", ".join(compact_chr(cfg.get("source_columns"))),
+            "constant": cfg.get("constant"),
+            "expected_min": cfg.get("expected_min"),
+            "expected_max": cfg.get("expected_max"),
+            "missing_data_rule": _as_character(cfg.get("missing_data_rule")) or "",
+            "notes": _as_character(cfg.get("notes")) or "",
+        })
+
+    strat_rows, group_rows, derived_strat_columns = [], [], []
+    for key, cfg in strat_config.items():
+        cfg = cfg or {}
+        is_custom = coerce_flag(cfg.get("is_custom_grouping"), default=False)
+        # build_strat_config_from_workbook accepts only paired / raw_single /
+        # custom_group. The runtime config reports type "single" for both raw and
+        # custom stratifications, so the writer has to recover the distinction
+        # from is_custom_grouping or the round trip degrades a custom grouping
+        # into a raw stratification on its own continuous source column.
+        if _as_character(cfg.get("type")) == "paired":
+            strat_type = "paired"
+        elif is_custom:
+            strat_type = "custom_group"
+        else:
+            strat_type = "raw_single"
+        # The reader sets column_name from derived_column_name, so they must agree.
+        derived_column_name = (
+            _as_character(cfg.get("derived_column_name"))
+            or (_as_character(cfg.get("column_name")) if is_custom else None)
+            or ""
+        )
+        if is_custom and derived_column_name:
+            derived_strat_columns.append(derived_column_name)
+        strat_rows.append({
+            "strat_key": key,
+            "display_name": _as_character(cfg.get("display_name")) or key,
+            "strat_type": strat_type,
+            "source_column": _as_character(cfg.get("source_column")) or "",
+            "source_data_type": _as_character(cfg.get("source_data_type")) or "",
+            "primary_strat_key": _as_character(cfg.get("primary")) or "",
+            "secondary_strat_key": _as_character(cfg.get("secondary")) or "",
+            "derived_column_name": derived_column_name,
+            "levels": _pipe_text(cfg.get("levels")),
+            "pairwise_comparisons": _pairwise_text(cfg.get("pairwise_comparisons")),
+            "min_group_size": int(_or(cfg.get("min_group_size"), 5)),
+            "notes": _as_character(cfg.get("notes")) or "",
+        })
+        # The runtime shape is group_definitions/group_label/source_values/
+        # rule_expression; the legacy groups/label/values/rule shape is still
+        # read so an older config does not lose its groups.
+        definitions = cfg.get("group_definitions")
+        if definitions:
+            for i, grp in enumerate(definitions):
+                grp = grp or {}
+                group_rows.append({
+                    "strat_key": key,
+                    "group_label": _as_character(grp.get("group_label")) or "",
+                    "sort_order": _or(grp.get("sort_order"), i + 1),
+                    "source_values": _pipe_text(grp.get("source_values")),
+                    "rule_expression": _as_character(grp.get("rule_expression")) or "",
+                })
+        else:
+            for i, grp in enumerate(cfg.get("groups") or []):
+                grp = grp or {}
+                group_rows.append({
+                    "strat_key": key,
+                    "group_label": _as_character(grp.get("label")) or "",
+                    "sort_order": i + 1,
+                    "source_values": _pipe_text(grp.get("values")),
+                    "rule_expression": _as_character(grp.get("rule")) or "",
+                })
+
+    # The data sheet is raw data by contract: build_input_bundle_from_tables
+    # refuses a custom grouping whose derived column already exists there, so an
+    # Apply in the Workbook panel would raise. derive_variables regenerates them.
+    if derived_strat_columns:
+        data = data.drop(columns=[c for c in derived_strat_columns if c in data.columns])
+
+    recode_rows = []
+    for key, cfg in factor_recode_config.items():
+        cfg = cfg or {}
+        for lvl in cfg.get("levels") or []:
+            lvl = lvl or {}
+            recode_rows.append({
+                "recode_key": key,
+                "source_column": _as_character(cfg.get("source_column")) or "",
+                "target_column": _as_character(cfg.get("target_column")) or "",
+                "target_level": _as_character(lvl.get("label")) or "",
+                "source_values": ", ".join(compact_chr(lvl.get("values"))),
+                "notes": _as_character(cfg.get("notes")) or "",
+            })
+
+    tables = {
+        "data": data,
+        "metrics": pd.DataFrame(metric_rows),
+        "metric_predictors": pd.DataFrame(mp_rows),
+        "metric_stratifications": pd.DataFrame(ms_rows),
+        "predictors": pd.DataFrame(pred_rows),
+        "stratifications": pd.DataFrame(strat_rows),
+        "strat_groups": pd.DataFrame(group_rows),
+        "factor_recodes": pd.DataFrame(recode_rows),
+    }
+    return {
+        name: (df if name == "data" else ensure_workbook_sheet_columns(df, name))
+        for name, df in tables.items()
+    }
+
+
+_CURATED_METRIC_FIELDS = (
+    "display_name", "units", "metric_family", "higher_is_better", "curve_form",
+    "monotonic_linear", "preferred_transform", "min_sample_size",
+    "best_subsets_allowed", "count_model", "stratification_mode",
+    "include_in_summary", "missing_data_rule", "notes",
+)
+
+
+def overlay_metric_settings(tables, metric_config) -> dict:
+    """Restore curated per-metric settings onto role-regenerated ``tables``.
+
+    ``build_config_tables_from_roles`` knows only which columns are metrics, so
+    it fills every setting with a default -- including ``higher_is_better`` TRUE
+    for all. Rebuilding a project that way silently inverts every "more is
+    worse" metric. This puts the project's own settings back for metrics it
+    already knows about, matching on ``column_name`` (role-derived metric_keys
+    are sanitized, so the column is the stable join). Genuinely new columns keep
+    their defaults.
+    """
+    metric_config = metric_config or {}
+    tables = dict(tables or {})
+    metrics = tables.get("metrics")
+    if metrics is None or len(metrics) == 0 or not metric_config:
+        return tables
+
+    by_column = {}
+    for cfg in metric_config.values():
+        col = _as_character((cfg or {}).get("column_name"))
+        if col:
+            by_column[col] = cfg
+
+    # Role-regenerated tables carry only the columns the role step knows about, so
+    # a curated field with no column would be silently dropped -- which is how a
+    # two-sided metric lost its curve_form and read back as monotone-increasing.
+    metrics = metrics.copy()
+    for field in _CURATED_METRIC_FIELDS:
+        if field not in metrics.columns and any(field in (c or {}) for c in by_column.values()):
+            metrics[field] = ""
+    for idx, col in zip(metrics.index, metrics.get("column_name", [])):
+        cfg = by_column.get(_as_character(col))
+        if not cfg:
+            continue
+        for field in _CURATED_METRIC_FIELDS:
+            if field not in cfg or field not in metrics.columns:
+                continue
+            value = cfg[field]
+            if isinstance(value, bool):
+                value = "TRUE" if value else "FALSE"
+            elif value is None:
+                # A null direction is an assertion ("no monotone direction"), not a
+                # missing value; the blank is what the reader turns back into None.
+                value = ""
+            metrics.at[idx, field] = value
+    tables["metrics"] = metrics
+    return tables
 
 
 # --------------------------------------------------------------------------- #

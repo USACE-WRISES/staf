@@ -27,3 +27,26 @@ plotly==6.8.0
 openpyxl==3.1.5
 PyYAML==6.0.3
 requests==2.34.2
+
+# HyRiver geospatial/hydrology stack (matched 0.19.x set), required by the
+# vendored EASI batch engine (streamcurves/_vendor/easi) for direct
+# reference-condition screening. Mirrors apps/easi/requirements.txt exactly:
+# pip only, manylinux wheels for Python 3.12, no system libs, no API keys.
+# reportlab is deliberately absent: easi/report.py imports it lazily and the
+# screening path never renders a PDF.
+pynhd==0.19.4
+py3dep==0.19.0
+pygeohydro==0.19.4
+pygeoutils==0.19.5
+pygeoogc==0.19.4
+async-retriever==0.19.3
+hydrosignatures==0.19.3
+
+# Geospatial core (binary wheels bundle GDAL/GEOS/PROJ)
+geopandas==1.1.3
+pyogrio==0.12.1
+shapely==2.1.2
+pyproj==3.7.2
+rasterio==1.5.0
+rioxarray==0.22.0
+xarray==2026.4.0

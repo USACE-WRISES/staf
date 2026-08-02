@@ -23,7 +23,10 @@ import numpy as np
 import pandas as pd
 from shiny import reactive
 
-from streamcurves.consistency import compute_strat_consistency
+from streamcurves.consistency import (  # noqa: F401  (build_phase2_ranking re-exported)
+    build_phase2_ranking,
+    compute_strat_consistency,
+)
 from streamcurves.curves import (
     build_reference_curve,
     hydrate_reference_curve_result,
@@ -36,7 +39,11 @@ from streamcurves.mapping import (
     function_mapping_full_coverage,
     validate_discipline_function_mapping,
 )
-from streamcurves.screening import screen_stratification
+from streamcurves.screening import (  # noqa: F401  (phase-1 candidate helpers re-exported)
+    auto_phase1_candidate_status,
+    build_metric_phase1_candidate_table_from_sources,
+    screen_stratification,
+)
 from streamcurves.stability import assess_pattern_stability
 from views.state import AppState, empty_phase2_settings
 
@@ -122,6 +129,54 @@ def get_metric_allowed_strats(state: AppState, metric: str) -> list[str]:
     allowed = override if override is not None else get_metric_config_allowed_strats(state, metric)
     strat_config = _iso(state, "strat_config") or {}
     return [s for s in allowed if s in strat_config]
+
+
+# Why a metric has no stratification to analyse. The three cases used to read as
+# one "has not been run" message, which said a step was skipped when in fact
+# there was nothing to run: a published assessment with no stratification
+# variables looked identical to one whose screening genuinely failed.
+STRAT_OK = "ok"
+STRAT_NO_CONFIG = "no_strat_config"          # the project defines none at all
+STRAT_NONE_ALLOWED = "none_allowed"          # none enabled for this metric
+STRAT_COLUMNS_ABSENT = "columns_absent"      # configured, but not in the data
+
+
+def usable_strat_keys(state: AppState) -> list[str]:
+    """Configured stratifications whose column actually carries values here.
+
+    Walked once per refresh rather than per metric: get_stratification_values
+    materializes a column, and the summary page asks this for every row.
+    """
+    strat_config = _iso(state, "strat_config") or {}
+    if not strat_config:
+        return []
+    data = _iso(state, "data")
+    out = []
+    for sk in strat_config:
+        try:
+            values = get_stratification_values(data, sk, strat_config)
+        except Exception:  # noqa: BLE001 — a broken stratification is unusable, not fatal
+            continue
+        if values is not None and len(values) > 0 and values.notna().any():
+            out.append(sk)
+    return out
+
+
+def metric_strat_eligibility(
+    state: AppState, metric: str, usable: list[str] | None = None
+) -> tuple[list[str], str]:
+    """``(allowed, reason)`` where reason is one of the STRAT_* constants."""
+    if not (_iso(state, "strat_config") or {}):
+        return [], STRAT_NO_CONFIG
+    allowed = get_metric_allowed_strats(state, metric)
+    if not allowed:
+        return [], STRAT_NONE_ALLOWED
+    if usable is None:
+        usable = usable_strat_keys(state)
+    live = [s for s in allowed if s in usable]
+    if not live:
+        return allowed, STRAT_COLUMNS_ABSENT
+    return live, STRAT_OK
 
 
 def normalize_curve_stratification_value(state: AppState, metric: str, selected) -> str:
@@ -255,7 +310,14 @@ def set_metric_summary_edit_notes(state: AppState, metric: str, phase: str, item
 
 def get_global_phase2_passed(state: AppState, metric: str | None = None) -> list[str]:
     ranking = _iso(state, "phase2_ranking")
-    if ranking is None or len(ranking) == 0:
+    # A restored frame without the ranking columns would raise a KeyError here,
+    # inside build_metric_notes, and blank the whole summary row.
+    if (
+        ranking is None
+        or len(ranking) == 0
+        or "tier" not in ranking.columns
+        or "stratification" not in ranking.columns
+    ):
         out: list[str] = []
     else:
         out = (
@@ -352,42 +414,6 @@ def set_phase2_settings(state: AppState, settings=None) -> dict:
     return normalized
 
 
-def build_phase2_ranking(result: dict, phase1_cands: dict, support_threshold: float):
-    summary = (result or {}).get("summary")
-    if summary is None or len(summary) == 0:
-        return None
-    summary = summary.copy()
-
-    def count_status(sk: str, status: str) -> int:
-        n = 0
-        for df in (phase1_cands or {}).values():
-            if df is None or len(df) == 0:
-                continue
-            row = df[df["stratification"] == sk]
-            if len(row) > 0 and row["candidate_status"].iloc[0] == status:
-                n += 1
-        return n
-
-    summary["n_promising"] = [count_status(sk, "promising") for sk in summary["stratification"]]
-    summary["n_possible"] = [count_status(sk, "possible") for sk in summary["stratification"]]
-    summary["n_not_promising"] = [
-        count_status(sk, "not_promising") for sk in summary["stratification"]
-    ]
-    denom = (
-        summary["n_promising"] + summary["n_possible"] + summary["n_not_promising"]
-    ).clip(lower=1)
-    summary["pct_promising_possible"] = (summary["n_promising"] + summary["n_possible"]) / denom
-    summary["tier"] = np.select(
-        [
-            summary["consistency_score"] >= support_threshold,
-            summary["consistency_score"] >= support_threshold / 2,
-        ],
-        ["Broad-Use Candidate", "Metric-Specific Candidate"],
-        default="Weak Candidate",
-    )
-    return summary
-
-
 def recompute_phase2_shared(state: AppState, settings=None, persist_settings: bool = True):
     settings = (
         set_phase2_settings(state, settings)
@@ -460,74 +486,6 @@ def refresh_phase2_ranking_shared(state: AppState, settings=None, persist_settin
 # --------------------------------------------------------------------------- #
 # Phase 1 candidate tables (R:424-553)
 # --------------------------------------------------------------------------- #
-
-
-def auto_phase1_candidate_status(p_val, es_label) -> str:
-    p_ok = p_val is not None and not (isinstance(p_val, float) and math.isnan(p_val))
-    if p_ok and p_val < 0.05 and es_label in ("medium", "large"):
-        return "promising"
-    if p_ok and p_val < 0.10:
-        return "possible"
-    return "not_promising"
-
-
-def build_metric_phase1_candidate_table_from_sources(
-    metric: str,
-    allowed,
-    existing: pd.DataFrame | None = None,
-    l1: pd.DataFrame | None = None,
-    l2: pd.DataFrame | None = None,
-    include_all_allowed: bool = True,
-) -> pd.DataFrame:
-    strat_keys: list[str] = []
-
-    def add(keys):
-        for k in keys:
-            if k not in strat_keys:
-                strat_keys.append(k)
-
-    if include_all_allowed:
-        add(allowed or [])
-    if existing is not None and len(existing) > 0:
-        add(existing["stratification"].astype(str).tolist())
-    if l1 is not None and len(l1) > 0:
-        add(l1["stratification"].astype(str).tolist())
-    if not strat_keys:
-        return pd.DataFrame()
-
-    def first_match(df, sk):
-        if df is None or len(df) == 0:
-            return pd.DataFrame()
-        return df[df["stratification"] == sk].head(1)
-
-    rows = []
-    for sk in strat_keys:
-        existing_row = first_match(existing, sk)
-        p_row = first_match(l1, sk)
-        es_row = first_match(l2, sk)
-        p_val = get_first_value(existing_row, "p_value", get_first_value(p_row, "p_value", np.nan))
-        es_label = get_first_value(
-            existing_row, "effect_size_label",
-            get_first_value(es_row, "effect_size_label", "negligible"),
-        )
-        rows.append(
-            {
-                "metric": metric,
-                "stratification": sk,
-                "p_value": p_val if p_val is not None else np.nan,
-                "epsilon_squared": get_first_value(
-                    existing_row, "epsilon_squared",
-                    get_first_value(es_row, "epsilon_squared", np.nan),
-                ),
-                "effect_size_label": es_label,
-                "min_group_n": get_first_value(
-                    existing_row, "min_group_n", get_first_value(p_row, "min_group_n", np.nan)
-                ),
-                "candidate_status": auto_phase1_candidate_status(p_val, es_label),
-                "reviewer_note": "",
-            }
-        )
-    return pd.DataFrame(rows)
 
 
 def get_metric_phase1_candidate_table(
@@ -1826,7 +1784,15 @@ def build_summary_snapshot_context(state: AppState) -> dict:
         "config_version": _iso(state, "config_version") or 0,
         "available_choices": available_choices,
         "strat_label_map": {sk: get_strat_display_name(state, sk) for sk in available_choices},
+        # Computed once per refresh; every summary row would otherwise
+        # re-materialize every stratification column to ask the same question.
+        "usable_strats": usable_strat_keys(state),
     }
+
+
+def context_usable_strats(context) -> list[str] | None:
+    """The context's usable-stratification list, or None to compute on demand."""
+    return None if context is None else (context.get("usable_strats") or [])
 
 
 def build_metric_summary_snapshot_signature(
@@ -1863,6 +1829,18 @@ def build_metric_summary_snapshot_signature(
         "phase1_selected": tuple(sorted(get_metric_phase1_selected(state, metric))),
         "phase2_selected": tuple(sorted(get_metric_phase2_passed(state, metric))),
         "phase3_strats": tuple(sorted((phase3_state or {}).get("strats") or [])),
+        # The three not-applicable cases and the two never-ran ones all leave the
+        # tuples above empty, so without these a row keeps the previous session's
+        # notes when one assessment is opened over another.
+        "strat_reason": metric_strat_eligibility(
+            state, metric, context_usable_strats(context))[1],
+        "phase2_has_ranking": bool(
+            (ranking := _iso(state, "phase2_ranking")) is not None
+            and len(ranking) > 0
+            and "tier" in ranking.columns
+        ),
+        "phase2_metric_included": metric in get_phase2_metric_choices(state),
+        "phase3_has_entry": metric in (_iso(state, "phase3_verification") or {}),
         "phase3_flagged": tuple(phase3_flagged),
         "phase4_source": phase4.get("source") or "none",
         "phase4_artifact_mode": phase4.get("artifact_mode"),
@@ -1926,7 +1904,9 @@ def build_stratified_threshold_table(curve_rows) -> pd.DataFrame:
     return tbl
 
 
-def build_metric_notes(state: AppState, metric: str, phase4=None) -> dict[str, list]:
+def build_metric_notes(
+    state: AppState, metric: str, phase4=None, context=None
+) -> dict[str, list]:
     if phase4 is None:
         phase4 = get_metric_phase4_display_state(state, metric)
     notes = empty_summary_note_store()
@@ -1938,11 +1918,27 @@ def build_metric_notes(state: AppState, metric: str, phase4=None) -> dict[str, l
     for phase in notes:
         notes[phase] = notes[phase] + edit_notes.get(phase, [])
 
-    allowed = get_metric_allowed_strats(state, metric)
+    # "warning" means something that should have happened did not, or is
+    # misconfigured; "info" means a truthful, expected absence. The distinction
+    # is load-bearing: metric_summary_status turns any warning into a
+    # "Run (warnings)" badge, so treating a not-applicable metric as a warning
+    # flagged every metric of every published assessment for review.
+    allowed, strat_reason = metric_strat_eligibility(state, metric, context_usable_strats(context))
     p1_selected = get_metric_phase1_selected(state, metric)
     p1_screening = (_iso(state, "all_layer1_results") or {}).get(metric)
 
-    if p1_screening is None or len(p1_screening) == 0:
+    if strat_reason == STRAT_NO_CONFIG:
+        add("Exploratory", "info",
+            "This project has no stratification variables, so there is nothing to screen.")
+    elif strat_reason == STRAT_NONE_ALLOWED:
+        add("Exploratory", "info",
+            "No stratification is enabled for this metric, so exploratory screening "
+            "does not apply.")
+    elif strat_reason == STRAT_COLUMNS_ABSENT:
+        add("Exploratory", "warning",
+            "Stratifications are configured for this metric but their columns are not "
+            "in the data.")
+    elif p1_screening is None or len(p1_screening) == 0:
         add("Exploratory", "warning", "Exploratory screening has not been run for this metric.")
     else:
         add("Exploratory", "info",
@@ -1955,17 +1951,39 @@ def build_metric_notes(state: AppState, metric: str, phase4=None) -> dict[str, l
                 "No stratifications met the automatic exploratory shortlist criteria.")
 
     p2_selected = get_metric_phase2_passed(state, metric)
+    ranking = _iso(state, "phase2_ranking")
+    ranking_ready = ranking is not None and len(ranking) > 0 and "tier" in ranking.columns
     if p2_selected:
         add("Cross-Metric Analysis", "info",
             "Broad-use candidates in the current cross-metric analysis: "
             + format_strat_list(state, p2_selected))
+    elif strat_reason != STRAT_OK:
+        add("Cross-Metric Analysis", "info",
+            "Cross-metric analysis needs at least one stratification for this metric. "
+            "None are available.")
+    elif not ranking_ready:
+        add("Cross-Metric Analysis", "warning",
+            "Cross-metric analysis has not been run for this project.")
+    elif metric not in get_phase2_metric_choices(state):
+        add("Cross-Metric Analysis", "warning",
+            "This metric was not included in the cross-metric run because it has no "
+            "exploratory screening results.")
     else:
         add("Cross-Metric Analysis", "info",
-            "No broad-use candidates are currently highlighted for this metric.")
+            "Cross-metric analysis ran. No stratification reached broad-use for this metric.")
 
     verification_state = get_metric_phase3_display_state(state, metric)
     if verification_state is None:
-        add("Verification", "info", "Verification diagnostics have not been run yet.")
+        if strat_reason != STRAT_OK:
+            add("Verification", "info",
+                "Verification needs a candidate stratification. None are available for "
+                "this metric.")
+        elif not get_metric_phase3_choices(state, metric):
+            add("Verification", "info",
+                "No candidate stratification reached verification for this metric.")
+        else:
+            add("Verification", "warning",
+                "Verification diagnostics have not been run for this metric.")
     else:
         add("Verification", "info",
             f"Verification diagnostics available for {len(verification_state['strats'])} "
@@ -2016,10 +2034,10 @@ def build_metric_notes(state: AppState, metric: str, phase4=None) -> dict[str, l
     return notes
 
 
-def metric_summary_status(state: AppState, metric: str, phase4=None) -> dict:
+def metric_summary_status(state: AppState, metric: str, phase4=None, context=None) -> dict:
     if phase4 is None:
         phase4 = get_metric_phase4_display_state(state, metric)
-    notes = build_metric_notes(state, metric, phase4=phase4)
+    notes = build_metric_notes(state, metric, phase4=phase4, context=context)
     has_warning = any(
         item.get("level") == "warning" for items in notes.values() for item in items
     )
@@ -2051,7 +2069,7 @@ def build_metric_summary_snapshot(state: AppState, metric: str, context=None) ->
     available_choices = context.get("available_choices") or get_summary_available_choices(state)
     curve_strat_used = get_metric_curve_stratification(state, metric)
     phase4 = get_metric_phase4_display_state(state, metric)
-    status = metric_summary_status(state, metric, phase4=phase4)
+    status = metric_summary_status(state, metric, phase4=phase4, context=context)
     manual = get_metric_phase4_manual_curve_info(state, metric, phase4=phase4)
     return {
         "metric": metric,

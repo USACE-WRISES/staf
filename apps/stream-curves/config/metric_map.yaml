@@ -68,6 +68,13 @@ functions:
   - discipline: Hydrology
     function: Reach inflow
     metrics:
+      # rddens is the only scored metric here: runoff and precip8110 are demoted to
+      # predictor-only in landscape_response_directions.yaml (climate context, not
+      # condition), and the two drainage areas are predictors by role. It is listed
+      # under Reach inflow ONLY -- metric_map_function_label returns the first match
+      # in file order, so a second listing under Watershed connectivity would relabel
+      # it as Hydrology and understate its overlap with rdcrs in the redundancy table.
+      - {code: rddens,            source: streamcat,    label: "Road density (km/sq km)",      default_selected: true,  role: both}
       - {code: runoff,            source: streamcat,    label: "Mean annual runoff (mm)",      default_selected: true,  role: both}
       - {code: precip8110,        source: streamcat,    label: "Mean annual precipitation (mm)", default_selected: true, role: both}
       - {code: DRNAREA,           source: streamstats,  label: "Drainage area (sq mi)",        default_selected: false, role: predictor}

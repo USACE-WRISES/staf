@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from conftest import documented_exclusions
 from streamcurves import library as lib
 from streamcurves import session_io as sio
 from streamcurves.deep_export import build_deep_assessment_bundle
@@ -41,7 +42,10 @@ def _bundle(y2: float = 0.3) -> dict:
             "sort_order": [1],
         }
     )
-    return build_deep_assessment_bundle(rows, mapping, {}, {"region": REGION})
+    return build_deep_assessment_bundle(
+        rows, mapping, {},
+        {"region": REGION, "functionCoverageExceptions": documented_exclusions()},
+    )
 
 
 def _session_payload() -> dict:
@@ -352,3 +356,108 @@ def test_revision_stamps_supersedes_version(libroot):
     assert b1["library"]["supersedesVersion"] is None
     # the prior version's status is NOT auto-changed by a revision
     assert lib.version_status("ecbp", 1) == "preliminary"
+
+
+# --------------------------------------------------------------------------- #
+# STAF function-coverage gate
+# --------------------------------------------------------------------------- #
+def _uncovered_bundle() -> dict:
+    """A one-function bundle with NO documented exclusions -- the NH v2 shape."""
+    return build_deep_assessment_bundle(
+        {
+            "perImperv": {
+                "metric": "perImperv",
+                "curve_status": "complete",
+                "stratum": np.nan,
+                "curve_points": pd.DataFrame(
+                    {"metric_value": [0, 9, 25, 75], "index_score": [1, 0.7, 0.3, 0]}
+                ),
+            }
+        },
+        pd.DataFrame(
+            {
+                "metric_key": ["perImperv"],
+                "discipline": ["Hydrology"],
+                "function_label": ["Catchment hydrology"],
+                "sort_order": [1],
+            }
+        ),
+        {},
+        {"region": REGION},
+    )
+
+
+def test_publish_blocks_when_a_function_is_uncovered_and_unjustified(libroot):
+    """The regression that shipped Northeastern Highlands v2 at 12 of 20 functions."""
+    with pytest.raises(ValueError, match="19 of 20 STAF functions"):
+        lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                            _session_payload(), _uncovered_bundle())
+    # a rejected publish must leave nothing behind
+    assert not (libroot / "assessments" / "ecbp").exists()
+    assert lib.read_manifest("ecbp") is None
+
+
+def test_publish_error_names_the_uncovered_functions(libroot):
+    with pytest.raises(ValueError) as exc:
+        lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                            _session_payload(), _uncovered_bundle())
+    msg = str(exc.value)
+    assert "Reach inflow (reach-inflow)" in msg
+    assert "Watershed connectivity (watershed-connectivity)" in msg
+    assert "no-suitable-metric" in msg  # the vocabulary is offered as the way through
+
+
+def test_publish_succeeds_when_every_gap_is_justified(libroot):
+    v = lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                            _session_payload(), _bundle())
+    assert v == 1
+    cov = lib.load_version_bundle("ecbp", 1)["functionCoverage"]
+    assert cov["total"] == 20
+    assert cov["missing"] == 0
+    assert cov["covered"] == 1 and cov["excluded"] == 19
+    assert cov["coveredFunctionIds"] == ["catchment-hydrology"]
+
+
+def test_gate_is_not_bypassed_by_a_bundle_with_no_coverage_block(libroot):
+    """An older code path emits no functionCoverage; derive rather than wave through."""
+    stale = _uncovered_bundle()
+    stale.pop("functionCoverage")
+    with pytest.raises(ValueError, match="STAF functions"):
+        lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                            _session_payload(), stale)
+
+
+def test_function_coverage_does_not_change_content_digest(libroot):
+    """Justification prose is provenance, not analytical content."""
+    a = _bundle()
+    b = build_deep_assessment_bundle(
+        {
+            "perImperv": {
+                "metric": "perImperv",
+                "curve_status": "complete",
+                "stratum": np.nan,
+                "curve_points": pd.DataFrame(
+                    {"metric_value": [0, 9, 25, 75], "index_score": [1, 0.7, 0.3, 0]}
+                ),
+            }
+        },
+        pd.DataFrame(
+            {
+                "metric_key": ["perImperv"],
+                "discipline": ["Hydrology"],
+                "function_label": ["Catchment hydrology"],
+                "sort_order": [1],
+            }
+        ),
+        {},
+        {
+            "region": REGION,
+            "functionCoverageExceptions": documented_exclusions(
+                reason="not-applicable-to-region",
+                justification="Entirely different prose, and a different reason code.",
+                recorded_by="someone-else",
+            ),
+        },
+    )
+    assert a["functionCoverage"]["exclusions"] != b["functionCoverage"]["exclusions"]
+    assert lib.content_digest(a) == lib.content_digest(b)

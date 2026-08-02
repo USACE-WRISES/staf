@@ -50,6 +50,7 @@ SESSION_FILE = "session.streamcurves.json"
 META_FILE = "meta.json"
 STATUS_FILE = "status.json"
 VALIDATION_FILE = "validation.json"
+PROVENANCE_FILE = "provenance.json"
 
 VALIDATION_UNVALIDATED = "unvalidated"
 VALIDATION_VALIDATED = "validated"
@@ -173,6 +174,42 @@ def _json_default(o: Any):
     if callable(tolist):
         return o.tolist()
     raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+
+
+# --------------------------------------------------------------------------- #
+# Coverage gate (STAF function completeness)
+# --------------------------------------------------------------------------- #
+def _require_documented_coverage(assessment_id: str, bundle: dict) -> dict:
+    """Refuse to publish while a STAF function is neither covered nor justified.
+
+    ``docs/tiered-approach.md`` allows a regional tool to tailor the 20-function
+    list "but changes should be documented and traceable". Tailoring therefore
+    stays legal; an undocumented gap does not. Every published version before this
+    gate existed covered 8-13 of 20 with no record of whether that was deliberate.
+    """
+    from . import deep_export  # local: deep_export imports nothing from here
+
+    coverage = bundle.get("functionCoverage")
+    if not isinstance(coverage, dict):
+        # A bundle built by an older code path carries no coverage block; derive one
+        # rather than waving it through, so the gate cannot be bypassed by staleness.
+        crosswalk = deep_export.deep_read_staf_crosswalk()
+        coverage = deep_export.function_coverage(
+            bundle.get("metricsByFunction"), crosswalk, None)
+    else:
+        crosswalk = deep_export.deep_read_staf_crosswalk()
+
+    if int(coverage.get("missing") or 0) > 0:
+        gaps = deep_export.coverage_gap_message(coverage, crosswalk)
+        raise ValueError(
+            f"Cannot publish {assessment_id}: {coverage['missing']} of "
+            f"{coverage['total']} STAF functions have no metric and no documented "
+            f"reason -- {gaps}. Either add a metric that informs each one, or record "
+            "a coverage exception (reason + justification) explaining why it is out "
+            f"of scope for this assessment. Valid reasons: "
+            f"{', '.join(deep_export.FUNCTION_EXCLUSION_REASONS)}."
+        )
+    return coverage
 
 
 # --------------------------------------------------------------------------- #
@@ -567,6 +604,7 @@ def publish_version(
     session_payload: dict,
     bundle: dict,
     restricted_package: Optional[dict] = None,
+    provenance: Optional[dict] = None,
 ) -> int:
     """Write a new version for ``assessment_id`` and return its version number.
 
@@ -581,6 +619,10 @@ def publish_version(
     onto it before writing.
     ``restricted_package``: optional ``{"sha256", "summary"}`` recorded in ``meta.json``
     so the access-controlled full package's checksum + aggregate summary are auditable.
+    ``provenance``: optional run manifest, decision log and review queue from
+    :mod:`streamcurves.provenance`, written beside the bundle as ``provenance.json``.
+    Without it a published version, the only citable artifact here, carries no record
+    of how it was produced; the run folder that has one is untracked scratch.
     """
     if not writable():
         raise RuntimeError(
@@ -591,6 +633,12 @@ def publish_version(
     assessment_id = slugify(assessment_id)
     if not assessment_id:
         raise ValueError("assessment_id is empty after slugify")
+
+    # Coverage gate. A published version is a citable artifact, and this is the only
+    # place one is minted, so it is where "every STAF function is either covered or
+    # documented as excluded" has to hold. Checked before anything is written, so a
+    # rejected publish leaves no half-version on disk.
+    _require_documented_coverage(assessment_id, bundle)
 
     manifest = read_manifest(assessment_id) or {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
@@ -648,6 +696,13 @@ def publish_version(
     (vdir / SESSION_FILE).write_text(
         session_io.dumps_session(session_payload), encoding="utf-8"
     )
+    if provenance:
+        _write_json(vdir / PROVENANCE_FILE, {
+            **provenance,
+            "version": new_version,
+            "updatedAt": updated_at,
+            "contentDigest": digest,
+        })
     _write_json(
         vdir / META_FILE,
         {

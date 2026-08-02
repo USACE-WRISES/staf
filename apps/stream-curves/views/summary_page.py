@@ -24,19 +24,28 @@ import pandas as pd
 from shiny import module, reactive, render, req, ui
 
 from streamcurves import curve_automation as ca
+from streamcurves import run_state as rs
 from views import state as st
 from views import summary_state as ss
 from views.curve_plots import build_overlay_curve_plot, build_reference_curve_plot
 from views.state import AppState
 from views.theme import fa
 from views.uihelpers import (
-    explanation_card,
     no_data_alert,
     remove_final_loading_notification,
     show_final_loading_notification,
 )
 
 logger = logging.getLogger("streamcurves")
+
+# curve_review status -> short badge text for the flagged-review queue.
+_REVIEW_STATUS_LABELS = {
+    rs.CURVE_STATUS_INSUFFICIENT: "Insufficient data",
+    rs.CURVE_STATUS_DEGENERATE: "Degenerate curve",
+    rs.CURVE_STATUS_UNMAPPED: "Unmapped metric",
+    rs.CURVE_STATUS_STRAT_REVIEW: "Stratification review",
+    rs.CURVE_STATUS_ERROR: "Build error",
+}
 
 
 class SummaryProgress:
@@ -96,6 +105,7 @@ def summary_page_server(input, output, session, state: AppState):
     bulk_recompute_phase = reactive.value("idle")
     pending_bulk_recompute = reactive.value(None)
     pending_row_recompute = reactive.value(None)
+    pending_review = reactive.value(None)  # {"metric", "decision"} awaiting a rationale
 
     @reactive.calc
     def summary_metrics() -> list[str]:
@@ -707,6 +717,147 @@ def summary_page_server(input, output, session, state: AppState):
     def _open_export():
         st.launch_workspace_modal(state, "summary_export")
 
+    # ── flagged-curve review queue (inline; was a stage-banner modal) ────────
+    def _metric_label(metric: str) -> str:
+        with reactive.isolate():
+            mc = state.metric_config() or {}
+        return (mc.get(metric) or {}).get("display_name") or metric
+
+    def _review_action(metric: str, action: str) -> str:
+        payload = json.dumps({"metric": metric, "action": action})
+        return (
+            f"Shiny.setInputValue('{ns('review_queue_action')}',"
+            f"{payload.replace(chr(39), chr(92) + chr(39))},"
+            "{priority:'event'})"
+        )
+
+    @render.ui
+    def review_queue():
+        review = state.curve_review() or {}
+        flagged = rs.flagged_metrics(review)
+        if not flagged:
+            return None
+        mc = state.metric_config() or {}
+        rows = []
+        for metric in flagged:
+            entry = review.get(metric) or {}
+            label = (mc.get(metric) or {}).get("display_name") or metric
+            status = entry.get("status") or ""
+            reason = (entry.get("reasons") or ["Needs review."])[0]
+            rows.append(ui.div(
+                ui.div(
+                    ui.div(
+                        ui.tags.strong(label),
+                        ui.tags.span(
+                            _REVIEW_STATUS_LABELS.get(status, "Needs review"),
+                            class_="badge review-queue-badge",
+                        ),
+                        class_="d-flex align-items-center gap-2 flex-wrap",
+                    ),
+                    ui.div(reason, class_="text-muted small"),
+                    class_="review-queue-info",
+                ),
+                ui.div(
+                    ui.tags.button(
+                        "Adjust and rerun",
+                        class_="btn btn-sm btn-outline-primary",
+                        onclick=_review_action(metric, "adjust"),
+                        title="Open the analysis workspace for this metric",
+                    ),
+                    ui.tags.button(
+                        "Accept",
+                        class_="btn btn-sm btn-outline-success",
+                        onclick=_review_action(metric, "accept"),
+                        title="Accept the proposed curve (rationale required)",
+                    ),
+                    ui.tags.button(
+                        "Remove",
+                        class_="btn btn-sm btn-outline-danger",
+                        onclick=_review_action(metric, "remove"),
+                        title="Remove from the published scope (rationale required)",
+                    ),
+                    class_="review-queue-actions",
+                ),
+                class_="review-queue-row",
+            ))
+        n = len(flagged)
+        headline = f"{n} curve needs review" if n == 1 else f"{n} curves need review"
+        return ui.div(
+            ui.div(
+                fa("triangle-exclamation"),
+                ui.tags.strong(f" {headline}."),
+                ui.tags.span(
+                    " Resolve each one: adjust and rerun it, accept it with a "
+                    "rationale, or remove it from the published scope.",
+                    class_="review-queue-blurb",
+                ),
+                class_="review-queue-header",
+            ),
+            *rows,
+            class_="review-queue",
+        )
+
+    @reactive.effect
+    @reactive.event(input.review_queue_action)  # no ignore_init: same rule as summary_row_action
+    def _review_queue_action():
+        payload = input.review_queue_action() or {}
+        metric = payload.get("metric")
+        action = payload.get("action")
+        if not metric:
+            return
+        if action == "adjust":
+            with reactive.isolate():
+                state.current_metric.set(metric)
+            request_id = st.next_workspace_modal_request_id(state)
+            st.launch_workspace_modal(state, "analysis", metric, request_id=request_id)
+            return
+        if action not in ("accept", "remove"):
+            return
+        decision = rs.DECISION_FINALIZED if action == "accept" else rs.DECISION_REMOVED
+        pending_review.set({"metric": metric, "decision": decision})
+        accepting = action == "accept"
+        verb = "Accept" if accepting else "Remove"
+        ui.modal_show(ui.modal(
+            ui.tags.p(
+                f"{verb} {_metric_label(metric)}"
+                + ("." if accepting else " from the published scope."),
+            ),
+            ui.input_text_area(
+                ns("review_note"), "Rationale (required)",
+                width="100%", height="70px",
+            ),
+            title=f"{verb} curve",
+            easy_close=True,
+            footer=ui.TagList(
+                ui.modal_button("Cancel"),
+                ui.input_action_button(
+                    ns("review_confirm"), verb,
+                    class_="btn btn-success" if accepting else "btn btn-danger",
+                ),
+            ),
+        ))
+
+    @reactive.effect
+    @reactive.event(input.review_confirm, ignore_init=True)
+    def _review_confirm():
+        pending = pending_review()
+        req(pending and pending.get("metric"))
+        note = (input.review_note() or "").strip()
+        if not note:
+            ui.notification_show(
+                "Add a rationale before continuing.", type="warning", duration=5
+            )
+            return
+        metric = pending["metric"]
+        decision = pending["decision"]
+        pending_review.set(None)
+        ca.set_review_decision(state, metric, decision, note=note, actor="reviewer")
+        done = "Accepted" if decision == rs.DECISION_FINALIZED else "Removed"
+        ui.notification_show(
+            f"{done} {_metric_label(metric)}.", type="message", duration=4
+        )
+        ui.modal_remove()
+
     @render.ui
     def bulk_refresh_status():
         if bulk_recompute_phase() != "refreshing":
@@ -724,21 +875,7 @@ def summary_page_server(input, output, session, state: AppState):
             return no_data_alert()
         metrics = summary_metrics()
         return ui.TagList(
-            explanation_card(
-                "Reference Curves",
-                ui.tags.p(
-                    "Track the continuous analysis workflow for all reference curve "
-                    "metrics in one place."
-                ),
-                ui.tags.p(
-                    "Edit the available stratifications and the stratification used "
-                    "for curves directly in the table."
-                ),
-                ui.tags.p(
-                    "Expand a row to review tabbed analysis summaries and inspect the "
-                    "current reference curve outputs for that metric."
-                ),
-            ),
+            ui.output_ui(ns("review_queue")),
             ui.card(
                 ui.card_header(
                     ui.div(

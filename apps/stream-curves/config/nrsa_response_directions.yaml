@@ -1,0 +1,73 @@
+# Curated ecological direction for NRSA response metrics.
+#
+# Why this file exists: the reference-curve engine needs to know, per metric, whether
+# a HIGHER value means BETTER condition (higher_is_better: true) or WORSE condition
+# (false). This is not stored in any offline registry (config/metric_registry.yaml
+# covers only geomorphic field metrics, and nrsa_metric_catalog.csv has no direction
+# column), so a naive compile defaults every metric to higher-is-better, which is wrong
+# for phosphorus, turbidity, sand/fines, tolerant taxa, etc. The Regional Analysis Agent
+# reads this map so its curves are ecologically correct.
+#
+# This closes the methodology's Unresolved Input 3 (per-metric expected direction) for
+# the NRSA response metrics. It carries the methodology's threshold-status discipline:
+#   source: pilot  -> the value curated in the published NH-58 pilot metric_config
+#   source: expert -> curated here from the metric definition and standard ecology
+#   confidence: high | moderate  -> how settled the direction is
+# Metrics with `review:` set have NO agreed direction of ANY form; the agent does NOT
+# auto-build their curves and routes them to the human review queue instead (never
+# guessing a direction, per the methodology's "do not invent" rule).
+#
+# curve_form selects the scoring shape:
+#   (absent) / monotone -> the one-sided IQR seed, driven by higher_is_better
+#   optimum             -> a two-sided curve, scored 1.0 across the reference
+#                          interquartile core and falling toward 0 in BOTH tails
+# An `optimum` entry carries `higher_is_better: null` on purpose: there is no better
+# direction, the reference distribution itself is the optimum. Metrics that degrade at
+# both extremes (pH, bankfull width:depth ratio) previously had no representable shape
+# and were silently excluded from every assessment along with the STAF functions they
+# were the only metric for.
+#
+# metric_family is the curve engine's eligibility field (categorical is excluded); it is
+# also the bundle's inputType. NRSA responses are continuous, count, or proportion.
+
+metrics:
+  # --- Biology (from the NH-58 pilot, high confidence) ---
+  bent_EPT_NTAX:   {higher_is_better: true,  metric_family: count,      source: pilot,  confidence: high,     note: "EPT (mayfly/stonefly/caddisfly) taxa richness; more sensitive taxa indicate better condition."}
+  bent_HPRIME:     {higher_is_better: true,  metric_family: continuous, source: pilot,  confidence: high,     note: "Benthic Shannon diversity; higher diversity indicates better condition."}
+  bent_TOTLNTAX:   {higher_is_better: true,  metric_family: count,      source: pilot,  confidence: high,     note: "Total benthic taxa richness; higher is better."}
+  bent_TOLRPIND:   {higher_is_better: false, metric_family: proportion, source: pilot,  confidence: high,     note: "Percent tolerant individuals; a higher share of pollution-tolerant taxa indicates worse condition."}
+  fish_NAT_TOTLNTAX: {higher_is_better: true, metric_family: count,     source: expert, confidence: high,     note: "Native fish taxa richness; higher is better."}
+
+  # --- Physicochemistry ---
+  chem_PTL:        {higher_is_better: false, metric_family: continuous, source: pilot,  confidence: high,     note: "Total phosphorus; higher indicates nutrient enrichment (worse)."}
+  chem_NTL_DISS:   {higher_is_better: false, metric_family: continuous, source: pilot,  confidence: high,     note: "Dissolved nitrogen; higher indicates nutrient enrichment (worse)."}
+  chem_TURB:       {higher_is_better: false, metric_family: continuous, source: pilot,  confidence: high,     note: "Turbidity; higher indicates more suspended sediment (worse)."}
+  chem_CHLA:       {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse)."}
+  chem_COND:       {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Specific conductance; higher indicates ionic disturbance (worse)."}
+  chem_DOC:        {higher_is_better: null,  metric_family: continuous, source: expert, review: uncertain,    note: "Dissolved organic carbon is naturally variable and not cleanly directional; needs expert direction for this ecoregion."}
+  chem_PH:         {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: high,     note: "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails."}
+
+  # --- Physical habitat (phab) ---
+  phab_PCT_SAFN:   {higher_is_better: false, metric_family: proportion, source: pilot,  confidence: high,     note: "Percent sand and fines; higher indicates fine-sediment loading (worse)."}
+  phab_XEMBED:     {higher_is_better: false, metric_family: proportion, source: expert, confidence: high,     note: "Percent embeddedness; higher means interstitial spaces filled with fines (worse)."}
+  phab_XCMGW:      {higher_is_better: true,  metric_family: continuous, source: pilot,  confidence: high,     note: "Riparian canopy plus mid-layer plus ground cover; higher is better."}
+  phab_XFC_NAT:    {higher_is_better: true,  metric_family: continuous, source: pilot,  confidence: high,     note: "Natural fish cover; higher is better."}
+  phab_LWDeqVolM100: {higher_is_better: true, metric_family: continuous, source: pilot, confidence: high,     note: "Large woody debris volume per 100 m; higher is better."}
+  phab_LRBS_use:   {higher_is_better: true,  metric_family: continuous, source: pilot,  confidence: moderate, note: "Log relative bed stability; higher (nearer natural) is better. Was degenerate in the pilot (Q25 issue), so expect a review flag."}
+  phab_XCDENMID:   {higher_is_better: true,  metric_family: continuous, source: expert, confidence: moderate, note: "Mid-channel canopy density; higher shading generally better for thermal/light regime."}
+  phab_RP100_cm:   {higher_is_better: true,  metric_family: continuous, source: expert, confidence: moderate, note: "Residual pool depth per 100 m; deeper residual pools generally better habitat."}
+  phab_PCT_FAST:   {higher_is_better: true,  metric_family: proportion, source: expert, confidence: moderate, note: "Percent fast-water (riffle/run) habitat; more generally better for many biota. Ecoregion-dependent."}
+  phab_SINU:       {higher_is_better: true,  metric_family: continuous, source: expert, confidence: moderate, note: "Channel sinuosity; higher generally indicates a more natural planform."}
+  phab_LSUB_DMM:   {higher_is_better: true,  metric_family: continuous, source: expert, confidence: moderate, note: "Log mean substrate diameter; coarser substrate generally better, but valley-type dependent."}
+
+  # --- Two-sided (optimum) responses: degraded at BOTH extremes ---
+  # These have no single "better" direction, which is why they were excluded from every
+  # published assessment (taking Floodplain connectivity and Channel evolution with
+  # them). They are not ambiguous, though: the reference distribution IS the optimum,
+  # and departure in either direction is departure from reference condition.
+  phab_BFWD_RAT:   {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: high,     note: "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core."}
+  phab_XBKF_H:     {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: moderate, note: "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core."}
+
+  # --- Ambiguous / context-dependent: flagged for expert direction, not auto-built ---
+  # (chem_DOC is declared above with the other chemistry metrics.)
+  phab_XBKA:       {higher_is_better: null,  metric_family: continuous, source: expert, review: uncertain,    note: "Mean bank angle; direction is context-dependent and not clearly two-sided either. Needs expert direction."}

@@ -11,10 +11,18 @@ active, then click a library metric to add it. All wiring uses onclick →
 from __future__ import annotations
 
 import math
+import os
+from datetime import datetime, timezone
 
 import pandas as pd
 from shiny import module, reactive, render, ui
 
+from streamcurves.deep_export import (
+    FUNCTION_EXCLUSION_REASONS,
+    deep_read_staf_crosswalk,
+    uncovered_functions_from_mapping,
+    validate_coverage_exceptions,
+)
 from streamcurves.mapping import (
     blank_function_mapping_scaffold,
     metric_usage_counts,
@@ -38,6 +46,17 @@ WORKBENCH_SEP = "@@"
 def js_str(x: str) -> str:
     """Safe JS string escape for embedding payloads in onclick handlers."""
     return str(x).replace("\\", "\\\\").replace("'", "\\'")
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _default_actor() -> str:
+    """Best-effort author name for a coverage exception, same env the library
+    publisher reads for its maintainer audit name."""
+    return (os.environ.get("STAF_LIBRARY_MAINTAINER")
+            or os.environ.get("USERNAME") or os.environ.get("USER") or "")
 
 
 def _is_blank(v) -> bool:
@@ -108,7 +127,12 @@ def discipline_map_ui():
             ),
             ui.output_ui("reset_workbook_ui", inline=True),
             ui.div(
-                ui.input_switch("hide_nodata", "Hide no-data metrics", value=False),
+                # On by default: the filter is workbench_has_data, i.e. exactly the
+                # metric_config membership that uncovered_functions_from_mapping
+                # counts as coverage. Off, the table shows lib: placeholder chips
+                # that read as coverage but are not -- so the table would contradict
+                # the uncovered panel right above it and the stage-4 pill above that.
+                ui.input_switch("hide_nodata", "Hide no-data metrics", value=True),
                 class_="ms-2 mb-0 small",
             ),
             ui.output_ui("status_badge", inline=True),
@@ -117,6 +141,7 @@ def discipline_map_ui():
         ui.layout_columns(
             ui.div(
                 ui.output_ui("unassigned_panel"),
+                ui.output_ui("uncovered_panel"),
                 ui.output_ui("workbench_table"),
                 class_="workbench-left",
             ),
@@ -512,6 +537,112 @@ def discipline_map_server(input, output, session, state: AppState):
             ui.tags.small(", ".join(labels)),
             class_="alert alert-warning py-2 px-3 mb-2 workbench-unassigned",
         )
+
+    # ---- uncovered STAF functions --------------------------------------------
+    # The mirror of unassigned_panel: that one warns about metrics with no function,
+    # this one about functions with no metric. Only the second blocks a publish
+    # (library.publish_version), and it is the gap that shipped every assessment so
+    # far at 8-13 of 20 functions with no record of whether that was deliberate.
+    def _uncovered_functions() -> list[tuple[str, str]]:
+        """[(function_id, function_name)] with no metric and no documented exception.
+
+        Thin reactive shim over the pure helper so this panel and the workflow
+        strip's stage-4 status (assessment_publish.run_snapshot) can never
+        disagree about what counts as a gap.
+        """
+        return uncovered_functions_from_mapping(
+            state.discipline_function_mapping(),
+            state.metric_config(),
+            state.function_coverage_exceptions(),
+        )
+
+    @render.ui
+    def uncovered_panel():
+        if state.metric_config() is None or not state.metric_config():
+            return None
+        gaps = _uncovered_functions()
+        if not gaps:
+            return None
+        n = len(gaps)
+        return ui.div(
+            ui.div(
+                fa("triangle-exclamation"),
+                ui.tags.strong(
+                    f"{n} STAF function{'' if n == 1 else 's'} with no metric"
+                ),
+                ui.input_action_button(
+                    "open_coverage_exception", "Document a gap",
+                    class_="btn btn-outline-secondary btn-sm ms-auto",
+                ),
+                class_="d-flex align-items-center gap-2 mb-1",
+            ),
+            ui.tags.small(
+                "Publishing needs each of the 20 functions either covered by a metric "
+                "or recorded with a reason. Assign a metric from the library, or "
+                "document why it is out of scope: ",
+                class_="text-muted",
+            ),
+            ui.tags.small(", ".join(name for _, name in gaps)),
+            class_="alert alert-warning py-2 px-3 mb-2 workbench-uncovered",
+        )
+
+    @reactive.effect
+    @reactive.event(input.open_coverage_exception)
+    def _open_coverage_exception():
+        gaps = _uncovered_functions()
+        if not gaps:
+            ui.notification_show("Every STAF function is covered or documented.",
+                                 type="message")
+            return
+        ui.modal_show(ui.modal(
+            ui.p("Recorded on the assessment so a reader can tell a deliberate scope "
+                 "decision from an oversight. Travels with the published bundle.",
+                 class_="text-muted small"),
+            ui.input_select("exc_function", "Function",
+                            {fid: name for fid, name in gaps}),
+            ui.input_select("exc_reason", "Reason",
+                            {r: r.replace("-", " ") for r in FUNCTION_EXCLUSION_REASONS}),
+            ui.input_text_area(
+                "exc_justification", "Justification", rows=3, width="100%",
+                placeholder="Why this function carries no metric in this assessment.",
+            ),
+            ui.input_text("exc_recorded_by", "Recorded by", value=_default_actor()),
+            title="Document an uncovered function",
+            footer=ui.TagList(
+                ui.modal_button("Cancel"),
+                ui.input_action_button("exc_save", "Record", class_="btn btn-primary"),
+            ),
+            easy_close=True,
+        ))
+
+    @reactive.effect
+    @reactive.event(input.exc_save)
+    def _save_coverage_exception():
+        record = {
+            "functionId": input.exc_function(),
+            "reason": input.exc_reason(),
+            "justification": (input.exc_justification() or "").strip(),
+            "recordedBy": (input.exc_recorded_by() or "").strip(),
+            "recordedAt": _now_iso(),
+        }
+        existing = list(state.function_coverage_exceptions() or [])
+        try:
+            # Validate the whole set, so one bad entry cannot be smuggled past the
+            # publish gate by being saved alongside good ones.
+            validate_coverage_exceptions(
+                [e for e in existing if e.get("functionId") != record["functionId"]]
+                + [record],
+                deep_read_staf_crosswalk(),
+            )
+        except ValueError as exc:
+            ui.notification_show(str(exc), type="error", duration=10)
+            return
+        state.function_coverage_exceptions.set(
+            [e for e in existing if e.get("functionId") != record["functionId"]] + [record]
+        )
+        ui.modal_remove()
+        ui.notification_show(
+            f"Recorded {record['functionId']} as out of scope.", type="message")
 
     # ---- RIGHT: searchable metric library -------------------------------------
     @render.ui

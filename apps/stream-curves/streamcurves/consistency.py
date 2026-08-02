@@ -43,6 +43,48 @@ def _bind_rows(x) -> pd.DataFrame:
     return pd.concat(frames, ignore_index=True)
 
 
+def build_phase2_ranking(result: dict, phase1_cands: dict, support_threshold: float):
+    """Rank stratifications into the three candidate tiers.
+
+    Lives here rather than in ``views/`` because the headless regional agent
+    needs it too and must never import shiny; ``views/summary_state.py``
+    re-exports it so its own call sites are unchanged.
+    """
+    summary = (result or {}).get("summary")
+    if summary is None or len(summary) == 0:
+        return None
+    summary = summary.copy()
+
+    def count_status(sk: str, status: str) -> int:
+        n = 0
+        for df in (phase1_cands or {}).values():
+            if df is None or len(df) == 0:
+                continue
+            row = df[df["stratification"] == sk]
+            if len(row) > 0 and row["candidate_status"].iloc[0] == status:
+                n += 1
+        return n
+
+    summary["n_promising"] = [count_status(sk, "promising") for sk in summary["stratification"]]
+    summary["n_possible"] = [count_status(sk, "possible") for sk in summary["stratification"]]
+    summary["n_not_promising"] = [
+        count_status(sk, "not_promising") for sk in summary["stratification"]
+    ]
+    denom = (
+        summary["n_promising"] + summary["n_possible"] + summary["n_not_promising"]
+    ).clip(lower=1)
+    summary["pct_promising_possible"] = (summary["n_promising"] + summary["n_possible"]) / denom
+    summary["tier"] = np.select(
+        [
+            summary["consistency_score"] >= support_threshold,
+            summary["consistency_score"] >= support_threshold / 2,
+        ],
+        ["Broad-Use Candidate", "Metric-Specific Candidate"],
+        default="Weak Candidate",
+    )
+    return summary
+
+
 def compute_strat_consistency(
     all_layer1_results,
     all_layer2_results,

@@ -26,7 +26,7 @@ from views import summary_state as ss
 from views.screening_plots import build_screening_plot_from_spec
 from views.state import AppState
 from views.theme import fa
-from views.uihelpers import explanation_card, no_data_alert, status_badge
+from views.uihelpers import no_data_alert, status_badge
 
 logger = logging.getLogger("streamcurves")
 
@@ -171,19 +171,12 @@ def phase3_server(
         if state.data() is None:
             return no_data_alert()
         return ui.div(
-            explanation_card(
-                "Verification",
-                ui.tags.p("Does the top candidate stratification hold up under focused review?"),
-                ui.tags.p(
-                    "Verify finalist stratifications through pattern stability (LOESS), "
-                    "feasibility assessment (sample sizes), and interpretability. Use this "
-                    "tab to review diagnostics before choosing the final curve "
-                    "stratification on the Reference Curves tab."
-                ),
-                ui.tags.p(
-                    ui.tags.strong("Requires:"),
-                    " Exploratory screening completed for this metric.",
-                ),
+            # verification_ui bottoms out in req(finalists()), so an unscreened
+            # metric renders nothing at all -- this line is what makes that silence
+            # legible.
+            ui.tags.p(
+                "Requires exploratory screening for this metric.",
+                class_="text-muted small mb-2",
             ),
             ui.output_ui(ns("metric_info_brief")),
             ui.output_ui(ns("artifact_status")),
@@ -524,7 +517,7 @@ def phase3_server(
                         class_="mb-2",
                     ),
                     ui.tags.p(
-                        "Use the Reference Curves tab to change the final curve "
+                        "Use the Reference curves page to change the final curve "
                         "stratification. This verification tab is advisory only.",
                         class_="text-muted mb-0",
                     ),

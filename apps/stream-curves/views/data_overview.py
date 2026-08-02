@@ -24,10 +24,17 @@ import pandas as pd
 from shiny import module, reactive, render, req, ui
 
 from streamcurves import library as lib
+from streamcurves import overlap
+from streamcurves import run_state as rs
 from streamcurves import session_io as sio
+from streamcurves import workbook as wb
 from streamcurves.cleaning import clean_data
 from streamcurves.derive import derive_variables
-from streamcurves.precheck import run_metric_precheck
+from streamcurves.precheck import (
+    precheck_summary,
+    precheck_warning_rows,
+    run_metric_precheck,
+)
 from streamcurves.workbook import read_input_workbook
 from views import assessment_publish as ap
 from views import state as st
@@ -35,14 +42,18 @@ from views.discipline_map import discipline_map_server, discipline_map_ui
 from views.import_map import import_map_server, import_map_ui
 from views.state import AppState, deep_copy_value, empty_phase2_settings
 from views.theme import STAF_LINKS, bi, fa
+from views.uihelpers import status_badge
 from views.workbook_grid import workbook_grid_server, workbook_grid_ui
 
 logger = logging.getLogger("streamcurves")
 
+# Workspace sections (not sequential steps): the panels of the Refine & map
+# stage, switched by the workflow strip's section chips. Canonical list lives
+# in run_state.STAGE_SECTIONS so the strip, this view, and tests share one
+# vocabulary. The mapping section still hosts the Discipline > Function >
+# Metric editor.
 WORKSPACE_STEPS = [
-    {"value": "workbook", "label": "Workbook"},
-    {"value": "mapping", "label": "Discipline → Function → Metric"},
-    {"value": "validation", "label": "Pre-Run Validation"},
+    {"value": v, "label": label} for v, label in rs.STAGE_SECTIONS["refine_map"]
 ]
 
 
@@ -128,16 +139,25 @@ def data_overview_server(input, output, session, state: AppState):
     metadata_status = reactive.value(None)
     ws_step = reactive.value("workbook")
 
+    @reactive.effect
+    def _mirror_view():
+        # Location mirror for the workflow strip; same resolution order as
+        # main_content below. One writer: this effect.
+        if entry_view() == "wizard":
+            resolved = "wizard"
+        elif state.app_data_loaded():
+            resolved = "workspace"
+        elif entry_view() == "new":
+            resolved = "new"
+        else:
+            resolved = "landing"
+        state.data_setup_view.set(resolved)
+
     # ── landing / entry views ────────────────────────────────────────────────
     @reactive.effect
     @reactive.event(input.start_new)
     def _start_new():
         entry_view.set("new")
-
-    @reactive.effect
-    @reactive.event(input.back_to_landing)
-    def _back():
-        entry_view.set("landing")
 
     @reactive.effect
     @reactive.event(state.app_reset_nonce, ignore_init=True)
@@ -168,16 +188,28 @@ def data_overview_server(input, output, session, state: AppState):
         if loaded and cur == "wizard":
             entry_view.set("landing")
 
-    # ── workspace stepper (sections stay mounted; visibility via <style>) ────
-    for s in WORKSPACE_STEPS:
+    # ── workspace sections (panels stay mounted; visibility via <style>) ─────
+    # The workflow strip's stage-4 chips are the only switcher (the in-card
+    # stepper is gone); they arrive here as section requests.
+    @reactive.effect
+    @reactive.event(state.workspace_open_nonce, ignore_init=True)
+    def _workspace_open_request():
+        # Stage-4 pill: close any open wizard back to the workspace view.
+        entry_view.set("landing")
 
-        def _mk(v):
-            @reactive.effect
-            @reactive.event(input[f"ws_step_{v}"], ignore_init=True)
-            def _step():
-                ws_step.set(v)
+    @reactive.effect
+    @reactive.event(state.workspace_section_nonce, ignore_init=True)
+    def _workspace_section_request():
+        with reactive.isolate():
+            value = state.workspace_section_request()
+        if value in {s["value"] for s in WORKSPACE_STEPS}:
+            ws_step.set(value)
+        entry_view.set("landing")
 
-        _mk(s["value"])
+    @reactive.effect
+    def _mirror_section():
+        # Location mirror for the strip's chip highlight. One writer: this.
+        state.workspace_section.set(ws_step())
 
     @reactive.effect
     @reactive.event(state.app_data_loaded)
@@ -190,23 +222,6 @@ def data_overview_server(input, output, session, state: AppState):
         cur = ws_step()
         css = ".ws-panel {display: none;} " + f".ws-panel-{cur} {{display: block;}}"
         return ui.tags.style(css)
-
-    @render.ui
-    def workspace_stepper():
-        cur = ws_step()
-        links = []
-        for i, s in enumerate(WORKSPACE_STEPS, start=1):
-            links.append(
-                ui.input_action_link(
-                    ns(f"ws_step_{s['value']}"),
-                    ui.TagList(
-                        ui.tags.span(str(i), class_="ws-step-num"),
-                        ui.tags.span(s["label"], class_="ws-step-label"),
-                    ),
-                    class_="ws-step" + (" active" if cur == s["value"] else ""),
-                )
-            )
-        return ui.div(*links, class_="workspace-stepper d-flex flex-wrap gap-2")
 
     @render.text
     def workspace_title():
@@ -251,20 +266,10 @@ def data_overview_server(input, output, session, state: AppState):
         )
 
     def new_project_view():
-        back_label = (
-            " Back to workspace" if state.app_data_loaded() else " Back to start"
-        )
-        return ui.TagList(
-            ui.div(
-                ui.input_action_link(
-                    ns("back_to_landing"),
-                    ui.TagList(bi("arrow-left"), back_label),
-                    class_="small text-decoration-none",
-                ),
-                class_="mb-2",
-            ),
-            import_map_ui("import_map"),
-        )
+        # No back-out link: the workflow strip is the only navigation. Over a
+        # loaded project the stage-4 pill returns to the workspace; on a fresh
+        # project there is nothing behind the wizard to go back to.
+        return ui.TagList(import_map_ui("import_map"))
 
     def workspace_view():
         panels = {
@@ -273,6 +278,7 @@ def data_overview_server(input, output, session, state: AppState):
                 workbook_grid_ui("workbook"),
             ),
             "mapping": discipline_map_ui("discipline_map"),
+            "redundancy": ui.output_ui(ns("redundancy_panel")),
             "validation": ui.output_ui(ns("validation_warnings")),
         }
         return ui.div(
@@ -294,8 +300,6 @@ def data_overview_server(input, output, session, state: AppState):
             ),
             ui.div(
                 ui.output_ui(ns("ws_style")),
-                ui.output_ui(ns("workspace_stepper")),
-                ui.tags.hr(class_="mt-2 mb-3"),
                 *[
                     ui.div(
                         panels[s["value"]],
@@ -414,12 +418,11 @@ def data_overview_server(input, output, session, state: AppState):
         st.reset_all_analysis(state)
 
         state.data.set(fields.get("data"))
-        state.precheck_df.set(fields.get("precheck_df"))
-
+        # precheck_df is restored further down: recomputing it needs metric_config,
+        # which is not set until below.
         state.data_source.set(fields.get("data_source") or "session_file")
         state.data_fingerprint.set(fields.get("data_fingerprint"))
         state.upload_filename.set(fields.get("upload_filename"))
-        state.input_metadata.set(fields.get("input_metadata"))
         state.site_mask_config.set(fields.get("site_mask_config"))
 
         with reactive.isolate():
@@ -445,14 +448,63 @@ def data_overview_server(input, output, session, state: AppState):
             fields.get("config_version") if fields.get("config_version") is not None else startup_ver or 0
         )
 
+        # Workbook tables. Sessions written headlessly (the regional agent, the
+        # SQT migration) never had a workbook to save, so every published
+        # library assessment carries input_metadata: null -- which left the
+        # whole Workbook panel reading "No data loaded." over a perfectly good
+        # dataset, and left Apply a silent no-op. Rebuild them from the configs
+        # we just restored; tables_from_configs keeps each metric's real
+        # settings, so this is a faithful reconstruction rather than defaults.
+        restored_tables = fields.get("input_metadata")
+        if not restored_tables and fields.get("data") is not None:
+            with reactive.isolate():
+                restored_tables = wb.tables_from_configs(
+                    state.data(),
+                    state.metric_config(),
+                    state.predictor_config(),
+                    state.strat_config(),
+                    state.factor_recode_config(),
+                )
+        state.input_metadata.set(restored_tables)
+
+        # Pre-run validation. Same gap as input_metadata above: headless sessions
+        # carry precheck_df: null, and the panel's only guard was a req() that
+        # renders nothing -- so a never-computed precheck looked exactly like a
+        # clean one, which would hide real failures on another dataset. Recompute
+        # rather than leave it blank. Wrapped: a QA table is never worth aborting
+        # an Open over, and the panel says "not run" if this fails.
+        restored_precheck = fields.get("precheck_df")
+        if restored_precheck is None and fields.get("data") is not None:
+            with reactive.isolate():
+                try:
+                    restored_precheck = run_metric_precheck(
+                        state.data(), state.metric_config()
+                    )
+                except Exception:  # noqa: BLE001
+                    logger.warning("Precheck recompute on restore failed", exc_info=True)
+        state.precheck_df.set(restored_precheck)
+
         state.phase1_candidates.set(fields.get("phase1_candidates") or {})
         state.all_layer1_results.set(fields.get("all_layer1_results") or {})
         state.all_layer2_results.set(fields.get("all_layer2_results") or {})
         state.phase2_ranking.set(fields.get("phase2_ranking"))
         state.cross_metric_consistency.set(fields.get("cross_metric_consistency"))
+        state.metric_redundancy.set(fields.get("metric_redundancy"))
         state.phase2_settings.set(fields.get("phase2_settings") or empty_phase2_settings())
         state.phase2_metric_overrides.set(fields.get("phase2_metric_overrides") or {})
-        state.curve_stratification.set(fields.get("curve_stratification") or {})
+        # A completed metric whose stored phase4_signature says decision_type
+        # "none" was built unstratified, but get_metric_curve_stratification
+        # falls back to the phase-1 screening recommendation whenever there is no
+        # stored choice. Once a published session carries screening results that
+        # fallback recomputes a "single" signature, it stops matching the stored
+        # one, and every curve in a completed assessment renders as "not current,
+        # recompute required". Pin the choice the curves were actually built with.
+        restored_curve_strat = dict(fields.get("curve_stratification") or {})
+        for metric, entry in (fields.get("completed_metrics") or {}).items():
+            signature = (entry or {}).get("phase4_signature") or {}
+            if metric not in restored_curve_strat and signature.get("decision_type") == "none":
+                restored_curve_strat[metric] = "none"
+        state.curve_stratification.set(restored_curve_strat)
         state.summary_available_overrides.set(fields.get("summary_available_overrides") or {})
         state.summary_edit_notes.set(fields.get("summary_edit_notes") or {})
         state.phase3_verification.set(fields.get("phase3_verification") or {})
@@ -468,6 +520,7 @@ def data_overview_server(input, output, session, state: AppState):
         state.column_sources.set(fields.get("column_sources") or {})
         state.column_functions.set(fields.get("column_functions") or {})
         state.region_of_applicability.set(fields.get("region_of_applicability"))
+        state.candidate_sites.set(fields.get("candidate_sites"))
         state.easi_screening_sites.set(fields.get("easi_screening_sites"))
         state.easi_screening_metrics.set(fields.get("easi_screening_metrics"))
         state.easi_screening_criteria.set(fields.get("easi_screening_criteria"))
@@ -477,6 +530,11 @@ def data_overview_server(input, output, session, state: AppState):
         state.screening_run.set(fields.get("screening_run"))
         state.site_exclusions.set(fields.get("site_exclusions") or [])
         state.validation_records.set(fields.get("validation_records") or [])
+        # Absent in a session written before gaps had to be justified -> no
+        # exceptions, which is the honest reading of that file.
+        state.function_coverage_exceptions.set(
+            fields.get("function_coverage_exceptions") or []
+        )
 
         mapping = fields.get("discipline_function_mapping")
         if mapping is not None:
@@ -695,7 +753,7 @@ def data_overview_server(input, output, session, state: AppState):
         _request_data_tab(wizard_step=None if has_data else 1)
         ui.notification_show(
             f"Loaded {name} v{ver}. Everything from the saved run is restored; use the "
-            "stage banner to revisit any step.",
+            "workflow strip to revisit any stage.",
             type="message",
             duration=7,
         )
@@ -717,8 +775,8 @@ def data_overview_server(input, output, session, state: AppState):
             )
             return
         ui.notification_show(
-            f"Loaded {rq.get('source_name') or 'assessment'}. Open Reference Curves to keep "
-            "working, or review inputs in Data & Setup.",
+            f"Loaded {rq.get('source_name') or 'assessment'}. Open Reference curves in the "
+            "workflow strip to keep working, or revisit earlier stages.",
             type="message",
             duration=7,
         )
@@ -799,20 +857,56 @@ def data_overview_server(input, output, session, state: AppState):
             )
         )
 
+    # Badge class per precheck_status. Anything unrecognized falls back to the
+    # neutral badge rather than being dropped from the roll-up.
+    _PRECHECK_BADGE = {
+        "pass": "bg-success",
+        "categorical": "bg-secondary",
+        "caution": "bg-warning text-dark",
+        "no_data": "bg-danger",
+        "fail": "bg-danger",
+        "missing_column": "bg-danger",
+    }
+
     @render.ui
     def validation_warnings():
+        # Three distinguishable states. The old version had one bare
+        # req(precheck is not None), which rendered NOTHING when precheck had
+        # never run -- indistinguishable from a clean dataset.
         precheck = state.precheck_df()
-        req(precheck is not None)
-        n_fail = int((precheck["precheck_status"] == "fail").sum())
-        n_caution = int((precheck["precheck_status"] == "caution").sum())
-        n_pass = int((precheck["precheck_status"] == "pass").sum())
-        header = ui.div(
-            ui.tags.span(f"{n_pass} pass", class_="badge bg-success me-1"),
-            ui.tags.span(f"{n_caution} caution", class_="badge bg-warning text-dark me-1"),
-            ui.tags.span(f"{n_fail} fail", class_="badge bg-danger"),
-            class_="mb-2",
-        )
-        show = precheck[
+        summary = precheck_summary(precheck)
+        if not summary["available"]:
+            return ui.div(
+                ui.tags.p("Validation has not run for this project.", class_="mb-1"),
+                ui.tags.p(
+                    "It runs when a project loads and whenever you apply workbook "
+                    "changes. Open the Workbook section and apply to compute it now.",
+                    class_="text-muted small mb-0",
+                ),
+                class_="alert alert-secondary py-2 px-3",
+            )
+
+        badges = [
+            ui.tags.span(
+                f"{n} {status.replace('_', ' ')}",
+                class_=f"badge {_PRECHECK_BADGE.get(status, 'bg-secondary')} me-1",
+            )
+            for status, n in sorted(summary["counts"].items())
+        ]
+        header = ui.div(*badges, class_="mb-2")
+
+        rows = precheck_warning_rows(precheck)
+        if len(rows) == 0:
+            return ui.TagList(
+                header,
+                ui.tags.p(
+                    f"{summary['n_total']} metrics checked, no warnings.",
+                    class_="text-muted small mb-0",
+                ),
+            )
+
+        # Warning rows only: a full all-pass dump buried the rows that matter.
+        show = rows[
             [
                 "metric", "display_name", "n_obs", "n_missing", "pct_missing",
                 "flag_low_n", "flag_low_variance", "flag_impossible_values",
@@ -821,6 +915,10 @@ def data_overview_server(input, output, session, state: AppState):
         ]
         return ui.TagList(
             header,
+            ui.tags.p(
+                f"{len(show)} of {summary['n_total']} metrics need a look.",
+                class_="text-muted small mb-2",
+            ),
             ui.tags.table(
                 ui.tags.thead(
                     ui.tags.tr(*[ui.tags.th(c) for c in show.columns])
@@ -831,6 +929,115 @@ def data_overview_server(input, output, session, state: AppState):
                         for row in show.itertuples(index=False)
                     ]
                 ),
+                class_="table table-sm table-striped small",
+            ),
+        )
+
+    def _redundancy_table(state) -> pd.DataFrame | None:
+        """The stored RED-01 matrix, or one computed from the restored project.
+
+        Published assessments written before this field existed carry no matrix,
+        and there is no reason to make a reviewer republish to see one, so fall
+        back to computing it from the data and configs already in hand.
+        """
+        stored = state.metric_redundancy()
+        if stored is not None:
+            return stored
+        data = state.data()
+        metric_config = state.metric_config() or {}
+        if data is None or not metric_config:
+            return None
+        column_functions = state.column_functions() or {}
+        metrics, _ = overlap.roles_from_configs(
+            metric_config, None, data_columns=data.columns)
+        if len(metrics) < 2:
+            return None
+        analysis = overlap.analyze_overlap(
+            data, metric_columns=metrics, partner_columns=metrics,
+            partner_role=overlap.PARTNER_METRIC, column_functions=column_functions,
+        )
+        return overlap.redundancy_view(analysis, column_functions)
+
+    @render.ui
+    def redundancy_panel():
+        data = state.data()
+        metric_config = state.metric_config() or {}
+        n_metrics = len([m for m in metric_config if data is not None and m in data.columns])
+        if data is None or n_metrics < 2:
+            return ui.div(
+                ui.tags.p(
+                    "Redundancy needs at least two numeric metrics. This project "
+                    f"has {n_metrics}.",
+                    class_="mb-0",
+                ),
+                class_="alert alert-secondary py-2 px-3",
+            )
+
+        table = _redundancy_table(state)
+        header = ui.TagList(
+            ui.tags.p(
+                "Every pair of metric columns is correlated on this project's site "
+                "data. Spearman rank correlation is primary; Pearson is shown "
+                "alongside so you can see when the two disagree. RED-01 flags a pair "
+                f"at absolute Spearman {overlap.DEFAULT_RHO_THRESHOLD:.2f} or above.",
+                class_="small mb-1",
+            ),
+            ui.tags.p(
+                "A flagged pair is evidence that two metrics carry the same signal. "
+                "It is not an automatic action. Decide which one to keep, then drop "
+                "the other in Function mapping and record why.",
+                class_="text-muted small mb-2",
+            ),
+        )
+
+        if table is None:
+            return ui.TagList(header, ui.div(
+                ui.tags.p("Redundancy has not been computed for this project.",
+                          class_="mb-0"),
+                class_="alert alert-secondary py-2 px-3",
+            ))
+        if len(table) == 0:
+            return ui.TagList(header, ui.tags.p(
+                f"No metric pair reached the reporting floor of "
+                f"{overlap.DEFAULT_REPORT_FLOOR:.2f}. Nothing to review here.",
+                class_="text-muted small mb-0",
+            ))
+
+        def label(metric: str) -> str:
+            return (metric_config.get(metric) or {}).get("display_name") or metric
+
+        def function_cell(row) -> str:
+            if row["same_function"]:
+                return str(row["function_a"])
+            return f"{row['function_a']} / {row['function_b']}"
+
+        flagged = int(table["red01_spearman_flag"].sum())
+        rows = []
+        for row in table.itertuples(index=False):
+            r = row._asdict()
+            rows.append(ui.tags.tr(
+                ui.tags.td(label(r["metric_a"])),
+                ui.tags.td(label(r["metric_b"])),
+                ui.tags.td(function_cell(r)),
+                ui.tags.td(f"{r['spearman']:.2f}"),
+                ui.tags.td("" if r["pearson"] is None else f"{r['pearson']:.2f}"),
+                ui.tags.td(
+                    status_badge("caution", "Flagged") if r["red01_spearman_flag"] else ""
+                ),
+            ))
+        return ui.TagList(
+            header,
+            ui.tags.p(
+                f"{len(table)} pair(s) above the reporting floor, {flagged} flagged "
+                "by RED-01.",
+                class_="text-muted small mb-2",
+            ),
+            ui.tags.table(
+                ui.tags.thead(ui.tags.tr(*[
+                    ui.tags.th(c) for c in
+                    ("Metric A", "Metric B", "Function", "Spearman", "Pearson", "RED-01")
+                ])),
+                ui.tags.tbody(*rows),
                 class_="table table-sm table-striped small",
             ),
         )

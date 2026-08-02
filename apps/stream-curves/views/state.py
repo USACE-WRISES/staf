@@ -126,6 +126,9 @@ class AppState:
     # ── phase 2 ─────────────────────────────────────────────────────────────
     phase2_ranking: reactive.Value = _rv()
     cross_metric_consistency: reactive.Value = _rv()
+    # RED-01 pairwise metric redundancy. Distinct from cross_metric_consistency
+    # above, which is stratification consistency across metrics.
+    metric_redundancy: reactive.Value = _rv()
     phase2_settings: reactive.Value = _rv_factory(empty_phase2_settings)
     phase2_metric_overrides: reactive.Value = _rv_factory(dict)
     curve_stratification: reactive.Value = _rv_factory(dict)
@@ -155,6 +158,11 @@ class AppState:
     startup_discipline_function_mapping: reactive.Value = _rv()
     mapping_user_touched: reactive.Value = _rv(False)
     workbook_provided_mapping: reactive.Value = _rv(False)
+    # Documented reasons a STAF function carries no metric; the publish gate in
+    # library.publish_version refuses a version while any of the 20 is neither
+    # covered nor listed here. Shape per entry: functionId / reason /
+    # justification / recordedBy (see deep_export.validate_coverage_exceptions).
+    function_coverage_exceptions: reactive.Value = _rv_factory(list)
 
     custom_groupings: reactive.Value = _rv_factory(dict)
     custom_grouping_counter: reactive.Value = _rv_factory(dict)
@@ -175,6 +183,13 @@ class AppState:
     # ride into the DEEP bundle meta + the assessment library). Shape:
     # {"kind": "ecoregion"|"state"|"polygon", "code", "name", "polygon"?}.
     region_of_applicability: reactive.Value = _rv()
+
+    # The wizard's assembled candidate table (site_id, lat, lon, .source and the
+    # source metadata), persisted verbatim so re-entry restores the candidates it
+    # actually built. The screening table cannot stand in for this: it drops the
+    # coordinates, and its ``state`` column is the EASI run state, not the US
+    # state this frame means by that name.
+    candidate_sites: reactive.Value = _rv()             # DataFrame
 
     # ── EASI reference-condition screening (session schema v2) ──────────────
     # Candidate decisions from the vendored EASI batch engine, keyed by external
@@ -210,6 +225,13 @@ class AppState:
     nav_request_nonce: reactive.Value = _rv(0)
     wizard_step_request: reactive.Value = _rv()
     wizard_step_nonce: reactive.Value = _rv(0)
+    # Refine & map stage requests: workspace_open closes any open wizard back to
+    # the opened-project workspace (the strip's stage-4 pill); section_request
+    # picks one of run_state.STAGE_SECTIONS["refine_map"] panels (the strip's
+    # section chips). Transient: not in SESSION_FIELDS.
+    workspace_open_nonce: reactive.Value = _rv(0)
+    workspace_section_request: reactive.Value = _rv()
+    workspace_section_nonce: reactive.Value = _rv(0)
     # Wizard hydration: bumped when the Data & Setup wizard should seed its
     # local widgets from the saved region/screening state (stage-banner clicks
     # and header Open on restored sessions). Transient: not in SESSION_FIELDS.
@@ -217,6 +239,16 @@ class AppState:
     # Header "Open" asks Data & Setup to show the Open dialog (library picker
     # plus project-file upload). Transient: not in SESSION_FIELDS.
     open_dialog_nonce: reactive.Value = _rv(0)
+
+    # ── location mirrors (shell/wizard -> workflow strip) ───────────────────
+    # The workflow strip derives its "you are here" highlight from these; each
+    # is written by exactly one effect (app.py navbar, data_overview view,
+    # import_map step) and only ever read in renders. All transient: not in
+    # SESSION_FIELDS.
+    current_tab: reactive.Value = _rv("data")
+    data_setup_view: reactive.Value = _rv("landing")
+    wizard_current_step: reactive.Value = _rv(1)
+    workspace_section: reactive.Value = _rv("workbook")
 
     # Cross-tab session restore request: a view loads a session payload and asks
     # the Data & Setup tab to restore it (bump the nonce). The Open dialog now
@@ -373,6 +405,7 @@ def reset_all_analysis(state: AppState) -> None:
     state.phase1_candidates.set({})
     state.phase2_ranking.set(None)
     state.cross_metric_consistency.set(None)
+    state.metric_redundancy.set(None)
     state.phase2_settings.set(empty_phase2_settings())
     state.phase2_metric_overrides.set({})
     state.curve_stratification.set({})
@@ -408,6 +441,7 @@ def reset_app_to_startup(state: AppState) -> None:
         state.upload_filename.set(None)
         state.session_name.set(None)
         state.region_of_applicability.set(None)
+        state.candidate_sites.set(None)
         state.easi_screening_sites.set(None)
         state.easi_screening_metrics.set(None)
         state.easi_screening_criteria.set(None)

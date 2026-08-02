@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from conftest import documented_exclusions
 from streamcurves import library as lib
 from streamcurves import session_io as sio
 from streamcurves.deep_export import build_deep_assessment_bundle
@@ -38,7 +39,10 @@ def _bundle():
             "sort_order": [1],
         }
     )
-    return build_deep_assessment_bundle(rows, mapping, {}, {"region": REGION})
+    return build_deep_assessment_bundle(
+        rows, mapping, {},
+        {"region": REGION, "functionCoverageExceptions": documented_exclusions()},
+    )
 
 
 def _session_payload():

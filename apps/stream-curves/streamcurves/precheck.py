@@ -11,6 +11,13 @@ from ._rcompat import as_numeric_r, r_round
 
 logger = logging.getLogger("streamcurves")
 
+# Fallback sample-size floor, matching every entry in config/metric_registry.yaml.
+# metric_config dicts do not all carry the key: sessions written headlessly (the
+# regional agent, the SQT migration) and wb.tables_from_configs reconstructions
+# both omit it. A missing floor should fall back to the registry default, never
+# raise -- a KeyError here aborts an entire library Open over a QA table.
+DEFAULT_MIN_SAMPLE_SIZE = 10
+
 _PRECHECK_COLUMNS = [
     "metric",
     "display_name",
@@ -99,7 +106,9 @@ def run_metric_precheck(data: pd.DataFrame, metric_config) -> pd.DataFrame:
                     **_NA_STATS,
                     "flag_low_variance": False,
                     "flag_impossible_values": False,
-                    "flag_low_n": bool(n_obs < mc["min_sample_size"]),
+                    "flag_low_n": bool(
+                        n_obs < mc.get("min_sample_size", DEFAULT_MIN_SAMPLE_SIZE)
+                    ),
                     "precheck_status": "categorical",
                 }
             )
@@ -138,7 +147,7 @@ def run_metric_precheck(data: pd.DataFrame, metric_config) -> pd.DataFrame:
         flag_impossible = False
         if mc.get("metric_family") == "proportion":
             flag_impossible = bool(np.any((v < 0) | (v > 100)))
-        flag_low_n = bool(n_obs < mc["min_sample_size"])
+        flag_low_n = bool(n_obs < mc.get("min_sample_size", DEFAULT_MIN_SAMPLE_SIZE))
 
         status = "pass"
         if flag_low_n:
@@ -175,3 +184,66 @@ def run_metric_precheck(data: pd.DataFrame, metric_config) -> pd.DataFrame:
     logger.info("Precheck complete: %d metrics evaluated", len(results))
 
     return results
+
+
+# --------------------------------------------------------------------------- #
+# Reading a precheck table
+#
+# One definition of "something is wrong here", shared by the Pre-run validation
+# panel and the workflow strip's section chip so the two can never disagree
+# about the count -- the same reason deep_export.uncovered_functions_from_mapping
+# exists for the mapping panel.
+# --------------------------------------------------------------------------- #
+
+# A categorical metric is not a problem by itself: it simply has no numeric
+# stats to judge. It becomes a warning only when one of the flags below fires.
+PRECHECK_OK_STATUSES = ("pass", "categorical")
+
+_PRECHECK_FLAG_COLUMNS = (
+    "flag_low_n",
+    "flag_low_variance",
+    "flag_impossible_values",
+)
+
+
+def _precheck_usable(precheck) -> bool:
+    """A precheck frame we can read: present, non-empty, and status-bearing."""
+    return (
+        isinstance(precheck, pd.DataFrame)
+        and len(precheck) > 0
+        and "precheck_status" in precheck.columns
+    )
+
+
+def precheck_warning_rows(precheck) -> pd.DataFrame:
+    """Rows worth a reader's attention: a non-OK status, or any flag set.
+
+    Flags are tri-state (True / False / None for "not computable", e.g. sd of a
+    single observation), so only an explicit True counts -- None is absence of a
+    verdict, not a warning.
+    """
+    if not _precheck_usable(precheck):
+        return pd.DataFrame()
+    status = precheck["precheck_status"].astype(str)
+    mask = ~status.isin(PRECHECK_OK_STATUSES)
+    for col in _PRECHECK_FLAG_COLUMNS:
+        if col in precheck.columns:
+            mask = mask | (precheck[col] == True)  # noqa: E712 - None must not match
+    return precheck[mask]
+
+
+def precheck_summary(precheck) -> dict:
+    """Roll-up for the validation panel and the strip chip.
+
+    ``available`` False means precheck has not run for this project -- which a
+    reader must be able to tell apart from "ran, found nothing".
+    """
+    if not _precheck_usable(precheck):
+        return {"available": False, "n_total": 0, "n_warnings": 0, "counts": {}}
+    counts = precheck["precheck_status"].astype(str).value_counts().to_dict()
+    return {
+        "available": True,
+        "n_total": int(len(precheck)),
+        "n_warnings": int(len(precheck_warning_rows(precheck))),
+        "counts": {str(k): int(v) for k, v in counts.items()},
+    }
