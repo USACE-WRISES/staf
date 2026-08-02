@@ -35,6 +35,23 @@ outputs/
 .env
 
 # =========================
+# Regional-agent run artifacts
+# =========================
+# One run writes ~1.3 MB of caches and tables; the citable record is the
+# provenance.json published alongside each library version, not these.
+**/screening_cache_*.json
+**/streamcat_cache_*.csv
+
+# =========================
+# Internal working material - never publish
+# =========================
+# This repository is public. notes/ holds internal program and drafting material:
+# the EMRRP proposal set (scope of work, PMP, budget correspondence), webinar decks
+# and their scratch folders, in-review manuscripts, and technical-note drafts.
+# Roughly 200 MB of it, none of it source. Keep the whole tree local.
+notes/
+
+# =========================
 # Misc
 # =========================
 .DS_Store
