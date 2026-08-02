@@ -347,7 +347,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=8"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=9"),
                     ui.tags.link(rel="stylesheet", href="deep.css?v=7"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -1132,8 +1132,12 @@ def server(input, output, session_):  # noqa: C901
                     class_="deep-assess-detail")
             return ui.div("Select an assessment above to see its details.",
                           class_="deep-assess-placeholder")
-        nfun = len([fn for fn in la.metrics_by_function if fn.get("metrics")])
+        cov = assessments.coverage_of(la)
+        nfun = cov["covered"]
         nmet = sum(len(fn.get("metrics", [])) for fn in la.metrics_by_function)
+        cov_note = ("" if nfun >= cov["total"]
+                    else f" ({cov['excluded']} documented)" if cov["declared"]
+                    else " (not declared)")
         lib = la.raw.get("library") or {}
         region = la.raw.get("region") or lib.get("region") or {}
         life = session.lifecycle_status(la.raw)
@@ -1149,7 +1153,8 @@ def server(input, output, session_):  # noqa: C901
         return ui.div(
             ui.div(ui.span("✓ ", class_="deep-ok"), la.assessment_name,
                    class_="deep-assess-detail-name"),
-            ui.div(f"{nmet} metrics · {nfun}/20 functions" + (f" · {ref}" if ref else ""),
+            ui.div(f"{nmet} metrics · {nfun}/{cov['total']} functions{cov_note}"
+                   + (f" · {ref}" if ref else ""),
                    class_="deep-assess-detail-line"),
             *info,
             ui.div(ui.input_action_button("to_measure", "Continue to assessment",
@@ -1553,6 +1558,13 @@ def server(input, output, session_):  # noqa: C901
             chips.append(ui.div(ui.span(cat, class_="lab"), val, class_="sfari-cat-chip"))
         pct = (n_scored / n_total * 100) if n_total else 0
         report_primary = bool(n_total) and n_scored == n_total
+        # Two denominators, two meanings. The progress bar measures DATA ENTRY over
+        # the functions this bundle can score, so a field user can still reach 100%
+        # on what they are able to fill in. The caption reports FRAMEWORK COVERAGE
+        # against all 20, so "12 / 12 functions scored" can no longer read as a
+        # complete STAF assessment.
+        cov = assessments.coverage_of(loaded_assessment())
+        cov_caption = assessments.coverage_caption(cov)
         return ui.TagList(
             ui.h4("Live rollup"),
             ui.div(ui.div(f"{eci:.2f}", class_="sfari-eci"),
@@ -1564,6 +1576,7 @@ def server(input, output, session_):  # noqa: C901
             ui.div(*chips, class_="sfari-cat-chips"),
             ui.div(ui.tags.span(style=f"width:{pct:.0f}%;"), class_="sfari-progress-bar"),
             ui.div(f"{n_scored} / {n_total} functions scored", class_="sfari-progress"),
+            ui.div(cov_caption, class_="sfari-coverage-note") if cov_caption else None,
             ui.tags.button("Open report", {"data-report": "1", "type": "button"},
                            class_="sfari-btn sfari-rollup-report" + (" primary" if report_primary else "")),
         )
@@ -1599,8 +1612,22 @@ def server(input, output, session_):  # noqa: C901
             style="display:flex;gap:16px;align-items:flex-start;margin-bottom:12px;")
 
         subs = sc["subIndices"]; eci = sc["ecosystemConditionIndex"]
+        # The index is computed over the functions this assessment covers, which is
+        # correct NA handling -- but unmarked it reads as comparable to a full
+        # 20-function index. The caveat travels with the number, not somewhere else.
+        rcov = assessments.coverage_of(la) if la else None
+        caveat = None
+        if rcov and rcov["covered"] < rcov["total"]:
+            excl = (f"{rcov['excluded']} documented as out of scope"
+                    if rcov["declared"] else "coverage not declared")
+            caveat = ui.div(
+                f"Index computed over the {rcov['covered']} of {rcov['total']} STAF "
+                f"functions this assessment covers ({excl}). Not directly comparable "
+                "to a full-framework index.",
+                style="font-size:11px;color:#8a93a3;font-style:italic;margin-top:4px;")
         summary = ui.div(
             _bar("Ecosystem Condition Index", eci, scoring.index_band_color(eci)),
+            caveat,
             _bar("Physical outcome", subs["physical"], scoring.index_band_color(subs["physical"]), indent=True),
             _bar("Chemical outcome", subs["chemical"], scoring.index_band_color(subs["chemical"]), indent=True),
             _bar("Biological outcome", subs["biological"], scoring.index_band_color(subs["biological"]), indent=True))

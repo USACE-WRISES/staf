@@ -56,6 +56,63 @@ class LoadedAssessment:
 
 
 # --------------------------------------------------------------------------- #
+# STAF function coverage
+# --------------------------------------------------------------------------- #
+def coverage_of(assessment) -> dict:
+    """How much of the 20-function STAF framework an assessment covers.
+
+    A bundle carries only the functions it scores, so the number of blocks is not
+    the framework size — reading it as one is what made a 12-function assessment
+    report "12 / 12 functions scored" at 100%. Bundles published after the coverage
+    gate declare the real denominator; older ones are derived, with ``declared``
+    False so the UI can say "not declared" instead of implying the gaps were chosen.
+    """
+    raw = getattr(assessment, "raw", None)
+    if raw is None:
+        raw = assessment if isinstance(assessment, dict) else {}
+    mbf = raw.get("metricsByFunction") or []
+    covered = len([fn for fn in mbf if fn.get("metrics")])
+
+    declared = raw.get("functionCoverage")
+    if isinstance(declared, dict) and declared.get("total"):
+        return {
+            "total": int(declared.get("total") or 0),
+            "covered": int(declared.get("covered") or covered),
+            "excluded": int(declared.get("excluded") or 0),
+            "missing": int(declared.get("missing") or 0),
+            "exclusions": declared.get("exclusions") or [],
+            "declared": True,
+        }
+
+    try:
+        total = len(config.functions_by_id())
+    except Exception:  # noqa: BLE001 - a coverage caption must never break a render
+        total = 20
+    return {
+        "total": total,
+        "covered": covered,
+        "excluded": 0,
+        "missing": max(0, total - covered),
+        "exclusions": [],
+        "declared": False,
+    }
+
+
+def coverage_caption(coverage: dict) -> str:
+    """One-line summary for the rail, the picker card, and the report."""
+    if not coverage or not coverage.get("total"):
+        return ""
+    base = (f"Assessment covers {coverage['covered']} of {coverage['total']} "
+            "STAF functions")
+    if coverage["covered"] >= coverage["total"]:
+        return base
+    if coverage.get("declared"):
+        n = coverage.get("excluded") or 0
+        return f"{base} · {n} documented exclusion{'' if n == 1 else 's'}"
+    return f"{base} · coverage not declared"
+
+
+# --------------------------------------------------------------------------- #
 # Registry (predefined) + upload
 # --------------------------------------------------------------------------- #
 def list_predefined() -> list[dict]:
