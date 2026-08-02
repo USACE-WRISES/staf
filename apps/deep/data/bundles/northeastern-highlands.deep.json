@@ -5,44 +5,579 @@
   "assessmentName": "Northeastern Highlands reference assessment",
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-  "applicability": "",
+  "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+  "applicability": "Northeastern Highlands",
   "metricsByFunction": [
     {
-      "functionId": "hyporheic-connectivity",
-      "functionName": "Hyporheic connectivity",
-      "discipline": "Hydraulics",
+      "functionId": "catchment-hydrology",
+      "functionName": "Catchment hydrology",
+      "discipline": "Hydrology",
       "metrics": [
         {
-          "metricId": "spring-phab-pct-safn",
-          "metricName": "Sand and fines",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Sand and fines (%)",
-          "howToMeasure": "",
+          "metricId": "spring-pctcrop2019ws",
+          "metricName": "Cultivated crops",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Cultivated crops (%)",
+          "howToMeasure": "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing.",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
                 "x": 0.0,
                 "y": 1.0
               },
               {
-                "x": 9.3073593075,
+                "x": 0.0,
                 "y": 1.0
               },
               {
-                "x": 63.809523805,
+                "x": 0.07,
                 "y": 0.7
               },
               {
-                "x": 136.47907646833335,
+                "x": 0.16333333333333333,
                 "y": 0.3
               },
               {
-                "x": 190.9812409658333,
+                "x": 0.23333333333333336,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-pctimp2019ws",
+          "metricName": "Impervious surface",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Impervious surface (%)",
+          "howToMeasure": "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 0.12,
+                "y": 1.0
+              },
+              {
+                "x": 0.71,
+                "y": 0.7
+              },
+              {
+                "x": 1.4966666666666666,
+                "y": 0.3
+              },
+              {
+                "x": 2.086666666666667,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "surface-water-storage",
+      "functionName": "Surface water storage",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-pcthbwet2019ws",
+          "metricName": "Herbaceous wetland",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Herbaceous wetland (%)",
+          "howToMeasure": "Watershed herbaceous wetland (%); wetlands store surface water and attenuate flow peaks.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.030000000000000002,
+                "y": 0.3
+              },
+              {
+                "x": 0.07,
+                "y": 0.7
+              },
+              {
+                "x": 0.59,
+                "y": 1.0
+              },
+              {
+                "x": 0.746,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-pctwdwet2019ws",
+          "metricName": "Woody wetland",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Woody wetland (%)",
+          "howToMeasure": "Watershed woody wetland (%); wetlands store surface water and attenuate flow peaks.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.5014285714285714,
+                "y": 0.3
+              },
+              {
+                "x": 1.17,
+                "y": 0.7
+              },
+              {
+                "x": 6.81,
+                "y": 1.0
+              },
+              {
+                "x": 8.501999999999999,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "reach-inflow",
+      "functionName": "Reach inflow",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-rddensws",
+          "metricName": "Road density",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Road density (km/sq km)",
+          "howToMeasure": "Watershed road density; roads concentrate and route runoff to the channel, so higher density means more concentrated inflow pressure. Directional proxy shared with the EASI screening metric; it does not count outfalls.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.07305,
+                "y": 1.0
+              },
+              {
+                "x": 0.3303,
+                "y": 1.0
+              },
+              {
+                "x": 1.1878,
+                "y": 0.7
+              },
+              {
+                "x": 2.3311333333333333,
+                "y": 0.3
+              },
+              {
+                "x": 3.1886333333333328,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "streamflow-regime",
+      "functionName": "Streamflow regime",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-bfiws",
+          "metricName": "Base flow index",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Base flow index (%)",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 20.288614285714285,
+                "y": 0.3
+              },
+              {
+                "x": 47.3401,
+                "y": 0.7
+              },
+              {
+                "x": 52.7813,
+                "y": 1.0
+              },
+              {
+                "x": 54.41366,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-damdensws",
+          "metricName": "Dam density",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Dam density (per sq km)",
+          "howToMeasure": "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 0.0123,
+                "y": 0.7
+              },
+              {
+                "x": 0.028700000000000003,
+                "y": 0.3
+              },
+              {
+                "x": 0.041,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "functionName": "Low flow and baseflow dynamics",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-bfiws",
+          "metricName": "Base flow index",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Base flow index (%)",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 20.288614285714285,
+                "y": 0.3
+              },
+              {
+                "x": 47.3401,
+                "y": 0.7
+              },
+              {
+                "x": 52.7813,
+                "y": 1.0
+              },
+              {
+                "x": 54.41366,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function"
+        },
+        {
+          "metricId": "spring-phab-bfwd-rat",
+          "metricName": "BFWD_RAT",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "BFWD_RAT",
+          "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 3.8987319999999954,
+                "y": 0.3
+              },
+              {
+                "x": 9.160185382249997,
+                "y": 0.7
+              },
+              {
+                "x": 11.993275664999999,
+                "y": 1.0
+              },
+              {
+                "x": 20.087819330000002,
+                "y": 1.0
+              },
+              {
+                "x": 22.920909612750002,
+                "y": 0.7
+              },
+              {
+                "x": 28.182362995000005,
+                "y": 0.3
+              },
+              {
+                "x": 36.27690666000001,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function"
+        },
+        {
+          "metricId": "spring-phab-rp100-cm",
+          "metricName": "RP100_cm",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "RP100_cm",
+          "howToMeasure": "Residual pool depth per 100 m; deeper residual pools generally better habitat.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 2.235243012,
+                "y": 0.3
+              },
+              {
+                "x": 5.215567028,
+                "y": 0.7
+              },
+              {
+                "x": 15.45063347,
+                "y": 1.0
+              },
+              {
+                "x": 18.5211534026,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "high-flow-dynamics",
+      "functionName": "High flow dynamics",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-pctimp2019ws",
+          "metricName": "Impervious surface",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Impervious surface (%)",
+          "howToMeasure": "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 0.12,
+                "y": 1.0
+              },
+              {
+                "x": 0.71,
+                "y": 0.7
+              },
+              {
+                "x": 1.4966666666666666,
+                "y": 0.3
+              },
+              {
+                "x": 2.086666666666667,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function"
+        }
+      ]
+    },
+    {
+      "functionId": "floodplain-connectivity",
+      "functionName": "Floodplain connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-phab-bfwd-rat",
+          "metricName": "BFWD_RAT",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "BFWD_RAT",
+          "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 3.8987319999999954,
+                "y": 0.3
+              },
+              {
+                "x": 9.160185382249997,
+                "y": 0.7
+              },
+              {
+                "x": 11.993275664999999,
+                "y": 1.0
+              },
+              {
+                "x": 20.087819330000002,
+                "y": 1.0
+              },
+              {
+                "x": 22.920909612750002,
+                "y": 0.7
+              },
+              {
+                "x": 28.182362995000005,
+                "y": 0.3
+              },
+              {
+                "x": 36.27690666000001,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function"
+        },
+        {
+          "metricId": "spring-phab-xbkf-h",
+          "metricName": "XBKF_H",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "XBKF_H",
+          "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.05454545399999999,
+                "y": 0.3
+              },
+              {
+                "x": 0.20522727229999999,
+                "y": 0.7
+              },
+              {
+                "x": 0.286363636,
+                "y": 1.0
+              },
+              {
+                "x": 0.518181818,
+                "y": 1.0
+              },
+              {
+                "x": 0.5993181817,
+                "y": 0.7
+              },
+              {
+                "x": 0.75,
+                "y": 0.3
+              },
+              {
+                "x": 0.9818181819999999,
                 "y": 0.0
               }
             ]
@@ -53,45 +588,485 @@
       ]
     },
     {
-      "functionId": "bed-composition-bedform-dynamics",
-      "functionName": "Bed composition and bedform dynamics",
+      "functionId": "hyporheic-connectivity",
+      "functionName": "Hyporheic connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-phab-pct-safn",
+          "metricName": "PCT_SAFN",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "PCT_SAFN",
+          "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.38095238110000107,
+                "y": 1.0
+              },
+              {
+                "x": 6.666666667,
+                "y": 1.0
+              },
+              {
+                "x": 27.61904762,
+                "y": 0.7
+              },
+              {
+                "x": 55.555555557333335,
+                "y": 0.3
+              },
+              {
+                "x": 76.50793651033334,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-phab-xembed",
+          "metricName": "XEMBED",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "XEMBED",
+          "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 24.935454545,
+                "y": 1.0
+              },
+              {
+                "x": 35.045454545,
+                "y": 1.0
+              },
+              {
+                "x": 68.745454545,
+                "y": 0.7
+              },
+              {
+                "x": 113.67878787833334,
+                "y": 0.3
+              },
+              {
+                "x": 147.37878787833336,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-evolution",
+      "functionName": "Channel evolution",
       "discipline": "Geomorphology",
       "metrics": [
         {
-          "metricId": "spring-phab-lwdeqvolm100",
-          "metricName": "Large woody debris volume",
+          "metricId": "spring-phab-bfwd-rat",
+          "metricName": "BFWD_RAT",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Large woody debris volume (m3/100m)",
-          "howToMeasure": "",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "BFWD_RAT",
+          "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "optimum",
             "points": [
               {
                 "x": 0.0,
                 "y": 0.0
               },
               {
-                "x": 0.39440357142857135,
+                "x": 3.8987319999999954,
                 "y": 0.3
               },
               {
-                "x": 0.920275,
+                "x": 9.160185382249997,
                 "y": 0.7
               },
               {
-                "x": 8.8103020835,
+                "x": 11.993275664999999,
                 "y": 1.0
               },
               {
-                "x": 11.17731020855,
+                "x": 20.087819330000002,
+                "y": 1.0
+              },
+              {
+                "x": 22.920909612750002,
+                "y": 0.7
+              },
+              {
+                "x": 28.182362995000005,
+                "y": 0.3
+              },
+              {
+                "x": 36.27690666000001,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-phab-xbkf-h",
+          "metricName": "XBKF_H",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "XBKF_H",
+          "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.05454545399999999,
+                "y": 0.3
+              },
+              {
+                "x": 0.20522727229999999,
+                "y": 0.7
+              },
+              {
+                "x": 0.286363636,
+                "y": 1.0
+              },
+              {
+                "x": 0.518181818,
+                "y": 1.0
+              },
+              {
+                "x": 0.5993181817,
+                "y": 0.7
+              },
+              {
+                "x": 0.75,
+                "y": 0.3
+              },
+              {
+                "x": 0.9818181819999999,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "additional-function"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "functionName": "Channel and floodplain dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-sinu",
+          "metricName": "SINU",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "SINU",
+          "howToMeasure": "Channel sinuosity; higher generally indicates a more natural planform.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.4604171213571428,
+                "y": 0.3
+              },
+              {
+                "x": 1.0743066165,
+                "y": 0.7
+              },
+              {
+                "x": 1.2994032575,
+                "y": 1.0
+              },
+              {
+                "x": 1.3669322498,
                 "y": 1.0
               }
             ]
           },
           "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "sediment-continuity",
+      "functionName": "Sediment continuity",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-pct-safn",
+          "metricName": "PCT_SAFN",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "PCT_SAFN",
+          "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.38095238110000107,
+                "y": 1.0
+              },
+              {
+                "x": 6.666666667,
+                "y": 1.0
+              },
+              {
+                "x": 27.61904762,
+                "y": 0.7
+              },
+              {
+                "x": 55.555555557333335,
+                "y": 0.3
+              },
+              {
+                "x": 76.50793651033334,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "additional-function"
+        }
+      ]
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "functionName": "Bed composition and bedform dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-lsub-dmm",
+          "metricName": "LSUB_DMM",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "LSUB_DMM",
+          "howToMeasure": "Log mean substrate diameter; coarser substrate generally better, but valley-type dependent.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.3821676197142857,
+                "y": 0.3
+              },
+              {
+                "x": 0.891724446,
+                "y": 0.7
+              },
+              {
+                "x": 1.976115919,
+                "y": 1.0
+              },
+              {
+                "x": 2.3014333609,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-phab-lwdeqvolm100",
+          "metricName": "LWDeqVolM100",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "LWDeqVolM100",
+          "howToMeasure": "Large woody debris volume per 100 m; higher is better.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.09282467528571428,
+                "y": 0.3
+              },
+              {
+                "x": 0.216590909,
+                "y": 0.7
+              },
+              {
+                "x": 7.614545454,
+                "y": 1.0
+              },
+              {
+                "x": 9.8339318175,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-phab-xembed",
+          "metricName": "XEMBED",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "XEMBED",
+          "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 24.935454545,
+                "y": 1.0
+              },
+              {
+                "x": 35.045454545,
+                "y": 1.0
+              },
+              {
+                "x": 68.745454545,
+                "y": 0.7
+              },
+              {
+                "x": 113.67878787833334,
+                "y": 0.3
+              },
+              {
+                "x": 147.37878787833336,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "additional-function"
+        }
+      ]
+    },
+    {
+      "functionId": "light-thermal-regime",
+      "functionName": "Light & thermal regime",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-chem-chla",
+          "metricName": "CHLA",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "CHLA (ug/L)",
+          "howToMeasure": "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.197,
+                "y": 1.0
+              },
+              {
+                "x": 0.47,
+                "y": 1.0
+              },
+              {
+                "x": 1.38,
+                "y": 0.7
+              },
+              {
+                "x": 2.593333333333333,
+                "y": 0.3
+              },
+              {
+                "x": 3.503333333333333,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-phab-xcdenmid",
+          "metricName": "XCDENMID",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "XCDENMID",
+          "howToMeasure": "Mid-channel canopy density; higher shading generally better for thermal/light regime.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 14.925515659285713,
+                "y": 0.3
+              },
+              {
+                "x": 34.826203205,
+                "y": 0.7
+              },
+              {
+                "x": 88.56951871999999,
+                "y": 1.0
+              },
+              {
+                "x": 104.69251337449998,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical"
         }
       ]
@@ -103,34 +1078,35 @@
       "metrics": [
         {
           "metricId": "spring-phab-xcmgw",
-          "metricName": "Riparian canopy + ground cover",
+          "metricName": "XCMGW",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Riparian canopy + ground cover",
-          "howToMeasure": "",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "XCMGW",
+          "howToMeasure": "Riparian canopy plus mid-layer plus ground cover; higher is better.",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
                 "x": 0.0,
                 "y": 0.0
               },
               {
-                "x": 0.30316558457142856,
+                "x": 0.30730519500000003,
                 "y": 0.3
               },
               {
-                "x": 0.707386364,
+                "x": 0.717045455,
                 "y": 0.7
               },
               {
-                "x": 1.1062500000000002,
+                "x": 1.1,
                 "y": 1.0
               },
               {
-                "x": 1.2259090908000003,
+                "x": 1.2148863635,
                 "y": 1.0
               }
             ]
@@ -146,35 +1122,36 @@
       "discipline": "Physicochemistry",
       "metrics": [
         {
-          "metricId": "spring-chem-ptl",
-          "metricName": "Total phosphorus",
+          "metricId": "spring-chem-ntl-diss",
+          "metricName": "NTL_DISS",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Total phosphorus (ug/L)",
-          "howToMeasure": "",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "NTL_DISS (mg N/L)",
+          "howToMeasure": "Dissolved nitrogen; higher indicates nutrient enrichment (worse).",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
-                "x": 2.6811750000000005,
+                "x": 0.13749999999999998,
                 "y": 1.0
               },
               {
-                "x": 7.6395,
+                "x": 0.175,
                 "y": 1.0
               },
               {
-                "x": 24.16725,
+                "x": 0.3,
                 "y": 0.7
               },
               {
-                "x": 46.204249999999995,
+                "x": 0.4666666666666667,
                 "y": 0.3
               },
               {
-                "x": 62.732,
+                "x": 0.5916666666666667,
                 "y": 0.0
               }
             ]
@@ -183,35 +1160,36 @@
           "assignmentOrigin": "canonical"
         },
         {
-          "metricId": "spring-chem-ntl-diss",
-          "metricName": "Dissolved nitrogen",
+          "metricId": "spring-chem-ptl",
+          "metricName": "PTL",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Dissolved nitrogen (mg/L)",
-          "howToMeasure": "",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "PTL (ug/L)",
+          "howToMeasure": "Total phosphorus; higher indicates nutrient enrichment (worse).",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
-                "x": 0.11449999999999999,
+                "x": 5.270775,
                 "y": 1.0
               },
               {
-                "x": 0.1745,
+                "x": 7.6605,
                 "y": 1.0
               },
               {
-                "x": 0.3745,
+                "x": 15.626249999999999,
                 "y": 0.7
               },
               {
-                "x": 0.6411666666666667,
+                "x": 26.247249999999998,
                 "y": 0.3
               },
               {
-                "x": 0.8411666666666667,
+                "x": 34.212999999999994,
                 "y": 0.0
               }
             ]
@@ -227,35 +1205,124 @@
       "discipline": "Physicochemistry",
       "metrics": [
         {
-          "metricId": "spring-chem-turb",
-          "metricName": "Turbidity",
+          "metricId": "spring-chem-cond",
+          "metricName": "COND",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Turbidity (NTU)",
-          "howToMeasure": "",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "COND (uS/cm)",
+          "howToMeasure": "Specific conductance; higher indicates ionic disturbance (worse).",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
-                "x": 0.15800000000000014,
+                "x": 0.0,
                 "y": 1.0
               },
               {
-                "x": 0.635,
+                "x": 24.8,
                 "y": 1.0
               },
               {
-                "x": 2.2249999999999996,
+                "x": 111.2,
                 "y": 0.7
               },
               {
-                "x": 4.344999999999999,
+                "x": 226.4,
                 "y": 0.3
               },
               {
-                "x": 5.934999999999999,
+                "x": 312.8,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-chem-ph",
+          "metricName": "PH",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "PH (Std. Units)",
+          "howToMeasure": "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 5.7,
+                "y": 0.0
+              },
+              {
+                "x": 6.37,
+                "y": 0.3
+              },
+              {
+                "x": 6.8055,
+                "y": 0.7
+              },
+              {
+                "x": 7.04,
+                "y": 1.0
+              },
+              {
+                "x": 7.71,
+                "y": 1.0
+              },
+              {
+                "x": 7.9445,
+                "y": 0.7
+              },
+              {
+                "x": 8.379999999999999,
+                "y": 0.3
+              },
+              {
+                "x": 9.05,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-chem-turb",
+          "metricName": "TURB",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "TURB (NTU)",
+          "howToMeasure": "Turbidity; higher indicates more suspended sediment (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.16100000000000003,
+                "y": 1.0
+              },
+              {
+                "x": 0.53,
+                "y": 1.0
+              },
+              {
+                "x": 1.76,
+                "y": 0.7
+              },
+              {
+                "x": 3.4,
+                "y": 0.3
+              },
+              {
+                "x": 4.63,
                 "y": 0.0
               }
             ]
@@ -271,35 +1338,74 @@
       "discipline": "Biology",
       "metrics": [
         {
-          "metricId": "spring-phab-xfc-nat",
-          "metricName": "Natural fish cover",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Natural fish cover",
-          "howToMeasure": "",
+          "metricId": "spring-phab-pct-fast",
+          "metricName": "PCT_FAST",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "PCT_FAST",
+          "howToMeasure": "Percent fast-water (riffle/run) habitat; more generally better for many biota. Ecoregion-dependent.",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
                 "x": 0.0,
                 "y": 0.0
               },
               {
-                "x": 0.07792207799999999,
+                "x": 8.142857142857142,
                 "y": 0.3
               },
               {
-                "x": 0.181818182,
+                "x": 19.0,
                 "y": 0.7
               },
               {
-                "x": 0.4943181815,
+                "x": 59.04761905,
                 "y": 1.0
               },
               {
-                "x": 0.58806818135,
+                "x": 71.06190476500001,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-phab-xfc-nat",
+          "metricName": "XFC_NAT",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "XFC_NAT",
+          "howToMeasure": "Natural fish cover; higher is better.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.06233766214285714,
+                "y": 0.3
+              },
+              {
+                "x": 0.145454545,
+                "y": 0.7
+              },
+              {
+                "x": 0.491666667,
+                "y": 1.0
+              },
+              {
+                "x": 0.5955303036,
                 "y": 1.0
               }
             ]
@@ -316,34 +1422,73 @@
       "metrics": [
         {
           "metricId": "spring-bent-totlntax",
-          "metricName": "Total benthic taxa",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Total benthic taxa (count)",
-          "howToMeasure": "",
+          "metricName": "TOTLNTAX",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "TOTLNTAX",
+          "howToMeasure": "Total benthic taxa richness; higher is better.",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
                 "x": 0.0,
                 "y": 0.0
               },
               {
-                "x": 14.785714285714286,
+                "x": 15.428571428571429,
                 "y": 0.3
               },
               {
-                "x": 34.5,
+                "x": 36.0,
                 "y": 0.7
               },
               {
-                "x": 47.5,
+                "x": 49.0,
                 "y": 1.0
               },
               {
-                "x": 51.4,
+                "x": 52.9,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical"
+        },
+        {
+          "metricId": "spring-fish-nat-totlntax",
+          "metricName": "NAT_TOTLNTAX",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "NAT_TOTLNTAX",
+          "howToMeasure": "Native fish taxa richness; higher is better.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.0714285714285714,
+                "y": 0.3
+              },
+              {
+                "x": 2.5,
+                "y": 0.7
+              },
+              {
+                "x": 8.0,
+                "y": 1.0
+              },
+              {
+                "x": 9.65,
                 "y": 1.0
               }
             ]
@@ -360,34 +1505,35 @@
       "metrics": [
         {
           "metricId": "spring-bent-ept-ntax",
-          "metricName": "EPT taxa richness",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "EPT taxa richness (count)",
-          "howToMeasure": "",
+          "metricName": "EPT_NTAX",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "EPT_NTAX",
+          "howToMeasure": "EPT (mayfly/stonefly/caddisfly) taxa richness; more sensitive taxa indicate better condition.",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
                 "x": 0.0,
                 "y": 0.0
               },
               {
-                "x": 4.5,
+                "x": 6.0,
                 "y": 0.3
               },
               {
-                "x": 10.5,
+                "x": 14.0,
                 "y": 0.7
               },
               {
-                "x": 19.0,
+                "x": 20.0,
                 "y": 1.0
               },
               {
-                "x": 21.55,
+                "x": 21.8,
                 "y": 1.0
               }
             ]
@@ -397,34 +1543,35 @@
         },
         {
           "metricId": "spring-bent-hprime",
-          "metricName": "Benthic Shannon diversity",
+          "metricName": "HPRIME",
           "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Benthic Shannon diversity",
-          "howToMeasure": "",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "HPRIME",
+          "howToMeasure": "Benthic Shannon diversity; higher diversity indicates better condition.",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
                 "x": 0.0,
                 "y": 0.0
               },
               {
-                "x": 1.1357142857142857,
+                "x": 1.1871428571428573,
                 "y": 0.3
               },
               {
-                "x": 2.65,
+                "x": 2.77,
                 "y": 0.7
               },
               {
-                "x": 3.085,
+                "x": 3.17,
                 "y": 1.0
               },
               {
-                "x": 3.2155,
+                "x": 3.29,
                 "y": 1.0
               }
             ]
@@ -434,18 +1581,19 @@
         },
         {
           "metricId": "spring-bent-tolrpind",
-          "metricName": "Tolerant individuals",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-          "xLabel": "Tolerant individuals (%)",
-          "howToMeasure": "",
+          "metricName": "TOLRPIND",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "TOLRPIND",
+          "howToMeasure": "Percent tolerant individuals; a higher share of pollution-tolerant taxa indicates worse condition.",
           "methodContext": "",
           "curve": {
-            "layerName": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
+            "form": "monotone",
             "points": [
               {
-                "x": 0.0,
+                "x": 0.3420000000000005,
                 "y": 1.0
               },
               {
@@ -453,15 +1601,98 @@
                 "y": 1.0
               },
               {
-                "x": 16.165,
+                "x": 13.29,
                 "y": 0.7
               },
               {
-                "x": 33.278333333333336,
+                "x": 26.57,
                 "y": 0.3
               },
               {
-                "x": 46.11333333333333,
+                "x": 36.53,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical"
+        }
+      ]
+    },
+    {
+      "functionId": "watershed-connectivity",
+      "functionName": "Watershed connectivity",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-damdensws",
+          "metricName": "Dam density",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Dam density (per sq km)",
+          "howToMeasure": "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 0.0123,
+                "y": 0.7
+              },
+              {
+                "x": 0.028700000000000003,
+                "y": 0.3
+              },
+              {
+                "x": 0.041,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Biology",
+          "assignmentOrigin": "additional-function"
+        },
+        {
+          "metricId": "spring-rdcrsws",
+          "metricName": "Road-stream crossings",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "Road-stream crossings (per sq km)",
+          "howToMeasure": "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0009599999999999999,
+                "y": 1.0
+              },
+              {
+                "x": 0.0033,
+                "y": 1.0
+              },
+              {
+                "x": 0.0111,
+                "y": 0.7
+              },
+              {
+                "x": 0.021500000000000002,
+                "y": 0.3
+              },
+              {
+                "x": 0.0293,
                 "y": 0.0
               }
             ]
@@ -472,9 +1703,40 @@
       ]
     }
   ],
+  "functionCoverage": {
+    "framework": "staf-20",
+    "total": 20,
+    "covered": 20,
+    "excluded": 0,
+    "missing": 0,
+    "coveredFunctionIds": [
+      "catchment-hydrology",
+      "surface-water-storage",
+      "reach-inflow",
+      "streamflow-regime",
+      "low-flow-baseflow-dynamics",
+      "high-flow-dynamics",
+      "floodplain-connectivity",
+      "hyporheic-connectivity",
+      "channel-evolution",
+      "channel-floodplain-dynamics",
+      "sediment-continuity",
+      "bed-composition-bedform-dynamics",
+      "light-thermal-regime",
+      "carbon-processing",
+      "nutrient-cycling",
+      "water-soil-quality",
+      "habitat-provision",
+      "population-support",
+      "community-dynamics",
+      "watershed-connectivity"
+    ],
+    "missingFunctionIds": [],
+    "exclusions": []
+  },
   "scoringContract": {
     "method": "STAF detailed reference-curve scoring",
-    "methodVersion": "iqr-seed-v1",
+    "methodVersion": "iqr-seed-v2",
     "indexBands": [
       0.39,
       0.69
@@ -3129,22 +4391,22 @@
       ]
     }
   },
-  "contentDigest": "sha256:9b17d3bd159f4765618ac33e51641e87ee0e2cdf04afff7213c62fc8ac1727fa",
+  "contentDigest": "sha256:cdb68461dbed1333f2a96e9022a0013b8da0957cab8b902ae9e4780e35fe1f5f",
   "library": {
     "libraryId": "northeastern-highlands",
-    "version": 1,
-    "updatedAt": "2026-07-14T16:46:12Z",
-    "author": "STAF pilot",
-    "revisionNotes": "Full reopenable session: 71 NRSA L3-58 reference sites, 11 finalized curves, 8 STAF functions.",
+    "version": 2,
+    "updatedAt": "2026-07-29T17:26:39Z",
+    "author": "StreamCurves Regional Analysis Agent",
+    "revisionNotes": "Reference tier: least_disturbed (screening preset functional, method direct_engine). Retained 33 of 71 candidates.",
     "region": {
       "kind": "ecoregion",
       "code": "58",
       "name": "Northeastern Highlands"
     },
-    "contentDigest": "sha256:9b17d3bd159f4765618ac33e51641e87ee0e2cdf04afff7213c62fc8ac1727fa",
-    "supersedesVersion": null
+    "contentDigest": "sha256:cdb68461dbed1333f2a96e9022a0013b8da0957cab8b902ae9e4780e35fe1f5f",
+    "supersedesVersion": 1
   },
-  "version": 1,
+  "version": 2,
   "lifecycle": "preliminary",
-  "assessmentRef": "northeastern-highlands@v1"
+  "assessmentRef": "northeastern-highlands@v2"
 }

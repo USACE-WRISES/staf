@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-14T16:46:12Z",
+  "generatedAt": "2026-07-29T17:26:39Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -37,6 +37,25 @@
       "latestCertified": 0,
       "defaultVersion": 1,
       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
+      "validationState": "unvalidated",
+      "validationSummary": null
+    },
+    {
+      "assessmentId": "eastern-corn-belt-plains",
+      "assessmentName": "Eastern Corn Belt Plains reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "55",
+        "name": "Eastern Corn Belt Plains"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-07-28T19:52:29Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "defaultVersion": 1,
+      "contentDigest": "sha256:0d42eabc3c3b59d7db1a363bfedfe82da191b19ce046c1ae86b0446e4b1cd4a1",
       "validationState": "unvalidated",
       "validationSummary": null
     },
@@ -107,12 +126,12 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 1,
-      "latestUpdatedAt": "2026-07-14T16:46:12Z",
-      "latestPreliminary": 1,
+      "latestVersion": 2,
+      "latestUpdatedAt": "2026-07-29T17:26:39Z",
+      "latestPreliminary": 2,
       "latestCertified": 0,
-      "defaultVersion": 1,
-      "contentDigest": "sha256:9b17d3bd159f4765618ac33e51641e87ee0e2cdf04afff7213c62fc8ac1727fa",
+      "defaultVersion": 2,
+      "contentDigest": "sha256:cdb68461dbed1333f2a96e9022a0013b8da0957cab8b902ae9e4780e35fe1f5f",
       "validationState": "unvalidated",
       "validationSummary": null
     },

@@ -9,8 +9,8 @@
   },
   "stateCode": "",
   "stateName": "",
-  "sourceCitation": "USEPA NRSA 2018-19 (L3 ecoregion 58), StreamCurves pilot",
-  "latestVersion": 1,
+  "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+  "latestVersion": 2,
   "versions": [
     {
       "version": 1,
@@ -19,6 +19,14 @@
       "revisionNotes": "Full reopenable session: 71 NRSA L3-58 reference sites, 11 finalized curves, 8 STAF functions.",
       "contentDigest": "sha256:9b17d3bd159f4765618ac33e51641e87ee0e2cdf04afff7213c62fc8ac1727fa",
       "supersedesVersion": null
+    },
+    {
+      "version": 2,
+      "updatedAt": "2026-07-29T17:26:39Z",
+      "author": "StreamCurves Regional Analysis Agent",
+      "revisionNotes": "Reference tier: least_disturbed (screening preset functional, method direct_engine). Retained 33 of 71 candidates.",
+      "contentDigest": "sha256:cdb68461dbed1333f2a96e9022a0013b8da0957cab8b902ae9e4780e35fe1f5f",
+      "supersedesVersion": 1
     }
   ]
 }

@@ -8,6 +8,13 @@
       "actor": "STAF pilot",
       "timestamp": "2026-07-14T16:46:12Z",
       "note": "Published new version."
+    },
+    {
+      "version": 2,
+      "status": "preliminary",
+      "actor": "StreamCurves Regional Analysis Agent",
+      "timestamp": "2026-07-29T17:26:39Z",
+      "note": "Published new version."
     }
   ]
 }
