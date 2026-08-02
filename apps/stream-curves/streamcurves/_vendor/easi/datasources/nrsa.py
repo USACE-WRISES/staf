@@ -11,11 +11,17 @@ from functools import lru_cache
 import gzip
 import json
 import math
-from pathlib import Path
 from typing import Any
 
+from .. import config
 
-DATA_PATH = Path(__file__).resolve().parents[2] / "data" / "nrsa-2018-19-evidence.json.gz"
+
+# Use the shared resolver, not a hand-rolled parents[n] hop: the bundled data sits
+# beside the package in this repo (apps/easi/data) but INSIDE it once vendored
+# (.../_vendor/easi/data). A fixed depth silently resolves to a nonexistent path in
+# the vendored tree, and _records() swallows the OSError, so the whole datasource
+# degrades to "no evidence" without an error.
+DATA_PATH = config.DATA_DIR / "nrsa-2018-19-evidence.json.gz"
 EARTH_RADIUS_MI = 3958.7613
 
 
@@ -26,6 +32,34 @@ def _records() -> tuple[dict[str, Any], ...]:
             return tuple(json.load(handle).get("records") or [])
     except (OSError, ValueError, TypeError):
         return tuple()
+
+
+# NHDPlus V2 COMIDs are 8-9 digits. A handful of bundled records carry a
+# synthetic HUC-derived id instead, marking a site that was never matched to the
+# network; those must never be handed back as a real reach.
+_MAX_REAL_COMID = 1_000_000_000
+
+
+@lru_cache(maxsize=1)
+def comid_by_site_id() -> dict[str, int]:
+    """``siteId`` -> published NHDPlus COMID, for records matched to the network.
+
+    Lets a batch caller supply the reach directly instead of snapping every point
+    live, which is faster and immune to NLDI snap outages. Sites with a synthetic
+    id are omitted, so a caller that finds no entry falls back to snapping.
+    """
+    out: dict[str, int] = {}
+    for record in _records():
+        site_id, comid = record.get("siteId"), record.get("comid")
+        if not site_id or comid is None:
+            continue
+        try:
+            comid = int(comid)
+        except (TypeError, ValueError):
+            continue
+        if comid < _MAX_REAL_COMID:
+            out[str(site_id)] = comid
+    return out
 
 
 def _distance_mi(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
