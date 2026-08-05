@@ -211,6 +211,13 @@
       table.appendChild(thead);
       table.appendChild(tbody);
 
+      // The first two columns are fixed-width, so on a phone the table is wider
+      // than the viewport. Scroll it inside its own box rather than letting the
+      // Description column get clipped off the edge with no way to reach it.
+      const tableWrap = document.createElement('div');
+      tableWrap.className = 'table-scroll';
+      tableWrap.appendChild(table);
+
       const filterAndRender = () => {
         const term = search.value.trim().toLowerCase();
         const cat = category.value;
@@ -286,7 +293,7 @@
       category.addEventListener('change', filterAndRender);
 
       ui.appendChild(controls);
-      ui.appendChild(table);
+      ui.appendChild(tableWrap);
       filterAndRender();
     } catch (error) {
       if (ui) {

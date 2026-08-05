@@ -57,6 +57,18 @@ h3,
   padding: 0;
 }
 
+/* Phone gutter. The theme's wrapper padding is zeroed above so content runs
+   edge to edge, but at phone width that leaves no room for text to breathe and
+   nothing to absorb the theme's anchor-heading icons, which sit at right: -1rem.
+   The full-bleed hero and title band self-compensate: their calc(50% - 50vw)
+   margins resolve against this content box, so they stay edge to edge. */
+@media (max-width: 700px) {
+  .main-content {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
 .guide-layout {
   display: grid;
   grid-template-columns: 260px 1fr;
@@ -2050,6 +2062,15 @@ body.modal-open {
   background: #ffffff;
 }
 
+/* Wide tables scroll inside their own box instead of being clipped by the
+   viewport (the page itself cannot scroll sideways: body sets overflow-x
+   hidden). Same idea as .detailed-table-wrap and .screening-table-wrap; this
+   one is generic because the tables that need it are authored in two places. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .detailed-table {
   width: 100%;
   border-collapse: collapse;
@@ -3711,6 +3732,21 @@ body.modal-open {
 .screening-bar-label {
   font-size: 0.85rem;
   color: #333333;
+}
+
+/* The 220px + 120px track minimums above force the row to ~387px, wider than a
+   phone viewport, and the label's nowrap keeps it from giving any width back.
+   Let both tracks collapse and the label wrap so the chart fits the screen.
+   Must sit after the nowrap rule: a media query adds no specificity, so at
+   equal specificity the later declaration wins. */
+@media (max-width: 700px) {
+  .screening-bar-row {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 2.25fr) 3.5ch;
+  }
+
+  .screening-bar-label {
+    white-space: normal;
+  }
 }
 
 .screening-bar-track {
