@@ -516,7 +516,8 @@
       mappingEditToggleText.textContent = 'Edit Mappings';
       mappingEditToggleLabel.appendChild(mappingEditToggleInput);
       mappingEditToggleLabel.appendChild(mappingEditToggleText);
-      summary.appendChild(mappingEditToggleLabel);
+      // Hidden on the live site; re-append to restore the Edit Mappings toggle.
+      // summary.appendChild(mappingEditToggleLabel);
 
       const mappingWeightField = document.createElement('label');
       mappingWeightField.className = 'mapping-weight-field';
