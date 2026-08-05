@@ -56,6 +56,7 @@ FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 2, "opacity": 0.9}
 # === TEMP: MMW comparison overlay (remove later) ===
 MMW_STYLE = {"color": "#7b2cbf", "weight": 2, "dashArray": "5,4",
              "fillColor": "#b388eb", "fillOpacity": 0.18}  # distinct from yellow WATERSHED_STYLE
+SHOW_MMW_OVERLAY = False  # hides the Basin-page comparison checkbox; the server logic stays dormant
 # === END TEMP ===
 RATING_COLOR = {"Good": "#c8d9f2", "Fair": "#f5e7a6", "Poor": "#f5b5b5"}
 _DISC_ORDER = ["Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology"]
@@ -66,6 +67,7 @@ USGS_HYDRO_URL = "https://hydro.nationalmap.gov/arcgis/rest/services/USGSHydroCa
 USGS_ATTR = "USGS The National Map"
 FLOW_ZOOM = 14          # NHD vectors appear at/above this zoom
 SNAP_TOL_FT = 150.0     # click must land within this distance of a flowline
+BATCH_UI_MAX_SITES = 10  # per-batch cap in this UI; the engine accepts batch_api.MAX_SITES (150)
 
 STEP_IDENTIFY, STEP_BASIN, STEP_ASSESS, STEP_REPORT = "identify", "basin", "assess", "report"
 STEP_LABELS = [(STEP_IDENTIFY, "Identify"), (STEP_BASIN, "Basin"),
@@ -242,7 +244,6 @@ app_ui = ui.page_fillable(
             ui.div(
                 ui.input_action_link("nav_new", "New analysis"),
                 ui.input_action_link("nav_batch", "Batch"),
-                ui.input_action_link("nav_about", "About"),
                 ui.input_action_link("nav_help", "Help"),
                 # Extended documentation (verification & validation) — a static,
                 # self-contained Quarto page served from www/. Opens in a new tab
@@ -1469,29 +1470,28 @@ def server(input, output, session):
         ui.modal_remove()
 
     @reactive.effect
-    @reactive.event(input.nav_about)
-    def _about():
-        ui.modal_show(ui.modal(
-            ui.markdown(
-                "**EASI** automates the EASI Screening-tier assessment (from STAF). "
-                "Click a stream, delineate the watershed and a reach upstream, and EASI "
-                "computes the 20 EASI metrics from national, public GIS/hydrology data, "
-                "scores them with the STAF rollup, and produces a read-only report. "
-                "It is a desktop screening estimate, not a field-validated assessment."),
-            title="About EASI", easy_close=True))
-
-    @reactive.effect
     @reactive.event(input.nav_help)
     def _help():
         ui.modal_show(ui.modal(
             ui.markdown(
+                "**EASI** automates the EASI Screening-tier assessment (from STAF) "
+                "using national, public GIS and hydrology data. It is a desktop "
+                "screening estimate, not a field-validated assessment.\n\n"
                 "**How to use**\n\n"
-                "1. **Zoom in** (to ~street level) until blue NHD stream lines appear.\n"
-                "2. **Click a stream** to drop a point (it snaps to the line; clicking off a "
-                "stream is rejected).\n"
-                "3. **Delineate basin** — the watershed + upstream reach are traced.\n"
-                "4. **Configure** which functions/sources to compute, then **open the report**.\n\n"
-                "Switch basemaps and toggle the NHD overlay with the layers control (top-right)."),
+                "1. **Zoom in** until blue stream lines appear. **Click a stream** to "
+                "place a point, or enter coordinates, or search an address.\n"
+                "2. Adjust the reach length if needed, then click "
+                "**Delineate Basin and Reach**.\n"
+                "3. Review the basin, then click **Run screening**. EASI computes the "
+                "20 metrics and scores them with the STAF rollup.\n"
+                "4. Review each function in the **Assessment**. Adjust scores, data "
+                "sources, notes, or the cross-section as needed.\n"
+                "5. The **report** opens when screening finishes. Download it as PDF, "
+                "CSV, or GeoJSON.\n\n"
+                "**Batch** runs up to 10 sites at once and packages the reports as "
+                "a ZIP.\n\n"
+                "Switch basemaps and toggle the stream overlay with the layers "
+                "control at the top right."),
             title="Help", easy_close=True))
 
     @reactive.calc
@@ -1835,19 +1835,20 @@ def server(input, output, session):
         elif step == STEP_BASIN:
             body = ui.TagList(ui.output_ui("basin_card"),
                               # === TEMP: MMW comparison overlay checkbox (remove later) ===
-                              ui.div(ui.input_checkbox("show_mmw",
-                                                       "Overlay MMW watershed (comparison)",
-                                                       value=False),
-                                     # suppress the auto .recalculating spinner on the
-                                     # status text so it never jitters the panel
-                                     ui.tags.style(
-                                         "#mmw_status.recalculating{min-height:0!important;"
-                                         "opacity:1!important}"
-                                         "#mmw_status.recalculating::after{display:none!important}"),
-                                     ui.div(ui.output_text("mmw_status"),
-                                            style="font-size:12px;color:#667;min-height:1em;"
-                                                  "margin:-.1rem 0 .2rem;"),
-                                     style="margin:.4rem 0;"),
+                              (ui.div(ui.input_checkbox("show_mmw",
+                                                        "Overlay MMW watershed (comparison)",
+                                                        value=False),
+                                      # suppress the auto .recalculating spinner on the
+                                      # status text so it never jitters the panel
+                                      ui.tags.style(
+                                          "#mmw_status.recalculating{min-height:0!important;"
+                                          "opacity:1!important}"
+                                          "#mmw_status.recalculating::after{display:none!important}"),
+                                      ui.div(ui.output_text("mmw_status"),
+                                             style="font-size:12px;color:#667;min-height:1em;"
+                                                   "margin:-.1rem 0 .2rem;"),
+                                      style="margin:.4rem 0;")
+                               if SHOW_MMW_OVERLAY else None),
                               # === END TEMP ===
                               ui.div(ui.input_action_button("clear_basin", "Clear",
                                                             class_="btn-outline-secondary"),
@@ -1868,7 +1869,8 @@ def server(input, output, session):
         if not pt:
             return ui.p("No point yet — enter coordinates, search an address, or zoom in "
                         "and click a blue stream line.", class_="easi-snap-note")
-        return ui.p(f"✓ Snapped to stream ({pt[2]:.0f} ft away). Click “Delineate basin”.",
+        return ui.p(f"✓ Snapped to stream ({pt[2]:.0f} ft away). "
+                    f"Click “Delineate Basin and Reach”.",
                     class_="easi-snap-note ok")
 
     @render.ui
@@ -2518,9 +2520,16 @@ def server(input, output, session):
 
     def _parse_and_set(text: str):
         sites, errors = batch_ui.parse_sites_text(text)
-        sites = sites[:batch_api.MAX_SITES]
+        n_parsed = len(sites)
+        # The parser's own over-limit warning fires above the 150-site engine
+        # limit; the stricter UI-cap note below supersedes it.
+        errors = [e for e in errors if "-site limit" not in e]
+        sites = sites[:BATCH_UI_MAX_SITES]
         batch_sites.set(sites)
         parts = [f"{len(sites)} site(s) ready"]
+        if n_parsed > BATCH_UI_MAX_SITES:
+            parts.append(f"only the first {BATCH_UI_MAX_SITES} of {n_parsed} "
+                         "sites will run")
         if errors:
             parts.append(f"{len(errors)} issue(s): " + "; ".join(errors[:3]))
         batch_msg.set(" · ".join(parts))
@@ -2788,9 +2797,10 @@ def server(input, output, session):
                    ui.input_action_link("batch_exit", "Back to single site"),
                    class_="easi-batch-head"),
             ui.div(ui.div(
-                ui.p("Paste a table of sites (id, lat, lon) or upload a CSV. Sites "
-                     "appear below as you type; a header row is optional; up to "
-                     "150 sites.", class_="easi-instr"),
+                ui.p(f"Paste a table of sites (id, lat, lon) or upload a CSV. "
+                     f"Sites appear below as you type. A header row is optional. "
+                     f"Up to {BATCH_UI_MAX_SITES} sites per batch.",
+                     class_="easi-instr"),
                 ui.input_text_area("batch_paste", None, value=paste0, rows=6,
                                    width="100%",
                                    placeholder="MB, 43.72, -72.25\nCC, 40.10, -83.10"),
