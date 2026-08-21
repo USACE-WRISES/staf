@@ -127,7 +127,7 @@
     {
       "methodKey": "catchment-land-cover-pressure",
       "metricId": "catchment-hydrology-impervious-surface-cover",
-      "title": "Catchment hydrology — land-cover pressure",
+      "title": "Catchment hydrology (land-cover pressure)",
       "status": "computed",
       "operator": "worst_index",
       "basisClass": "published directional relationship",
@@ -163,7 +163,7 @@
               "max": 25,
               "minInclusive": true,
               "maxInclusive": true,
-              "label": "10–25%"
+              "label": "10-25%"
             },
             {
               "rating": "Poor",
@@ -246,7 +246,7 @@
       "limitations": [
         "The worse input governs because hydrologic alteration through one pathway is not offset by low pressure in the other.",
         "Agricultural bands are national screening tiers, not ecological criteria.",
-        "A one-input result is visibly marked partial.",
+        "A result computed from one input is labeled partial.",
         "Sensitive macroinvertebrate taxa decline well below the 10 percent impervious Good boundary (community thresholds near 0.5 to 2 percent), so a Good rating is not a no-effect finding (King et al. 2011)."
       ],
       "citations": [
@@ -320,7 +320,7 @@
           "max": 5,
           "minInclusive": true,
           "maxInclusive": true,
-          "label": "1–5%"
+          "label": "1-5%"
         },
         {
           "rating": "Good",
@@ -393,7 +393,7 @@
           "max": 3,
           "minInclusive": true,
           "maxInclusive": false,
-          "label": "1–<3 km/km²"
+          "label": "1-<3 km/km²"
         },
         {
           "rating": "Poor",
@@ -407,7 +407,7 @@
       "breakpoints": [
         {
           "label": "1 km/km²",
-          "description": "Lower STAF screening transition; it is not a demonstrated ecological threshold."
+          "description": "Lower STAF screening transition. It is not a demonstrated ecological threshold."
         },
         {
           "label": "3 km/km²",
@@ -437,7 +437,7 @@
     {
       "methodKey": "degree-of-regulation",
       "metricId": "streamflow-regime-flow-alteration-regulation-water-use",
-      "title": "Flow alteration — degree of regulation",
+      "title": "Flow alteration (degree of regulation)",
       "status": "computed",
       "operator": "ratio",
       "basisClass": "published threshold",
@@ -560,7 +560,7 @@
           "sourceField": "NRSA 2018-19 PCT_DR (100 - percent dry)",
           "units": "%",
           "required": true,
-          "rationale": "The NRSA reach survey directly records the dry-channel fraction; its complement describes wetted-channel continuity during the survey visit.",
+          "rationale": "The NRSA reach survey directly records the dry-channel fraction. Its complement describes wetted-channel continuity during the survey visit.",
           "slider": {
             "min": 0,
             "max": 100,
@@ -593,7 +593,7 @@
           "max": 75,
           "minInclusive": true,
           "maxInclusive": true,
-          "label": "25–75%"
+          "label": "25-75%"
         },
         {
           "rating": "Good",
@@ -685,7 +685,7 @@
               "max": 0.7,
               "minInclusive": true,
               "maxInclusive": false,
-              "label": "0.40–<0.70"
+              "label": "0.40-<0.70"
             },
             {
               "rating": "Good",
@@ -703,7 +703,7 @@
             },
             {
               "label": "V 0.70",
-              "description": "Upper EASI integration tier; this is not an EPA ecological threshold."
+              "description": "Upper EASI integration tier. It is not an EPA ecological threshold."
             }
           ],
           "limitations": [
@@ -728,7 +728,7 @@
         "title": "Field profile where persistent flow is naturally expected",
         "criteria": {
           "Good": ">75% of the channel wetted",
-          "Fair": "25–75% of the channel wetted",
+          "Fair": "25-75% of the channel wetted",
           "Poor": "<25% of the channel wetted"
         }
       },
@@ -754,7 +754,7 @@
     {
       "methodKey": "bank-height-ratio",
       "metricId": "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence",
-      "title": "Floodplain engagement — bank-height ratio",
+      "title": "Floodplain engagement (bank-height ratio)",
       "status": "computed",
       "operator": "threshold",
       "basisClass": "published threshold",
@@ -789,7 +789,7 @@
           "max": 1.5,
           "minInclusive": false,
           "maxInclusive": true,
-          "label": ">1.3–≤1.5"
+          "label": ">1.3-≤1.5"
         },
         {
           "rating": "Poor",
@@ -833,7 +833,7 @@
     {
       "methodKey": "entrenchment-ratio",
       "metricId": "floodplain-connectivity-floodplain-access-entrenchment",
-      "title": "Floodplain access — entrenchment ratio",
+      "title": "Floodplain access (entrenchment ratio)",
       "status": "computed",
       "operator": "threshold",
       "basisClass": "published threshold",
@@ -868,7 +868,7 @@
           "max": 2.2,
           "minInclusive": true,
           "maxInclusive": false,
-          "label": "1.4–<2.2"
+          "label": "1.4-<2.2"
         },
         {
           "rating": "Good",
@@ -1045,7 +1045,7 @@
               "max": 1.5,
               "minInclusive": false,
               "maxInclusive": true,
-              "label": ">1.3–≤1.5"
+              "label": ">1.3-≤1.5"
             },
             {
               "rating": "Poor",
@@ -1086,7 +1086,7 @@
               "max": 2.2,
               "minInclusive": true,
               "maxInclusive": false,
-              "label": "1.4–<2.2"
+              "label": "1.4-<2.2"
             },
             {
               "rating": "Good",
@@ -1106,7 +1106,7 @@
           "units": "",
           "required": false,
           "contextOnly": true,
-          "rationale": "A canal/ditch classification is decisive; other FCODEs are neutral and cannot imply stable condition."
+          "rationale": "A canal/ditch classification is decisive. Other FCODEs are neutral and cannot imply stable condition."
         }
       ],
       "formula": {
@@ -1267,12 +1267,12 @@
         "title": "Field channel-adjustment profile",
         "criteria": {
           "Good": "Stable or recovered Stage I/VI condition",
-          "Fair": "Moderate adjustment or recovery, generally Stages III–V",
-          "Poor": "Severe incision or destructive adjustment, generally Stage II or severe III–IV"
+          "Fair": "Moderate adjustment or recovery, generally Stages III-V",
+          "Poor": "Severe incision or destructive adjustment, generally Stage II or severe III-IV"
         }
       },
       "limitations": [
-        "BHR and ER indicate susceptibility and provide channel-evolution clues; they do not establish a formal stage.",
+        "BHR and ER indicate susceptibility and provide channel-evolution clues. They do not establish a formal stage.",
         "Formal interpretation also considers headcuts, bars, width/depth change, bank erosion, and recovery features.",
         "BHR and ER are reused by other metrics and are therefore correlated evidence."
       ],
@@ -1327,7 +1327,7 @@
           "max": 1.5,
           "minInclusive": false,
           "maxInclusive": true,
-          "label": ">1.3–≤1.5"
+          "label": ">1.3-≤1.5"
         },
         {
           "rating": "Poor",
@@ -1405,7 +1405,7 @@
                   "max": 60,
                   "minInclusive": true,
                   "maxInclusive": false,
-                  "label": "5–<60%"
+                  "label": "5-<60%"
                 },
                 {
                   "rating": "Poor",
@@ -1446,7 +1446,7 @@
                   "max": 50,
                   "minInclusive": false,
                   "maxInclusive": false,
-                  "label": ">0–<50%"
+                  "label": ">0-<50%"
                 },
                 {
                   "rating": "Poor",
@@ -1481,7 +1481,7 @@
             {
               "input": "erodingBankPct",
               "label": "60%",
-              "description": "Upper EASI transition for widespread observed erosion; EPA's 30% moderate-to-marginal transition remains annotated context."
+              "description": "Upper EASI transition for widespread observed erosion. EPA's 30% moderate-to-marginal transition remains annotated context."
             },
             {
               "input": "armoredBankPct",
@@ -1491,11 +1491,11 @@
             {
               "input": "armoredBankPct",
               "label": "50%",
-              "description": "Half or more of the bank length armored is classified Poor; 75% is annotated as pervasive armoring."
+              "description": "Half or more of the bank length armored is classified Poor. Armoring of 75% or more is annotated as pervasive."
             }
           ],
           "limitations": [
-            "The 5%, 50%, and 60% class limits are transparent EASI screening judgments; 30% erosion and 75% armoring are interpretive annotations.",
+            "The 5%, 50%, and 60% class limits are transparent EASI screening judgments. The 30% erosion and 75% armoring marks are interpretive annotations.",
             "Annual retreat requires a regional reference rate and is supporting evidence only."
           ],
           "citations": [
@@ -1511,7 +1511,7 @@
         "title": "Observed bank condition (both components required)",
         "criteria": {
           "Good": "<5% eroding bank and 0% armored bank",
-          "Fair": "5–<60% eroding bank or >0–<50% armored bank, with neither component Poor",
+          "Fair": "5-<60% eroding bank or >0-<50% armored bank, with neither component Poor",
           "Poor": "≥60% eroding bank or ≥50% armored bank"
         }
       },
@@ -1767,7 +1767,7 @@
           "max": 75,
           "minInclusive": true,
           "maxInclusive": true,
-          "label": "25–75%"
+          "label": "25-75%"
         },
         {
           "rating": "Poor",
@@ -1859,7 +1859,7 @@
               "max": 0.7,
               "minInclusive": true,
               "maxInclusive": false,
-              "label": "0.40–<0.70"
+              "label": "0.40-<0.70"
             },
             {
               "rating": "Good",
@@ -1877,7 +1877,7 @@
             },
             {
               "label": "V 0.70",
-              "description": "Upper EASI integration tier; this is not an EPA substrate threshold."
+              "description": "Upper EASI integration tier. It is not an EPA substrate threshold."
             }
           ],
           "limitations": [
@@ -1901,7 +1901,7 @@
         "title": "Field substrate profile",
         "criteria": {
           "Good": "Embeddedness <25%",
-          "Fair": "Embeddedness 25–75%",
+          "Fair": "Embeddedness 25-75%",
           "Poor": "Embeddedness >75%, or a consolidated/fine-dominated bed where coarse substrate would otherwise be expected"
         }
       },
@@ -1943,7 +1943,7 @@
           "sourceField": "forest + shrub + woody wetland in 100 m corridor",
           "units": "%",
           "required": true,
-          "rationale": "Woody cover represents potential shade and thermal buffering; grass and herbaceous wetland do not receive thermal-shade credit.",
+          "rationale": "Woody cover represents potential shade and thermal buffering. Grass and herbaceous wetland do not receive thermal-shade credit.",
           "slider": {
             "min": 0,
             "max": 100,
@@ -1964,7 +1964,7 @@
               "max": 75,
               "minInclusive": true,
               "maxInclusive": false,
-              "label": "25–<75%"
+              "label": "25-<75%"
             },
             {
               "rating": "Good",
@@ -2005,7 +2005,7 @@
               "max": 25,
               "minInclusive": true,
               "maxInclusive": true,
-              "label": "10–25%"
+              "label": "10-25%"
             },
             {
               "rating": "Poor",
@@ -2045,7 +2045,7 @@
       ],
       "fieldReference": null,
       "limitations": [
-        "This method estimates vulnerability to thermal loading and loss of shade; it does not estimate stream temperature.",
+        "This method estimates vulnerability to thermal loading and loss of shade. It does not estimate stream temperature.",
         "Both inputs are required and the specific bands are provisional screening classes.",
         "Valid WQP temperature observations may be displayed as context but are not scored without an applicable class, season, and exposure rule.",
         "The 25 and 75 percent woody bands are EASI conventions. Shade studies place intact forest near 85 percent shade, but no published corridor-percent thresholds exist."
@@ -2146,7 +2146,7 @@
           "max": 50,
           "minInclusive": false,
           "maxInclusive": true,
-          "label": ">20–≤50%"
+          "label": ">20-≤50%"
         },
         {
           "rating": "Good",
@@ -2170,7 +2170,7 @@
       "fieldReference": null,
       "limitations": [
         "The method estimates organic-matter supply potential, not CPOM retention or shredder condition.",
-        "All expected source classes must be present; missing classes are not treated as zero.",
+        "All expected source classes must be present. Missing classes are not treated as zero.",
         "Breakpoints are provisional STAF screening judgments."
       ],
       "citations": [
@@ -2390,7 +2390,7 @@
               "max": 0.7,
               "minInclusive": true,
               "maxInclusive": false,
-              "label": "0.40–<0.70"
+              "label": "0.40-<0.70"
             },
             {
               "rating": "Good",
@@ -2408,7 +2408,7 @@
             },
             {
               "label": "V 0.70",
-              "description": "Upper EASI integration tier; this is not an EPA nutrient criterion."
+              "description": "Upper EASI integration tier. It is not an EPA nutrient criterion."
             }
           ],
           "limitations": [
@@ -2481,7 +2481,7 @@
           },
           "3": {
             "rating": null,
-            "label": "Category 3 — insufficient evidence"
+            "label": "Category 3 (insufficient evidence)"
           },
           "4A": {
             "rating": "Fair",
@@ -2511,7 +2511,7 @@
         {
           "methodKey": "streamcat-chem-integrity-regulatory",
           "label": "StreamCat CHEM condition fallback",
-          "description": "Use when ATTAINS is absent or Category 3 is inconclusive; the result is condition context, not a regulatory determination."
+          "description": "Use when ATTAINS is absent or Category 3 is inconclusive. The result is condition context, not a regulatory determination."
         }
       ],
       "variants": [
@@ -2573,7 +2573,7 @@
               "max": 0.7,
               "minInclusive": true,
               "maxInclusive": false,
-              "label": "0.40–<0.70"
+              "label": "0.40-<0.70"
             },
             {
               "rating": "Good",
@@ -2591,11 +2591,11 @@
             },
             {
               "label": "V 0.70",
-              "description": "Upper EASI condition-integration tier; it is not an ATTAINS category or regulatory finding."
+              "description": "Upper EASI condition-integration tier. It is not an ATTAINS category or regulatory finding."
             }
           ],
           "limitations": [
-            "This fallback changes the automated interpretation to water-quality condition context; it is not a regulatory impairment determination.",
+            "This fallback changes the automated interpretation to water-quality condition context. It is not a regulatory impairment determination.",
             "The 0.40 and 0.70 breakpoints are EASI integration tiers, not EPA regulatory thresholds."
           ],
           "citations": [
@@ -2740,7 +2740,7 @@
           "sourceField": "NRSA/state benthic or fish class",
           "units": "",
           "required": true,
-          "rationale": "A measured, method-compatible biological condition class is the strongest evidence; when both communities are available, the worse class governs."
+          "rationale": "A measured, method-compatible biological condition class is the strongest evidence. When both communities are available, the worse class governs."
         },
         {
           "key": "benthicClass",
@@ -2785,7 +2785,7 @@
         {
           "methodKey": "nrsa-biological-condition",
           "label": "Measured NRSA/state condition class",
-          "description": "Use compatible measured benthic and fish classes; the worse class governs and one community is partial."
+          "description": "Use compatible measured benthic and fish classes. The worse class governs, and one community alone is partial evidence."
         },
         {
           "methodKey": "streamcat-prg-bmmi",
@@ -2817,7 +2817,7 @@
               "sourceField": "EPA StreamCat prG_BMMI",
               "units": "probability",
               "required": true,
-              "rationale": "The published model predicts the probability that benthic condition is Good; it is not a measured IBI class.",
+              "rationale": "The published model predicts the probability that benthic condition is Good. It is not a measured IBI class.",
               "slider": {
                 "min": 0,
                 "max": 1,
@@ -2840,7 +2840,7 @@
               "max": 0.67,
               "minInclusive": true,
               "maxInclusive": false,
-              "label": "0.33–<0.67"
+              "label": "0.33-<0.67"
             },
             {
               "rating": "Good",
@@ -2858,7 +2858,7 @@
             },
             {
               "label": "0.67",
-              "description": "Upper EASI probability-integration tier; it is not a measured class boundary."
+              "description": "Upper EASI probability-integration tier. It is not a measured class boundary."
             }
           ],
           "limitations": [
@@ -3034,7 +3034,7 @@
               "max": 0.7,
               "minInclusive": true,
               "maxInclusive": false,
-              "label": "0.40–<0.70"
+              "label": "0.40-<0.70"
             },
             {
               "rating": "Good",
@@ -3052,7 +3052,7 @@
             },
             {
               "label": "V 0.70",
-              "description": "Upper EASI integration tier; it is not a measured IBI threshold."
+              "description": "Upper EASI integration tier. It is not a measured IBI threshold."
             }
           ],
           "limitations": [
@@ -3084,7 +3084,7 @@
       },
       "limitations": [
         "A connected nearby NRSA visit is not necessarily representative of the selected reach.",
-        "One measured community is partial evidence; when both are available, the worse class governs.",
+        "One measured community is partial evidence. When both are available, the worse class governs.",
         "Predicted probabilities and integrity products remain modeled landscape condition and are never relabeled as measured IBI values."
       ],
       "citations": [
@@ -3132,7 +3132,7 @@
           "max": 2,
           "minInclusive": true,
           "maxInclusive": true,
-          "label": "1–2 recorded"
+          "label": "1-2 recorded"
         },
         {
           "rating": "Poor",
@@ -3155,7 +3155,7 @@
       ],
       "fieldReference": null,
       "limitations": [
-        "A successful zero is worded 'no established taxa recorded,' not confirmed absence.",
+        "A zero count means no established taxa were recorded. It does not confirm absence.",
         "HUC8 fallback results carry lower confidence than HUC12 results.",
         "Count bands are STAF screening judgments.",
         "Establishment status often cannot be confirmed from occurrence records, and uneven sampling effort inflates richness where effort is high (Mangiante et al. 2019)."

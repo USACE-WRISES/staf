@@ -29,7 +29,8 @@ From the repo root, using the venv Python:
 .venv/bin/python scripts/build_docs.py             # macOS / Linux
 ```
 
-This regenerates the figures and tables, then renders the report to
+This regenerates the metric-method tables from the scoring catalog, rebuilds the
+figures and validation tables, then renders the report to
 `www/documentation.html`. There is no manual copy step.
 
 Flags:
@@ -44,7 +45,8 @@ For a prose-only change you can also just run `quarto render` inside this folder
 
 | You want to ...                                   | Edit                                                    | Then run                            |
 |---------------------------------------------------|---------------------------------------------------------|-------------------------------------|
-| Reword text, headings, or a method table          | `easi-vnv.qmd`                                          | `quarto render` (or `build_docs.py`)|
+| Reword prose or headings                          | `easi-vnv.qmd`                                          | `quarto render` (or `build_docs.py`)|
+| Change a metric method, band, or limitation       | `../../data/screening-methods.json` (the scoring catalog) | `build_docs.py` (tables regenerate) |
 | Change a SFARI value                              | `../Verification Sites/SFARI Summary.xlsx`              | `build_docs.py`                     |
 | Re-run a site, or change which functions it overrides | site coordinates in the xlsx, and `MINK_BROOK_OVERRIDES` in `../../scripts/sfari_data.py` | `build_docs.py --site MB`           |
 | Restyle a figure (colors, labels, axes)           | `../../scripts/build_doc_assets.py`                     | `build_docs.py`                     |
@@ -58,7 +60,8 @@ site's coordinates or overrides change.
 
 Hand-edited (source):
 
-- `easi-vnv.qmd` — the report itself: all prose plus the two method tables.
+- `easi-vnv.qmd` — the report's prose. The metric-method tables are generated from the
+  scoring catalog and pulled in with `{{< include >}}`, never hand-edited here.
 - `easi-docs.css` — page styling, matched to the EASI app.
 - `_quarto.yml` — render config that sends output to `../../www/documentation.html`.
 
@@ -78,8 +81,11 @@ Build scripts (in `../../scripts/`):
 
 - `sfari_data.py` — reads the xlsx, holds the EASI/SFARI function crosswalk and the Mink Brook overrides.
 - `run_sfari_sites.py` — runs EASI at each site and writes `data/easi_site_reports/`.
-- `build_doc_assets.py` — builds `figures/` and `_generated/` from the cached EASI runs plus the xlsx.
-- `build_docs.py` — the one command above (assets, then render).
+- `build_method_tables.py` — generates `_generated/methods_*.md` from the scoring catalog.
+- `build_doc_assets.py` — builds `figures/` and the validation tables from the cached EASI runs plus the xlsx.
+- `build_docs.py` — the one command above (method tables, then assets, then render).
+- `build_walkthrough_reference.py` — regenerates the site walkthrough's metric reference
+  (`docs/walkthroughs/easi/index.md`) from the same catalog.
 
 ## Notes for editors
 

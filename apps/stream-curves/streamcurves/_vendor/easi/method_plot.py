@@ -218,7 +218,7 @@ def worst_svg(method: ScoringMethod, site_inputs: dict, explored_inputs: Optiona
         unit = f" ({inp.unit})" if inp and inp.unit else ""
         gov = governing == key
         body.append(f'<text x="16" y="{top - 6:.1f}" class="mv-label">{_e(label)}{_e(unit)}'
-                    f'{" — governs" if gov else ""}</text>')
+                    f'{" (governs)" if gov else ""}</text>')
         body.append(_panel(bands, lo, hi, left, right, top, bottom, x_label="",
                            show_index_labels=False))
         sr = rate_fn(sv) if sv is not None else None

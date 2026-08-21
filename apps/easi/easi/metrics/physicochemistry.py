@@ -40,7 +40,7 @@ def _attains_result(record: dict, confidence: str) -> MetricResult:
         prefix = "assessment unit intersects selected point"
         warning = ""
     text = (f"{prefix}: IR category {category or '—'}"
-            f" — AU {record.get('assessment_unit') or '—'}")
+            f" (AU {record.get('assessment_unit') or '—'})")
     if ev.rating is None:
         return MetricResult(
             IMPAIRMENT_ID, value=category, value_text=text, rating=None,
@@ -73,17 +73,17 @@ def _chem_fallback(ctx: AnalysisContext, metric_id: str, *, reason: str) -> Metr
     if ev.rating is None:
         return unavailable(
             metric_id,
-            f"{reason}; both StreamCat CHEM components are also required",
+            f"{reason} and both StreamCat CHEM components are also required",
             "L", scoring=ev.trace,
             value_text=f"{label} evidence unavailable")
     value = float(ev.combined_value)
     return MetricResult(
         metric_id, value=value,
         value_text=(f"CHEM integrity fallback {value:.2f} "
-                    f"(catchment {float(chem_cat):.2f}; watershed {float(chem_ws):.2f})"),
+                    f"(catchment {float(chem_cat):.2f}, watershed {float(chem_ws):.2f})"),
         rating=ev.rating, confidence="L",
         source="EPA StreamCat CHEM catchment + watershed components",
-        note=(f"{reason}. Landscape-integrity fallback for {label}; it is not "
+        note=(f"{reason}. Landscape-integrity fallback for {label}. It is not "
               "a measured concentration or regulatory determination. The 0.40/0.70 "
               "classes are EASI integration tiers."),
         scoring=ev.trace)
@@ -205,7 +205,7 @@ def nutrients(ctx: AnalysisContext) -> MetricResult:
         + f"; {excluded} row(s) excluded")
     return MetricResult(
         NUTRIENTS_ID, value={"tn": tn, "tp": tp, "region": region_code},
-        value_text=f"{'; '.join(parts)} — {region_code} region",
+        value_text=f"{', '.join(parts)} ({region_code} region)",
         rating=ev.rating, confidence=confidence,
         source="Water Quality Portal + EPA NARS nine-region thresholds",
         note=coverage, detail={"tn": tn_summary, "tp": tp_summary, "region": region},
@@ -242,11 +242,11 @@ def stream_temperature(ctx: AnalysisContext) -> MetricResult:
     if temperature and temperature.get("value") is not None:
         context_note = (
             f" Nearby WQP temperature context: {float(temperature['value']):.1f} °C "
-            f"from {temperature.get('observation_count', 0)} observation(s); not scored.")
+            f"from {temperature.get('observation_count', 0)} observation(s), not scored.")
     return MetricResult(
         TEMPERATURE_ID, value=float(ev.combined_value),
-        value_text=(f"thermal vulnerability: woody riparian {float(woody):.1f}%; "
-                    f"impervious {float(impervious):.1f}% — {governing} governs"),
+        value_text=(f"thermal vulnerability: woody riparian {float(woody):.1f}%, "
+                    f"impervious {float(impervious):.1f}% ({governing} governs)"),
         rating=ev.rating, confidence="L",
         source="EPA StreamCat woody riparian cover + watershed impervious cover",
         note=("Vulnerability proxy for thermal loading and shade loss; not stream temperature."

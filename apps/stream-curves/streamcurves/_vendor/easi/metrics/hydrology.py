@@ -51,12 +51,12 @@ def impervious(ctx: AnalysisContext) -> MetricResult:
     governing = ev.trace["governingInput"]
     gov = inputs[governing]
     available = [x for x in ev.trace["inputs"] if x["available"]]
-    comparison = "; ".join(
+    comparison = ", ".join(
         f"{x['label'].replace('Watershed ', '')} {float(x['value']):.1f}% ({x.get('rating')})"
         for x in available)
     value_text = (
         f"{float(gov['value']):.1f}% {gov['label'].replace('Watershed ', '').lower()} "
-        f"— {governing} governs")
+        f"({governing} governs)")
     detail = {
         "governing": governing,
         "impervious": (None if imp is None else

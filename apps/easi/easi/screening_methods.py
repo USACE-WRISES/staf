@@ -175,7 +175,7 @@ def regional_bands(input_def: dict, region: str | None) -> list[dict]:
          "label": f"≤{_fmt(good_fair)}"},
         {"rating": "Fair", "min": good_fair, "max": fair_poor,
          "minInclusive": False, "maxInclusive": False,
-         "label": f">{_fmt(good_fair)}–<{_fmt(fair_poor)}"},
+         "label": f">{_fmt(good_fair)}-<{_fmt(fair_poor)}"},
         {"rating": "Poor", "min": fair_poor, "max": None,
          "minInclusive": True, "maxInclusive": False,
          "label": f"≥{_fmt(fair_poor)}"},
@@ -219,8 +219,12 @@ def criteria_for(method: dict, context: dict | None = None) -> dict:
             "input": next((i["key"] for i in method.get("inputs", [])
                            if not i.get("contextOnly")), "value"),
             "label": method["title"],
-            "units": next((i.get("units", "") for i in method.get("inputs", [])
-                           if not i.get("contextOnly")), ""),
+            # A formula that derives a new quantity (for example the degree of
+            # regulation, in percent) owns the banded units; otherwise the
+            # rated input's units apply.
+            "units": ((method.get("formula") or {}).get("units")
+                      or next((i.get("units", "") for i in method.get("inputs", [])
+                               if not i.get("contextOnly")), "")),
             "bands": {b["rating"]: b["label"] for b in method["bands"]},
         })
     elif method["operator"] == "categorical_lookup":
@@ -233,7 +237,7 @@ def criteria_for(method: dict, context: dict | None = None) -> dict:
                 "input": (method.get("formula") or {}).get("input", "category"),
                 "label": method["title"],
                 "units": "",
-                "bands": {rating: "; ".join(labels) for rating, labels in grouped.items()},
+                "bands": {rating: " · ".join(labels) for rating, labels in grouped.items()},
             })
     return {"automated": auto, "fieldReference": method.get("fieldReference")}
 
@@ -454,7 +458,7 @@ def evaluate(metric_id: str, values: dict[str, Any], *, context: dict | None = N
         threshold = float(method["formula"]["geometryWarningBelow"])
         if combined < threshold:
             warnings.append(
-                f"Value {combined:g} is below {threshold:g}; verify cross-section geometry.")
+                f"Value {combined:g} is below {threshold:g}. Verify cross-section geometry.")
     return _finish(method, values, input_meta, confidence, rating=rating,
                    combined=combined, completeness="complete" if rating else "not_assessed",
                    warnings=warnings, context=context)

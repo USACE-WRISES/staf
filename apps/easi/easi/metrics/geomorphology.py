@@ -65,8 +65,8 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
         note += " Flood-prone width reached the DEM buffer edge; ER may be underestimated."
     return MetricResult(
         CHANNEL_EVOL_ID, value={"bhr": bhr, "er": er},
-        value_text=(f"channel-adjustment susceptibility — BHR {float(bhr):.2f}; "
-                    f"ER {float(er):.2f}; {ev.trace.get('governingInput')} governs"),
+        value_text=(f"channel-adjustment susceptibility (BHR {float(bhr):.2f}, "
+                    f"ER {float(er):.2f}), {ev.trace.get('governingInput')} governs"),
         rating=ev.rating, confidence=confidence,
         source="USGS 3DEP representative cross section + NHDPlus FCODE",
         note=note,
@@ -136,7 +136,7 @@ def substrate(ctx: AnalysisContext) -> MetricResult:
             evidence_family="nrsa_field", used_fallback=False)
         if connected:
             ev.trace["completeness"] = "partial"
-        note = f"NRSA survey date {nrsa.get('date')}; embeddedness is one component of substrate condition."
+        note = f"NRSA survey date {nrsa.get('date')}. Embeddedness is one component of substrate condition."
         if nrsa.get("warning"):
             note += f" {nrsa['warning']}"
         return MetricResult(
@@ -164,7 +164,7 @@ def substrate(ctx: AnalysisContext) -> MetricResult:
     return MetricResult(
         SUBSTRATE_ID, value=value,
         value_text=(f"SED integrity fallback {value:.2f} "
-                    f"(catchment {float(sed_cat):.2f}; watershed {float(sed_ws):.2f})"),
+                    f"(catchment {float(sed_cat):.2f}, watershed {float(sed_ws):.2f})"),
         rating=ev.rating, confidence="L",
         source="EPA StreamCat SED catchment + watershed components",
         note=("Landscape-integrity fallback, not observed embeddedness or bed composition; "
@@ -186,13 +186,13 @@ def bank_erosion(ctx: AnalysisContext) -> MetricResult:
             BANK_EROSION_ID,
             "bank-height ratio unavailable for the bank-instability susceptibility proxy",
             "L", scoring=ev.trace)
-    warning = "; ".join(ev.trace.get("warnings") or [])
+    warning = " ".join(ev.trace.get("warnings") or [])
     return MetricResult(
         BANK_EROSION_ID, value=float(bhr),
         value_text=f"bank-instability susceptibility from BHR {float(bhr):.2f}",
         rating=ev.rating, confidence="L",
         source="USGS 3DEP representative cross section",
-        note=((warning + "; ") if warning else "")
+        note=((warning + " ") if warning else "")
              + ("BHR does not detect armoring or directly measure erosion. Complete observed "
                 "erosion and armoring percentages supersede this proxy."),
         scoring=ev.trace)

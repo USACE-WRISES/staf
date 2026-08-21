@@ -214,7 +214,7 @@ METRIC_DEFINITIONS: dict[str, str] = {
         "Potential for surface water to exchange with the shallow subsurface (hyporheic zone), "
         "screened from channel slope. Sinuosity is shown for context and is not rated.",
     "channel-evolution-channel-evolution-stage-and-trends":
-        "Whether the channel is stable or actively incising/widening — its stage in the "
+        "Whether the channel is stable or actively incising/widening, its stage in the "
         "channel-evolution sequence.",
     "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition":
         "Susceptibility to bank erosion, from the bank-height ratio unless bank observations "
@@ -288,7 +288,7 @@ METRIC_CALCULATIONS: dict[str, str] = {
     "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl":
         "From the reach's Clean Water Act impaired-waters listing (303(d)/305(b)/TMDL).",
     "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity":
-        "From dam/barrier presence affecting upstream–downstream passage.",
+        "From dam/barrier presence affecting upstream-downstream passage.",
 }
 
 

@@ -56,7 +56,7 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
         ("Chemical coverage", pct((outcome_coverage.get("chemical") or {}).get("fraction"))),
         ("Biological coverage", pct((outcome_coverage.get("biological") or {}).get("fraction"))),
         ("Coverage status", coverage.get("statusMessage") or
-         ("Provisional — limited coverage" if rep.get("provisionalCoverage")
+         ("Provisional (limited coverage)" if rep.get("provisionalCoverage")
           else "Sufficient coverage")),
         ("Observed evidence metrics", profile.get("observed", 0)),
         ("Connected/nearby evidence metrics", profile.get("connectedNearby", 0)),
@@ -242,7 +242,7 @@ def _summary_plots_png(rep: dict) -> bytes:
             tick.set_color("#22304d")
     axL.set_ylim(-0.6, len(plot_rows) - 0.4)
     axL.set_xlim(0, 15)
-    axL.set_xlabel("Function score (0–15)", fontsize=8)
+    axL.set_xlabel("Function score (0-15)", fontsize=8)
     axL.set_title("Function scores", fontsize=9.5, fontweight="bold")
     axL.grid(axis="x", color="#eef0f4", lw=0.6)
     axL.set_axisbelow(True)
@@ -266,7 +266,7 @@ def _summary_plots_png(rep: dict) -> bytes:
     axR.get_yticklabels()[3].set_fontweight("bold")
     axR.set_ylim(-0.6, 3.6)
     axR.set_xlim(0, 1)
-    axR.set_xlabel("Condition index (0–1)", fontsize=8)
+    axR.set_xlabel("Condition index (0-1)", fontsize=8)
     axR.set_title("Condition indices", fontsize=9.5, fontweight="bold")
     axR.grid(axis="x", color="#eef0f4", lw=0.6)
     axR.set_axisbelow(True)
@@ -291,7 +291,7 @@ def build_pdf(result: dict) -> bytes:
     d, rep = result["delineation"], result["report"]
     styles = getSampleStyleSheet()
     story = []
-    story.append(Paragraph(f"EASI Screening Report — {d.get('gnis_name','')}",
+    story.append(Paragraph(f"EASI Screening Report: {d.get('gnis_name','')}",
                            styles["Title"]))
     lat, lon = d.get("snapped_lat"), d.get("snapped_lon")
     pt = f"{lat:.4f}, {lon:.4f}" if lat is not None and lon is not None else "—"
@@ -300,13 +300,13 @@ def build_pdf(result: dict) -> bytes:
     story.append(Spacer(1, 8))
     if rep.get("provisionalCoverage"):
         story.append(Paragraph(
-            "<b>Provisional — limited coverage.</b> One or more included coverage "
-            "measures are below 70%; missing domains are shown as a gray dash, not zero.",
+            "<b>Provisional (limited coverage).</b> One or more included coverage "
+            "measures are below 70%. Missing domains are shown as a gray dash, not zero.",
             styles["Normal"]))
         story.append(Spacer(1, 6))
     elif (rep.get("coverage") or {}).get("completeWithProxies"):
         story.append(Paragraph(
-            "<b>Complete screening coverage — includes proxy-derived ratings.</b> "
+            "<b>Complete screening coverage (includes proxy-derived ratings).</b> "
             "Use the evidence profile and per-metric source tier to distinguish "
             "observations, models, and screening proxies.", styles["Normal"]))
         story.append(Spacer(1, 6))
@@ -348,7 +348,7 @@ def build_pdf(result: dict) -> bytes:
     story.append(Image(io.BytesIO(_summary_plots_png(rep)),
                        width=7.0 * inch, height=5.44 * inch))
     story.append(Paragraph(
-        "Bars colored by condition band — blue: Functioning · yellow: "
+        "Bars colored by condition band. Blue: Functioning · yellow: "
         "Functioning-at-Risk · red: Non-Functioning.", styles["Italic"]))
     story.append(Spacer(1, 8))
 
@@ -419,7 +419,7 @@ def build_pdf(result: dict) -> bytes:
     story.append(tbl)
     story.append(Spacer(1, 8))
     story.append(Paragraph(
-        "Generated from national datasets — a desktop screening estimate with "
+        "Generated from national datasets. A desktop screening estimate with "
         "per-metric confidence, not a field-validated assessment.",
         styles["Italic"]))
 

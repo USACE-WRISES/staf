@@ -2,35 +2,35 @@
 |:--------|:------------------|:----------------------------------------------------|
 | **Stream Temperature** | Function | Light & thermal regime |
 |  | Automated method | Thermal-regulation vulnerability |
-|  | Inputs | Woody riparian cover (%); Watershed impervious cover (%) |
+|  | Inputs | Woody riparian cover (%) · Watershed impervious cover (%) |
 |  | Equation | Icombined = min(Iwoody, Iimpervious) |
-|  | Scoring | *Woody riparian cover* — Good ≥75%; Fair 25–<75%; Poor <25%<br>*Watershed impervious cover* — Good <10%; Fair 10–25%; Poor >25% |
-|  | Basis | published directional relationship; confidence L; provisional screening transitions |
-|  | Source hierarchy | Single source; no fallback. |
-|  | Known limitations | This method estimates vulnerability to thermal loading and loss of shade; it does not estimate stream temperature.<br>Both inputs are required and the specific bands are provisional screening classes.<br>Valid WQP temperature observations may be displayed as context but are not scored without an applicable class, season, and exposure rule.<br>The 25 and 75 percent woody bands are EASI conventions. Shade studies place intact forest near 85 percent shade, but no published corridor-percent thresholds exist. |
+|  | Scoring | *Woody riparian cover*: Good ≥75% · Fair 25-<75% · Poor <25%<br>*Watershed impervious cover*: Good <10% · Fair 10-25% · Poor >25% |
+|  | Basis | published directional relationship, confidence L, provisional screening transitions |
+|  | Source hierarchy | Single source, no fallback. |
+|  | Known limitations | This method estimates vulnerability to thermal loading and loss of shade. It does not estimate stream temperature.<br>Both inputs are required and the specific bands are provisional screening classes.<br>Valid WQP temperature observations may be displayed as context but are not scored without an applicable class, season, and exposure rule.<br>The 25 and 75 percent woody bands are EASI conventions. Shade studies place intact forest near 85 percent shade, but no published corridor-percent thresholds exist. |
 | **Detrital Processing (CPOM retention / shredders)** | Function | Carbon processing |
 |  | Automated method | Organic-matter supply potential proxy |
-|  | Inputs | Riparian forest (%); Riparian shrub (%); Riparian grassland (%); Riparian wetland (%) |
+|  | Inputs | Riparian forest (%) · Riparian shrub (%) · Riparian grassland (%) · Riparian wetland (%) |
 |  | Equation | V = min(forest + shrub + grassland + wetland, 100) |
-|  | Scoring | Good >50%; Fair >20–≤50%; Poor ≤20% |
-|  | Basis | provisional STAF screening judgment; confidence M; provisional screening transitions |
-|  | Source hierarchy | Single source; no fallback. |
-|  | Known limitations | The method estimates organic-matter supply potential, not CPOM retention or shredder condition.<br>All expected source classes must be present; missing classes are not treated as zero.<br>Breakpoints are provisional STAF screening judgments. |
+|  | Scoring | Good >50% · Fair >20-≤50% · Poor ≤20% |
+|  | Basis | provisional STAF screening judgment, confidence M, provisional screening transitions |
+|  | Source hierarchy | Single source, no fallback. |
+|  | Known limitations | The method estimates organic-matter supply potential, not CPOM retention or shredder condition.<br>All expected source classes must be present. Missing classes are not treated as zero.<br>Breakpoints are provisional STAF screening judgments. |
 | **Nitrogen & Phosphorus Concentrations** | Function | Nutrient cycling |
 |  | Automated method | Nutrient condition |
-|  | Inputs | Total nitrogen (mg/L); Total phosphorus (mg/L) |
+|  | Inputs | Total nitrogen (mg/L) · Total phosphorus (mg/L) |
 |  | Equation | Icombined = min(ITN, ITP) |
-|  | Scoring | Categorical; see the source hierarchy. |
-|  | Basis | published threshold; confidence M/L |
-|  | Source hierarchy | 1. Normalized WQP TN/TP observations — Use valid total-fraction observations from stations within five miles and the preceding ten years.<br>2. StreamCat CHEM integrity fallback — Use when no qualifying TN or TP observation can be normalized. |
+|  | Scoring | *Total nitrogen* (mg/L), Good at or below / Poor at or above by NRSA region: CPL 0.624/1.081 · NAP 0.345/0.482 · SAP 0.24/0.456 · UMW 0.583/1.024 · TPL 0.7/1.274 · NPL 0.575/0.937 · SPL 0.581/1.069 · WMT 0.139/0.249 · XER 0.285/0.529<br>*Total phosphorus* (mg/L), Good at or below / Poor at or above by NRSA region: CPL 0.0559/0.103 · NAP 0.0171/0.0326 · SAP 0.0148/0.0244 · UMW 0.0363/0.0499 · TPL 0.0886/0.143 · NPL 0.064/0.107 · SPL 0.0558/0.127 · WMT 0.0177/0.041 · XER 0.052/0.0959 |
+|  | Basis | published threshold, confidence M/L |
+|  | Source hierarchy | 1. Normalized WQP TN/TP observations: Use valid total-fraction observations from stations within five miles and the preceding ten years.<br>2. StreamCat CHEM integrity fallback: Use when no qualifying TN or TP observation can be normalized. |
 |  | Known limitations | Nearby monitoring stations are not necessarily reach-specific.<br>Each station is reduced to a median before station medians are combined, preventing heavily sampled stations from dominating.<br>One analyte may produce a partial rating.<br>When observations are unavailable, the CHEM fallback represents landscape integrity rather than measured nutrient concentration. |
 | **Regulatory Impairment Status (305b/303d/TMDL)** | Function | Water & soil quality |
 |  | Automated method | Regulatory impairment |
 |  | Inputs | ATTAINS integrated-report category |
 |  | Equation | Rating = lookup(IR category) |
-|  | Scoring | Good Category 1; Category 2; Fair Category 4a; Category 4b; Poor Category 4c; Category 5 |
-|  | Basis | dataset reference; confidence H |
-|  | Source hierarchy | 1. Conclusive ATTAINS category — Use an intersecting or qualifying nearby Category 1, 2, 4a, 4b, 4c, or 5 assessment.<br>2. StreamCat CHEM condition fallback — Use when ATTAINS is absent or Category 3 is inconclusive; the result is condition context, not a regulatory determination. |
+|  | Scoring | Good Category 1 · Category 2 · Fair Category 4a · Category 4b · Poor Category 4c · Category 5 |
+|  | Basis | dataset reference, confidence H |
+|  | Source hierarchy | 1. Conclusive ATTAINS category: Use an intersecting or qualifying nearby Category 1, 2, 4a, 4b, 4c, or 5 assessment.<br>2. StreamCat CHEM condition fallback: Use when ATTAINS is absent or Category 3 is inconclusive. The result is condition context, not a regulatory determination. |
 |  | Known limitations | Category 3 remains unscored because evidence is insufficient.<br>A nearby unit within 2 km is explicitly labeled nearby and may not represent the selected reach.<br>When ATTAINS is absent or inconclusive, the CHEM fallback is labeled water-quality condition context and not a regulatory determination.<br>The category mapping reflects remedy status, not severity. A Category 4a water is as impaired as a Category 5 water but has an approved TMDL, so 4a and 4b rate Fair as impaired-with-a-management-pathway. Category 2 means no assessed use is failing, which is weaker than Category 1. |
 
 : Physicochemistry metrics {#tbl-metrics-physicochemistry}

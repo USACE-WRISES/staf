@@ -1,17 +1,17 @@
-**EASI** ECI 0.74 (Physical 0.7, Chemical 0.71, Biological 0.82). **SFARI** ECI 0.88 (Physical 0.84, Chemical 0.93, Biological 0.87).
+**EASI** ECI 0.77 (Physical 0.75, Chemical 0.72, Biological 0.83). **SFARI** ECI 0.88 (Physical 0.84, Chemical 0.93, Biological 0.87).
 
 | Function | EASI rating | EASI score | SFARI score |
 |---|:--:|--:|--:|
 | Catchment hydrology | Good | 13 | 13.0 |
 | Surface water storage | Fair | 8 | 12.0 |
 | Reach inflow | Fair | 8 | 11.0 |
-| Streamflow regime | Poor | 3 | 14.5 |
+| Streamflow regime | Good | 13 | 14.5 |
 | Low flow and baseflow dynamics | Good | 13 | 15.0 |
 | High flow dynamics | Good * | 13 | 12.0 |
 | Floodplain connectivity | Good * | 13 | 11.0 |
 | Hyporheic connectivity | Good | 13 | 14.0 |
 | Channel evolution | Good * | 13 | 12.0 |
-| Channel and floodplain dynamics | Fair | 8 | 11.5 |
+| Channel and floodplain dynamics | Good | 13 | 11.5 |
 | Sediment continuity | Fair | 8 | 12.0 |
 | Light & thermal regime | Good | 13 | 14.0 |
 | Carbon processing | Good | 13 | 14.0 |
