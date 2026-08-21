@@ -55,6 +55,12 @@ def interp_curve(points: Sequence[dict], x: float) -> Optional[float]:
     return _clamp01(pts[-1]["y"])  # pragma: no cover — unreachable given the clamps above
 
 
+def _fmt_bound(v: float) -> str:
+    """Domain bounds for the advisory: four decimals at most, so a seed edge
+    such as 2.086666666666667 reads 2.0867 while 8.0 stays 8.0."""
+    return str(round(float(v), 4))
+
+
 def domain_warning(points: Sequence[dict], x: float) -> Optional[str]:
     """Advisory when ``x`` falls outside a curve's x-domain (its score is clamped).
 
@@ -78,9 +84,9 @@ def domain_warning(points: Sequence[dict], x: float) -> Optional[str]:
     lo, hi = xs[0], xs[-1]
     xf = float(x)
     if xf < lo:
-        return f"value {xf} is below the curve domain [{lo}, {hi}]; score clamped to the endpoint"
+        return f"value {_fmt_bound(xf)} is below the curve domain [{_fmt_bound(lo)}, {_fmt_bound(hi)}]; score clamped to the endpoint"
     if xf > hi:
-        return f"value {xf} is above the curve domain [{lo}, {hi}]; score clamped to the endpoint"
+        return f"value {_fmt_bound(xf)} is above the curve domain [{_fmt_bound(lo)}, {_fmt_bound(hi)}]; score clamped to the endpoint"
     return None
 
 

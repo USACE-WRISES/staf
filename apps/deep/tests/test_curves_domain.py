@@ -100,3 +100,12 @@ def test_score_site_no_warning_for_in_domain_value():
     _sc, fres = score_site(asmt, {"m1": MeasuredValue("m1", value=4.0)})
     assert curves.score_site  # module import sanity
     assert fres["catchment-hydrology"].metric_warnings["m1"] is None
+
+
+def test_domain_advisory_rounds_seed_edges_to_four_decimals():
+    """A seed edge such as 2.086666666666667 reads 2.0867 in the advisory;
+    whole-number edges keep their plain form (Phase 8 figure review)."""
+    spec = {"curve": {"points": [{"x": 0.0, "y": 1.0}, {"x": 2.086666666666667, "y": 0.0}]}}
+    msg = metric_warning(MeasuredValue("m", value=4.5), spec)
+    assert "curve domain [0.0, 2.0867]" in msg
+    assert "value 4.5 is above" in msg

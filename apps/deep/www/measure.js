@@ -40,8 +40,10 @@
       .sort(function (a, b) { return a - b; });
     if (xs.length < 2) return null;
     var lo = xs[0], hi = xs[xs.length - 1];
-    if (x < lo) return "value " + x + " is below the curve domain [" + lo + ", " + hi + "]; score clamped to the endpoint";
-    if (x > hi) return "value " + x + " is above the curve domain [" + lo + ", " + hi + "]; score clamped to the endpoint";
+    // Four decimals at most, so a seed edge such as 2.086666666666667 reads 2.0867 (mirrors deep/curves.py).
+    var fmtB = function (v) { return String(Math.round(v * 1e4) / 1e4); };
+    if (x < lo) return "value " + fmtB(x) + " is below the curve domain [" + fmtB(lo) + ", " + fmtB(hi) + "]; score clamped to the endpoint";
+    if (x > hi) return "value " + fmtB(x) + " is above the curve domain [" + fmtB(lo) + ", " + fmtB(hi) + "]; score clamped to the endpoint";
     return null;
   }
   function idxColor(v) {

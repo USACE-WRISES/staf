@@ -43,11 +43,24 @@
                 "y": 0.3
               },
               {
-                "x": 116.15750000000003,
+                "x": 100.0,
                 "y": 0.0
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            25.12,
+            89.57
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -87,6 +100,19 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.95,
+            15.69
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -133,6 +159,20 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Reference bands of hundredths of a percent sit below the land-cover product's wetland-class accuracy, and a steep watershed that never held herbaceous wetland reads low without being degraded."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            0.26
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -172,6 +212,20 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Wetland cover follows terrain: a steep watershed that never held wetland reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.01,
+            8.82
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -218,6 +272,19 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            1.0092,
+            3.9889
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -235,7 +302,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Base flow index (%)",
-          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime.",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -264,6 +331,20 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            16.1181,
+            39.6583
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -303,6 +384,19 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            0.0677
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -320,7 +414,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Base flow index (%)",
-          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime.",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -349,6 +443,20 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            16.1181,
+            39.6583
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "best_available"
@@ -369,10 +477,6 @@
               {
                 "x": 0.0,
                 "y": 0.0
-              },
-              {
-                "x": 0.0,
-                "y": 0.3
               },
               {
                 "x": 4.0474876698874995,
@@ -400,6 +504,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            4.344160509,
+            44.75490465
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "best_available"
@@ -439,6 +555,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            9.378750648,
+            115.7046338
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -485,6 +613,19 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.95,
+            15.69
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "best_available"
@@ -514,10 +655,6 @@
                 "y": 0.0
               },
               {
-                "x": 0.0,
-                "y": 0.3
-              },
-              {
                 "x": 4.0474876698874995,
                 "y": 0.7
               },
@@ -543,6 +680,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            4.344160509,
+            44.75490465
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "best_available"
@@ -563,10 +712,6 @@
               {
                 "x": 0.0,
                 "y": 0.0
-              },
-              {
-                "x": 0.0,
-                "y": 0.3
               },
               {
                 "x": 0.22105681837500002,
@@ -594,6 +739,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            2.472727273
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -640,6 +797,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            6.0,
+            95.23809524
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -670,15 +839,23 @@
                 "y": 0.7
               },
               {
-                "x": 121.96969696,
-                "y": 0.3
-              },
-              {
-                "x": 152.42424240999998,
+                "x": 100.0,
                 "y": 0.0
               }
             ]
           },
+          "referenceN": 9,
+          "sampleDisposition": "insufficient",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            26.36363636,
+            98.18181818
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -708,10 +885,6 @@
                 "y": 0.0
               },
               {
-                "x": 0.0,
-                "y": 0.3
-              },
-              {
                 "x": 4.0474876698874995,
                 "y": 0.7
               },
@@ -737,6 +910,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            4.344160509,
+            44.75490465
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -757,10 +942,6 @@
               {
                 "x": 0.0,
                 "y": 0.0
-              },
-              {
-                "x": 0.0,
-                "y": 0.3
               },
               {
                 "x": 0.22105681837500002,
@@ -788,6 +969,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            2.472727273
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "best_available"
@@ -813,12 +1006,8 @@
             "form": "monotone",
             "points": [
               {
-                "x": 0.0,
+                "x": 1.0,
                 "y": 0.0
-              },
-              {
-                "x": 0.45695648185714294,
-                "y": 0.3
               },
               {
                 "x": 1.066231791,
@@ -834,6 +1023,18 @@
               }
             ]
           },
+          "referenceN": 9,
+          "sampleDisposition": "insufficient",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 48.5,
+          "referenceRange": [
+            1.002636699,
+            2.6200619
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -844,7 +1045,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "XBKA",
-          "howToMeasure": "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment.",
+          "howToMeasure": "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment. low_tail flat added at the adversarial review gate (owner decision, 2026-08-21): a regraded or naturally gentle bank holds at the Functioning edge instead of being penalized, because the flat tail is not symmetric evidence of degradation and the framework's stated use is restoration evaluation.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -853,11 +1054,7 @@
             "points": [
               {
                 "x": 1.0454545500000059,
-                "y": 0.0
-              },
-              {
-                "x": 12.727272730000003,
-                "y": 0.3
+                "y": 0.7
               },
               {
                 "x": 20.320454547,
@@ -885,6 +1082,18 @@
               }
             ]
           },
+          "referenceN": 9,
+          "sampleDisposition": "insufficient",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 44.7,
+          "referenceRange": [
+            18.5,
+            45.90909091
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -902,35 +1111,59 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "LRBS_use",
-          "howToMeasure": "Log relative bed stability; higher (nearer natural) is better. Was degenerate in the pilot (Q25 issue), so expect a review flag.",
+          "howToMeasure": "Log relative bed stability; departure from the reference core in EITHER direction departs from reference (negative excess fines, positive an armored, sediment-starved bed, the classic below-impoundment failure). The pilot's rising direction scored armored beds 1.0 and left Sediment continuity blind to its textbook failure mode. Two-sided form is an owner decision at the adversarial review gate, 2026-08-21.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
             "stratification": "",
-            "form": "monotone",
+            "form": "optimum",
             "points": [
               {
-                "x": -4.022073464916667,
+                "x": -3.602738508,
                 "y": 0.0
               },
               {
-                "x": -2.764068594166667,
+                "x": -2.34473363725,
                 "y": 0.3
               },
               {
-                "x": -1.0867287665,
+                "x": -1.5270304712625,
                 "y": 0.7
+              },
+              {
+                "x": -1.0867287665,
+                "y": 1.0
               },
               {
                 "x": 0.17127610425,
                 "y": 1.0
               },
               {
-                "x": 0.548677565475,
-                "y": 1.0
+                "x": 0.6115778090124999,
+                "y": 0.7
+              },
+              {
+                "x": 1.429280975,
+                "y": 0.3
+              },
+              {
+                "x": 2.68728584575,
+                "y": 0.0
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            -2.338748975,
+            1.453444449
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -970,6 +1203,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            6.0,
+            95.23809524
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "best_available"
@@ -1016,6 +1261,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            -1.673490689,
+            2.745787676
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1055,6 +1312,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            29.65636364
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1085,15 +1354,23 @@
                 "y": 0.7
               },
               {
-                "x": 121.96969696,
-                "y": 0.3
-              },
-              {
-                "x": 152.42424240999998,
+                "x": 100.0,
                 "y": 0.0
               }
             ]
           },
+          "referenceN": 9,
+          "sampleDisposition": "insufficient",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            26.36363636,
+            98.18181818
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "best_available"
@@ -1140,6 +1417,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            1.08,
+            31.73
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1179,6 +1468,18 @@
               }
             ]
           },
+          "referenceN": 9,
+          "sampleDisposition": "insufficient",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 52.3,
+          "referenceRange": [
+            12.1657754,
+            89.57219251
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1225,6 +1526,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.061363636,
+            1.993181818
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1271,6 +1584,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.52,
+            6.594
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1310,6 +1635,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            23.849,
+            1055.9
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1356,57 +1693,19 @@
               }
             ]
           },
-          "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "best_available"
-        },
-        {
-          "metricId": "spring-chem-ph",
-          "metricName": "PH",
-          "inputType": "continuous",
-          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "PH (Std. Units)",
-          "howToMeasure": "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails.",
-          "methodContext": "",
-          "curve": {
-            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-            "stratification": "",
-            "form": "optimum",
-            "points": [
-              {
-                "x": 8.027500000000003,
-                "y": 0.0
-              },
-              {
-                "x": 8.142500000000002,
-                "y": 0.3
-              },
-              {
-                "x": 8.21725,
-                "y": 0.7
-              },
-              {
-                "x": 8.2575,
-                "y": 1.0
-              },
-              {
-                "x": 8.372499999999999,
-                "y": 1.0
-              },
-              {
-                "x": 8.412749999999999,
-                "y": 0.7
-              },
-              {
-                "x": 8.487499999999997,
-                "y": 0.3
-              },
-              {
-                "x": 8.602499999999996,
-                "y": 0.0
-              }
-            ]
-          },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Specific conductance carries natural carbonate geology as well as disturbance: a pristine stream in a calcareous valley can score low on this curve."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            322.23,
+            979.9
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1446,6 +1745,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            1.73,
+            27.92
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1492,6 +1803,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.059090909,
+            1.011363636
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1538,6 +1861,18 @@
               }
             ]
           },
+          "referenceN": 15,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 15 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            12.0,
+            45.0
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1577,6 +1912,18 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            5.0,
+            37.0
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1623,6 +1970,18 @@
               }
             ]
           },
+          "referenceN": 15,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 15 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            2.0,
+            14.0
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1662,6 +2021,18 @@
               }
             ]
           },
+          "referenceN": 15,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 15 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            1.86,
+            3.3
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1701,6 +2072,18 @@
               }
             ]
           },
+          "referenceN": 15,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 15 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            3.03,
+            59.67
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -1747,6 +2130,19 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            0.0677
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "best_available"
@@ -1757,7 +2153,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Road-stream crossings (per sq km)",
-          "howToMeasure": "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage.",
+          "howToMeasure": "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage. UNITS CAUTION (2026-08-21): values as served by the EPA StreamCat API sit about two orders of magnitude below the classic StreamCat documentation of crossings per sq km (frame national median 0.0098 vs a documented distribution near 0.5 to 1.5). The frame and the live API agree with each other, so scoring is internally consistent, but a manually computed crossings-per-sq-km value will land far off-curve. Enter API-served values only, pending units reconciliation with EPA.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -1786,6 +2182,20 @@
               }
             ]
           },
+          "referenceN": 16,
+          "sampleDisposition": "exploratory",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Units caution: enter the StreamCat API value as served. A crossing density computed by hand in crossings per square kilometer lands about 100 times above this curve."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0051,
+            0.0276
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "best_available"
@@ -3812,22 +4222,22 @@
     }
   },
   "referenceTier": "best_available",
-  "contentDigest": "sha256:fd7f84e1e27d72b862ae014a6c31f6639693191440b141835a0a83315db665a9",
+  "contentDigest": "sha256:c86f7b22dff315c4a8b98582e658fdfeac7162138e6bf1ab2707615b521f77d0",
   "library": {
     "libraryId": "eastern-corn-belt-plains",
-    "version": 2,
-    "updatedAt": "2026-08-21T18:02:10Z",
+    "version": 3,
+    "updatedAt": "2026-08-21T23:32:32Z",
     "author": "StreamCurves Regional Analysis Agent",
-    "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 16 of 18 candidates.  REF-02 fallback: only 0 Functioning sites (< 20); included Functioning-at-Risk to reach 16. Mandatory review; confidence capped; reference tier = best_available.",
+    "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 16 of 18 candidates.  REF-02 fallback: only 0 Functioning sites, below the exploratory floor of 10; included Functioning-at-Risk to reach 16. Mandatory review; confidence capped; reference tier = best_available.",
     "region": {
       "kind": "ecoregion",
       "code": "55",
       "name": "Eastern Corn Belt Plains"
     },
-    "contentDigest": "sha256:fd7f84e1e27d72b862ae014a6c31f6639693191440b141835a0a83315db665a9",
-    "supersedesVersion": 1
+    "contentDigest": "sha256:c86f7b22dff315c4a8b98582e658fdfeac7162138e6bf1ab2707615b521f77d0",
+    "supersedesVersion": 2
   },
-  "version": 2,
+  "version": 3,
   "lifecycle": "preliminary",
-  "assessmentRef": "eastern-corn-belt-plains@v2"
+  "assessmentRef": "eastern-corn-belt-plains@v3"
 }

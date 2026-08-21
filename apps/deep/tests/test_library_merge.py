@@ -136,17 +136,20 @@ def test_library_wins_over_baked_same_id_no_duplicate(libroot):
 
 
 def test_only_latest_version_is_used(libroot):
-    _write_library_version(libroot, "eastern-corn-belt-plains", 1, name="v1", region_name="ECBP")
-    _write_library_version(libroot, "eastern-corn-belt-plains", 2, name="v2", region_name="ECBP")
+    # Synthetic versions sit above anything the bake carries (the baked ECBP
+    # copy advanced to v3 in Phase 8), so the test pins the merge rule and not
+    # the current published version.
+    _write_library_version(libroot, "eastern-corn-belt-plains", 98, name="v98", region_name="ECBP")
+    _write_library_version(libroot, "eastern-corn-belt-plains", 99, name="v99", region_name="ECBP")
     _write_catalog(
         libroot,
-        [{"assessmentId": "eastern-corn-belt-plains", "assessmentName": "v2",
+        [{"assessmentId": "eastern-corn-belt-plains", "assessmentName": "v99",
           "region": {"kind": "ecoregion", "code": "55", "name": "ECBP"},
-          "latestVersion": 2, "latestUpdatedAt": "2026-07-07T00:00:00Z"}],
+          "latestVersion": 99, "latestUpdatedAt": "2026-07-07T00:00:00Z"}],
     )
     la = assessments.load_predefined("eastern-corn-belt-plains")
-    assert la.assessment_name == "v2"
-    assert la.raw["library"]["version"] == 2
+    assert la.assessment_name == "v99"
+    assert la.raw["library"]["version"] == 99
 
 
 def test_placeholder_version_zero_is_skipped(libroot):
@@ -162,20 +165,20 @@ def test_placeholder_version_zero_is_skipped(libroot):
 
 def test_list_predefined_surfaces_region_and_version(libroot):
     _write_library_version(
-        libroot, "eastern-corn-belt-plains", 2,
+        libroot, "eastern-corn-belt-plains", 99,
         name="ECBP Adapted", region_name="Eastern Corn Belt Plains",
     )
     _write_catalog(
         libroot,
         [{"assessmentId": "eastern-corn-belt-plains", "assessmentName": "ECBP Adapted",
           "region": {"kind": "ecoregion", "code": "55", "name": "Eastern Corn Belt Plains"},
-          "latestVersion": 2, "latestUpdatedAt": "2026-07-07T00:00:00Z"}],
+          "latestVersion": 99, "latestUpdatedAt": "2026-07-07T00:00:00Z"}],
     )
     entry = next(
         a for a in assessments.list_predefined()
         if a["assessmentId"] == "eastern-corn-belt-plains"
     )
-    assert entry["version"] == 2
+    assert entry["version"] == 99
     assert entry["regionName"] == "Eastern Corn Belt Plains"
 
 

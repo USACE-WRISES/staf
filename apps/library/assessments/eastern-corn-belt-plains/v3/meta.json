@@ -1,0 +1,46 @@
+{
+  "assessmentId": "eastern-corn-belt-plains",
+  "assessmentName": "Eastern Corn Belt Plains reference assessment",
+  "version": 3,
+  "updatedAt": "2026-08-21T23:32:32Z",
+  "author": "StreamCurves Regional Analysis Agent",
+  "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 16 of 18 candidates.  REF-02 fallback: only 0 Functioning sites, below the exploratory floor of 10; included Functioning-at-Risk to reach 16. Mandatory review; confidence capped; reference tier = best_available.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "55",
+    "name": "Eastern Corn Belt Plains"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+  "contentDigest": "sha256:c86f7b22dff315c4a8b98582e658fdfeac7162138e6bf1ab2707615b521f77d0",
+  "supersedesVersion": 2,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "community-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Three complementary benthic community angles"
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Substrate size, wood volume, and the reviewer-finalized embeddedness read different aspects of bed condition"
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Complementary set where the third metric arrives via a metric informing a second function"
+    },
+    {
+      "functionId": "water-soil-quality",
+      "approvedBy": "gtmenichino",
+      "note": "Conductivity and turbidity are complementary axes (pH removed from scoring in this region)"
+    },
+    {
+      "functionId": "hyporheic-connectivity",
+      "approvedBy": "gtmenichino",
+      "note": "Fines and the reviewer-finalized embeddedness read complementary aspects of interstitial condition"
+    }
+  ]
+}

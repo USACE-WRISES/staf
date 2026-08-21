@@ -31,10 +31,6 @@
                 "y": 1.0
               },
               {
-                "x": 0.0,
-                "y": 1.0
-              },
-              {
                 "x": 0.07,
                 "y": 0.7
               },
@@ -48,6 +44,18 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 85.1,
+          "referenceRange": [
+            0.0,
+            1.45
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -87,6 +95,18 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 95.1,
+          "referenceRange": [
+            0.0,
+            1.59
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -133,6 +153,19 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Reference bands of hundredths of a percent sit below the land-cover product's wetland-class accuracy, and a steep watershed that never held herbaceous wetland reads low without being degraded."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 84.9,
+          "referenceRange": [
+            0.0,
+            6.98
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -172,6 +205,19 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Wetland cover follows terrain: a steep watershed that never held wetland reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 90.0,
+          "referenceRange": [
+            0.0,
+            27.13
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -218,6 +264,18 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 84.0,
+          "referenceRange": [
+            0.101,
+            2.1976
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -235,7 +293,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
           "xLabel": "Base flow index (%)",
-          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime.",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
@@ -264,6 +322,19 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 94.0,
+          "referenceRange": [
+            44.4592,
+            60.0
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -286,10 +357,6 @@
                 "y": 1.0
               },
               {
-                "x": 0.0,
-                "y": 1.0
-              },
-              {
                 "x": 0.0123,
                 "y": 0.7
               },
@@ -303,6 +370,18 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 81.5,
+          "referenceRange": [
+            0.0,
+            0.1165
+          ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -320,7 +399,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
           "xLabel": "Base flow index (%)",
-          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime.",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
@@ -349,6 +428,19 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 94.0,
+          "referenceRange": [
+            44.4592,
+            60.0
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -400,6 +492,18 @@
               }
             ]
           },
+          "referenceN": 32,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 20%, resample recurrence 80%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Moderate",
+          "confidenceTotal": 79.9,
+          "referenceRange": [
+            4.435452685,
+            102.6899018
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -439,6 +543,18 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with ChannelSlopeClass (cross-validated improvement 14%, resample recurrence 83%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 80.7,
+          "referenceRange": [
+            2.169944866,
+            97.9016583
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -485,6 +601,18 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 95.1,
+          "referenceRange": [
+            0.0,
+            1.59
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -543,6 +671,18 @@
               }
             ]
           },
+          "referenceN": 32,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 20%, resample recurrence 80%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Moderate",
+          "confidenceTotal": 79.9,
+          "referenceRange": [
+            4.435452685,
+            102.6899018
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -594,6 +734,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 84.6,
+          "referenceRange": [
+            0.169090909,
+            0.963636364
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -640,6 +790,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 82.7,
+          "referenceRange": [
+            0.0,
+            100.0
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -670,15 +830,21 @@
                 "y": 0.7
               },
               {
-                "x": 113.67878787833334,
-                "y": 0.3
-              },
-              {
-                "x": 147.37878787833336,
+                "x": 100.0,
                 "y": 0.0
               }
             ]
           },
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 92.5,
+          "referenceRange": [
+            12.2,
+            95.45454545
+          ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -737,6 +903,18 @@
               }
             ]
           },
+          "referenceN": 32,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 20%, resample recurrence 80%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Moderate",
+          "confidenceTotal": 79.9,
+          "referenceRange": [
+            4.435452685,
+            102.6899018
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -788,6 +966,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 84.6,
+          "referenceRange": [
+            0.169090909,
+            0.963636364
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -813,12 +1001,8 @@
             "form": "monotone",
             "points": [
               {
-                "x": 0.0,
+                "x": 1.0,
                 "y": 0.0
-              },
-              {
-                "x": 0.4604171213571428,
-                "y": 0.3
               },
               {
                 "x": 1.0743066165,
@@ -834,6 +1018,16 @@
               }
             ]
           },
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 90.7,
+          "referenceRange": [
+            1.009694133,
+            1.95787645
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -844,7 +1038,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
           "xLabel": "XBKA",
-          "howToMeasure": "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment.",
+          "howToMeasure": "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment. low_tail flat added at the adversarial review gate (owner decision, 2026-08-21): a regraded or naturally gentle bank holds at the Functioning edge instead of being penalized, because the flat tail is not symmetric evidence of degradation and the framework's stated use is restoration evaluation.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
@@ -853,11 +1047,7 @@
             "points": [
               {
                 "x": 0.0,
-                "y": 0.0
-              },
-              {
-                "x": 6.079545450000005,
-                "y": 0.3
+                "y": 0.7
               },
               {
                 "x": 14.566477270250004,
@@ -885,6 +1075,16 @@
               }
             ]
           },
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 86.9,
+          "referenceRange": [
+            13.73076923,
+            59.31818182
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -902,35 +1102,57 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
           "xLabel": "LRBS_use",
-          "howToMeasure": "Log relative bed stability; higher (nearer natural) is better. Was degenerate in the pilot (Q25 issue), so expect a review flag.",
+          "howToMeasure": "Log relative bed stability; departure from the reference core in EITHER direction departs from reference (negative excess fines, positive an armored, sediment-starved bed, the classic below-impoundment failure). The pilot's rising direction scored armored beds 1.0 and left Sediment continuity blind to its textbook failure mode. Two-sided form is an owner decision at the adversarial review gate, 2026-08-21.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
             "stratification": "",
-            "form": "monotone",
+            "form": "optimum",
             "points": [
               {
-                "x": -2.2507424686666666,
+                "x": -2.015381069,
                 "y": 0.0
               },
               {
-                "x": -1.5446582696666666,
+                "x": -1.3092968699999998,
                 "y": 0.3
               },
               {
-                "x": -0.603212671,
+                "x": -0.8503421406499999,
                 "y": 0.7
+              },
+              {
+                "x": -0.603212671,
+                "y": 1.0
               },
               {
                 "x": 0.102871528,
                 "y": 1.0
               },
               {
-                "x": 0.3146967877,
-                "y": 1.0
+                "x": 0.35000099765,
+                "y": 0.7
+              },
+              {
+                "x": 0.808955727,
+                "y": 0.3
+              },
+              {
+                "x": 1.515039926,
+                "y": 0.0
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Moderate",
+          "confidenceTotal": 76.9,
+          "referenceRange": [
+            -3.350098915,
+            1.352911579
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -970,6 +1192,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 82.7,
+          "referenceRange": [
+            0.0,
+            100.0
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -1016,6 +1248,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Moderate",
+          "confidenceTotal": 76.9,
+          "referenceRange": [
+            -2.110924375,
+            2.623443177
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1055,6 +1297,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 82.8,
+          "referenceRange": [
+            0.0,
+            51.89933333
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1085,15 +1337,21 @@
                 "y": 0.7
               },
               {
-                "x": 113.67878787833334,
-                "y": 0.3
-              },
-              {
-                "x": 147.37878787833336,
+                "x": 100.0,
                 "y": 0.0
               }
             ]
           },
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 92.5,
+          "referenceRange": [
+            12.2,
+            95.45454545
+          ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -1140,6 +1398,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            0.15,
+            15.52
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1174,11 +1442,23 @@
                 "y": 1.0
               },
               {
-                "x": 104.69251337449998,
+                "x": 100.0,
                 "y": 1.0
               }
             ]
           },
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 36%, resample recurrence 98%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 80.7,
+          "referenceRange": [
+            2.807486631,
+            100.0
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1225,6 +1505,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            0.201136364,
+            1.671590909
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1271,6 +1561,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            0.056,
+            0.795
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1310,6 +1610,16 @@
               }
             ]
           },
+          "referenceN": 32,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            3.118,
+            41.319
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1356,6 +1666,18 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Specific conductance carries natural carbonate geology as well as disturbance: a pristine stream in a calcareous valley can score low on this curve."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.2,
+          "referenceRange": [
+            11.5,
+            249.4
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1407,6 +1729,18 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "pH carries natural geology (calcareous or naturally acidic waters) as well as disturbance, and a two-sided core narrower than measurement precision is noise rather than condition."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            6.3,
+            8.16
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1446,6 +1780,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            0.01,
+            7.94
+          ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1492,6 +1836,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 90.6,
+          "referenceRange": [
+            0.0,
+            95.0
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1531,6 +1885,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            0.040909091,
+            1.164090909
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1577,6 +1941,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            28.0,
+            59.0
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1616,6 +1990,18 @@
               }
             ]
           },
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 29%, resample recurrence 83%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 82.9,
+          "referenceRange": [
+            1.0,
+            12.0
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1662,6 +2048,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            1.0,
+            27.0
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1701,6 +2097,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            2.41,
+            3.38
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1740,6 +2146,16 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "High",
+          "confidenceTotal": 96.7,
+          "referenceRange": [
+            0.33,
+            53.0
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -1769,10 +2185,6 @@
                 "y": 1.0
               },
               {
-                "x": 0.0,
-                "y": 1.0
-              },
-              {
                 "x": 0.0123,
                 "y": 0.7
               },
@@ -1786,6 +2198,18 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 81.5,
+          "referenceRange": [
+            0.0,
+            0.1165
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "additional-function",
           "referenceTier": "least_disturbed"
@@ -1796,7 +2220,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
           "xLabel": "Road-stream crossings (per sq km)",
-          "howToMeasure": "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage.",
+          "howToMeasure": "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage. UNITS CAUTION (2026-08-21): values as served by the EPA StreamCat API sit about two orders of magnitude below the classic StreamCat documentation of crossings per sq km (frame national median 0.0098 vs a documented distribution near 0.5 to 1.5). The frame and the live API agree with each other, so scoring is internally consistent, but a manually computed crossings-per-sq-km value will land far off-curve. Enter API-served values only, pending units reconciliation with EPA.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
@@ -1825,6 +2249,19 @@
               }
             ]
           },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Units caution: enter the StreamCat API value as served. A crossing density computed by hand in crossings per square kilometer lands about 100 times above this curve."
+          ],
+          "confidenceLabel": "High",
+          "confidenceTotal": 100.0,
+          "referenceRange": [
+            0.0,
+            0.0628
+          ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
           "referenceTier": "least_disturbed"
@@ -4521,11 +4958,11 @@
     }
   },
   "referenceTier": "least_disturbed",
-  "contentDigest": "sha256:38aba1c669b16ba7d8e19ca6134ffac7c228514c81577ab7c92401cadc720b56",
+  "contentDigest": "sha256:a82835217e267957dc4b3884e44b4e13737cde578729b9a2ea973edcf263e0b9",
   "library": {
     "libraryId": "northeastern-highlands",
-    "version": 3,
-    "updatedAt": "2026-08-21T17:31:54Z",
+    "version": 4,
+    "updatedAt": "2026-08-21T23:00:04Z",
     "author": "StreamCurves Regional Analysis Agent",
     "revisionNotes": "Reference tier: least_disturbed (screening preset functional, method direct_engine). Retained 33 of 71 candidates.",
     "region": {
@@ -4533,10 +4970,10 @@
       "code": "58",
       "name": "Northeastern Highlands"
     },
-    "contentDigest": "sha256:38aba1c669b16ba7d8e19ca6134ffac7c228514c81577ab7c92401cadc720b56",
-    "supersedesVersion": 2
+    "contentDigest": "sha256:a82835217e267957dc4b3884e44b4e13737cde578729b9a2ea973edcf263e0b9",
+    "supersedesVersion": 3
   },
-  "version": 3,
+  "version": 4,
   "lifecycle": "preliminary",
-  "assessmentRef": "northeastern-highlands@v3"
+  "assessmentRef": "northeastern-highlands@v4"
 }

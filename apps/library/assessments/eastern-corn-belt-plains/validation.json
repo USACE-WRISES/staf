@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "eastern-corn-belt-plains",
+  "records": [
+    {
+      "version": 3,
+      "actor": "gtmenichino",
+      "timestamp": "2026-08-21T23:34:56Z",
+      "note": "Phase 8 protocol-demonstration record",
+      "method": "protocol demonstration: OSAM field values scored through the published curves with DEEP's interpolator, banded, compared with the crews' capacity calls",
+      "checker": "DEEP project Phase 6, recast Phase 8 (analysis/field_validation_ecbp.py)",
+      "outcome": "no per-curve support claimed: chance-corrected agreement at or below zero on every comparable pair, curves read softer than the crews on width-to-depth ratio and substrate (the best-available offset)",
+      "reference": "notes/DEEP_Working/DEEP_Field_Verification_and_Validation_Report_v01.md (Version 02), report chapter 9",
+      "pairs": {
+        "WDR->spring-phab-bfwd-rat": {
+          "n": 16,
+          "exact": 0.375,
+          "chance_exact": 0.46875,
+          "within_one": 0.875,
+          "chance_within_one": 0.9140625,
+          "weighted_kappa": -0.21518987341772153,
+          "spearman": -0.36721619875151806,
+          "curve_harsher": 0.125,
+          "curve_softer": 0.5,
+          "share_index_at_1": 0.6875
+        },
+        "avgcanopy->spring-phab-xcdenmid": {
+          "n": 16,
+          "exact": 0.4375,
+          "chance_exact": 0.5,
+          "within_one": 1.0,
+          "chance_within_one": 1.0,
+          "weighted_kappa": -0.125,
+          "spearman": -0.12598815766974242,
+          "curve_harsher": 0.25,
+          "curve_softer": 0.3125,
+          "share_index_at_1": 0.1875
+        },
+        "d50->spring-phab-lsub-dmm": {
+          "n": 13,
+          "exact": 0.6153846153846154,
+          "chance_exact": 0.6153846153846154,
+          "within_one": 1.0,
+          "chance_within_one": 1.0,
+          "weighted_kappa": 0.0,
+          "spearman": null,
+          "curve_harsher": 0.0,
+          "curve_softer": 0.38461538461538464,
+          "share_index_at_1": 0.9230769230769231
+        },
+        "imperviouscover->spring-pctimp2019ws": {
+          "n": 16,
+          "exact": 0.875,
+          "chance_exact": 0.87890625,
+          "within_one": 0.9375,
+          "chance_within_one": 0.94140625,
+          "weighted_kappa": -0.043478260869565216,
+          "spearman": -0.06666666666666667,
+          "curve_harsher": 0.0625,
+          "curve_softer": 0.0625,
+          "share_index_at_1": 0.125
+        }
+      },
+      "excluded_pair": [
+        "perRiffle",
+        "spring-phab-pct-fast",
+        "not comparable: no shippable scoring curve in this region (collapsed lower quartile, fallback excluded from the bundle)"
+      ],
+      "dataset_provenance": {
+        "dataset": "Ohio Stream Assessment Method summary data (OSAM)",
+        "file": "apps/stream-curves/tests/fixtures/OSAM_summarydata.xlsx",
+        "sites_used": 16,
+        "site_selection": "every site whose id starts with ECBP (inside ecoregion 55)",
+        "survey_years": "INFORMATION REQUIRED (not recorded in the workbook)",
+        "protocol_reference": "INFORMATION REQUIRED",
+        "capacity_call_derivation": "INFORMATION REQUIRED: the workbook maps each measured variable to the function its call belongs to, so the calls may be rubric-derived from the compared indicators",
+        "independence": {
+          "sites": "independent (no OSAM site within 8 km of an NRSA development site)",
+          "judgment": "unverified pending protocol documentation",
+          "variables": "different measurement methods per pair (documented in the crosswalk)"
+        }
+      },
+      "design_approval": {
+        "approved_by": "gtmenichino",
+        "approved_on": "2026-08-21",
+        "gate": "Phase 6 design gate, before any conclusion was drawn",
+        "measures": "band agreement at the 0.39 and 0.69 breaks; Phase 8 recast added chance expectations, linear-weighted kappa, Spearman correlation with sign, per-site aggregation, permutation p",
+        "acceptance_threshold": "none claimed at 16 and 4 sites; the only decision rule was below-chance agreement or a systematically opposite direction",
+        "recast": "Phase 8 (adversarial review VAL-1, VAL-2, STAT-11): reported as a protocol demonstration with no per-curve support"
+      },
+      "bundle_version_compared": 3
+    }
+  ],
+  "history": [
+    {
+      "version": 3,
+      "state": "unvalidated",
+      "summary": {
+        "kind": "protocol_demonstration",
+        "n_sites": 16,
+        "weighted_kappa_range": [
+          -0.21518987341772153,
+          0.0
+        ],
+        "offset_direction": "curves softer than field crews"
+      },
+      "actor": "gtmenichino",
+      "timestamp": "2026-08-21T23:34:56Z",
+      "note": "Exploratory field comparison only; not validation"
+    }
+  ]
+}
