@@ -20,9 +20,9 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.3-provisional"
+  methodology_version: "0.4-provisional"
   threshold_status: "provisional"        # global default; rules may override
-  date: "2026-07-24"
+  date: "2026-08-21"
   calibration_note: >
     v0.3 recalibrated the DATA sample-size floors against the two pilots' REAL
     EASI-screened reference sizes (NH-58 = 33 Functioning sites; ECBP-55 = 0 Functioning,
@@ -32,6 +32,14 @@ meta:
     (~20 for stable quartiles, ~10 minimum). The DATA rules below are threshold_status
     calibrated on this evidence; the broader methodology stays provisional until the full
     pilot benchmark validation (Section 11) completes.
+    v0.4 (2026-08-21) is the implementation release: the formerly net-new machinery
+    (leave-one-site-out stability, bootstrap intervals and category stability, drop-one
+    influence, stratifier CV and AICc evidence, missingness actions, expected-shape
+    conflict checks, the 0-100 confidence with caps, the metric score, the SELECT-01
+    publish gate, per-metric REF-02 trigger evaluation, and the reference-tier stamp)
+    now runs, wired to this file's values. No threshold VALUE changed in v0.4 except
+    require_uncertainty_interval flipping true now that intervals exist; threshold
+    statuses are untouched and stay provisional pending the pilot benchmarks.
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
@@ -62,34 +70,35 @@ data_rules:
 
 # --------------------------------------------------------------------------- #
 # Predictor and redundancy analysis (rule family RED).
-# NOTE divergence: cross_metric.py currently flags redundancy on |Pearson| > 0.80.
-# The methodology's primary flag is |Spearman| >= 0.80 (RED-01). Both are computed;
-# the Spearman-primary flag is implementation_status: partial until the flag column
-# is switched. See rule_catalog.json RED-01.
+# v0.4: the Spearman-primary flag is the acting flag in overlap.py for both the
+# interactive view and the agent (the old Pearson divergence is closed;
+# cross_metric.py remains only as the R-parity golden module). BH-FDR q rides
+# across every tested pair, and flagged pairs get bootstrap category stability.
 # --------------------------------------------------------------------------- #
 redundancy_rules:
-  strong_abs_spearman: 0.80              # RED-01 strong redundancy flag
-  moderate_abs_spearman: 0.65            # RED-02 investigate
+  strong_abs_spearman: 0.80              # RED-01 strong redundancy flag (overlap.py)
+  moderate_abs_spearman: 0.65            # RED-02 investigate (overlap.py report floor)
   # RED-03: below moderate -> not redundant on correlation alone
   vif_review: 5                          # RED-04 (diagnostics.py: caution band)
   vif_fail: 10                           # RED-05 (diagnostics.py: fail band)
-  bootstrap_stability: 0.80              # RED-06 (net-new: no bootstrap in code yet)
-  fdr_q: 0.05                            # RED-07 (screening.py uses BH already)
+  bootstrap_stability: 0.80              # RED-06 (curve_stability, seeded bootstrap)
+  fdr_q: 0.05                            # RED-07 (overlap.py BH across the pair matrix)
 
 # --------------------------------------------------------------------------- #
-# Stratifier acceptance (rule family STRAT). The CV-based improvement rules are
-# net-new (no cross-validation in the curve or stratifier path today); the KW +
-# effect-size + feasibility screen that DOES exist (screening.py, effects.py,
-# decision.py, feasibility.py) is the current operational gate. See rule_catalog.
+# Stratifier acceptance (rule family STRAT). STRAT-00 (KW + effect size +
+# feasibility) remains the operational gate; v0.4 adds the supporting evidence:
+# grouped LOO improvement, AICc support, and bootstrap recurrence per metric x
+# eligible candidate (curve_stability, recorded in the stratifier evaluation
+# table and the decision records). See rule_catalog.
 # --------------------------------------------------------------------------- #
 stratifier_rules:
-  min_cv_error_improvement: 0.10         # STRAT-01 (net-new)
-  strong_cv_error_improvement: 0.15      # STRAT-02 (net-new)
-  min_delta_cv_r2: 0.05                  # STRAT-03 (net-new)
-  min_delta_aicc: 4                      # STRAT-04 (net-new; models.py uses BIC, not AICc)
-  strong_delta_aicc: 10                  # STRAT-05 (net-new)
-  min_resample_support: 0.80             # STRAT-06 (net-new)
-  breakpoint_interval_support: 0.70      # STRAT-07 (net-new)
+  min_cv_error_improvement: 0.10         # STRAT-01 (grouped LOO, curve_stability)
+  strong_cv_error_improvement: 0.15      # STRAT-02
+  min_delta_cv_r2: 0.05                  # STRAT-03
+  min_delta_aicc: 4                      # STRAT-04 (Gaussian AICc, curve_stability)
+  strong_delta_aicc: 10                  # STRAT-05
+  min_resample_support: 0.80             # STRAT-06 (seeded bootstrap recurrence)
+  breakpoint_interval_support: 0.70      # STRAT-07 (guard; no data-derived binning exists)
   max_data_derived_bins: 3               # STRAT-08
   group_difference_fdr_q: 0.05           # STRAT-09 (screening.py BH already)
   min_group_size_current: 5              # implemented today: stratification_registry.yaml
@@ -106,10 +115,11 @@ stratifier_rules:
     - BEHIeroding
 
 # --------------------------------------------------------------------------- #
-# Reference curve acceptance (rule family CURVE). For the pilots the sole Approved
-# curve family is the empirical IQR-seed curve; its acceptance gate is geometric
-# validation (implemented). CV, one-standard-error selection, and CI reporting are
-# specified but net-new.
+# Reference curve acceptance (rule family CURVE). The sole Approved family is the
+# empirical IQR-seed curve; geometric validation (CURVE-07a) gates acceptance.
+# v0.4 adds leave-one-site-out stability (CURVE-02), drop-one influence
+# (CURVE-04), and bootstrap percentile intervals (CURVE-06). One-standard-error
+# selection (CURVE-03) stays moot with a single family.
 # --------------------------------------------------------------------------- #
 curve_rules:
   approved_families: ["iqr_seed_piecewise_linear"]   # CURVE-01 (the only Approved family)
@@ -119,9 +129,9 @@ curve_rules:
   max_band_crossings: 2                  # <=2 crossings of each band
   require_monotone_metric: true
   # Influence and shape review:
-  influence_param_change_frac: 0.20      # CURVE-04 mandatory review trigger (net-new automation)
-  require_direction_check: true          # CURVE-05 (higher_is_better inversion is checked)
-  require_uncertainty_interval: false    # CURVE-06 -> net-new for IQR curves (true once implemented)
+  influence_param_change_frac: 0.20      # CURVE-04 mandatory review trigger (curve_stability)
+  require_direction_check: true          # CURVE-05 (stored expected_shape + realized-shape conflict check)
+  require_uncertainty_interval: true     # CURVE-06: bootstrap percentile intervals (curve_stability)
   require_reproducible_seed: true        # CURVE-08 (deterministic engine; stamp seed + versions)
   # DEEP scoring contract bands (deep_export.py; distinct from the drawing bands):
   deep_index_bands: [0.39, 0.69]
@@ -159,8 +169,10 @@ reference_tiers:
   never_relax_to_hit_count_when_adequate: true
 
 # --------------------------------------------------------------------------- #
-# Confidence scoring (0-100). Net-new: no numeric confidence exists in code today;
-# the current triage is categorical (run_state curve statuses + boolean needs_review).
+# Confidence scoring (0-100). Implemented v0.4 (streamcurves/confidence.py):
+# component fractions from recorded evidence times these weights, caps applied
+# after. The mapping formulas are provisional operating formulas pending the
+# pilot benchmark calibration; the categorical curve statuses remain alongside.
 # --------------------------------------------------------------------------- #
 confidence_rules:
   components:                            # points must sum to 100
@@ -183,8 +195,10 @@ confidence_rules:
   # Review Priority = Impact x Uncertainty x Novelty (net-new; scales in methodology.md)
 
 # --------------------------------------------------------------------------- #
-# Final metric portfolio (rule family SELECT). The 100-point metric score is
-# net-new (no metric score exists in code today).
+# Final metric portfolio (rule family SELECT). v0.4: publishing more than two
+# metrics on a function requires a recorded human approval (library publish
+# gate), and the 100-point metric score (confidence.metric_score) ranks
+# candidates within a function, advisory only.
 # --------------------------------------------------------------------------- #
 metric_portfolio:
   default_primary_metrics_per_function: 1

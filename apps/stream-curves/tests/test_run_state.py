@@ -75,6 +75,130 @@ def test_classify_strat_review():
     assert status == rs.CURVE_STATUS_STRAT_REVIEW
 
 
+def test_classify_strat_review_carries_the_named_reason():
+    status, reasons = rs.classify_curve_proposal(
+        [{"curve_status": "complete"}], strat_ok=False,
+        strat_reason="Stratum 'B' has n = 6, below the very-small-stratum rule."
+    )
+    assert status == rs.CURVE_STATUS_STRAT_REVIEW
+    assert "n = 6" in reasons[0]
+
+
+def test_classify_data_review_routes_high_missingness():
+    status, reasons = rs.classify_curve_proposal(
+        [{"curve_status": "complete", "n_reference": 30}],
+        data_ok=False, data_reason="Missing-data fraction 55% exceeds DATA-03."
+    )
+    assert status == rs.CURVE_STATUS_DATA_REVIEW
+    assert "55%" in reasons[0]
+    # And it lands in the review-required set like every non-auto_ok status.
+    assert rs.CURVE_STATUS_DATA_REVIEW in rs.CURVE_REVIEW_REQUIRED
+
+
+def test_classify_data_review_defaults_its_reason():
+    status, reasons = rs.classify_curve_proposal(
+        [{"curve_status": "complete"}], data_ok=False
+    )
+    assert status == rs.CURVE_STATUS_DATA_REVIEW
+    assert reasons == [rs.REVIEW_REASONS["data_review"]]
+
+
+# --- DATA-07/08 per-stratum floors (strata_floor_check) --------------------- #
+def test_floor_check_passes_unstratified_rows():
+    ok, reason = rs.strata_floor_check([{"curve_status": "complete", "n_reference": 12}])
+    assert ok and reason is None
+
+
+def test_floor_check_passes_adequate_strata():
+    rows = [
+        {"curve_status": "complete", "stratum": "A", "n_reference": 20},
+        {"curve_status": "complete", "stratum": "B", "n_reference": 16},
+    ]
+    ok, reason = rs.strata_floor_check(rows)
+    assert ok and reason is None
+
+
+def test_floor_check_flags_a_stratum_below_the_data07_floor():
+    rows = [
+        {"curve_status": "complete", "stratum": "A", "n_reference": 20},
+        {"curve_status": "complete", "stratum": "B", "n_reference": 12},
+    ]
+    ok, reason = rs.strata_floor_check(rows)
+    assert not ok
+    assert "DATA-07" in reason and "'B'" in reason
+
+
+def test_floor_check_flags_a_very_small_stratum_first():
+    rows = [
+        {"curve_status": "complete", "stratum": "A", "n_reference": 40},
+        {"curve_status": "complete", "stratum": "B", "n_reference": 6},
+    ]
+    ok, reason = rs.strata_floor_check(rows)
+    assert not ok
+    assert "DATA-08" in reason
+
+
+def test_floor_check_flags_a_stratum_under_ten_percent_of_the_pool():
+    # n = 9 clears the very-small count (8) but is under 10 percent of 100.
+    rows = [
+        {"curve_status": "complete", "stratum": "A", "n_reference": 91},
+        {"curve_status": "complete", "stratum": "B", "n_reference": 9},
+    ]
+    ok, reason = rs.strata_floor_check(rows)
+    assert not ok
+    assert "DATA-08" in reason
+
+
+# --- CURVE-05 expected shape versus realized shape -------------------------- #
+def _pts(pairs):
+    return [{"metric_value": x, "index_score": y} for x, y in pairs]
+
+
+def test_expected_shape_derives_from_the_curated_declaration():
+    assert rs.expected_shape_from_entry({"higher_is_better": True}) == "monotone_increasing"
+    assert rs.expected_shape_from_entry({"higher_is_better": False}) == "monotone_decreasing"
+    assert rs.expected_shape_from_entry(
+        {"higher_is_better": None, "curve_form": "optimum"}) == "optimum"
+    assert rs.expected_shape_from_entry(
+        {"expected_shape": "optimum", "higher_is_better": True}) == "optimum"
+    assert rs.expected_shape_from_entry({}) is None
+
+
+def test_realized_shapes_are_read_from_the_points():
+    assert rs.realized_curve_shape(_pts([(0, 0), (5, 0.5), (10, 1)])) == "monotone_increasing"
+    assert rs.realized_curve_shape(_pts([(0, 1), (5, 0.5), (10, 0)])) == "monotone_decreasing"
+    assert rs.realized_curve_shape(
+        _pts([(0, 0), (4, 1), (6, 1), (10, 0)])) == "optimum"
+    assert rs.realized_curve_shape(_pts([(0, 0.5), (10, 0.5)])) is None
+    assert rs.realized_curve_shape(None) is None
+
+
+def test_shape_conflict_flags_an_edited_backwards_curve():
+    entry = {"higher_is_better": False, "curve_form": "monotone"}
+    rows = [{"curve_status": "complete",
+             "curve_points": _pts([(0, 0), (10, 1)])}]  # rises, but lower is better
+    ok, reason = rs.shape_conflict_check(rows, entry)
+    assert not ok
+    assert "CURVE-05" in reason and "monotone_decreasing" in reason
+
+
+def test_shape_conflict_passes_the_matching_curve_and_the_unresolved_metric():
+    entry = {"higher_is_better": False}
+    rows = [{"curve_status": "complete", "curve_points": _pts([(0, 1), (10, 0)])}]
+    assert rs.shape_conflict_check(rows, entry) == (True, None)
+    # No approved expectation, no conflict claim (direction review handles it).
+    assert rs.shape_conflict_check(rows, {}) == (True, None)
+
+
+def test_classify_shape_conflict_routes_to_review():
+    status, reasons = rs.classify_curve_proposal(
+        [{"curve_status": "complete"}], shape_ok=False,
+        shape_reason="Realized curve shape 'monotone_increasing' conflicts."
+    )
+    assert status == rs.CURVE_STATUS_SHAPE_CONFLICT
+    assert rs.CURVE_STATUS_SHAPE_CONFLICT in rs.CURVE_REVIEW_REQUIRED
+
+
 def test_classify_accepts_dataframe():
     df = pd.DataFrame([{"curve_status": "complete", "n_reference": 9}])
     status, _ = rs.classify_curve_proposal(df)

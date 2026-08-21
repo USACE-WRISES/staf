@@ -570,6 +570,7 @@ def _regenerate_catalog() -> None:
             latest_cert = max(certified) if certified else 0
             default_v = latest_cert or latest_prelim or latest
             vmap = _validation_state_map(aid)
+            default_vdir = sub / f"v{int(default_v)}"
             entries.append(
                 {
                     "assessmentId": m.get("assessmentId"),
@@ -586,6 +587,11 @@ def _regenerate_catalog() -> None:
                     "validationState": vmap.get(int(default_v), {}).get(
                         "state", VALIDATION_UNVALIDATED),
                     "validationSummary": vmap.get(int(default_v), {}).get("summary"),
+                    # A version without provenance.json is visible from the top
+                    # level, so an unauditable default cannot hide in the catalog.
+                    "provenanceState": (
+                        "present" if (default_vdir / PROVENANCE_FILE).is_file()
+                        else "absent"),
                 }
             )
     _write_json(
@@ -596,6 +602,29 @@ def _regenerate_catalog() -> None:
             "assessments": entries,
         },
     )
+
+
+def _require_portfolio_approval(assessment_id: str, bundle: dict, meta: dict) -> None:
+    """SELECT-01: a function carrying more than two metrics publishes only with a
+    recorded human approval (``meta['portfolioApprovals']``: a list of
+    ``{functionId, approvedBy, note}``). The approval is written into meta.json,
+    so the decision is auditable beside the version it authorized."""
+    approvals = {str(a.get("functionId")): a
+                 for a in (meta.get("portfolioApprovals") or [])
+                 if a.get("functionId") and a.get("approvedBy")}
+    unapproved = []
+    for block in bundle.get("metricsByFunction") or []:
+        metrics = block.get("metrics") or []
+        fid = str(block.get("functionId") or "")
+        if len(metrics) > 2 and fid not in approvals:
+            unapproved.append(f"{fid} ({len(metrics)} metrics)")
+    if unapproved:
+        raise ValueError(
+            f"Refusing to publish '{assessment_id}': more than two metrics per "
+            f"function requires a recorded human approval (SELECT-01). Missing "
+            f"approvals: {', '.join(unapproved)}. Pass meta['portfolioApprovals'] "
+            "entries with functionId and approvedBy."
+        )
 
 
 def publish_version(
@@ -639,6 +668,15 @@ def publish_version(
     # documented as excluded" has to hold. Checked before anything is written, so a
     # rejected publish leaves no half-version on disk.
     _require_documented_coverage(assessment_id, bundle)
+
+    # SELECT-01 gate: more than two metrics on one function requires a recorded
+    # human approval riding in the meta, refused before anything is written.
+    _require_portfolio_approval(assessment_id, bundle, meta)
+
+    if provenance is None:
+        logger.warning(
+            "Publishing %s without a provenance document. The version will record "
+            "provenance as absent; a reviewer will see it.", assessment_id)
 
     manifest = read_manifest(assessment_id) or {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
@@ -718,6 +756,9 @@ def publish_version(
             "sourceCitation": meta.get("sourceCitation", ""),
             "contentDigest": digest,
             "supersedesVersion": supersedes_version,
+            "provenance": "present" if provenance else "absent",
+            **({"portfolioApprovals": meta["portfolioApprovals"]}
+               if meta.get("portfolioApprovals") else {}),
             **({"restrictedPackage": restricted_package} if restricted_package else {}),
         },
     )

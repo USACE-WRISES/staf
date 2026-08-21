@@ -47,6 +47,7 @@ def _json_default(o):
 def variable_evaluation_matrix(result: dict) -> pd.DataFrame:
     rows = []
     cr = result["curve_review"]
+    miss = result.get("missingness") or {}
     for mk, cfg in result["metric_config"].items():
         entry = cr.get(mk, {})
         rows.append({
@@ -59,6 +60,8 @@ def variable_evaluation_matrix(result: dict) -> pd.DataFrame:
             "direction_confidence": cfg.get("direction_confidence"),
             "n_reference": result["curve_rows"].get(mk, {}).get("n_reference"),
             "sample_size_disposition": result["sample_sizes"].get(mk, {}).get("disposition"),
+            "missing_fraction": miss.get(mk, {}).get("missing_fraction"),
+            "missingness_disposition": miss.get(mk, {}).get("disposition"),
             "curve_status": entry.get("status"),
             "review_decision": entry.get("decision"),
             "review_reasons": "; ".join(entry.get("reasons") or []),
@@ -79,8 +82,16 @@ def variable_evaluation_matrix(result: dict) -> pd.DataFrame:
 def curve_registry(result: dict) -> pd.DataFrame:
     rows = []
     cr = result["curve_review"]
+    diags = result.get("diagnostics") or {}
+    confs = result.get("confidence") or {}
+    scores = result.get("metric_scores") or {}
     for mk, row in result["curve_rows"].items():
         entry = cr.get(mk, {})
+        d = diags.get(mk) or {}
+        loo = d.get("loo") or {}
+        boot = d.get("bootstrap") or {}
+        infl = d.get("influence") or {}
+        conf = confs.get(mk) or {}
         rows.append({
             "metric": mk,
             "function": result["column_functions"].get(mk) or "(unmapped)",
@@ -96,6 +107,16 @@ def curve_registry(result: dict) -> pd.DataFrame:
             "not_functioning_max": row.get("not_functioning_max"),
             "reference_tier": result["reference_tier"],
             "sample_size_disposition": result["sample_sizes"].get(mk, {}).get("disposition"),
+            "loo_mean_abs_delta": loo.get("held_out_mean_abs_delta"),
+            "loo_max_abs_delta": loo.get("held_out_max_abs_delta"),
+            "bootstrap_structure_stability": boot.get("structure_stability"),
+            "bootstrap_shape_stability": boot.get("shape_stability"),
+            "influence_max_param_change": infl.get("max_param_change_frac"),
+            "influence_flagged": infl.get("flagged"),
+            "confidence_total": conf.get("total"),
+            "confidence_label": conf.get("label"),
+            "confidence_caps": "; ".join(conf.get("caps_applied") or []),
+            "metric_score": (scores.get(mk) or {}).get("total"),
             "review_status": entry.get("status"),
             "reviewer_decision": entry.get("decision"),
         })
@@ -238,18 +259,24 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
     c = result["screening_counts"]
     lines = [
         f"# Regional Analysis: {result['name']} (EPA L3-{result['l3_code']})", "",
-        "Produced by the StreamCurves Regional Analysis Agent (methodology 0.2-provisional). "
+        f"Produced by the StreamCurves Regional Analysis Agent "
+        f"(methodology {methodology.methodology_version()}). "
         "Preliminary and for review; not certified.", "",
         "## Reference screening", "",
         f"- Candidates: {result['n_candidates']} NRSA sites in the ecoregion.",
-        f"- Screening method: **{result['screening_method']}** (a real EASI screen, not a "
-        "represented one).",
+        f"- Screening method: **{result['screening_method']}**"
+        + (" (a real EASI screen, not a represented one)."
+           if result["screening_method"] == "direct_engine"
+           else " (offline test mode, not a real screen)."),
         f"- Counts: {json.dumps(c, default=_json_default)}",
         f"- Reference tier applied: **{result['reference_tier']}**"
         + ("  (REF-02 fallback triggered)" if result["ref02_triggered"] else ""),
         f"- Retained reference sites: {len(result['retained_site_ids'])} "
         f"(**{result['reference_pool_disposition']}** under the calibrated DATA floors: "
-        "auto n>=20, exploratory 10-20, insufficient <10)", "",
+        f"auto n>={methodology.threshold('data_rules.min_n_unstratified')}, "
+        f"exploratory {methodology.threshold('data_rules.exploratory_n_unstratified')}-"
+        f"{methodology.threshold('data_rules.min_n_unstratified')}, "
+        f"insufficient <{methodology.threshold('data_rules.insufficient_n_unstratified')})", "",
         "## Data sources", "",
     ]
     for rep in (result.get("source_reports") or []):
@@ -270,6 +297,8 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
         f"- Curves in scope (auto-finalized): {len(result['intended_metrics'])}",
         f"- Flagged curves (need review): {len(result['flagged_metrics'])}",
         f"- Sample-size flags (exploratory/insufficient n): {len(result['sample_size_flags'])}",
+        f"- Missingness above the DATA-03 review threshold (data_review): "
+        f"{sum(1 for m in (result.get('missingness') or {}).values() if m.get('disposition') == 'review')}",
         f"- Metrics with unresolved direction (not built): {len(result['flagged_direction'])}", "",
         "## STAF function coverage", "",
     ]
@@ -293,11 +322,28 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
     if publish_info:
         lines.append(f"- Published preliminary version {publish_info['version']} to "
                      f"`{publish_info['path']}` (staging library).")
+    elif result.get("bundle") is not None:
+        lines.append("- Not published: the publish gate refused the version "
+                     "(coverage, portfolio approval, or writability; see the console log).")
     else:
         lines.append(f"- Not published: {result.get('bundle_error') or 'no bundle'}")
-    lines += ["", "## Honesty notes", "",
-              "- Cross-validation, bootstrap stability, and the 0-100 confidence score are "
-              "not implemented; their absence routes decisions to human review (methodology).",
+    confs = result.get("confidence") or {}
+    if confs:
+        labels = [c.get("label") for c in confs.values()]
+        lines += [
+            "## Confidence (CONF-01/02)", "",
+            f"- Curves by band: High {labels.count('High')}, "
+            f"Moderate {labels.count('Moderate')}, Low {labels.count('Low')} "
+            f"(seeded diagnostics, run seed {result.get('run_seed')}, "
+            f"n_boot {result.get('diagnostics_n_boot')}).",
+            "- Caps applied where the rules require them (best-available reference, "
+            "sample below minimum, no out-of-sample evaluation).", "",
+        ]
+    lines += ["## Honesty notes", "",
+              "- Leave-one-site-out stability, bootstrap intervals, influence checks, "
+              "and the 0-100 confidence score are internal diagnostics on development "
+              "data. They are not independent field validation, and nothing here "
+              "claims validation.",
               "- Compare against pilot_validation/NH58_benchmark.json: this run uses a REAL "
               "reference screen, unlike the represented pilot."]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -308,14 +354,20 @@ def stratifier_evaluation_table(result: dict) -> pd.DataFrame:
 
     One row per metric x candidate stratification, plus a row for every candidate
     the region excluded, so the table answers "what was considered here" and not
-    only "what was tested". Columns the methodology lists but no rule computes yet
-    (cross-validated improvement, AICc, resample stability) are present and
-    explicitly not_evaluated rather than blank, because blank reads as zero.
+    only "what was tested". The cross-validated improvement, AICc, and resample
+    columns fill from the run's strat_evidence (STRAT-01..06, Wave 3); a pair
+    without evidence stays null, never blank-as-zero.
     """
     strat = result.get("stratifiers") or {}
     ledger = strat.get("eligibility")
     if ledger is None or len(ledger) == 0:
         return pd.DataFrame()
+    evidence: dict[tuple, dict] = {}
+    ev_df = result.get("strat_evidence")
+    if ev_df is not None and len(ev_df):
+        for erow in ev_df.itertuples(index=False):
+            e = erow._asdict()
+            evidence[(str(e["metric"]), str(e["stratification"]))] = e
     ranking_tier = {}
     ranking = strat.get("phase2_ranking")
     if ranking is not None and len(ranking) and "tier" in ranking.columns:
@@ -350,6 +402,7 @@ def stratifier_evaluation_table(result: dict) -> pd.DataFrame:
                 screened[screened["stratification"] == sk].head(1)
                 if screened is not None and len(screened) else pd.DataFrame()
             )
+            e = evidence.get((metric, sk)) or {}
             rows.append({
                 "metric": metric, "stratification": sk,
                 "test": match["test"].iloc[0] if len(match) else None,
@@ -361,12 +414,13 @@ def stratifier_evaluation_table(result: dict) -> pd.DataFrame:
                 "candidate_status": c.get("candidate_status"),
                 "cross_metric_tier": ranking_tier.get(sk),
                 "feasibility_flag": feasibility_flag.get(sk),
-                # Declared and null, never blank: the methodology lists them and
-                # they are not_yet_implemented.
-                "cv_error_improvement": None,
-                "delta_aicc": None,
-                "resample_support": None,
-                "rule_ids": "STRAT-00;STRAT-08;STRAT-09",
+                "cv_error_improvement": e.get("cv_rmse_improvement"),
+                "delta_cv_r2": e.get("delta_cv_r2"),
+                "delta_aicc": e.get("delta_aicc"),
+                "resample_support": e.get("strat06_recurrence"),
+                "rule_ids": "STRAT-00;STRAT-01;STRAT-02;STRAT-03;STRAT-04;"
+                            "STRAT-05;STRAT-06;STRAT-08;STRAT-09"
+                            if e else "STRAT-00;STRAT-08;STRAT-09",
                 "applied_to_curves": False,
                 "review_status": "advisory",
             })
@@ -386,6 +440,9 @@ def write_outputs(result: dict, out_dir: Path, publish_info: dict | None,
     strat = result.get("stratifiers") or {}
     if strat.get("eligibility") is not None:
         strat["eligibility"].to_csv(out_dir / "stratifier_eligibility.csv", index=False)
+    tier_eval = result.get("tier_evaluation") or []
+    if tier_eval:
+        pd.DataFrame(tier_eval).to_csv(out_dir / "tier_evaluation.csv", index=False)
     write_portfolio(result, out_dir / "compact_portfolio.md")
     if provenance_doc:
         (out_dir / "run_manifest.json").write_text(
@@ -432,7 +489,25 @@ def main(argv=None) -> int:
                     help="Exit 0 even when a landscape source (StreamCat) failed to join. "
                          "Without this the run exits non-zero, because a silent StreamCat "
                          "outage drops the Hydrology functions from the published bundle")
+    ap.add_argument("--n-boot", type=int, default=200,
+                    help="Bootstrap resamples for the CURVE-06/RED-06/STRAT-06 "
+                         "diagnostics (default 200; seeded from the run identity)")
+    ap.add_argument("--approve-portfolio", action="append", default=[],
+                    metavar="FUNCTIONID=APPROVER[:NOTE]",
+                    help="Recorded human approval for a function carrying more than "
+                         "two metrics (SELECT-01). Repeatable. Without one for each "
+                         "such function the publish is refused")
     args = ap.parse_args(argv)
+
+    portfolio_approvals = []
+    for spec in args.approve_portfolio:
+        fid, _, rest = str(spec).partition("=")
+        approver, _, note = rest.partition(":")
+        if not fid or not approver:
+            ap.error(f"--approve-portfolio needs FUNCTIONID=APPROVER[:NOTE], got {spec!r}")
+        portfolio_approvals.append(
+            {"functionId": fid.strip(), "approvedBy": approver.strip(),
+             "note": note.strip() or None})
 
     out_dir = Path(args.out)
     publish_root = Path(args.publish_root) if args.publish_root else out_dir / "library"
@@ -448,6 +523,7 @@ def main(argv=None) -> int:
     result = ra.run(args.l3, args.name, screen_preset=args.screen,
                     source_citation=args.source_citation, do_screen=not args.no_screen,
                     coverage_exceptions=coverage_exceptions, cache_dir=out_dir,
+                    diagnostics_n_boot=args.n_boot,
                     on_event=lambda ev: print(f"[screen] {ev}") if isinstance(ev, str) else None)
     print(f"[agent] retained {len(result['retained_site_ids'])} / {result['n_candidates']} "
           f"(tier {result['reference_tier']}, pool {result['reference_pool_disposition']}); "
@@ -486,7 +562,8 @@ def main(argv=None) -> int:
     if result.get("bundle") is not None:
         try:
             publish_info = ra.publish(result, publish_root, maintainer=args.maintainer,
-                                      provenance=provenance_doc)
+                                      provenance=provenance_doc,
+                                      portfolio_approvals=portfolio_approvals)
             print(f"[agent] published preliminary v{publish_info['version']} -> {publish_info['path']}")
         except Exception as exc:  # noqa: BLE001
             print(f"[agent] publish failed: {exc}")

@@ -39,24 +39,32 @@ adds pytest and other dev-only tooling.
 
 ## Navigation
 
-The workflow strip under the top bar is the primary navigation: five numbered
-stages, each a page. Stages 1-3 open the Data & Setup wizard at the matching
-step; two supplementary tools sit in the top bar, outside the numbered stages.
+The workflow strip under the top bar is the primary navigation: six numbered
+stages (`streamcurves/run_state.py` `STAGE_KEYS`), each a page. Stages 1-3 open
+the Data & Setup wizard at the matching step; two supplementary tools sit in
+the top bar, outside the numbered stages.
 
-- **1 Region & data / 2 Screen sites / 3 Build dataset** — the Data & Setup
-  page: landing (open a workbook/session), the map-first import wizard
-  (region → add data → screen sites → choose metrics → compile → classify →
-  build), the editable workbook grid, discipline→function mapping,
-  validation/QA.
-- **4 Reference curves** — the flagged-curve review queue, the per-metric
-  summary mega-table and the 4-phase workspace (explore → verify → confirm →
-  finalize), the curve editor, and the export hub (OH List-of-Metrics + SQT
-  Reference Curves workbooks, the Science Support HTML, and a DEEP assessment
-  bundle).
-- **5 Publish** — Draft file downloads and Preliminary/Final publishing into
-  the STAF assessment library.
+- **1 Region & Data Sources / 2 Screen Candidate Sites (EASI) / 3 Build
+  Dataset** — the Data & Setup page: landing (open a workbook/session), then
+  the map-first import wizard (region → add data → screen sites → choose
+  metrics → compile → classify → build).
+- **4 Refine Workbook, Map Functions & Validate** — the opened-project
+  workspace: the editable workbook grid, discipline→function mapping,
+  redundancy review, validation/QA prechecks.
+- **5 Reference Curves & Flagged Review** — the flagged-curve review queue,
+  the per-metric summary mega-table and the 4-phase workspace (explore →
+  verify → confirm → finalize), the curve editor, and the export hub (OH
+  List-of-Metrics + SQT Reference Curves workbooks, the Science Support HTML,
+  and a DEEP assessment bundle).
+- **6 Package & Publish** — Draft file downloads and Preliminary/Final
+  publishing into the STAF assessment library (`apps/library`), with an
+  optional DEEP re-bake.
 - **Regional Curves** (top bar) — power-function (log-log) bankfull-vs-drainage-area curves.
 - **Cross-Sections** (top bar) — on-demand geomorphic cross-sections (NLDI snap + 3DEP terrain).
+
+A headless path runs the same pipeline under the governed methodology
+(`config/methodology/`): `scripts/run_regional_analysis.py` screens, builds,
+and stages a publish for one EPA Level III ecoregion with full provenance.
 
 The import wizard and cross-sections tab pull from public REST services (USGS
 NLDI/3DEP, EPA StreamCAT, USGS StreamStats, and Model My Watershed); each source

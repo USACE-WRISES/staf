@@ -80,3 +80,50 @@ def test_fingerprints_change_with_content():
     assert fingerprints["config_sha256"].startswith("sha256:")
     assert fingerprints["rule_catalog_sha256"].startswith("sha256:")
     assert fingerprints["config_sha256"] != fingerprints["rule_catalog_sha256"]
+
+
+# --------------------------------------------------------------------------- #
+# Mirror verification (Q-07): the config blocks that MIRROR engine constants
+# must match them, and drift must be loud.
+# --------------------------------------------------------------------------- #
+def test_the_shipped_config_carries_no_mirror_drift():
+    assert methodology.mirror_drift() == []
+
+
+def test_verify_mirrors_is_quiet_on_the_clean_config():
+    assert methodology.verify_mirrors(strict=True) == []
+
+
+def test_an_edited_preset_mirror_is_reported_and_raises(monkeypatch):
+    clean = methodology.load_config()
+    tweaked = {**clean, "easi_presets": {**clean["easi_presets"],
+                                         "functional": {"field": "eci", "cmp": ">",
+                                                        "value": 0.5}}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    drift = methodology.mirror_drift()
+    assert any("functional" in d for d in drift)
+    with pytest.raises(RuntimeError):
+        methodology.verify_mirrors(strict=True)
+
+
+def test_an_edited_curve_band_mirror_is_reported(monkeypatch):
+    clean = methodology.load_config()
+    tweaked = {**clean, "curve_rules": {**clean["curve_rules"], "index_low_band": 0.25}}
+    monkeypatch.setattr(methodology, "load_config", lambda: tweaked)
+    assert any("curve engine" in d for d in methodology.mirror_drift())
+
+
+# --------------------------------------------------------------------------- #
+# Missingness dispositions (DATA-01/02/03 wired as acting thresholds)
+# --------------------------------------------------------------------------- #
+def test_missingness_dispositions_follow_the_config_bands():
+    auto_cut = methodology.threshold("data_rules.max_missingness_auto")
+    review_cut = methodology.threshold("data_rules.max_missingness_review")
+    assert methodology.missingness_disposition(0.0) == "auto"
+    assert methodology.missingness_disposition(auto_cut) == "auto"
+    assert methodology.missingness_disposition(auto_cut + 0.01) == "caution"
+    assert methodology.missingness_disposition(review_cut) == "caution"
+    assert methodology.missingness_disposition(review_cut + 0.01) == "review"
+    assert methodology.missingness_disposition(1.0) == "review"
+    assert methodology.missingness_disposition(None) == "unknown"
+    assert methodology.missingness_disposition(float("nan")) == "unknown"

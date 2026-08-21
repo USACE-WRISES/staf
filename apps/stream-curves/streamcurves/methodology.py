@@ -33,10 +33,15 @@ CONFIG_PATH = METHODOLOGY_DIR / "methodology_config.yaml"
 RULE_CATALOG_PATH = METHODOLOGY_DIR / "rule_catalog.json"
 
 
+@lru_cache(maxsize=1)
 def load_config() -> dict:
+    """Cached: the config is read on hot paths (overlap thresholds, per-curve
+    checks). Edits to the file require a process restart, which matches how
+    every other config in the app behaves."""
     return read_yaml(CONFIG_PATH) or {}
 
 
+@lru_cache(maxsize=1)
 def load_rule_catalog() -> dict:
     return read_json(RULE_CATALOG_PATH) or {}
 
@@ -75,6 +80,124 @@ def threshold(path: str, default: Any = None) -> Any:
             raise KeyError(f"Unknown methodology threshold '{path}'.")
         node = node[part]
     return node
+
+
+def missingness_disposition(missing_fraction: Any) -> str:
+    """DATA-01/02/03 band for a variable's missing-data fraction.
+
+    ``"auto"`` (eligible for automation), ``"caution"`` (analyze with caution,
+    targeted review), ``"review"`` (do not auto-recommend), or ``"unknown"``.
+    """
+    try:
+        f = float(missing_fraction)
+    except (TypeError, ValueError):
+        return "unknown"
+    if f != f:  # NaN
+        return "unknown"
+    if f <= float(threshold("data_rules.max_missingness_auto")):
+        return "auto"
+    if f <= float(threshold("data_rules.max_missingness_review")):
+        return "caution"
+    return "review"
+
+
+# --------------------------------------------------------------------------- #
+# Mirror verification (the config's own warning made executable)
+#
+# Some config blocks MIRROR engine constants rather than governing them: the
+# EASI screening presets, the engine's index-band cuts, the curve gate's
+# geometry, and the DEEP scoring contract. The engine is the methodology's
+# approved implementation for those values, so an edit to the mirror alone
+# would make the published methodology describe thresholds the software does
+# not apply. This check makes that drift loud instead of silent.
+# --------------------------------------------------------------------------- #
+def mirror_drift() -> list[str]:
+    """Human-readable descriptions of config-vs-engine drift. Empty means clean."""
+    problems: list[str] = []
+    cfg = load_config()
+
+    # 1. easi_presets must equal the vendored engine's PRESETS.
+    try:
+        from ._vendor.easi.batch import qualify as _qualify
+        mirrored = cfg.get("easi_presets") or {}
+        for name, engine_rule in _qualify.PRESETS.items():
+            if name not in mirrored:
+                problems.append(f"easi_presets is missing the engine preset '{name}'.")
+            elif mirrored[name] != engine_rule:
+                problems.append(
+                    f"easi_presets['{name}'] differs from the engine: "
+                    f"config {mirrored[name]!r} vs engine {engine_rule!r}.")
+        for name in mirrored:
+            if name not in _qualify.PRESETS:
+                problems.append(f"easi_presets carries '{name}', unknown to the engine.")
+    except Exception as exc:  # noqa: BLE001 - a broken vendor import is itself drift
+        problems.append(f"could not load the vendored EASI presets: {exc}")
+
+    # 2. The engine's condition-band cuts behind the presets.
+    try:
+        from ._vendor.easi import config as _easi_config
+        cuts = [b[0] for b in _easi_config.INDEX_BANDS[:2]]
+        deep_bands = list(threshold("curve_rules.deep_index_bands"))
+        if [float(c) for c in cuts] != [float(b) for b in deep_bands]:
+            problems.append(
+                f"curve_rules.deep_index_bands {deep_bands} differs from the "
+                f"engine's INDEX_BANDS cuts {cuts}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the engine index bands: {exc}")
+
+    # 3. Curve-gate geometry mirrors curves.py (structural to iqr-seed-1).
+    try:
+        from . import curves as _curves
+        low, high = _curves.INDEX_DRAWING_BANDS
+        if (float(threshold("curve_rules.index_low_band")) != float(low)
+                or float(threshold("curve_rules.index_high_band")) != float(high)):
+            problems.append(
+                "curve_rules index bands differ from the curve engine's "
+                f"{_curves.INDEX_DRAWING_BANDS}.")
+        if int(threshold("curve_rules.max_band_crossings")) != int(
+                _curves.MAX_BAND_CROSSINGS):
+            problems.append(
+                "curve_rules.max_band_crossings differs from the curve engine's "
+                f"{_curves.MAX_BAND_CROSSINGS}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the curve-gate geometry: {exc}")
+
+    # 4. The DEEP scoring contract mirrors deep_export.
+    try:
+        from . import deep_export as _dx
+        contract = _dx.SCORING_CONTRACT_CONSTANTS
+        pairs = [
+            ("curve_rules.deep_index_bands", list(contract["indexBands"])),
+            ("curve_rules.deep_function_score_bands",
+             list(contract["functionScoreBands"])),
+            ("curve_rules.deep_function_score_max", contract["functionScoreMax"]),
+        ]
+        for path, engine_value in pairs:
+            if list_or_value(threshold(path)) != list_or_value(engine_value):
+                problems.append(
+                    f"{path} ({threshold(path)!r}) differs from the DEEP export "
+                    f"contract ({engine_value!r}).")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the DEEP scoring contract: {exc}")
+
+    return problems
+
+
+def list_or_value(v: Any) -> Any:
+    return list(v) if isinstance(v, (list, tuple)) else v
+
+
+def verify_mirrors(strict: bool = True) -> list[str]:
+    """Run :func:`mirror_drift`. In strict mode any drift raises, so a headless
+    run cannot proceed under a config that misdescribes the engine. Non-strict
+    callers (the interactive app at startup) log and continue."""
+    problems = mirror_drift()
+    if problems and strict:
+        raise RuntimeError(
+            "methodology config drift against the engine:\n- " + "\n- ".join(problems))
+    for p in problems:
+        logger.error("methodology mirror drift: %s", p)
+    return problems
 
 
 def _sha256(path: Path) -> str | None:

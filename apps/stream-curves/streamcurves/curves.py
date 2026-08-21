@@ -54,6 +54,14 @@ CURVE_FORMS = (CURVE_FORM_MONOTONE, CURVE_FORM_OPTIMUM)
 # Score 1.0 across the reference interquartile core, falling to 0 in both tails.
 _OPTIMUM_OFFSETS = (0.35, 1.0, 2.0)   # 0.70 / 0.30 / 0.00 crossings
 
+# The geometric acceptance gate's structural constants (CURVE-07a). The 0.30 and
+# 0.70 drawing bands and the two-crossing limit appear as literals throughout
+# this parity-anchored module; these names exist so the methodology mirror check
+# (methodology.mirror_drift) can verify the config against the engine without a
+# third hand-typed copy elsewhere.
+INDEX_DRAWING_BANDS = (0.30, 0.70)
+MAX_BAND_CROSSINGS = 2
+
 
 def curve_form_of(metric_entry: Mapping | None) -> str:
     """The declared curve form for a metric_config entry (default monotone)."""

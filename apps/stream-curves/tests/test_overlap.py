@@ -191,9 +191,12 @@ def test_redundancy_view_carries_the_legacy_columns():
     view = ov.redundancy_view(a, {"m1": "Reach inflow", "m2": "Reach inflow"})
     assert list(view.columns) == [
         "metric_a", "metric_b", "function_a", "function_b", "same_function",
-        "spearman", "pearson", "red01_spearman_flag", "code_pearson_flag", "divergence"]
+        "n", "spearman", "pearson", "p_value", "fdr_q",
+        "red01_spearman_flag", "code_pearson_flag", "divergence"]
     assert bool(view.iloc[0]["same_function"])
     assert bool(view.iloc[0]["red01_spearman_flag"])
+    # RED-07 support rides along for every reported pair.
+    assert view.iloc[0]["fdr_q"] is not None
 
 
 def test_redundancy_view_of_an_empty_analysis():

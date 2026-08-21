@@ -3,12 +3,13 @@
 Mirrors the R repo's tests/deep_export_roundtrip.R (synthetic finalized curves ->
 bundle structure, alias mapping, curveLayers) and adds the DEEP contract test:
 the exported bundle must pass deep.assessments.validate_bundle and score through
-deep.curves (D:\\Code\\Work\\deep).
+deep.curves (apps/deep in this monorepo).
 """
 
 import json
 import logging
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -26,7 +27,7 @@ from streamcurves.deep_export import (
     write_deep_assessment_bundle,
 )
 
-DEEP_ROOT = r"D:\Code\Work\deep"
+DEEP_ROOT = str(Path(__file__).resolve().parents[2] / "deep")
 
 
 # --------------------------------------------------------------------------- #
@@ -516,7 +517,7 @@ def _import_deep():
         sys.path.insert(0, DEEP_ROOT)
     try:
         from deep import assessments, curves, models  # noqa: PLC0415
-    except Exception as e:  # pragma: no cover - depends on sibling checkout
+    except Exception as e:  # pragma: no cover - depends on the deep app importing
         pytest.skip(f"DEEP ({DEEP_ROOT}) not importable: {e}")
     return assessments, curves, models
 

@@ -3,12 +3,13 @@
 Ports tests/geomorph_tests.R from the R repo verbatim (same profiles, same
 hand-computed expectations), adds extra hand-computed island / edge-limited /
 rounding cases, and cross-checks against the sister app DEEP
-(D:\\Code\\Work\\deep — the original Python source the R file was ported from),
-skipping gracefully when DEEP is not importable.
+(apps/deep in this monorepo — the original Python source the R file was ported
+from), skipping gracefully when DEEP is not importable.
 """
 
 import math
 import sys
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -27,15 +28,16 @@ from streamcurves.geomorph import (
     transect_entrenchment,
 )
 
-sys.path.insert(0, r"D:\Code\Work\deep")
+DEEP_ROOT = str(Path(__file__).resolve().parents[2] / "deep")
+sys.path.insert(0, DEEP_ROOT)
 try:
     import deep.bieger as deep_bieger
     import deep.geomorph as deep_geomorph
-except Exception:  # pragma: no cover - depends on the sibling checkout
+except Exception:  # pragma: no cover - depends on the deep app importing
     deep_bieger = deep_geomorph = None
 
 needs_deep = pytest.mark.skipif(
-    deep_geomorph is None, reason="DEEP repo not importable from D:\\Code\\Work\\deep"
+    deep_geomorph is None, reason=f"DEEP app not importable from {DEEP_ROOT}"
 )
 
 # Symmetric trapezoid: thalweg at station 0 (elev 0); banks at 3 (+-10);

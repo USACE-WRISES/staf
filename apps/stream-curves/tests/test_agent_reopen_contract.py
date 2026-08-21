@@ -36,7 +36,11 @@ NOT_RUN_STRINGS = (
 @pytest.fixture(scope="module")
 def offline_result() -> dict:
     """The real pipeline, no network: L3 58 unscreened, StreamCat skipped."""
-    return ra.run("58", "Northeastern Highlands", do_screen=False, use_streamcat=False)
+    # This fixture tests session reopen, not the resampling diagnostics, so it
+    # skips them to keep the module fast. Provenance and determinism tests keep
+    # them on.
+    return ra.run("58", "Northeastern Highlands", do_screen=False,
+                  use_streamcat=False, diagnostics_enabled=False)
 
 
 @pytest.fixture(scope="module")

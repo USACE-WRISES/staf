@@ -29,6 +29,18 @@
 #
 # metric_family is the curve engine's eligibility field (categorical is excluded); it is
 # also the bundle's inputType. NRSA responses are continuous, count, or proportion.
+#
+# expected_shape (optional) records the approved ecological expectation explicitly:
+#   monotone_increasing | monotone_decreasing | optimum
+# When absent it derives from the declaration above (curve_form: optimum -> optimum,
+# else higher_is_better true/false -> increasing/decreasing). CURVE-05 compares every
+# built curve's realized shape against this and routes any conflict to review, so an
+# edited curve can never silently contradict the approved expectation.
+#
+# transformation (optional, default none) records a curated variable transformation
+# (e.g. log10) as documentation. No code applies it automatically; it exists so the
+# variable dictionary can carry the transform the methodology asks for (Unresolved
+# Input 4) once one is approved for a metric.
 
 metrics:
   # --- Biology (from the NH-58 pilot, high confidence) ---

@@ -25,6 +25,7 @@ from urllib.parse import quote
 from shiny import module, reactive, render, req, ui
 
 from streamcurves import library as lib
+from streamcurves import provenance as pv
 from streamcurves import run_state as rs
 from streamcurves import session_io as sio
 from streamcurves.deep_export import write_deep_assessment_bundle
@@ -572,7 +573,20 @@ def publish_server(input, output, session, state: AppState):
                 meta={"assessmentName": name, "sourceCitation": meta["sourceCitation"]},
             )
             full_payload = ap.session_payload_from_state(state)
-            version = lib.publish_version(aid, meta, full_payload, bundle)
+            # Every published version carries a provenance document. The
+            # interactive one records what this path genuinely applied (curve
+            # review, family, portfolio counts) and lists the rest as not
+            # evaluated, so an interactive publish is auditable without faking
+            # an agent-grade chain.
+            with reactive.isolate():
+                curve_review = dict(state.curve_review() or {})
+                region = state.region_of_applicability()
+                session_name = state.session_name()
+            provenance_doc = pv.build_interactive_provenance(
+                bundle, curve_review, region=region,
+                publisher=_maintainer_name(), session_name=session_name)
+            version = lib.publish_version(aid, meta, full_payload, bundle,
+                                          provenance=provenance_doc)
         except Exception as e:  # noqa: BLE001
             state.run_stage_status.set(prev_stage_status)
             state.run_meta.set(prev_meta)

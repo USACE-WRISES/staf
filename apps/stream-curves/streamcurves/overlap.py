@@ -30,12 +30,42 @@ from typing import Any, Iterable, Optional
 
 import numpy as np
 import pandas as pd
+from scipy import stats as _sstats
+from statsmodels.stats.multitest import multipletests
+
+from . import methodology
 
 OVERLAP_METHOD_VERSION = "spearman-abs-1"
 
-DEFAULT_RHO_THRESHOLD = 0.80   # OVL-01 auto-drop
+# Fallback values, equal to the methodology config's redundancy_rules. Callers
+# that pass None get the live config values (one threshold home, Q-06); these
+# constants remain for tests and for reading the module in isolation.
+DEFAULT_RHO_THRESHOLD = 0.80   # OVL-01 auto-drop (redundancy_rules.strong_abs_spearman)
 DEFAULT_MIN_PAIR_N = 8         # complete pairs required before a flag is trusted
-DEFAULT_REPORT_FLOOR = 0.65    # reported as a near-miss, never auto-dropped
+DEFAULT_REPORT_FLOOR = 0.65    # near-miss report floor (redundancy_rules.moderate_abs_spearman)
+
+
+def _resolve_thresholds(threshold, report_floor) -> tuple[float, float]:
+    if threshold is None:
+        threshold = float(methodology.threshold(
+            "redundancy_rules.strong_abs_spearman", DEFAULT_RHO_THRESHOLD))
+    if report_floor is None:
+        report_floor = float(methodology.threshold(
+            "redundancy_rules.moderate_abs_spearman", DEFAULT_REPORT_FLOOR))
+    return float(threshold), float(report_floor)
+
+
+def _spearman_p(rho: float, n: int) -> float:
+    """Two-sided p for a Spearman rho via the t approximation (the same
+    large-sample form scipy's spearmanr uses). Supporting evidence for RED-07;
+    the effect size stays primary."""
+    if n is None or n <= 2 or rho is None or not np.isfinite(rho):
+        return float("nan")
+    a = min(abs(float(rho)), 1.0)
+    if a >= 1.0:
+        return 0.0
+    t = a * np.sqrt((n - 2) / (1.0 - a * a))
+    return float(2.0 * _sstats.t.sf(t, n - 2))
 
 PARTNER_PREDICTOR = "predictor"
 PARTNER_METRIC = "metric"
@@ -48,7 +78,7 @@ _NON_ANALYSIS = {"site_id", "site_name", "lat", "lon", "comid", "source", ".sour
 
 PAIR_COLUMNS = [
     "metric", "partner", "partner_role", "n", "spearman", "pearson",
-    "abs_spearman", "flagged", "low_n", "low_variety",
+    "abs_spearman", "p_value", "fdr_q", "flagged", "low_n", "low_variety",
 ]
 
 
@@ -132,9 +162,9 @@ def pairwise_correlations(
     partner_columns: Iterable[str],
     *,
     partner_role: str = PARTNER_PREDICTOR,
-    threshold: float = DEFAULT_RHO_THRESHOLD,
+    threshold: Optional[float] = None,
     min_n: int = DEFAULT_MIN_PAIR_N,
-    report_floor: float = DEFAULT_REPORT_FLOOR,
+    report_floor: Optional[float] = None,
 ) -> tuple[pd.DataFrame, list[dict]]:
     """Every metric x partner pair at or above ``report_floor``, plus skip reasons.
 
@@ -142,7 +172,13 @@ def pairwise_correlations(
     the per-pair n comes from the notna masks rather than a global ``dropna`` -- with
     ragged landscape data a shared dropna can collapse the sample to a handful of rows
     and quietly change every coefficient.
+
+    ``threshold`` and ``report_floor`` default to the methodology config's
+    redundancy bands (RED-01/02). BH-FDR q-values (RED-07) are computed across
+    EVERY tested pair in the call, not only the reported ones, and ride along as
+    supporting evidence; flagging stays effect-size primary.
     """
+    threshold, report_floor = _resolve_thresholds(threshold, report_floor)
     metrics = [str(c) for c in dict.fromkeys(metric_columns or [])]
     partners = [str(c) for c in dict.fromkeys(partner_columns or [])]
     union = list(dict.fromkeys(metrics + partners))
@@ -163,7 +199,7 @@ def pairwise_correlations(
     binary = {c for c in usable if num[c].nunique(dropna=True) <= 2}
 
     seen: set[tuple[str, str]] = set()
-    rows: list[dict] = []
+    tested: list[dict] = []
     for m in metrics:
         for p in partners:
             if m == p:
@@ -180,9 +216,7 @@ def pairwise_correlations(
             low_n = n < int(min_n)
             low_variety = (m in binary) or (p in binary)
             arho = abs(float(rho))
-            if arho < float(report_floor):
-                continue
-            rows.append({
+            tested.append({
                 "metric": m,
                 "partner": p,
                 "partner_role": partner_role,
@@ -190,10 +224,21 @@ def pairwise_correlations(
                 "spearman": float(rho),
                 "pearson": float(r) if r is not None and np.isfinite(r) else np.nan,
                 "abs_spearman": arho,
+                "p_value": _spearman_p(float(rho), n),
                 "flagged": bool(arho >= float(threshold) and not low_n and not low_variety),
                 "low_n": bool(low_n),
                 "low_variety": bool(low_variety),
             })
+    # RED-07: BH-FDR across the whole tested family in this call, so the
+    # multiplicity universe is every pair examined, not only the reported ones.
+    finite = [d for d in tested if np.isfinite(d["p_value"])]
+    if finite:
+        qs = multipletests([d["p_value"] for d in finite], method="fdr_bh")[1]
+        for d, q in zip(finite, qs):
+            d["fdr_q"] = float(q)
+    for d in tested:
+        d.setdefault("fdr_q", np.nan)
+    rows = [d for d in tested if d["abs_spearman"] >= float(report_floor)]
     if not rows:
         return pd.DataFrame(columns=PAIR_COLUMNS), skipped
     out = pd.DataFrame(rows, columns=PAIR_COLUMNS)
@@ -236,12 +281,16 @@ def analyze_overlap(
     column_functions: Optional[dict] = None,
     labels: Optional[dict] = None,
     sources: Optional[dict] = None,
-    threshold: float = DEFAULT_RHO_THRESHOLD,
+    threshold: Optional[float] = None,
     min_n: int = DEFAULT_MIN_PAIR_N,
-    report_floor: float = DEFAULT_REPORT_FLOOR,
+    report_floor: Optional[float] = None,
     analyzed_at: Optional[str] = None,
 ) -> dict:
-    """Full overlap picture for one dataset: pairs, a per-metric verdict, and skips."""
+    """Full overlap picture for one dataset: pairs, a per-metric verdict, and skips.
+
+    ``threshold`` and ``report_floor`` default to the methodology config's
+    redundancy bands so the acting values have one home."""
+    threshold, report_floor = _resolve_thresholds(threshold, report_floor)
     metrics = [str(c) for c in dict.fromkeys(metric_columns or []) if c not in _NON_ANALYSIS]
     partners = [str(c) for c in dict.fromkeys(partner_columns or []) if c not in _NON_ANALYSIS]
     pairs, skipped = pairwise_correlations(
@@ -339,11 +388,14 @@ def _pair_dict(row, labels: dict, sources: dict) -> dict:
 # Legacy view: the metric-vs-metric redundancy CSV the agent already publishes.
 # --------------------------------------------------------------------------- #
 def redundancy_view(analysis: dict, column_functions: Optional[dict] = None) -> pd.DataFrame:
-    """``analysis`` reshaped into the historical RED-01 ``redundancy_matrix`` columns."""
+    """``analysis`` reshaped into the historical RED-01 ``redundancy_matrix``
+    columns, plus the pair n and the RED-07 supporting evidence (p, BH q)."""
     column_functions = column_functions or {}
     pairs = analysis.get("pairs")
+    strong, _ = _resolve_thresholds(None, None)
     cols = ["metric_a", "metric_b", "function_a", "function_b", "same_function",
-            "spearman", "pearson", "red01_spearman_flag", "code_pearson_flag", "divergence"]
+            "n", "spearman", "pearson", "p_value", "fdr_q",
+            "red01_spearman_flag", "code_pearson_flag", "divergence"]
     if pairs is None or not len(pairs):
         return pd.DataFrame(columns=cols)
     rows = []
@@ -357,10 +409,13 @@ def redundancy_view(analysis: dict, column_functions: Optional[dict] = None) -> 
             "metric_a": a, "metric_b": b,
             "function_a": fa, "function_b": fb,
             "same_function": fa == fb,
+            "n": int(r["n"]) if "n" in r else None,
             "spearman": sp,
             "pearson": pe,
-            "red01_spearman_flag": abs(sp) >= DEFAULT_RHO_THRESHOLD,
-            "code_pearson_flag": pe is not None and abs(pe) >= DEFAULT_RHO_THRESHOLD,
+            "p_value": _maybe_float(r["p_value"]) if "p_value" in r else None,
+            "fdr_q": _maybe_float(r["fdr_q"]) if "fdr_q" in r else None,
+            "red01_spearman_flag": abs(sp) >= strong,
+            "code_pearson_flag": pe is not None and abs(pe) >= strong,
             "divergence": None if pe is None else abs(abs(sp) - abs(pe)),
         })
     out = pd.DataFrame(rows, columns=cols)

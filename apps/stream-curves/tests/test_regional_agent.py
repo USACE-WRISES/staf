@@ -24,6 +24,38 @@ def test_select_candidates_empty_region():
 
 
 # --------------------------------------------------------------------------- #
+# Missingness dispositions (DATA-01/02/03) acting on the review map
+# --------------------------------------------------------------------------- #
+def test_metric_missingness_classifies_and_counts_absent_columns():
+    data = pd.DataFrame({
+        "clean": [1.0, 2.0, 3.0, 4.0, 5.0],
+        "half": [1.0, None, 3.0, None, 5.0],
+    })
+    out = ra.metric_missingness(data, ["clean", "half", "absent"])
+    assert out["clean"]["disposition"] == "auto"
+    assert out["half"]["missing_fraction"] == 0.4
+    assert out["half"]["disposition"] == "caution"
+    # A column that never arrived is fully missing, not silently skipped.
+    assert out["absent"]["missing_fraction"] == 1.0
+    assert out["absent"]["disposition"] == "review"
+
+
+def test_review_curves_routes_high_missingness_to_data_review():
+    from streamcurves import run_state as rs
+    row = {"curve_status": "complete", "n_reference": 30}
+    review = ra.review_curves(
+        {"m": dict(row)}, {"m": "Nutrient cycling"},
+        missingness={"m": {"missing_fraction": 0.55, "disposition": "review"}})
+    assert review["m"]["status"] == rs.CURVE_STATUS_DATA_REVIEW
+    assert "55%" in review["m"]["reasons"][0]
+    # The same curve with acceptable coverage auto-finalizes.
+    clean = ra.review_curves(
+        {"m": dict(row)}, {"m": "Nutrient cycling"},
+        missingness={"m": {"missing_fraction": 0.1, "disposition": "auto"}})
+    assert clean["m"]["status"] == rs.CURVE_STATUS_AUTO_OK
+
+
+# --------------------------------------------------------------------------- #
 # Curated direction map
 # --------------------------------------------------------------------------- #
 def test_build_metric_config_applies_curated_directions():
@@ -37,6 +69,17 @@ def test_build_metric_config_applies_curated_directions():
     # a metric with neither a direction nor a declared shape is flagged, never guessed
     assert "phab_XBKA" in {f["metric"] for f in flagged}
     assert "phab_XBKA" not in mc
+
+
+def test_build_metric_config_carries_expected_shape_and_transformation():
+    directions = ra.load_directions()
+    cols = ["chem_PTL", "bent_EPT_NTAX", "chem_PH"]
+    mc, _ = ra.build_metric_config(cols, directions)
+    assert mc["chem_PTL"]["expected_shape"] == "monotone_decreasing"
+    assert mc["bent_EPT_NTAX"]["expected_shape"] == "monotone_increasing"
+    assert mc["chem_PH"]["expected_shape"] == "optimum"      # curve_form: optimum
+    for code in ("chem_PTL", "bent_EPT_NTAX", "chem_PH"):
+        assert mc[code]["transformation"] == "none"
 
 
 def test_two_sided_metrics_build_instead_of_being_flagged():
@@ -285,7 +328,8 @@ def test_sample_size_disposition_calibrated_bands(n, expected):
 
 def test_run_offline_end_to_end_no_screen():
     """Full pipeline offline (do_screen=False): curves + a valid bundle, no network."""
-    res = ra.run("58", "Northeastern Highlands", do_screen=False)
+    res = ra.run("58", "Northeastern Highlands", do_screen=False,
+                 diagnostics_n_boot=20)
     assert res["n_candidates"] == 71
     assert res["screening_method"] == "unscreened_test"
     assert res["bundle"] is not None
@@ -294,6 +338,14 @@ def test_run_offline_end_to_end_no_screen():
     for mk in res["intended_metrics"]:
         assert res["sample_sizes"][mk]["disposition"] in (
             "adequate", "exploratory", "insufficient", "too_few", "unknown")
+    # Wave 3: the run carries diagnostics, confidence, scores, and the
+    # per-metric tier evaluation, all keyed consistently.
+    assert set(res["confidence"]) == set(res["metric_config"])
+    assert set(res["metric_scores"]) == set(res["metric_config"])
+    assert res["diagnostics"]
+    assert res["tier_evaluation"]
+    for mk, c in res["confidence"].items():
+        assert c["label"] in ("High", "Moderate", "Low"), mk
 
 
 def test_portfolio_credits_every_function_a_metric_informs():

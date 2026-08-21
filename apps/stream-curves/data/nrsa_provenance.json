@@ -1,0 +1,24 @@
+{
+  "dataset": "EPA National Rivers and Streams Assessment 2018-19 (NRSA 2018-19)",
+  "program": "EPA National Aquatic Resource Surveys (NARS)",
+  "source_statement": "Pulled in December 2025 from the EPA published records for the NRSA 2018-19 dataset (owner statement, recorded 2026-08-21). The specific archive file names were not recorded at download time.",
+  "conversion": "Converted from the prior R application data (.rds) by scripts/convert_data.py. The parquet and CSVs in this folder are the converted artifacts, not the EPA originals.",
+  "recorded_at": "2026-08-21",
+  "files": [
+    {
+      "file": "nrsa_metrics.parquet",
+      "bytes": 6987557,
+      "sha256": "sha256:fad9fe4ef8c0c60418759b4e4460a19b6e2366e473b8850684531ea6ef4140e2"
+    },
+    {
+      "file": "nrsa_sites.csv",
+      "bytes": 248530,
+      "sha256": "sha256:7cf13e60fcf6ed7a46eda74e16b2770a28ae9e861a2f25606ebb5757b8b8da68"
+    },
+    {
+      "file": "nrsa_metric_catalog.csv",
+      "bytes": 55142,
+      "sha256": "sha256:2c515ca07e5e3b7f3146d0102782014c537a2e2cdf792fecad1911cf85aa3b6b"
+    }
+  ]
+}

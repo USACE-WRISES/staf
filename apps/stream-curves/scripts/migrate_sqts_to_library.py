@@ -366,6 +366,18 @@ def migrate(
             "author": "STAF SQT migration",
             "revisionNotes": "Migrated from the STAF metric library "
             "(detailed-adapted-assessments.json).",
+            # SELECT-01: several state SQTs legitimately carry three or more
+            # metrics on a function because their published tools do. The
+            # approval records that basis: the state SQT's own published
+            # metric set is the human-approved source being migrated, not a
+            # new agent selection.
+            "portfolioApprovals": [
+                {"functionId": fn.get("functionId"),
+                 "approvedBy": "STAF SQT migration",
+                 "note": "Adopted from the state SQT's published metric set."}
+                for fn in _bundle.get("metricsByFunction") or []
+                if len(fn.get("metrics") or []) > 2
+            ],
         }
         try:
             version = lib.publish_version(aid, meta, _session_payload(a, region), _bundle)
