@@ -136,6 +136,10 @@ def tier_evaluation_table(data: pd.DataFrame, metric_config: dict, tier: dict,
     evaluation the reviewer decides from.
     """
     primary = tier.get("primary") or {}
+    # An EMPTY functional pool is a real screen result (the ECBP case: zero
+    # Functioning sites), not missing information, so the counts must report 0
+    # rather than borrowing the applied pool's numbers.
+    has_primary = "retained_ids" in primary
     functional_ids = {str(s) for s in (primary.get("retained_ids") or [])}
     rows: list[dict] = []
     for mk, entry in metric_config.items():
@@ -143,11 +147,13 @@ def tier_evaluation_table(data: pd.DataFrame, metric_config: dict, tier: dict,
         if col not in data.columns:
             continue
         n_applied = int(data[col].notna().sum())
-        if functional_ids and "site_id" in data.columns:
+        if has_primary and "site_id" in data.columns:
             mask = data["site_id"].astype(str).isin(functional_ids)
             n_functional = int(data.loc[mask, col].notna().sum())
+        elif screen_preset == "functional":
+            n_functional = n_applied
         else:
-            n_functional = n_applied if screen_preset == "functional" else None
+            n_functional = None
         trigger = (n_functional is not None and n_functional < MIN_N_AUTO)
         rows.append({
             "metric": mk,
@@ -839,7 +845,9 @@ def run(l3_code: str, name: str, *,
         coverage_exceptions: Optional[list[dict]] = None,
         cache_dir: Optional[Path] = None,
         diagnostics_n_boot: int = 200,
-        diagnostics_enabled: bool = True) -> dict:
+        diagnostics_enabled: bool = True,
+        finalize_metrics: Optional[dict] = None,
+        finalize_actor: str = "") -> dict:
     """Run the full regional analysis for one L3 ecoregion. Returns a structured result
     (no files written here; the CLI writes outputs and publishes).
 
@@ -929,6 +937,18 @@ def run(l3_code: str, name: str, *,
     curve_rows = build_curves(data, metric_config)
     curve_review = review_curves(curve_rows, column_functions,
                                  missingness=missingness, metric_config=metric_config)
+    # Recorded reviewer finalizations (``finalize_metrics``: metric -> note).
+    # A flagged curve publishes only through exactly this: a named human
+    # decision with a rationale, stamped on the review entry. The agent never
+    # finalizes a flagged curve on its own.
+    for mk, note in (finalize_metrics or {}).items():
+        entry = curve_review.get(mk)
+        if entry is None:
+            raise ValueError(f"--finalize-metric names unknown metric {mk!r}")
+        if not finalize_actor:
+            raise ValueError("finalize_metrics requires a named finalize_actor")
+        curve_review[mk] = run_state.apply_review_decision(
+            entry, run_state.DECISION_FINALIZED, note=note, actor=finalize_actor)
     intended = run_state.intended_metrics_for_publish(curve_review)
     flagged = run_state.flagged_metrics(curve_review)
 

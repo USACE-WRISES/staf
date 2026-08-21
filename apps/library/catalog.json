@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-21T17:31:54Z",
+  "generatedAt": "2026-08-21T18:02:10Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -52,15 +52,15 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 1,
-      "latestUpdatedAt": "2026-07-28T19:52:29Z",
-      "latestPreliminary": 1,
+      "latestVersion": 2,
+      "latestUpdatedAt": "2026-08-21T18:02:10Z",
+      "latestPreliminary": 2,
       "latestCertified": 0,
-      "defaultVersion": 1,
-      "contentDigest": "sha256:0d42eabc3c3b59d7db1a363bfedfe82da191b19ce046c1ae86b0446e4b1cd4a1",
+      "defaultVersion": 2,
+      "contentDigest": "sha256:fd7f84e1e27d72b862ae014a6c31f6639693191440b141835a0a83315db665a9",
       "validationState": "unvalidated",
       "validationSummary": null,
-      "provenanceState": "absent"
+      "provenanceState": "present"
     },
     {
       "assessmentId": "mi-sqt-adapted",
