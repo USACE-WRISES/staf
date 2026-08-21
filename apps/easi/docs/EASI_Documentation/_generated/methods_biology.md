@@ -23,7 +23,7 @@
 |  | Scoring | Good 0 recorded · Fair 1-2 recorded · Poor ≥3 recorded |
 |  | Basis | dataset reference, confidence M, provisional screening transitions |
 |  | Source hierarchy | Single source, no fallback. |
-|  | Known limitations | A zero count means no established taxa were recorded. It does not confirm absence.<br>HUC8 fallback results carry lower confidence than HUC12 results.<br>Count bands are STAF screening judgments.<br>Establishment status often cannot be confirmed from occurrence records, and uneven sampling effort inflates richness where effort is high (Mangiante et al. 2019). |
+|  | Known limitations | A zero count means no established taxa were recorded. It does not confirm absence.<br>HUC8 fallback results carry lower confidence than HUC12 results.<br>Count bands are STAF screening judgments.<br>Establishment status often cannot be confirmed from occurrence records, and uneven sampling effort inflates richness where effort is high (Mangiante et al. 2018). |
 | **Fish Passage & Barrier Effects (longitudinal connectivity)** | Function | Watershed connectivity |
 |  | Automated method | Nearby dam-proximity proxy |
 |  | Inputs | Mapped NID dams within one mile (mapped dams) |

@@ -111,7 +111,7 @@
       "url": "https://doi.org/10.1890/10-1357.1"
     },
     "mangiante-2019": {
-      "title": "Mangiante et al. 2019, Trends in nonindigenous aquatic species richness in the United States",
+      "title": "Mangiante et al. 2018, Trends in nonindigenous aquatic species richness in the United States",
       "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6707539/"
     },
     "hyporheic-review": {
@@ -3158,7 +3158,7 @@
         "A zero count means no established taxa were recorded. It does not confirm absence.",
         "HUC8 fallback results carry lower confidence than HUC12 results.",
         "Count bands are STAF screening judgments.",
-        "Establishment status often cannot be confirmed from occurrence records, and uneven sampling effort inflates richness where effort is high (Mangiante et al. 2019)."
+        "Establishment status often cannot be confirmed from occurrence records, and uneven sampling effort inflates richness where effort is high (Mangiante et al. 2018)."
       ],
       "citations": [
         "nas",
