@@ -28,6 +28,7 @@ from streamcurves.curves import (
     build_reference_curve,
     build_reference_curve_from_points,
     curve_form_of,
+    metric_domain_of,
     empty_reference_curve_points,
     hydrate_reference_curve_result,
     normalize_reference_curve_points,
@@ -226,6 +227,7 @@ def reference_curve_editor_ui(title: str = "Manual Curve Editor"):
 def reference_curve_editor_server(
     input, output, session, current_result, higher_is_better, on_apply, on_reset,
     curve_form=None,
+    domain=None,
 ):
     editor_table = reactive.value(reference_curve_editor_table_df(None))
     validation_message = reactive.value(None)
@@ -437,6 +439,9 @@ def reference_curve_editor_server(
         validation = validate_reference_curve_points(
             points, higher_is_better(),
             curve_form=(curve_form() if curve_form else CURVE_FORM_MONOTONE),
+            # A hand-drawn anchor outside the metric's physical domain is an
+            # error to surface here, in the editor's own message (ECO-1).
+            domain=(domain() if domain else None),
         )
 
         if not validation["valid"]:
@@ -617,6 +622,9 @@ def ref_curve_server(input, output, session, state: AppState, workspace_scope: s
             ) is True
         ),
         curve_form=lambda: curve_form_of(
+            (state.metric_config() or {}).get(state.current_metric()) or {}
+        ),
+        domain=lambda: metric_domain_of(
             (state.metric_config() or {}).get(state.current_metric()) or {}
         ),
         on_apply=_on_apply,

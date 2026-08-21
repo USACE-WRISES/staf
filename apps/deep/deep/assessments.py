@@ -274,7 +274,7 @@ def covering_refs(lat: float, lon: float, *, require_polygon: bool = True) -> li
 
     Coverage is decided from the *default* version's region polygon. Returns one dict per
     covering id: ``{assessmentId, assessmentName, regionName, defaultRef, refs,
-    lifecycleByRef, versionByRef, hasCertified}`` where ``refs`` is ordered certified-desc
+    lifecycleByRef, versionByRef, referenceTierByRef, hasCertified}`` where ``refs`` is ordered certified-desc
     then preliminary-desc with the default ref first. Ids with a certified default sort
     ahead. ``require_polygon`` mirrors :func:`covering_assessments`.
     """
@@ -317,6 +317,11 @@ def covering_refs(lat: float, lon: float, *, require_polygon: bool = True) -> li
             "refs": refs,
             "lifecycleByRef": {r["assessmentRef"]: r.get("lifecycle", "preliminary") for r in ordered},
             "versionByRef": {r["assessmentRef"]: int(r.get("version") or 1) for r in ordered},
+            # The reference tier the pool was drawn at (least_disturbed or
+            # best_available), stamped on the bundle by the builder; None for
+            # versions that predate the stamp. Shown on the card so a
+            # best-available bar is never mistaken for reference condition.
+            "referenceTierByRef": {r["assessmentRef"]: r.get("referenceTier") for r in ordered},
             "hasCertified": bool(certified),
         })
     out.sort(key=lambda e: (0 if e["hasCertified"] else 1, e["assessmentId"]))

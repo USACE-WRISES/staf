@@ -214,11 +214,28 @@ def _criteria_table(points):
     return "".join(rows)
 
 
+_TIER_LABELS = {
+    "minimally_disturbed": "Minimally disturbed",
+    "least_disturbed": "Least disturbed",
+    "best_available": "Best available (fallback)",
+}
+
+
+def _tier_label(tier) -> str:
+    """Human label for a bundle's reference tier; '' when the version predates the stamp."""
+    if not tier:
+        return ""
+    return _TIER_LABELS.get(str(tier), str(tier).replace("_", " "))
+
+
 def _metric_tip_html(m) -> str:
-    """Rich hover card for a metric: how to collect it. Pulls the assessment's
-    ``metricStatement`` / ``howToMeasure`` / ``methodContext`` prose (all optional).
-    Falls back to a muted note when the assessment carries none yet (raw text may hold
-    '<', '>', '&', so escape it)."""
+    """Rich hover card for a metric: how to collect it, plus what stands behind
+    its curve. Pulls the assessment's ``metricStatement`` / ``howToMeasure`` /
+    ``methodContext`` prose (all optional) and the builder's annotations
+    (``metricRole``, ``referenceN``, ``sampleDisposition``, ``curveCaveats``,
+    ``confidenceLabel``, ``referenceTier``), all optional. Falls back to a muted
+    note when the assessment carries none yet (raw text may hold '<', '>', '&',
+    so escape it)."""
     name = m.get("metricName", m.get("metricId", ""))
     parts = [f'<div class="easi-tip-title">{html.escape(name)}</div>']
     any_sec = False
@@ -233,6 +250,31 @@ def _metric_tip_html(m) -> str:
     if not any_sec:
         parts.append('<div class="easi-tip-sub">Field collection guidance has not been '
                      'provided for this assessment yet.</div>')
+    # What stands behind the curve (stamped by StreamCurves at publish).
+    basis = []
+    tier = _tier_label(m.get("referenceTier"))
+    if tier:
+        basis.append(f"Reference tier: {tier}")
+    role = str(m.get("metricRole") or "").strip()
+    if role == "stressor_surrogate":
+        basis.append("Landscape stressor surrogate (footprint comparison, not measured function)")
+    elif role == "response":
+        basis.append("Site-scale response measurement")
+    n = m.get("referenceN")
+    disp = str(m.get("sampleDisposition") or "").strip()
+    if isinstance(n, (int, float)):
+        basis.append(f"Reference sites: {int(n)}" + (f" ({disp})" if disp else ""))
+    conf = m.get("confidenceLabel")
+    if conf:
+        basis.append(f"Builder confidence: {html.escape(str(conf))} (a review-priority heuristic, not a probability)")
+    if basis:
+        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Curve basis</span>'
+                     + "; ".join(html.escape(b) if not b.startswith("Builder confidence") else b
+                                 for b in basis) + "</div>")
+    caveats = [str(c) for c in (m.get("curveCaveats") or []) if str(c).strip()]
+    if caveats:
+        parts.append('<div class="easi-tip-sec"><span class="easi-tip-lbl">Read with care</span>'
+                     + " ".join(html.escape(c) for c in caveats) + "</div>")
     return "".join(parts)
 
 
@@ -901,10 +943,12 @@ def server(input, output, session_):  # noqa: C901
                 "**DEEP** — Detailed Evaluation of Ecosystem Processes.\n\n"
                 "The detailed tier of the Stream Tiered Assessment Framework. From a clicked point "
                 "DEEP delineates the upstream watershed and an assessment reach, loads a detailed "
-                "assessment definition (a selection of metrics per function, each with a calibrated "
-                "reference curve), and turns your measured metric values into function scores that "
-                "roll up to Physical / Chemical / Biological outcome sub-indices and an Ecosystem "
-                "Condition Index. Assessments are built in the companion SPRING builder."),
+                "assessment definition (a selection of metrics per function, each with a published "
+                "reference curve and the reference tier it was drawn at), and turns your measured "
+                "metric values into function scores that roll up to Physical / Chemical / Biological "
+                "outcome sub-indices and an Ecosystem Condition Index. Assessments are built in the "
+                "companion StreamCurves builder and are preliminary until the scientific team "
+                "certifies them."),
             title="About DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
     @reactive.effect
@@ -1097,6 +1141,8 @@ def server(input, output, session_):  # noqa: C901
                 for ref in refs
             }
             default_life = life_by_ref.get(entry["defaultRef"], "preliminary")
+            tier_by_ref = entry.get("referenceTierByRef") or {}
+            default_tier = _tier_label(tier_by_ref.get(entry["defaultRef"]))
             badge_cls = "deep-badge-cert" if default_life == "certified" else "deep-badge-prelim"
             is_sel = sel is not None and sel in refs
             pick_label = "✓ Selected" if is_sel else "Select this assessment"
@@ -1107,6 +1153,10 @@ def server(input, output, session_):  # noqa: C901
                     ui.span(default_life, class_=f"deep-card-badge {badge_cls}"),
                     class_="deep-card-head"),
                 ui.div(entry.get("regionName") or "", class_="deep-card-region"),
+                (ui.div(ui.span("Reference tier", class_="deep-card-verlabel"),
+                        ui.span(" " + default_tier, class_="deep-card-tier"),
+                        class_="deep-card-tierrow")
+                 if default_tier else None),
                 ui.div(
                     ui.span("Version", class_="deep-card-verlabel"),
                     ui.input_select(f"assess_ver_{i}", None, choices=ver_choices,
@@ -1150,6 +1200,14 @@ def server(input, output, session_):  # noqa: C901
             info.append(ui.div(
                 f"Version v{lib['version']}" + (f" · updated {updated}" if updated else "")
                 + f" · {life}", class_="deep-assess-detail-line"))
+        tier = _tier_label(la.raw.get("referenceTier"))
+        if tier:
+            info.append(ui.div(
+                f"Reference tier: {tier}"
+                + (" · scores compare the site with the best remaining streams of the "
+                   "region, not with unimpaired condition"
+                   if str(la.raw.get("referenceTier")) == "best_available" else ""),
+                class_="deep-assess-detail-line"))
         return ui.div(
             ui.div(ui.span("✓ ", class_="deep-ok"), la.assessment_name,
                    class_="deep-assess-detail-name"),

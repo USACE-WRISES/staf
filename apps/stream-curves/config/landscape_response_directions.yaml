@@ -29,16 +29,16 @@
 
 metrics:
   # --- Hydrology: Catchment hydrology ---
-  pctimp2019:   {higher_is_better: false, metric_family: proportion, source: expert, confidence: high,     note: "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology."}
-  pctcrop2019:  {higher_is_better: false, metric_family: proportion, source: expert, confidence: high,     note: "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing."}
+  pctimp2019:   {higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology."}
+  pctcrop2019:  {higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing."}
 
   # --- Hydrology: Surface water storage ---
-  pctwdwet2019: {higher_is_better: true,  metric_family: proportion, source: expert, confidence: high,     note: "Watershed woody wetland (%); wetlands store surface water and attenuate flow peaks."}
-  pcthbwet2019: {higher_is_better: true,  metric_family: proportion, source: expert, confidence: high,     note: "Watershed herbaceous wetland (%); wetlands store surface water and attenuate flow peaks."}
+  pctwdwet2019: {higher_is_better: true,  metric_family: proportion, caveat: "Wetland cover follows terrain: a steep watershed that never held wetland reads low on this curve without being degraded.", domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed woody wetland (%); wetlands store surface water and attenuate flow peaks."}
+  pcthbwet2019: {higher_is_better: true,  metric_family: proportion, caveat: "Reference bands of hundredths of a percent sit below the land-cover product's wetland-class accuracy, and a steep watershed that never held herbaceous wetland reads low without being degraded.", domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed herbaceous wetland (%); wetlands store surface water and attenuate flow peaks."}
 
   # --- Hydrology: Streamflow regime ---
-  bfi:          {higher_is_better: true,  metric_family: continuous, source: expert, confidence: high,     note: "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime."}
-  damdens:      {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network."}
+  bfi:          {higher_is_better: true,  metric_family: continuous, caveat: "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded.", domain_min: 0, domain_max: 100, source: expert, confidence: moderate, note: "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it."}
+  damdens:      {higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: high,     note: "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network."}
 
   # --- Hydrology: Reach inflow ---
   # Reach inflow's published detailed metric is a field count of concentrated flow
@@ -48,16 +48,26 @@ metrics:
   # hydrology.py reach_inflow, bands Good <1, Fair 1-<3, Poor >=3 km/sq km). Held at
   # moderate confidence because it is a directional proxy, not an outfall count --
   # EASI carries it as provisional at confidence "L" for the same reason.
-  rddens:       {higher_is_better: false, metric_family: continuous, source: expert, confidence: moderate, note: "Watershed road density; roads concentrate and route runoff to the channel, so higher density means more concentrated inflow pressure. Directional proxy shared with the EASI screening metric; it does not count outfalls."}
+  rddens:       {higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: moderate, note: "Watershed road density; roads concentrate and route runoff to the channel, so higher density means more concentrated inflow pressure. Directional proxy shared with the EASI screening metric; it does not count outfalls."}
 
   # --- Biology: Watershed connectivity ---
-  rdcrs:        {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage."}
+  rdcrs:        {higher_is_better: false, metric_family: continuous, caveat: "Units caution: enter the StreamCat API value as served. A crossing density computed by hand in crossings per square kilometer lands about 100 times above this curve.", domain_min: 0, source: expert, confidence: high,     note: "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage. UNITS CAUTION (2026-08-21): values as served by the EPA StreamCat API sit about two orders of magnitude below the classic StreamCat documentation of crossings per sq km (frame national median 0.0098 vs a documented distribution near 0.5 to 1.5). The frame and the live API agree with each other, so scoring is internally consistent, but a manually computed crossings-per-sq-km value will land far off-curve. Enter API-served values only, pending units reconciliation with EPA."}
 
   # --- Context / scaling variables: predictors, never scored ---
   # Reviewed 2026-07-24: mean annual runoff and precipitation describe where a site sits
   # in the regional climate/water-balance gradient. A naturally wetter catchment is not
   # degraded, so a condition score over these would be meaningless. They remain valuable
   # as predictors (drainage-area and climate scaling for the metrics that ARE scored).
+  #
+  # THE CRITERION (recorded 2026-08-21, adversarial review ECO-4): a variable is
+  # scoreable when human activity is the dominant driver of its variation within a
+  # region (impervious cover, crops, roads, dams, crossings, wetland loss), and it is
+  # predictor-only when natural setting dominates (climate, elevation, drainage area).
+  # BFI sits between: hydrogeology sets its baseline but flow alteration and
+  # groundwater withdrawal move it, so it stays scored at moderate confidence with a
+  # recorded caveat that naturally flashy till catchments read low without being
+  # degraded. Conductivity and pH (NRSA file) carry the same carbonate-geology caveat
+  # in BOTH regions in the report's metric reference.
   runoff:       {role: predictor, source: expert, confidence: high, note: "Mean annual runoff; scaling/climate context, not a condition indicator. Predictor only."}
   precip8110:   {role: predictor, source: expert, confidence: high, note: "Mean annual precipitation (1981-2010 normal); scaling/climate context, not a condition indicator. Predictor only."}
   elev:         {role: predictor, source: expert, confidence: high, note: "Mean watershed elevation; physiographic scaling context. Predictor only."}

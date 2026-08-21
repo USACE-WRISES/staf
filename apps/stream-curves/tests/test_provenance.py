@@ -103,8 +103,10 @@ def test_statuses_are_copied_from_the_catalog_not_retyped(provenance):
 
 
 def test_confidence_is_null_with_a_stated_basis(provenance):
-    """CONF-01/02 is not_yet_implemented. Inventing a score is the single thing
-    that would make a published assessment indefensible."""
+    """The per-record confidence slot keeps its categorical basis: the CONF-01
+    heuristic is a per-curve score that rides in its own CONF-01/02 records,
+    and inventing a number on every rule record would be the single thing that
+    makes a published assessment indefensible."""
     for record in provenance["records"]:
         assert record["confidence"]["score"] is None
         assert record["confidence"]["basis"] == "categorical_proxy"
@@ -155,8 +157,11 @@ def test_manifest_states_the_breakpoint_policy(manifest):
 
 def test_determinism_block_states_the_seed_policy(manifest):
     determinism = manifest["determinism"]
-    assert determinism["randomSeeds"] == {}
+    # v0.6: the run seed every resampling diagnostic derives from is recorded
+    # here, where the old policy text said a future bootstrap would have to.
+    assert determinism["randomSeeds"] == {"runSeed": manifest["diagnostics"]["runSeed"]}
     assert "deterministic" in determinism["seedPolicy"]
+    assert "run seed" in determinism["seedPolicy"]
     assert "registry-declared order" in determinism["orderPolicy"]
 
 

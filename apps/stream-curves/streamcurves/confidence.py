@@ -1,14 +1,17 @@
 """CONF-01/02 numeric confidence, Review Priority, and the SELECT-02 metric score.
 
-The methodology specifies a 0 to 100 workflow-triage confidence per decision,
+The methodology specifies a 0 to 100 reviewer-priority heuristic per decision,
 built from six weighted components with hard caps that no subtotal can exceed,
 plus a Review Priority ordering and a 100-point within-function metric score.
-The component weights, band cutoffs, caps, and score weights all come from the
-methodology config (one threshold home). The mapping formulas below, from
-recorded evidence to a 0 to 1 component fraction, are provisional operating
-formulas: they are deterministic, documented here, and subject to calibration
-against the pilot benchmarks before any status promotion. Confidence is a
-triage score, never a probability that a decision is scientifically correct.
+The component weights, band cutoffs, caps, deductions, and score weights all
+come from the methodology config (one threshold home). The mapping formulas
+below, from recorded evidence to a 0 to 1 component fraction, are provisional
+operating formulas: they are deterministic, documented here, and subject to
+calibration against the pilot benchmarks before any status promotion.
+Confidence is a triage heuristic that orders review effort, never a probability
+that a decision is scientifically correct, and it carries no out-of-sample
+evidence: every component reads within-pool diagnostics on development data
+(2026-08-21, adversarial review STAT-3 and STAT-5).
 """
 
 from __future__ import annotations
@@ -49,7 +52,11 @@ def _frac_statistical_strength(ev: dict) -> float:
     return min(base, 1.0)
 
 
-def _frac_robustness(ev: dict) -> float:
+def _frac_resampling_stability(ev: dict) -> float:
+    """Within-pool resampling stability (bootstrap structure and shape
+    reproduction, halved under an influence flag). Formerly named
+    robustness_out_of_sample; renamed 2026-08-21 because nothing here is
+    out of sample (STAT-3)."""
     boot = ev.get("bootstrap") or {}
     if not boot.get("evaluable"):
         return 0.2
@@ -85,7 +92,7 @@ def _frac_rule_completeness(ev: dict) -> float:
 _COMPONENT_FRACS = {
     "data_adequacy_quality": _frac_data_adequacy,
     "statistical_strength": _frac_statistical_strength,
-    "robustness_out_of_sample": _frac_robustness,
+    "resampling_stability": _frac_resampling_stability,
     "ecological_plausibility": _frac_ecological,
     "interpretability_feasibility": _frac_interpretability,
     "rule_completeness_agreement": _frac_rule_completeness,
@@ -93,13 +100,19 @@ _COMPONENT_FRACS = {
 
 
 def curve_confidence(evidence: dict) -> dict:
-    """The CONF-01 score with CONF-02 caps for one curve's recorded evidence.
+    """The CONF-01 heuristic with CONF-02 deductions and caps for one curve's
+    recorded evidence.
 
     ``evidence`` carries: sample_disposition, missingness_disposition,
     curve_status, loo, bootstrap, influence (curve_stability results),
-    direction_confidence, shape_ok, mapped, units_present, reference_tier.
-    Returns components, the uncapped subtotal, the caps that applied, the final
-    total, and the band label.
+    direction_confidence, shape_ok, mapped, units_present, reference_tier,
+    plus the two 2026-08-21 honesty inputs: ``mandatory_review_open`` (a
+    mandatory-review trigger on this curve has no recorded reviewer decision
+    yet) and ``deferred_gradient`` (a stratifier candidate cleared the STRAT-01
+    and STRAT-06 evidence floors but stratification was not applied, so a known
+    gradient stays unmodeled).
+    Returns components, the uncapped subtotal, the deductions and caps that
+    applied, the final total, and the band label.
     """
     weights = methodology.threshold("confidence_rules.components")
     components: dict[str, float] = {}
@@ -110,9 +123,19 @@ def curve_confidence(evidence: dict) -> dict:
         components[name] = round(points, 1)
         subtotal += points
 
+    # Deductions (CONF-02, 2026-08-21): recorded point deductions for known,
+    # documented weaknesses that no component measures. They apply before the
+    # caps so a deducted curve still orders by its own evidence.
+    deductions = methodology.threshold("confidence_rules.deductions", default={}) or {}
+    deductions_applied: dict[str, float] = {}
+    total = subtotal
+    if evidence.get("deferred_gradient") and "deferred_gradient" in deductions:
+        pts = float(deductions["deferred_gradient"])
+        deductions_applied["deferred_gradient"] = pts
+        total = max(0.0, total - pts)
+
     caps = methodology.threshold("confidence_rules.caps")
     applied: list[str] = []
-    total = subtotal
     loo = evidence.get("loo") or {}
     if str(evidence.get("reference_tier")) == "best_available":
         total = min(total, float(caps["best_available_reference"]))
@@ -121,12 +144,11 @@ def curve_confidence(evidence: dict) -> dict:
         total = min(total, float(caps["sample_below_minimum"]))
         applied.append("sample_below_minimum")
     if not loo.get("evaluable"):
-        # CURVE-02: without completed out-of-sample evaluation, confidence
-        # cannot claim robustness. Leave-one-site-out on one-row-per-site data
-        # is the grouped CV this rule requires, so a run that produced it does
-        # not take this cap.
-        total = min(total, float(caps["no_out_of_sample_validation"]))
-        applied.append("no_out_of_sample_validation")
+        # CURVE-02: without a completed leave-one-site-out stability check the
+        # heuristic cannot credit stability. The check is within-pool evidence
+        # on development data, never out-of-sample validation (STAT-3).
+        total = min(total, float(caps["no_stability_evidence"]))
+        applied.append("no_stability_evidence")
     if evidence.get("leakage_unresolved"):
         total = min(total, float(caps["unresolved_leakage_or_circularity"]))
         applied.append("unresolved_leakage_or_circularity")
@@ -134,6 +156,12 @@ def curve_confidence(evidence: dict) -> dict:
         # No settled ecological rationale (direction below moderate confidence).
         total = min(total, float(caps["no_ecological_rationale"]))
         applied.append("no_ecological_rationale")
+    if evidence.get("mandatory_review_open") and "mandatory_review_open" in caps:
+        # A curve whose mandatory-review trigger has no recorded reviewer
+        # decision cannot read as streamlined (High). The cap lifts only when
+        # the adjudication is on the record (STAT-5b, 2026-08-21).
+        total = min(total, float(caps["mandatory_review_open"]))
+        applied.append("mandatory_review_open")
 
     bands = methodology.threshold("confidence_rules.bands")
     total = round(total, 1)
@@ -144,8 +172,9 @@ def curve_confidence(evidence: dict) -> dict:
     else:
         label = "Low"
     return {"components": components, "subtotal": round(subtotal, 1),
+            "deductions_applied": deductions_applied,
             "caps_applied": applied, "total": total, "label": label,
-            "basis": "conf-01-v1"}
+            "basis": "conf-01-v2"}
 
 
 # --------------------------------------------------------------------------- #

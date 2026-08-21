@@ -1,12 +1,12 @@
 {
   "meta": {
-    "methodology_version": "0.5-provisional",
+    "methodology_version": "0.6-provisional",
     "date": "2026-08-21",
-    "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged.",
+    "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged. v0.6 (2026-08-21) is the adversarial-review release: REF-02 and the DATA sample floors (DATA-04 to DATA-08) return to provisional because the pilots mechanism-verified the implementation without calibrating the values (calibrated is reserved for external evidence); REF-02's automatic trigger fires only below the DATA-05 exploratory floor; CURVE-02 is renamed Leave-one-site-out stability and the confidence vocabulary drops out-of-sample (the component is resampling_stability, the cap no_stability_evidence); CONF-02 gains a mandatory_review_open cap of 79 and a deferred_gradient deduction of 10; the seed clamps to declared physical domains, signed scales are declared, and a two-sided curve may declare a flat low tail. No numeric threshold value moved.",
     "status_legend": {
       "threshold_status": {
         "provisional": "Operating default, not yet calibrated. Never describe as validated.",
-        "calibrated": "Adjusted using the pilot ecoregions or other validation data.",
+        "calibrated": "Adjusted using external evidence (independent field data or the blind benchmark). Mechanism verification on the pilots (the rule fires as designed) does not qualify; such a rule stays provisional with a mechanism_verified note.",
         "approved": "Formally accepted by the scientific team for operational use."
       },
       "implementation_status": {
@@ -19,6 +19,22 @@
       "none",
       "human_review",
       "maintainer"
+    ],
+    "future_rules": [
+      {
+        "proposed_id": "CURVE-09",
+        "name": "Measurement-precision floor for two-sided curves",
+        "purpose": "A two-sided Functioning core narrower than about twice the documented measurement standard deviation of the metric (NRSA QAPP precision values) flags the curve, because band assignments inside such a core are measurement noise presented as condition classes.",
+        "origin": "Adversarial review 2026-08-21 (ECO-2, STAT-13). The Eastern Corn Belt Plains pH curve (core 0.196 units at n = 16) was removed from scoring by recorded owner decision pending this rule.",
+        "status": "proposed, not implemented"
+      },
+      {
+        "proposed_id": "CURVE-04b",
+        "name": "Scale-free influence threshold",
+        "purpose": "Evaluate the drop-one influence trigger in IQR units instead of the relative change of a parameter, with an explicit rule for zero quartiles.",
+        "origin": "Adversarial review 2026-08-21 (STAT-15). The IQR companion measure is computed and recorded from v0.6; the trigger still reads the relative fraction pending calibration.",
+        "status": "proposed, companion measure recorded"
+      }
     ]
   },
   "rules": [
@@ -86,17 +102,18 @@
       "purpose": "Floor for automated curve evaluation.",
       "test": "n >= 20",
       "threshold": ">= 20",
-      "threshold_status": "calibrated",
+      "threshold_status": "provisional",
       "implementation_status": "implemented",
       "maps_to": "streamcurves/regional_agent.py MIN_N_AUTO (sample_size_disposition); curves.py hard floor n<5",
-      "note": "Calibrated v0.3 from 50 -> 20 on the pilots' real reference sizes (IQR quartiles are stable near n=20). regional_agent flags every curve below this as exploratory/insufficient.",
+      "note": "Moved v0.3 from 50 -> 20 on the pilots' real reference sizes (IQR quartiles are stable near n=20). regional_agent flags every curve below this as exploratory/insufficient. v0.6: status returned to provisional (review STAT-7); mechanism_verified: the rule fires as designed on the two pilots (v0.3 floors, v0.5 fallback); the threshold value itself is not calibrated against external evidence.",
       "outcomes": {
         "pass": "eligible for automated curve evaluation",
         "review": "n/a",
         "fail": "see DATA-05/06"
       },
       "confidence_effect": "cap 59 if below minimum (sample_below_minimum)",
-      "override_permission": "human_review"
+      "override_permission": "human_review",
+      "verification": "mechanism_verified_v0.3"
     },
     {
       "id": "DATA-05",
@@ -105,17 +122,18 @@
       "purpose": "Exploratory-only band.",
       "test": "10 <= n < 20",
       "threshold": "[10, 20)",
-      "threshold_status": "calibrated",
+      "threshold_status": "provisional",
       "implementation_status": "implemented",
       "maps_to": "streamcurves/regional_agent.py MIN_N_EXPLORATORY (sample_size_disposition)",
-      "note": "Calibrated v0.3 from [30,50) to [10,20). Curves in this band publish as preliminary but carry an 'exploratory' flag and a confidence cap; certification requires human approval.",
+      "note": "Moved v0.3 from [30,50) to [10,20). Curves in this band publish as preliminary but carry an 'exploratory' flag and a confidence cap; certification requires human approval. v0.6: status returned to provisional (review STAT-7); mechanism_verified: the rule fires as designed on the two pilots (v0.3 floors, v0.5 fallback); the threshold value itself is not calibrated against external evidence.",
       "outcomes": {
         "pass": "n/a",
         "review": "exploratory: flag + confidence cap, preliminary only unless approved",
         "fail": "n/a"
       },
       "confidence_effect": "cap 59",
-      "override_permission": "human_review"
+      "override_permission": "human_review",
+      "verification": "mechanism_verified_v0.3"
     },
     {
       "id": "DATA-06",
@@ -124,17 +142,18 @@
       "purpose": "Do not auto-fit below this floor.",
       "test": "n < 10",
       "threshold": "< 10",
-      "threshold_status": "calibrated",
+      "threshold_status": "provisional",
       "implementation_status": "implemented",
       "maps_to": "streamcurves/regional_agent.py MIN_N_FLOOR; curves.py (n<5 -> insufficient_data); run_state CURVE_STATUS_INSUFFICIENT",
-      "note": "Calibrated v0.3 from 30 to 10. 5 <= n < 10 builds but is flagged 'insufficient' for mandatory review; n < 5 is the engine's hard insufficient_data.",
+      "note": "Moved v0.3 from 30 to 10. 5 <= n < 10 builds but is flagged 'insufficient' for mandatory review; n < 5 is the engine's hard insufficient_data. v0.6: status returned to provisional (review STAT-7); mechanism_verified: the rule fires as designed on the two pilots (v0.3 floors, v0.5 fallback); the threshold value itself is not calibrated against external evidence.",
       "outcomes": {
         "pass": "n/a",
         "review": "insufficient: flag for mandatory review",
         "fail": "n < 5 do not fit (engine)"
       },
       "confidence_effect": "hard-stop; flagged review",
-      "override_permission": "human_review"
+      "override_permission": "human_review",
+      "verification": "mechanism_verified_v0.3"
     },
     {
       "id": "DATA-07",
@@ -143,17 +162,18 @@
       "purpose": "Floor for automated stratified evaluation.",
       "test": "n_stratum >= 15",
       "threshold": ">= 15",
-      "threshold_status": "calibrated",
+      "threshold_status": "provisional",
       "implementation_status": "implemented",
       "maps_to": "run_state.strata_floor_check (config floors act on stratified proposals); feasibility.py keeps the per-registry stricter screen",
-      "note": "Wired v0.4 at the decision layer.",
+      "note": "Wired v0.4 at the decision layer. v0.6: status returned to provisional (review STAT-7); mechanism_verified: the rule fires as designed on the two pilots (v0.3 floors, v0.5 fallback); the threshold value itself is not calibrated against external evidence.",
       "outcomes": {
         "pass": "eligible for stratified evaluation",
         "review": "n/a",
         "fail": "see DATA-08"
       },
       "confidence_effect": "cap 59 per stratum if below minimum",
-      "override_permission": "human_review"
+      "override_permission": "human_review",
+      "verification": "mechanism_verified_v0.3"
     },
     {
       "id": "DATA-08",
@@ -162,7 +182,7 @@
       "purpose": "Reject automatic stratification on thin groups.",
       "test": "n_stratum < 8 OR n_stratum < 0.10 * n_region",
       "threshold": "< 8 or < 10%",
-      "threshold_status": "calibrated",
+      "threshold_status": "provisional",
       "implementation_status": "implemented",
       "maps_to": "run_state.strata_floor_check (count and ten-percent rules)",
       "outcomes": {
@@ -172,7 +192,8 @@
       },
       "confidence_effect": "flagged review (strat_review)",
       "override_permission": "human_review",
-      "note": "Wired v0.4 at the decision layer."
+      "note": "Wired v0.4 at the decision layer. v0.6: status returned to provisional (review STAT-7); mechanism_verified: the rule fires as designed on the two pilots (v0.3 floors, v0.5 fallback); the threshold value itself is not calibrated against external evidence.",
+      "verification": "mechanism_verified_v0.3"
     },
     {
       "id": "DATA-09",
@@ -299,7 +320,7 @@
         "review": "unstable -> review",
         "fail": "n/a"
       },
-      "confidence_effect": "robustness_out_of_sample points",
+      "confidence_effect": "resampling_stability points",
       "override_permission": "human_review"
     },
     {
@@ -354,7 +375,7 @@
         "review": "below threshold -> review",
         "fail": "insufficient"
       },
-      "confidence_effect": "robustness_out_of_sample points",
+      "confidence_effect": "resampling_stability points",
       "override_permission": "human_review",
       "note": "v0.4: CV form is leave-one-site-out prediction by training-fold medians, pooled versus within-stratum."
     },
@@ -373,7 +394,7 @@
         "review": "n/a",
         "fail": "n/a"
       },
-      "confidence_effect": "robustness_out_of_sample points",
+      "confidence_effect": "resampling_stability points",
       "override_permission": "human_review"
     },
     {
@@ -445,7 +466,7 @@
         "review": "unstable -> review",
         "fail": "n/a"
       },
-      "confidence_effect": "robustness_out_of_sample points",
+      "confidence_effect": "resampling_stability points",
       "override_permission": "human_review"
     },
     {
@@ -463,7 +484,7 @@
         "review": "unstable -> reject/review",
         "fail": "reject"
       },
-      "confidence_effect": "robustness_out_of_sample points",
+      "confidence_effect": "resampling_stability points",
       "override_permission": "human_review",
       "note": "No data-derived binning exists by design (B-03); the rule stands as a guard if binning is ever introduced."
     },
@@ -520,26 +541,27 @@
         "fail": "reject or request method change"
       },
       "confidence_effect": "n/a",
-      "override_permission": "maintainer"
+      "override_permission": "maintainer",
+      "note": "v0.6 seed geometry: the IQR seed clamps into the metric's declared physical domain (registry domain_min/domain_max, review ECO-1), signed scales are declared in the registry rather than inferred from the sample minimum (STAT-9), and a two-sided curve may declare low_tail: flat so the below-core limb holds at the 0.70 edge (ECO-7, mean bank angle)."
     },
     {
       "id": "CURVE-02",
       "family": "CURVE",
-      "name": "Out-of-sample validation",
-      "purpose": "Grouped cross-validation completed before automated acceptance.",
-      "test": "grouped CV completed",
+      "name": "Leave-one-site-out stability",
+      "purpose": "Within-pool leave-one-site-out stability completed before automated acceptance. Development-data evidence, never out-of-sample validation.",
+      "test": "leave-one-site-out stability completed (within pool)",
       "threshold": "required",
       "threshold_status": "provisional",
       "implementation_status": "implemented",
       "maps_to": "curve_stability.loo_curve_stability (leave-one-site-out; grouped by construction on one-row-per-site data)",
       "outcomes": {
         "pass": "eligible for auto-accept",
-        "review": "missing CV -> review",
+        "review": "stability check missing -> review",
         "fail": "block auto-accept"
       },
-      "confidence_effect": "cap 59 if required CV absent",
+      "confidence_effect": "cap 59 (no_stability_evidence) if the stability check is absent",
       "override_permission": "human_review",
-      "note": "v0.4: LOO satisfies the grouped requirement on this data shape. Internal evaluation on development data, never field validation."
+      "note": "v0.4: LOO on one-row-per-site data is the grouped fold structure. v0.6: renamed from Out-of-sample validation (review STAT-3): the held-out site is inside the full-sample summary and there is no independent target, so the statistic measures stability, not prediction error. At n near 30 it cannot fail a wrong curve, only an unstable one, which the report states."
     },
     {
       "id": "CURVE-03",
@@ -575,8 +597,9 @@
         "review": "mandatory review",
         "fail": "n/a"
       },
-      "confidence_effect": "robustness_out_of_sample penalty; mandatory review",
-      "override_permission": "human_review"
+      "confidence_effect": "resampling_stability penalty; mandatory review; mandatory_review_open cap until adjudicated",
+      "override_permission": "human_review",
+      "note": "v0.6: the drop-one shift is also recorded in IQR units (max_param_change_iqr) so a zero or near-zero quartile cannot blank or inflate the measure (review STAT-15); the trigger still reads the relative fraction (provisional)."
     },
     {
       "id": "CURVE-05",
@@ -612,8 +635,9 @@
         "review": "missing interval -> review",
         "fail": "block release"
       },
-      "confidence_effect": "robustness_out_of_sample",
-      "override_permission": "human_review"
+      "confidence_effect": "resampling_stability",
+      "override_permission": "human_review",
+      "note": "v0.6: every interval carries n_matched (the structure-reproducing resamples it summarizes) and the structure_stability rate is reported beside it, because the percentiles condition on matched resamples (review STAT-4). The point intervals ride in the CURVE-06 provenance record (S-02)."
     },
     {
       "id": "CURVE-07",
@@ -650,7 +674,8 @@
         "fail": "degenerate_curve"
       },
       "confidence_effect": "gates auto_ok",
-      "override_permission": "human_review"
+      "override_permission": "human_review",
+      "note": "v0.6: the geometric-validation record also carries domain_violations, the count of anchors outside the declared physical domain (zero for every published auto seed after clamping; a manual anchor outside the domain is rejected by the validator)."
     },
     {
       "id": "CURVE-08",
@@ -693,19 +718,20 @@
       "family": "REF",
       "name": "Reference-tier fallback (best-available)",
       "purpose": "When the Functioning-only pool is too small, include Functioning-at-Risk sites, explicitly and under review.",
-      "test": "IF least-disturbed pool fails DATA-04/DATA-06 for a metric or stratum THEN switch to at_risk_or_better (ECI > 0.39)",
+      "test": "IF the least-disturbed pool is below the DATA-05 exploratory floor (n < 10) for the region THEN switch to at_risk_or_better (ECI > 0.39) under mandatory review; a pool of 10 to 19 stays at the stricter tier as exploratory (DATA-05) unless the owner opts into the fallback on the record",
       "threshold": "ECI > 0.39 (fallback only)",
-      "threshold_status": "calibrated",
+      "threshold_status": "provisional",
       "implementation_status": "implemented",
-      "maps_to": "regional_agent.choose_reference_tier (pool trigger) + tier_evaluation_table (per-metric trigger evaluation) + deep_export referenceTier stamp + confidence cap via CONF-02",
-      "note": "Calibrated v0.5 on the Eastern Corn Belt Plains pilot (2026-08-21, owner decision): zero Functioning sites among 18 candidates fired the fallback exactly as designed, every curve published double-capped at Low with the tier stamped, and the trigger (functional pool below the DATA-04 floor, evaluated per metric) and the 59 cap are confirmed as operating values. Reconciles with the revision plan by being explicit, reviewed, provenance-stamped, and human-authorized, never silent.",
+      "maps_to": "regional_agent.choose_reference_tier (pool trigger at REF_FALLBACK_FLOOR = DATA-05 floor) + tier_evaluation_table (per-metric trigger and exploratory band) + deep_export referenceTier stamp + confidence cap via CONF-02",
+      "note": "Mechanism-verified v0.5 on the Eastern Corn Belt Plains pilot (2026-08-21, owner decision): zero Functioning sites among 18 candidates fired the fallback exactly as designed, every curve published double-capped at Low with the tier stamped. v0.6 (adversarial review): the status returned to provisional because a correct mechanical execution verifies the implementation, not the 0.39 cutoff (ECO-16, STAT-7), and the automatic trigger moved from the DATA-04 auto floor to the DATA-05 exploratory floor so a 10-to-19 pool is no longer both publishable at tier and fallback-eligible (STAT-8). Reconciles with the revision plan by being explicit, reviewed, provenance-stamped, and human-authorized, never silent.",
       "outcomes": {
         "pass": "n/a (never auto-passes)",
         "review": "MANDATORY human review of every affected curve",
         "fail": "n/a"
       },
       "confidence_effect": "cap 59 (best_available_reference); mandatory review; stamp reference_tier per curve + bundle",
-      "override_permission": "human_review"
+      "override_permission": "human_review",
+      "verification": "mechanism_verified_v0.5"
     },
     {
       "id": "REF-03",
@@ -729,7 +755,7 @@
       "id": "CONF-01",
       "family": "CONF",
       "name": "0-100 confidence score",
-      "purpose": "Workflow-triage score for every decision.",
+      "purpose": "Reviewer-priority heuristic per decision: a 0-100 ordering of review effort, never a probability that a curve is correct and never out-of-sample evidence.",
       "test": "weighted sum of six components (see config confidence_rules.components)",
       "threshold": "0-100",
       "threshold_status": "provisional",
@@ -742,25 +768,26 @@
       },
       "confidence_effect": "defines the confidence band",
       "override_permission": "human_review",
-      "note": "v0.4: mapping formulas are provisional operating formulas pending pilot calibration."
+      "note": "v0.4: mapping formulas are provisional operating formulas pending pilot calibration. v0.6: the formulas saturate near 71 for any adequate pool with evaluable diagnostics, so the band distribution is close to a formula property; the registry publishes every component and the uncapped subtotal so capped rows keep their ordering (review STAT-5)."
     },
     {
       "id": "CONF-02",
       "family": "CONF",
-      "name": "Confidence caps",
-      "purpose": "Hard caps regardless of subtotal.",
-      "test": "apply caps: 59 (no ecology / no OOS validation / below min n / best-available reference); 39 (leakage/circularity)",
-      "threshold": "caps 59 / 39",
+      "name": "Confidence deductions and caps",
+      "purpose": "Recorded deductions, then hard caps regardless of subtotal.",
+      "test": "apply deductions (deferred_gradient 10 when a stratifier candidate cleared STRAT-01 and STRAT-06 but could not be applied), then caps: 59 (no ecology / no stability evidence / below min n / best-available reference); 39 (leakage/circularity); 79 (a mandatory-review trigger with no recorded decision)",
+      "threshold": "caps 59 / 39 / 79; deduction 10",
       "threshold_status": "provisional",
       "implementation_status": "implemented",
-      "maps_to": "confidence.curve_confidence caps (best-available, sample, out-of-sample, leakage, no-rationale)",
+      "maps_to": "confidence.curve_confidence deductions and caps (best-available, sample, no_stability_evidence, leakage, no-rationale, mandatory_review_open)",
       "outcomes": {
         "pass": "n/a",
         "review": "capped -> review band",
         "fail": "n/a"
       },
       "confidence_effect": "caps override subtotal",
-      "override_permission": "human_review"
+      "override_permission": "human_review",
+      "note": "v0.6: mandatory_review_open keeps a curve under an unadjudicated mandatory-review trigger below High until the reviewer decision is on the record (STAT-5b); the deferred_gradient deduction records a known unmodeled size gradient (ECO-5)."
     },
     {
       "id": "SELECT-01",
