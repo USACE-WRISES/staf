@@ -704,15 +704,6 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   font-size: 13px; color: #2a3344; margin-top: 8px; }
 .easi-metric-card .easi-note-ta:focus { outline: none; border-color: var(--easi-accent);
   box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
-/* in-card data-source picker */
-.easi-src-row { display: flex; align-items: center; gap: 8px; margin: 4px 0 2px; }
-.easi-src-key { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-  color: #8a93a3; flex: none; }
-.easi-src-sel { border: 1px solid var(--card-border); border-radius: 6px; background: #fff;
-  color: #33415c; font-size: 13px; font-weight: 600; padding: 5px 9px; cursor: pointer; }
-.easi-src-sel:hover { border-color: var(--easi-accent); }
-.easi-src-sel:focus { outline: none; border-color: var(--easi-accent);
-  box-shadow: 0 0 0 2px rgba(47, 75, 124, .12); }
 /* read-only derived-score gauge (mirrors DEEP's deep-fscore-*) */
 .easi-scorecard { background: #fff; border: 1px solid var(--card-border);
   border-left: 3px solid var(--easi-accent); border-radius: 10px; padding: 12px 16px 13px;

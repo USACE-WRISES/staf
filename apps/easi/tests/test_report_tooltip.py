@@ -70,13 +70,13 @@ def test_tooltip_land_cover_shows_both_indicators():
     inner = _tip_html(_row(
         mid, valueText="61.0% agricultural land (watershed)", rating="Poor",
         generatedRating="Poor", source="EPA StreamCat crop+hay (watershed)",
-        criteriaBands={"Good": "<25%", "Fair": "25%-50%", "Poor": ">50%"},
+        criteriaBands={"Good": "<30%", "Fair": "30-50%", "Poor": ">50%"},
         landCover={"governing": "agriculture",
                    "impervious": {"pct": 2.0, "rating": "Good"},
                    "agriculture": {"pct": 61.0, "rating": "Poor"}}))
     assert '<span class="easi-tip-lbl">Land-cover indicators</span>' in inner
     assert "Impervious 2.0%" in inner and "Agricultural 61.0%" in inner
-    assert "&lt;25%" in inner and "&gt;50%" in inner        # agriculture thresholds shown
+    assert "&lt;30%" in inner and "&gt;50%" in inner        # agriculture thresholds shown
     assert "&lt;10%" in inner                                # impervious thresholds shown too
     assert "[governs]" in inner                              # governing driver marked
     assert 'easi-tip-dot good' in inner                      # impervious (Good) band chip

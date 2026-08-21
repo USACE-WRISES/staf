@@ -588,10 +588,10 @@ def test_land_cover_agriculture_governs_when_worse():
     assert "agricultural cover" in r.value_text and "crop + hay" in r.source
 
 
-@pytest.mark.parametrize("ag,expected", [(20, "Good"), (24.99, "Good"), (25, "Fair"),
+@pytest.mark.parametrize("ag,expected", [(20, "Good"), (29.99, "Good"), (30, "Fair"),
                                          (50, "Fair"), (50.1, "Poor"), (70, "Poor")])
 def test_land_cover_agriculture_bins(ag, expected):
-    # impervious absent -> agriculture governs and uses the 25/50 bins
+    # impervious absent -> agriculture governs and uses the 30/50 bins (Allan 2004 / Wang 1997)
     r = hydrology.impervious(_lc_ctx(crop=ag, hay=0))
     assert r.rating == expected and r.detail["governing"] == "agriculture"
 

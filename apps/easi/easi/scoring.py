@@ -7,7 +7,8 @@ Pipeline (one metric per stream function):
        per Physical / Chemical / Biological, weight D=1.0, i=0.1, -=0
     -> Ecosystem Condition Index = mean(Physical, Chemical, Biological)
 
-Ported from docs/assets/js/screening-assessment.js (~lines 3225-3507).
+Originally ported from the retired STAF site screening widget; this module and the
+scoring catalog are now the reference implementation.
 Core functions are parameterized (no I/O) for testability; ``score_assessment``
 is the convenience entry point that pulls metric/mapping data from ``config``.
 """

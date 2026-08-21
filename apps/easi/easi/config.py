@@ -33,8 +33,9 @@ def _resolve_data_dir() -> Path:
 
 DATA_DIR = _resolve_data_dir()
 
-# --- STAF scoring constants (must match docs/assets/js/screening-assessment.js) ---
-# rating -> index (0-1): midpoint of each bin's recommended range
+# --- STAF scoring constants ---
+# rating -> index (0-1): the midpoint of each STAF condition band
+# (Functioning 0.70-1.0, Functioning-at-Risk 0.40-0.69, Non-Functioning 0-0.39)
 RATING_INDEX: dict[str, float] = {"Good": 0.85, "Fair": 0.545, "Poor": 0.195}
 RATINGS = ("Good", "Fair", "Poor")
 
@@ -122,88 +123,66 @@ def criteria_bands(mid: str, indicator: str | None = None) -> dict:
 METRIC_REGISTRY: dict[str, dict] = {
     "catchment-hydrology-impervious-surface-cover": {
         "scale": "W", "confidence": "H", "proxy": False, "overrideable": False,
-        "datasource": "streamcat:pctimp2019"},
+        "datasource": "streamcat:pctimp2019+pctcrop2019+pcthay2019"},
     "surface-water-storage-percent-wetlands-in-watershed": {
         "scale": "W", "confidence": "H", "proxy": False, "overrideable": False,
-        "datasource": "streamcat:pctwdwet2019+pcthbwet2019|nwi"},
+        "datasource": "streamcat:pctwdwet2019+pcthbwet2019"},
     "reach-inflow-concentrated-runoff-stormwater-inputs": {
         "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
         "datasource": "proxy:streamcat:rddens"},
     "streamflow-regime-flow-alteration-regulation-water-use": {
         "scale": "W/R", "confidence": "M", "proxy": True, "overrideable": True,
-        "datasource": "nwis_waterdata|streamcat:damnrmstor,damdens"},
+        "datasource": "streamcat:damnrmstor+runoff"},
     "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity": {
         "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
-        "datasource": "proxy:nhd_fcode+nwis_zeroflow"},
+        "datasource": "nrsa:pct_dr|streamcat:hyd"},
     "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence": {
         "scale": "R", "confidence": "M", "proxy": True, "overrideable": True,
-        "datasource": "bankfull_curves+streamstats_nss+threedep"},
+        "datasource": "threedep:bhr+bieger_bankfull"},
     "floodplain-connectivity-floodplain-access-entrenchment": {
         "scale": "R", "confidence": "M", "proxy": True, "overrideable": True,
         "datasource": "threedep:entrenchment"},
     "hyporheic-connectivity-hyporheic-exchange-indicators": {
         "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
-        "datasource": "proxy:threedep_slope+sinuosity+sda_ksat"},
+        "datasource": "nhdplus:slope (sinuosity context)"},
     "channel-evolution-channel-evolution-stage-and-trends": {
         "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
-        "datasource": "proxy:threedep_incision+nhd_channelization"},
+        "datasource": "threedep:bhr+er|nhd_fcode|observed"},
     "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition": {
         "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
-        "datasource": "proxy:streampower+sda_kfact+riparian_deficit"},
+        "datasource": "threedep:bhr|observed"},
     "sediment-continuity-sediment-supply-potential-watershed-banks": {
         "scale": "W", "confidence": "M", "proxy": True, "overrideable": True,
-        "datasource": "streamcat:kffact,pctcrop2019,pcthay2019,damnrmstor,rddens"},
+        "datasource": "streamcat:pctcrop2019+pcthay2019,kffact,rddens"},
     "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation": {
-        "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
-        "datasource": "proxy:threedep_gradient+streamcat_erodibility"},
-    "light-and-thermal-regime-stream-temperature": {
         "scale": "R", "confidence": "M", "proxy": True, "overrideable": True,
-        "datasource": "wqp_temperature|streamcat:tmean8110+riparian (climate surrogate)"},
+        "datasource": "nrsa:xembed|streamcat:sed"},
+    "light-and-thermal-regime-stream-temperature": {
+        "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
+        "datasource": "streamcat:rp100_woody+pctimp2019 (wqp temp context)"},
     "carbon-processing-detrital-processing-cpom-retention-shredders": {
         "scale": "R", "confidence": "M", "proxy": True, "overrideable": True,
-        "datasource": "streamcat:rp100_forest"},
+        "datasource": "streamcat:rp100_natural_veg"},
     "nutrient-cycling-nitrogen-and-phosphorus-concentrations": {
         "scale": "R/W", "confidence": "M/L", "proxy": True, "overrideable": True,
-        "datasource": "wqp_tn_tp|sparrow_lookup vs ecoregion_criteria"},
+        "datasource": "wqp:tn_tp vs nrsa_benchmarks|streamcat:chem"},
     "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl": {
         "scale": "R", "confidence": "H", "proxy": False, "overrideable": True,
-        "datasource": "attains|nearby vs landscape surrogate"},
+        "datasource": "attains|streamcat:chem"},
     "habitat-provision-in-stream-habitat-complexity-and-cover": {
         "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
-        "datasource": "proxy:sinuosity+gradient_var+rp100+stream_order"},
+        "datasource": "streamcat:rp100_woody (sinuosity context)"},
     "population-support-biological-integrity-ibi-community-condition": {
         "scale": "R", "confidence": "M", "proxy": True, "overrideable": True,
-        "datasource": "streamcat:predicted_bio|nrsa_nearest"},
+        "datasource": "nrsa_class|streamcat:prg_bmmi|ici_iwi"},
     "community-dynamics-invasive-non-native-species-presence": {
         "scale": "W", "confidence": "M", "proxy": True, "overrideable": True,
-        "datasource": "nas_by_huc"},
+        "datasource": "nas_by_huc12|huc8"},
     "watershed-connectivity-fish-passage-and-barrier-effects-longitudinal-connectivity": {
         "scale": "R", "confidence": "H", "proxy": False, "overrideable": False,
-        "datasource": "nid+nabd+fws_sarp"},
+        "datasource": "nid_within_1mi"},
 }
 
-
-# User-selectable data-source options for the metrics with >1 *implemented* source.
-# {metricId: [(value, label), ...]} — adapters read ctx.extras["source_choices"][mid].
-# Metrics absent here use their single (auto) source.
-SOURCE_OPTIONS: dict[str, list[tuple[str, str]]] = {
-    "surface-water-storage-percent-wetlands-in-watershed":
-        [("streamcat", "EPA StreamCat wetlands"), ("nlcd", "NLCD 2021 wetlands")],
-    "light-and-thermal-regime-stream-temperature":
-        [("wqp", "Observed (WQP)"), ("surrogate", "Climate surrogate (PRISM + shade)")],
-    "water-and-soil-quality-regulatory-impairment-status-305b-303d-tmdl":
-        [("attains", "EPA ATTAINS 303(d)/305(b)"), ("surrogate", "Modeled risk (landscape)")],
-}
-
-# Documented-but-not-yet-built alternative sources, shown as a note in the configure
-# UI so the user can see the planned indicator without it being a hollow choice.
-PLANNED_ALT_SOURCE: dict[str, str] = {
-    "streamflow-regime-flow-alteration-regulation-water-use": "NWIS gaged flow comparison",
-    "nutrient-cycling-nitrogen-and-phosphorus-concentrations":
-        "Ecoregion reference criteria / SPARROW model",
-    "population-support-biological-integrity-ibi-community-condition":
-        "NRSA / StreamCat predicted biological condition",
-}
 
 # Concise, plain-language definition of each metric (what it measures), shown in the
 # report's ⓘ tooltip above the calculation method and scoring criteria. Curated here so
@@ -233,7 +212,7 @@ METRIC_DEFINITIONS: dict[str, str] = {
         "(floodprone width ÷ bankfull width).",
     "hyporheic-connectivity-hyporheic-exchange-indicators":
         "Potential for surface water to exchange with the shallow subsurface (hyporheic zone), "
-        "inferred from channel slope and sinuosity.",
+        "screened from channel slope. Sinuosity is shown for context and is not rated.",
     "channel-evolution-channel-evolution-stage-and-trends":
         "Whether the channel is stable or actively incising/widening — its stage in the "
         "channel-evolution sequence.",
@@ -241,8 +220,9 @@ METRIC_DEFINITIONS: dict[str, str] = {
         "Susceptibility to bank erosion, from the bank-height ratio unless bank observations "
         "are entered. The proxy does not detect existing armoring.",
     "sediment-continuity-sediment-supply-potential-watershed-banks":
-        "Potential for excess sediment from watershed sources (cropland, roads) and channel "
-        "banks relative to natural supply.",
+        "Potential for excess sediment from watershed sources, scored on the most limiting of "
+        "agricultural cover, soil erodibility, and road density. Bank-derived supply is not "
+        "represented.",
     "bed-composition-and-large-wood-substrate-condition-grain-size-embeddedness-fines-consolidation":
         "Quality of the streambed substrate (grain size, embeddedness, fines) that supports "
         "habitat and spawning.",
@@ -259,8 +239,9 @@ METRIC_DEFINITIONS: dict[str, str] = {
         "Whether the reach is on a Clean Water Act impaired-waters list (303(d)/305(b)/TMDL) "
         "for water-quality problems.",
     "habitat-provision-in-stream-habitat-complexity-and-cover":
-        "Physical habitat diversity and cover (pools, riffles, structure, wood) available to "
-        "aquatic organisms.",
+        "Woody riparian corridor cover as a stand-in for habitat support (cover, wood "
+        "recruitment, bank structure). It is not a field inventory of pools, wood, or bedforms. "
+        "Sinuosity is shown for context.",
     "population-support-biological-integrity-ibi-community-condition":
         "Condition of the aquatic community, from measured benthic or fish results where "
         "available, otherwise a labeled model or landscape-integrity estimate.",
@@ -281,21 +262,26 @@ METRIC_CALCULATIONS: dict[str, str] = {
         "From watershed road density, a directional proxy. It does not count outfalls "
         "or road-stream crossings.",
     "streamflow-regime-flow-alteration-regulation-water-use":
-        "From upstream dam, diversion, and water-use indicators.",
+        "Degree of regulation = upstream normalized storage relative to the annual runoff "
+        "volume.",
     "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity":
-        "From modeled flow permanence (low-flow wetted connectivity).",
+        "From the NRSA wetted-channel observation where connected evidence qualifies, otherwise "
+        "the StreamCat HYD integrity fallback.",
     "high-flow-dynamics-floodplain-engagement-frequency-bankfull-recurrence":
-        "From the bank-height ratio and the modeled bankfull-flow recurrence interval.",
+        "From the bank-height ratio (low-bank height ÷ maximum bankfull depth).",
     "floodplain-connectivity-floodplain-access-entrenchment":
         "Entrenchment ratio = flood-prone width ÷ bankfull width.",
     "hyporheic-connectivity-hyporheic-exchange-indicators":
-        "Derived from channel slope and sinuosity.",
+        "Channel slope binned to a rating. Sinuosity is displayed as context.",
     "channel-evolution-channel-evolution-stage-and-trends":
-        "From the bank-height ratio (low-bank height ÷ bankfull height).",
+        "Worse of the bank-height and entrenchment ratios. A canal or ditch classification "
+        "rates Poor directly.",
     "channel-and-floodplain-dynamics-bank-erosion-and-armoring-condition":
-        "Composite of stream power, soil erodibility, and riparian condition.",
+        "From the bank-height ratio unless observed bank condition is entered.",
     "sediment-continuity-sediment-supply-potential-watershed-banks":
-        "Composite of watershed- and channel-bank sediment-supply potential.",
+        "Most limiting of agricultural cover, soil K-factor, and road density.",
+    "habitat-provision-in-stream-habitat-complexity-and-cover":
+        "Woody riparian corridor cover binned to a rating. Sinuosity is displayed as context.",
     "carbon-processing-detrital-processing-cpom-retention-shredders":
         "Percent of the 100 m riparian buffer in natural vegetation (forest + shrub + grassland "
         "+ wetland).",

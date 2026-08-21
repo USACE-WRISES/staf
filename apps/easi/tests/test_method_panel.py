@@ -52,9 +52,10 @@ def test_criteria_rows_carry_the_catalog_breakpoint_and_colour_swatch():
                                                          trace["methodKey"])))
     for band in ("good", "fair", "poor"):
         assert f"easi-tip-dot {band}" in m                     # clear colour coding kept
-    assert m.count("easi-method-crit-range") == 3              # one breakpoint per rating
+    assert m.count("easi-method-crit-sub") == 3                # one block per indicator
+    assert m.count("easi-method-crit-range") == 9              # three ratings per indicator
     # the chip states the automated boundary, matching the catalog exactly
-    assert "&lt;0.33" in m or "<0.33" in m
+    assert "&lt;30%" in m or "<30%" in m
     assert "easi-method-crit-title" not in m                   # section owns the title
 
 

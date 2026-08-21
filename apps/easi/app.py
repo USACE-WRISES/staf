@@ -226,12 +226,12 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=39"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=40"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="report-controls.js", defer=""),
                     ui.tags.script(src="report-edit.js", defer=""),
-                    ui.tags.script(src="worksheet.js?v=7", defer=""),
+                    ui.tags.script(src="worksheet.js?v=8", defer=""),
                     ui.tags.script(src="coord-entry.js", defer="")),
     # Disable Shiny/bslib's page-level "pulse" loading bar at the top of the screen —
     # the bottom-right toast is the app's loading indicator (output spinners unaffected).
@@ -911,7 +911,6 @@ def server(input, output, session):
     _assess_prog = {"done": 0, "total": 0, "waiting": {}}  # shared metric-progress state (poller reads)
     _overrides = reactive.value({})        # {metricId: "Good"/"Fair"/"Poor"} from the worksheet
     _notes = reactive.value({})            # {metricId: note text} from the worksheet
-    _source_choice = reactive.value({})    # {metricId: source key} chosen in the metric card
     _geom_owned = reactive.value(set())    # metricIds whose rating is currently derived from
     #                                        an edited cross-section (vs a manual dropdown pick)
     _geom_text = reactive.value({})        # {metricId: value text} for those edited rows
@@ -1362,8 +1361,6 @@ def server(input, output, session):
         stage.set(f"Computing metrics… 0/{n}")
         ui.notification_show(f"Computing metrics… 0/{n} — please wait", id="stage",
                              type="message", duration=None)
-        # sources={} -> each row's default variant; prefetch (default True) attaches all variants
-        # for instant in-card source swapping via apply_source_choices.
         assess_task(d["ctx_inputs"], selected_metric_ids(), {}, _assess_prog)
 
     @reactive.effect
@@ -1408,7 +1405,7 @@ def server(input, output, session):
         merged["report"] = res["report"]
         base_result.set(merged)
         # fresh screening: no overrides / notes / source swaps / geometry edits
-        _overrides.set({}); _notes.set({}); _source_choice.set({})
+        _overrides.set({}); _notes.set({})
         _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); _xs_sel.set(None)
         _xs_unit_prev.set("ft"); current_fn.set(0)
         # Fresh run complete: auto-open the screening report (same path as "Open report",
@@ -1455,7 +1452,7 @@ def server(input, output, session):
         for k in ("ws", "reach", "marker"):
             _remove_layer(k)
         snapped_point.set(None); delin.set(None); base_result.set(None)
-        _overrides.set({}); _notes.set({}); _source_choice.set({})
+        _overrides.set({}); _notes.set({})
         _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); current_fn.set(0)
         stage.set("")
         current_step.set(STEP_IDENTIFY)
@@ -1499,7 +1496,7 @@ def server(input, output, session):
         # All 20 metrics always run (there is no per-metric selection).
         return list(ALL_MIDS)
 
-    # ---- worksheet navigation + in-card source swap (posted by www/worksheet.js) ----
+    # ---- worksheet navigation (posted by www/worksheet.js) ----
     @reactive.effect
     @reactive.event(input.nav_move)
     def _nav_move():
@@ -1521,17 +1518,6 @@ def server(input, output, session):
         except (TypeError, ValueError):
             return
         current_fn.set(max(0, min(len(_FUNCTIONS) - 1, i)))
-
-    @reactive.effect
-    @reactive.event(input.source_set)
-    def _apply_source():
-        ev = input.source_set() or {}
-        mid, src = ev.get("mid"), ev.get("source")
-        if not mid or not src:
-            return
-        cur = dict(_source_choice())
-        cur[mid] = src
-        _source_choice.set(cur)
 
     def _show_report_modal():
         res = export_result()
@@ -1738,9 +1724,7 @@ def server(input, output, session):
         base = base_result()
         if not base:
             return None
-        # in-card source swaps rewrite the generated view; overrides then win on top
-        merged = assessment.apply_source_choices(base["report"], dict(_source_choice()))
-        sc = assessment.rescore(merged, dict(current_overrides()))
+        sc = assessment.rescore(base["report"], dict(current_overrides()))
         owned = _geom_owned()
         if owned:  # relabel so an edited cross-section doesn't read as a manual override
             texts = _geom_text()
@@ -2073,32 +2057,10 @@ def server(input, output, session):
         meta = _METRIC_BY_FID.get(fid) or {}
         mid = meta.get("metricId")
         is_xs = fid in XS_FUNCTION_IDS
-        # Depend on _source_choice so a data-source swap re-renders the card, rebuilding the
-        # Scoring-method sliders for the chosen variant. Source swaps happen only on non-XS
-        # cards, so the XS widget's mount-once-per-visit guarantee is unaffected.
-        src_choice_all = _source_choice()
         with reactive.isolate():
             note0 = (_notes() or {}).get(mid, "")
-            src0 = (src_choice_all or {}).get(mid)
             brow = next((r for r in ((base_result() or {}).get("report") or {}).get("metricRows", [])
                          if r["metricId"] == mid), None) or {}
-        src_sel = None
-        if mid in config.SOURCE_OPTIONS:
-            variants = brow.get("sourceVariants") or {}
-            cur_src = src0 or brow.get("sourceChoice")
-            opts = []
-            for val, lbl in config.SOURCE_OPTIONS[mid]:
-                avail = (variants.get(val) or {}).get("available", True)
-                attrs = {"value": val}
-                if val == cur_src:
-                    attrs["selected"] = "selected"
-                if not avail:
-                    attrs["disabled"] = "disabled"
-                    lbl = f"{lbl} (no data)"
-                opts.append(ui.tags.option(lbl, attrs))
-            src_sel = ui.div(ui.span("Data source", class_="easi-src-key"),
-                             ui.tags.select(*opts, {"class": "easi-src-sel", "data-mid": mid}),
-                             class_="easi-src-row")
         card = ui.div(
             ui.div(ui.span("1", class_="sfari-step-num"),
                    ui.span("Score this metric", class_="sfari-sec-title"),
@@ -2108,8 +2070,7 @@ def server(input, output, session):
             (ui.div(meta.get("metricStatement", ""), class_="sfari-metric-statement")
              if meta.get("metricStatement") else None),
             ui.output_ui("fn_metric_live"),
-            src_sel,
-            _method_expander(mid, _active_scoring(brow, src0)),
+            _method_expander(mid, _active_scoring(brow, None)),
             ui.tags.textarea(note0, {"class": "easi-note-ta", "data-mid": mid, "rows": "2",
                                      "placeholder": "Add a note for this metric…"}),
             _xs_editor() if is_xs else None,

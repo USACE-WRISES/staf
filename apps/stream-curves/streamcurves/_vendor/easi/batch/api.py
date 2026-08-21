@@ -35,8 +35,9 @@ def capabilities() -> dict:
         "contracts_schema_version": contracts.CONTRACTS_SCHEMA_VERSION,
         "metric_ids": list(config.metrics_by_id().keys()),
         "registered_metric_ids": list(registry.REGISTRY.keys()),
-        "source_options": {mid: [list(o) for o in opts]
-                           for mid, opts in config.SOURCE_OPTIONS.items()},
+        # The in-app source picker was removed (2026-08-20 review); the key is kept
+        # empty so vendoring consumers keep a stable capability shape.
+        "source_options": {},
         "outcomes": list(config.OUTCOMES),
         "index_bands": [list(b) for b in config.INDEX_BANDS],
         "function_score_bands": [list(b) for b in config.FUNCTION_SCORE_BANDS],

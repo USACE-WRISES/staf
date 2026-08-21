@@ -30,7 +30,7 @@ def test_impervious_exact_boundaries(value, expected):
 
 @pytest.mark.parametrize(
     "value,expected",
-    [(24.999, "Good"), (25, "Fair"), (50, "Fair"), (50.001, "Poor")],
+    [(29.999, "Good"), (30, "Fair"), (50, "Fair"), (50.001, "Poor")],
 )
 def test_agriculture_exact_boundaries(value, expected):
     result = sm.evaluate(hydrology.IMPERVIOUS_ID,
@@ -80,8 +80,8 @@ def test_missing_required_inputs_are_not_zero():
     [
         (19990, 1000, "Good"),
         (20000, 1000, "Fair"),
-        (300000, 1000, "Fair"),
-        (300010, 1000, "Poor"),
+        (150000, 1000, "Fair"),
+        (150010, 1000, "Poor"),
     ],
 )
 def test_degree_of_regulation_conversion_and_boundaries(storage, runoff, expected):
@@ -121,55 +121,67 @@ def test_entrenchment_boundaries(er, expected):
     assert sm.evaluate(hydraulics.ENTRENCHMENT_ID, {"er": er}).rating == expected
 
 
-def test_provisional_composite_formula_reproduction():
-    hyp = sm.evaluate(hydraulics.HYPORHEIC_ID, {"slope": 0.005, "sinuosity": 1.25})
-    assert hyp.combined_value == pytest.approx(0.5)
-    sed = sm.evaluate(geomorphology.SEDIMENT_ID, {
-        "agriculture": 25, "kFactor": 0.2, "roadDensity": 2.5,
-    })
-    assert sed.combined_value == pytest.approx(0.5)
-    habitat = sm.evaluate(biology.HABITAT_ID, {
-        "woodyRiparian": 30, "sinuosity": 1.25,
-    })
-    assert habitat.combined_value == pytest.approx(0.5)
+def test_no_method_uses_a_weighted_composite():
+    """The 2026-08 review converted every weighted composite (worst-governs or
+    a single rated indicator now); the operator stays supported but unused."""
+    catalog = config.screening_methods()
+    assert all(m["operator"] != "weighted_capped_sum" for m in catalog["methods"])
 
 
 @pytest.mark.parametrize(
-    "target,expected",
-    [(0.299999, "Poor"), (0.3, "Fair"), (0.599999, "Fair"), (0.6, "Good")],
+    "slope,expected",
+    [(0.002999, "Poor"), (0.003, "Fair"), (0.005999, "Fair"), (0.006, "Good")],
 )
-def test_hyporheic_combined_breakpoints(target, expected):
+def test_hyporheic_slope_breakpoints(slope, expected):
     result = sm.evaluate(
-        hydraulics.HYPORHEIC_ID,
-        {"slope": target / 0.6 * 0.01, "sinuosity": 1.0})
-    assert result.combined_value == pytest.approx(target)
+        hydraulics.HYPORHEIC_ID, {"slope": slope, "sinuosity": 1.0})
+    assert result.combined_value == pytest.approx(slope)
     assert result.rating == expected
 
 
+def test_hyporheic_sinuosity_is_context_only():
+    result = sm.evaluate(
+        hydraulics.HYPORHEIC_ID, {"slope": 0.01, "sinuosity": None})
+    assert result.rating == "Good"
+    sin = next(i for i in result.trace["inputs"] if i["key"] == "sinuosity")
+    assert sin["contextOnly"] is True
+
+
 @pytest.mark.parametrize(
-    "target,expected",
-    [(0.329999, "Good"), (0.33, "Fair"), (0.659999, "Fair"), (0.66, "Poor")],
+    "ag,k,roads,expected",
+    [
+        (29.9, 0.24, 1.23, "Good"),
+        (30, 0.24, 1.23, "Fair"),
+        (50.001, 0.24, 1.23, "Poor"),
+        (10, 0.25, 1.0, "Fair"),
+        (10, 0.41, 1.0, "Poor"),
+        (10, 0.2, 1.24, "Fair"),
+        (10, 0.2, 1.86, "Poor"),
+    ],
 )
-def test_sediment_combined_breakpoints(target, expected):
+def test_sediment_worst_input_governs(ag, k, roads, expected):
     result = sm.evaluate(geomorphology.SEDIMENT_ID, {
-        "agriculture": 50 * target,
-        "kFactor": 0.4 * target,
-        "roadDensity": 5 * target,
+        "agriculture": ag, "kFactor": k, "roadDensity": roads,
     })
-    assert result.combined_value == pytest.approx(target)
     assert result.rating == expected
 
 
-@pytest.mark.parametrize(
-    "target,expected",
-    [(0.299999, "Poor"), (0.3, "Fair"), (0.549999, "Fair"), (0.55, "Good")],
-)
-def test_habitat_combined_breakpoints(target, expected):
-    result = sm.evaluate(biology.HABITAT_ID, {
-        "woodyRiparian": 60 * target,
-        "sinuosity": 1 + 0.5 * target,
+def test_sediment_governing_input_is_traced():
+    result = sm.evaluate(geomorphology.SEDIMENT_ID, {
+        "agriculture": 10, "kFactor": 0.2, "roadDensity": 1.86,
     })
-    assert result.combined_value == pytest.approx(target)
+    assert result.trace["governingInput"] == "roadDensity"
+
+
+@pytest.mark.parametrize(
+    "woody,expected",
+    [(49.999, "Poor"), (50, "Fair"), (70, "Fair"), (70.001, "Good")],
+)
+def test_habitat_woody_cover_breakpoints(woody, expected):
+    result = sm.evaluate(biology.HABITAT_ID, {
+        "woodyRiparian": woody, "sinuosity": None,
+    })
+    assert result.combined_value == pytest.approx(woody)
     assert result.rating == expected
 
 
@@ -276,18 +288,18 @@ def _values(trace):
 
 def test_reference_curve_shows_breakpoints_and_both_markers():
     """The worksheet's reference curve is drawn from the catalog bands the evaluator used."""
-    method = easi_methods.resolve(geomorphology.SEDIMENT_ID)
-    site = sm.evaluate(geomorphology.SEDIMENT_ID, {
-        "agriculture": 25, "kFactor": 0.2, "roadDensity": 2.5,
+    method = easi_methods.resolve(hydraulics.HYPORHEIC_ID)
+    site = sm.evaluate(hydraulics.HYPORHEIC_ID, {
+        "slope": 0.004, "sinuosity": 1.2,
     }).trace
     explored = easi_methods.evaluate_method(
-        method, {"agriculture": 80, "kFactor": 0.5, "roadDensity": 8})
+        method, {"slope": 0.001, "sinuosity": 1.0})
     svg = method_plot.scalar_svg(method, site["combinedValue"], site["generatedRating"],
                                  explored["value"], explored["rating"])
     assert svg.startswith("<svg")
     for color in ("#c8d9f2", "#f5e7a6", "#f5b5b5"):     # Good / Fair / Poor regions
         assert color in svg
-    assert "V 0.33" in svg and "V 0.66" in svg          # authored breakpoint labels
+    assert "0.003 m/m" in svg and "0.006 m/m" in svg    # authored breakpoint labels
     assert "Site" in svg and "Explore" in svg
     assert explored["rating"] == "Poor"
 

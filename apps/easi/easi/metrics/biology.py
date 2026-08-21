@@ -74,7 +74,10 @@ def barriers(ctx: AnalysisContext) -> MetricResult:
 
 
 def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
-    """Low-confidence woody-riparian + sinuosity habitat-support proxy."""
+    """Woody riparian corridor screen of habitat support.
+
+    Corridor woody cover alone is rated (RBP-derived 50/70 bands). Sinuosity
+    rides along as a context-only input in the scoring trace."""
     woody = base.riparian_woody_pct(ctx)
     sinuosity = ctx.sinuosity
     ev = screening_methods.evaluate(
@@ -87,17 +90,19 @@ def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
         confidence="L")
     if ev.rating is None:
         return unavailable(
-            HABITAT_ID, "both woody riparian cover and sinuosity are required",
+            HABITAT_ID, "woody riparian cover is required",
             "L", scoring=ev.trace)
-    score = float(ev.combined_value)
+    value = float(ev.combined_value)
+    sin_txt = ("" if sinuosity is None
+               else f" (sinuosity {float(sinuosity):.2f} shown as context)")
     return MetricResult(
-        HABITAT_ID, value=round(score, 3),
-        value_text=(f"habitat-support potential {score:.2f} "
-                    f"(woody riparian {float(woody):.1f}%; "
-                    f"sinuosity {float(sinuosity):.2f})"),
+        HABITAT_ID, value=round(value, 1),
+        value_text=f"woody riparian cover {value:.1f}%{sin_txt}",
         rating=ev.rating, confidence="L",
-        source="EPA StreamCat woody riparian cover + selected reach geometry",
-        note="Provisional low-confidence habitat-support proxy; not a field habitat inventory.",
+        source="EPA StreamCat woody riparian cover (rp100)",
+        note=("Corridor-cover proxy for habitat support, not a field habitat "
+              "inventory. Grass-dominated natural channels can provide "
+              "habitat this proxy does not credit."),
         scoring=ev.trace)
 
 

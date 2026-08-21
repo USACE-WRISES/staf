@@ -7,7 +7,7 @@
 |  | Scoring | *Woody riparian cover* — Good ≥75%; Fair 25–<75%; Poor <25%<br>*Watershed impervious cover* — Good <10%; Fair 10–25%; Poor >25% |
 |  | Basis | published directional relationship; confidence L; provisional screening transitions |
 |  | Source hierarchy | Single source; no fallback. |
-|  | Known limitations | This method estimates vulnerability to thermal loading and loss of shade; it does not estimate stream temperature.<br>Both inputs are required and the specific bands are provisional screening classes.<br>Valid WQP temperature observations may be displayed as context but are not scored without an applicable class, season, and exposure rule. |
+|  | Known limitations | This method estimates vulnerability to thermal loading and loss of shade; it does not estimate stream temperature.<br>Both inputs are required and the specific bands are provisional screening classes.<br>Valid WQP temperature observations may be displayed as context but are not scored without an applicable class, season, and exposure rule.<br>The 25 and 75 percent woody bands are EASI conventions. Shade studies place intact forest near 85 percent shade, but no published corridor-percent thresholds exist. |
 | **Detrital Processing (CPOM retention / shredders)** | Function | Carbon processing |
 |  | Automated method | Organic-matter supply potential proxy |
 |  | Inputs | Riparian forest (%); Riparian shrub (%); Riparian grassland (%); Riparian wetland (%) |
@@ -31,6 +31,6 @@
 |  | Scoring | Good Category 1; Category 2; Fair Category 4a; Category 4b; Poor Category 4c; Category 5 |
 |  | Basis | dataset reference; confidence H |
 |  | Source hierarchy | 1. Conclusive ATTAINS category — Use an intersecting or qualifying nearby Category 1, 2, 4a, 4b, 4c, or 5 assessment.<br>2. StreamCat CHEM condition fallback — Use when ATTAINS is absent or Category 3 is inconclusive; the result is condition context, not a regulatory determination. |
-|  | Known limitations | Category 3 remains unscored because evidence is insufficient.<br>A nearby unit within 2 km is explicitly labeled nearby and may not represent the selected reach.<br>When ATTAINS is absent or inconclusive, the CHEM fallback is labeled water-quality condition context and not a regulatory determination. |
+|  | Known limitations | Category 3 remains unscored because evidence is insufficient.<br>A nearby unit within 2 km is explicitly labeled nearby and may not represent the selected reach.<br>When ATTAINS is absent or inconclusive, the CHEM fallback is labeled water-quality condition context and not a regulatory determination.<br>The category mapping reflects remedy status, not severity. A Category 4a water is as impaired as a Category 5 water but has an approved TMDL, so 4a and 4b rate Fair as impaired-with-a-management-pathway. Category 2 means no assessed use is failing, which is weaker than Category 1. |
 
 : Physicochemistry metrics {#tbl-metrics-physicochemistry}
