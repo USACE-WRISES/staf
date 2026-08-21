@@ -1,8 +1,8 @@
 {
   "meta": {
-    "methodology_version": "0.4-provisional",
+    "methodology_version": "0.5-provisional",
     "date": "2026-08-21",
-    "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses are untouched.",
+    "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged.",
     "status_legend": {
       "threshold_status": {
         "provisional": "Operating default, not yet calibrated. Never describe as validated.",
@@ -695,10 +695,10 @@
       "purpose": "When the Functioning-only pool is too small, include Functioning-at-Risk sites, explicitly and under review.",
       "test": "IF least-disturbed pool fails DATA-04/DATA-06 for a metric or stratum THEN switch to at_risk_or_better (ECI > 0.39)",
       "threshold": "ECI > 0.39 (fallback only)",
-      "threshold_status": "provisional",
+      "threshold_status": "calibrated",
       "implementation_status": "implemented",
       "maps_to": "regional_agent.choose_reference_tier (pool trigger) + tier_evaluation_table (per-metric trigger evaluation) + deep_export referenceTier stamp + confidence cap via CONF-02",
-      "note": "v0.4: the per-metric trigger is evaluated and recorded; the pool switch stays an assessment-level, human-authorized decision, which is the review the rule demands.",
+      "note": "Calibrated v0.5 on the Eastern Corn Belt Plains pilot (2026-08-21, owner decision): zero Functioning sites among 18 candidates fired the fallback exactly as designed, every curve published double-capped at Low with the tier stamped, and the trigger (functional pool below the DATA-04 floor, evaluated per metric) and the 59 cap are confirmed as operating values. Reconciles with the revision plan by being explicit, reviewed, provenance-stamped, and human-authorized, never silent.",
       "outcomes": {
         "pass": "n/a (never auto-passes)",
         "review": "MANDATORY human review of every affected curve",

@@ -10,7 +10,7 @@
   "stateCode": "",
   "stateName": "",
   "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-  "latestVersion": 1,
+  "latestVersion": 2,
   "versions": [
     {
       "version": 1,
@@ -19,6 +19,14 @@
       "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 16 of 18 candidates.  REF-02 fallback: only 0 Functioning sites (< 20); included Functioning-at-Risk to reach 16. Mandatory review; confidence capped; reference tier = best_available.",
       "contentDigest": "sha256:0d42eabc3c3b59d7db1a363bfedfe82da191b19ce046c1ae86b0446e4b1cd4a1",
       "supersedesVersion": null
+    },
+    {
+      "version": 2,
+      "updatedAt": "2026-08-21T18:02:10Z",
+      "author": "StreamCurves Regional Analysis Agent",
+      "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 16 of 18 candidates.  REF-02 fallback: only 0 Functioning sites (< 20); included Functioning-at-Risk to reach 16. Mandatory review; confidence capped; reference tier = best_available.",
+      "contentDigest": "sha256:fd7f84e1e27d72b862ae014a6c31f6639693191440b141835a0a83315db665a9",
+      "supersedesVersion": 1
     }
   ]
 }

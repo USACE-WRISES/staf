@@ -99,6 +99,22 @@ def test_tier_evaluation_reports_the_per_metric_trigger():
     assert by_metric["sparse"]["ref02_metric_trigger"]
 
 
+def test_tier_evaluation_reports_zero_when_the_functional_pool_is_empty():
+    """The ECBP case: a REAL screen that retained zero Functioning sites must
+    report functional counts of 0, never borrow the applied pool's numbers."""
+    data = pd.DataFrame({
+        "site_id": [f"s{i}" for i in range(16)],
+        "m": np.arange(16, dtype=float),
+    })
+    tier = {"reference_tier": "best_available",
+            "primary": {"retained_ids": []}}
+    rows = ra.tier_evaluation_table(
+        data, {"m": {"column_name": "m"}}, tier, "functional")
+    assert rows[0]["n_functional_pool"] == 0
+    assert rows[0]["n_applied_pool"] == 16
+    assert rows[0]["ref02_metric_trigger"]
+
+
 def test_stratifier_evidence_frame_shape():
     rng = np.random.default_rng(2)
     n = 24

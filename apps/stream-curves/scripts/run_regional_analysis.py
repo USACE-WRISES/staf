@@ -509,7 +509,19 @@ def main(argv=None) -> int:
                          "({rule_id, subject, action, rationale, reviewer, date}). "
                          "Merged into the provenance records and review queue, so the "
                          "published document carries the human record, not empty slots")
+    ap.add_argument("--finalize-metric", action="append", default=[],
+                    metavar="METRIC=NOTE",
+                    help="Recorded reviewer finalization for a flagged curve (the only "
+                         "way a flagged curve publishes). Repeatable; the maintainer "
+                         "name is stamped as the actor")
     args = ap.parse_args(argv)
+
+    finalize_metrics = {}
+    for spec in args.finalize_metric:
+        mk, _, note = str(spec).partition("=")
+        if not mk or not note:
+            ap.error(f"--finalize-metric needs METRIC=NOTE, got {spec!r}")
+        finalize_metrics[mk.strip()] = note.strip()
 
     portfolio_approvals = []
     for spec in args.approve_portfolio:
@@ -536,6 +548,8 @@ def main(argv=None) -> int:
                     source_citation=args.source_citation, do_screen=not args.no_screen,
                     coverage_exceptions=coverage_exceptions, cache_dir=out_dir,
                     diagnostics_n_boot=args.n_boot,
+                    finalize_metrics=finalize_metrics or None,
+                    finalize_actor=args.maintainer,
                     on_event=lambda ev: print(f"[screen] {ev}") if isinstance(ev, str) else None)
     print(f"[agent] retained {len(result['retained_site_ids'])} / {result['n_candidates']} "
           f"(tier {result['reference_tier']}, pool {result['reference_pool_disposition']}); "
