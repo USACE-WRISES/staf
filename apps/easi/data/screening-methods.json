@@ -30,10 +30,6 @@
       "title": "Colorado Stream Quantification Tool v1.0 Science Document",
       "url": "https://stream-mechanics.com/wp-content/uploads/2020/10/CSQT-v1_Science-Document-1.pdf"
     },
-    "dor": {
-      "title": "Global river regulation and fragmentation classification",
-      "url": "https://www.nature.com/articles/srep06041"
-    },
     "epa-rbp": {
       "title": "EPA Rapid Bioassessment Protocols for Streams and Wadeable Rivers",
       "url": "https://www.epa.gov/sites/production/files/2019-02/documents/rapid-bioassessment-streams-rivers-1999.pdf"
@@ -59,7 +55,7 @@
       "url": "https://nid.sec.usace.army.mil/"
     },
     "nrsa-2018-19": {
-      "title": "National Rivers and Streams Assessment 2018–19 Technical Support Document",
+      "title": "National Rivers and Streams Assessment 2018-19 Technical Support Document",
       "url": "https://www.epa.gov/system/files/documents/2024-12/nrsa-2018-19-tsd-final-11252024.pdf"
     },
     "nrsa-data": {
@@ -77,6 +73,54 @@
     "wqp": {
       "title": "Water Quality Portal User Guide",
       "url": "https://www.waterqualitydata.us/portal_userguide/"
+    },
+    "lehner-2011": {
+      "title": "Lehner et al. 2011, High-resolution mapping of the world's reservoirs and dams",
+      "url": "https://esajournals.onlinelibrary.wiley.com/doi/10.1890/100125"
+    },
+    "grill-2019": {
+      "title": "Grill et al. 2019, Mapping the world's free-flowing rivers",
+      "url": "https://www.nature.com/articles/s41586-019-1111-9"
+    },
+    "schueler-1994": {
+      "title": "Schueler 1994, The importance of imperviousness",
+      "url": "https://pinelakedistrict.org/doc/resources/The%20Importance%20of%20Imperviousness.pdf"
+    },
+    "allan-2004": {
+      "title": "Allan 2004, Landscapes and riverscapes: the influence of land use on stream ecosystems",
+      "url": "https://doi.org/10.1146/annurev.ecolsys.35.120202.110122"
+    },
+    "wang-1997": {
+      "title": "Wang et al. 1997, Influences of watershed land use on habitat quality and biotic integrity in Wisconsin streams",
+      "url": "https://doi.org/10.1577/1548-8446(1997)022%3C0006:IOWLUO%3E2.0.CO;2"
+    },
+    "rusle-k": {
+      "title": "RUSLE soil erodibility factor classes (Michigan State University Institute of Water Research)",
+      "url": "https://iwr.msu.edu/rusle/kfactor.htm"
+    },
+    "nmfs-roads": {
+      "title": "NMFS 1996 salmonid watershed road-density criteria (as compiled in KRIS)",
+      "url": "http://www.krisweb.com/krisrussian/krisdb/html/krisweb/watershd/roads.htm"
+    },
+    "usfs-wcf": {
+      "title": "USDA Forest Service 2011, Watershed Condition Classification Technical Guide (FS-978)",
+      "url": "https://www.fs.usda.gov/biology/resources/pubs/watershed/maps/watershed_classification_guide2011FS978.pdf"
+    },
+    "king-2011": {
+      "title": "King et al. 2011, Stream community thresholds at exceptionally low levels of catchment urbanization",
+      "url": "https://doi.org/10.1890/10-1357.1"
+    },
+    "mangiante-2019": {
+      "title": "Mangiante et al. 2019, Trends in nonindigenous aquatic species richness in the United States",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6707539/"
+    },
+    "hyporheic-review": {
+      "title": "Harvey et al., How hydrologic connectivity regulates water quality in river corridors (NEXSS synthesis)",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8312628/"
+    },
+    "cbp-wetland-review": {
+      "title": "Chesapeake Bay Program 2016, Wetland Expert Panel literature review (Appendix B)",
+      "url": "https://d18lev1ok5leia.cloudfront.net/chesapeakebay/documents/appendix_b_wetlands_expert_panel_literature_review_habitat_benefits_mar2016.pdf"
     }
   },
   "methods": [
@@ -149,18 +193,18 @@
             {
               "rating": "Good",
               "min": null,
-              "max": 25,
+              "max": 30,
               "minInclusive": false,
               "maxInclusive": false,
-              "label": "<25%"
+              "label": "<30%"
             },
             {
               "rating": "Fair",
-              "min": 25,
+              "min": 30,
               "max": 50,
               "minInclusive": true,
               "maxInclusive": true,
-              "label": "25–50%"
+              "label": "30-50%"
             },
             {
               "rating": "Poor",
@@ -180,37 +224,43 @@
         {
           "input": "impervious",
           "label": "10% impervious",
-          "description": "Transition from the lower impervious-cover screen to the middle pressure tier."
+          "description": "Boundary between the sensitive and impacted classes of the Impervious Cover Model (Schueler 1994)."
         },
         {
           "input": "impervious",
           "label": "25% impervious",
-          "description": "Transition to the upper impervious-cover pressure tier."
+          "description": "Boundary of the non-supporting class of the Impervious Cover Model (Schueler 1994)."
         },
         {
           "input": "agriculture",
-          "label": "25% agriculture",
-          "description": "Lower national STAF agricultural land-use screening transition."
+          "label": "30% agriculture",
+          "description": "Lower agricultural transition. Fish-index decline and subsidy-stress responses are reported above about 30 percent watershed agriculture (Allan 2004)."
         },
         {
           "input": "agriculture",
           "label": "50% agriculture",
-          "description": "Upper agricultural land-use screen aligned with NRSA reference-site screening practice."
+          "description": "Upper agricultural screen. Habitat and biotic integrity decline become apparent above 50 percent watershed agriculture (Wang et al. 1997), aligned with NRSA reference-site screening practice."
         }
       ],
       "fieldReference": null,
       "limitations": [
         "The worse input governs because hydrologic alteration through one pathway is not offset by low pressure in the other.",
         "Agricultural bands are national screening tiers, not ecological criteria.",
-        "A one-input result is visibly marked partial."
+        "A one-input result is visibly marked partial.",
+        "Sensitive macroinvertebrate taxa decline well below the 10 percent impervious Good boundary (community thresholds near 0.5 to 2 percent), so a Good rating is not a no-effect finding (King et al. 2011)."
       ],
       "citations": [
-        "nrsa-2018-19"
+        "nrsa-2018-19",
+        "schueler-1994",
+        "allan-2004",
+        "wang-1997",
+        "king-2011"
       ],
       "plot": {
         "mode": "worst_index",
         "direction": "lower_better"
-      }
+      },
+      "evidenceFamily": "landcover_pressure"
     },
     {
       "methodKey": "watershed-wetland-extent",
@@ -284,11 +334,11 @@
       "breakpoints": [
         {
           "label": "1%",
-          "description": "Lower provisional transition separating very low mapped wetland extent from the middle tier."
+          "description": "Lower national screening transition. Watershed wetland extents of 1 to 5 percent are associated with water-quality benefit and about 7 percent with flood attenuation (Mitsch and Gosselink, as reviewed by the Chesapeake Bay Program 2016)."
         },
         {
           "label": "5%",
-          "description": "Upper provisional transition to the higher wetland-extent tier."
+          "description": "Upper national screening transition, the top of the same reviewed 1 to 5 percent benefit range."
         }
       ],
       "fieldReference": null,
@@ -296,7 +346,8 @@
         "Natural wetland abundance varies substantially among regions."
       ],
       "citations": [
-        "streamcat"
+        "streamcat",
+        "cbp-wetland-review"
       ],
       "plot": {
         "mode": "scalar",
@@ -366,10 +417,12 @@
       "fieldReference": null,
       "limitations": [
         "Road density does not count actual outfalls or establish whether runoff is treated.",
-        "The 1 km/km² breakpoint is a screening judgment."
+        "The 1 km/km² breakpoint is a screening judgment.",
+        "USFS watershed-condition guidance classes road density more strictly (good under 1, impaired over 2.4 miles per square mile, about 0.62 and 1.49 km/km²), derived from salmonid watersheds. EASI keeps the NRSA-anchored national screen and discloses the stricter alternative."
       ],
       "citations": [
-        "nrsa-2018-19"
+        "nrsa-2018-19",
+        "usfs-wcf"
       ],
       "plot": {
         "mode": "scalar",
@@ -378,7 +431,8 @@
           0,
           6
         ]
-      }
+      },
+      "evidenceFamily": "landcover_pressure"
     },
     {
       "methodKey": "degree-of-regulation",
@@ -443,28 +497,28 @@
         {
           "rating": "Fair",
           "min": 2,
-          "max": 30,
+          "max": 15,
           "minInclusive": true,
           "maxInclusive": true,
-          "label": "2–30%"
+          "label": "2-15%"
         },
         {
           "rating": "Poor",
-          "min": 30,
+          "min": 15,
           "max": null,
           "minInclusive": false,
           "maxInclusive": false,
-          "label": ">30%"
+          "label": ">15%"
         }
       ],
       "breakpoints": [
         {
           "label": "2% DOR",
-          "description": "Onset-of-regulation screening boundary used in comparative river-regulation assessment."
+          "description": "Onset-of-regulation boundary. Comparative global assessment treats storage above 2 percent of annual flow as regulated (Lehner et al. 2011)."
         },
         {
-          "label": "30% DOR",
-          "description": "Comparative strongly affected boundary; it is not a regulatory standard."
+          "label": "15% DOR",
+          "description": "Severe-regulation boundary. The free-flowing rivers analysis uses 15 percent as its operational pressure limit, the high end of a published 2 to 15 percent range (Grill et al. 2019). It is not a regulatory standard."
         }
       ],
       "fieldReference": null,
@@ -474,7 +528,8 @@
       ],
       "citations": [
         "streamcat",
-        "dor"
+        "lehner-2011",
+        "grill-2019"
       ],
       "plot": {
         "mode": "scalar",
@@ -552,11 +607,11 @@
       "breakpoints": [
         {
           "label": "25% wetted",
-          "description": "Transition between Poor and Fair where persistent flow is naturally expected."
+          "description": "Marginal-to-poor boundary of the EPA Rapid Bioassessment Protocols Channel Flow Status categories, collapsed to three classes (Barbour et al. 1999). Applies where persistent flow is naturally expected."
         },
         {
           "label": "75% wetted",
-          "description": "Transition between Fair and Good where persistent flow is naturally expected."
+          "description": "Suboptimal-to-marginal boundary of the same RBP categories. Applies where persistent flow is naturally expected."
         }
       ],
       "sourceHierarchy": [
@@ -684,7 +739,8 @@
       ],
       "citations": [
         "nrsa-data",
-        "nrsa-2018-19"
+        "nrsa-2018-19",
+        "epa-rbp"
       ],
       "plot": {
         "mode": "scalar",
@@ -836,7 +892,8 @@
       "fieldReference": null,
       "limitations": [
         "This is an unstratified confinement/access screen.",
-        "Naturally confined valley settings require field interpretation."
+        "Naturally confined valley settings require field interpretation.",
+        "Published condition standards stratify by stream type. Alluvial C and E channels are functioning above 2.2 and not functioning below 2.0, while confined B channels are functioning above 1.4. This unstratified screen is therefore lenient for alluvial reaches and strict for naturally confined ones."
       ],
       "citations": [
         "csqt"
@@ -853,9 +910,9 @@
     {
       "methodKey": "hyporheic-exchange-potential",
       "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
-      "title": "Hyporheic-exchange potential",
+      "title": "Hyporheic-exchange potential (channel gradient)",
       "status": "computed",
-      "operator": "weighted_capped_sum",
+      "operator": "threshold",
       "basisClass": "provisional STAF screening judgment",
       "provisional": true,
       "confidence": "L",
@@ -867,7 +924,7 @@
           "sourceField": "NHDPlus slope",
           "units": "m/m",
           "required": true,
-          "rationale": "Slope represents vertical hydraulic-gradient potential.",
+          "rationale": "Slope sets the vertical hydraulic gradient that drives bed exchange, the dominant hyporheic pathway in national syntheses.",
           "slider": {
             "min": 0,
             "max": 0.02,
@@ -880,84 +937,69 @@
           "symbol": "sinuosity",
           "sourceField": "reach geometry",
           "units": "ratio",
-          "required": true,
-          "rationale": "Sinuosity represents lateral and meander-driven exchange potential.",
+          "required": false,
+          "rationale": "Sinuosity indicates lateral exchange potential and is shown for context. It is not rated because sinuosity measured over the fixed assessment reach understates planform sinuosity.",
           "slider": {
             "min": 1,
             "max": 2.5,
             "step": 0.01
-          }
+          },
+          "contextOnly": true
         }
       ],
-      "formula": {
-        "resultSymbol": "V",
-        "terms": [
-          {
-            "input": "slope",
-            "weight": 0.6,
-            "transform": "cap",
-            "cap": 0.01
-          },
-          {
-            "input": "sinuosity",
-            "weight": 0.4,
-            "transform": "offset_cap",
-            "offset": 1.0,
-            "cap": 0.5
-          }
-        ]
-      },
       "bands": [
         {
           "rating": "Poor",
           "min": null,
-          "max": 0.3,
+          "max": 0.003,
           "minInclusive": false,
           "maxInclusive": false,
-          "label": "<0.30"
+          "label": "<0.003 m/m"
         },
         {
           "rating": "Fair",
-          "min": 0.3,
-          "max": 0.6,
+          "min": 0.003,
+          "max": 0.006,
           "minInclusive": true,
           "maxInclusive": false,
-          "label": "0.30–<0.60"
+          "label": "0.003-<0.006 m/m"
         },
         {
           "rating": "Good",
-          "min": 0.6,
+          "min": 0.006,
           "max": null,
           "minInclusive": true,
           "maxInclusive": false,
-          "label": "≥0.60"
+          "label": "≥0.006 m/m"
         }
       ],
       "breakpoints": [
         {
-          "label": "V 0.30",
-          "description": "Lower provisional screening transition."
+          "label": "0.003 m/m",
+          "description": "Lower screening transition, carried over from the prior exchange-potential index. A screening judgment, not a published threshold."
         },
         {
-          "label": "V 0.60",
-          "description": "Upper provisional screening transition."
+          "label": "0.006 m/m",
+          "description": "Upper screening transition, carried over from the prior exchange-potential index. A screening judgment, not a published threshold."
         }
       ],
       "fieldReference": null,
       "limitations": [
-        "Bed permeability, sediment texture, and hydraulic head observations are unavailable.",
-        "Weights, caps, and bands are provisional STAF judgments rather than published ecological thresholds."
+        "Slope screens vertical exchange potential only. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.",
+        "Sinuosity is displayed as context and is not rated. Short fixed-length reaches understate planform sinuosity.",
+        "The slope bands are screening judgments, not published thresholds."
       ],
       "citations": [
         "streamcat",
-        "function-framework"
+        "function-framework",
+        "hyporheic-review"
       ],
       "plot": {
         "mode": "scalar",
         "direction": "higher_better",
         "domain": [
           0,
-          1
+          0.02
         ]
       }
     },
@@ -1496,7 +1538,7 @@
       "metricId": "sediment-continuity-sediment-supply-potential-watershed-banks",
       "title": "Sediment-supply potential",
       "status": "computed",
-      "operator": "weighted_capped_sum",
+      "operator": "worst_index",
       "basisClass": "published directional relationship",
       "provisional": true,
       "confidence": "M",
@@ -1513,7 +1555,34 @@
             "min": 0,
             "max": 100,
             "step": 1
-          }
+          },
+          "indexSymbol": "Iagriculture",
+          "bands": [
+            {
+              "rating": "Good",
+              "min": null,
+              "max": 30,
+              "minInclusive": false,
+              "maxInclusive": false,
+              "label": "<30%"
+            },
+            {
+              "rating": "Fair",
+              "min": 30,
+              "max": 50,
+              "minInclusive": true,
+              "maxInclusive": true,
+              "label": "30-50%"
+            },
+            {
+              "rating": "Poor",
+              "min": 50,
+              "max": null,
+              "minInclusive": false,
+              "maxInclusive": false,
+              "label": ">50%"
+            }
+          ]
         },
         {
           "key": "kFactor",
@@ -1522,12 +1591,39 @@
           "sourceField": "kffactws",
           "units": "",
           "required": true,
-          "rationale": "K-factor represents inherent soil erodibility.",
+          "rationale": "K-factor represents inherent soil erodibility, the susceptibility term no other metric screens.",
           "slider": {
             "min": 0,
             "max": 0.65,
             "step": 0.01
-          }
+          },
+          "indexSymbol": "IK",
+          "bands": [
+            {
+              "rating": "Good",
+              "min": null,
+              "max": 0.25,
+              "minInclusive": false,
+              "maxInclusive": false,
+              "label": "<0.25"
+            },
+            {
+              "rating": "Fair",
+              "min": 0.25,
+              "max": 0.4,
+              "minInclusive": true,
+              "maxInclusive": true,
+              "label": "0.25-0.40"
+            },
+            {
+              "rating": "Poor",
+              "min": 0.4,
+              "max": null,
+              "minInclusive": false,
+              "maxInclusive": false,
+              "label": ">0.40"
+            }
+          ]
         },
         {
           "key": "roadDensity",
@@ -1541,84 +1637,92 @@
             "min": 0,
             "max": 10,
             "step": 0.1
-          }
+          },
+          "indexSymbol": "Iroads",
+          "bands": [
+            {
+              "rating": "Good",
+              "min": null,
+              "max": 1.24,
+              "minInclusive": false,
+              "maxInclusive": false,
+              "label": "<1.24 km/km²"
+            },
+            {
+              "rating": "Fair",
+              "min": 1.24,
+              "max": 1.86,
+              "minInclusive": true,
+              "maxInclusive": false,
+              "label": "1.24-<1.86 km/km²"
+            },
+            {
+              "rating": "Poor",
+              "min": 1.86,
+              "max": null,
+              "minInclusive": true,
+              "maxInclusive": false,
+              "label": "≥1.86 km/km²"
+            }
+          ]
         }
       ],
       "formula": {
-        "resultSymbol": "V",
-        "terms": [
-          {
-            "input": "agriculture",
-            "weight": 0.5,
-            "transform": "cap",
-            "cap": 50
-          },
-          {
-            "input": "kFactor",
-            "weight": 0.3,
-            "transform": "cap",
-            "cap": 0.4
-          },
-          {
-            "input": "roadDensity",
-            "weight": 0.2,
-            "transform": "cap",
-            "cap": 5
-          }
-        ]
+        "allowPartial": false
       },
-      "bands": [
-        {
-          "rating": "Good",
-          "min": null,
-          "max": 0.33,
-          "minInclusive": false,
-          "maxInclusive": false,
-          "label": "<0.33"
-        },
-        {
-          "rating": "Fair",
-          "min": 0.33,
-          "max": 0.66,
-          "minInclusive": true,
-          "maxInclusive": false,
-          "label": "0.33–<0.66"
-        },
-        {
-          "rating": "Poor",
-          "min": 0.66,
-          "max": null,
-          "minInclusive": true,
-          "maxInclusive": false,
-          "label": "≥0.66"
-        }
-      ],
       "breakpoints": [
         {
-          "label": "V 0.33",
-          "description": "Lower provisional combined-pressure transition."
+          "input": "agriculture",
+          "label": "30% agriculture",
+          "description": "Lower agricultural transition (Allan 2004), shared with the land-cover pressure metric."
         },
         {
-          "label": "V 0.66",
-          "description": "Upper provisional combined-pressure transition."
+          "input": "agriculture",
+          "label": "50% agriculture",
+          "description": "Upper agricultural transition (Wang et al. 1997)."
+        },
+        {
+          "input": "kFactor",
+          "label": "K 0.25",
+          "description": "Lower boundary of the moderate RUSLE erodibility class (silt loams)."
+        },
+        {
+          "input": "kFactor",
+          "label": "K 0.40",
+          "description": "Upper boundary of the moderate RUSLE erodibility class. Values above 0.40 mark the most erodible high-silt soils."
+        },
+        {
+          "input": "roadDensity",
+          "label": "1.24 km/km²",
+          "description": "2 miles per square mile, the properly-functioning limit in NMFS salmonid watershed criteria (as compiled in KRIS)."
+        },
+        {
+          "input": "roadDensity",
+          "label": "1.86 km/km²",
+          "description": "3 miles per square mile, the not-properly-functioning boundary in the same criteria. Fine sediment in spawning gravels increases above about this density (Cedarholm et al. 1981)."
         }
       ],
       "fieldReference": null,
       "limitations": [
-        "The inputs are scientifically directional, while weights, caps, and combined breakpoints are provisional STAF judgments.",
-        "All three inputs are required; missing inputs are not converted to zero."
+        "The worse input governs. Source indicators are screened separately and are not summed.",
+        "Intrinsic soil erodibility (K-factor) can lower the rating in undisturbed watersheds. It indicates susceptibility rather than an active source.",
+        "The road-density bands derive from salmonid watershed criteria applied here nationally.",
+        "Agricultural cover and road density are also rated by other metrics and are therefore correlated evidence.",
+        "All three inputs are required. Missing inputs are not converted to zero.",
+        "Bank-derived sediment supply is not represented. The method screens watershed sources only."
       ],
       "citations": [
-        "streamcat"
+        "streamcat",
+        "allan-2004",
+        "wang-1997",
+        "rusle-k",
+        "nmfs-roads"
       ],
       "plot": {
-        "mode": "scalar",
-        "direction": "lower_better",
-        "domain": [
-          0,
-          1
-        ]
-      }
+        "mode": "worst_index",
+        "direction": "lower_better"
+      },
+      "evidenceFamily": "landcover_pressure"
     },
     {
       "methodKey": "nrsa-embeddedness-condition",
@@ -1677,11 +1781,11 @@
       "breakpoints": [
         {
           "label": "25% embeddedness",
-          "description": "Observed embeddedness transition from Good to Fair."
+          "description": "Optimal-class boundary of the EPA Rapid Bioassessment Protocols embeddedness categories, collapsed to three classes (Barbour et al. 1999)."
         },
         {
           "label": "75% embeddedness",
-          "description": "Observed embeddedness transition from Fair to Poor."
+          "description": "Poor-class boundary of the same RBP categories."
         }
       ],
       "sourceHierarchy": [
@@ -1804,11 +1908,13 @@
       "limitations": [
         "A connected nearby NRSA visit may not represent the selected reach's bed condition.",
         "Embeddedness does not fully characterize grain size, fine-sediment depth, consolidation, or large wood.",
-        "The landscape fallback estimates sediment integrity rather than observed substrate condition."
+        "The landscape fallback estimates sediment integrity rather than observed substrate condition.",
+        "Embeddedness applies to gravel and coarser beds. The RBP treats it as a high-gradient parameter, and the survey convention scores sand and finer beds as 100 percent embedded, so naturally fine-bedded streams (for example coastal plain channels) can rate Poor by nature. Interpret against the expected natural bed."
       ],
       "citations": [
         "nrsa-data",
-        "nrsa-2018-19"
+        "nrsa-2018-19",
+        "epa-rbp"
       ],
       "plot": {
         "mode": "scalar",
@@ -1941,7 +2047,8 @@
       "limitations": [
         "This method estimates vulnerability to thermal loading and loss of shade; it does not estimate stream temperature.",
         "Both inputs are required and the specific bands are provisional screening classes.",
-        "Valid WQP temperature observations may be displayed as context but are not scored without an applicable class, season, and exposure rule."
+        "Valid WQP temperature observations may be displayed as context but are not scored without an applicable class, season, and exposure rule.",
+        "The 25 and 75 percent woody bands are EASI conventions. Shade studies place intact forest near 85 percent shade, but no published corridor-percent thresholds exist."
       ],
       "citations": [
         "caddis-temperature",
@@ -1950,7 +2057,8 @@
       "plot": {
         "mode": "worst_index",
         "direction": "mixed"
-      }
+      },
+      "evidenceFamily": "landcover_pressure"
     },
     {
       "methodKey": "organic-matter-supply-potential",
@@ -2507,7 +2615,8 @@
       "limitations": [
         "Category 3 remains unscored because evidence is insufficient.",
         "A nearby unit within 2 km is explicitly labeled nearby and may not represent the selected reach.",
-        "When ATTAINS is absent or inconclusive, the CHEM fallback is labeled water-quality condition context and not a regulatory determination."
+        "When ATTAINS is absent or inconclusive, the CHEM fallback is labeled water-quality condition context and not a regulatory determination.",
+        "The category mapping reflects remedy status, not severity. A Category 4a water is as impaired as a Category 5 water but has an approved TMDL, so 4a and 4b rate Fair as impaired-with-a-management-pathway. Category 2 means no assessed use is failing, which is weaker than Category 1."
       ],
       "citations": [
         "attains"
@@ -2519,10 +2628,10 @@
     {
       "methodKey": "habitat-support-potential",
       "metricId": "habitat-provision-in-stream-habitat-complexity-and-cover",
-      "title": "Habitat-support potential",
+      "title": "Habitat-support potential (woody riparian corridor)",
       "status": "computed",
-      "operator": "weighted_capped_sum",
-      "basisClass": "provisional STAF screening judgment",
+      "operator": "threshold",
+      "basisClass": "published directional relationship",
       "provisional": true,
       "confidence": "L",
       "inputs": [
@@ -2533,7 +2642,7 @@
           "sourceField": "forest + shrub + woody wetland in 100 m corridor",
           "units": "%",
           "required": true,
-          "rationale": "Woody riparian cover represents potential cover, recruitment, and bank-zone structure.",
+          "rationale": "Woody riparian cover represents potential cover, wood recruitment, and bank-zone structure, the strongest desktop indicator of habitat support.",
           "slider": {
             "min": 0,
             "max": 100,
@@ -2546,83 +2655,68 @@
           "symbol": "sinuosity",
           "sourceField": "reach geometry",
           "units": "ratio",
-          "required": true,
-          "rationale": "Sinuosity represents planform and hydraulic variability.",
+          "required": false,
+          "rationale": "Sinuosity indicates planform variability and is shown for context. It is not rated because sinuosity measured over the fixed assessment reach understates planform sinuosity.",
           "slider": {
             "min": 1,
             "max": 2.5,
             "step": 0.01
-          }
+          },
+          "contextOnly": true
         }
       ],
-      "formula": {
-        "resultSymbol": "V",
-        "terms": [
-          {
-            "input": "woodyRiparian",
-            "weight": 0.6,
-            "transform": "cap",
-            "cap": 60
-          },
-          {
-            "input": "sinuosity",
-            "weight": 0.4,
-            "transform": "offset_cap",
-            "offset": 1.0,
-            "cap": 0.5
-          }
-        ]
-      },
       "bands": [
         {
           "rating": "Poor",
           "min": null,
-          "max": 0.3,
+          "max": 50,
           "minInclusive": false,
           "maxInclusive": false,
-          "label": "<0.30"
+          "label": "<50%"
         },
         {
           "rating": "Fair",
-          "min": 0.3,
-          "max": 0.55,
+          "min": 50,
+          "max": 70,
           "minInclusive": true,
-          "maxInclusive": false,
-          "label": "0.30–<0.55"
+          "maxInclusive": true,
+          "label": "50-70%"
         },
         {
           "rating": "Good",
-          "min": 0.55,
+          "min": 70,
           "max": null,
-          "minInclusive": true,
+          "minInclusive": false,
           "maxInclusive": false,
-          "label": "≥0.55"
+          "label": ">70%"
         }
       ],
       "breakpoints": [
         {
-          "label": "V 0.30",
-          "description": "Lower provisional habitat-support transition."
+          "label": "50% woody cover",
+          "description": "Marginal-to-poor boundary of the EPA Rapid Bioassessment Protocols bank-vegetation condition categories, collapsed to three classes (Barbour et al. 1999)."
         },
         {
-          "label": "V 0.55",
-          "description": "Upper provisional habitat-support transition."
+          "label": "70% woody cover",
+          "description": "Suboptimal-to-marginal boundary of the same RBP categories. The RBP bins describe bank plots and are applied here to the 100 m corridor."
         }
       ],
       "fieldReference": null,
       "limitations": [
-        "This is a low-confidence habitat-support proxy, not a field inventory of pools, wood, cover, or bedforms.",
-        "Weights, caps, and bands are provisional STAF judgments."
+        "Corridor woody cover is a habitat-support proxy, not a field inventory of pools, wood, cover, or bedforms.",
+        "The 50 and 70 percent bands are collapsed from RBP bank-vegetation categories that describe bank plots, applied here to the 100 m corridor.",
+        "Sinuosity is displayed as context and is not rated. Grass-dominated natural channels can provide habitat this proxy does not credit."
       ],
       "citations": [
-        "caddis-habitat"
+        "caddis-habitat",
+        "epa-rbp"
       ],
       "plot": {
         "mode": "scalar",
         "direction": "higher_better",
         "domain": [
           0,
-          1
+          100
         ]
       }
     },
@@ -3063,10 +3157,12 @@
       "limitations": [
         "A successful zero is worded 'no established taxa recorded,' not confirmed absence.",
         "HUC8 fallback results carry lower confidence than HUC12 results.",
-        "Count bands are STAF screening judgments."
+        "Count bands are STAF screening judgments.",
+        "Establishment status often cannot be confirmed from occurrence records, and uneven sampling effort inflates richness where effort is high (Mangiante et al. 2019)."
       ],
       "citations": [
-        "nas"
+        "nas",
+        "mangiante-2019"
       ],
       "plot": {
         "mode": "scalar",
@@ -3142,7 +3238,7 @@
       },
       "limitations": [
         "A mapped dam count is a proximity screen and cannot confirm passability or the severity of a barrier.",
-        "NID does not comprehensively represent culverts, smaller structures, or passability.",
+        "NID carries about 91,000 regulated dams while the National Aquatic Barrier Inventory maps over 500,000 barriers of all sizes, so zero mapped dams is frequently a false negative for passage.",
         "Query failure is unscored, not Good."
       ],
       "citations": [

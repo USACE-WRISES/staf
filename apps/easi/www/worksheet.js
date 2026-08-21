@@ -1,4 +1,4 @@
-/* EASI Assessment worksheet — client-side navigation + in-card source swap.
+/* EASI Assessment worksheet — client-side navigation.
  *
  * The middle panel (fn_panel) is server-isolated so it never re-renders on stepping;
  * this file delegates the discrete actions to single Shiny.setInputValue channels:
@@ -8,7 +8,6 @@
  *   - [data-report]      click  -> open_report_evt {}          (Open report)
  *   - [data-suggest]     click  -> override_set {mid, rating: "auto"}  (restore desktop rating)
  *   - [data-xs-view]     click  -> Plotly.relayout on the cross-section (home / extents)
- *   - .easi-src-sel      change -> source_set {mid, source}    (data-source swap)
  * Also injects "Zoom Home" / "Zoom to Extents" buttons into the cross-section plot's own
  * Plotly modebar (config can't carry JS click handlers through shinywidgets).
  * Rating (.easi-rate-sel) and notes (.easi-note-ta) are handled by report-edit.js.
@@ -86,13 +85,6 @@
       scrollPanelTop();
       send("nav_jump", { i: parseInt(fnItem.getAttribute("data-idx"), 10) || 0 });
       return;
-    }
-  });
-
-  document.addEventListener("change", function (e) {
-    var s = e.target;
-    if (s && s.classList && s.classList.contains("easi-src-sel")) {
-      send("source_set", { mid: s.getAttribute("data-mid"), source: s.value });
     }
   });
 

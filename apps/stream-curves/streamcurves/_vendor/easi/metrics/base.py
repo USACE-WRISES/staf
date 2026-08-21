@@ -189,9 +189,9 @@ class MetricResult:
     # family, fallback and observed-supersedes flags, limitations. Never overloaded into detail.
     scoring: Optional[dict] = None
     is_override: bool = False
-    # Multi-source metrics (config.SOURCE_OPTIONS) with ctx.extras["prefetch_variants"]
-    # set: every computed variant keyed by source value, plus which key produced THIS
-    # result — lets the UI swap sources instantly (assessment.apply_source_choices).
+    # Reserved for supplied alternate evaluations keyed by source value (the engine-side
+    # merge in assessment.apply_source_choices). No adapter populates this today; the
+    # in-app source picker was removed in the 2026-08 review.
     variants: Optional[dict[str, "MetricResult"]] = None
     source_key: Optional[str] = None
 

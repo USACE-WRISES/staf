@@ -23,14 +23,14 @@
 |  | Scoring | Good ≥2.2; Fair 1.4–<2.2; Poor <1.4 |
 |  | Basis | published threshold; confidence M |
 |  | Source hierarchy | Single source; no fallback. |
-|  | Known limitations | This is an unstratified confinement/access screen.<br>Naturally confined valley settings require field interpretation. |
+|  | Known limitations | This is an unstratified confinement/access screen.<br>Naturally confined valley settings require field interpretation.<br>Published condition standards stratify by stream type. Alluvial C and E channels are functioning above 2.2 and not functioning below 2.0, while confined B channels are functioning above 1.4. This unstratified screen is therefore lenient for alluvial reaches and strict for naturally confined ones. |
 | **Hyporheic Exchange Indicators** | Function | Hyporheic connectivity |
-|  | Automated method | Hyporheic-exchange potential |
-|  | Inputs | Channel slope (m/m); Reach sinuosity (ratio) |
-|  | Equation | V = 0.6 × min(slope/0.01, 1) + 0.4 × clamp((sinuosity−1)/0.5, 0, 1) |
-|  | Scoring | Good ≥0.60; Fair 0.30–<0.60; Poor <0.30 |
+|  | Automated method | Hyporheic-exchange potential (channel gradient) |
+|  | Inputs | Channel slope (m/m); Reach sinuosity (context only) |
+|  | Equation | Rating = bands(slope) |
+|  | Scoring | Good ≥0.006 m/m; Fair 0.003-<0.006 m/m; Poor <0.003 m/m |
 |  | Basis | provisional STAF screening judgment; confidence L; provisional screening transitions |
 |  | Source hierarchy | Single source; no fallback. |
-|  | Known limitations | Bed permeability, sediment texture, and hydraulic head observations are unavailable.<br>Weights, caps, and bands are provisional STAF judgments rather than published ecological thresholds. |
+|  | Known limitations | Slope screens vertical exchange potential only. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.<br>Sinuosity is displayed as context and is not rated. Short fixed-length reaches understate planform sinuosity.<br>The slope bands are screening judgments, not published thresholds. |
 
 : Hydraulics metrics {#tbl-metrics-hydraulics}

@@ -113,7 +113,8 @@ def test_projection_uses_the_catalog_bands():
 
 def test_band_range_texts_scalar_and_worst_and_categorical():
     combined = methods.band_range_texts(methods.METHODS[HYPORHEIC_ID])
-    assert combined["Good"].endswith("> 0.6") and combined["Poor"].endswith("< 0.3")
+    assert combined["Good"].endswith("> 0.006 m/m")
+    assert combined["Poor"].endswith("< 0.003 m/m")
 
     worst = methods.band_range_texts(methods.METHODS[IMPERVIOUS_ID])
     for rating in ("Good", "Fair", "Poor"):          # both indicators, joined

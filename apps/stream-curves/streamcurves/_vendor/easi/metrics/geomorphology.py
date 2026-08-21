@@ -74,7 +74,7 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
 
 
 def sediment_supply(ctx: AnalysisContext) -> MetricResult:
-    """Provisional agriculture + erodibility + road-density composite."""
+    """Most limiting of agriculture, soil erodibility, and road density."""
     s = base.sc(ctx)
     agriculture = base.ag_pct(ctx)
     k_factor = s.get("kffactws")
@@ -93,15 +93,28 @@ def sediment_supply(ctx: AnalysisContext) -> MetricResult:
         return unavailable(
             SEDIMENT_ID, "agriculture, K-factor, and road density are all required",
             "M", scoring=ev.trace)
-    score = float(ev.combined_value)
+    inputs = {x["key"]: x for x in ev.trace["inputs"]}
+    governing = ev.trace["governingInput"]
+    gov = inputs.get(governing) or {}
+    parts = []
+    for key, spec in (("agriculture", "agriculture {:.1f}%"),
+                      ("kFactor", "K {:.2f}"),
+                      ("roadDensity", "roads {:.2f} km/km²")):
+        v = (inputs.get(key) or {}).get("value")
+        if v is not None:
+            parts.append(spec.format(float(v)))
+    gov_label = {"agriculture": "agricultural cover",
+                 "kFactor": "soil erodibility",
+                 "roadDensity": "road density"}.get(governing, governing)
     return MetricResult(
-        SEDIMENT_ID, value=round(score, 3),
-        value_text=(f"sediment-supply potential {score:.2f} "
-                    f"(agriculture {float(agriculture):.1f}%; "
-                    f"K {float(k_factor):.2f}; roads {float(road_density):.2f} km/km²)"),
+        SEDIMENT_ID,
+        value=(None if gov.get("value") is None else float(gov["value"])),
+        value_text=f"{gov_label} governs ({', '.join(parts)})",
         rating=ev.rating, confidence="M",
         source="EPA StreamCat agriculture + K-factor + road density",
-        note="Directional inputs; weights, caps, and combined bands are provisional.",
+        note=("The most limiting source indicator governs. K-factor is "
+              "intrinsic erodibility and can lower the rating without "
+              "disturbance."),
         scoring=ev.trace)
 
 

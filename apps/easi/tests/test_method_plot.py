@@ -9,17 +9,17 @@ from easi.metrics.physicochemistry import IMPAIRMENT_ID
 
 
 def test_scalar_svg_regions_markers_breakpoints():
-    svg = method_plot.scalar_svg(methods.METHODS[HYPORHEIC_ID], 0.75, "Good", 0.42, "Fair")
+    svg = method_plot.scalar_svg(methods.METHODS[HYPORHEIC_ID], 0.0075, "Good", 0.0042, "Fair")
     assert svg.startswith("<svg")
     for color in ("#c8d9f2", "#f5e7a6", "#f5b5b5"):     # Good / Fair / Poor regions
         assert color in svg
-    assert "Site 0.75" in svg and "Explore 0.42" in svg
-    assert "V 0.30" in svg and "V 0.60" in svg          # authored breakpoint labels
+    assert "Site 0.0075" in svg and "Explore 0.0042" in svg
+    assert "0.003 m/m" in svg and "0.006 m/m" in svg    # authored breakpoint labels
     assert "function score" not in svg                  # the summary footer was removed
 
 
 def test_scalar_svg_no_explored_marker_when_unchanged():
-    svg = method_plot.scalar_svg(methods.METHODS[HYPORHEIC_ID], 0.75, "Good", 0.75, "Good")
+    svg = method_plot.scalar_svg(methods.METHODS[HYPORHEIC_ID], 0.0075, "Good", 0.0075, "Good")
     # footer gone: no "Explore" marker AND no site/explore summary line
     assert "Explore" not in svg
     assert "function score" not in svg and "unchanged from site" not in svg

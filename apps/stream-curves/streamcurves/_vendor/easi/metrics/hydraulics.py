@@ -150,7 +150,10 @@ def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
 
 
 def hyporheic(ctx: AnalysisContext) -> MetricResult:
-    """Provisional slope + sinuosity hyporheic-exchange proxy."""
+    """Channel-gradient screen of hyporheic-exchange potential.
+
+    Slope alone is rated (it drives bed exchange, the dominant pathway).
+    Sinuosity rides along as a context-only input in the scoring trace."""
     slope, sinuosity = ctx.slope, ctx.sinuosity
     ev = screening_methods.evaluate(
         HYPORHEIC_ID, {"slope": slope, "sinuosity": sinuosity},
@@ -161,14 +164,17 @@ def hyporheic(ctx: AnalysisContext) -> MetricResult:
         confidence="L")
     if ev.rating is None:
         return unavailable(
-            HYPORHEIC_ID, "both slope and sinuosity are required", "L",
+            HYPORHEIC_ID, "channel slope is required", "L",
             scoring=ev.trace)
-    score = float(ev.combined_value)
+    value = float(ev.combined_value)
+    sin_txt = ("" if sinuosity is None
+               else f" (sinuosity {float(sinuosity):.2f} shown as context)")
     return MetricResult(
-        HYPORHEIC_ID, value=round(score, 3),
-        value_text=(f"exchange-potential proxy {score:.2f} "
-                    f"(slope {float(slope):.4f}; sinuosity {float(sinuosity):.2f})"),
+        HYPORHEIC_ID, value=round(value, 4),
+        value_text=f"channel slope {value:.4f} m/m{sin_txt}",
         rating=ev.rating, confidence="L",
-        source="NHDPlus slope + selected reach geometry",
-        note="Provisional low-confidence proxy; bed permeability is unavailable.",
+        source="NHDPlus slope",
+        note=("Slope screens vertical exchange potential. Bed hydraulic "
+              "conductivity is unavailable, so steep bedrock or fine-bedded "
+              "reaches can overpredict exchange."),
         scoring=ev.trace)
