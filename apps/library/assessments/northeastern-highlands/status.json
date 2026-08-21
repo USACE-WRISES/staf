@@ -22,6 +22,13 @@
       "actor": "StreamCurves Regional Analysis Agent",
       "timestamp": "2026-08-21T17:31:54Z",
       "note": "Published new version."
+    },
+    {
+      "version": 4,
+      "status": "preliminary",
+      "actor": "StreamCurves Regional Analysis Agent",
+      "timestamp": "2026-08-21T23:00:05Z",
+      "note": "Published new version."
     }
   ]
 }

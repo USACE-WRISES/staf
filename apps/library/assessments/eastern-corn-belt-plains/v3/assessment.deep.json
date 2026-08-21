@@ -4236,8 +4236,5 @@
     },
     "contentDigest": "sha256:c86f7b22dff315c4a8b98582e658fdfeac7162138e6bf1ab2707615b521f77d0",
     "supersedesVersion": 2
-  },
-  "version": 3,
-  "lifecycle": "preliminary",
-  "assessmentRef": "eastern-corn-belt-plains@v3"
+  }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-21T18:02:10Z",
+  "generatedAt": "2026-08-21T23:34:56Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -52,14 +52,22 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 2,
-      "latestUpdatedAt": "2026-08-21T18:02:10Z",
-      "latestPreliminary": 2,
+      "latestVersion": 3,
+      "latestUpdatedAt": "2026-08-21T23:32:32Z",
+      "latestPreliminary": 3,
       "latestCertified": 0,
-      "defaultVersion": 2,
-      "contentDigest": "sha256:fd7f84e1e27d72b862ae014a6c31f6639693191440b141835a0a83315db665a9",
+      "defaultVersion": 3,
+      "contentDigest": "sha256:c86f7b22dff315c4a8b98582e658fdfeac7162138e6bf1ab2707615b521f77d0",
       "validationState": "unvalidated",
-      "validationSummary": null,
+      "validationSummary": {
+        "kind": "protocol_demonstration",
+        "n_sites": 16,
+        "weighted_kappa_range": [
+          -0.21518987341772153,
+          0.0
+        ],
+        "offset_direction": "curves softer than field crews"
+      },
       "provenanceState": "present"
     },
     {
@@ -132,14 +140,19 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 3,
-      "latestUpdatedAt": "2026-08-21T17:31:54Z",
-      "latestPreliminary": 3,
+      "latestVersion": 4,
+      "latestUpdatedAt": "2026-08-21T23:00:04Z",
+      "latestPreliminary": 4,
       "latestCertified": 0,
-      "defaultVersion": 3,
-      "contentDigest": "sha256:38aba1c669b16ba7d8e19ca6134ffac7c228514c81577ab7c92401cadc720b56",
+      "defaultVersion": 4,
+      "contentDigest": "sha256:a82835217e267957dc4b3884e44b4e13737cde578729b9a2ea973edcf263e0b9",
       "validationState": "unvalidated",
-      "validationSummary": null,
+      "validationSummary": {
+        "kind": "protocol_demonstration",
+        "n_sites": 4,
+        "weighted_kappa_unique": -0.007263922518159807,
+        "offset_direction": "curves harsher than field scores"
+      },
       "provenanceState": "present"
     },
     {

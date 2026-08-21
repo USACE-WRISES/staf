@@ -394,7 +394,7 @@ app_ui = ui.page_fillable(
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="measure.js?v=2", defer=""),
+                    ui.tags.script(src="measure.js?v=3", defer=""),
                     ui.tags.script(src="coverage.js", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(

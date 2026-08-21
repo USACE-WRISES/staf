@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "northeastern-highlands",
+  "records": [
+    {
+      "version": 4,
+      "actor": "gtmenichino",
+      "timestamp": "2026-08-21T23:34:56Z",
+      "note": "Phase 8 protocol-demonstration record",
+      "method": "protocol demonstration: StreamCat values for four SFARI field sites scored through the published landscape curves, banded, compared with the SFARI function scores banded at 5 and 10",
+      "checker": "DEEP project Phase 6, recast Phase 8 (analysis/field_validation_neh.py)",
+      "outcome": "no per-curve support claimed: chance-corrected agreement near zero on unique site-metric values, curves read harsher than the field scores (the least-disturbed offset), four-site ranking agrees on the strongest and the degraded site only",
+      "reference": "notes/DEEP_Working/DEEP_Field_Verification_and_Validation_Report_v01.md (Version 02), report chapter 9",
+      "views": {
+        "all_rows": {
+          "n": 44,
+          "exact": 0.4318181818181818,
+          "chance_exact": 0.40754132231404955,
+          "within_one": 0.8181818181818182,
+          "chance_within_one": 0.7732438016528925,
+          "weighted_kappa": 0.08448928121059308,
+          "spearman": 0.12462891635921014,
+          "curve_harsher": 0.36363636363636365,
+          "curve_softer": 0.20454545454545456
+        },
+        "unique_site_metric": {
+          "n": 32,
+          "exact": 0.40625,
+          "chance_exact": 0.408203125,
+          "within_one": 0.78125,
+          "chance_within_one": 0.78515625,
+          "weighted_kappa": -0.007263922518159807,
+          "spearman": -0.014861198865663462,
+          "curve_harsher": 0.34375,
+          "curve_softer": 0.25
+        },
+        "unique_in_ecoregion_only": {
+          "n": 24,
+          "exact": 0.375,
+          "chance_exact": 0.39583333333333337,
+          "within_one": 0.7916666666666666,
+          "chance_within_one": 0.7708333333333333,
+          "weighted_kappa": 0.0,
+          "spearman": 0.032075014954979206,
+          "curve_harsher": 0.375,
+          "curve_softer": 0.25
+        },
+        "unique_index_scaled_breaks": {
+          "n": 32,
+          "exact": 0.40625,
+          "chance_exact": 0.408203125,
+          "within_one": 0.78125,
+          "chance_within_one": 0.78515625,
+          "weighted_kappa": -0.007263922518159807,
+          "spearman": -0.014861198865663462,
+          "curve_harsher": 0.34375,
+          "curve_softer": 0.25
+        }
+      },
+      "site_ranking": {
+        "rho": 0.7999999999999999,
+        "p_one_sided": 0.16666666666666666,
+        "n_orderings": 24,
+        "n": 4,
+        "order_by_curve": [
+          "SB",
+          "KR",
+          "MB",
+          "SRT"
+        ],
+        "order_by_field": [
+          "SB",
+          "MB",
+          "KR",
+          "SRT"
+        ]
+      },
+      "embeddedness_observation": {
+        "value": 32.4,
+        "index": 1.0,
+        "curve_band": "F",
+        "sfari_score": 14.0,
+        "sfari_band": "F"
+      },
+      "dataset_provenance": {
+        "dataset": "SFARI field assessments in or near ecoregion 58 (Slade Brook NH, Mink Brook NH, Tributary to Sugar River NH, Kenduskeag River ME)",
+        "file": "apps/easi/docs/EASI_Documentation/data/easi_site_reports/{SB,MB,SRT,KR}.json",
+        "sites_used": 4,
+        "out_of_ecoregion": [
+          "KR"
+        ],
+        "independence": {
+          "sites": "independent of the NRSA development data",
+          "variables": "shared: the same StreamCat values on both sides",
+          "evidence_values": "possibly shared: SFARI's desktop layer can pre-fill suggested scores from the same values, and the site reports do not record whether they were used",
+          "tool_lineage": "shared: the SFARI corpus validated the EASI engine that screens the reference pools"
+        }
+      },
+      "design_approval": {
+        "approved_by": "gtmenichino",
+        "approved_on": "2026-08-21",
+        "gate": "Phase 6 design gate, before any conclusion was drawn",
+        "measures": "band agreement at the 0.39 and 0.69 breaks; Phase 8 recast added chance expectations, linear-weighted kappa, Spearman correlation with sign, per-site aggregation, permutation p",
+        "acceptance_threshold": "none claimed at 16 and 4 sites; the only decision rule was below-chance agreement or a systematically opposite direction",
+        "recast": "Phase 8 (adversarial review VAL-1, VAL-2, STAT-11): reported as a protocol demonstration with no per-curve support"
+      },
+      "bundle_version_compared": 4
+    }
+  ],
+  "history": [
+    {
+      "version": 4,
+      "state": "unvalidated",
+      "summary": {
+        "kind": "protocol_demonstration",
+        "n_sites": 4,
+        "weighted_kappa_unique": -0.007263922518159807,
+        "offset_direction": "curves harsher than field scores"
+      },
+      "actor": "gtmenichino",
+      "timestamp": "2026-08-21T23:34:56Z",
+      "note": "Exploratory field comparison only; not validation"
+    }
+  ]
+}

@@ -10,7 +10,7 @@
   "stateCode": "",
   "stateName": "",
   "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
-  "latestVersion": 3,
+  "latestVersion": 4,
   "versions": [
     {
       "version": 1,
@@ -35,6 +35,14 @@
       "revisionNotes": "Reference tier: least_disturbed (screening preset functional, method direct_engine). Retained 33 of 71 candidates.",
       "contentDigest": "sha256:38aba1c669b16ba7d8e19ca6134ffac7c228514c81577ab7c92401cadc720b56",
       "supersedesVersion": 2
+    },
+    {
+      "version": 4,
+      "updatedAt": "2026-08-21T23:00:04Z",
+      "author": "StreamCurves Regional Analysis Agent",
+      "revisionNotes": "Reference tier: least_disturbed (screening preset functional, method direct_engine). Retained 33 of 71 candidates.",
+      "contentDigest": "sha256:a82835217e267957dc4b3884e44b4e13737cde578729b9a2ea973edcf263e0b9",
+      "supersedesVersion": 3
     }
   ]
 }
