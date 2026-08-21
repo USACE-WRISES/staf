@@ -19,6 +19,7 @@ description: "How metrics roll up to functions, outcomes, and overall condition.
     <li>Each sub-index is normalized to 0–1 (÷ 15, rounded to 2 decimals).</li>
     <li>The <strong>Ecosystem Condition Index</strong> (0–1) is the average of the three sub-indices.</li>
   </ol>
+  <p>Most functions are rated from a single indicator per tier. Where a Screening-tier metric reads more than one indicator, the more limiting one governs the rating: low pressure through one pathway does not offset high pressure through another. EASI's Catchment hydrology metric is the clearest example, rating the worse of watershed impervious cover and agricultural cover. The <a href="{{ site.baseurl }}/walkthroughs/easi/">EASI metric reference</a> lists each indicator's boundaries and which one governed.</p>
   <table class="tier-comparison-table scoring-tier-table">
     <thead>
       <tr>

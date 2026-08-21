@@ -98,7 +98,7 @@ def test_complete_coverage_reports_evidence_profile_and_proxy_message():
     assert report["coverage"]["overall"]["fraction"] == 1.0
     assert report["coverage"]["completeWithProxies"] is True
     assert report["coverage"]["statusMessage"] == (
-        "Complete screening coverage — includes proxy-derived ratings")
+        "Complete screening coverage (includes proxy-derived ratings)")
     assert sum(report["evidenceProfile"].values()) == 20
     assert report["correlationNotes"][0]["evidenceFamily"] == "incision_geometry"
 

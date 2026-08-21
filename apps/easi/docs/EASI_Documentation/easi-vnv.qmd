@@ -147,9 +147,10 @@ limitations.
 
 These tables are generated from `data/screening-methods.json`, the same catalog the
 evaluator scores from, so the documented breakpoints cannot differ from the ones applied
-(`python scripts/build_method_tables.py`). Breakpoints described as provisional are STAF
-screening transitions, not evidence of an ecological threshold; those described as
-published carry the citation given in the source register.
+(the documentation build regenerates them on every run). Breakpoints described as
+provisional are STAF screening transitions, not evidence of an ecological threshold.
+Breakpoints described as published carry the citation recorded in the catalog's
+citation register.
 
 {{< include _generated/methods_hydrology.md >}}
 
@@ -171,6 +172,37 @@ with the entrenchment and bank-height ratios of Rosgen (1996). Because some
 metrics are national proxies, any metric rating can be overridden with field
 evidence or more detailed data, which updates the scores.
 
+Several fallback methods classify published 0 to 1 integrity or probability
+values into Good, Fair, and Poor at 0.70 and 0.40, and the modeled benthic
+probability at 0.67 and 0.33. These are EASI integration tiers. The source
+datasets publish no condition cutpoints, so EASI applies one consistent
+convention across its fallbacks and labels it in every scoring trace. The
+tiers sit below the national median watershed integrity value of about 0.79,
+so a Good from a fallback should be read as the absence of strong landscape
+pressure rather than confirmed good condition.
+
+## Channel geometry
+
+Four metrics read the channel cross section: floodplain engagement and bank
+condition through the bank-height ratio, floodplain access through the
+entrenchment ratio, and channel evolution through the worse of the two. The
+cross section comes from the best available 3DEP elevation model (1 m where
+published, otherwise the 10 m seamless layer). EASI cuts nine transects
+perpendicular to the reach between 15 and 85 percent of its length, samples
+each at 10 m spacing, and selects a representative transect for scoring.
+Bankfull width and depth come from the regional curves noted above.
+
+The low-bank elevation that sets the bank-height ratio is found by a slope-break
+rule. Walking outward from the deepest point, a candidate bank must first climb
+at least 0.3 m and at least 25 percent of the bankfull depth. The bank is then
+the first point whose next 3 m of profile is flat, meaning the average grade
+ahead is below 5 percent and below 25 percent of the steepest climb crossed so
+far. The lower of the two sides governs, and a side that never breaks (a valley
+wall) contributes nothing. These constants are screening conventions. A computed
+bank-height ratio below 1.0 triggers a geometry check in the scoring trace, and
+the cross section is editable in the report, which recomputes all four geometry
+metrics from the edited stages.
+
 ## Scoring
 
 Each metric is rated Good, Fair, or Poor against the published thresholds in the
@@ -186,6 +218,12 @@ midpoint index of its range, and the function score is that index multiplied by
 scores of 11 to 15 indicate a Functioning state, 6 to 10 indicate a
 Functioning-at-Risk state, and 0 to 5 indicate a Non-Functioning state.
 
+The index values behind those scores (0.85, 0.545, and 0.195) are the midpoints
+of the three STAF condition bands (0.70 to 1.0, 0.40 to 0.69, and 0 to 0.39),
+which places each rating at the center of its band on both scales. The
+midpoint is the unbiased representative of a band when only the band is known,
+which is the screening situation by design.
+
 ## Aggregation
 
 Function scores are combined into three outcome sub-indices for physical,
@@ -198,6 +236,12 @@ Ecosystem Condition Index. A sub-index or index value of 0 to 0.39 indicates
 Non-Functioning condition, 0.40 to 0.69 indicates Functioning-at-Risk condition,
 and 0.70 to 1.0 indicates Functioning condition.
 
+The indirect weight of 0.1 is a STAF convention. A sensitivity sweep run for
+the 2026-08 review varied it across its full range and found site rankings
+essentially unchanged (rank correlation at least 0.975) with no condition-class
+changes except at the extreme of removing indirect effects entirely, which
+supports keeping the convention as stated.
+
 # Application
 
 EASI is a web application that runs in a browser and requires no installation,
@@ -207,15 +251,16 @@ accounts, or data subscriptions. The user works through four named steps.
    snaps to the mapped stream line from the National Hydrography Dataset.
 2. **Basin.** The application delineates the contributing watershed and an
    upstream assessment reach, then reports the drainage area, the reach length,
-   and the stream identifiers. The assessment reach follows the field convention
-   of about twenty times the bankfull width (Harrelson et al. 1994).
-3. **Configure.** The twenty functions are listed by category. Where more than
-   one national data source exists for a metric, the user can choose which source
-   to use.
-4. **Report.** The application computes the metrics, scores them, and presents an
-   interactive report. The report shows the function scores, the physical,
-   chemical, and biological sub-indices, the overall Ecosystem Condition Index,
-   an editable channel cross section, and the full metric table. Results can be
+   and the stream identifiers. The assessment reach extends a standard 1000 ft
+   upstream of the selected point and can be adjusted before delineation.
+3. **Assessment.** The application computes and scores the twenty metrics, then
+   presents each function with its metric, the scoring method behind it (inputs,
+   breakpoints, and the resulting rating), and the source that supplied the
+   evidence. An assessor can override any rating, edit the channel cross
+   section, and attach notes.
+4. **Report.** The report shows the function scores, the physical, chemical,
+   and biological sub-indices, the overall Ecosystem Condition Index, the
+   editable channel cross section, and the full metric table. Results can be
    exported as PDF, CSV, or GeoJSON.
 
 Because EASI is a screening tool, every rating can be overridden. An assessor who
@@ -300,17 +345,17 @@ on Non-Functioning condition. @fig-xs-mc shows the EASI cross section and
 
 # Validation
 
-::: {.callout-important}
-## These results predate the current method set
+::: {.callout-note}
+## Statistics current as of 2026-08-20
 
-The statistics in this section were computed with the metric methods EASI used before
-the 2026-07-18 revision. That revision replaced the flow-alteration calculation, the
-bank-height recurrence transform, the substrate and biological-integrity surrogates, and
-the thermal and nutrient methods, and it added connected NRSA evidence. The agreement
-reported below therefore describes the previous methods, not the ones documented in
-@sec-quantification. Refreshing it requires re-running the SFARI site corpus
-(`python scripts/build_doc_assets.py`, which needs network access to the federal
-services) and is outstanding.
+The statistics in this section were computed with the metric configuration
+adopted in the 2026-08 defensibility review, from a fresh run of all 17 sites
+with service data pulled on 2026-08-20. One caution from that work: paired
+same-day requests returned different catchment-scale StreamCat components at
+one site, which changed two fallback ratings there. Small differences in the
+agreement statistics are within the noise of the underlying services. To
+refresh these results, re-run the site corpus and the build
+(`python scripts/build_docs.py --all`, network, about ten minutes).
 :::
 
 Validation asks whether EASI estimates agree with independent observations of
@@ -382,6 +427,38 @@ diverge, the difference often points to a function that depends on field
 observation, which is exactly where the override workflow and the higher STAF
 tiers add value.
 
+# Limitations
+
+EASI is a desktop screen, and its limits follow from its data. They are stated
+here so results are read at the right strength. The override workflow and the
+Rapid and Detailed tiers are the designed responses to each of them.
+
+- **Most evidence is landscape data.** At the 17 verification sites, StreamCat
+  variables supplied 11 of 20 ratings on average, and removing them would move
+  7 of 17 sites across a condition class. EASI results carry the strengths and
+  the blind spots of national landscape summaries.
+- **Connected field evidence is rare.** The source hierarchy prefers a
+  connected NRSA observation, but qualifying evidence supplied only about three
+  ratings across all 17 verification sites. In practice most ratings come from
+  StreamCat, the elevation model, WQP, ATTAINS, NAS, and NID.
+- **One cross section drives four physical functions.** The bank-height and
+  entrenchment ratios come from a single representative DEM transect, usually
+  at 10 m resolution. Dropping those four ratings shifts the mean index by
+  about 0.04 and changes 3 of 17 site classes, so verifying or editing the
+  cross section is the highest-value check an assessor can make.
+- **Three-bin ratings compress the index.** Every metric scores 0.85, 0.545,
+  or 0.195, so extreme sites pull toward the middle. Across the verification
+  sites the EASI index spans about 0.40 to 0.77 while the paired field values
+  span 0.15 to 0.94. EASI ranks and screens rather than measures.
+- **Upstream services are not perfectly repeatable.** Paired same-day runs
+  returned different catchment-scale StreamCat components at one site. Ratings
+  built on fallback components can shift between runs without any change in
+  the stream.
+- **A Good band is not a no-effect finding.** Sensitive macroinvertebrate taxa
+  decline well below the 10 percent impervious boundary, and naturally
+  fine-bedded streams can rate Poor on substrate by nature. The per-metric
+  limitations in the catalog state these cases where they apply.
+
 # Summary
 
 EASI is the Screening tier of STAF. It estimates the condition of wadeable
@@ -390,10 +467,11 @@ results into physical, chemical, and biological outcomes, and reports an overall
 Ecosystem Condition Index. This document described how EASI is conceptualized,
 quantified, and applied, and it reported verification and validation against
 SFARI field results at sites that span the country. EASI ran end to end at every
-site and produced condition estimates that track the field assessments. Continued
-work will refine the metric thresholds and the function-to-outcome weighting,
-expand the validation dataset, and extend the web application as additional
-national datasets become available.
+site and produced condition estimates that track the field assessments. The
+2026-08 defensibility review anchored the metric thresholds to published
+sources where they exist and labeled the remaining screening judgments. Continued
+work will expand the validation dataset, examine regional thresholds, and extend
+the web application as additional national datasets become available.
 
 # References
 
@@ -430,10 +508,6 @@ Technical Note SR-52. Vicksburg, MS: U.S. Army Corps of Engineers.
 Harman, W., R. Starr, M. Carter, K. Tweedy, M. M. Clemmons, K. Suggs, and C.
 Miller. 2012. A Function-Based Framework for Stream Assessment and Restoration
 Projects. Washington, DC: U.S. Environmental Protection Agency.
-
-Harrelson, C. C., C. L. Rawlins, and J. P. Potyondy. 1994. Stream Channel
-Reference Sites: An Illustrated Guide to Field Technique. General Technical Report
-RM-245. Fort Collins, CO: U.S. Department of Agriculture, Forest Service.
 
 Palmer, M. A., and J. D. Allan. 2006. Restoring rivers. Issues in Science and
 Technology 22 (2): 40-48.

@@ -23,7 +23,7 @@ for Python** and deployable to **Posit Connect Cloud** straight from this repo.
 ## What it does
 
 A StreamStats-style, full-screen map with a left workflow pane and a four-step
-stepper: **Identify → Basin → Configure → Report**.
+stepper: **Identify → Basin → Assessment → Report**.
 
 1. **Identify** — Pan/zoom a USGS National Map basemap (Topo or Imagery) with an
    NHD hydrography overlay. At zoom ≥ 14, NHD stream vectors load for the view and
@@ -32,13 +32,17 @@ stepper: **Identify → Basin → Configure → Report**.
 2. **Basin** — Delineate the contributing **watershed** and an **upstream reach**
    (default ~1,000 ft, adjustable) with staged progress feedback. Shows COMID,
    HUC12, drainage area, watershed area, and reach length.
-3. **Configure** — Browse the 20 functions grouped by discipline; toggle any on or
-   off and pick the **data source** where alternatives exist. Each metric has an
-   ⓘ card with its definition, the calculation used, and the scoring criteria.
+3. **Assessment** — All 20 metrics compute automatically, then a worksheet walks
+   the functions by discipline. Each card shows the metric, its scoring method
+   (inputs, breakpoints, and the resulting rating), and the evidence source, with
+   inline overrides, notes, and the editable cross-section.
 4. **Report** — A popup with the **outcome rollup** (ECI + sub-indices + cards),
    a **basin-characteristics** section, an **editable cross-section**, and the
    **metric table** with inline overrides and per-metric notes. Export to
    **PDF / CSV / GeoJSON**.
+
+A **Batch** mode runs up to 10 sites from a pasted list and packages the reports
+as a ZIP (the engine itself accepts up to 150 sites for programmatic use).
 
 ## How it scores (STAF rollup)
 
@@ -50,15 +54,13 @@ function score (0–15), then combined with Clean-Water-Act outcome weights into
 
 The 20 metrics span five disciplines:
 
-| Discipline | Example metrics |
-|---|---|
 | Discipline | Automated method |
 |---|---|
-| **Hydrology** | Land-cover pressure (worse of impervious / agriculture) · Wetland extent · Road-density inflow proxy · Degree of regulation (storage ÷ runoff) |
-| **Hydraulics** | Low-flow condition (NRSA wetted channel → StreamCat HYD) · Floodplain engagement (BHR) · Floodplain access (ER) · Hyporheic-exchange potential |
-| **Geomorphology** | Channel-adjustment susceptibility (FCODE + BHR/ER) · Bank-instability susceptibility (BHR; observed bank evidence supersedes) · Sediment-supply potential · Substrate condition (NRSA embeddedness → StreamCat SED) |
-| **Physicochemistry** | Thermal-regulation vulnerability (woody riparian + impervious) · Organic-matter supply potential · Nutrient condition (WQP vs NARS regional benchmarks → StreamCat CHEM) · Regulatory impairment (ATTAINS → StreamCat CHEM) |
-| **Biology** | Habitat-support potential · Biological integrity (measured NRSA → prG_BMMI → ICI/IWI) · Invasive-species pressure · Nearby dam proximity |
+| **Hydrology** | Land-cover pressure (worse of impervious / agricultural cover) · Wetland extent · Road-density inflow proxy · Degree of regulation (storage ÷ runoff) |
+| **Hydraulics** | Low-flow condition (NRSA wetted channel → StreamCat HYD) · Floodplain engagement (BHR) · Floodplain access (ER) · Hyporheic-exchange potential (channel gradient) |
+| **Geomorphology** | Channel-adjustment susceptibility (FCODE + BHR/ER) · Bank-instability susceptibility (BHR, observed bank evidence supersedes) · Sediment-supply potential (worst of agriculture, soil K-factor, roads) · Substrate condition (NRSA embeddedness → StreamCat SED) |
+| **Physicochemistry** | Thermal-regulation vulnerability (worse of woody riparian and impervious) · Organic-matter supply potential · Nutrient condition (WQP vs NRSA regional benchmarks → StreamCat CHEM) · Regulatory impairment (ATTAINS → StreamCat CHEM) |
+| **Biology** | Habitat-support potential (woody riparian corridor) · Biological integrity (measured NRSA → prG_BMMI → ICI/IWI) · Invasive-species pressure · Nearby dam proximity |
 
 Every metric produces a value; field- or low-confidence metrics show a confidence
 badge and can be **overridden** in the report.
@@ -182,7 +184,8 @@ easi/
 data/
   screening-methods.json   the automated method catalog: inputs, operators, exact bands, source
                            hierarchy, basis, limitations, citations (single source of truth)
-  easi-metrics.json        20 STAF metric defs + field criteria (generated from the STAF source TSV)
+  easi-metrics.json        20 STAF metric defs (names, statements, prose criteria kept as a
+                           dormant fallback; generated from the STAF source TSV)
   nrsa-2018-19-evidence.json.gz  deterministic NRSA extract for connected field evidence
   nars-ecoregions-9.geojson.gz   EPA NARS nine regions (regional nutrient benchmarks)
   functions.json           function metadata · cwa-mapping.json  function → P/C/B weights

@@ -64,7 +64,7 @@ def barriers(ctx: AnalysisContext) -> MetricResult:
         confidence="M", source_tier="connected-nearby",
         evidence_family="nid_proximity")
     value_text = (f"no mapped NID dams within 1 mile" if count == 0
-                  else f"{count} mapped NID dam(s) within 1 mile — potential barrier")
+                  else f"{count} mapped NID dam(s) within 1 mile (potential barrier)")
     return MetricResult(
         BARRIERS_ID, value=count, value_text=value_text,
         rating=ev.rating, confidence="M", source="USACE NID",
@@ -143,12 +143,12 @@ def biological_integrity(ctx: AnalysisContext) -> MetricResult:
             components.append(
                 f"fish {fish} (MMI {float(nrsa['fishMmi']):.2f})"
                 if nrsa.get("fishMmi") is not None else f"fish {fish}")
-        note = f"Measured class from {nrsa.get('date')}; worse available community governs."
+        note = f"Measured class from {nrsa.get('date')}. The worse available community governs."
         if nrsa.get("warning"):
             note += f" {nrsa['warning']}"
         return MetricResult(
             BIOINTEGRITY_ID, value={"benthic": benthic, "fish": fish},
-            value_text="; ".join(components), rating=ev.rating,
+            value_text=", ".join(components), rating=ev.rating,
             confidence=confidence, source=source, note=note, scoring=ev.trace)
 
     streamcat = base.sc(ctx)
@@ -192,7 +192,7 @@ def biological_integrity(ctx: AnalysisContext) -> MetricResult:
     return MetricResult(
         BIOINTEGRITY_ID, value=float(ev.combined_value),
         value_text=(f"landscape integrity fallback {float(ev.combined_value):.3f} "
-                    f"(ICI {float(product_values.get('ICI')):.3f}; "
+                    f"(ICI {float(product_values.get('ICI')):.3f}, "
                     f"IWI {float(product_values.get('IWI')):.3f})"),
         rating=ev.rating, confidence="L",
         source="EPA StreamCat published ICI/IWI component products",

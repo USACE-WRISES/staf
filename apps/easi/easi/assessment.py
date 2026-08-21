@@ -200,10 +200,10 @@ def _xsection_caption(er=None, bhr=None, division=None, *, edited=False) -> str:
     # ER / BHR / widths now live in the summary table beside the plot, not here.
     if edited:
         return ("Edited cross-section. Floodprone width is measured at 2x max "
-                "bankfull depth (Rosgen); the bank-height ratio uses your low-bank height.")
-    reg = f" — Bieger bankfull ({division})" if division else ""
+                "bankfull depth (Rosgen). The bank-height ratio uses your low-bank height.")
+    reg = f" (Bieger bankfull, {division})" if division else ""
     return ("Representative 3DEP cross-section" + reg
-            + ". DEM screening estimate (10 m); edit the bankfull and low-bank "
+            + ". DEM screening estimate (10 m). Edit the bankfull and low-bank "
             "heights in the table.")
 
 
@@ -334,8 +334,8 @@ def rate_metrics_from_stages(block: dict, bankfull_stage: float,
     if er_ev.rating:
         out[hydraulics.ENTRENCHMENT_ID] = {
             "rating": er_ev.rating,
-            "valueText": f"entrenchment ratio {er} — flood-prone width / bankfull "
-                         f"width (edited cross section)",
+            "valueText": f"entrenchment ratio {er} (flood-prone width / bankfull "
+                         f"width, edited cross section)",
             "scoring": er_ev.trace}
     bhr = d.get("bank_height_ratio")
     bhr_ev = screening_methods.evaluate(
@@ -380,8 +380,8 @@ def rate_metrics_from_stages(block: dict, bankfull_stage: float,
             "valueText": (
                 f"canal/ditch classification (NHD FCODE {fcode})"
                 if channelized else
-                f"channel-adjustment susceptibility — BHR {bhr}; ER {er} "
-                "(edited cross section)"),
+                f"channel-adjustment susceptibility (BHR {bhr}, ER {er}, "
+                "edited cross section)"),
             "scoring": channel_ev.trace}
     return out
 
@@ -423,8 +423,8 @@ def apply_observed_evidence(report: dict, evidence: Optional[dict[str, dict]]) -
                 confidence="H", variant_key="observed-bank-condition",
                 source_tier="observed", evidence_family="bank_observation",
                 used_fallback=False, observed_overrides_proxy=True)
-            value_text = (f"observed bank condition — {float(erosion):.1f}% eroding; "
-                          f"{float(armoring):.1f}% armored")
+            value_text = (f"observed bank condition ({float(erosion):.1f}% eroding, "
+                          f"{float(armoring):.1f}% armored)")
             source = "user-observed bank erosion and armoring"
             note = "Both observed components supplied; the worse component governs."
             if item.get("annualRetreatContext") not in (None, ""):
@@ -447,7 +447,7 @@ def apply_observed_evidence(report: dict, evidence: Optional[dict[str, dict]]) -
                 used_fallback=False, observed_overrides_proxy=True)
             labels = {"Good": "stable or recovered", "Fair": "moderately adjusting",
                       "Poor": "severely or destructively adjusting"}
-            value_text = f"observed channel condition — {labels[stage_class]}"
+            value_text = f"observed channel condition: {labels[stage_class]}"
             source = "user-documented channel-stage assessment"
             note = f"Observed indicators: {indicators}"
         if ev is None or ev.rating not in VALID:
@@ -609,7 +609,7 @@ def _finalize(rows: list[dict], total_count: int, overrides_applied) -> dict:
         "evidenceProfile": evidence_profile,
         "completeWithProxies": complete_with_proxies,
         "statusMessage": (
-            "Complete screening coverage — includes proxy-derived ratings"
+            "Complete screening coverage (includes proxy-derived ratings)"
             if complete_with_proxies else
             ("Complete screening coverage" if overall_fraction == 1.0 else
              "Partial screening coverage")),

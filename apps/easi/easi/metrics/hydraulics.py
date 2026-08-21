@@ -38,7 +38,7 @@ def floodplain_engagement(ctx: AnalysisContext) -> MetricResult:
             FLOODPLAIN_ENGAGEMENT_ID,
             "bank-height ratio unavailable for the representative cross section",
             confidence, scoring=ev.trace)
-    warning = "; ".join(ev.trace.get("warnings") or [])
+    warning = " ".join(ev.trace.get("warnings") or [])
     return MetricResult(
         FLOODPLAIN_ENGAGEMENT_ID, value=round(float(bhr), 3),
         value_text=f"bank-height ratio {float(bhr):.2f} (low-bank height / max bankfull depth)",
@@ -68,10 +68,10 @@ def floodplain_access(ctx: AnalysisContext) -> MetricResult:
             ENTRENCHMENT_ID, "3DEP entrenchment ratio unavailable for reach",
             confidence, scoring=ev.trace)
     res = geom.get("dem_resolution_m") or 10
-    note = f"DEM {res} m; bankfull from national curve"
+    note = f"DEM {res} m, bankfull from national curve."
     if edge:
-        note += "; flood-prone width reached the buffer edge and ER may be underestimated"
-    note += "; naturally confined valleys require field interpretation"
+        note += " Flood-prone width reached the buffer edge and ER may be underestimated."
+    note += " Naturally confined valleys require field interpretation."
     return MetricResult(
         ENTRENCHMENT_ID, value=round(float(er), 3),
         value_text=(f"entrenchment ratio {float(er):.2f} "
@@ -109,13 +109,13 @@ def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
             evidence_family="nrsa_field", used_fallback=False)
         if connected:
             ev.trace["completeness"] = "partial"
-        note = (f"Survey date {nrsa.get('date')}; {regime}. "
+        note = (f"Survey date {nrsa.get('date')}, {regime}. "
                 "Interpret against the naturally expected flow regime.")
         if nrsa.get("warning"):
             note += f" {nrsa['warning']}"
         return MetricResult(
             LOW_FLOW_ID, value=float(wetted),
-            value_text=f"{float(wetted):.1f}% wetted channel — {regime}",
+            value_text=f"{float(wetted):.1f}% wetted channel ({regime})",
             rating=ev.rating, confidence=confidence, source=source,
             note=note, scoring=ev.trace)
 
@@ -136,16 +136,16 @@ def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
             LOW_FLOW_ID,
             "eligible NRSA wetted-channel evidence and both StreamCat HYD components are unavailable",
             "L", scoring=ev.trace,
-            value_text=f"low-flow evidence unavailable — {regime}")
+            value_text=f"low-flow evidence unavailable ({regime})")
     value = float(ev.combined_value)
     return MetricResult(
         LOW_FLOW_ID, value=value,
         value_text=(f"HYD integrity fallback {value:.2f} "
-                    f"(catchment {float(hyd_cat):.2f}; watershed {float(hyd_ws):.2f})"),
+                    f"(catchment {float(hyd_cat):.2f}, watershed {float(hyd_ws):.2f})"),
         rating=ev.rating, confidence="L",
         source="EPA StreamCat HYD catchment + watershed components",
-        note=("Landscape-integrity fallback, not observed wetted-channel condition; "
-              f"{regime}. The 0.40/0.70 classes are EASI integration tiers."),
+        note=("Landscape-integrity fallback, not observed wetted-channel condition "
+              f"({regime}). The 0.40/0.70 classes are EASI integration tiers."),
         scoring=ev.trace)
 
 

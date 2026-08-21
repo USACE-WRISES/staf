@@ -185,7 +185,7 @@ def _bieger_area_tip_html(current_name: str | None = None) -> str:
     e = html.escape
     parts = ['<div class="easi-tip-title">Bieger bankfull XS-area curves</div>',
              '<div class="easi-tip-sec"><span class="easi-tip-lbl">Regression</span>'
-             'A = a·DA<sup>b</sup> — area in m², drainage area in km² '
+             'A = a·DA<sup>b</sup>, area in m², drainage area in km² '
              '(Bieger et al. 2015, Table 3).</div>',
              '<div class="easi-tip-sec"><span class="easi-tip-lbl">Physiographic division</span>']
     lines = []
@@ -267,7 +267,7 @@ app_ui = ui.page_fillable(
         ui.output_ui("cursor_style"),
         class_="easi-shell",
     ),
-    title="EASI — Automated Stream Screening",
+    title="EASI · Automated Stream Screening",
     padding=0,
     fillable=True,
 )
@@ -329,17 +329,17 @@ def _summary_plots(sc):
                                 class_="easi-fn-block"))
     left = ui.div(
         ui.div("Function scores", class_="easi-plot-title"),
-        _plot_legend([(scoring.function_score_band_color(15), "Functioning 11–15"),
-                      (scoring.function_score_band_color(8), "At-Risk 6–10"),
-                      (scoring.function_score_band_color(0), "Non-Functioning 0–5")]),
+        _plot_legend([(scoring.function_score_band_color(15), "Functioning 11-15"),
+                      (scoring.function_score_band_color(8), "At-Risk 6-10"),
+                      (scoring.function_score_band_color(0), "Non-Functioning 0-5")]),
         *fn_blocks,
         class_="easi-plot-panel",
     )
     right = ui.div(
         ui.div("Condition indices", class_="easi-plot-title"),
-        _plot_legend([(scoring.index_band_color(1.0), "Functioning 0.70–1.00"),
-                      (scoring.index_band_color(0.5), "At-Risk 0.40–0.69"),
-                      (scoring.index_band_color(0.0), "Non-Functioning 0.00–0.39")]),
+        _plot_legend([(scoring.index_band_color(1.0), "Functioning 0.70-1.00"),
+                      (scoring.index_band_color(0.5), "At-Risk 0.40-0.69"),
+                      (scoring.index_band_color(0.0), "Non-Functioning 0.00-0.39")]),
         _bar("Ecosystem Condition Index", eci, scoring.index_band_color(eci)),
         _bar("Physical", sub["physical"], scoring.index_band_color(sub["physical"]),
              indent=True),
@@ -1068,7 +1068,7 @@ def server(input, output, session):
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit)
             else:
-                ui.notification_show("You didn't click on a stream line — zoom in and click "
+                ui.notification_show("You didn't click on a stream line. Zoom in and click "
                                      "a blue stream line.", type="warning", duration=5)
 
         # ---- typed lat/long -> recenter the map + snap (same path as a click) ----
@@ -1130,7 +1130,7 @@ def server(input, output, session):
             ui.notification_show(f"Centered on {hit[0]:.4f}, {hit[1]:.4f}. Click a blue stream.",
                                  duration=4)
         elif not hit:
-            ui.notification_show("Place not found — try a city, address, or stream name.",
+            ui.notification_show("Place not found. Try a city, address, or stream name.",
                                  type="warning", duration=4)
 
     @reactive.effect
@@ -1298,7 +1298,7 @@ def server(input, output, session):
             return
         ui.notification_remove("stage"); stage.set("")
         if status == "error":
-            ui.notification_show("Delineation failed — try another point or zoom in further.",
+            ui.notification_show("Delineation failed. Try another point or zoom in further.",
                                  type="error", duration=8)
             return  # keep the marker + stay on Identify so the user can retry
         try:
@@ -1359,7 +1359,7 @@ def server(input, output, session):
         n = len(selected_metric_ids())
         _assess_prog["done"], _assess_prog["total"], _assess_prog["waiting"] = 0, n, {}
         stage.set(f"Computing metrics… 0/{n}")
-        ui.notification_show(f"Computing metrics… 0/{n} — please wait", id="stage",
+        ui.notification_show(f"Computing metrics… 0/{n}, please wait", id="stage",
                              type="message", duration=None)
         assess_task(d["ctx_inputs"], selected_metric_ids(), {}, _assess_prog)
 
@@ -1372,10 +1372,10 @@ def server(input, output, session):
         reactive.invalidate_later(0.3)
         done, total = _assess_prog["done"], _assess_prog["total"]
         waiting = _assess_prog.get("waiting") or {}
-        detail = (" — waiting on " + ", ".join(sorted(waiting))) if waiting else ""
+        detail = (", waiting on " + ", ".join(sorted(waiting))) if waiting else ""
         label = f"Computing metrics… {done}/{total}{detail}"
         stage.set(label)
-        ui.notification_show(label + " — please wait", id="stage",
+        ui.notification_show(label + ", please wait", id="stage",
                              type="message", duration=None)
 
     @reactive.effect
@@ -1385,7 +1385,7 @@ def server(input, output, session):
             return
         ui.notification_remove("stage"); stage.set("")
         if status == "error":
-            ui.notification_show("Metric computation failed — please try again.",
+            ui.notification_show("Metric computation failed. Please try again.",
                                  type="error", duration=8)
             return
         try:
@@ -1481,12 +1481,12 @@ def server(input, output, session):
                 "**Delineate Basin and Reach**.\n"
                 "3. Review the basin, then click **Run screening**. EASI computes the "
                 "20 metrics and scores them with the STAF rollup.\n"
-                "4. Review each function in the **Assessment**. Adjust scores, data "
-                "sources, notes, or the cross-section as needed.\n"
+                "4. Review each function in the **Assessment**. Adjust ratings, "
+                "notes, or the cross-section as needed.\n"
                 "5. The **report** opens when screening finishes. Download it as PDF, "
                 "CSV, or GeoJSON.\n\n"
-                "**Batch** runs up to 10 sites at once and packages the reports as "
-                "a ZIP.\n\n"
+                f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "
+                "packages the reports as a ZIP.\n\n"
                 "Switch basemaps and toggle the stream overlay with the layers "
                 "control at the top right."),
             title="Help", easy_close=True))
@@ -1803,7 +1803,7 @@ def server(input, output, session):
                               placeholder="e.g. Atlanta, GA  ·  Utoy Creek"),
                 ui.input_action_button("find_address", "Find on map",
                                        class_="btn-outline-secondary btn-sm"),
-                ui.div("Type to search — suggestions from OpenStreetMap / Photon.",
+                ui.div("Type to search. Suggestions from OpenStreetMap / Photon.",
                        class_="easi-ac-credit"),
                 ui.hr(),
                 ui.input_numeric("lat", "Latitude", value=None, min=24.0, max=50.0, step=0.0001),
@@ -1843,7 +1843,7 @@ def server(input, output, session):
         active = current_step()
         head_label = dict(STEP_LABELS).get(active, "EASI")
         return ui.TagList(
-            ui.div(f"EASI — {head_label}", class_="easi-pane-head"),
+            ui.div(f"EASI · {head_label}", class_="easi-pane-head"),
             ui.div(_stepper(active), body, class_="easi-pane-body"),
         )
 
@@ -1851,7 +1851,7 @@ def server(input, output, session):
     def snap_status():
         pt = snapped_point()
         if not pt:
-            return ui.p("No point yet — enter coordinates, search an address, or zoom in "
+            return ui.p("No point yet. Enter coordinates, search an address, or zoom in "
                         "and click a blue stream line.", class_="easi-snap-note")
         return ui.p(f"✓ Snapped to stream ({pt[2]:.0f} ft away). "
                     f"Click “Delineate Basin and Reach”.",
@@ -1996,7 +1996,7 @@ def server(input, output, session):
             return None
         return ui.div(
             ui.div(
-                ui.div("EASI — Assessment", class_="easi-pane-head"),
+                ui.div("EASI · Assessment", class_="easi-pane-head"),
                 ui.div(_stepper(step), class_="sfari-nav-steps"),
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),

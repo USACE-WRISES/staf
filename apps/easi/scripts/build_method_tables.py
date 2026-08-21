@@ -32,19 +32,42 @@ def _escape(text: str) -> str:
     return str(text or "").replace("|", "\\|").replace("\n", " ").strip()
 
 
+def _regional_bands_text(method: dict) -> str:
+    """Per-region breakpoint listing for inputs banded by regional context.
+
+    ``criteria_for`` cannot render these without a runtime region, so the table
+    lists every region's Good/Fair and Fair/Poor values explicitly."""
+    parts = []
+    for inp in method.get("inputs", []):
+        regional = inp.get("regionalBands")
+        if not regional:
+            continue
+        pairs = " · ".join(f"{region} {gf}/{fp}"
+                                for region, (gf, fp) in regional.items())
+        units = f" ({_escape(inp['units'])})" if inp.get("units") else ""
+        parts.append(f"*{_escape(inp['label'])}*{units}, Good at or below / "
+                     f"Poor at or above by NRSA region: {pairs}")
+    return "<br>".join(parts)
+
+
 def _bands_text(method: dict) -> str:
     """Good/Fair/Poor breakpoints exactly as the evaluator bands them."""
     blocks = sm.criteria_for(method).get("automated") or []
     parts = []
     for block in blocks:
         bands = block.get("bands") or {}
-        rendered = "; ".join(f"{rating} {bands[rating]}"
-                             for rating in ("Good", "Fair", "Poor") if bands.get(rating))
+        rendered = " · ".join(f"{rating} {bands[rating]}"
+                                   for rating in ("Good", "Fair", "Poor")
+                                   if bands.get(rating))
         if not rendered:
             continue
-        parts.append(f"*{_escape(block['label'])}* — {_escape(rendered)}"
+        parts.append(f"*{_escape(block['label'])}*: {_escape(rendered)}"
                      if len(blocks) > 1 else _escape(rendered))
-    return "<br>".join(parts) or "Categorical; see the source hierarchy."
+    if not parts:
+        regional = _regional_bands_text(method)
+        if regional:
+            return regional
+    return "<br>".join(parts) or "Categorical. See the source hierarchy."
 
 
 def _inputs_text(method: dict) -> str:
@@ -55,14 +78,14 @@ def _inputs_text(method: dict) -> str:
         else:
             units = f" ({_escape(inp['units'])})" if inp.get("units") else ""
             items.append(f"{_escape(inp['label'])}{units}")
-    return "; ".join(items)
+    return " · ".join(items)
 
 
 def _hierarchy_text(method: dict) -> str:
     tiers = method.get("sourceHierarchy") or []
     if not tiers:
-        return "Single source; no fallback."
-    return "<br>".join(f"{i}. {_escape(t.get('label', t.get('methodKey', '')))} — "
+        return "Single source, no fallback."
+    return "<br>".join(f"{i}. {_escape(t.get('label', t.get('methodKey', '')))}: "
                        f"{_escape(t.get('description', ''))}"
                        for i, t in enumerate(tiers, start=1))
 
@@ -82,9 +105,9 @@ def _table(discipline: str) -> str:
             ("Inputs", _inputs_text(method)),
             ("Equation", _escape(sm.equation_for(method))),
             ("Scoring", _bands_text(method)),
-            ("Basis", f"{_escape(method.get('basisClass'))}; confidence "
+            ("Basis", f"{_escape(method.get('basisClass'))}, confidence "
                       f"{_escape(method.get('confidence'))}"
-                      + ("; provisional screening transitions"
+                      + (", provisional screening transitions"
                          if method.get("provisional") else "")),
             ("Source hierarchy", _hierarchy_text(method)),
             ("Known limitations",

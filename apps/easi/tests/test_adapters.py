@@ -642,7 +642,7 @@ def test_land_cover_metric_display_name_is_neutral():
     name = config.metrics_by_id()[hydrology.IMPERVIOUS_ID]["name"]
     assert name == "Watershed Land-Cover Pressure"
     assert screening_methods.method_for(hydrology.IMPERVIOUS_ID)["title"] == (
-        "Catchment hydrology — land-cover pressure")
+        "Catchment hydrology (land-cover pressure)")
 
 
 def test_rescore_keeps_agriculture_criteria_through_override():

@@ -11,7 +11,8 @@ dependencies, for example:
     .venv/bin/python scripts/build_docs.py                    (macOS / Linux)
 
 Options:
-    (no flag)      Rebuild figures + tables from the cached EASI runs, then render.
+    (no flag)      Regenerate the method tables from the catalog, rebuild figures +
+                   validation tables from the cached EASI runs, then render.
                    Use this for prose edits, figure restyles, and SFARI value edits
                    (SFARI Summary.xlsx is read fresh on every build). Fast, no network.
     --site <ID>    Re-run EASI for one site (e.g. MB, CC, MC) before rebuilding.
@@ -33,6 +34,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 DOC = os.path.join(ROOT, "docs", "EASI_Documentation")
 RUN_SITES = os.path.join(HERE, "run_sfari_sites.py")
+BUILD_TABLES = os.path.join(HERE, "build_method_tables.py")
 BUILD_ASSETS = os.path.join(HERE, "build_doc_assets.py")
 OUTPUT = os.path.join(ROOT, "www", "documentation.html")
 
@@ -62,7 +64,9 @@ def main():
         _py([RUN_SITES, "--only", args.site, "--force"],
             f"Re-running EASI at site {args.site} (network)")
 
-    # 2. Rebuild figures + validation tables (reads cached EASI + the xlsx).
+    # 2. Regenerate the metric-method tables from the scoring catalog, then the
+    #    figures + validation tables (reads cached EASI + the xlsx).
+    _py([BUILD_TABLES], "Regenerating method tables from the scoring catalog")
     _py([BUILD_ASSETS], "Rebuilding figures and validation tables")
 
     # 3. Render the document to www/documentation.html (via _quarto.yml).
