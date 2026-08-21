@@ -63,8 +63,15 @@ the top bar, outside the numbered stages.
 - **Cross-Sections** (top bar) — on-demand geomorphic cross-sections (NLDI snap + 3DEP terrain).
 
 A headless path runs the same pipeline under the governed methodology
-(`config/methodology/`): `scripts/run_regional_analysis.py` screens, builds,
-and stages a publish for one EPA Level III ecoregion with full provenance.
+(`config/methodology/`, version 0.6-provisional): `scripts/run_regional_analysis.py`
+screens, builds, and stages a publish for one EPA Level III ecoregion with full
+provenance. Recorded human inputs ride as flags: `--reviewer-decisions` (per-item
+adjudications, machine-checked against each record's computed evidence),
+`--finalize-metric` (the only way a flagged curve publishes), `--remove-metric`
+(takes a built, diagnosed curve out of scope for one region), and
+`--approve-portfolio` (SELECT-01). The direction registries under `config/` declare each
+metric's expectation and its seed geometry (physical domain, signed scale, low-tail
+treatment, caveats).
 
 The import wizard and cross-sections tab pull from public REST services (USGS
 NLDI/3DEP, EPA StreamCAT, USGS StreamStats, and Model My Watershed); each source

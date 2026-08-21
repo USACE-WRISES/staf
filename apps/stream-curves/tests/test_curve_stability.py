@@ -155,12 +155,19 @@ def test_signed_scale_metric_builds_a_real_seed_not_the_origin_fallback():
     import pandas as pd
     from streamcurves import curves as c
     lrbs_like = pd.DataFrame({"m": [-3.35, -1.2, -0.6, -0.23, -0.1, 0.1, 0.5, 1.35]})
+    # The registry declares the signed scale (v0.6, review STAT-9); the
+    # sample-minimum inference survives only for undeclared metrics.
     cfg = {"m": {"column_name": "m", "higher_is_better": True,
-                 "metric_family": "continuous"}}
+                 "metric_family": "continuous", "signed_scale": True}}
     res = c.build_reference_curve(lrbs_like, "m", cfg, build_plots=False)
     assert str(res["curve_row"].iloc[0]["curve_status"]) == "complete"
     xs = [p["metric_value"] for p in res["curve_points"].to_dict("records")]
     assert min(xs) < 0  # the seed genuinely spans the negative range
+    # Undeclared: the inference from the sample minimum still builds the seed.
+    cfg_undeclared = {"m": {"column_name": "m", "higher_is_better": True,
+                            "metric_family": "continuous"}}
+    res2 = c.build_reference_curve(lrbs_like, "m", cfg_undeclared, build_plots=False)
+    assert str(res2["curve_row"].iloc[0]["curve_status"]) == "complete"
 
 
 def test_nonnegative_scale_zero_q25_still_degenerates():

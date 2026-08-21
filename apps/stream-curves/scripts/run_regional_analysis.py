@@ -27,6 +27,7 @@ if str(_APP_ROOT) not in sys.path:
 
 import pandas as pd  # noqa: E402
 
+from streamcurves import curves  # noqa: E402
 from streamcurves import methodology  # noqa: E402
 from streamcurves import provenance as pv  # noqa: E402
 from streamcurves import regional_agent as ra  # noqa: E402
@@ -83,12 +84,28 @@ def variable_evaluation_matrix(result: dict) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def _reviewer_decision_label(entry: dict, review: dict) -> str:
+    """auto_finalized | reviewed_then_finalized | reviewer_finalized |
+    removed_from_scope | pending. A curve that auto-finalized but whose review
+    items carry recorded adjudications is reviewed_then_finalized, so the
+    registry no longer misstates the review path (2026-08-21, review STAT-14)."""
+    decision = entry.get("decision") or (
+        run_state.DECISION_AUTO if entry.get("status") == run_state.CURVE_STATUS_AUTO_OK
+        else run_state.DECISION_PENDING)
+    if decision == run_state.DECISION_AUTO and (review or {}).get("adjudicated"):
+        return "reviewed_then_finalized"
+    return decision
+
+
 def curve_registry(result: dict) -> pd.DataFrame:
     rows = []
     cr = result["curve_review"]
     diags = result.get("diagnostics") or {}
     confs = result.get("confidence") or {}
     scores = result.get("metric_scores") or {}
+    domain_checks = result.get("domain_checks") or {}
+    gradients = result.get("deferred_gradients") or {}
+    mandatory = result.get("mandatory_review") or {}
     for mk, row in result["curve_rows"].items():
         entry = cr.get(mk, {})
         d = diags.get(mk) or {}
@@ -96,6 +113,13 @@ def curve_registry(result: dict) -> pd.DataFrame:
         boot = d.get("bootstrap") or {}
         infl = d.get("influence") or {}
         conf = confs.get(mk) or {}
+        mc = result["metric_config"][mk]
+        bands = curves.deep_contract_bands(
+            row.get("curve_points"), curve_form=curves.curve_form_of(mc),
+            higher_is_better=mc.get("higher_is_better") is True,
+            domain=curves.metric_domain_of(mc))
+        review = mandatory.get(mk) or {}
+        components = conf.get("components") or {}
         rows.append({
             "metric": mk,
             "function": result["column_functions"].get(mk) or "(unmapped)",
@@ -111,18 +135,53 @@ def curve_registry(result: dict) -> pd.DataFrame:
             "not_functioning_max": row.get("not_functioning_max"),
             "reference_tier": result["reference_tier"],
             "sample_size_disposition": result["sample_sizes"].get(mk, {}).get("disposition"),
+            # DEEP-contract bands (0.39 / 0.69 breaks), one-sided for monotone
+            # curves. The six scalars above keep the R-parity seed-segment
+            # semantics; these say what a DEEP score actually means (ECO-8).
+            "band_semantics": bands.get("band_semantics"),
+            "functioning_text": bands.get("functioning_text"),
+            "deep_functioning_min": bands.get("deep_functioning_min"),
+            "deep_functioning_max": bands.get("deep_functioning_max"),
+            "deep_at_risk_min": bands.get("deep_at_risk_min"),
+            "deep_at_risk_max": bands.get("deep_at_risk_max"),
+            "deep_at_risk_high_min": bands.get("deep_at_risk_high_min"),
+            "deep_at_risk_high_max": bands.get("deep_at_risk_high_max"),
+            "deep_not_functioning_min": bands.get("deep_not_functioning_min"),
+            "deep_not_functioning_max": bands.get("deep_not_functioning_max"),
+            "deep_not_functioning_high_min": bands.get("deep_not_functioning_high_min"),
+            "deep_not_functioning_high_max": bands.get("deep_not_functioning_high_max"),
+            "domain_min": (domain_checks.get(mk) or {}).get("domain_min"),
+            "domain_max": (domain_checks.get(mk) or {}).get("domain_max"),
+            "domain_violations": (domain_checks.get(mk) or {}).get("violations"),
             "loo_mean_abs_delta": loo.get("held_out_mean_abs_delta"),
             "loo_max_abs_delta": loo.get("held_out_max_abs_delta"),
+            "loo_n_folds": loo.get("n_folds"),
+            "loo_structural_change": loo.get("structural_change"),
+            "loo_seed_max_shift_frac": loo.get("seed_max_shift_frac"),
             "bootstrap_structure_stability": boot.get("structure_stability"),
             "bootstrap_shape_stability": boot.get("shape_stability"),
+            "bootstrap_n_boot": boot.get("n_boot"),
+            "bootstrap_n_matched": boot.get("n_matched"),
             "influence_max_param_change": infl.get("max_param_change_frac"),
+            "influence_max_param_change_iqr": infl.get("max_param_change_iqr"),
             "influence_flagged": infl.get("flagged"),
+            "influence_driver": infl.get("driver"),
+            "influence_decision_flip": infl.get("decision_flip"),
+            "deferred_gradient": (gradients.get(mk) or {}).get("stratification"),
+            "deferred_gradient_improvement": (gradients.get(mk) or {}).get("cv_error_improvement"),
+            "confidence_subtotal": conf.get("subtotal"),
+            "confidence_deductions": "; ".join(
+                f"{k}={v:g}" for k, v in (conf.get("deductions_applied") or {}).items()),
             "confidence_total": conf.get("total"),
             "confidence_label": conf.get("label"),
             "confidence_caps": "; ".join(conf.get("caps_applied") or []),
+            **{f"conf_{name}": pts for name, pts in components.items()},
             "metric_score": (scores.get(mk) or {}).get("total"),
             "review_status": entry.get("status"),
-            "reviewer_decision": entry.get("decision"),
+            "reviewer_decision": _reviewer_decision_label(entry, review),
+            "review_triggers": "; ".join(review.get("triggers") or []),
+            "adjudication_ids": "; ".join(review.get("adjudicated") or []),
+            "review_open": "; ".join(review.get("open") or []),
         })
     return pd.DataFrame(rows)
 
@@ -154,7 +213,7 @@ def write_review_queue(result: dict, path: Path) -> None:
                          "(or confirm the metric is unsuitable for a monotone curve)?")
     else:
         lines.append("- None.")
-    lines += ["", "## Sample-size flags (DATA-04/05/06, calibrated v0.3)", "",
+    lines += ["", "## Sample-size flags (DATA-04/05/06, provisional floors)", "",
               f"Reference pool: {len(result['retained_site_ids'])} sites "
               f"({result['reference_pool_disposition']}). Auto floor n>=20; exploratory 10-20; "
               "insufficient <10. Flagged curves stay in the preliminary bundle but need review "
@@ -164,7 +223,7 @@ def write_review_queue(result: dict, path: Path) -> None:
             lines.append(f"- **{f['metric']}** n={f['n']} ({f['disposition']}). "
                          "Reviewer question: is the reference sample adequate for this curve?")
     else:
-        lines.append("- None. Every curve meets the calibrated auto floor (n>=20).")
+        lines.append("- None. Every curve meets the auto floor (n>=20).")
     lines += ["", "## Portfolio (SELECT-01)", ""]
     for p in result["portfolio"]:
         if p["select01_flag"]:
@@ -276,7 +335,7 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
         f"- Reference tier applied: **{result['reference_tier']}**"
         + ("  (REF-02 fallback triggered)" if result["ref02_triggered"] else ""),
         f"- Retained reference sites: {len(result['retained_site_ids'])} "
-        f"(**{result['reference_pool_disposition']}** under the calibrated DATA floors: "
+        f"(**{result['reference_pool_disposition']}** under the provisional DATA floors: "
         f"auto n>={methodology.threshold('data_rules.min_n_unstratified')}, "
         f"exploratory {methodology.threshold('data_rules.exploratory_n_unstratified')}-"
         f"{methodology.threshold('data_rules.min_n_unstratified')}, "
@@ -298,8 +357,13 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
         "",
         "## Curves", "",
         f"- Metrics with a curated direction and data: {len(result['metric_config'])}",
-        f"- Curves in scope (auto-finalized): {len(result['intended_metrics'])}",
-        f"- Flagged curves (need review): {len(result['flagged_metrics'])}",
+        f"- Curves in scope: {len(result['intended_metrics'])} "
+        f"({len(result['intended_metrics']) - len(result.get('finalized_metrics') or {})} "
+        f"auto-finalized, {len(result.get('finalized_metrics') or {})} by recorded reviewer "
+        "finalization)",
+        f"- Curves removed from scope by recorded reviewer decision: "
+        f"{len(result.get('removed_metrics') or {})}",
+        f"- Flagged curves still needing review: {len(result['flagged_metrics'])}",
         f"- Sample-size flags (exploratory/insufficient n): {len(result['sample_size_flags'])}",
         f"- Missingness above the DATA-03 review threshold (data_review): "
         f"{sum(1 for m in (result.get('missingness') or {}).values() if m.get('disposition') == 'review')}",
@@ -343,14 +407,16 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
             f"Moderate {labels.count('Moderate')}, Low {labels.count('Low')} "
             f"(seeded diagnostics, run seed {result.get('run_seed')}, "
             f"n_boot {result.get('diagnostics_n_boot')}).",
-            "- Caps applied where the rules require them (best-available reference, "
-            "sample below minimum, no out-of-sample evaluation).", "",
+            "- Deductions and caps applied where the rules require them (best-available "
+            "reference, sample below minimum, no stability evidence, an unadjudicated "
+            "mandatory-review trigger, a deferred stratification gradient). The score is a "
+            "reviewer-priority heuristic on development data, never a probability.", "",
         ]
     lines += ["## Honesty notes", "",
               "- Leave-one-site-out stability, bootstrap intervals, influence checks, "
-              "and the 0-100 confidence score are internal diagnostics on development "
-              "data. They are not independent field validation, and nothing here "
-              "claims validation.",
+              "and the 0-100 confidence heuristic are within-pool diagnostics on "
+              "development data. They are not out-of-sample evidence and not independent "
+              "field validation, and nothing here claims validation.",
               "- Compare against pilot_validation/NH58_benchmark.json: this run uses a REAL "
               "reference screen, unlike the represented pilot."]
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -514,7 +580,20 @@ def main(argv=None) -> int:
                     help="Recorded reviewer finalization for a flagged curve (the only "
                          "way a flagged curve publishes). Repeatable; the maintainer "
                          "name is stamped as the actor")
+    ap.add_argument("--remove-metric", action="append", default=[],
+                    metavar="METRIC=RATIONALE",
+                    help="Recorded reviewer decision that takes a built curve out of scope "
+                         "for this run only (the per-region door the national registries "
+                         "lack). The curve is still built and diagnosed so its evidence is "
+                         "on the record. Repeatable; the maintainer name is the actor")
     args = ap.parse_args(argv)
+
+    remove_metrics = {}
+    for spec in args.remove_metric:
+        mk, _, note = str(spec).partition("=")
+        if not mk or not note:
+            ap.error(f"--remove-metric needs METRIC=RATIONALE, got {spec!r}")
+        remove_metrics[mk.strip()] = note.strip()
 
     finalize_metrics = {}
     for spec in args.finalize_metric:
@@ -544,12 +623,17 @@ def main(argv=None) -> int:
         coverage_exceptions = json.loads(
             Path(args.coverage_exceptions).read_text(encoding="utf-8"))
         print(f"[agent] loaded {len(coverage_exceptions)} coverage exception(s)")
+    decisions = None
+    if args.reviewer_decisions:
+        decisions = json.loads(Path(args.reviewer_decisions).read_text(encoding="utf-8"))
     result = ra.run(args.l3, args.name, screen_preset=args.screen,
                     source_citation=args.source_citation, do_screen=not args.no_screen,
                     coverage_exceptions=coverage_exceptions, cache_dir=out_dir,
                     diagnostics_n_boot=args.n_boot,
                     finalize_metrics=finalize_metrics or None,
                     finalize_actor=args.maintainer,
+                    remove_metrics=remove_metrics or None,
+                    reviewer_decisions=decisions,
                     on_event=lambda ev: print(f"[screen] {ev}") if isinstance(ev, str) else None)
     print(f"[agent] retained {len(result['retained_site_ids'])} / {result['n_candidates']} "
           f"(tier {result['reference_tier']}, pool {result['reference_pool_disposition']}); "
@@ -580,8 +664,7 @@ def main(argv=None) -> int:
         result, argv=list(argv or sys.argv[1:]), started_at=started_at,
         finished_at=datetime.now(timezone.utc).isoformat())
     provenance_doc = pv.build_provenance(result, manifest, timestamp=started_at)
-    if args.reviewer_decisions:
-        decisions = json.loads(Path(args.reviewer_decisions).read_text(encoding="utf-8"))
+    if decisions is not None:
         provenance_doc = pv.apply_reviewer_decisions(
             provenance_doc, decisions, default_reviewer=args.maintainer,
             default_date=started_at)

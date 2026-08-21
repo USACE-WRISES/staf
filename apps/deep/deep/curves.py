@@ -124,18 +124,66 @@ def metric_index(measured: Optional[MeasuredValue], metric_spec: dict) -> Option
     return interp_curve(points, float(measured.value))
 
 
+THIN_SAMPLE_DISPOSITIONS = ("insufficient", "too_few")
+
+
+def sample_advisory(metric_spec: dict) -> Optional[str]:
+    """Advisory for a curve built from a reference sample below the builder's
+    exploratory floor (the bundle's ``sampleDisposition`` and ``referenceN``,
+    stamped by StreamCurves). The point value of such a curve moves by up to a
+    band width when one reference site is dropped, so the honest reading is the
+    band, not the number. ``None`` when the bundle carries no such stamp.
+    """
+    disp = str((metric_spec or {}).get("sampleDisposition") or "").strip().lower()
+    if disp not in THIN_SAMPLE_DISPOSITIONS:
+        return None
+    n = (metric_spec or {}).get("referenceN")
+    n_txt = f"{int(n)} reference sites" if isinstance(n, (int, float)) else "few reference sites"
+    return (f"built from {n_txt}, below the exploratory floor: read the condition "
+            "band, not the point value")
+
+
+def reference_range_advisory(metric_spec: dict, x: float) -> Optional[str]:
+    """Advisory when ``x`` falls outside the reference pool's observed span
+    (the bundle's ``referenceRange``, stamped by StreamCurves). Inside the
+    curve's domain but outside the pool, the score comes from the seed's
+    sub-reference convention rather than from reference data, which a scorer
+    should know. ``None`` when the bundle carries no range."""
+    rng = (metric_spec or {}).get("referenceRange")
+    if not isinstance(rng, (list, tuple)) or len(rng) != 2:
+        return None
+    try:
+        lo, hi = float(rng[0]), float(rng[1])
+    except (TypeError, ValueError):
+        return None
+    xf = float(x)
+    if xf < lo:
+        return (f"value {xf:g} is below the reference pool's range ({lo:g} to {hi:g}); "
+                "the score follows the seed's sub-reference convention, not reference data")
+    if xf > hi:
+        return (f"value {xf:g} is above the reference pool's range ({lo:g} to {hi:g}); "
+                "the score follows the seed's convention beyond the data")
+    return None
+
+
 def metric_warning(measured: Optional[MeasuredValue], metric_spec: dict) -> Optional[str]:
-    """Endpoint-clamp advisory for one metric's measured value, or ``None``.
+    """Scoring advisories for one metric's measured value, or ``None``.
 
     Mirrors :func:`metric_index`: ``None`` when the value is missing / Not
-    Applicable, otherwise flags when the value sits outside the active curve's
-    x-domain (where the interpolated index is clamped to an endpoint). The
-    measured value's ``stratum`` selects the curve layer, exactly as for scoring.
+    Applicable. Otherwise flags when the value sits outside the active curve's
+    x-domain (where the interpolated index is clamped to an endpoint) and, for a
+    curve the builder stamped as thin-sampled, says to read the band rather than
+    the point value. The measured value's ``stratum`` selects the curve layer,
+    exactly as for scoring. Purely additive: never changes the index.
     """
     if measured is None or not measured.is_scored:
         return None
     points = active_points(metric_spec, getattr(measured, "stratum", None))
-    return domain_warning(points, float(measured.value))
+    parts = [domain_warning(points, float(measured.value)),
+             reference_range_advisory(metric_spec, float(measured.value)),
+             sample_advisory(metric_spec)]
+    parts = [p for p in parts if p]
+    return "; ".join(parts) if parts else None
 
 
 def function_index(

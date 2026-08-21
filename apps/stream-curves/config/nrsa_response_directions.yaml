@@ -41,45 +41,78 @@
 # (e.g. log10) as documentation. No code applies it automatically; it exists so the
 # variable dictionary can carry the transform the methodology asks for (Unresolved
 # Input 4) once one is approved for a metric.
+#
+# domain_min / domain_max (optional) declare the metric's PHYSICAL domain (sinuosity
+# cannot be below 1.0, a percent cannot exceed 100). The seed builder clamps its
+# outer anchors into the domain, collapsing anchors that fall outside onto the domain
+# edge while keeping that tail's terminal score, so the worst physically possible
+# value scores the tail's floor instead of landing off-curve. Manual curve points
+# outside a declared domain are rejected. Added 2026-08-21 after the adversarial
+# review found published sinuosity and embeddedness anchors beyond their domains
+# (a straightened channel could not score Non-Functioning anywhere).
+#
+# signed_scale (optional, default false) declares that a metric's scale is signed
+# (log ratios such as relative bed stability or log substrate diameter). The rising
+# monotone seed keys on this declaration for its scale-free ladder instead of
+# inferring it from the sample minimum, so the seed form cannot flip when a pool
+# happens to contain no negative values.
+#
+# caveat (optional) is a short user-facing sentence the DEEP bundle carries beside the
+# curve (curveCaveats), for metrics whose natural-setting confound is known (review
+# ECO-4, 2026-08-21). It rides with the metric into the published annotations.
+#
+# Per-region exclusions are NOT a registry field: the registry is national. A metric
+# removed from scoring for one region goes through the agent's --remove-metric door
+# (a recorded reviewer decision on that run). Eastern Corn Belt Plains v3 removed
+# chem_PH that way on 2026-08-21 (owner decision at the adversarial review gate): the
+# two-sided core at n = 16 was 0.196 pH units, narrower than diel swings or meter
+# precision, so neutral water scored 0. A measurement-precision floor for two-sided
+# curves is the proposed rule (rule_catalog.json meta.future_rules).
+#
+# low_tail: flat (optional, optimum curves only) holds the below-core limb at the
+# 0.70 Functioning edge instead of penalizing toward 0. Declared for mean bank
+# angle: gently sloped banks are a common deliberate restoration outcome and occur
+# naturally on unconfined valley bottoms, so a low angle is not symmetric evidence
+# of degradation the way a steep (incising) bank is.
 
 metrics:
   # --- Biology (from the NH-58 pilot, high confidence) ---
-  bent_EPT_NTAX:   {higher_is_better: true,  metric_family: count,      source: pilot,  confidence: high,     note: "EPT (mayfly/stonefly/caddisfly) taxa richness; more sensitive taxa indicate better condition."}
-  bent_HPRIME:     {higher_is_better: true,  metric_family: continuous, source: pilot,  confidence: high,     note: "Benthic Shannon diversity; higher diversity indicates better condition."}
-  bent_TOTLNTAX:   {higher_is_better: true,  metric_family: count,      source: pilot,  confidence: high,     note: "Total benthic taxa richness; higher is better."}
-  bent_TOLRPIND:   {higher_is_better: false, metric_family: proportion, source: pilot,  confidence: high,     note: "Percent tolerant individuals; a higher share of pollution-tolerant taxa indicates worse condition."}
-  fish_NAT_TOTLNTAX: {higher_is_better: true, metric_family: count,     source: expert, confidence: high,     note: "Native fish taxa richness; higher is better."}
+  bent_EPT_NTAX:   {higher_is_better: true,  metric_family: count, domain_min: 0,      source: pilot,  confidence: high,     note: "EPT (mayfly/stonefly/caddisfly) taxa richness; more sensitive taxa indicate better condition."}
+  bent_HPRIME:     {higher_is_better: true,  metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Benthic Shannon diversity; higher diversity indicates better condition."}
+  bent_TOTLNTAX:   {higher_is_better: true,  metric_family: count, domain_min: 0,      source: pilot,  confidence: high,     note: "Total benthic taxa richness; higher is better."}
+  bent_TOLRPIND:   {higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: pilot,  confidence: high,     note: "Percent tolerant individuals; a higher share of pollution-tolerant taxa indicates worse condition."}
+  fish_NAT_TOTLNTAX: {higher_is_better: true, metric_family: count, domain_min: 0,     source: expert, confidence: high,     note: "Native fish taxa richness; higher is better."}
 
   # --- Physicochemistry ---
-  chem_PTL:        {higher_is_better: false, metric_family: continuous, source: pilot,  confidence: high,     note: "Total phosphorus; higher indicates nutrient enrichment (worse)."}
-  chem_NTL_DISS:   {higher_is_better: false, metric_family: continuous, source: pilot,  confidence: high,     note: "Dissolved nitrogen; higher indicates nutrient enrichment (worse)."}
-  chem_TURB:       {higher_is_better: false, metric_family: continuous, source: pilot,  confidence: high,     note: "Turbidity; higher indicates more suspended sediment (worse)."}
-  chem_CHLA:       {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse)."}
-  chem_COND:       {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Specific conductance; higher indicates ionic disturbance (worse)."}
+  chem_PTL:        {higher_is_better: false, metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Total phosphorus; higher indicates nutrient enrichment (worse)."}
+  chem_NTL_DISS:   {higher_is_better: false, metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Dissolved nitrogen; higher indicates nutrient enrichment (worse)."}
+  chem_TURB:       {higher_is_better: false, metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Turbidity; higher indicates more suspended sediment (worse)."}
+  chem_CHLA:       {higher_is_better: false, metric_family: continuous, domain_min: 0, source: expert, confidence: high,     note: "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse)."}
+  chem_COND:       {higher_is_better: false, metric_family: continuous, caveat: "Specific conductance carries natural carbonate geology as well as disturbance: a pristine stream in a calcareous valley can score low on this curve.", domain_min: 0, source: expert, confidence: high,     note: "Specific conductance; higher indicates ionic disturbance (worse)."}
   chem_DOC:        {higher_is_better: null,  metric_family: continuous, source: expert, excluded_from_scoring: true, exclusion_reason: "natural context, no defensible direction", decided_by: "gtmenichino 2026-08-21", note: "Dissolved organic carbon stays unscored: low DOC is clear natural water and high DOC is often natural wetland influence, so scoring it in either direction (or two-sided) would penalize natural streams. Kept as regional context. Owner decision at the Northeastern Highlands review gate."}
-  chem_PH:         {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: high,     note: "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails."}
+  chem_PH:         {higher_is_better: null,  curve_form: optimum, metric_family: continuous, caveat: "pH carries natural geology (calcareous or naturally acidic waters) as well as disturbance, and a two-sided core narrower than measurement precision is noise rather than condition.", domain_min: 0, domain_max: 14, source: expert, confidence: high,     note: "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails."}
 
   # --- Physical habitat (phab) ---
-  phab_PCT_SAFN:   {higher_is_better: false, metric_family: proportion, source: pilot,  confidence: high,     note: "Percent sand and fines; higher indicates fine-sediment loading (worse)."}
-  phab_XEMBED:     {higher_is_better: false, metric_family: proportion, source: expert, confidence: high,     note: "Percent embeddedness; higher means interstitial spaces filled with fines (worse)."}
-  phab_XCMGW:      {higher_is_better: true,  metric_family: continuous, source: pilot,  confidence: high,     note: "Riparian canopy plus mid-layer plus ground cover; higher is better."}
-  phab_XFC_NAT:    {higher_is_better: true,  metric_family: continuous, source: pilot,  confidence: high,     note: "Natural fish cover; higher is better."}
-  phab_LWDeqVolM100: {higher_is_better: true, metric_family: continuous, source: pilot, confidence: high,     note: "Large woody debris volume per 100 m; higher is better."}
-  phab_LRBS_use:   {higher_is_better: true,  metric_family: continuous, source: pilot,  confidence: moderate, note: "Log relative bed stability; higher (nearer natural) is better. Was degenerate in the pilot (Q25 issue), so expect a review flag."}
-  phab_XCDENMID:   {higher_is_better: true,  metric_family: continuous, source: expert, confidence: moderate, note: "Mid-channel canopy density; higher shading generally better for thermal/light regime."}
-  phab_RP100_cm:   {higher_is_better: true,  metric_family: continuous, source: expert, confidence: moderate, note: "Residual pool depth per 100 m; deeper residual pools generally better habitat."}
-  phab_PCT_FAST:   {higher_is_better: true,  metric_family: proportion, source: expert, confidence: moderate, note: "Percent fast-water (riffle/run) habitat; more generally better for many biota. Ecoregion-dependent."}
-  phab_SINU:       {higher_is_better: true,  metric_family: continuous, source: expert, confidence: moderate, note: "Channel sinuosity; higher generally indicates a more natural planform."}
-  phab_LSUB_DMM:   {higher_is_better: true,  metric_family: continuous, source: expert, confidence: moderate, note: "Log mean substrate diameter; coarser substrate generally better, but valley-type dependent."}
+  phab_PCT_SAFN:   {higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: pilot,  confidence: high,     note: "Percent sand and fines; higher indicates fine-sediment loading (worse)."}
+  phab_XEMBED:     {higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Percent embeddedness; higher means interstitial spaces filled with fines (worse)."}
+  phab_XCMGW:      {higher_is_better: true,  metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Riparian canopy plus mid-layer plus ground cover; higher is better."}
+  phab_XFC_NAT:    {higher_is_better: true,  metric_family: continuous, domain_min: 0, source: pilot,  confidence: high,     note: "Natural fish cover; higher is better."}
+  phab_LWDeqVolM100: {higher_is_better: true, metric_family: continuous, domain_min: 0, source: pilot, confidence: high,     note: "Large woody debris volume per 100 m; higher is better."}
+  phab_LRBS_use:   {higher_is_better: null,  curve_form: optimum, signed_scale: true, metric_family: continuous, source: expert, confidence: moderate, note: "Log relative bed stability; departure from the reference core in EITHER direction departs from reference (negative excess fines, positive an armored, sediment-starved bed, the classic below-impoundment failure). The pilot's rising direction scored armored beds 1.0 and left Sediment continuity blind to its textbook failure mode. Two-sided form is an owner decision at the adversarial review gate, 2026-08-21."}
+  phab_XCDENMID:   {higher_is_better: true,  metric_family: continuous, domain_min: 0, domain_max: 100, source: expert, confidence: moderate, note: "Mid-channel canopy density; higher shading generally better for thermal/light regime."}
+  phab_RP100_cm:   {higher_is_better: true,  metric_family: continuous, domain_min: 0, source: expert, confidence: moderate, note: "Residual pool depth per 100 m; deeper residual pools generally better habitat."}
+  phab_PCT_FAST:   {higher_is_better: true,  metric_family: proportion, domain_min: 0, domain_max: 100, source: expert, confidence: moderate, note: "Percent fast-water (riffle/run) habitat; more generally better for many biota. Ecoregion-dependent."}
+  phab_SINU:       {higher_is_better: true,  metric_family: continuous, domain_min: 1.0, source: expert, confidence: moderate, note: "Channel sinuosity; higher generally indicates a more natural planform."}
+  phab_LSUB_DMM:   {higher_is_better: true,  metric_family: continuous, signed_scale: true, source: expert, confidence: moderate, note: "Log mean substrate diameter; coarser substrate generally better, but valley-type dependent."}
 
   # --- Two-sided (optimum) responses: degraded at BOTH extremes ---
   # These have no single "better" direction, which is why they were excluded from every
   # published assessment (taking Floodplain connectivity and Channel evolution with
   # them). They are not ambiguous, though: the reference distribution IS the optimum,
   # and departure in either direction is departure from reference condition.
-  phab_BFWD_RAT:   {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: high,     note: "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core."}
-  phab_XBKF_H:     {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: moderate, note: "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core."}
-  phab_XBKA:       {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: moderate, note: "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment."}
+  phab_BFWD_RAT:   {higher_is_better: null,  curve_form: optimum, metric_family: continuous, domain_min: 0, source: expert, confidence: high,     note: "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core."}
+  phab_XBKF_H:     {higher_is_better: null,  curve_form: optimum, metric_family: continuous, domain_min: 0, source: expert, confidence: moderate, note: "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core."}
+  phab_XBKA:       {higher_is_better: null,  curve_form: optimum, metric_family: continuous, domain_min: 0, domain_max: 180, low_tail: flat, source: expert, confidence: moderate, note: "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment. low_tail flat added at the adversarial review gate (owner decision, 2026-08-21): a regraded or naturally gentle bank holds at the Functioning edge instead of being penalized, because the flat tail is not symmetric evidence of degradation and the framework's stated use is restoration evaluation."}
 
   # (chem_DOC, declared above, is the one recorded exclusion. phab_XBKA moved to
   # the two-sided section when its direction was resolved on 2026-08-21.)

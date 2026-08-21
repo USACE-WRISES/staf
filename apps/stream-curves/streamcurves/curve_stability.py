@@ -1,4 +1,4 @@
-"""Out-of-sample and resampling diagnostics for IQR-seed reference curves.
+"""Within-pool resampling diagnostics for IQR-seed reference curves.
 
 CURVE-02 leave-one-site-out stability, CURVE-04 drop-one influence, CURVE-06
 bootstrap percentile intervals, RED-06 redundancy-category stability, and the
@@ -153,8 +153,9 @@ def influence_check(values: Any, entry: dict,
             "curve_rules.influence_param_change_frac"))
     v = _clean(values)
     n = len(v)
-    out = {"n": n, "max_param_change_frac": None, "driver": None,
-           "decision_flip": False, "flagged": False, "evaluable": False}
+    out = {"n": n, "max_param_change_frac": None, "max_param_change_iqr": None,
+           "driver": None, "decision_flip": False, "flagged": False,
+           "evaluable": False}
     if n < 5:
         return out
     arr = v.to_numpy()
@@ -163,6 +164,7 @@ def influence_check(values: Any, entry: dict,
     _, full_status = _build_points(v, entry)
     full_ok = full_status == "complete"
     worst = 0.0
+    worst_iqr = 0.0
     driver = None
     flip = False
     for i in range(n):
@@ -170,6 +172,13 @@ def influence_check(values: Any, entry: dict,
         r25, r75 = np.quantile(rest, [0.25, 0.75])
         drop = {"q25": float(r25), "q75": float(r75), "iqr": float(r75 - r25)}
         for key, b in base.items():
+            # Scale-free companion (2026-08-21, review STAT-15): the same shift
+            # in IQR units, defined whenever the pool has spread, so a quartile
+            # sitting at zero cannot silently blank the influence measure.
+            if base["iqr"] > 1e-12:
+                frac_iqr = abs(drop[key] - b) / base["iqr"]
+                if frac_iqr > worst_iqr:
+                    worst_iqr = frac_iqr
             denom = abs(b) if abs(b) > 1e-12 else None
             if denom is None:
                 continue
@@ -183,6 +192,7 @@ def influence_check(values: Any, entry: dict,
             driver = driver or str(v.index[i])
     out.update({
         "max_param_change_frac": float(worst),
+        "max_param_change_iqr": float(worst_iqr),
         "driver": driver,
         "decision_flip": flip,
         "flagged": bool(flip or worst > change_frac),
@@ -238,14 +248,22 @@ def bootstrap_curve(values: Any, entry: dict, *, n_boot: int = 200,
         if len(xs) >= 20:
             lo, hi = np.percentile(xs, [2.5, 97.5])
             intervals.append({"index_score": p["y"], "x": p["x"],
-                              "x_lo": float(lo), "x_hi": float(hi)})
+                              "x_lo": float(lo), "x_hi": float(hi),
+                              "n_matched": len(xs)})
         else:
             intervals.append({"index_score": p["y"], "x": p["x"],
-                              "x_lo": None, "x_hi": None})
+                              "x_lo": None, "x_hi": None,
+                              "n_matched": len(xs)})
+    # n_matched rides with every interval (2026-08-21, review STAT-4): the
+    # percentiles condition on structure-reproducing resamples, so a reader must
+    # be able to see how many resamples an interval actually summarizes. The
+    # conditioning itself is reported, not hidden: structure_stability IS the
+    # matched fraction.
     out.update({
         "structure_stability": structure_hits / float(n_boot) if n_boot else None,
         "shape_stability": shape_hits / float(n_boot) if n_boot else None,
         "point_intervals": intervals,
+        "n_matched": structure_hits,
         "evaluable": structure_hits > 0,
     })
     return out

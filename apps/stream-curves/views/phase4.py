@@ -18,12 +18,14 @@ from datetime import date
 import pandas as pd
 from shiny import module, reactive, render, req, ui
 
+from streamcurves import run_state
 from streamcurves.curves import (
     CURVE_FORM_MONOTONE,
     CURVE_FORM_OPTIMUM,
     build_reference_curve,
     build_reference_curve_from_points,
     curve_form_of,
+    metric_domain_of,
     hydrate_reference_curve_result,
     normalize_reference_curve_points,
     normalize_reference_curve_result,
@@ -546,6 +548,10 @@ def phase4_server(
         updated = dict(entry)
         updated["higher_is_better"] = higher_is_better
         updated["curve_form"] = curve_form
+        # The stored CURVE-05 expectation follows the declared form, or the
+        # rebuilt curve would be checked against the OLD expectation and trip
+        # a shape conflict it cannot clear (2026-08-21).
+        updated["expected_shape"] = run_state.expected_shape_from_entry(updated)
         mc[metric] = updated
         state.metric_config.set(mc)
 
@@ -849,6 +855,8 @@ def phase4_server(
             current_result=_current,
             higher_is_better=_higher_is_better,
             curve_form=_curve_form,
+            domain=lambda: metric_domain_of(
+                (state.metric_config() or {}).get(state.current_metric()) or {}),
             on_apply=_on_apply,
             on_reset=_on_reset,
         )

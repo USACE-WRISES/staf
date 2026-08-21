@@ -545,6 +545,20 @@ def build_deep_assessment_bundle(
             },
         }
 
+        # Per-metric annotations (2026-08-21, adversarial review): the reference
+        # sample behind the curve, its disposition, whether the metric is a
+        # response measurement or a landscape stressor surrogate, the caveats a
+        # scorer should read beside the number, and the confidence band. Additive
+        # fields: DEEP retains what it does not read. They ride inside
+        # metricsByFunction, so they are part of the content digest, which is
+        # correct because the same curve with a different caveat set is a
+        # different published statement.
+        annotations = (meta.get("metricAnnotations") or {}).get(mk) or {}
+        for key in ("referenceN", "sampleDisposition", "metricRole", "curveCaveats",
+                    "confidenceLabel", "confidenceTotal", "referenceRange"):
+            if key in annotations and annotations[key] is not None:
+                base_entry[key] = annotations[key]
+
         # multi-stratum metric -> emit curveLayers (DEEP's per-metric stratum chooser)
         # NOTE(parity): in R the data.frame input path wraps a list-column cell in a
         # length-1 list (as.list), so curveLayers only fire on the list-of-rows path;

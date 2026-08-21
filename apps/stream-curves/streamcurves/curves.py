@@ -74,6 +74,10 @@ __all__ = [
     "CURVE_FORM_OPTIMUM",
     "CURVE_FORMS",
     "curve_form_of",
+    "metric_domain_of",
+    "clamp_points_to_domain",
+    "count_domain_violations",
+    "deep_contract_bands",
     "build_optimum_curve_points",
     "empty_reference_curve_points",
     "normalize_reference_curve_points",
@@ -738,7 +742,8 @@ def reference_curve_metric_at_score(points: Any, target_score: float, prefer: st
 
 
 def validate_reference_curve_points(
-    points: Any, higher_is_better: Any, curve_form: str = CURVE_FORM_MONOTONE
+    points: Any, higher_is_better: Any, curve_form: str = CURVE_FORM_MONOTONE,
+    domain: tuple | None = None,
 ) -> dict:
     """Validate a (manual or auto) point set. Returns
     ``{"valid": bool, "errors": list[str], "points": DataFrame}``.
@@ -749,6 +754,12 @@ def validate_reference_curve_points(
     the one check R had no need for -- an ``optimum`` curve must actually be
     single-peaked -- so a declared two-sided curve cannot silently be a monotone one
     or a W. Defaults to monotone, which is the historical behavior exactly.
+
+    ``domain`` (optional ``(domain_min, domain_max)``, either side None) rejects
+    points outside the metric's declared physical domain. The auto seed clamps
+    itself before validation, so this check exists for MANUAL points: a hand-drawn
+    anchor at sinuosity 0.4 or embeddedness 150 is an error to surface, not a shape
+    to store (2026-08-21, adversarial review ECO-1).
     """
     points = normalize_reference_curve_points(points)
     errors: list[str] = []
@@ -759,6 +770,19 @@ def validate_reference_curve_points(
 
     if len(points) < 2:
         errors.append("At least 2 curve points are required.")
+
+    if domain is not None and len(points):
+        dmin, dmax = domain
+        with np.errstate(invalid="ignore"):
+            below = dmin is not None and bool((mv < float(dmin) - tol).any())
+            above = dmax is not None and bool((mv > float(dmax) + tol).any())
+        if below or above:
+            lo = "-inf" if dmin is None else reference_curve_format_number(dmin)
+            hi = "inf" if dmax is None else reference_curve_format_number(dmax)
+            errors.append(
+                f"Curve points must stay inside the metric's physical domain "
+                f"[{lo}, {hi}]."
+            )
 
     if np.isnan(mv).any() or np.isnan(isc).any():
         errors.append("Metric score and index score must be numeric for every point.")
@@ -1358,20 +1382,39 @@ def build_reference_curve_from_components(
     }
 
 
-def build_optimum_curve_points(stats: Mapping, *, non_negative: bool = True) -> pd.DataFrame:
+def build_optimum_curve_points(
+    stats: Mapping, *, non_negative: bool = True, low_tail: str = "penalized"
+) -> pd.DataFrame:
     """The two-sided ("optimum") IQR seed: 1.0 across the reference core, 0 in both tails.
 
     Eight points, symmetric about the interquartile range, mirroring the monotone seeds'
     0.30 / 0.70 / 1.00 ladder outward from each quartile. Yields exactly two crossings of
     0.30 and of 0.70, which is what ``validate_reference_curve_points`` allows.
+
+    ``low_tail="flat"`` (2026-08-21, owner decision at the adversarial review gate)
+    holds the below-core limb at the 0.70 Functioning edge instead of penalizing
+    toward 0: seven points, [0.70, 0.70, 1.0, 1.0, 0.70, 0.30, 0.00]. Declared for
+    mean bank angle, where a gently sloped bank is a common deliberate restoration
+    outcome and not symmetric evidence of degradation.
     """
     q25, q75, iqr = float(stats["q25"]), float(stats["q75"]), float(stats["iqr"])
     near, mid, far = _OPTIMUM_OFFSETS
+    highs = [q75 + near * iqr, q75 + mid * iqr, q75 + far * iqr]
+    if str(low_tail).strip().lower() == "flat":
+        lows = [q25 - far * iqr, q25 - near * iqr]
+        if non_negative:
+            lows = [max(0.0, v) for v in lows]
+        return pd.DataFrame(
+            {
+                "point_order": list(range(1, 8)),
+                "metric_value": lows + [q25, q75] + highs,
+                "index_score": [0.70, 0.70, 1.00, 1.00, 0.70, 0.30, 0.00],
+            }
+        )
     lows = [q25 - far * iqr, q25 - mid * iqr, q25 - near * iqr]
     if non_negative:
         lows = [max(0.0, v) for v in lows]
-    values = lows + [q25, q75,
-                     q75 + near * iqr, q75 + mid * iqr, q75 + far * iqr]
+    values = lows + [q25, q75] + highs
     return pd.DataFrame(
         {
             "point_order": list(range(1, 9)),
@@ -1379,6 +1422,168 @@ def build_optimum_curve_points(stats: Mapping, *, non_negative: bool = True) -> 
             "index_score": [0.00, 0.30, 0.70, 1.00, 1.00, 0.70, 0.30, 0.00],
         }
     )
+
+
+def metric_domain_of(metric_entry: Mapping | None) -> tuple:
+    """The declared physical domain ``(domain_min, domain_max)`` of a metric_config
+    entry, either side None when undeclared. Read from the curated direction
+    registries (sinuosity floor 1.0, percent ceilings 100, count floors 0)."""
+    mc = metric_entry or {}
+    out = []
+    for key in ("domain_min", "domain_max"):
+        v = mc.get(key)
+        try:
+            out.append(None if v is None else float(v))
+        except (TypeError, ValueError):
+            out.append(None)
+    return tuple(out)
+
+
+def clamp_points_to_domain(
+    points: pd.DataFrame, domain_min: float | None, domain_max: float | None
+) -> pd.DataFrame:
+    """Clamp seed anchors into the metric's declared physical domain.
+
+    Anchors outside the domain move to the domain edge; anchors that collapse onto
+    the same edge keep only the OUTERMOST one (lowest point_order at the low edge,
+    highest at the high edge), so the tail's terminal score survives at the edge.
+    A clamped sinuosity seed therefore scores 0 exactly at 1.0 (a straightened
+    channel) and a clamped embeddedness seed scores 0 exactly at 100 percent,
+    where the pre-clamp seeds put those scores at physically impossible values
+    (2026-08-21, adversarial review ECO-1).
+    """
+    if domain_min is None and domain_max is None:
+        return points
+    pts = normalize_reference_curve_points(points)
+    if not len(pts):
+        return pts
+    mv = pts["metric_value"].to_numpy(dtype=float)
+    if domain_min is not None:
+        mv = np.maximum(mv, float(domain_min))
+    if domain_max is not None:
+        mv = np.minimum(mv, float(domain_max))
+    pts = pts.assign(metric_value=mv)
+    keep = np.ones(len(pts), dtype=bool)
+    if domain_min is not None:
+        at_edge = np.isclose(mv, float(domain_min))
+        if at_edge.sum() > 1:
+            keep &= ~at_edge
+            keep[int(np.argmax(at_edge))] = True  # first (outermost) survives
+    if domain_max is not None:
+        at_edge = np.isclose(mv, float(domain_max))
+        if at_edge.sum() > 1:
+            keep &= ~at_edge
+            keep[len(at_edge) - 1 - int(np.argmax(at_edge[::-1]))] = True  # last
+    pts = pts.loc[keep].reset_index(drop=True)
+    pts["point_order"] = np.arange(1, len(pts) + 1, dtype=np.int64)
+    return pts
+
+
+def count_domain_violations(
+    points: Any, domain_min: float | None, domain_max: float | None, tol: float = 1e-9
+) -> int:
+    """Number of curve anchors outside the declared physical domain.
+
+    Zero for every clamped auto seed; the CURVE-07a geometric-validation record
+    carries it so a published bundle can be audited mechanically for the defect
+    the 2026-08-21 review found (sinuosity anchors below 1.0, embeddedness
+    anchors above 100 percent, ECO-1).
+    """
+    if domain_min is None and domain_max is None:
+        return 0
+    pts = normalize_reference_curve_points(points)
+    if not len(pts):
+        return 0
+    mv = pts["metric_value"].to_numpy(dtype=float)
+    mv = mv[~np.isnan(mv)]
+    n = 0
+    if domain_min is not None:
+        n += int((mv < float(domain_min) - tol).sum())
+    if domain_max is not None:
+        n += int((mv > float(domain_max) + tol).sum())
+    return n
+
+
+def deep_contract_bands(
+    points: Any,
+    *,
+    curve_form: str = CURVE_FORM_MONOTONE,
+    higher_is_better: bool = True,
+    domain: tuple | None = None,
+    index_bands: tuple[float, float] = (0.39, 0.69),
+    digits: int = 3,
+) -> dict:
+    """The condition bands a DEEP consumer actually assigns, read off the curve.
+
+    Distinct from the six R-parity registry scalars (which quote the seed segment
+    between the quartiles at the 0.30/0.70 drawing bands): these are computed at
+    the DEEP scoring-contract breaks and are ONE-SIDED for monotone curves, so a
+    rising metric's Functioning band is "x69 or more" and a falling metric's is
+    "x69 or less". Open ends are None; a declared domain edge closes the outer
+    Not-Functioning limb. Two-sided curves report the core between their two
+    0.69 crossings and the two outer limbs (2026-08-21, review ECO-8 and RPT-8).
+    """
+    lo_break, hi_break = float(index_bands[0]), float(index_bands[1])
+    dmin, dmax = (domain or (None, None))
+    dmin = None if dmin is None else float(dmin)
+    dmax = None if dmax is None else float(dmax)
+    out: dict = {
+        "band_semantics": None,
+        "deep_functioning_min": None, "deep_functioning_max": None,
+        "deep_at_risk_min": None, "deep_at_risk_max": None,
+        "deep_at_risk_high_min": None, "deep_at_risk_high_max": None,
+        "deep_not_functioning_min": None, "deep_not_functioning_max": None,
+        "deep_not_functioning_high_min": None, "deep_not_functioning_high_max": None,
+        "functioning_text": None,
+    }
+    pts = normalize_reference_curve_points(points)
+    if len(pts) < 2:
+        return out
+    x_hi = reference_curve_threshold_crossings(pts, hi_break)
+    x_lo = reference_curve_threshold_crossings(pts, lo_break)
+    fmt = lambda v: reference_curve_format_number(v, digits=digits)  # noqa: E731
+
+    if str(curve_form).strip().lower() == CURVE_FORM_OPTIMUM:
+        out["band_semantics"] = "two_sided"
+        if len(x_hi) == 2:
+            out["deep_functioning_min"], out["deep_functioning_max"] = x_hi[0], x_hi[1]
+            out["functioning_text"] = f"between {fmt(x_hi[0])} and {fmt(x_hi[1])}"
+        elif len(x_hi) == 1:
+            # A flat low tail holds at the 0.70 edge, so only the high-side
+            # crossing exists: Functioning runs from the domain edge (or the
+            # open low side) up to that crossing.
+            out["deep_functioning_min"], out["deep_functioning_max"] = dmin, x_hi[0]
+            out["functioning_text"] = f"{fmt(x_hi[0])} or less"
+        if len(x_lo) == 2 and len(x_hi) == 2:
+            out["deep_at_risk_min"], out["deep_at_risk_max"] = x_lo[0], x_hi[0]
+            out["deep_at_risk_high_min"], out["deep_at_risk_high_max"] = x_hi[1], x_lo[1]
+            out["deep_not_functioning_min"], out["deep_not_functioning_max"] = dmin, x_lo[0]
+            out["deep_not_functioning_high_min"], out["deep_not_functioning_high_max"] = x_lo[1], dmax
+        elif len(x_lo) == 1 and len(x_hi) == 1:
+            out["deep_at_risk_high_min"], out["deep_at_risk_high_max"] = x_hi[0], x_lo[0]
+            out["deep_not_functioning_high_min"], out["deep_not_functioning_high_max"] = x_lo[0], dmax
+        return out
+
+    if higher_is_better:
+        out["band_semantics"] = "one_sided_rising"
+        if x_hi:
+            out["deep_functioning_min"], out["deep_functioning_max"] = x_hi[-1], dmax
+            out["functioning_text"] = f"{fmt(x_hi[-1])} or more"
+        if x_lo and x_hi:
+            out["deep_at_risk_min"], out["deep_at_risk_max"] = x_lo[-1], x_hi[-1]
+        if x_lo:
+            out["deep_not_functioning_min"], out["deep_not_functioning_max"] = dmin, x_lo[-1]
+        return out
+
+    out["band_semantics"] = "one_sided_falling"
+    if x_hi:
+        out["deep_functioning_min"], out["deep_functioning_max"] = dmin, x_hi[0]
+        out["functioning_text"] = f"{fmt(x_hi[0])} or less"
+    if x_lo and x_hi:
+        out["deep_at_risk_min"], out["deep_at_risk_max"] = x_hi[0], x_lo[0]
+    if x_lo:
+        out["deep_not_functioning_min"], out["deep_not_functioning_max"] = x_lo[0], dmax
+    return out
 
 
 def build_reference_curve(
@@ -1401,8 +1606,18 @@ def build_reference_curve(
     col_name = mc.get("column_name")
     higher_is_better = mc.get("higher_is_better") is True
     curve_form = curve_form_of(mc)
+    domain = metric_domain_of(mc)
     ref_values = _column_values(data, col_name)
     stats = reference_curve_summary_stats(ref_values)
+
+    # The declared scale wins; the sample-minimum inference survives only for
+    # metrics with no declaration, so a signed-scale seed cannot flip form when a
+    # pool happens to contain no negative values (2026-08-21, review STAT-9).
+    declared_signed = mc.get("signed_scale")
+    signed_scale = (
+        bool(declared_signed) if declared_signed is not None
+        else bool(math.isfinite(stats["min_val"]) and stats["min_val"] < 0)
+    )
 
     if len(ref_values) < 5:
         logger.warning(f"{metric_key}: too few reference values ({len(ref_values)})")
@@ -1438,19 +1653,19 @@ def build_reference_curve(
     if (curve_form == CURVE_FORM_MONOTONE
             and higher_is_better
             and (not math.isfinite(stats["q25"]) or stats["q25"] <= 0)
-            and (not math.isfinite(stats["min_val"]) or stats["min_val"] >= 0)):
+            and not signed_scale):
         logger.warning(f"{metric_key}: Q25 <= 0, scoring curve is degenerate")
         return build_reference_curve_from_components(
             data=data,
             metric_key=metric_key,
             metric_config=metric_config,
-            curve_points=pd.DataFrame(
+            curve_points=clamp_points_to_domain(pd.DataFrame(
                 {
                     "point_order": [1, 2, 3],
                     "metric_value": [0.0, stats["q25"], stats["q75"]],
                     "index_score": [0.00, 0.70, 1.00],
                 }
-            ),
+            ), *domain),
             curve_source="auto",
             stratum_label=stratum_label,
             curve_status="degenerate_q25",
@@ -1474,11 +1689,12 @@ def build_reference_curve(
 
     if curve_form == CURVE_FORM_OPTIMUM:
         auto_points = build_optimum_curve_points(
-            stats, non_negative=bool(math.isfinite(stats["min_val"])
-                                     and stats["min_val"] >= 0)
+            stats,
+            non_negative=not signed_scale,
+            low_tail=str(mc.get("low_tail") or "penalized"),
         )
     elif higher_is_better:
-        if math.isfinite(stats["min_val"]) and stats["min_val"] < 0:
+        if signed_scale:
             # iqr-seed-2 (2026-08-21): a signed scale (log relative bed
             # stability) has no meaningful origin, so the rising seed uses the
             # scale-free IQR ladder, the mirrored counterpart of the
@@ -1521,8 +1737,9 @@ def build_reference_curve(
             }
         )
 
+    auto_points = clamp_points_to_domain(auto_points, *domain)
     validation = validate_reference_curve_points(
-        auto_points, higher_is_better, curve_form=curve_form)
+        auto_points, higher_is_better, curve_form=curve_form, domain=domain)
     status = "complete" if validation["valid"] else "degenerate_curve"
 
     return build_reference_curve_from_components(
@@ -1551,8 +1768,11 @@ def build_reference_curve_from_points(
     higher_is_better = mc.get("higher_is_better") is True
     # The declared form has to reach the validator or a hand-drawn shape is never
     # checked against it: the auto path already passes it, this one did not.
+    # The declared domain reaches it for the same reason: a manual anchor outside
+    # the metric's physical domain is an error to surface, never a shape to store.
     validation = validate_reference_curve_points(
-        curve_points, higher_is_better, curve_form=curve_form_of(mc)
+        curve_points, higher_is_better, curve_form=curve_form_of(mc),
+        domain=metric_domain_of(mc),
     )
     if not validation["valid"]:
         raise ValueError(" ".join(validation["errors"]))

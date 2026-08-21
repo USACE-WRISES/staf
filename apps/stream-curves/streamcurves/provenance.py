@@ -27,6 +27,8 @@ from __future__ import annotations
 import logging
 import os
 import platform
+import hashlib
+import re
 import subprocess
 from pathlib import Path
 from typing import Optional
@@ -56,6 +58,9 @@ RULE_RECORD_FIELDS = (
     # Null at emission; a human pass fills them. This is what makes the log an
     # audit trail rather than a report.
     "reviewer", "reviewer_action", "reviewer_rationale", "reviewed_at",
+    # 2026-08-21 (review VAL-6, VAL-12): the class a decision was made as, who
+    # drafted the rationale, and the computed fields the rationale asserts.
+    "reviewer_decision_class", "reviewer_rationale_origin", "reviewer_asserts",
 )
 
 def jsonable(value):
@@ -94,17 +99,36 @@ VERDICT_NOT_EVALUATED = "not_evaluated"
 # --------------------------------------------------------------------------- #
 # Environment (best effort: a tarball checkout records null, never raises)
 # --------------------------------------------------------------------------- #
-def _git_commit(repo_root: Path) -> tuple[str | None, bool | None]:
+def _git_state(repo_root: Path) -> dict:
+    """Commit, dirty flag, the dirty file list, and a digest of the working-tree
+    diff. A boolean alone could not tell output-only dirt from code drift, which
+    is what kept the July runs from being reproducible from their manifests
+    (2026-08-21, review VAL-7)."""
+    out = {"commit": None, "dirty": None, "dirty_files": None, "diff_digest": None}
     try:
-        commit = subprocess.run(
+        out["commit"] = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=repo_root, capture_output=True,
             text=True, timeout=10, check=True).stdout.strip()
-        dirty = bool(subprocess.run(
+        porcelain = subprocess.run(
             ["git", "status", "--porcelain"], cwd=repo_root, capture_output=True,
-            text=True, timeout=10, check=True).stdout.strip())
-        return commit, dirty
+            text=True, timeout=10, check=True).stdout
+        files = [line[3:].strip() for line in porcelain.splitlines() if line.strip()]
+        out["dirty"] = bool(files)
+        out["dirty_files"] = files
+        if files:
+            diff = subprocess.run(
+                ["git", "diff", "HEAD"], cwd=repo_root, capture_output=True,
+                text=True, timeout=30, check=True).stdout
+            out["diff_digest"] = "sha256:" + hashlib.sha256(
+                diff.encode("utf-8", errors="replace")).hexdigest()
     except Exception:  # noqa: BLE001 — provenance must never break a run
-        return None, None
+        pass
+    return out
+
+
+def _git_commit(repo_root: Path) -> tuple[str | None, bool | None]:
+    st = _git_state(repo_root)
+    return st["commit"], st["dirty"]
 
 
 def _package_versions() -> dict:
@@ -159,7 +183,8 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
     """The reproducibility record for one regional run."""
     app_root = app_root or Path(__file__).resolve().parent.parent
     repo_root = app_root.parent.parent
-    commit, dirty = _git_commit(repo_root)
+    git_state = _git_state(repo_root)
+    commit, dirty = git_state["commit"], git_state["dirty"]
     region = result.get("region") or {}
 
     configs = methodology.file_fingerprints([
@@ -196,6 +221,10 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "argv": list(argv or []),
             "gitCommit": commit,
             "gitDirty": dirty,
+            # The files behind the dirty flag and a digest of the diff, so a
+            # third party can tell output-only dirt from code drift (VAL-7).
+            "gitDirtyFiles": git_state["dirty_files"],
+            "gitDiffDigest": git_state["diff_digest"],
             "python": platform.python_version(),
             "packages": _package_versions(),
             # The AI operator behind the run, when one drove it. Set
@@ -225,12 +254,20 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             ),
             "candidates": _stratifier_candidates(result),
         },
+        "reviewerInputs": {
+            # The recorded human inputs the run was given, so the publish is
+            # reproducible from the manifest alone (2026-08-21).
+            "finalizedMetrics": result.get("finalized_metrics") or {},
+            "removedMetrics": result.get("removed_metrics") or {},
+            "deferredGradients": result.get("deferred_gradients") or {},
+        },
         "determinism": {
-            "randomSeeds": {},
+            "randomSeeds": {"runSeed": result.get("run_seed")},
             "seedPolicy": (
-                "No stochastic step: IQR quantiles, Spearman and Pearson correlation, "
-                "Kruskal-Wallis and Benjamini-Hochberg are all deterministic. Any future "
-                "bootstrap (RED-06, STRAT-06 and STRAT-07) must record its seed here."
+                "Every resampling diagnostic (CURVE-02/04/06, RED-06, STRAT-06) derives "
+                "its seed from the run seed, which is a function of the ecoregion, the "
+                "retained site ids, and the methodology version. Quantiles, "
+                "correlations, Kruskal-Wallis and Benjamini-Hochberg are deterministic."
             ),
             "orderPolicy": (
                 "Metrics in metric_config order; stratifier candidates and their levels "
@@ -282,14 +319,17 @@ def _record(run_id, region_code, rule_id, subject_kind, subject, *,
         "computed": computed or {},
         "verdict": verdict,
         "recommendation": recommendation,
-        # CONF-01/02 is not_yet_implemented; record the basis and the caps that
-        # are genuinely derivable rather than inventing a number.
+        # The per-record confidence slot keeps the categorical basis: the CONF-01
+        # heuristic is a per-curve score and rides in its own CONF-01/02 records,
+        # not on every rule record.
         "confidence": {"score": None, "label": None, "basis": "categorical_proxy"},
         "review_required": bool(review_required),
         "review_triggers": list(review_triggers or []),
         "timestamp": timestamp,
         "reviewer": None, "reviewer_action": None,
         "reviewer_rationale": None, "reviewed_at": None,
+        "reviewer_decision_class": None, "reviewer_rationale_origin": None,
+        "reviewer_asserts": None,
     }
 
 
@@ -308,7 +348,8 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
     add("REF-01", "run", "reference_screen",
         inputs={"preset": result.get("screening_method")},
         thresholds={"ref_fallback_floor": methodology.threshold(
-            "data_rules.min_n_unstratified")},
+            "data_rules.exploratory_n_unstratified"),
+                    "ref_fallback_floor_rule": "DATA-05"},
         computed={"reference_tier": tier,
                   "n_retained": (result.get("screening_counts") or {}).get("n_retained")},
         verdict=VERDICT_REVIEW if ref02 else VERDICT_PASS)
@@ -317,8 +358,9 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             computed={"reference_tier": tier,
                       "review_flags": result.get("review_flags") or []},
             verdict=VERDICT_REVIEW, review_required=True,
-            recommendation="Accept best-available reference for this region, or acquire "
-                           "more least-disturbed sites.",
+            recommendation="The least-disturbed pool is below the DATA-05 exploratory "
+                           "floor. Accept the best-available reference for this region "
+                           "under mandatory review, or acquire more least-disturbed sites.",
             review_triggers=["reference_tier_fallback"])
 
     # --- DATA-04/05/06: per-metric reference sample size ---
@@ -396,8 +438,14 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
     for metric, review in (result.get("curve_review") or {}).items():
         status = (review or {}).get("status")
         flagged = status not in ("auto_ok", None)
+        domain_check = (result.get("domain_checks") or {}).get(metric) or {}
         add("CURVE-07", "metric", metric,
-            computed={"curve_status": status, "reasons": (review or {}).get("reasons")},
+            computed={"curve_status": status, "reasons": (review or {}).get("reasons"),
+                      # CURVE-07a domain check (2026-08-21, review ECO-1)
+                      "domain_min": domain_check.get("domain_min"),
+                      "domain_max": domain_check.get("domain_max"),
+                      "domain_violations": domain_check.get("violations"),
+                      "reviewer_decision": (review or {}).get("decision")},
             verdict=VERDICT_REVIEW if flagged else VERDICT_PASS,
             review_required=flagged,
             review_triggers=["curve_needs_review"] if flagged else [])
@@ -477,6 +525,8 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             thresholds={"influence_param_change_frac": methodology.threshold(
                 "curve_rules.influence_param_change_frac")},
             computed={"max_param_change_frac": infl.get("max_param_change_frac"),
+                      # Scale-free companion in IQR units (2026-08-21, STAT-15).
+                      "max_param_change_iqr": infl.get("max_param_change_iqr"),
                       "decision_flip": infl.get("decision_flip"),
                       "driver": infl.get("driver")},
             verdict=VERDICT_REVIEW if infl.get("flagged") else VERDICT_PASS,
@@ -486,7 +536,12 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             computed={"evaluable": boot.get("evaluable"),
                       "structure_stability": boot.get("structure_stability"),
                       "shape_stability": boot.get("shape_stability"),
-                      "n_boot": boot.get("n_boot"), "seed": boot.get("seed")},
+                      "n_boot": boot.get("n_boot"), "seed": boot.get("seed"),
+                      # The resamples the intervals condition on (STAT-4).
+                      "n_matched": boot.get("n_matched"),
+                      # S-02: the percentile intervals live in provenance (and
+                      # the reports), never in the scoring bundle.
+                      "point_intervals": boot.get("point_intervals")},
             verdict=VERDICT_PASS if boot.get("evaluable") else VERDICT_REVIEW,
             review_required=not boot.get("evaluable"),
             review_triggers=[] if boot.get("evaluable") else ["no_interval"])
@@ -549,16 +604,21 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
         add("CONF-01", "metric", metric,
             computed={"components": score.get("components"),
                       "total": score.get("total"), "label": score.get("label"),
-                      "subtotal": score.get("subtotal")},
+                      "subtotal": score.get("subtotal"),
+                      "deductions_applied": score.get("deductions_applied") or {},
+                      "basis": score.get("basis")},
             verdict=VERDICT_PASS,
-            recommendation=f"Confidence {score.get('total')} ({score.get('label')}).")
-        if score.get("caps_applied"):
+            recommendation=(f"Confidence {score.get('total')} ({score.get('label')}): a "
+                            "reviewer-priority heuristic on development data, not a "
+                            "probability."))
+        if score.get("caps_applied") or score.get("deductions_applied"):
             add("CONF-02", "metric", metric,
-                computed={"caps_applied": score.get("caps_applied"),
+                computed={"caps_applied": score.get("caps_applied") or [],
+                          "deductions_applied": score.get("deductions_applied") or {},
                           "subtotal": score.get("subtotal"),
                           "total": score.get("total")},
-                verdict=VERDICT_REVIEW,
-                review_triggers=["confidence_capped"])
+                verdict=VERDICT_REVIEW if score.get("caps_applied") else VERDICT_PASS,
+                review_triggers=["confidence_capped"] if score.get("caps_applied") else [])
     for metric, score in (result.get("metric_scores") or {}).items():
         add("SELECT-02", "metric", metric,
             computed={"components": score.get("components"),
@@ -607,8 +667,9 @@ def rules_not_evaluated(records) -> list[dict]:
 _TRIGGER_TIERS = {
     "reference_tier_fallback": (
         1, True,
-        "Accept best-available reference for this ecoregion, or stop and acquire more "
-        "least-disturbed sites?"),
+        "The least-disturbed pool is below the exploratory floor. Accept the "
+        "best-available reference for this ecoregion under mandatory review, or stop "
+        "and acquire more least-disturbed sites?"),
     "curve_needs_review": (
         2, False, "Accept this curve as preliminary, adjust it, or drop the metric?"),
     "advisory_stratifier_not_applied": (
@@ -833,19 +894,71 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
     })
 
 
+#: Phrases a templated rationale uses to assert a computed fact, with the
+#: computed field and the value the phrase asserts. A rationale that contradicts
+#: its own record's evidence is what an audit trail exists to prevent (the
+#: published Eastern Corn Belt Plains v2 fast-water influence record read "no
+#: decision flip" over decision_flip: true, review VAL-6, 2026-08-21).
+_RATIONALE_LINT = (
+    (re.compile(r"\bno (?:decision[- ])?flip\b", re.IGNORECASE), "decision_flip", False),
+    (re.compile(r"\bdecision flip(?:ped)?\b(?![^.]*\bno\b)", re.IGNORECASE),
+     "decision_flip", True),
+    (re.compile(r"\bno structural change\b", re.IGNORECASE), "structural_change", False),
+)
+
+
+def _values_match(computed, expected) -> bool:
+    if isinstance(expected, bool) or isinstance(computed, bool):
+        return bool(computed) == bool(expected)
+    if isinstance(expected, (int, float)) and isinstance(computed, (int, float)):
+        return abs(float(computed) - float(expected)) <= 1e-6 * max(
+            1.0, abs(float(expected)))
+    if expected is None or computed is None:
+        return computed is expected
+    return str(computed) == str(expected)
+
+
+def decision_consistency_problems(record: dict, decision: dict) -> list[str]:
+    """Every way a decision's stated facts contradict its record's computed
+    evidence: explicit ``asserts`` first, then the templated phrases."""
+    problems: list[str] = []
+    computed = record.get("computed") or {}
+    for field, expected in (decision.get("asserts") or {}).items():
+        if field not in computed:
+            problems.append(f"asserts '{field}', which the record does not compute")
+        elif not _values_match(computed.get(field), expected):
+            problems.append(f"asserts {field}={expected!r} but the record computed "
+                            f"{computed.get(field)!r}")
+    text = str(decision.get("rationale") or "")
+    for pattern, field, asserted in _RATIONALE_LINT:
+        if field in computed and computed.get(field) is not None and pattern.search(text):
+            if bool(computed.get(field)) != asserted:
+                problems.append(f"the rationale says {pattern.pattern!r} ({field} "
+                                f"{asserted}) but the record computed "
+                                f"{field}={computed.get(field)!r}")
+    return problems
+
+
 def apply_reviewer_decisions(provenance_doc: dict, decisions: list[dict],
                              *, default_reviewer: str = "",
                              default_date: Optional[str] = None) -> dict:
     """Fold recorded human adjudications into a provenance document.
 
-    Each decision: ``{rule_id, subject, action, rationale, reviewer?, date?}``
-    with action in accept / accept_with_conditions / modify / reject /
-    request_additional_analysis. Matching records get their reviewer fields
-    filled, matching queue items are marked resolved, and the queue counts are
-    recomputed, so the published document carries the human record the
-    methodology's section 8 requires instead of empty reviewer slots. Returns
-    the same document object, modified in place, plus a summary of unmatched
-    decisions under ``reviewerDecisionsUnmatched`` (never silently dropped).
+    Each decision: ``{rule_id, subject, action, rationale, reviewer?, date?,
+    decision_class?, rationale_origin?, asserts?}`` with action in accept /
+    accept_with_conditions / modify / reject / request_additional_analysis.
+    Matching records get their reviewer fields filled, matching queue items are
+    marked resolved, and the queue counts are recomputed, so the published
+    document carries the human record the methodology's section 8 requires
+    instead of empty reviewer slots. Returns the same document object, modified
+    in place, plus a summary of unmatched decisions under
+    ``reviewerDecisionsUnmatched`` (never silently dropped).
+
+    Consistency (2026-08-21, review VAL-6): a decision may carry ``asserts``,
+    a mapping of computed fields to the values its rationale relies on, and
+    every rationale is linted for the templated phrases. Any contradiction
+    between a decision and its record's computed evidence raises, so no
+    published rationale can contradict the record it sits on.
     """
     allowed = {"accept", "accept_with_conditions", "modify", "reject",
                "request_additional_analysis"}
@@ -858,16 +971,26 @@ def apply_reviewer_decisions(provenance_doc: dict, decisions: list[dict],
         by_key[(str(d.get("rule_id")), str(d.get("subject")))] = d
 
     matched: set[tuple] = set()
+    inconsistent: list[str] = []
     for record in provenance_doc.get("records") or []:
         key = (str(record.get("rule_id")), str(record.get("subject")))
         d = by_key.get(key)
         if not d:
             continue
         matched.add(key)
+        for problem in decision_consistency_problems(record, d):
+            inconsistent.append(f"{key[0]}:{key[1]}: {problem}")
         record["reviewer"] = d.get("reviewer") or default_reviewer
         record["reviewer_action"] = d.get("action")
         record["reviewer_rationale"] = d.get("rationale")
         record["reviewed_at"] = d.get("date") or default_date
+        record["reviewer_decision_class"] = d.get("decision_class")
+        record["reviewer_rationale_origin"] = d.get("rationale_origin")
+        record["reviewer_asserts"] = d.get("asserts")
+    if inconsistent:
+        raise ValueError(
+            "reviewer decisions contradict their records' computed evidence:\n- "
+            + "\n- ".join(inconsistent))
 
     queue = provenance_doc.get("reviewQueue") or {}
     for item in queue.get("items") or []:

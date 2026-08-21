@@ -1121,6 +1121,21 @@ def build_metric_config_from_workbook(
         }
         if curve_form:
             config[metric_key]["curve_form"] = curve_form
+        # Curated seed-geometry and expectation fields (2026-08-21). The agent
+        # reads them from the national registries; the interactive path carries
+        # them through the workbook so the app and the agent build identical
+        # seeds and run the same CURVE-05 check. Absent columns stay absent (the
+        # engine treats a missing declaration as undeclared), never defaulted.
+        for field in _CURATED_EXTRA_TEXT_FIELDS:
+            if field in cols:
+                val = scalar_text(row.get(field), None)
+                if val not in (None, ""):
+                    config[metric_key][field] = val
+        for field in _CURATED_EXTRA_NUMBER_FIELDS:
+            if field in cols and not _blank_cell(row.get(field)):
+                config[metric_key][field] = float(scalar_number(row.get(field), float("nan")))
+        if "signed_scale" in cols and not _blank_cell(row.get("signed_scale")):
+            config[metric_key]["signed_scale"] = coerce_flag(row.get("signed_scale"), default=False)
     return config
 
 
@@ -1414,6 +1429,16 @@ def tables_from_configs(
             "include_in_summary": _flag_text(cfg.get("include_in_summary"), True),
             "missing_data_rule": _as_character(cfg.get("missing_data_rule")) or "",
             "notes": _as_character(cfg.get("notes")) or "",
+            # Curated geometry and expectation fields ride as extra columns (the
+            # reader restores them; a blank means undeclared).
+            **{field: _as_character(cfg.get(field)) or ""
+               for field in _CURATED_EXTRA_TEXT_FIELDS},
+            # Numbers travel as text so the sheet column stays a string column
+            # beside the blanks of undeclared metrics; the reader parses them.
+            **{field: ("" if cfg.get(field) is None else repr(float(cfg.get(field))))
+               for field in _CURATED_EXTRA_NUMBER_FIELDS},
+            "signed_scale": ("" if cfg.get("signed_scale") is None
+                             else _flag_text(cfg.get("signed_scale"), False)),
         })
         # Only keys the companion sheets actually define. build_input_bundle_from_tables
         # validates these as foreign keys, so emitting a row for a predictor or
@@ -1546,11 +1571,19 @@ def tables_from_configs(
     }
 
 
+#: Curated fields beyond the R workbook's fixed metrics sheet (2026-08-21):
+#: the CURVE-05 expectation pair and the seed-geometry declarations the
+#: national registries carry. They ride as extra workbook columns.
+_CURATED_EXTRA_TEXT_FIELDS = ("expected_shape", "transformation", "low_tail",
+                              "direction_source", "direction_confidence")
+_CURATED_EXTRA_NUMBER_FIELDS = ("domain_min", "domain_max")
+
 _CURATED_METRIC_FIELDS = (
     "display_name", "units", "metric_family", "higher_is_better", "curve_form",
     "monotonic_linear", "preferred_transform", "min_sample_size",
     "best_subsets_allowed", "count_model", "stratification_mode",
     "include_in_summary", "missing_data_rule", "notes",
+    *_CURATED_EXTRA_TEXT_FIELDS, *_CURATED_EXTRA_NUMBER_FIELDS, "signed_scale",
 )
 
 
@@ -1598,6 +1631,10 @@ def overlay_metric_settings(tables, metric_config) -> dict:
                 # A null direction is an assertion ("no monotone direction"), not a
                 # missing value; the blank is what the reader turns back into None.
                 value = ""
+            elif isinstance(value, (int, float)):
+                # Sheet columns are text; a declared domain edge travels as its
+                # repr and the reader parses it back (2026-08-21).
+                value = repr(float(value))
             metrics.at[idx, field] = value
     tables["metrics"] = metrics
     return tables

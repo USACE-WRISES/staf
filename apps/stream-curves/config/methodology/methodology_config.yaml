@@ -20,7 +20,7 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.5-provisional"
+  methodology_version: "0.6-provisional"
   threshold_status: "provisional"        # global default; rules may override
   date: "2026-08-21"
   calibration_note: >
@@ -45,6 +45,25 @@ meta:
     fallback fired exactly as designed on a zero-Functioning pool, every curve
     published double-capped at Low with the tier stamped, and the trigger and the 59
     cap are confirmed operating values. No value changed.
+    v0.6 (2026-08-21) is the adversarial-review release. Threshold statuses: REF-02 and
+    the DATA sample floors (DATA-04 to DATA-08) return from calibrated to provisional,
+    because what v0.3 and v0.5 showed is that the mechanisms fire as designed on the
+    pilots, which verifies the implementation and does not calibrate the values
+    (reviews STAT-7, ECO-16). Calibrated is reserved for external evidence. REF-02's
+    automatic trigger now fires only below the DATA-05 exploratory floor; a pool of
+    10 to 19 stays at the stricter tier as exploratory unless the owner opts into the
+    fallback (STAT-8). CONF: the component robustness_out_of_sample is renamed
+    resampling_stability and the cap no_out_of_sample_validation is renamed
+    no_stability_evidence, because the leave-one-site-out check is within-pool
+    evidence, never out-of-sample validation (STAT-3); a mandatory_review_open cap
+    (79) keeps any curve with an unadjudicated mandatory-review trigger below High
+    (STAT-5); a deferred_gradient deduction (10 points) records a stratifier
+    candidate that cleared STRAT-01 and STRAT-06 but could not be applied (ECO-5).
+    Seed geometry: declared physical domains clamp the IQR seed (sinuosity cannot
+    fall below 1.0, a percent cannot exceed 100), signed scales are declared in the
+    registries instead of inferred from the sample, and a two-sided curve may declare
+    a flat low tail (ECO-1, STAT-9, ECO-7). Value changes: none of the numeric
+    thresholds moved; the additions are the new cap and deduction.
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
@@ -59,8 +78,11 @@ meta:
 # Protocol, Phase 1).
 # --------------------------------------------------------------------------- #
 data_rules:
-  # threshold_status: calibrated (v0.3, on the two pilots' real reference sizes).
-  # See meta.calibration_note. Prior provisional values shown in parentheses.
+  # threshold_status: provisional (v0.6). The v0.3 move from 50/30/30 to 20/10/10
+  # was mechanism-verified on the two pilots' real reference sizes (the floors are
+  # reachable and the dispositions fire as designed), which is not a calibration of
+  # the values against external evidence. See meta.calibration_note. Prior
+  # provisional values shown in parentheses.
   max_missingness_auto: 0.20             # DATA-01: <=20% eligible for automation
   max_missingness_review: 0.40           # DATA-03: >40% do not auto-recommend
   min_n_unstratified: 20                 # DATA-04 (was 50): n>=20 eligible for automated curve eval
@@ -138,6 +160,12 @@ curve_rules:
   require_direction_check: true          # CURVE-05 (stored expected_shape + realized-shape conflict check)
   require_uncertainty_interval: true     # CURVE-06: bootstrap percentile intervals (curve_stability)
   require_reproducible_seed: true        # CURVE-08 (deterministic engine; stamp seed + versions)
+  # v0.6 seed geometry (curves.py): the registries may declare domain_min/domain_max
+  # (the seed clamps into the physical domain, CURVE-07a records domain_violations),
+  # signed_scale (the rising seed keys on the declaration, never the sample minimum),
+  # and low_tail: flat for a two-sided curve whose below-core limb holds at 0.70.
+  clamp_seed_to_declared_domain: true
+  signed_scale_from_registry: true
   # DEEP scoring contract bands (deep_export.py; distinct from the drawing bands):
   deep_index_bands: [0.39, 0.69]
   deep_function_score_bands: [5, 10]
@@ -166,37 +194,49 @@ reference_tiers:
   primary_tier: "least_disturbed"        # REF-01 default for both pilots
   fallback_tier: "best_available"        # REF-02 fallback target
   floor_tier: "best_available"           # REF-03: never below this for reference curves
-  fallback_trigger: "least_disturbed pool fails DATA-04 or DATA-06 for a metric or stratum"
+  fallback_trigger: "least_disturbed pool below the DATA-05 exploratory floor (n < 10) for the region; a pool of 10 to 19 stays at tier as exploratory unless the owner opts into the fallback"
   fallback_is_hard_stop: true            # mandatory human review whenever REF-02 is used
   fallback_confidence_cap: 59            # best-available reference cannot score High
-  # REF-02 calibrated v0.5 on the ECBP pilot: trigger and cap confirmed as designed.
+  # REF-02 provisional (v0.6). The ECBP pilot mechanism-verified the trigger and the
+  # cap (v0.5); the tie-break to the DATA-05 floor resolves the contradiction with
+  # the exploratory band (v0.6, review STAT-8). The 0.39 cutoff is not calibrated.
+  fallback_floor_rule: "DATA-05"
   stamp_reference_tier_per_curve: true   # provenance on every curve + published bundle
   never_relax_silently: true
   never_relax_to_hit_count_when_adequate: true
 
 # --------------------------------------------------------------------------- #
-# Confidence scoring (0-100). Implemented v0.4 (streamcurves/confidence.py):
-# component fractions from recorded evidence times these weights, caps applied
-# after. The mapping formulas are provisional operating formulas pending the
-# pilot benchmark calibration; the categorical curve statuses remain alongside.
+# Confidence scoring (0-100), a reviewer-priority heuristic. Implemented v0.4
+# (streamcurves/confidence.py): component fractions from recorded evidence times
+# these weights, deductions and caps applied after. The mapping formulas are
+# provisional operating formulas pending the pilot benchmark calibration; the
+# categorical curve statuses remain alongside. v0.6: every component reads
+# within-pool diagnostics on development data, so no name here may say
+# out-of-sample (review STAT-3).
 # --------------------------------------------------------------------------- #
 confidence_rules:
   components:                            # points must sum to 100
     data_adequacy_quality: 20
     statistical_strength: 25
-    robustness_out_of_sample: 20
+    resampling_stability: 20             # formerly robustness_out_of_sample (renamed v0.6)
     ecological_plausibility: 20
     interpretability_feasibility: 10
     rule_completeness_agreement: 5
   bands:
     high_minimum: 80                     # 80-100 High
     moderate_minimum: 60                 # 60-79 Moderate; <60 Low
+  deductions:                            # v0.6: applied before the caps
+    deferred_gradient: 10                # a stratifier candidate cleared STRAT-01 and
+                                         # STRAT-06 but the stratum floors (or a recorded
+                                         # STRAT-09 rejection) left the gradient unmodeled
   caps:
     no_ecological_rationale: 59
-    no_out_of_sample_validation: 59
+    no_stability_evidence: 59            # formerly no_out_of_sample_validation (renamed v0.6)
     sample_below_minimum: 59
     best_available_reference: 59         # ties REF-02 to the confidence cap
     unresolved_leakage_or_circularity: 39
+    mandatory_review_open: 79            # v0.6: an unadjudicated mandatory-review trigger
+                                         # cannot read as streamlined (High)
   high_confidence_audit_rate: 0.10       # production drift audit
   # Review Priority = Impact x Uncertainty x Novelty (net-new; scales in methodology.md)
 
@@ -280,14 +320,14 @@ lifecycle:
     requires_maintainer_audit_name: true
 
 # --------------------------------------------------------------------------- #
-# Pilots. NH-58 is published (preliminary, unvalidated). ECBP-55 is the fallback
+# Pilots. Both are published (preliminary, unvalidated). ECBP-55 is the fallback
 # stress test. Neither calibration is complete; all thresholds remain provisional.
 # --------------------------------------------------------------------------- #
 pilots:
   northeastern_highlands:
     l3_code: "58"
     name: "Northeastern Highlands"
-    status: "agent_preliminary_staging"    # regional_agent real-screen run, 2026-07-24
+    status: "published_preliminary"        # v4 (2026-08-21) supersedes v3; real screen cached 2026-07-24
     reference_tier: "least_disturbed"      # functional preset, ECI>0.69
     nrsa_candidates: 71
     real_screen: {method: direct_engine, n_functioning: 33, n_excluded: 38, n_failed: 0}
@@ -297,7 +337,7 @@ pilots:
   eastern_corn_belt_plains:
     l3_code: "55"
     name: "Eastern Corn Belt Plains"
-    status: "agent_preliminary_staging"   # regional_agent real-screen run, 2026-07-24
+    status: "published_preliminary"       # v3 (2026-08-21) supersedes v2; real screen cached 2026-07-24
     reference_tier: "best_available"      # REF-02 FIRED: 0 Functioning sites of 18
     real_screen: {method: direct_engine, n_functioning: 0, n_best_available: 16, n_excluded: 2, n_failed: 0}
     reference_n: 16                       # 10 <= n < 20 -> exploratory (DATA-05); per-metric 9-16

@@ -188,4 +188,4 @@ functions:
     function: Watershed connectivity
     metrics:
       - {code: damdens,           source: streamcat,    label: "Dam density (per sq km)",      default_selected: true,  role: both}
-      - {code: rdcrs,             source: streamcat,    label: "Road-stream crossings (per sq km)", default_selected: true, role: both}
+      - {code: rdcrs,             source: streamcat,    label: "Road-stream crossings (StreamCat RdCrsWs, API units)", default_selected: true, role: both}

@@ -57,12 +57,20 @@ CANONICAL_LIBRARY = (_APP_ROOT.parent / "library").resolve()
 # Sample-size rules (methodology DATA family). Resolved from
 # config/methodology/methodology_config.yaml rather than retyped here, so
 # changing a threshold is a config edit that the run record fingerprints.
-# threshold_status: calibrated (v0.3) on the two pilots' real reference sizes (NH-58=33,
-# ECBP-55=16); the prior 50/30 floors were unreachable at the L3 scale with NRSA 2018-19.
+# threshold_status: provisional (v0.6). The v0.3 move from the 50/30 floors, which were
+# unreachable at the L3 scale with NRSA 2018-19, was mechanism-verified on the two
+# pilots' real reference sizes (NH-58=33, ECBP-55=16); the values are not calibrated.
 MIN_N_AUTO = methodology.threshold("data_rules.min_n_unstratified")            # DATA-04
 MIN_N_EXPLORATORY = methodology.threshold("data_rules.exploratory_n_unstratified")  # DATA-05
 MIN_N_FLOOR = methodology.threshold("data_rules.insufficient_n_unstratified")  # DATA-06
-REF_FALLBACK_FLOOR = MIN_N_AUTO  # REF-02: fall back when the least-disturbed pool < auto floor
+# REF-02 tie-break (2026-08-21, review STAT-8, owner decision): the fallback
+# auto-fires only when the least-disturbed pool cannot support curves AT ALL,
+# i.e. below the DATA-05 exploratory floor. A pool of 10 to 19 stays at the
+# stricter tier as exploratory (DATA-05 exists for exactly that band); the owner
+# can still choose fallback for such a pool, but the machinery never does it for
+# them. Before this the trigger fired anywhere under the DATA-04 auto floor,
+# which contradicted DATA-05's whole reason to exist.
+REF_FALLBACK_FLOOR = MIN_N_EXPLORATORY
 
 
 def sample_size_disposition(n: Any) -> str:
@@ -154,16 +162,24 @@ def tier_evaluation_table(data: pd.DataFrame, metric_config: dict, tier: dict,
             n_functional = n_applied
         else:
             n_functional = None
-        trigger = (n_functional is not None and n_functional < MIN_N_AUTO)
+        trigger = (n_functional is not None and n_functional < MIN_N_EXPLORATORY)
+        exploratory_band = (n_functional is not None and not trigger
+                            and n_functional < MIN_N_AUTO)
+        if trigger:
+            note = ("Least-disturbed pool below the DATA-05 exploratory floor "
+                    "for this metric; fallback justified (REF-02 tie-break).")
+        elif exploratory_band:
+            note = ("Least-disturbed pool exploratory for this metric (DATA-05 "
+                    "band); stays at tier unless the owner opts into fallback.")
+        else:
+            note = "Least-disturbed pool adequate for this metric."
         rows.append({
             "metric": mk,
             "n_functional_pool": n_functional,
             "n_applied_pool": n_applied,
             "tier_applied": tier.get("reference_tier"),
             "ref02_metric_trigger": bool(trigger),
-            "note": ("Least-disturbed pool below the DATA-04 floor for this "
-                     "metric; fallback justified (REF-02)." if trigger else
-                     "Least-disturbed pool adequate for this metric."),
+            "note": note,
         })
     return rows
 
@@ -380,6 +396,18 @@ def build_metric_config(columns: list[str], directions: dict) -> tuple[dict, lis
             # curated declaration. Transformation is a curated record, default none.
             "expected_shape": run_state.expected_shape_from_entry(d),
             "transformation": d.get("transformation") or "none",
+            # Seed geometry declarations (2026-08-21): the physical domain the
+            # seed clamps into, the declared signed scale, and the optimum
+            # low-tail treatment all travel with the metric so the engine and
+            # every diagnostic rebuild see identical inputs.
+            "domain_min": d.get("domain_min"),
+            "domain_max": d.get("domain_max"),
+            "signed_scale": d.get("signed_scale"),
+            "low_tail": d.get("low_tail"),
+            # A site-scale measurement of the response (chemistry, habitat,
+            # biology), as opposed to a landscape stressor surrogate.
+            "metric_role": "response",
+            "caveat": d.get("caveat"),
             "notes": d.get("note", ""),
         }
     return metric_config, flagged_direction
@@ -418,6 +446,17 @@ def build_landscape_metric_config(
             "direction_confidence": d.get("confidence"),
             "expected_shape": run_state.expected_shape_from_entry(d),
             "transformation": d.get("transformation") or "none",
+            "domain_min": d.get("domain_min"),
+            "domain_max": d.get("domain_max"),
+            "signed_scale": d.get("signed_scale"),
+            "low_tail": d.get("low_tail"),
+            # Landscape metrics score a watershed's stressor footprint against
+            # the reference pool's footprint, and the reference pool was itself
+            # selected by a screening index that reads the same variables, so
+            # they are stressor surrogates, not measured function (2026-08-21,
+            # review ECO-10 and STAT-1).
+            "metric_role": "stressor_surrogate",
+            "caveat": d.get("caveat"),
             "notes": d.get("note", ""),
         }
     return metric_config, missing
@@ -609,7 +648,9 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
     }
 
     if primary_preset == "functional" and n_primary < REF_FALLBACK_FLOOR:
-        # REF-02: the Functioning-only pool cannot support curves. Fall back explicitly.
+        # REF-02: the Functioning-only pool cannot support curves even as
+        # exploratory. Fall back explicitly. (A pool of 10 to 19 does NOT land
+        # here: it stays least-disturbed at DATA-05 exploratory status.)
         fallback = screen_pool(candidate_rows, "at_risk_or_better", on_event=on_event,
                                cache_path=_cache("at_risk_or_better"))
         result.update({
@@ -618,11 +659,18 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
             "ref02_triggered": True,
             "screening": fallback,
             "review_flags": [
-                f"REF-02 fallback: only {n_primary} Functioning sites (< {REF_FALLBACK_FLOOR}); "
+                f"REF-02 fallback: only {n_primary} Functioning sites, below the "
+                f"exploratory floor of {REF_FALLBACK_FLOOR}; "
                 f"included Functioning-at-Risk to reach {len(fallback['retained_ids'])}. "
                 "Mandatory review; confidence capped; reference tier = best_available."
             ],
         })
+    elif primary_preset == "functional" and n_primary < MIN_N_AUTO:
+        result["review_flags"] = [
+            f"Least-disturbed pool is exploratory ({n_primary} sites, DATA-05 band "
+            f"{REF_FALLBACK_FLOOR} to {MIN_N_AUTO - 1}). Stays at tier; the owner may "
+            "choose the REF-02 fallback for this pool, the machinery never does."
+        ]
     return result
 
 
@@ -833,6 +881,158 @@ def uncovered_functions(portfolio: list[dict]) -> list[dict]:
 # --------------------------------------------------------------------------- #
 # Orchestrator
 # --------------------------------------------------------------------------- #
+# Rule ids whose per-metric review records are mandatory-review triggers for the
+# CONF-02 mandatory_review_open cap (2026-08-21). CONF-02's own "confidence_capped"
+# item is a consequence, not a cause, and stays out; pair and function records
+# are not per-curve.
+MANDATORY_REVIEW_RULES = ("CURVE-07", "CURVE-04", "CURVE-02", "CURVE-06",
+                          "DATA-03", "DATA-05", "DATA-06")
+ADJUDICATING_ACTIONS = ("accept", "accept_with_conditions", "modify")
+
+
+def t_in(keys: set, rule_id: str, subject: str) -> bool:
+    return (str(rule_id), str(subject)) in keys
+
+
+def adjudicated_keys(reviewer_decisions) -> set[tuple[str, str]]:
+    """(rule_id, subject) pairs carrying a recorded adjudication that closes the
+    item (reject and request_additional_analysis leave it open)."""
+    out: set[tuple[str, str]] = set()
+    for d in reviewer_decisions or []:
+        if str(d.get("action") or "").strip() in ADJUDICATING_ACTIONS:
+            out.add((str(d.get("rule_id")), str(d.get("subject"))))
+    return out
+
+
+def mandatory_review_triggers(mk: str, *, review_entry: dict, sample_disposition,
+                              missingness_disposition, diag: dict,
+                              ref02_triggered: bool) -> list[tuple[str, str]]:
+    """The (rule_id, subject) review items the run raises on one curve, derived
+    from the same evidence the provenance records are built from."""
+    triggers: list[tuple[str, str]] = []
+    status = (review_entry or {}).get("status")
+    if status not in (run_state.CURVE_STATUS_AUTO_OK, None):
+        triggers.append(("CURVE-07", mk))
+    if str(sample_disposition) == "exploratory":
+        triggers.append(("DATA-05", mk))
+    elif str(sample_disposition) in ("insufficient", "too_few"):
+        triggers.append(("DATA-06", mk))
+    if str(missingness_disposition) == "review":
+        triggers.append(("DATA-03", mk))
+    loo = (diag or {}).get("loo") or {}
+    infl = (diag or {}).get("influence") or {}
+    boot = (diag or {}).get("bootstrap") or {}
+    if diag:
+        if not loo.get("evaluable"):
+            triggers.append(("CURVE-02", mk))
+        if infl.get("flagged"):
+            triggers.append(("CURVE-04", mk))
+        if not boot.get("evaluable"):
+            triggers.append(("CURVE-06", mk))
+    if ref02_triggered:
+        triggers.append(("REF-02", "reference_screen"))
+    return triggers
+
+
+def deferred_gradient_candidates(strat_evidence) -> dict[str, dict]:
+    """Metrics whose best stratifier candidate clears STRAT-01 (cross-validated
+    improvement floor) and STRAT-06 (resample recurrence floor) while the run
+    builds unstratified curves. In advisory mode every such candidate is
+    deferred by construction (the stratum floors or a recorded STRAT-09 decision
+    keep the split unapplied), so the gradient is known and unmodeled: CONF-02
+    deducts for it and the bundle carries the caveat (2026-08-21, review ECO-5).
+    Mechanical by the owner's decision at the Phase 8 gate: no hand-picked list.
+    """
+    if strat_evidence is None or len(strat_evidence) == 0:
+        return {}
+    floor_imp = float(methodology.threshold("stratifier_rules.min_cv_error_improvement"))
+    floor_rec = float(methodology.threshold("stratifier_rules.min_resample_support"))
+    out: dict[str, dict] = {}
+    for row in strat_evidence.itertuples(index=False):
+        r = row._asdict()
+        if not r.get("evaluable"):
+            continue
+        imp = r.get("cv_rmse_improvement")
+        rec = r.get("strat06_recurrence")
+        if imp is None or rec is None:
+            continue
+        try:
+            imp_f, rec_f = float(imp), float(rec)
+        except (TypeError, ValueError):
+            continue
+        if not (imp_f >= floor_imp and rec_f >= floor_rec):
+            continue
+        mk = str(r.get("metric"))
+        cand = {"stratification": str(r.get("stratification")),
+                "cv_error_improvement": imp_f, "resample_support": rec_f,
+                "rule_ids": ["STRAT-01", "STRAT-06"],
+                "reason": "stratification not applied (advisory mode; stratum floors "
+                          "or a recorded STRAT-09 decision)"}
+        if mk not in out or imp_f > out[mk]["cv_error_improvement"]:
+            out[mk] = cand
+    return out
+
+
+def metric_annotations(*, intended, curve_rows, metric_config, sample_sizes,
+                       confidence_map, deferred_gradients) -> dict[str, dict]:
+    """The per-metric annotations the DEEP bundle carries beside each curve
+    (2026-08-21): reference n, sample disposition, metric role, caveats, and the
+    confidence band. The scorer sees what the registry and the report see."""
+    floor_auto = int(methodology.threshold("data_rules.min_n_unstratified"))
+    out: dict[str, dict] = {}
+    for mk in intended:
+        cfg = metric_config.get(mk) or {}
+        row = curve_rows.get(mk) or {}
+        n = row.get("n_reference")
+        disp = (sample_sizes.get(mk) or {}).get("disposition")
+        caveats: list[str] = []
+        if disp in ("insufficient", "too_few"):
+            caveats.append(
+                f"Built from {n} reference sites, below the exploratory floor: read the "
+                "condition band, not the point value.")
+        elif disp == "exploratory":
+            caveats.append(
+                f"Built from {n} reference sites (exploratory band, below the automated "
+                f"floor of {floor_auto}): the point value carries wide sampling error.")
+        g = deferred_gradients.get(mk)
+        if g:
+            caveats.append(
+                f"The reference expectation likely varies with {g['stratification']} "
+                f"(cross-validated improvement {g['cv_error_improvement']:.0%}, resample "
+                f"recurrence {g['resample_support']:.0%}); the curve is unstratified "
+                "pending a larger reference pool, so sites at either end of that "
+                "gradient may read as departures that are natural.")
+        if cfg.get("metric_role") == "stressor_surrogate":
+            caveats.append(
+                "Landscape stressor surrogate: the score compares the watershed's "
+                "footprint with the reference pool's footprint, and the pool was "
+                "screened on the same kind of variable, so read it as a footprint "
+                "comparison rather than measured function.")
+        if cfg.get("caveat"):
+            caveats.append(str(cfg["caveat"]))
+        conf = confidence_map.get(mk) or {}
+        lo, hi = row.get("min_val"), row.get("max_val")
+        ref_range = None
+        try:
+            if lo is not None and hi is not None and math.isfinite(float(lo)) \
+                    and math.isfinite(float(hi)):
+                ref_range = [float(lo), float(hi)]
+        except (TypeError, ValueError):
+            ref_range = None
+        out[mk] = {
+            "referenceN": None if n is None else int(n),
+            "sampleDisposition": disp,
+            "metricRole": cfg.get("metric_role") or "response",
+            "curveCaveats": caveats,
+            "confidenceLabel": conf.get("label"),
+            "confidenceTotal": conf.get("total"),
+            # The reference pool's observed span (STAT-10): scores outside it
+            # come from the seed's sub-reference convention, not from data.
+            "referenceRange": ref_range,
+        }
+    return out
+
+
 def run(l3_code: str, name: str, *,
         screen_preset: str = "functional",
         source_citation: str = "",
@@ -847,9 +1047,21 @@ def run(l3_code: str, name: str, *,
         diagnostics_n_boot: int = 200,
         diagnostics_enabled: bool = True,
         finalize_metrics: Optional[dict] = None,
-        finalize_actor: str = "") -> dict:
+        finalize_actor: str = "",
+        remove_metrics: Optional[dict] = None,
+        reviewer_decisions: Optional[list] = None) -> dict:
     """Run the full regional analysis for one L3 ecoregion. Returns a structured result
     (no files written here; the CLI writes outputs and publishes).
+
+    ``remove_metrics`` (metric -> rationale) records a named reviewer decision
+    that takes a built curve out of scope for this run only (the curve is still
+    built and diagnosed, so its evidence is on the record, and the registry row
+    reads removed_from_scope). It is the per-region door the national direction
+    registries do not have (2026-08-21, the Eastern Corn Belt Plains pH decision).
+    ``reviewer_decisions`` (the same list the CLI merges into provenance) lets
+    the confidence heuristic lift the mandatory_review_open cap for adjudicated
+    items and the registry distinguish reviewed_then_finalized from
+    auto_finalized.
 
     ``coverage_exceptions``: documented reasons a STAF function carries no metric
     (see ``deep_export.validate_coverage_exceptions``). Without one for each gap the
@@ -949,6 +1161,14 @@ def run(l3_code: str, name: str, *,
             raise ValueError("finalize_metrics requires a named finalize_actor")
         curve_review[mk] = run_state.apply_review_decision(
             entry, run_state.DECISION_FINALIZED, note=note, actor=finalize_actor)
+    for mk, note in (remove_metrics or {}).items():
+        entry = curve_review.get(mk)
+        if entry is None:
+            raise ValueError(f"--remove-metric names unknown metric {mk!r}")
+        if not finalize_actor:
+            raise ValueError("remove_metrics requires a named finalize_actor")
+        curve_review[mk] = run_state.apply_review_decision(
+            entry, run_state.DECISION_REMOVED, note=note, actor=finalize_actor)
     intended = run_state.intended_metrics_for_publish(curve_review)
     flagged = run_state.flagged_metrics(curve_review)
 
@@ -993,6 +1213,41 @@ def run(l3_code: str, name: str, *,
     # --- REF-02 evaluated per metric (the rule's own trigger granularity) ---
     tier_eval = tier_evaluation_table(data, metric_config, tier, screen_preset)
 
+    # --- Domain check (CURVE-07a, 2026-08-21): no anchor outside the declared
+    #     physical domain. Zero after clamping; recorded so a bundle can be audited.
+    domain_checks: dict[str, dict] = {}
+    for mk, row in curve_rows.items():
+        dom = curves.metric_domain_of(metric_config.get(mk))
+        domain_checks[mk] = {
+            "domain_min": dom[0], "domain_max": dom[1],
+            "violations": curves.count_domain_violations(
+                row.get("curve_points"), dom[0], dom[1]),
+        }
+
+    # --- Deferred gradients (ECO-5): known, unmodeled stratification evidence ---
+    deferred_gradients = deferred_gradient_candidates(strat_evidence_df)
+
+    # --- Mandatory-review triggers per curve and the recorded adjudications ---
+    adjudicated = adjudicated_keys(reviewer_decisions)
+    # A recorded reviewer finalization or removal closes the curve's own
+    # CURVE-07 item by definition (it IS the recorded decision).
+    for mk in list((finalize_metrics or {}).keys()) + list((remove_metrics or {}).keys()):
+        adjudicated.add(("CURVE-07", mk))
+    mandatory_review: dict[str, dict] = {}
+    for mk in metric_config:
+        triggers = mandatory_review_triggers(
+            mk, review_entry=curve_review.get(mk) or {},
+            sample_disposition=sample_sizes.get(mk, {}).get("disposition"),
+            missingness_disposition=missingness.get(mk, {}).get("disposition"),
+            diag=diagnostics.get(mk) or {},
+            ref02_triggered=bool(tier.get("ref02_triggered")))
+        open_items = [t for t in triggers if t not in adjudicated]
+        mandatory_review[mk] = {
+            "triggers": [f"{r}:{sub}" for r, sub in triggers],
+            "adjudicated": [f"{r}:{sub}" for r, sub in triggers if t_in(adjudicated, r, sub)],
+            "open": [f"{r}:{sub}" for r, sub in open_items],
+        }
+
     # --- CONF-01/02 numeric confidence and the SELECT-02 metric score ---
     flagged_pair_counts: dict[str, int] = {}
     if redundancy is not None and len(redundancy) and "metric_a" in redundancy.columns:
@@ -1020,6 +1275,9 @@ def run(l3_code: str, name: str, *,
             "units_present": bool(entry.get("units")),
             "reference_tier": tier["reference_tier"],
             "redundant_pairs": flagged_pair_counts.get(mk, 0),
+            # 2026-08-21 honesty inputs (CONF-02 v0.6).
+            "mandatory_review_open": bool((mandatory_review.get(mk) or {}).get("open")),
+            "deferred_gradient": deferred_gradients.get(mk),
         }
         confidence_map[mk] = conf.curve_confidence(ev)
         metric_scores[mk] = conf.metric_score(ev)
@@ -1065,6 +1323,10 @@ def run(l3_code: str, name: str, *,
         # REF stamp for the bundle and every metric entry (REF-02 provenance).
         "referenceTier": tier["reference_tier"],
     }
+    meta["metricAnnotations"] = metric_annotations(
+        intended=intended, curve_rows=curve_rows, metric_config=metric_config,
+        sample_sizes=sample_sizes, confidence_map=confidence_map,
+        deferred_gradients=deferred_gradients)
     intended_rows = {mk: curve_rows[mk] for mk in intended if mk in curve_rows}
     bundle = None
     bundle_error = None
@@ -1121,6 +1383,11 @@ def run(l3_code: str, name: str, *,
         "confidence": confidence_map,
         "metric_scores": metric_scores,
         "review_priorities": review_priorities,
+        "domain_checks": domain_checks,
+        "deferred_gradients": deferred_gradients,
+        "mandatory_review": mandatory_review,
+        "removed_metrics": dict(remove_metrics or {}),
+        "finalized_metrics": dict(finalize_metrics or {}),
         "redundancy": redundancy,
         "stratifiers": strat,
         "portfolio": portfolio,

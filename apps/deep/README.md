@@ -2,7 +2,7 @@
 
 The **detailed-tier** assessment tool of the Stream Tiered Assessment Framework
 (STAF), sibling to **EASI** (screening) and **SFARI** (rapid). DEEP runs a
-site's *measured* metric values through **calibrated reference curves** to
+site's *measured* metric values through **published reference curves** to
 produce function scores, Physical / Chemical / Biological outcome sub-indices,
 and an overall Ecosystem Condition Index (ECI).
 
@@ -66,6 +66,27 @@ assessment bundles.
 
 The STAF site's Tools page (`staf/docs/_data/apps.yml`) links out to DEEP and
 the StreamCurves builder, both hosted on Posit Connect Cloud.
+
+**Phase 5 — what stands behind a score (2026-08-21, after the DEEP project's
+adversarial review):**
+
+- Bundles now carry per-metric annotations stamped by StreamCurves:
+  `referenceN`, `sampleDisposition`, `metricRole` (`response` or
+  `stressor_surrogate`), `curveCaveats`, `confidenceLabel`, `confidenceTotal`,
+  and `referenceRange`. DEEP retains unknown fields, so older bundles still load.
+- The assessment card and detail pane show the **reference tier** the curves were
+  drawn at (least disturbed or best available); a best-available bar is never
+  mistaken for reference condition.
+- The metric information card lists the curve basis (tier, role, reference
+  sites, builder confidence band) and the builder's caveats ("Read with care").
+- Three scoring advisories compose beside a score (`deep/curves.py:metric_warning`):
+  the endpoint clamp, a value outside the reference pool's observed range, and a
+  thin-sample curve (`sampleDisposition` insufficient) that should be read as a
+  band, not a point value. None changes the index.
+- Curves may be two-sided (`curve.form: optimum`), including a flat-low-tail
+  variant; `interp_curve` is shape-agnostic and scores them unchanged.
+- Published regional assessments are preliminary until the scientific team
+  certifies them; nothing in DEEP implies certification.
 
 ## Run the app (dev)
 
