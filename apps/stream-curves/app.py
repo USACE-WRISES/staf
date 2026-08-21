@@ -36,6 +36,7 @@ except Exception:  # noqa: BLE001
 
 import logging
 
+from streamcurves import methodology
 from streamcurves.mapping import realign_discipline_function_mapping
 from streamcurves.paths import WWW_DIR
 from streamcurves.staf_library import default_discipline_function_mapping
@@ -59,6 +60,12 @@ from views.uihelpers import WORKFLOW_GOTO_INPUT
 from views.workspace_modal import register_workspace_modal
 
 logger = logging.getLogger("streamcurves")
+
+# The methodology config mirrors several engine constants (EASI presets, curve
+# gate geometry, DEEP scoring contract). Drift means the published methodology
+# misdescribes what the software does, so it is logged loudly at every startup.
+# Non-strict here: an analyst can still open the app to inspect the problem.
+methodology.verify_mirrors(strict=False)
 
 
 # --------------------------------------------------------------------------- #

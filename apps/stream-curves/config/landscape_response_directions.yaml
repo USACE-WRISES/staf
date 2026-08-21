@@ -22,6 +22,10 @@
 # Codes are StreamCat BASE names. The live data columns carry an area-of-interest suffix
 # (watershed -> "ws", e.g. pctimp2019 -> pctimp2019ws); metric_map._code_candidates and
 # the lookup in this file both tolerate that suffix.
+#
+# expected_shape and transformation: same optional fields as the NRSA file (see its
+# header). expected_shape derives from higher_is_better when absent and feeds the
+# CURVE-05 realized-shape check; transformation is curated documentation, default none.
 
 metrics:
   # --- Hydrology: Catchment hydrology ---

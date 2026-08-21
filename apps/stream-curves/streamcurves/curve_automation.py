@@ -38,6 +38,9 @@ def reconcile_review_map(old_review: Optional[dict], proposals: dict) -> dict:
             prop.get("curve_rows"),
             mapping_ok=prop.get("mapping_ok", True),
             strat_ok=prop.get("strat_ok", True),
+            strat_reason=prop.get("strat_reason"),
+            shape_ok=prop.get("shape_ok", True),
+            shape_reason=prop.get("shape_reason"),
             exc=prop.get("exc"),
         )
         fingerprint = rs.proposal_fingerprint(
@@ -124,10 +127,21 @@ def build_metric_proposal(state: AppState, metric: str, *, exc: Optional[BaseExc
         strat_used = ss.get_metric_curve_stratification(state, metric)
     except Exception:  # noqa: BLE001
         strat_used = None
+    # DATA-07/08: a stratified proposal must also clear the per-stratum sample
+    # floors from the methodology config, not only the phase-3 feasibility flag.
+    floors_ok, floor_reason = rs.strata_floor_check(curve_rows)
+    # CURVE-05: a curve (typically an edited one) must not contradict the
+    # metric's approved ecological expectation without review.
+    with reactive.isolate():
+        entry = (state.metric_config() or {}).get(metric)
+    shape_ok, shape_reason = rs.shape_conflict_check(curve_rows, entry)
     return {
         "curve_rows": curve_rows,
         "mapping_ok": _mapping_ok(state, metric),
-        "strat_ok": _strat_ok(state, metric),
+        "strat_ok": _strat_ok(state, metric) and floors_ok,
+        "strat_reason": floor_reason,
+        "shape_ok": shape_ok,
+        "shape_reason": shape_reason,
         "mapping": mapping,
         "strat": None if not strat_used or str(strat_used) in ("none", "None") else str(strat_used),
         "summary": _proposal_summary(metric, curve_rows, mapping, strat_used),

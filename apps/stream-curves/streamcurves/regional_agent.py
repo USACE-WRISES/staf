@@ -13,15 +13,19 @@ layer that the reactive ``views/`` package normally provides, plus the methodolo
 application (the reference-tier ladder REF-01/02/03, the Spearman-primary redundancy flag
 RED-01, the six-status review, and the SELECT-01 portfolio rule).
 
-What is deliberately NOT here (methodology ``not_yet_implemented``): cross-validation,
-bootstrap stability, and the numeric 0-100 confidence score. Their absence routes affected
-decisions to human review and is reported honestly, exactly as the methodology specifies.
+Since the Wave 3 implementation the formerly missing machinery runs here too:
+leave-one-site-out stability (CURVE-02), drop-one influence (CURVE-04), bootstrap
+intervals (CURVE-06), the stratifier CV and information-criterion evidence
+(STRAT-01..06), and the numeric 0-100 confidence with its caps (CONF-01/02).
+Every resample is seeded from the run's identity, so the determinism contract
+covers the diagnostics as well.
 """
 from __future__ import annotations
 
 import logging
 import math
 import re
+import zlib
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -30,6 +34,8 @@ import pandas as pd
 import yaml
 
 from . import curves, deep_export, library, metric_map, nrsa, run_state, session_io, staf_library
+from . import confidence as conf
+from . import curve_stability
 from . import easi_screening, overlap, sites, workbook
 # `screening` is already a local name inside run() (the EASI screen); alias the
 # stratification-screening module so the two never look like the same thing.
@@ -71,6 +77,161 @@ def sample_size_disposition(n: Any) -> str:
     if n >= 5:
         return "insufficient"      # DATA-06: 5 <= n < 10
     return "too_few"               # engine's insufficient_data (n < 5)
+
+
+def _metric_seed(base_seed: int, metric: str) -> int:
+    """A per-metric resampling seed that is stable across runs (hash() is salted
+    per process, so it must never be used here)."""
+    return (int(base_seed) ^ zlib.crc32(str(metric).encode("utf-8"))) & 0x7FFFFFFF
+
+
+def run_seed(l3_code: str, retained_ids, methodology_version: str | None) -> int:
+    """Deterministic base seed for a region's resampling diagnostics: identical
+    runs resample identically, so the determinism contract extends to every
+    bootstrap interval."""
+    payload = f"{l3_code}|{','.join(sorted(str(s) for s in retained_ids))}|{methodology_version}"
+    return zlib.crc32(payload.encode("utf-8")) & 0x7FFFFFFF
+
+
+def _metric_values(data: pd.DataFrame, entry: dict, metric: str) -> Optional[pd.Series]:
+    col = (entry or {}).get("column_name") or metric
+    if col not in data.columns:
+        return None
+    if "site_id" in data.columns:
+        return pd.Series(data[col].to_numpy(), index=data["site_id"].astype(str))
+    return data[col]
+
+
+def curve_diagnostics_for(data: pd.DataFrame, metric_config: dict, *,
+                          seed: int, n_boot: int = 200) -> dict:
+    """CURVE-02/04/06 diagnostics per metric through the real engine (see
+    curve_stability). The DATA-09 guard runs first: these are fold-using
+    procedures and must refuse repeated site observations."""
+    curve_stability.assert_one_row_per_site(data)
+    out: dict[str, dict] = {}
+    for mk, entry in metric_config.items():
+        if (entry or {}).get("metric_family") == "categorical":
+            continue
+        values = _metric_values(data, entry, mk)
+        if values is None:
+            continue
+        mseed = _metric_seed(seed, mk)
+        out[mk] = {
+            "loo": curve_stability.loo_curve_stability(values, entry),
+            "influence": curve_stability.influence_check(values, entry),
+            "bootstrap": curve_stability.bootstrap_curve(
+                values, entry, n_boot=n_boot, seed=mseed),
+        }
+    return out
+
+
+def tier_evaluation_table(data: pd.DataFrame, metric_config: dict, tier: dict,
+                          screen_preset: str) -> list[dict]:
+    """REF-02's trigger evaluated per metric, as the rule specifies.
+
+    For every metric: the least-disturbed pool's usable sample, the applied
+    pool's usable sample, and whether the per-metric trigger (functional n
+    below the DATA-04 floor) fires. The pool switch itself stays an
+    assessment-level, human-authorized decision; this table is the recorded
+    evaluation the reviewer decides from.
+    """
+    primary = tier.get("primary") or {}
+    functional_ids = {str(s) for s in (primary.get("retained_ids") or [])}
+    rows: list[dict] = []
+    for mk, entry in metric_config.items():
+        col = (entry or {}).get("column_name") or mk
+        if col not in data.columns:
+            continue
+        n_applied = int(data[col].notna().sum())
+        if functional_ids and "site_id" in data.columns:
+            mask = data["site_id"].astype(str).isin(functional_ids)
+            n_functional = int(data.loc[mask, col].notna().sum())
+        else:
+            n_functional = n_applied if screen_preset == "functional" else None
+        trigger = (n_functional is not None and n_functional < MIN_N_AUTO)
+        rows.append({
+            "metric": mk,
+            "n_functional_pool": n_functional,
+            "n_applied_pool": n_applied,
+            "tier_applied": tier.get("reference_tier"),
+            "ref02_metric_trigger": bool(trigger),
+            "note": ("Least-disturbed pool below the DATA-04 floor for this "
+                     "metric; fallback justified (REF-02)." if trigger else
+                     "Least-disturbed pool adequate for this metric."),
+        })
+    return rows
+
+
+def stratifier_evidence(data: pd.DataFrame, metric_config: dict, strat: dict, *,
+                        seed: int, n_boot: int = 100) -> pd.DataFrame:
+    """STRAT-01/02/03/04/05/06 evidence per metric x eligible stratifier.
+
+    Grouped LOO improvement and AICc support are computed for every pair; the
+    bootstrap recurrence (STRAT-06) only where the improvement reaches the
+    STRAT-01 floor, since recurrence of a non-improvement answers nothing.
+    """
+    floor = float(methodology.threshold("stratifier_rules.min_cv_error_improvement"))
+    strong = float(methodology.threshold("stratifier_rules.strong_cv_error_improvement"))
+    min_r2 = float(methodology.threshold("stratifier_rules.min_delta_cv_r2"))
+    sc = strat.get("strat_config") or {}
+    rows: list[dict] = []
+    for key in (strat.get("eligible") or []):
+        col = (sc.get(key) or {}).get("column_name")
+        if not col or col not in data.columns:
+            continue
+        for mk, entry in metric_config.items():
+            vcol = (entry or {}).get("column_name") or mk
+            if vcol not in data.columns or (entry or {}).get("metric_family") == "categorical":
+                continue
+            frame = data[[vcol, col]]
+            imp = curve_stability.stratified_loo_improvement(frame, vcol, col)
+            ic = curve_stability.stratifier_ic_support(frame, vcol, col)
+            rec = None
+            if imp.get("evaluable") and (imp.get("rmse_improvement_frac") or 0.0) >= floor:
+                rec = curve_stability.bootstrap_improvement_recurrence(
+                    frame, vcol, col, n_boot=n_boot,
+                    seed=_metric_seed(seed, f"{mk}|{key}"))
+            rows.append({
+                "metric": mk,
+                "stratification": key,
+                "n": imp.get("n"),
+                "cv_rmse_improvement": imp.get("rmse_improvement_frac"),
+                "cv_mae_improvement": imp.get("mae_improvement_frac"),
+                "delta_cv_r2": imp.get("delta_cv_r2"),
+                "strat01_supports": (imp.get("evaluable") or False)
+                and (imp.get("rmse_improvement_frac") or 0.0) >= floor,
+                "strat02_strong": (imp.get("evaluable") or False)
+                and (imp.get("rmse_improvement_frac") or 0.0) >= strong,
+                "strat03_supports": (imp.get("evaluable") or False)
+                and (imp.get("delta_cv_r2") or 0.0) >= min_r2,
+                "delta_aicc": ic.get("delta_aicc"),
+                "strat04_supports": ic.get("supports_min"),
+                "strat05_strong": ic.get("supports_strong"),
+                "strat06_recurrence": (rec or {}).get("recurrence_above_floor"),
+                "evaluable": bool(imp.get("evaluable")),
+            })
+    return pd.DataFrame(rows)
+
+
+def metric_missingness(data: pd.DataFrame, metric_cols: list) -> dict:
+    """Per-metric missing-data fraction over the retained reference pool, with its
+    DATA-01/02/03 disposition (auto / caution / review) from the methodology config.
+
+    A metric column absent from the frame counts as fully missing: the data never
+    arrived, which is exactly the case DATA-03 exists to keep out of automation.
+    """
+    out: dict[str, dict] = {}
+    n_rows = len(data)
+    for mk in metric_cols:
+        if mk in data.columns and n_rows:
+            frac = float(data[mk].isna().mean())
+        else:
+            frac = 1.0
+        out[mk] = {
+            "missing_fraction": round(frac, 4),
+            "disposition": methodology.missingness_disposition(frac),
+        }
+    return out
 
 # The methodology's reference-tier ladder mapped onto easi_screening presets.
 TIER_LEAST_DISTURBED = "least_disturbed"      # functional preset, ECI > 0.69
@@ -198,6 +359,11 @@ def build_metric_config(columns: list[str], directions: dict) -> tuple[dict, lis
             "include_in_summary": True,
             "direction_source": d.get("source"),
             "direction_confidence": d.get("confidence"),
+            # CURVE-05 inputs (Unresolved Inputs 3 and 4, now stored per metric):
+            # an explicit registry expected_shape wins, else it derives from the
+            # curated declaration. Transformation is a curated record, default none.
+            "expected_shape": run_state.expected_shape_from_entry(d),
+            "transformation": d.get("transformation") or "none",
             "notes": d.get("note", ""),
         }
     return metric_config, flagged_direction
@@ -234,6 +400,8 @@ def build_landscape_metric_config(
             "include_in_summary": True,
             "direction_source": d.get("source"),
             "direction_confidence": d.get("confidence"),
+            "expected_shape": run_state.expected_shape_from_entry(d),
+            "transformation": d.get("transformation") or "none",
             "notes": d.get("note", ""),
         }
     return metric_config, missing
@@ -465,18 +633,38 @@ def build_curves(data: pd.DataFrame, metric_config: dict) -> dict:
     return out
 
 
-def review_curves(curve_rows_by_metric: dict, column_functions: dict) -> dict:
-    """Classify every curve proposal into the six-status review map (REF/CURVE gates).
+def review_curves(curve_rows_by_metric: dict, column_functions: dict,
+                  missingness: Optional[dict] = None,
+                  metric_config: Optional[dict] = None) -> dict:
+    """Classify every curve proposal into the status review map (REF/CURVE gates).
 
     This mirrors ``curve_automation.reconcile_review_map`` but calls the pure
     ``run_state`` primitives directly, so the agent never imports the reactive
     ``curve_automation`` (which pulls Shiny + views). mapping_ok is whether the metric
-    has a STAF function."""
+    has a STAF function. ``missingness`` (from :func:`metric_missingness`) routes a
+    metric whose missing-data fraction exceeds the DATA-03 review threshold to the
+    flagged queue instead of letting it auto-finalize, and ``metric_config`` lets the
+    CURVE-05 shape check compare each built curve against its approved expectation."""
     review: dict = {}
+    missingness = missingness or {}
+    metric_config = metric_config or {}
     for mk, row in curve_rows_by_metric.items():
         mapping = column_functions.get(mk) or ""
+        miss = missingness.get(mk) or {}
+        data_ok = miss.get("disposition") != "review"
+        data_reason = None
+        if not data_ok:
+            frac = miss.get("missing_fraction")
+            data_reason = (
+                f"Missing-data fraction {frac:.0%} exceeds the DATA-03 review "
+                "threshold, so the curve must not be auto-recommended."
+                if isinstance(frac, (int, float)) else None)
+        shape_ok, shape_reason = run_state.shape_conflict_check(
+            [row], metric_config.get(mk))
         status, reasons = run_state.classify_curve_proposal(
-            [row], mapping_ok=bool(mapping), strat_ok=True)
+            [row], mapping_ok=bool(mapping), strat_ok=True,
+            data_ok=data_ok, data_reason=data_reason,
+            shape_ok=shape_ok, shape_reason=shape_reason)
         fingerprint = run_state.proposal_fingerprint(
             [row], mapping=mapping or None, strat=None)
         summary = {
@@ -639,7 +827,9 @@ def run(l3_code: str, name: str, *,
         do_screen: bool = True,
         use_streamcat: bool = True,
         coverage_exceptions: Optional[list[dict]] = None,
-        cache_dir: Optional[Path] = None) -> dict:
+        cache_dir: Optional[Path] = None,
+        diagnostics_n_boot: int = 200,
+        diagnostics_enabled: bool = True) -> dict:
     """Run the full regional analysis for one L3 ecoregion. Returns a structured result
     (no files written here; the CLI writes outputs and publishes).
 
@@ -648,6 +838,8 @@ def run(l3_code: str, name: str, *,
     publish step refuses the version, which is deliberate -- an unattended run should
     not be able to mint an assessment with an unexplained hole in the framework.
     """
+    # A headless run must not proceed under a config that misdescribes the engine.
+    methodology.verify_mirrors(strict=True)
     directions = load_directions()
     candidates = select_candidates(l3_code)
     n_candidates = len(candidates)
@@ -720,9 +912,13 @@ def run(l3_code: str, name: str, *,
         data, metric_config, predictor_config, on_event=on_event)
     data = strat["data"]
 
+    # --- Missingness dispositions (DATA-01/02/03), over the retained pool ---
+    missingness = metric_missingness(data, list(metric_config))
+
     # --- Curves + review ---
     curve_rows = build_curves(data, metric_config)
-    curve_review = review_curves(curve_rows, column_functions)
+    curve_review = review_curves(curve_rows, column_functions,
+                                 missingness=missingness, metric_config=metric_config)
     intended = run_state.intended_metrics_for_publish(curve_review)
     flagged = run_state.flagged_metrics(curve_review)
 
@@ -737,8 +933,84 @@ def run(l3_code: str, name: str, *,
                          if v["disposition"] in ("exploratory", "insufficient", "too_few")]
     reference_pool_disposition = sample_size_disposition(len(retained))
 
+    # --- Resampling diagnostics (CURVE-02/04/06), seeded by run identity ---
+    base_seed = run_seed(l3_code, retained_ids, methodology.methodology_version())
+    diagnostics = (curve_diagnostics_for(
+        data, metric_config, seed=base_seed, n_boot=diagnostics_n_boot)
+        if diagnostics_enabled else {})
+
+    # --- RED-06: category stability for the flagged redundant pairs ---
+    red06_stability: dict[str, dict] = {}
+    if diagnostics_enabled and redundancy is not None and len(redundancy) \
+            and "metric_a" in redundancy.columns:
+        for row in redundancy.itertuples(index=False):
+            r = row._asdict()
+            if not r.get("red01_spearman_flag"):
+                continue
+            a, b = str(r.get("metric_a")), str(r.get("metric_b"))
+            if a in data.columns and b in data.columns:
+                red06_stability[f"{a}|{b}"] = (
+                    curve_stability.bootstrap_pair_category_stability(
+                        data[a], data[b], n_boot=diagnostics_n_boot,
+                        seed=_metric_seed(base_seed, f"{a}|{b}")))
+
+    # --- STRAT-01..06 evidence for the eligible candidates ---
+    strat_evidence_df = (stratifier_evidence(
+        data, metric_config, strat, seed=base_seed,
+        n_boot=min(100, diagnostics_n_boot))
+        if diagnostics_enabled else pd.DataFrame())
+
+    # --- REF-02 evaluated per metric (the rule's own trigger granularity) ---
+    tier_eval = tier_evaluation_table(data, metric_config, tier, screen_preset)
+
+    # --- CONF-01/02 numeric confidence and the SELECT-02 metric score ---
+    flagged_pair_counts: dict[str, int] = {}
+    if redundancy is not None and len(redundancy) and "metric_a" in redundancy.columns:
+        for row in redundancy.itertuples(index=False):
+            r = row._asdict()
+            if r.get("red01_spearman_flag"):
+                for side in ("metric_a", "metric_b"):
+                    key = str(r.get(side))
+                    flagged_pair_counts[key] = flagged_pair_counts.get(key, 0) + 1
+    confidence_map: dict[str, dict] = {}
+    metric_scores: dict[str, dict] = {}
+    for mk in metric_config:
+        entry = metric_config[mk]
+        review_entry = curve_review.get(mk) or {}
+        ev = {
+            "sample_disposition": sample_sizes.get(mk, {}).get("disposition"),
+            "missingness_disposition": missingness.get(mk, {}).get("disposition"),
+            "curve_status": review_entry.get("status"),
+            "loo": (diagnostics.get(mk) or {}).get("loo"),
+            "bootstrap": (diagnostics.get(mk) or {}).get("bootstrap"),
+            "influence": (diagnostics.get(mk) or {}).get("influence"),
+            "direction_confidence": entry.get("direction_confidence"),
+            "shape_ok": review_entry.get("status") != run_state.CURVE_STATUS_SHAPE_CONFLICT,
+            "mapped": bool(column_functions.get(mk)),
+            "units_present": bool(entry.get("units")),
+            "reference_tier": tier["reference_tier"],
+            "redundant_pairs": flagged_pair_counts.get(mk, 0),
+        }
+        confidence_map[mk] = conf.curve_confidence(ev)
+        metric_scores[mk] = conf.metric_score(ev)
+
     # --- Portfolio (SELECT-01) ---
     portfolio = compact_portfolio(intended, column_functions, metric_config)
+
+    # --- Review Priority (impact x uncertainty x novelty) for flagged metrics ---
+    single_cover = {r.get("function") for r in portfolio
+                    if len(r.get("metrics") or []) == 1}
+    portfolio_metrics = {m for r in portfolio for m in (r.get("metrics") or [])}
+    review_priorities: dict[str, dict] = {}
+    for mk in flagged:
+        fn = column_functions.get(mk)
+        review_priorities[mk] = conf.review_priority(
+            confidence_label=(confidence_map.get(mk) or {}).get("label", "Low"),
+            ref02=bool(tier.get("ref02_triggered")),
+            coverage_critical=bool(fn and fn in single_cover),
+            in_portfolio=mk in portfolio_metrics,
+            optimum_form=str(metric_config.get(mk, {}).get("curve_form")) == "optimum",
+        )
 
     # --- Bundle (in-scope, complete curves only) ---
     aid = assessment_id or library.slugify(name)
@@ -760,6 +1032,8 @@ def run(l3_code: str, name: str, *,
         # An unattended run must not be able to mint a version with silent gaps, so
         # anything left uncovered has to arrive here as an explicit justification.
         "functionCoverageExceptions": coverage_exceptions or [],
+        # REF stamp for the bundle and every metric entry (REF-02 provenance).
+        "referenceTier": tier["reference_tier"],
     }
     intended_rows = {mk: curve_rows[mk] for mk in intended if mk in curve_rows}
     bundle = None
@@ -806,7 +1080,17 @@ def run(l3_code: str, name: str, *,
         "flagged_metrics": flagged,
         "sample_sizes": sample_sizes,
         "sample_size_flags": sample_size_flags,
+        "missingness": missingness,
         "reference_pool_disposition": reference_pool_disposition,
+        "run_seed": base_seed,
+        "diagnostics_n_boot": diagnostics_n_boot,
+        "diagnostics": diagnostics,
+        "red06_stability": red06_stability,
+        "strat_evidence": strat_evidence_df,
+        "tier_evaluation": tier_eval,
+        "confidence": confidence_map,
+        "metric_scores": metric_scores,
+        "review_priorities": review_priorities,
         "redundancy": redundancy,
         "stratifiers": strat,
         "portfolio": portfolio,
@@ -1230,11 +1514,14 @@ def session_fields(result: dict) -> dict:
 
 
 def publish(result: dict, publish_root: Path | str, *, maintainer: str = "regional-agent",
-            provenance: dict | None = None) -> dict:
+            provenance: dict | None = None,
+            portfolio_approvals: list[dict] | None = None) -> dict:
     """Publish the result's bundle as a preliminary version into a (staging) library root.
 
     ``publish_root`` is set as STAF_LIBRARY_ROOT so this never touches canonical apps/library
-    unless the caller points it there. Returns {version, path} or raises."""
+    unless the caller points it there. ``portfolio_approvals`` carries the recorded
+    human approvals SELECT-01 requires for any function with more than two metrics
+    (the agent can never self-approve one). Returns {version, path} or raises."""
     import os
     if result.get("bundle") is None:
         raise RuntimeError(f"nothing to publish: {result.get('bundle_error')}")
@@ -1258,7 +1545,10 @@ def publish(result: dict, publish_root: Path | str, *, maintainer: str = "region
     }
     payload = session_io.dump_session_fields(
         fields, session_name=result["meta"]["assessmentName"])
-    version = library.publish_version(result["assessment_id"], result["meta"], payload,
+    meta = dict(result["meta"])
+    if portfolio_approvals:
+        meta["portfolioApprovals"] = list(portfolio_approvals)
+    version = library.publish_version(result["assessment_id"], meta, payload,
                                       result["bundle"], provenance=provenance)
     return {"version": version, "root": str(root),
             "path": str(root / "assessments" / library.slugify(result["assessment_id"])

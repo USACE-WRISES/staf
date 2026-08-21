@@ -25,7 +25,10 @@ TS = "2026-07-29T00:00:00+00:00"
 
 @pytest.fixture(scope="module")
 def result() -> dict:
-    return ra.run("58", "Northeastern Highlands", do_screen=False, use_streamcat=False)
+    # diagnostics_n_boot=20 keeps the module fixture fast; the resampling path
+    # is identical, just with fewer resamples than a production run's 200.
+    return ra.run("58", "Northeastern Highlands", do_screen=False,
+                  use_streamcat=False, diagnostics_n_boot=20)
 
 
 @pytest.fixture(scope="module")
@@ -63,10 +66,20 @@ def test_rules_applied_is_derived_from_the_records(provenance):
 
 def test_unimplemented_rules_say_why(provenance):
     by_id = {r["rule_id"]: r for r in provenance["rules_not_evaluated"]}
-    assert "CONF-01" in by_id, "the confidence score is not implemented; say so"
+    # CURVE-03 (one-standard-error selection) stays moot while exactly one
+    # curve family is approved, so it must be accounted for as not evaluated.
+    assert "CURVE-03" in by_id, "an unevaluated rule must say so"
     for entry in provenance["rules_not_evaluated"]:
         assert entry["reason"]
         assert entry["implementation_status"]
+
+
+def test_the_new_machinery_rules_are_applied(provenance):
+    """Wave 3: the formerly missing rule families now leave records."""
+    applied = set(provenance["rules_applied"])
+    for rule_id in ("CURVE-02", "CURVE-04", "CURVE-06", "CONF-01", "SELECT-02",
+                    "DATA-01", "DATA-09"):
+        assert rule_id in applied, f"{rule_id} left no record"
 
 
 # --- record shape ------------------------------------------------------------- #
@@ -174,10 +187,16 @@ def test_queue_items_are_actionable(provenance):
         assert item["status"] == "open"
 
 
-def test_priority_is_a_tier_not_an_invented_score(provenance):
+def test_priority_tiers_stay_primary_with_the_numeric_score_riding_along(provenance):
+    """Tier ordering is the queue's backbone; the implemented Review Priority
+    (impact x uncertainty x novelty) rides per metric item without reordering
+    a hard stop below anything."""
     for item in provenance["reviewQueue"]["items"]:
         assert item["priority"] in (1, 2, 3, 4)
-        assert "not an invented score" in item["priority_basis"]["note"]
+        assert "hard stop" in item["priority_basis"]["note"]
+        numeric = item["priority_basis"].get("review_priority")
+        if numeric is not None:
+            assert 1 <= numeric <= 27
 
 
 def test_queue_is_ordered_by_priority(provenance):

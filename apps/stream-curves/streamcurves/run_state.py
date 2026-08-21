@@ -157,6 +157,8 @@ CURVE_STATUS_AUTO_OK = "auto_ok"
 CURVE_STATUS_INSUFFICIENT = "insufficient_data"
 CURVE_STATUS_DEGENERATE = "degenerate"
 CURVE_STATUS_UNMAPPED = "unmapped"
+CURVE_STATUS_SHAPE_CONFLICT = "shape_conflict"
+CURVE_STATUS_DATA_REVIEW = "data_review"
 CURVE_STATUS_STRAT_REVIEW = "strat_review"
 CURVE_STATUS_MULTI_CROSSING = "multi_crossing"
 CURVE_STATUS_ERROR = "error"
@@ -166,6 +168,8 @@ CURVE_STATUSES = [
     CURVE_STATUS_INSUFFICIENT,
     CURVE_STATUS_DEGENERATE,
     CURVE_STATUS_UNMAPPED,
+    CURVE_STATUS_SHAPE_CONFLICT,
+    CURVE_STATUS_DATA_REVIEW,
     CURVE_STATUS_STRAT_REVIEW,
     CURVE_STATUS_MULTI_CROSSING,
     CURVE_STATUS_ERROR,
@@ -187,6 +191,14 @@ REVIEW_REASONS = {
     "degenerate_q25": "Non-positive or non-finite Q25 produced a fallback curve.",
     "degenerate_curve": "The IQR seed did not validate as a scoring curve.",
     "unmapped": "Metric is not assigned to a STAF function.",
+    "shape_conflict": (
+        "The curve's realized shape conflicts with the metric's approved "
+        "ecological expectation (CURVE-05), so it must not ship without review."
+    ),
+    "data_review": (
+        "Missing-data fraction exceeds the review threshold (DATA-03), so the "
+        "curve must not be auto-recommended."
+    ),
     "strat_review": "Stratification needs review before the curve is trusted.",
     "multi_crossing": (
         "The curve crosses a scoring threshold more than twice, so its condition "
@@ -429,12 +441,22 @@ def classify_curve_proposal(
     *,
     mapping_ok: bool = True,
     strat_ok: bool = True,
+    strat_reason: Optional[str] = None,
+    data_ok: bool = True,
+    data_reason: Optional[str] = None,
+    shape_ok: bool = True,
+    shape_reason: Optional[str] = None,
     exc: Optional[BaseException] = None,
 ) -> tuple[str, list[str]]:
     """Classify one metric's curve proposal into a status + human reasons.
 
     Precedence: build error > unmapped > insufficient data > degenerate >
-    stratification review > clean (auto_ok).
+    multi-crossing > shape conflict (CURVE-05) > data review (DATA-03) >
+    stratification review > clean (auto_ok). ``data_ok=False`` marks a metric
+    whose missing-data fraction exceeds the DATA-03 review threshold,
+    ``shape_ok=False`` a curve whose realized shape contradicts the approved
+    expectation, and ``strat_reason`` lets a caller name the specific
+    stratification problem (e.g. a stratum below the DATA-07 floor).
     """
     if exc is not None:
         return CURVE_STATUS_ERROR, [f"{REVIEW_REASONS['build_error']} ({exc})"]
@@ -458,10 +480,165 @@ def classify_curve_proposal(
     if any(st == "unsupported_multi_crossing" for st in statuses):
         return CURVE_STATUS_MULTI_CROSSING, [REVIEW_REASONS["multi_crossing"]]
 
+    if not shape_ok:
+        return CURVE_STATUS_SHAPE_CONFLICT, [
+            shape_reason or REVIEW_REASONS["shape_conflict"]]
+
+    if not data_ok:
+        return CURVE_STATUS_DATA_REVIEW, [data_reason or REVIEW_REASONS["data_review"]]
+
     if not strat_ok:
-        return CURVE_STATUS_STRAT_REVIEW, [REVIEW_REASONS["strat_review"]]
+        return CURVE_STATUS_STRAT_REVIEW, [strat_reason or REVIEW_REASONS["strat_review"]]
 
     return CURVE_STATUS_AUTO_OK, []
+
+
+def strata_floor_check(curve_rows: Any) -> tuple[bool, Optional[str]]:
+    """DATA-07/08 per-stratum sample floors for a stratified curve proposal.
+
+    Applies only when the proposal actually stratifies (more than one row, or a
+    named stratum). An unstratified proposal passes. The region denominator for
+    the DATA-08 ten-percent rule is the sum of the strata (the strata partition
+    the reference pool's non-missing values). Reads the calibrated floors from
+    the methodology config so the acting values have one home.
+    """
+    from . import methodology  # local import; keeps this module light at import
+
+    rows = _as_rows(curve_rows)
+    strat_rows = [
+        r for r in rows
+        if r.get("stratum") not in (None, "") and str(r.get("stratum")) != "nan"
+    ]
+    if len(rows) <= 1 and not strat_rows:
+        return True, None
+    if not strat_rows:
+        return True, None
+
+    def _n(r):
+        try:
+            return int(r.get("n_reference"))
+        except (TypeError, ValueError):
+            return None
+
+    ns = [(str(r.get("stratum")), _n(r)) for r in strat_rows]
+    known = [n for _, n in ns if n is not None]
+    total = sum(known) if known else 0
+    very_small = int(methodology.threshold("data_rules.very_small_stratum_n"))
+    small_frac = float(methodology.threshold("data_rules.very_small_stratum_frac"))
+    floor = int(methodology.threshold("data_rules.min_n_stratum"))
+
+    for name, n in ns:
+        if n is None:
+            continue
+        if n < very_small or (total > 0 and n < small_frac * total):
+            return False, (
+                f"Stratum '{name}' has n = {n}, below the very-small-stratum rule "
+                f"(DATA-08: fewer than {very_small} or under {small_frac:.0%} of the pool)."
+            )
+    for name, n in ns:
+        if n is not None and n < floor:
+            return False, (
+                f"Stratum '{name}' has n = {n}, below the automated stratified "
+                f"floor (DATA-07: {floor})."
+            )
+    return True, None
+
+
+# --------------------------------------------------------------------------- #
+# CURVE-05: realized shape versus the approved ecological expectation
+# --------------------------------------------------------------------------- #
+EXPECTED_SHAPES = ("monotone_increasing", "monotone_decreasing", "optimum")
+
+
+def expected_shape_from_entry(metric_entry: Any) -> Optional[str]:
+    """The approved expected shape for a metric_config or registry entry.
+
+    An explicit ``expected_shape`` wins. Otherwise the shape is derived from the
+    curated declaration: ``curve_form: optimum`` means optimum, and a monotone
+    metric's direction comes from ``higher_is_better``. Returns None when the
+    entry declares nothing (an unresolved direction), so no conflict can be
+    claimed against a metric that has no approved expectation.
+    """
+    entry = metric_entry or {}
+    explicit = str(entry.get("expected_shape") or "").strip().lower()
+    if explicit in EXPECTED_SHAPES:
+        return explicit
+    form = str(entry.get("curve_form") or "").strip().lower()
+    if form == "optimum":
+        return "optimum"
+    hib = entry.get("higher_is_better")
+    if hib is True:
+        return "monotone_increasing"
+    if hib is False:
+        return "monotone_decreasing"
+    return None
+
+
+def _points_ys(curve_points: Any) -> list[float]:
+    """Index scores ordered by metric value, from any of the point shapes the
+    app passes around (DataFrame with metric_value/index_score, or dict lists)."""
+    rows: list[tuple[float, float]] = []
+    if curve_points is None:
+        return []
+    if hasattr(curve_points, "columns"):
+        try:
+            for rec in curve_points.to_dict(orient="records"):
+                rows.append((float(rec["metric_value"]), float(rec["index_score"])))
+        except (KeyError, TypeError, ValueError):
+            return []
+    else:
+        for rec in curve_points:
+            try:
+                if "metric_value" in rec:
+                    rows.append((float(rec["metric_value"]), float(rec["index_score"])))
+                else:
+                    rows.append((float(rec["x"]), float(rec["y"])))
+            except (KeyError, TypeError, ValueError):
+                return []
+    rows.sort(key=lambda p: p[0])
+    return [y for _, y in rows]
+
+
+def realized_curve_shape(curve_points: Any, tol: float = 1e-9) -> Optional[str]:
+    """The shape a curve's points actually trace: ``monotone_increasing``,
+    ``monotone_decreasing``, ``optimum`` (rises and falls around an interior
+    peak), or None when the points are absent, flat, or unreadable."""
+    ys = _points_ys(curve_points)
+    if len(ys) < 2:
+        return None
+    peak = max(ys)
+    first, last = ys[0], ys[-1]
+    if peak - first > tol and peak - last > tol:
+        return "optimum"
+    if last - first > tol:
+        return "monotone_increasing"
+    if first - last > tol:
+        return "monotone_decreasing"
+    return None
+
+
+def shape_conflict_check(curve_rows: Any, metric_entry: Any) -> tuple[bool, Optional[str]]:
+    """CURVE-05: does any built curve contradict the approved expectation?
+
+    Only rows with points are judged, and a metric with no approved expectation
+    can never conflict (its absence is the direction-review path instead). A
+    flat or degenerate trace is left to the degenerate classification.
+    """
+    expected = expected_shape_from_entry(metric_entry)
+    if expected is None:
+        return True, None
+    for row in _as_rows(curve_rows):
+        realized = realized_curve_shape(row.get("curve_points"))
+        if realized is None or realized == expected:
+            continue
+        stratum = row.get("stratum")
+        where = f" (stratum '{stratum}')" if stratum not in (None, "") and str(stratum) != "nan" else ""
+        return False, (
+            f"Realized curve shape '{realized}'{where} conflicts with the approved "
+            f"expectation '{expected}' (CURVE-05). An approved ecological "
+            "expectation is never overridden silently."
+        )
+    return True, None
 
 
 def _curve_points_digest(value: Any) -> Any:

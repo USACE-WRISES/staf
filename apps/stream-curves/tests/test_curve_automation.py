@@ -82,3 +82,19 @@ def test_reducer_strat_review():
     review = ca.reconcile_review_map({}, proposals)
     assert review["m"]["status"] == rs.CURVE_STATUS_STRAT_REVIEW
     assert rs.needs_review(review["m"])
+
+
+def test_reducer_carries_the_stratum_floor_reason():
+    """A proposal whose stratification fails the DATA-07/08 floors surfaces the
+    specific floor reason in the review entry, not the generic one."""
+    rows = [
+        {"curve_status": "complete", "stratum": "A", "n_reference": 20},
+        {"curve_status": "complete", "stratum": "B", "n_reference": 6},
+    ]
+    ok, reason = rs.strata_floor_check(rows)
+    assert not ok
+    proposals = {"m": {"curve_rows": rows, "mapping_ok": True,
+                       "strat_ok": ok, "strat_reason": reason}}
+    review = ca.reconcile_review_map({}, proposals)
+    assert review["m"]["status"] == rs.CURVE_STATUS_STRAT_REVIEW
+    assert "DATA-08" in review["m"]["reasons"][0]

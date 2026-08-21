@@ -25,9 +25,11 @@ Pure: dicts in, dicts out. The CLI writes the files.
 from __future__ import annotations
 
 import logging
+import os
 import platform
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -196,6 +198,16 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "gitDirty": dirty,
             "python": platform.python_version(),
             "packages": _package_versions(),
+            # The AI operator behind the run, when one drove it. Set
+            # STAF_AI_MODEL (e.g. "claude-fable-5") and optionally
+            # STAF_AI_TOOL; absent means the run was launched by a person
+            # directly, and the manifest says so rather than guessing.
+            "aiModel": os.environ.get("STAF_AI_MODEL"),
+            "aiTool": os.environ.get("STAF_AI_TOOL"),
+        },
+        "diagnostics": {
+            "runSeed": result.get("run_seed"),
+            "nBoot": result.get("diagnostics_n_boot"),
         },
         "methodology": {
             **methodology.config_fingerprints(),
@@ -409,6 +421,141 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             review_required=n_metrics > 2,
             review_triggers=["more_than_two_metrics"] if n_metrics > 2 else [])
 
+    # --- DATA-01/02/03: missingness dispositions over the reference pool ---
+    for metric, info in (result.get("missingness") or {}).items():
+        disp = info.get("disposition")
+        rule_id = {"auto": "DATA-01", "caution": "DATA-02"}.get(disp, "DATA-03")
+        add(rule_id, "metric", metric,
+            inputs={"missing_fraction": info.get("missing_fraction")},
+            thresholds={"max_missingness_auto": methodology.threshold(
+                            "data_rules.max_missingness_auto"),
+                        "max_missingness_review": methodology.threshold(
+                            "data_rules.max_missingness_review")},
+            computed={"disposition": disp},
+            verdict=VERDICT_PASS if disp == "auto" else VERDICT_REVIEW,
+            review_required=disp == "review",
+            review_triggers=(["missingness_review"] if disp == "review"
+                             else ["missingness_caution"] if disp == "caution" else []),
+            recommendation=(
+                "Do not auto-recommend this curve (DATA-03)." if disp == "review"
+                else "Analyze with caution; confidence takes a penalty." if disp == "caution"
+                else None))
+
+    # --- DATA-09: the leakage guard ran before any fold-using diagnostic ---
+    if result.get("diagnostics"):
+        add("DATA-09", "run", "resampling_guard",
+            computed={"one_row_per_site": True},
+            recommendation="Repeated site observations would refuse to resample "
+                           "(site-grouped folds are not implemented for repeats).")
+
+    # --- CURVE-02/04/06: resampling diagnostics per metric ---
+    for metric, diag in (result.get("diagnostics") or {}).items():
+        loo = diag.get("loo") or {}
+        infl = diag.get("influence") or {}
+        boot = diag.get("bootstrap") or {}
+        add("CURVE-02", "metric", metric,
+            computed={"evaluable": loo.get("evaluable"),
+                      "held_out_mean_abs_delta": loo.get("held_out_mean_abs_delta"),
+                      "held_out_max_abs_delta": loo.get("held_out_max_abs_delta"),
+                      "seed_max_shift_frac": loo.get("seed_max_shift_frac")},
+            verdict=VERDICT_PASS if loo.get("evaluable") else VERDICT_REVIEW,
+            review_required=not loo.get("evaluable"),
+            review_triggers=[] if loo.get("evaluable") else ["cv_not_evaluable"],
+            recommendation=None if loo.get("evaluable") else
+            "Leave-one-out could not run (sample too small); confidence capped.")
+        add("CURVE-04", "metric", metric,
+            thresholds={"influence_param_change_frac": methodology.threshold(
+                "curve_rules.influence_param_change_frac")},
+            computed={"max_param_change_frac": infl.get("max_param_change_frac"),
+                      "decision_flip": infl.get("decision_flip"),
+                      "driver": infl.get("driver")},
+            verdict=VERDICT_REVIEW if infl.get("flagged") else VERDICT_PASS,
+            review_required=bool(infl.get("flagged")),
+            review_triggers=["influential_site"] if infl.get("flagged") else [])
+        add("CURVE-06", "metric", metric,
+            computed={"evaluable": boot.get("evaluable"),
+                      "structure_stability": boot.get("structure_stability"),
+                      "shape_stability": boot.get("shape_stability"),
+                      "n_boot": boot.get("n_boot"), "seed": boot.get("seed")},
+            verdict=VERDICT_PASS if boot.get("evaluable") else VERDICT_REVIEW,
+            review_required=not boot.get("evaluable"),
+            review_triggers=[] if boot.get("evaluable") else ["no_interval"])
+
+    # --- RED-06/07: pair stability and multiplicity support ---
+    if redundancy is not None and len(redundancy) and "fdr_q" in getattr(
+            redundancy, "columns", []):
+        for row in redundancy.itertuples(index=False):
+            r = row._asdict()
+            add("RED-07", "metric_pair", f"{r['metric_a']}|{r['metric_b']}",
+                thresholds={"fdr_q": methodology.threshold("redundancy_rules.fdr_q")},
+                computed={"p_value": r.get("p_value"), "fdr_q": r.get("fdr_q")},
+                verdict=VERDICT_PASS,
+                recommendation="Supporting evidence only; the effect size stays primary.")
+    for pair_key, stab in (result.get("red06_stability") or {}).items():
+        add("RED-06", "metric_pair", pair_key,
+            thresholds={"bootstrap_stability": methodology.threshold(
+                "redundancy_rules.bootstrap_stability")},
+            computed={"category": stab.get("category"),
+                      "stability": stab.get("stability")},
+            verdict=VERDICT_PASS if (stab.get("stability") or 0) >= float(
+                methodology.threshold("redundancy_rules.bootstrap_stability"))
+            else VERDICT_REVIEW,
+            review_required=(stab.get("stability") or 0) < float(
+                methodology.threshold("redundancy_rules.bootstrap_stability")),
+            review_triggers=[] if (stab.get("stability") or 0) >= float(
+                methodology.threshold("redundancy_rules.bootstrap_stability"))
+            else ["unstable_redundancy_category"])
+
+    # --- STRAT-01..06: stratifier CV and information-criterion evidence ---
+    strat_ev = result.get("strat_evidence")
+    if strat_ev is not None and len(strat_ev):
+        for row in strat_ev.itertuples(index=False):
+            r = row._asdict()
+            subject = f"{r['stratification']}|{r['metric']}"
+            evaluable = bool(r.get("evaluable"))
+            pairs = [("STRAT-01", "strat01_supports", "cv_rmse_improvement"),
+                     ("STRAT-02", "strat02_strong", "cv_rmse_improvement"),
+                     ("STRAT-03", "strat03_supports", "delta_cv_r2"),
+                     ("STRAT-04", "strat04_supports", "delta_aicc"),
+                     ("STRAT-05", "strat05_strong", "delta_aicc")]
+            for rule_id, flag_key, value_key in pairs:
+                supports = r.get(flag_key)
+                add(rule_id, "stratifier_metric", subject,
+                    computed={value_key: r.get(value_key), "supports": supports},
+                    verdict=(VERDICT_PASS if supports
+                             else VERDICT_REVIEW if evaluable
+                             else VERDICT_NOT_APPLICABLE))
+            if r.get("strat06_recurrence") is not None:
+                add("STRAT-06", "stratifier_metric", subject,
+                    thresholds={"min_resample_support": methodology.threshold(
+                        "stratifier_rules.min_resample_support")},
+                    computed={"recurrence_above_floor": r.get("strat06_recurrence")},
+                    verdict=VERDICT_PASS if (r.get("strat06_recurrence") or 0) >= float(
+                        methodology.threshold("stratifier_rules.min_resample_support"))
+                    else VERDICT_REVIEW)
+
+    # --- CONF-01/02 and SELECT-02 per metric ---
+    for metric, score in (result.get("confidence") or {}).items():
+        add("CONF-01", "metric", metric,
+            computed={"components": score.get("components"),
+                      "total": score.get("total"), "label": score.get("label"),
+                      "subtotal": score.get("subtotal")},
+            verdict=VERDICT_PASS,
+            recommendation=f"Confidence {score.get('total')} ({score.get('label')}).")
+        if score.get("caps_applied"):
+            add("CONF-02", "metric", metric,
+                computed={"caps_applied": score.get("caps_applied"),
+                          "subtotal": score.get("subtotal"),
+                          "total": score.get("total")},
+                verdict=VERDICT_REVIEW,
+                review_triggers=["confidence_capped"])
+    for metric, score in (result.get("metric_scores") or {}).items():
+        add("SELECT-02", "metric", metric,
+            computed={"components": score.get("components"),
+                      "total": score.get("total")},
+            verdict=VERDICT_PASS,
+            recommendation="Within-function ranking evidence; never an automatic decision.")
+
     return records
 
 
@@ -468,27 +615,63 @@ _TRIGGER_TIERS = {
         4, False, "This function carries more than two metrics. Approve or trim?"),
     "direction_unresolved": (
         4, False, "Supply a curated ecological direction, or leave this metric out?"),
+    # Wave 3 machinery (DATA-03, CURVE-02/04/06, RED-06, CONF-02):
+    "missingness_review": (
+        3, False,
+        "Missing data exceed the DATA-03 threshold. Keep this curve under review, "
+        "or exclude the metric for this region?"),
+    "cv_not_evaluable": (
+        3, False,
+        "Leave-one-out could not run on this sample. Accept the capped confidence, "
+        "or drop the metric?"),
+    "influential_site": (
+        3, False,
+        "One site moves this curve past the influence threshold. Keep the site, "
+        "investigate it, or accept the curve with the flag?"),
+    "no_interval": (
+        4, False,
+        "Bootstrap intervals could not be derived. Accept the curve without an "
+        "interval, or drop the metric?"),
+    "unstable_redundancy_category": (
+        3, False,
+        "This pair's redundancy category is unstable across resamples. Treat the "
+        "pair as redundant, or keep both metrics?"),
+    "confidence_capped": (
+        4, False,
+        "Confidence is capped by rule. Accept the capped score, or address the "
+        "capping condition first?"),
 }
 
 
-def build_review_queue(records, manifest: dict, *, generated_at=None) -> dict:
-    """The records that need a human, ordered by tier."""
+def build_review_queue(records, manifest: dict, *, generated_at=None,
+                       priorities: Optional[dict] = None) -> dict:
+    """The records that need a human, ordered by tier.
+
+    ``priorities`` (metric -> review_priority dict from the run) attaches the
+    numeric impact x uncertainty x novelty score to metric-subject items. Tier
+    ordering stays primary: a hard stop outranks any score.
+    """
+    priorities = priorities or {}
     items = []
     for record in records:
         if not record["review_required"]:
             continue
         trigger = (record["review_triggers"] or ["unspecified"])[0]
         tier, blocking, question = _TRIGGER_TIERS.get(
-            trigger, (4, False, "Review this decision."))
+            trigger, (4, False, "Review this decision. Accept, modify, or reject?"))
+        numeric = priorities.get(record["subject"]) if record.get(
+            "subject_kind") == "metric" else None
         items.append({
             "item_id": f"{record['rule_id']}:{record['subject']}",
             "priority": tier,
             "priority_basis": {
                 "note": (
-                    "Review Priority (impact x uncertainty x novelty) is CONF / "
-                    "not_yet_implemented. Ordering is by hard stop then impact tier, "
-                    "not an invented score."
+                    "Ordering is by hard stop then impact tier. The numeric Review "
+                    "Priority (impact x uncertainty x novelty) rides per metric item "
+                    "where the run computed it."
                 ),
+                "review_priority": (numeric or {}).get("priority"),
+                "review_priority_parts": numeric,
             },
             "decision_id": record["decision_id"],
             "rule_ids": [record["rule_id"]],
@@ -528,7 +711,8 @@ def build_review_queue(records, manifest: dict, *, generated_at=None) -> dict:
 def build_provenance(result: dict, manifest: dict, *, timestamp=None) -> dict:
     """Manifest, decision log and review queue as one auditable document."""
     records = build_records(result, manifest, timestamp=timestamp)
-    queue = build_review_queue(records, manifest, generated_at=timestamp)
+    queue = build_review_queue(records, manifest, generated_at=timestamp,
+                               priorities=result.get("review_priorities"))
     counts_by_family: dict[str, int] = {}
     counts_by_verdict: dict[str, int] = {}
     for record in records:
@@ -546,6 +730,93 @@ def build_provenance(result: dict, manifest: dict, *, timestamp=None) -> dict:
             "total": len(records),
             "by_family": counts_by_family,
             "by_verdict": counts_by_verdict,
+            "review_required": sum(1 for r in records if r["review_required"]),
+        },
+        "reviewQueue": queue,
+    })
+
+
+def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
+                                 region: Optional[dict] = None,
+                                 screening_preset: Optional[str] = None,
+                                 publisher: str = "",
+                                 session_name: Optional[str] = None,
+                                 timestamp=None) -> dict:
+    """A real, leaner provenance document for an interactive (non-agent) publish.
+
+    Records only what the interactive path genuinely applied: the curve-review
+    classifications and decisions (CURVE-07), the approved family (CURVE-01),
+    the SELECT-01 portfolio counts from the bundle itself, and the screening
+    preset when one was run (REF-01). Everything the interactive session did
+    not evaluate lands in rules_not_evaluated, so an interactive version never
+    fakes an agent-grade audit chain, and never publishes without any chain.
+    """
+    run_id = f"interactive:{session_name or 'session'}"
+    region_code = (region or {}).get("code")
+    records: list[dict] = []
+
+    def add(*args, **kwargs):
+        records.append(_record(run_id, region_code, *args, timestamp=timestamp, **kwargs))
+
+    if screening_preset:
+        add("REF-01", "run", "reference_screen",
+            inputs={"preset": screening_preset},
+            computed={"path": "interactive"})
+    for metric, review in (curve_review or {}).items():
+        status = (review or {}).get("status")
+        flagged = status not in ("auto_ok", None)
+        add("CURVE-07", "metric", metric,
+            computed={"curve_status": status,
+                      "decision": (review or {}).get("decision"),
+                      "reasons": (review or {}).get("reasons")},
+            verdict=VERDICT_REVIEW if flagged else VERDICT_PASS,
+            review_required=flagged and (review or {}).get("decision") == "pending",
+            review_triggers=["curve_needs_review"] if flagged else [])
+        add("CURVE-01", "metric", metric,
+            computed={"family": "iqr-seed piecewise-linear",
+                      "method_version": run_state.CURVE_METHOD_VERSION})
+    for block in bundle.get("metricsByFunction") or []:
+        n_metrics = len(block.get("metrics") or [])
+        add("SELECT-01", "function", block.get("functionId"),
+            computed={"n_metrics": n_metrics},
+            verdict=VERDICT_REVIEW if n_metrics > 2 else VERDICT_PASS,
+            review_required=False,
+            review_triggers=["more_than_two_metrics"] if n_metrics > 2 else [])
+
+    manifest = {
+        "schemaVersion": MANIFEST_SCHEMA_VERSION,
+        "mode": "interactive_session",
+        "region": region,
+        "publisher": publisher,
+        "sessionName": session_name,
+        "startedAt": timestamp,
+        "finishedAt": timestamp,
+        "agent": {
+            "module": "views.publish (interactive)",
+            "aiModel": os.environ.get("STAF_AI_MODEL"),
+            "aiTool": os.environ.get("STAF_AI_TOOL"),
+            "python": platform.python_version(),
+        },
+        "methodology": {
+            **methodology.config_fingerprints(),
+            "curveMethodVersion": run_state.CURVE_METHOD_VERSION,
+            "screeningMethodVersion": run_state.SCREENING_METHOD_VERSION,
+        },
+        # An interactive session does not version-lock its inputs the way the
+        # agent does; saying so beats inventing a digest.
+        "inputsDigest": None,
+        "inputsDigestNote": "interactive session; inputs not version-locked",
+    }
+    queue = build_review_queue(records, manifest, generated_at=timestamp)
+    return jsonable({
+        "schemaVersion": PROVENANCE_SCHEMA_VERSION,
+        "inputsDigest": None,
+        "manifest": manifest,
+        "rules_applied": rules_applied(records),
+        "rules_not_evaluated": rules_not_evaluated(records),
+        "records": records,
+        "counts": {
+            "total": len(records),
             "review_required": sum(1 for r in records if r["review_required"]),
         },
         "reviewQueue": queue,

@@ -31,6 +31,17 @@ from .paths import CONFIG_DIR
 
 logger = logging.getLogger("streamcurves")
 
+# The DEEP scoring contract's numeric constants, stated once. They mirror
+# apps/deep/deep/config.py (INDEX_BANDS thresholds, FUNCTION_SCORE_BANDS,
+# FUNCTION_SCORE_MAX, indirect weight); the methodology mirror check
+# (methodology.mirror_drift) verifies the methodology config against them.
+SCORING_CONTRACT_CONSTANTS = {
+    "indexBands": [0.39, 0.69],
+    "functionScoreBands": [5, 10],
+    "functionScoreMax": 15,
+    "indirectWeight": 0.10,
+}
+
 
 # ---- small helpers ----------------------------------------------------------
 def _is_na(x: Any) -> bool:
@@ -647,10 +658,7 @@ def build_deep_assessment_bundle(
         # Scoring itself is unchanged (interp_curve was always shape-agnostic); the
         # bump records that a bundle may now contain curves that fall in both tails.
         "methodVersion": "iqr-seed-v2",
-        "indexBands": [0.39, 0.69],
-        "functionScoreBands": [5, 10],
-        "functionScoreMax": 15,
-        "indirectWeight": 0.10,
+        **SCORING_CONTRACT_CONSTANTS,
         "rounding": {"index": 2, "functionScore": 0},
         "settings": {},
     }
@@ -665,6 +673,18 @@ def build_deep_assessment_bundle(
     library = meta.get("library")
     if library:
         bundle["library"] = library
+    # REF ladder provenance: the tier the reference pool was drawn at, stamped
+    # on the bundle and on every metric entry (REF-02 requires the stamp so a
+    # best-available curve can never read as reference condition). Per-metric
+    # stamps ride inside metricsByFunction, so they are part of the analytical
+    # content the digest fingerprints, which is correct: the same curve from a
+    # different reference tier is a different assessment.
+    tier = meta.get("referenceTier")
+    if tier:
+        bundle["referenceTier"] = tier
+        for block in bundle.get("metricsByFunction") or []:
+            for m in block.get("metrics") or []:
+                m["referenceTier"] = tier
     return bundle
 
 

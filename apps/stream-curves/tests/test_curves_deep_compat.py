@@ -1,26 +1,27 @@
 """Byte-compatibility of streamcurves.curves.interp_curve with DEEP.
 
-DEEP (D:\\Code\\Work\\deep, deep/curves.py::interp_curve) is the executor app
-that consumes curves exported from this app (see R/20_deep_export.R for the
+DEEP (apps/deep in this monorepo, deep/curves.py::interp_curve) is the executor
+app that consumes curves exported from this app (see R/20_deep_export.R for the
 shared contract), so the two interpolators must agree exactly — same stable
 sort, same endpoint clamping, same coincident-x behavior, same arithmetic.
 
-Skips gracefully when the DEEP repo is not importable on this machine.
+Skips gracefully when the DEEP app is not importable.
 """
 
 import math
 import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
-DEEP_ROOT = r"D:\Code\Work\deep"
+DEEP_ROOT = str(Path(__file__).resolve().parents[2] / "deep")
 if DEEP_ROOT not in sys.path:
     sys.path.insert(0, DEEP_ROOT)
 
 deep_curves = pytest.importorskip(
-    "deep.curves", reason=f"DEEP repo not importable from {DEEP_ROOT}"
+    "deep.curves", reason=f"DEEP app not importable from {DEEP_ROOT}"
 )
 
 from streamcurves import curves as rc  # noqa: E402

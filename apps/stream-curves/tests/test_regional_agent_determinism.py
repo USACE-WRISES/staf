@@ -19,7 +19,9 @@ L3 = "55"  # Eastern Corn Belt Plains: the smallest pilot, so this stays quick
 
 @pytest.fixture(scope="module")
 def two_runs() -> tuple[dict, dict]:
-    kwargs = dict(do_screen=False, use_streamcat=False)
+    # diagnostics_n_boot=20 keeps two full runs fast; determinism must hold at
+    # any resample count because every seed derives from the run identity.
+    kwargs = dict(do_screen=False, use_streamcat=False, diagnostics_n_boot=20)
     return (ra.run(L3, "Eastern Corn Belt Plains", **kwargs),
             ra.run(L3, "Eastern Corn Belt Plains", **kwargs))
 
@@ -41,6 +43,14 @@ def test_metric_order_is_stable(two_runs):
     first, second = two_runs
     assert list(first["metric_config"]) == list(second["metric_config"])
     assert list(first["curve_rows"]) == list(second["curve_rows"])
+
+
+def test_seeded_diagnostics_are_identical_between_runs(two_runs):
+    """The determinism contract covers the resampling diagnostics too."""
+    first, second = two_runs
+    assert first["run_seed"] == second["run_seed"]
+    assert first["diagnostics"] == second["diagnostics"]
+    assert first["confidence"] == second["confidence"]
 
 
 def test_stratifier_eligibility_is_stable(two_runs):
