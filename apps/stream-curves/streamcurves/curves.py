@@ -1427,9 +1427,18 @@ def build_reference_curve(
     # The degenerate-Q25 guard is a monotone higher-is-better concern (its 3-point
     # fallback rises from the origin); a two-sided curve is centered on the IQR and
     # has no such origin anchor, so it falls through to the IQR check below.
+    #
+    # iqr-seed-2 refinement (2026-08-21, owner decision): the guard applies only to
+    # metrics whose scale cannot go negative. On a signed scale (log relative bed
+    # stability spans about -3.4 to +1.4 in the Northeastern Highlands reference
+    # pool) a non-positive Q25 is a legitimate quantile, the origin anchor is
+    # meaningless, and the standard seed is mathematically sound. The R port fired
+    # this guard on LRBS in both pilots for that false reason; this is a deliberate,
+    # documented deviation from the R behavior for signed-scale metrics only.
     if (curve_form == CURVE_FORM_MONOTONE
             and higher_is_better
-            and (not math.isfinite(stats["q25"]) or stats["q25"] <= 0)):
+            and (not math.isfinite(stats["q25"]) or stats["q25"] <= 0)
+            and (not math.isfinite(stats["min_val"]) or stats["min_val"] >= 0)):
         logger.warning(f"{metric_key}: Q25 <= 0, scoring curve is degenerate")
         return build_reference_curve_from_components(
             data=data,
@@ -1469,16 +1478,31 @@ def build_reference_curve(
                                      and stats["min_val"] >= 0)
         )
     elif higher_is_better:
+        if math.isfinite(stats["min_val"]) and stats["min_val"] < 0:
+            # iqr-seed-2 (2026-08-21): a signed scale (log relative bed
+            # stability) has no meaningful origin, so the rising seed uses the
+            # scale-free IQR ladder, the mirrored counterpart of the
+            # lower-is-better seed below. Nonnegative scales keep the R port's
+            # origin-anchored form unchanged.
+            rising_x = [
+                stats["q25"] - stats["iqr"] * 7 / 3,
+                stats["q25"] - stats["iqr"] * 4 / 3,
+                stats["q25"],
+                stats["q75"],
+                stats["q75"] + stats["iqr"] * 0.3,
+            ]
+        else:
+            rising_x = [
+                0.0,
+                stats["q25"] * 3 / 7,
+                stats["q25"],
+                stats["q75"],
+                stats["q75"] + stats["iqr"] * 0.3,
+            ]
         auto_points = pd.DataFrame(
             {
                 "point_order": [1, 2, 3, 4, 5],
-                "metric_value": [
-                    0.0,
-                    stats["q25"] * 3 / 7,
-                    stats["q25"],
-                    stats["q75"],
-                    stats["q75"] + stats["iqr"] * 0.3,
-                ],
+                "metric_value": rising_x,
                 "index_score": [0.00, 0.30, 0.70, 1.00, 1.00],
             }
         )

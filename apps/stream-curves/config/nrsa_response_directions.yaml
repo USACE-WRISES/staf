@@ -56,7 +56,7 @@ metrics:
   chem_TURB:       {higher_is_better: false, metric_family: continuous, source: pilot,  confidence: high,     note: "Turbidity; higher indicates more suspended sediment (worse)."}
   chem_CHLA:       {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse)."}
   chem_COND:       {higher_is_better: false, metric_family: continuous, source: expert, confidence: high,     note: "Specific conductance; higher indicates ionic disturbance (worse)."}
-  chem_DOC:        {higher_is_better: null,  metric_family: continuous, source: expert, review: uncertain,    note: "Dissolved organic carbon is naturally variable and not cleanly directional; needs expert direction for this ecoregion."}
+  chem_DOC:        {higher_is_better: null,  metric_family: continuous, source: expert, excluded_from_scoring: true, exclusion_reason: "natural context, no defensible direction", decided_by: "gtmenichino 2026-08-21", note: "Dissolved organic carbon stays unscored: low DOC is clear natural water and high DOC is often natural wetland influence, so scoring it in either direction (or two-sided) would penalize natural streams. Kept as regional context. Owner decision at the Northeastern Highlands review gate."}
   chem_PH:         {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: high,     note: "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails."}
 
   # --- Physical habitat (phab) ---
@@ -79,7 +79,7 @@ metrics:
   # and departure in either direction is departure from reference condition.
   phab_BFWD_RAT:   {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: high,     note: "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core."}
   phab_XBKF_H:     {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: moderate, note: "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core."}
+  phab_XBKA:       {higher_is_better: null,  curve_form: optimum, metric_family: continuous, source: expert, confidence: moderate, note: "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment."}
 
-  # --- Ambiguous / context-dependent: flagged for expert direction, not auto-built ---
-  # (chem_DOC is declared above with the other chemistry metrics.)
-  phab_XBKA:       {higher_is_better: null,  metric_family: continuous, source: expert, review: uncertain,    note: "Mean bank angle; direction is context-dependent and not clearly two-sided either. Needs expert direction."}
+  # (chem_DOC, declared above, is the one recorded exclusion. phab_XBKA moved to
+  # the two-sided section when its direction was resolved on 2026-08-21.)

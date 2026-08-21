@@ -60,15 +60,28 @@ def test_review_curves_routes_high_missingness_to_data_review():
 # --------------------------------------------------------------------------- #
 def test_build_metric_config_applies_curated_directions():
     directions = ra.load_directions()
-    cols = ["chem_PTL", "bent_EPT_NTAX", "phab_PCT_SAFN", "phab_XBKA"]
+    cols = ["chem_PTL", "bent_EPT_NTAX", "phab_PCT_SAFN", "phab_XBKA", "chem_DOC"]
     mc, flagged = ra.build_metric_config(cols, directions)
     # correct ecological directions, not the naive higher-is-better default
     assert mc["chem_PTL"]["higher_is_better"] is False       # phosphorus: lower is better
     assert mc["bent_EPT_NTAX"]["higher_is_better"] is True   # richness: higher is better
     assert mc["phab_PCT_SAFN"]["higher_is_better"] is False  # sand/fines: lower is better
-    # a metric with neither a direction nor a declared shape is flagged, never guessed
-    assert "phab_XBKA" in {f["metric"] for f in flagged}
-    assert "phab_XBKA" not in mc
+    # Resolved at the NEH review gate (2026-08-21): bank angle scores two-sided.
+    assert mc["phab_XBKA"]["curve_form"] == "optimum"
+    assert mc["phab_XBKA"]["expected_shape"] == "optimum"
+    # DOC is a recorded, human-decided exclusion: flagged as documented, never re-asked.
+    doc = next(f for f in flagged if f["metric"] == "chem_DOC")
+    assert doc["documented"] is True
+    assert doc["decided_by"]
+    assert "chem_DOC" not in mc
+
+
+def test_uncurated_metric_is_flagged_never_guessed():
+    mc, flagged = ra.build_metric_config(["chem_PTL"], {})
+    assert mc == {}
+    assert flagged[0]["metric"] == "chem_PTL"
+    assert flagged[0]["reason"] == "no curated direction available"
+    assert not flagged[0].get("documented")
 
 
 def test_build_metric_config_carries_expected_shape_and_transformation():
@@ -178,11 +191,13 @@ def test_build_curves_lower_is_better_inverts():
 
 
 def test_review_flags_degenerate_and_scopes_clean():
-    # a clean higher-is-better metric + a degenerate one (all non-positive Q25)
+    # A clean higher-is-better metric + a degenerate one: a NONNEGATIVE scale
+    # collapsed at zero (q25 == 0). Signed scales no longer trip the guard
+    # (iqr-seed-2), so the fixture uses the guard's real domain.
     data = pd.DataFrame({
         "site_id": [f"s{i}" for i in range(10)],
         "good": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        "bad": [-5, -4, -3, -2, -1, 0, 0, 0, 0, 0],
+        "bad": [0, 0, 0, 0, 0, 0, 0, 1, 2, 3],
     })
     mc = {
         "good": {"column_name": "good", "higher_is_better": True, "metric_family": "continuous"},

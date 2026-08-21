@@ -44,7 +44,7 @@ meta:
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
   curve_engine: "apps/stream-curves/streamcurves/curves.py::build_reference_curve"
-  curve_method_version: "iqr-seed-1"     # matches run_state.CURVE_METHOD_VERSION
+  curve_method_version: "iqr-seed-2"     # matches run_state.CURVE_METHOD_VERSION (mirror-checked)
   screening_method_version: "easi-batch-1"
 
 # --------------------------------------------------------------------------- #

@@ -18,7 +18,10 @@ from typing import Any, Iterable, Optional
 # Method-version stamps (travel into published bundles so a consumer can tell
 # which algorithm produced a curve / a screening decision).
 # --------------------------------------------------------------------------- #
-CURVE_METHOD_VERSION = "iqr-seed-1"
+# iqr-seed-2 (2026-08-21): the degenerate-Q25 origin guard applies only to
+# nonnegative-scale metrics, so signed-scale metrics (log relative bed
+# stability) build the standard seed. Scoring semantics are unchanged.
+CURVE_METHOD_VERSION = "iqr-seed-2"
 SCREENING_METHOD_VERSION = "easi-batch-1"
 
 # --------------------------------------------------------------------------- #

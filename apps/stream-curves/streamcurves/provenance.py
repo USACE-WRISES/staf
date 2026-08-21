@@ -406,11 +406,21 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             computed={"family": "iqr-seed piecewise-linear",
                       "method_version": run_state.CURVE_METHOD_VERSION})
     for entry in (result.get("flagged_direction") or []):
-        add("CURVE-05", "metric", entry.get("metric"),
-            computed={"reason": entry.get("reason")},
-            verdict=VERDICT_REVIEW, review_required=True,
-            recommendation="No curated ecological direction; no curve was built.",
-            review_triggers=["direction_unresolved"])
+        if entry.get("documented"):
+            # A human-decided, recorded exclusion is a resolved expectation,
+            # not an open review item.
+            add("CURVE-05", "metric", entry.get("metric"),
+                computed={"reason": entry.get("reason"),
+                          "decided_by": entry.get("decided_by")},
+                verdict=VERDICT_PASS,
+                recommendation="Excluded from scoring by recorded owner decision; "
+                               "kept as regional context.")
+        else:
+            add("CURVE-05", "metric", entry.get("metric"),
+                computed={"reason": entry.get("reason")},
+                verdict=VERDICT_REVIEW, review_required=True,
+                recommendation="No curated ecological direction; no curve was built.",
+                review_triggers=["direction_unresolved"])
 
     # --- SELECT-01: compact portfolio ---
     for entry in (result.get("portfolio") or []):
@@ -821,6 +831,68 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
         },
         "reviewQueue": queue,
     })
+
+
+def apply_reviewer_decisions(provenance_doc: dict, decisions: list[dict],
+                             *, default_reviewer: str = "",
+                             default_date: Optional[str] = None) -> dict:
+    """Fold recorded human adjudications into a provenance document.
+
+    Each decision: ``{rule_id, subject, action, rationale, reviewer?, date?}``
+    with action in accept / accept_with_conditions / modify / reject /
+    request_additional_analysis. Matching records get their reviewer fields
+    filled, matching queue items are marked resolved, and the queue counts are
+    recomputed, so the published document carries the human record the
+    methodology's section 8 requires instead of empty reviewer slots. Returns
+    the same document object, modified in place, plus a summary of unmatched
+    decisions under ``reviewerDecisionsUnmatched`` (never silently dropped).
+    """
+    allowed = {"accept", "accept_with_conditions", "modify", "reject",
+               "request_additional_analysis"}
+    by_key: dict[tuple, dict] = {}
+    for d in decisions or []:
+        action = str(d.get("action") or "").strip()
+        if action not in allowed:
+            raise ValueError(f"unknown reviewer action {action!r} for "
+                             f"{d.get('rule_id')}:{d.get('subject')}")
+        by_key[(str(d.get("rule_id")), str(d.get("subject")))] = d
+
+    matched: set[tuple] = set()
+    for record in provenance_doc.get("records") or []:
+        key = (str(record.get("rule_id")), str(record.get("subject")))
+        d = by_key.get(key)
+        if not d:
+            continue
+        matched.add(key)
+        record["reviewer"] = d.get("reviewer") or default_reviewer
+        record["reviewer_action"] = d.get("action")
+        record["reviewer_rationale"] = d.get("rationale")
+        record["reviewed_at"] = d.get("date") or default_date
+
+    queue = provenance_doc.get("reviewQueue") or {}
+    for item in queue.get("items") or []:
+        for rid in item.get("rule_ids") or []:
+            d = by_key.get((str(rid), str(item.get("subject"))))
+            if d:
+                item["status"] = "resolved"
+                item["reviewer"] = d.get("reviewer") or default_reviewer
+                item["reviewer_action"] = d.get("action")
+                item["reviewer_rationale"] = d.get("rationale")
+                item["reviewed_at"] = d.get("date") or default_date
+                break
+    open_items = [i for i in queue.get("items") or [] if i.get("status") == "open"]
+    if "counts" in queue:
+        queue["counts"] = {
+            **queue["counts"],
+            "open": len(open_items),
+            "blocking": sum(1 for i in open_items if i.get("blocking")),
+        }
+
+    provenance_doc["reviewerDecisionsUnmatched"] = [
+        {"rule_id": k[0], "subject": k[1], "action": by_key[k].get("action")}
+        for k in by_key if k not in matched
+    ]
+    return provenance_doc
 
 
 def review_queue_markdown(queue: dict) -> str:

@@ -49,7 +49,8 @@
             ]
           },
           "discipline": "Hydrology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-pctimp2019ws",
@@ -87,7 +88,8 @@
             ]
           },
           "discipline": "Hydrology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -132,7 +134,8 @@
             ]
           },
           "discipline": "Hydrology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-pctwdwet2019ws",
@@ -170,7 +173,8 @@
             ]
           },
           "discipline": "Hydrology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -215,7 +219,8 @@
             ]
           },
           "discipline": "Hydrology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -260,7 +265,8 @@
             ]
           },
           "discipline": "Hydrology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-damdensws",
@@ -298,7 +304,8 @@
             ]
           },
           "discipline": "Hydrology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -343,7 +350,8 @@
             ]
           },
           "discipline": "Hydraulics",
-          "assignmentOrigin": "additional-function"
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-phab-bfwd-rat",
@@ -393,7 +401,8 @@
             ]
           },
           "discipline": "Hydraulics",
-          "assignmentOrigin": "additional-function"
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-phab-rp100-cm",
@@ -431,7 +440,8 @@
             ]
           },
           "discipline": "Hydraulics",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -476,7 +486,8 @@
             ]
           },
           "discipline": "Hydraulics",
-          "assignmentOrigin": "additional-function"
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -533,7 +544,8 @@
             ]
           },
           "discipline": "Hydraulics",
-          "assignmentOrigin": "additional-function"
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-phab-xbkf-h",
@@ -583,7 +595,8 @@
             ]
           },
           "discipline": "Hydraulics",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -628,7 +641,8 @@
             ]
           },
           "discipline": "Hydraulics",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-phab-xembed",
@@ -666,7 +680,8 @@
             ]
           },
           "discipline": "Hydraulics",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -723,7 +738,8 @@
             ]
           },
           "discipline": "Geomorphology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-phab-xbkf-h",
@@ -773,7 +789,8 @@
             ]
           },
           "discipline": "Geomorphology",
-          "assignmentOrigin": "additional-function"
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -818,7 +835,59 @@
             ]
           },
           "discipline": "Geomorphology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
+        {
+          "metricId": "spring-phab-xbka",
+          "metricName": "XBKA",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "XBKA",
+          "howToMeasure": "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.079545450000005,
+                "y": 0.3
+              },
+              {
+                "x": 14.566477270250004,
+                "y": 0.7
+              },
+              {
+                "x": 19.136363635000002,
+                "y": 1.0
+              },
+              {
+                "x": 32.19318182,
+                "y": 1.0
+              },
+              {
+                "x": 36.76306818475,
+                "y": 0.7
+              },
+              {
+                "x": 45.250000005,
+                "y": 0.3
+              },
+              {
+                "x": 58.306818189999994,
+                "y": 0.0
+              }
+            ]
+          },
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -827,6 +896,45 @@
       "functionName": "Sediment continuity",
       "discipline": "Geomorphology",
       "metrics": [
+        {
+          "metricId": "spring-phab-lrbs-use",
+          "metricName": "LRBS_use",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+          "xLabel": "LRBS_use",
+          "howToMeasure": "Log relative bed stability; higher (nearer natural) is better. Was degenerate in the pilot (Q25 issue), so expect a review flag.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": -2.2507424686666666,
+                "y": 0.0
+              },
+              {
+                "x": -1.5446582696666666,
+                "y": 0.3
+              },
+              {
+                "x": -0.603212671,
+                "y": 0.7
+              },
+              {
+                "x": 0.102871528,
+                "y": 1.0
+              },
+              {
+                "x": 0.3146967877,
+                "y": 1.0
+              }
+            ]
+          },
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
+        },
         {
           "metricId": "spring-phab-pct-safn",
           "metricName": "PCT_SAFN",
@@ -863,7 +971,8 @@
             ]
           },
           "discipline": "Geomorphology",
-          "assignmentOrigin": "additional-function"
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -886,11 +995,11 @@
             "form": "monotone",
             "points": [
               {
-                "x": 0.0,
+                "x": -1.6385223243333331,
                 "y": 0.0
               },
               {
-                "x": 0.3821676197142857,
+                "x": -0.5541308513333332,
                 "y": 0.3
               },
               {
@@ -908,7 +1017,8 @@
             ]
           },
           "discipline": "Geomorphology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-phab-lwdeqvolm100",
@@ -946,7 +1056,8 @@
             ]
           },
           "discipline": "Geomorphology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-phab-xembed",
@@ -984,7 +1095,8 @@
             ]
           },
           "discipline": "Geomorphology",
-          "assignmentOrigin": "additional-function"
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -1029,7 +1141,8 @@
             ]
           },
           "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-phab-xcdenmid",
@@ -1067,7 +1180,8 @@
             ]
           },
           "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -1112,7 +1226,8 @@
             ]
           },
           "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -1157,7 +1272,8 @@
             ]
           },
           "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-chem-ptl",
@@ -1195,7 +1311,8 @@
             ]
           },
           "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -1240,7 +1357,8 @@
             ]
           },
           "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-chem-ph",
@@ -1290,7 +1408,8 @@
             ]
           },
           "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-chem-turb",
@@ -1328,7 +1447,8 @@
             ]
           },
           "discipline": "Physicochemistry",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -1373,7 +1493,8 @@
             ]
           },
           "discipline": "Biology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-phab-xfc-nat",
@@ -1411,7 +1532,8 @@
             ]
           },
           "discipline": "Biology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -1456,7 +1578,8 @@
             ]
           },
           "discipline": "Biology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-fish-nat-totlntax",
@@ -1494,7 +1617,8 @@
             ]
           },
           "discipline": "Biology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -1539,7 +1663,8 @@
             ]
           },
           "discipline": "Biology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-bent-hprime",
@@ -1577,7 +1702,8 @@
             ]
           },
           "discipline": "Biology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-bent-tolrpind",
@@ -1615,7 +1741,8 @@
             ]
           },
           "discipline": "Biology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     },
@@ -1660,7 +1787,8 @@
             ]
           },
           "discipline": "Biology",
-          "assignmentOrigin": "additional-function"
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "least_disturbed"
         },
         {
           "metricId": "spring-rdcrsws",
@@ -1698,7 +1826,8 @@
             ]
           },
           "discipline": "Biology",
-          "assignmentOrigin": "canonical"
+          "assignmentOrigin": "canonical",
+          "referenceTier": "least_disturbed"
         }
       ]
     }
@@ -4391,11 +4520,12 @@
       ]
     }
   },
-  "contentDigest": "sha256:cdb68461dbed1333f2a96e9022a0013b8da0957cab8b902ae9e4780e35fe1f5f",
+  "referenceTier": "least_disturbed",
+  "contentDigest": "sha256:38aba1c669b16ba7d8e19ca6134ffac7c228514c81577ab7c92401cadc720b56",
   "library": {
     "libraryId": "northeastern-highlands",
-    "version": 2,
-    "updatedAt": "2026-07-29T17:26:39Z",
+    "version": 3,
+    "updatedAt": "2026-08-21T17:31:54Z",
     "author": "StreamCurves Regional Analysis Agent",
     "revisionNotes": "Reference tier: least_disturbed (screening preset functional, method direct_engine). Retained 33 of 71 candidates.",
     "region": {
@@ -4403,10 +4533,10 @@
       "code": "58",
       "name": "Northeastern Highlands"
     },
-    "contentDigest": "sha256:cdb68461dbed1333f2a96e9022a0013b8da0957cab8b902ae9e4780e35fe1f5f",
-    "supersedesVersion": 1
+    "contentDigest": "sha256:38aba1c669b16ba7d8e19ca6134ffac7c228514c81577ab7c92401cadc720b56",
+    "supersedesVersion": 2
   },
-  "version": 2,
+  "version": 3,
   "lifecycle": "preliminary",
-  "assessmentRef": "northeastern-highlands@v2"
+  "assessmentRef": "northeastern-highlands@v3"
 }
