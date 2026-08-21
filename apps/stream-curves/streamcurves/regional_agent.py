@@ -340,6 +340,16 @@ def build_metric_config(columns: list[str], directions: dict) -> tuple[dict, lis
             flagged_direction.append({"metric": code, "display_name": label,
                                       "reason": "no curated direction available"})
             continue
+        if d.get("excluded_from_scoring"):
+            # A resolved, human-decided exclusion: recorded, never re-asked.
+            flagged_direction.append({
+                "metric": code, "display_name": label,
+                "reason": d.get("exclusion_reason") or "excluded from scoring",
+                "documented": True,
+                "decided_by": d.get("decided_by"),
+                "note": d.get("note"),
+            })
+            continue
         hib = d.get("higher_is_better")
         form = str(d.get("curve_form") or curves.CURVE_FORM_MONOTONE).strip().lower()
         # A two-sided metric legitimately has no "better" direction, so hib is null by

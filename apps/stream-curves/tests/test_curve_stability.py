@@ -145,3 +145,29 @@ def test_recurrence_of_a_real_improvement():
         _strat_frame(True), "v", "s", n_boot=30, seed=13)
     assert res["evaluable"]
     assert res["recurrence_above_zero"] >= 0.9
+
+
+# --- iqr-seed-2: the signed-scale guard refinement --------------------------- #
+def test_signed_scale_metric_builds_a_real_seed_not_the_origin_fallback():
+    """LRBS-shaped values (log ratio, legitimately negative) must build the
+    standard seed. The origin-anchored degenerate fallback is for scales that
+    cannot go negative (iqr-seed-2, owner decision 2026-08-21)."""
+    import pandas as pd
+    from streamcurves import curves as c
+    lrbs_like = pd.DataFrame({"m": [-3.35, -1.2, -0.6, -0.23, -0.1, 0.1, 0.5, 1.35]})
+    cfg = {"m": {"column_name": "m", "higher_is_better": True,
+                 "metric_family": "continuous"}}
+    res = c.build_reference_curve(lrbs_like, "m", cfg, build_plots=False)
+    assert str(res["curve_row"].iloc[0]["curve_status"]) == "complete"
+    xs = [p["metric_value"] for p in res["curve_points"].to_dict("records")]
+    assert min(xs) < 0  # the seed genuinely spans the negative range
+
+
+def test_nonnegative_scale_zero_q25_still_degenerates():
+    import pandas as pd
+    from streamcurves import curves as c
+    zeros = pd.DataFrame({"m": [0.0, 0.0, 0.0, 0.0, 2.0, 5.0, 9.0]})
+    cfg = {"m": {"column_name": "m", "higher_is_better": True,
+                 "metric_family": "continuous"}}
+    res = c.build_reference_curve(zeros, "m", cfg, build_plots=False)
+    assert str(res["curve_row"].iloc[0]["curve_status"]) == "degenerate_q25"

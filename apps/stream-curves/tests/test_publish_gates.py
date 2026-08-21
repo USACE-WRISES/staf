@@ -109,6 +109,40 @@ def test_reference_tier_is_stamped_through_the_bundle():
             assert m["referenceTier"] == "best_available"
 
 
+def test_reviewer_decisions_merge_into_records_and_queue():
+    doc = pv.build_interactive_provenance(
+        _bundle(("m1", "m2", "m3")),
+        {"m2": {"status": "degenerate", "decision": "pending",
+                "reasons": ["degenerate"]}},
+        region=REGION, publisher="tester", session_name="s")
+    assert doc["reviewQueue"]["counts"]["open"] >= 1
+    decisions = [{"rule_id": "CURVE-07", "subject": "m2", "action": "accept",
+                  "rationale": "Accepted as preliminary with the flag.",
+                  "reviewer": "owner", "date": "2026-08-21"}]
+    merged = pv.apply_reviewer_decisions(doc, decisions)
+    rec = next(r for r in merged["records"]
+               if r["rule_id"] == "CURVE-07" and r["subject"] == "m2")
+    assert rec["reviewer"] == "owner"
+    assert rec["reviewer_action"] == "accept"
+    item = next(i for i in merged["reviewQueue"]["items"] if i["subject"] == "m2")
+    assert item["status"] == "resolved"
+    assert merged["reviewQueue"]["counts"]["open"] == 0
+    assert merged["reviewerDecisionsUnmatched"] == []
+
+
+def test_unmatched_reviewer_decisions_are_reported_and_bad_actions_raise():
+    doc = pv.build_interactive_provenance(
+        _bundle(), {}, region=REGION, publisher="t", session_name="s")
+    merged = pv.apply_reviewer_decisions(
+        doc, [{"rule_id": "STRAT-09", "subject": "Nope", "action": "reject",
+               "rationale": "x"}])
+    assert merged["reviewerDecisionsUnmatched"] == [
+        {"rule_id": "STRAT-09", "subject": "Nope", "action": "reject"}]
+    with pytest.raises(ValueError, match="unknown reviewer action"):
+        pv.apply_reviewer_decisions(doc, [{"rule_id": "X", "subject": "y",
+                                           "action": "yolo"}])
+
+
 def test_interactive_provenance_accounts_for_every_rule():
     from streamcurves import methodology
     doc = pv.build_interactive_provenance(

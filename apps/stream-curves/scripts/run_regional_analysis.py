@@ -68,13 +68,17 @@ def variable_evaluation_matrix(result: dict) -> pd.DataFrame:
             "final_status": "in_scope" if mk in result["intended_metrics"] else "flagged",
         })
     for fd in result["flagged_direction"]:
+        documented = bool(fd.get("documented"))
         rows.append({
             "metric": fd["metric"], "display_name": fd.get("display_name"),
-            "function": "", "metric_role": "insufficient_evidence",
+            "function": "", "metric_role": "no" if documented else "insufficient_evidence",
             "higher_is_better": None, "direction_source": None,
             "direction_confidence": None, "n_reference": None,
-            "curve_status": "not_built", "review_decision": "pending",
-            "review_reasons": f"direction {fd['reason']}", "final_status": "flagged",
+            "curve_status": "not_built",
+            "review_decision": "excluded_by_decision" if documented else "pending",
+            "review_reasons": (f"excluded by recorded decision: {fd['reason']}"
+                               if documented else f"direction {fd['reason']}"),
+            "final_status": "excluded_by_decision" if documented else "flagged",
         })
     return pd.DataFrame(rows)
 
@@ -299,7 +303,10 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
         f"- Sample-size flags (exploratory/insufficient n): {len(result['sample_size_flags'])}",
         f"- Missingness above the DATA-03 review threshold (data_review): "
         f"{sum(1 for m in (result.get('missingness') or {}).values() if m.get('disposition') == 'review')}",
-        f"- Metrics with unresolved direction (not built): {len(result['flagged_direction'])}", "",
+        f"- Metrics with unresolved direction (not built): "
+        f"{sum(1 for fd in result['flagged_direction'] if not fd.get('documented'))}",
+        f"- Metrics excluded by recorded decision: "
+        f"{sum(1 for fd in result['flagged_direction'] if fd.get('documented'))}", "",
         "## STAF function coverage", "",
     ]
     _cov = result.get("coverage") or {}
@@ -497,6 +504,11 @@ def main(argv=None) -> int:
                     help="Recorded human approval for a function carrying more than "
                          "two metrics (SELECT-01). Repeatable. Without one for each "
                          "such function the publish is refused")
+    ap.add_argument("--reviewer-decisions", default=None, metavar="PATH",
+                    help="JSON list of recorded human adjudications "
+                         "({rule_id, subject, action, rationale, reviewer, date}). "
+                         "Merged into the provenance records and review queue, so the "
+                         "published document carries the human record, not empty slots")
     args = ap.parse_args(argv)
 
     portfolio_approvals = []
@@ -554,8 +566,19 @@ def main(argv=None) -> int:
         result, argv=list(argv or sys.argv[1:]), started_at=started_at,
         finished_at=datetime.now(timezone.utc).isoformat())
     provenance_doc = pv.build_provenance(result, manifest, timestamp=started_at)
+    if args.reviewer_decisions:
+        decisions = json.loads(Path(args.reviewer_decisions).read_text(encoding="utf-8"))
+        provenance_doc = pv.apply_reviewer_decisions(
+            provenance_doc, decisions, default_reviewer=args.maintainer,
+            default_date=started_at)
+        unmatched = provenance_doc.get("reviewerDecisionsUnmatched") or []
+        print(f"[agent] reviewer decisions merged: {len(decisions)} supplied, "
+              f"{len(unmatched)} unmatched"
+              + (f" ({', '.join(u['rule_id'] + ':' + u['subject'] for u in unmatched)})"
+                 if unmatched else ""))
     print(f"[agent] provenance: {provenance_doc['counts']['total']} rule record(s), "
           f"{provenance_doc['counts']['review_required']} need review; "
+          f"queue open {provenance_doc['reviewQueue']['counts']['open']}; "
           f"inputs {manifest['inputsDigest'][:19]}")
 
     publish_info = None

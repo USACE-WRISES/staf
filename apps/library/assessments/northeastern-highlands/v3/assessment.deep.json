@@ -4535,8 +4535,5 @@
     },
     "contentDigest": "sha256:38aba1c669b16ba7d8e19ca6134ffac7c228514c81577ab7c92401cadc720b56",
     "supersedesVersion": 2
-  },
-  "version": 3,
-  "lifecycle": "preliminary",
-  "assessmentRef": "northeastern-highlands@v3"
+  }
 }

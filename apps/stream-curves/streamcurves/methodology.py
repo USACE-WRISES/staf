@@ -162,7 +162,18 @@ def mirror_drift() -> list[str]:
     except Exception as exc:  # noqa: BLE001
         problems.append(f"could not compare the curve-gate geometry: {exc}")
 
-    # 4. The DEEP scoring contract mirrors deep_export.
+    # 4. The curve method version mirrors run_state.
+    try:
+        from . import run_state as _rs
+        declared = str(threshold("meta.curve_method_version"))
+        if declared != _rs.CURVE_METHOD_VERSION:
+            problems.append(
+                f"meta.curve_method_version ({declared!r}) differs from the engine's "
+                f"{_rs.CURVE_METHOD_VERSION!r}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the curve method version: {exc}")
+
+    # 5. The DEEP scoring contract mirrors deep_export.
     try:
         from . import deep_export as _dx
         contract = _dx.SCORING_CONTRACT_CONSTANTS

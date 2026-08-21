@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-07-29T17:26:39Z",
+  "generatedAt": "2026-08-21T17:31:54Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -19,7 +19,8 @@
       "defaultVersion": 1,
       "contentDigest": "sha256:e9749dd548213591c0ac0de60f52ccd49aac5dc8ddff5ef302ba78cdff9564bd",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "absent"
     },
     {
       "assessmentId": "co-sqt-adapted",
@@ -38,7 +39,8 @@
       "defaultVersion": 1,
       "contentDigest": "sha256:6f50aa175a53ebec76273007f75d5abbd26f90d8bc56e624d715fb2fa6b6459a",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "absent"
     },
     {
       "assessmentId": "eastern-corn-belt-plains",
@@ -57,7 +59,8 @@
       "defaultVersion": 1,
       "contentDigest": "sha256:0d42eabc3c3b59d7db1a363bfedfe82da191b19ce046c1ae86b0446e4b1cd4a1",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "absent"
     },
     {
       "assessmentId": "mi-sqt-adapted",
@@ -76,7 +79,8 @@
       "defaultVersion": 1,
       "contentDigest": "sha256:5d8e95677f0cf2bf4b18d1f089024b4fda8aefb21767fb89e2742ad819998e02",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "absent"
     },
     {
       "assessmentId": "mn-sqt-adapted",
@@ -95,7 +99,8 @@
       "defaultVersion": 1,
       "contentDigest": "sha256:63bcc01398fb30358ace1dea1e03e5087126d7222494bce9e82e8d700beabb6c",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "absent"
     },
     {
       "assessmentId": "nc-sqt-adapted",
@@ -114,7 +119,8 @@
       "defaultVersion": 1,
       "contentDigest": "sha256:b7d335a29033af4302053cf22b1b3c3074939c6e7c51237d6254d83aaac219eb",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "absent"
     },
     {
       "assessmentId": "northeastern-highlands",
@@ -126,14 +132,15 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 2,
-      "latestUpdatedAt": "2026-07-29T17:26:39Z",
-      "latestPreliminary": 2,
+      "latestVersion": 3,
+      "latestUpdatedAt": "2026-08-21T17:31:54Z",
+      "latestPreliminary": 3,
       "latestCertified": 0,
-      "defaultVersion": 2,
-      "contentDigest": "sha256:cdb68461dbed1333f2a96e9022a0013b8da0957cab8b902ae9e4780e35fe1f5f",
+      "defaultVersion": 3,
+      "contentDigest": "sha256:38aba1c669b16ba7d8e19ca6134ffac7c228514c81577ab7c92401cadc720b56",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "present"
     },
     {
       "assessmentId": "sc-sqt-adapted",
@@ -152,7 +159,8 @@
       "defaultVersion": 1,
       "contentDigest": "sha256:91a19a28ca5e6bbbe1f35eefb5a06284a65b006ccddca6f905fe28e79a893f23",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "absent"
     },
     {
       "assessmentId": "wi-sqt-adapted",
@@ -171,7 +179,8 @@
       "defaultVersion": 1,
       "contentDigest": "sha256:91c5d84688ed1bffb97ce69ca6dc18b9498cb9515ba17af8cdbbe59df7fc4b2b",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "absent"
     },
     {
       "assessmentId": "wy-sqt-adapted",
@@ -190,7 +199,8 @@
       "defaultVersion": 1,
       "contentDigest": "sha256:9d2260e43f0e3c57f3cb2a54819e36313a9012baf68a5e82bcba84cdae03615d",
       "validationState": "unvalidated",
-      "validationSummary": null
+      "validationSummary": null,
+      "provenanceState": "absent"
     }
   ]
 }
