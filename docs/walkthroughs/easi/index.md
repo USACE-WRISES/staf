@@ -373,11 +373,11 @@ description: "Video walkthrough of the EASI screening app, with the full referen
 </div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Breakpoints</div><table class="metric-ref-table"><thead><tr><th>Boundary</th><th>What it marks</th></tr></thead><tbody><tr><td>1 taxon</td><td>Transparent STAF transition from no established taxa recorded to recorded pressure.</td></tr><tr><td>3 taxa</td><td>Transparent STAF transition to the upper count tier.</td></tr></tbody></table></div>
 <div class="metric-ref-sec"><div class="metric-ref-label">Input rationale</div><ul class="metric-ref-list"><li><b>Established NAS taxa count:</b> Established taxa records provide a transparent national indicator of invasive-species pressure.</li></ul></div>
-<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>A zero count means no established taxa were recorded. It does not confirm absence.</li><li>HUC8 fallback results carry lower confidence than HUC12 results.</li><li>Count bands are STAF screening judgments.</li><li>Establishment status often cannot be confirmed from occurrence records, and uneven sampling effort inflates richness where effort is high (Mangiante et al. 2019).</li></ul></div>
+<div class="metric-ref-sec"><div class="metric-ref-label">Known limitations</div><ul class="metric-ref-list"><li>A zero count means no established taxa were recorded. It does not confirm absence.</li><li>HUC8 fallback results carry lower confidence than HUC12 results.</li><li>Count bands are STAF screening judgments.</li><li>Establishment status often cannot be confirmed from occurrence records, and uneven sampling effort inflates richness where effort is high (Mangiante et al. 2018).</li></ul></div>
 <div class="metric-ref-sec">
 <div class="metric-ref-label">Basis and sources</div>
 <p class="metric-ref-meta">Basis: dataset reference &middot; Data confidence: Moderate &middot; Provisional screening thresholds</p>
-<ul class="metric-ref-sources"><li><a href="https://nas.er.usgs.gov/" target="_blank" rel="noopener noreferrer">USGS Nonindigenous Aquatic Species database</a></li><li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6707539/" target="_blank" rel="noopener noreferrer">Mangiante et al. 2019, Trends in nonindigenous aquatic species richness in the United States</a></li></ul>
+<ul class="metric-ref-sources"><li><a href="https://nas.er.usgs.gov/" target="_blank" rel="noopener noreferrer">USGS Nonindigenous Aquatic Species database</a></li><li><a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC6707539/" target="_blank" rel="noopener noreferrer">Mangiante et al. 2018, Trends in nonindigenous aquatic species richness in the United States</a></li></ul>
 </div>
 </div></details>
 
