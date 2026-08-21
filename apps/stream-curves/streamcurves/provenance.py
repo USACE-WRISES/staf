@@ -899,12 +899,34 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
 #: its own record's evidence is what an audit trail exists to prevent (the
 #: published Eastern Corn Belt Plains v2 fast-water influence record read "no
 #: decision flip" over decision_flip: true, review VAL-6, 2026-08-21).
-_RATIONALE_LINT = (
-    (re.compile(r"\bno (?:decision[- ])?flip\b", re.IGNORECASE), "decision_flip", False),
-    (re.compile(r"\bdecision flip(?:ped)?\b(?![^.]*\bno\b)", re.IGNORECASE),
-     "decision_flip", True),
-    (re.compile(r"\bno structural change\b", re.IGNORECASE), "structural_change", False),
-)
+_NEGATIONS = ("no", "not", "never", "without", "none")
+
+
+def _phrase_claims(text: str) -> dict[str, bool]:
+    """The computed facts a templated rationale asserts in prose.
+
+    "no decision flip" / "decision flip: no" assert decision_flip False; a bare
+    "decision flip" (or "decision flip: yes") asserts True; "no structural
+    change" asserts structural_change False. Negation is looked for in the
+    few words BEFORE the phrase and in a trailing ": no", never in the text
+    after it, which is what the first version of this lint got wrong.
+    """
+    claims: dict[str, bool] = {}
+    low = text.lower()
+    for m in re.finditer(r"\b(?:decision[- ])?flip(?:ped|s)?\b", low):
+        before = low[max(0, m.start() - 24):m.start()]
+        after = low[m.end():m.end() + 8]
+        negated = (any(re.search(r"\b" + n + r"\b", before) for n in _NEGATIONS)
+                   or bool(re.match(r"\s*[:=]\s*(no|false)\b", after)))
+        affirmed_after = bool(re.match(r"\s*[:=]\s*(yes|true)\b", after))
+        value = not (negated and not affirmed_after)
+        # Several mentions: any negated mention makes the claim False.
+        claims["decision_flip"] = claims.get("decision_flip", True) and value
+    for m in re.finditer(r"\bstructural change\b", low):
+        before = low[max(0, m.start() - 24):m.start()]
+        if any(re.search(r"\b" + n + r"\b", before) for n in _NEGATIONS):
+            claims["structural_change"] = False
+    return claims
 
 
 def _values_match(computed, expected) -> bool:
@@ -930,12 +952,11 @@ def decision_consistency_problems(record: dict, decision: dict) -> list[str]:
             problems.append(f"asserts {field}={expected!r} but the record computed "
                             f"{computed.get(field)!r}")
     text = str(decision.get("rationale") or "")
-    for pattern, field, asserted in _RATIONALE_LINT:
-        if field in computed and computed.get(field) is not None and pattern.search(text):
+    for field, asserted in _phrase_claims(text).items():
+        if field in computed and computed.get(field) is not None:
             if bool(computed.get(field)) != asserted:
-                problems.append(f"the rationale says {pattern.pattern!r} ({field} "
-                                f"{asserted}) but the record computed "
-                                f"{field}={computed.get(field)!r}")
+                problems.append(f"the rationale's wording asserts {field}={asserted} "
+                                f"but the record computed {field}={computed.get(field)!r}")
     return problems
 
 
