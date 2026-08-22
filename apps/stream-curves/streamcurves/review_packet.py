@@ -269,6 +269,12 @@ def packet_markdown(p: dict) -> str:
         lines.append(f"- {f}")
     if p.get("review_flags"):
         lines.append("")
+    counts = s.get("counts") or {}
+    n_unresolved = int(counts.get("n_unresolved") or 0)
+    if n_unresolved:
+        lines += [f"- **{n_unresolved} of {counts.get('n_screened')} candidates unresolved by the screen** "
+                  "(a service outage or a failed assessment, not a criteria exclusion): the pool is "
+                  "smaller than the region's data.", ""]
     lines += [f"Standing-decision policy {p['policy']['version']} ({str(p['policy']['sha256'])[:19]}), "
               f"enabled beyond the defaults: {', '.join(p['policy']['enabled']) or 'none'}. "
               f"Applied entries: {', '.join(p['policy']['applied_ids']) or 'none'}. "
@@ -367,9 +373,11 @@ def packet_markdown(p: dict) -> str:
 
     lines += ["## 8. Data sources", ""]
     for rep in p.get("source_reports") or []:
+        cache = rep.get("cache") or {}
         lines.append(f"- {rep.get('source')}: {rep.get('status')} "
                      f"({rep.get('n_columns', 0)} columns)"
-                     + (f", {rep.get('reason')}" if rep.get("reason") else ""))
+                     + (f", {rep.get('reason')}" if rep.get("reason") else "")
+                     + (", read from the run's cache" if cache.get("from_cache") else ""))
     lines.append("")
 
     lines += ["## 9. Promote", "",
