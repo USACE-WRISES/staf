@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-21T23:34:56Z",
+  "generatedAt": "2026-08-22T22:51:44Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -67,6 +67,34 @@
           0.0
         ],
         "offset_direction": "curves softer than field crews"
+      },
+      "provenanceState": "present"
+    },
+    {
+      "assessmentId": "interior-plateau",
+      "assessmentName": "Interior Plateau reference assessment",
+      "region": {
+        "kind": "ecoregion",
+        "code": "71",
+        "name": "Interior Plateau"
+      },
+      "stateCode": "",
+      "stateName": "",
+      "latestVersion": 1,
+      "latestUpdatedAt": "2026-08-22T22:51:40Z",
+      "latestPreliminary": 1,
+      "latestCertified": 0,
+      "defaultVersion": 1,
+      "contentDigest": "sha256:cb3ff0c4c96f8795d4722637dde58c1c6bfdfadc09982a0cdfa8f06a6719983f",
+      "validationState": "unvalidated",
+      "validationSummary": {
+        "kind": "protocol_demonstration",
+        "n_sites": 15,
+        "weighted_kappa_range": [
+          -0.1999999999999997,
+          0.23076923076923123
+        ],
+        "offset_direction": "mixed: curves softer than the crews on substrate and impervious cover, harsher on canopy cover"
       },
       "provenanceState": "present"
     },

@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "interior-plateau",
+  "records": [
+    {
+      "version": 1,
+      "actor": "gtmenichino",
+      "timestamp": "2026-08-22T22:51:44Z",
+      "note": "Batch-mode region: protocol-demonstration record",
+      "method": "protocol demonstration: OSAM field values scored through the published curves with DEEP's interpolator, banded, compared with the crews' capacity calls",
+      "checker": "DEEP project batch-mode demonstration (analysis/field_validation_osam.py --ecoregion IP)",
+      "outcome": "no per-curve support claimed: chance-corrected agreement at or near zero on the four comparable pairs, canopy cover the only pair above chance (weighted kappa +0.23); curves read softer than the crews on substrate and impervious cover (the best-available offset) and harsher on canopy; the riffle pair is not comparable because the fast-water curve is registry-only",
+      "reference": "notes/DEEP_Working/analysis/runs/ip-71/review_packet.md (the end-review packet) and field_validation_interior_plateau_summary.json",
+      "reference_tier": "best_available",
+      "pairs": {
+        "WDR->spring-phab-bfwd-rat": {
+          "n": 13,
+          "exact": 0.3076923076923077,
+          "chance_exact": 0.3550295857988166,
+          "within_one": 0.6923076923076923,
+          "chance_within_one": 0.7751479289940828,
+          "weighted_kappa": -0.14965986394557854,
+          "spearman": -0.19342040270917507,
+          "curve_harsher": 0.38461538461538464,
+          "curve_softer": 0.3076923076923077,
+          "share_index_at_1": 0.3076923076923077
+        },
+        "avgcanopy->spring-phab-xcdenmid": {
+          "n": 15,
+          "exact": 0.5333333333333333,
+          "chance_exact": 0.38666666666666666,
+          "within_one": 0.9333333333333333,
+          "chance_within_one": 0.92,
+          "weighted_kappa": 0.23076923076923123,
+          "spearman": 0.33968311024337877,
+          "curve_harsher": 0.4666666666666667,
+          "curve_softer": 0.0,
+          "share_index_at_1": 0.06666666666666667
+        },
+        "d50->spring-phab-lsub-dmm": {
+          "n": 12,
+          "exact": 0.5,
+          "chance_exact": 0.5,
+          "within_one": 1.0,
+          "chance_within_one": 1.0,
+          "weighted_kappa": 0.0,
+          "spearman": null,
+          "curve_harsher": 0.0,
+          "curve_softer": 0.5,
+          "share_index_at_1": 0.6666666666666666
+        },
+        "imperviouscover->spring-pctimp2019ws": {
+          "n": 15,
+          "exact": 0.5333333333333333,
+          "chance_exact": 0.6,
+          "within_one": 0.9333333333333333,
+          "chance_within_one": 0.9555555555555555,
+          "weighted_kappa": -0.1999999999999997,
+          "spearman": -0.27664166758624403,
+          "curve_harsher": 0.13333333333333333,
+          "curve_softer": 0.3333333333333333,
+          "share_index_at_1": 0.4
+        }
+      },
+      "not_comparable": [
+        [
+          "perRiffle",
+          "spring-phab-pct-fast",
+          "not comparable: no shippable scoring curve for this metric in the bundle"
+        ]
+      ],
+      "dataset_provenance": {
+        "dataset": "Ohio Stream Assessment Method summary data (OSAM)",
+        "file": "apps/stream-curves/tests/fixtures/OSAM_summarydata.xlsx",
+        "sites_used": 15,
+        "site_selection": "every site whose Ecoregion column reads IP (inside ecoregion 71)",
+        "survey_years": "INFORMATION REQUIRED (not recorded in the workbook)",
+        "protocol_reference": "INFORMATION REQUIRED",
+        "capacity_call_derivation": "INFORMATION REQUIRED: the workbook maps each measured variable to the function its call belongs to, so the calls may be rubric-derived from the compared indicators",
+        "independence": {
+          "sites": "independent of the NRSA development data (no OSAM site is an NRSA site)",
+          "judgment": "unverified pending protocol documentation",
+          "variables": "different measurement methods per pair (documented in the crosswalk)"
+        }
+      },
+      "design_approval": {
+        "approved_by": "gtmenichino",
+        "approved_on": "2026-08-21",
+        "gate": "Phase 6 design gate of the two pilots, applied unchanged to the third region",
+        "measures": "band agreement at the 0.39 and 0.69 breaks with chance expectations, linear-weighted kappa, Spearman correlation with sign, per-site aggregation",
+        "acceptance_threshold": "none claimed at 15 sites; the only decision rule was below-chance agreement or a systematically opposite direction",
+        "recast": "reported as a protocol demonstration with no per-curve support, as for the pilots"
+      },
+      "bundle_version_compared": 1
+    }
+  ],
+  "history": [
+    {
+      "version": 1,
+      "state": "unvalidated",
+      "summary": {
+        "kind": "protocol_demonstration",
+        "n_sites": 15,
+        "weighted_kappa_range": [
+          -0.1999999999999997,
+          0.23076923076923123
+        ],
+        "offset_direction": "mixed: curves softer than the crews on substrate and impervious cover, harsher on canopy cover"
+      },
+      "actor": "gtmenichino",
+      "timestamp": "2026-08-22T22:51:44Z",
+      "note": "Exploratory field comparison only; not validation"
+    }
+  ]
+}

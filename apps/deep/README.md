@@ -27,6 +27,8 @@ assessment bundles.
 - `deep/assessments.py` — load a predefined assessment or an uploaded bundle.
 - `deep/config.py`, `deep/models.py` — constants/loaders and run models.
 - `scripts/build_deep_data.py` — distills the STAF metric library into `data/`.
+- `scripts/build_us_states.py`: builds `data/us_states.geojson.gz`, the state
+  boundary layer, from the Census 1:500,000 cartographic boundary file.
 
 **Phase 2 — interactive app (done):**
 
@@ -116,6 +118,14 @@ An uploaded assessment is one object of the same shape as an entry in
 `deep-assessments.json` (curves inlined), so predefined and uploaded load
 through one path.
 
+Two boundary layers back the Region step's site line and the session and report
+region stamp (`deep/geo.py`, exact boundary-inclusive point-in-polygon):
+`data/ecoregions_l3.geojson` (EPA Level III ecoregions, copied from StreamCurves)
+and `data/us_states.geojson.gz` (Census 1:500,000 cartographic state boundaries,
+built by `scripts/build_us_states.py`, which downloads the source zip and writes
+the gzipped layer). The earlier coarse state layer placed a Hanover NH site in
+Vermont, so `tests/test_geo.py` pins near-border points.
+
 ## Scoring convention
 
 Matches SFARI/EASI exactly so tiers are comparable: outcome weights
@@ -131,5 +141,6 @@ Uses the Python 3.12 launcher (`py`) on this machine. Requires a sibling
 
 ```sh
 py scripts/build_deep_data.py      # generate data/ from the STAF metric library
+py scripts/build_us_states.py      # rebuild data/us_states.geojson.gz from the Census source
 py -m pytest                       # run the test suite
 ```

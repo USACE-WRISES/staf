@@ -4,29 +4,34 @@ DEEP needs to resolve a snapped site to its EPA Level III ecoregion and US state
 the Assessment step can match published library assessments to the site's region and
 so a saved session/report can record where the site fell.
 
-The polygon sets (``ecoregions_l3.geojson``, ``us_states.geojson``) are copied from
-StreamCurves — there is no shared ``libs/`` package yet, so this mirrors the
-mirror-the-contract convention already used across the monorepo. The point-in-polygon
-resolvers mirror ``streamcurves/geo.py`` (lazy read, cached index, bbox prefilter) but
-use shapely's ``covers`` predicate so a point exactly on an official boundary counts as
-inside (boundary-inclusive) — plain ray-casting cannot guarantee that for a shared edge
-or a vertex.
+The ecoregion polygons (``ecoregions_l3.geojson``) are copied from StreamCurves — there
+is no shared ``libs/`` package yet, so this mirrors the mirror-the-contract convention
+already used across the monorepo. The state polygons (``us_states.geojson.gz``) are the
+US Census cartographic boundary file at 1:500,000, built by
+``scripts/build_us_states.py``: the coarse choropleth layer DEEP shipped before
+2026-08-22 drew New Hampshire's western edge about 2.7 km east of the Connecticut
+River and labeled a Hanover NH site as Vermont. The point-in-polygon resolvers mirror
+``streamcurves/geo.py`` (lazy read, cached index, bbox prefilter) but use shapely's
+``covers`` predicate so a point exactly on an official boundary counts as inside
+(boundary-inclusive) — plain ray-casting cannot guarantee that for a shared edge or a
+vertex. On a shared edge or corner the first feature in file order wins.
 
-Both GeoJSONs are read lazily and the built geometry index is cached, so the first
-lookup pays the parse cost and subsequent lookups are fast.
+Both layers are read lazily (gzipped or plain GeoJSON) and the built geometry index
+is cached, so the first lookup pays the parse cost and subsequent lookups are fast.
 
 FUTURE: consolidate with ``streamcurves/geo.py`` into a shared ``staf-core`` package.
 """
 from __future__ import annotations
 
 import functools
+import gzip
 import json
 import math
 from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 ECOREGIONS_PATH = DATA_DIR / "ecoregions_l3.geojson"
-STATES_PATH = DATA_DIR / "us_states.geojson"
+STATES_PATH = DATA_DIR / "us_states.geojson.gz"
 
 
 def _finite(v) -> bool:
@@ -34,6 +39,16 @@ def _finite(v) -> bool:
         return math.isfinite(float(v))
     except (TypeError, ValueError):
         return False
+
+
+def _read_feature_collection(path: Path) -> dict:
+    """Parse a GeoJSON FeatureCollection, gzipped (``.gz``) or plain. Raises on a
+    missing or unreadable file; ``_index`` turns that into an empty index."""
+    path = Path(path)
+    if path.suffix == ".gz":
+        with gzip.open(path, "rt", encoding="utf-8") as stream:
+            return json.load(stream)
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 @functools.lru_cache(maxsize=None)
@@ -52,7 +67,7 @@ def _index(path_str: str, value_prop: str, name_prop: str) -> list[tuple]:
     if not path.exists():
         return []
     try:
-        fc = json.loads(path.read_text(encoding="utf-8"))
+        fc = _read_feature_collection(path)
     except Exception:  # noqa: BLE001
         return []
     out: list[tuple] = []

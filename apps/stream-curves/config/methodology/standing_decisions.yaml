@@ -1,0 +1,215 @@
+# StreamCurves standing decisions: the owner-approved class decisions a batch run
+# may apply to a review-queue item without a per-item human decision.
+#
+# Governance (methodology 0.7-provisional, section 8, "Standing decisions"):
+#   - Every entry is a decision the owner made once, as a class, on the two pilot
+#     regions (Northeastern Highlands v4, Eastern Corn Belt Plains v3), recorded
+#     here with the version it was approved under. A batch run expands an entry
+#     per item from that item's OWN computed evidence, stamps the decision with
+#     rationale_origin "standing_policy:<policy_version>" and the reviewer
+#     "standing-policy:<id> (pending owner confirmation)", and the provenance
+#     machinery refuses any rationale that contradicts its record (the asserts).
+#   - A staged version carrying a pending-confirmation reviewer can never reach
+#     the canonical library: `promote` rewrites the reviewer to the confirming
+#     owner's name after the end review, and library.publish_version refuses
+#     the marker on a canonical publish.
+#   - Entries marked enabled: false are policy-enableable only: the owner passes
+#     --enable-policy <id> on the record for one run. Everything no entry covers
+#     stays an open item the owner decides at the end review (the region-specific
+#     RED-01 keeper choice, a flagged curve whose status is degenerate, shape
+#     conflict, multi-crossing or insufficient data, an unresolved direction, a
+#     coverage gap, and a portfolio set that differs from the crosswalk default).
+#   - Match conditions read the queue item's computed evidence plus the derived
+#     fields decisions.enrich_evidence adds. Thresholds may reference the
+#     methodology config as "$methodology:<dotted path>" so a threshold edit
+#     cannot leave a stale copy here.
+#
+# Replay (`run_region_batch.py replay`) applies this file to both published pilots
+# offline: every policy decision must match the recorded class and action, and
+# the items the policy leaves open are the owner-only decisions listed in
+# tests/test_standing_decisions_replay.py.
+
+meta:
+  policy_version: "1.0"
+  methodology_version: "0.7-provisional"
+  approved_on: "2026-08-22"
+  authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote."
+  rationale_origin: "standing_policy"
+  pending_reviewer_suffix: "(pending owner confirmation)"
+
+entries:
+  - id: curve04-accept-with-flag
+    rule_id: CURVE-04
+    trigger: influential_site
+    enabled: true
+    approved_under: "0.6-provisional"
+    approved_on: "2026-08-21"
+    match:
+      decision_flip: {eq: false}
+    action: accept
+    asserts: [decision_flip, driver]
+    rationale: >-
+      Accepted with the flag under standing decision {policy_id} (policy
+      {policy_version}), expanded from this record's own evidence. For this
+      curve: {decision_flip_text}; the largest drop-one shift is
+      {max_param_change_pct} of a seed parameter ({max_param_change_iqr_text}),
+      driven by site {driver}. Drop-one quartile sensitivity is inherent to a
+      reference pool of this size on a skewed distribution, the driver is a
+      valid reference site, and removal without a data-quality reason is
+      prohibited. The curve carries the mandatory-review cap until this decision
+      is on the record.
+
+  - id: data05-exploratory-pool-accepted
+    rule_id: DATA-05
+    trigger: n_exploratory
+    enabled: true
+    approved_under: "0.6-provisional"
+    approved_on: "2026-08-21"
+    match:
+      disposition: {eq: exploratory}
+      n_reference: {gte: "$methodology:data_rules.exploratory_n_unstratified"}
+    action: accept
+    asserts: [disposition]
+    rationale: >-
+      Exploratory reference sample accepted under standing decision {policy_id}
+      (policy {policy_version}). Recorded disposition: {disposition}, from
+      {n_reference} reference sites. A curve in scope publishes preliminary with
+      the sample flag and the sample-below-minimum confidence cap, and its
+      published entry states the reference sample so a reader can weigh the
+      point value.
+
+  - id: red06-instability-is-noise
+    rule_id: RED-06
+    trigger: unstable_redundancy_category
+    enabled: true
+    approved_under: "0.6-provisional"
+    approved_on: "2026-08-21"
+    aliases: [red06-instability-is-noise-at-n16]
+    match:
+      stability: {lt: "$methodology:redundancy_rules.bootstrap_stability"}
+    action: accept
+    asserts: [stability, category]
+    rationale: >-
+      Category instability across resamples (this pair reproduces its category
+      in {stability_pct} of resamples, category {category}) is read as
+      resampling noise at this pool size, not as proof of redundancy, under
+      standing decision {policy_id} (policy {policy_version}). Both metrics
+      stay, and the pair is re-examined when the pool grows.
+
+  - id: strat09-defer-floors
+    rule_id: STRAT-09
+    trigger: advisory_stratifier_not_applied
+    enabled: true
+    approved_under: "0.6-provisional"
+    approved_on: "2026-08-21"
+    match:
+      min_level_n: {lt: "$methodology:data_rules.min_n_stratum"}
+    action: reject
+    asserts: [tier]
+    rationale: >-
+      Not applied under standing decision {policy_id} (policy {policy_version}):
+      the candidate's smallest populated class holds {min_level_n} sites
+      (classes {level_counts}), below the DATA-07 automated stratified floor, so
+      the curves stay unstratified. The candidate is recorded in the stratifier
+      evaluation table, and every metric whose candidate clears the STRAT-01 and
+      STRAT-06 floors takes the deferred-gradient deduction and carries the
+      caveat into the published bundle.
+
+  - id: select01-complementary-set
+    rule_id: SELECT-01
+    trigger: more_than_two_metrics
+    enabled: true
+    approved_under: "0.6-provisional"
+    approved_on: "2026-08-21"
+    match:
+      equals_default_portfolio: {eq: true}
+      max_within_function_abs_spearman: {lt: "$methodology:redundancy_rules.strong_abs_spearman"}
+    action: accept
+    side_effect: portfolio_approval
+    asserts: [n_metrics]
+    rationale: >-
+      Complementary set approved under standing decision {policy_id} (policy
+      {policy_version}): the {bundle_n_metrics} metrics on this function
+      ({metrics_text}) are the crosswalk's own assignment, and no pair among
+      them reaches the strong redundancy band (largest within-function rank
+      correlation {max_within_function_abs_spearman_text}). The approval is
+      recorded in the publish metadata.
+
+  # ---- policy-enableable, default off: the owner opts in per run on the record ----
+  - id: ref02-accept-best-available
+    rule_id: REF-02
+    trigger: reference_tier_fallback
+    enabled: false
+    approved_under: "0.6-provisional"
+    approved_on: "2026-08-21"
+    match:
+      reference_tier: {eq: best_available}
+      n_retained: {gte: "$methodology:data_rules.exploratory_n_unstratified"}
+    action: accept
+    asserts: [reference_tier]
+    rationale: >-
+      Best-available reference accepted for this region under standing decision
+      {policy_id} (policy {policy_version}), enabled by the owner for this run.
+      The least-disturbed pool is below the DATA-05 exploratory floor, so the
+      fallback fired as designed, every curve publishes capped at Low with the
+      tier stamped on the bundle and on every metric entry, and the retained
+      pool of {n_retained} sites describes the region's typical remaining
+      streams rather than a selective reference. The 0.39 cutoff stays
+      provisional.
+
+  - id: data03-thin-metric-finalized
+    rule_id: DATA-03
+    trigger: missingness_review
+    enabled: false
+    approved_under: "0.6-provisional"
+    approved_on: "2026-08-21"
+    match:
+      disposition: {eq: review}
+      n_reference: {gte: "$methodology:data_rules.curve_engine_hard_floor_n"}
+    action: accept_with_conditions
+    asserts: [disposition]
+    rationale: >-
+      Accepted with conditions under standing decision {policy_id} (policy
+      {policy_version}), enabled by the owner for this run: measured at
+      {n_reference} of the reference sites ({missing_pct} missing, recorded
+      disposition {disposition}). The bar on automatic recommendation is
+      satisfied by this recorded decision, and the published entry states the
+      reference sample and carries the band-only advisory.
+
+  - id: data06-insufficient-finalized
+    rule_id: DATA-06
+    trigger: n_insufficient
+    enabled: false
+    approved_under: "0.6-provisional"
+    approved_on: "2026-08-21"
+    match:
+      disposition: {eq: insufficient}
+      n_reference: {gte: "$methodology:data_rules.curve_engine_hard_floor_n"}
+    action: accept_with_conditions
+    asserts: [disposition]
+    rationale: >-
+      Insufficient band (recorded disposition {disposition}, {n_reference}
+      reference sites) accepted with conditions under standing decision
+      {policy_id} (policy {policy_version}), enabled by the owner for this run:
+      the curve publishes flagged, at Low confidence, with the reference sample
+      and the band-only advisory on the published entry.
+
+  - id: curve07-thin-metric-finalized
+    rule_id: CURVE-07
+    trigger: curve_needs_review
+    enabled: false
+    approved_under: "0.6-provisional"
+    approved_on: "2026-08-21"
+    match:
+      curve_status: {eq: data_review}
+      domain_violations: {eq: 0}
+    action: accept_with_conditions
+    side_effect: finalize_metric
+    asserts: [curve_status]
+    rationale: >-
+      Reviewer-finalized as exploratory with the missing-data flag carried,
+      under standing decision {policy_id} (policy {policy_version}) enabled by
+      the owner for this run. Curve status on the record: {curve_status}, with
+      no anchor outside the declared domain. The published entry states its
+      reference sample and carries the band-only advisory, and DEEP shows both
+      beside the score.
