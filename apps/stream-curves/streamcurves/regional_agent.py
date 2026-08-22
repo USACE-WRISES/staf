@@ -23,6 +23,7 @@ covers the diagnostics as well.
 from __future__ import annotations
 
 import copy
+import json
 import logging
 import math
 import re
@@ -334,7 +335,22 @@ def select_candidates(l3_code: str, sites_path: Path | str | None = None) -> pd.
     df = pd.read_csv(path, dtype={"us_l3code": str})
     sel = df[df["us_l3code"].astype(str) == str(l3_code)].copy()
     sel["site_id"] = sel["site_id"].astype(str)
+    # The bundled NRSA table carries two duplicated site ids (Minnesota, L3 49
+    # and 50); a site is screened once and counted once in the reference pool.
+    sel = sel.drop_duplicates(subset="site_id", keep="first")
     return sel.reset_index(drop=True)
+
+
+def region_name_for(l3_code: str, sites_path: Path | str | None = None) -> Optional[str]:
+    """The Level III ecoregion name the bundled NRSA table records for a code,
+    None when the code has no candidate sites."""
+    path = Path(sites_path) if sites_path else _DATA_DIR / "nrsa_sites.csv"
+    df = pd.read_csv(path, dtype={"us_l3code": str}, usecols=["us_l3code", "us_l3name"])
+    sel = df[df["us_l3code"].astype(str) == str(l3_code)]
+    if not len(sel):
+        return None
+    name = str(sel["us_l3name"].iloc[0]).strip()
+    return name or None
 
 
 def build_metric_config(columns: list[str], directions: dict) -> tuple[dict, list[dict]]:
@@ -539,15 +555,47 @@ def attach_comids(data: pd.DataFrame, screening_tables: dict | None = None) -> p
     return out
 
 
+def _streamcat_cache_key(comids: list, codes: list[str]) -> dict:
+    return {"comids": sorted({str(c) for c in comids if pd.notna(c)}), "codes": sorted(codes)}
+
+
+def _read_streamcat_cache(path: Path | str, comids: list, codes: list[str]) -> Optional[pd.DataFrame]:
+    """The cached StreamCat table for exactly this COMID set and code list, else None."""
+    p = Path(path)
+    if not p.is_file():
+        return None
+    try:
+        doc = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if doc.get("key") != _streamcat_cache_key(comids, codes):
+        return None
+    rows = doc.get("rows") or []
+    return pd.DataFrame.from_records(rows) if rows else None
+
+
+def _write_streamcat_cache(path: Path | str, comids: list, codes: list[str], wide: pd.DataFrame) -> None:
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    doc = {"schemaVersion": 1, "source": "streamcat",
+           "key": _streamcat_cache_key(comids, codes),
+           "rows": json.loads(wide.to_json(orient="records"))}
+    p.write_text(json.dumps(doc, indent=1) + "\n", encoding="utf-8")
+
+
 def enrich_streamcat(data: pd.DataFrame, directions: dict, *, enabled: bool = True,
                      on_event: Optional[Callable] = None,
-                     fetch: Optional[Callable] = None) -> tuple[pd.DataFrame, dict]:
+                     fetch: Optional[Callable] = None,
+                     cache_path: Path | str | None = None) -> tuple[pd.DataFrame, dict]:
     """Join StreamCat watershed metrics onto the retained sites by COMID.
 
     Returns ``(data, report)``. ``report`` records the outcome honestly -- ``ok`` with a
     column count, ``skipped``, or ``failed`` with the reason -- so the run report can
     never present a missing landscape source as an ordinary NA column. ``fetch`` is
-    injectable for tests; it defaults to the live StreamCat client.
+    injectable for tests; it defaults to the live StreamCat client. ``cache_path``
+    names a per-run cache: a table fetched for exactly this COMID set and code list
+    is read back instead of refetched, so a re-stage is offline and the evidence
+    pass reproduces; the report says which happened.
     """
     codes = sorted(set(select_landscape_codes(directions)[0])
                    | set(select_landscape_codes(directions)[1]))
@@ -566,19 +614,26 @@ def enrich_streamcat(data: pd.DataFrame, directions: dict, *, enabled: bool = Tr
         return data, report
     if callable(on_event):
         on_event({"event": "streamcat_start", "n_codes": len(codes)})
-    try:
-        wide = (fetch or streamcat_metrics)(
-            data["comid"].tolist(), codes, area="watershed")
-    except Exception as exc:  # noqa: BLE001 - a source failure must not kill the run
-        report["status"] = "failed"
-        report["reason"] = str(exc)
-        logger.warning("StreamCat fetch failed: %s", exc)
-        return data, report
-    if wide is None or not len(wide) or wide.shape[1] <= 1:
-        report["status"] = "failed"
-        report["reason"] = "StreamCat returned no rows (service unreachable?)"
-        logger.warning("StreamCat fetch returned nothing for %d comids", len(data))
-        return data, report
+    comids = data["comid"].tolist()
+    wide = _read_streamcat_cache(cache_path, comids, codes) if cache_path else None
+    if wide is not None:
+        report["cache"] = {"path": str(cache_path), "from_cache": True}
+    else:
+        try:
+            wide = (fetch or streamcat_metrics)(comids, codes, area="watershed")
+        except Exception as exc:  # noqa: BLE001 - a source failure must not kill the run
+            report["status"] = "failed"
+            report["reason"] = str(exc)
+            logger.warning("StreamCat fetch failed: %s", exc)
+            return data, report
+        if wide is None or not len(wide) or wide.shape[1] <= 1:
+            report["status"] = "failed"
+            report["reason"] = "StreamCat returned no rows (service unreachable?)"
+            logger.warning("StreamCat fetch returned nothing for %d comids", len(data))
+            return data, report
+        if cache_path:
+            _write_streamcat_cache(cache_path, comids, codes, wide)
+            report["cache"] = {"path": str(cache_path), "from_cache": False}
     out = sites.attach_by_comid(data, "comid", wide)
     added = [c for c in out.columns if c not in data.columns]
     report.update(status="ok", n_columns=len(added), columns=added)
@@ -1102,7 +1157,8 @@ def run_evidence(l3_code: str, name: str, *,
     landscape_directions = load_landscape_directions()
     data = attach_comids(data, screening.get("tables"))
     data, source_report = enrich_streamcat(
-        data, landscape_directions, enabled=use_streamcat, on_event=on_event)
+        data, landscape_directions, enabled=use_streamcat, on_event=on_event,
+        cache_path=(Path(cache_dir) / "streamcat_cache.json") if cache_dir else None)
     landscape_config, landscape_missing = build_landscape_metric_config(
         list(data.columns), landscape_directions)
     predictor_config = build_predictor_config(list(data.columns), landscape_directions)

@@ -83,7 +83,13 @@ the owner's class decisions from the pilots) to the review queue, publishes into
 run's own staged library root, and writes `review_packet.md` for the owner. `promote`
 confirms the staged decisions under the owner's name after the end review and publishes
 the identical content into `apps/library`. `replay` proves the policy reproduces the
-published pilots' recorded decisions.
+published pilots' recorded decisions. `stage-many` stages a list of Level III codes in
+sequence with the same flags (names from the NRSA site table) and writes
+`batch_summary.md`; it never promotes. A stage refuses to proceed when the screen left
+more than a share of the candidates unresolved (a service outage, `--max-unresolved-share`,
+default 10 percent; `--allow-unresolved` stages anyway on the record), reads its own
+`streamcat_cache.json` on a re-stage so the evidence pass reproduces offline, and
+screens each site once even where the bundled NRSA table repeats an id.
 
 The import wizard and cross-sections tab pull from public REST services (USGS
 NLDI/3DEP, EPA StreamCAT, USGS StreamStats, and Model My Watershed); each source

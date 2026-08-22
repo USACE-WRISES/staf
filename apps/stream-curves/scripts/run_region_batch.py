@@ -10,6 +10,16 @@ end-review packet, then a zero-recompute promote after the owner's review.
              and publish the same content into the canonical apps/library.
     replay   apply the policy to published versions offline and report whether
              it reproduces their recorded decisions.
+    stage-many
+             stage several Level III codes in sequence with the same flags
+             (names from the NRSA site table), one run folder each under
+             --out-root, and write batch_summary.md; never promotes.
+
+A stage refuses when the screen left more than --max-unresolved-share of the
+candidates unresolved (a service outage shrinks the pool without excluding
+anyone on the criteria); --allow-unresolved stages anyway on the record. The
+StreamCat join is cached per run (streamcat_cache.json), so a re-stage reads
+it back and the evidence pass reproduces offline.
 
 Usage (from the repo root, shared venv):
     .venv/Scripts/python apps/stream-curves/scripts/run_region_batch.py stage \
@@ -31,6 +41,7 @@ import json
 import os
 import shutil
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -125,6 +136,31 @@ def _confirm_approvals(meta: dict, *, maintainer: str, date: str) -> list[dict]:
     return approvals
 
 
+def unresolved_share(counts: dict) -> Optional[float]:
+    """The share of screened candidates the screen never resolved (None when
+    nothing was screened)."""
+    n = int((counts or {}).get("n_screened") or 0)
+    if n <= 0:
+        return None
+    return int((counts or {}).get("n_unresolved") or 0) / n
+
+
+def unresolved_check(counts: dict, *, max_share: float, allow: bool) -> tuple[Optional[str], Optional[str]]:
+    """``("refuse" | "warn" | None, message)``. A screen that left candidates
+    unresolved (a service outage, a failed or cancelled assessment) shrinks the
+    reference pool without excluding anyone on the criteria; beyond the share
+    allowed the stage refuses rather than staging a pool smaller than the
+    region's data, unless the owner accepts that on the record."""
+    share = unresolved_share(counts)
+    if share is None or share <= max_share:
+        return None, None
+    msg = (f"{counts.get('n_unresolved')} of {counts.get('n_screened')} candidates unresolved by the "
+           f"screen ({share:.0%}, above the {max_share:.0%} allowed): the pool is smaller than the "
+           "region's data. Re-run when the services are up, or pass --allow-unresolved to stage "
+           "anyway on the record.")
+    return ("warn" if allow else "refuse"), msg
+
+
 def _staged_root(out_dir: Path) -> Path:
     root = (out_dir / "library").resolve()
     if root == ra.CANONICAL_LIBRARY:
@@ -186,6 +222,13 @@ def cmd_stage(a) -> int:
     print(f"[batch] evidence: {evidence['n_retained']} / {evidence['n_candidates']} retained "
           f"(tier {evidence['tier']['reference_tier']}, pool {evidence['reference_pool_disposition']}), "
           f"{len(evidence['curve_rows'])} curves built")
+    level, msg = unresolved_check(evidence.get("screening_counts") or {},
+                                  max_share=a.max_unresolved_share, allow=a.allow_unresolved)
+    if level == "refuse":
+        print(f"[batch] REFUSED: {msg}")
+        return 2
+    if level == "warn":
+        print(f"[batch] WARNING (accepted with --allow-unresolved): {msg}")
     bad_sources = [r for r in (evidence.get("source_reports") or [])
                    if str(r.get("status")) not in ("ok", "skipped")]
     if bad_sources:
@@ -453,6 +496,83 @@ def cmd_promote(a) -> int:
 
 
 # --------------------------------------------------------------------------- #
+# stage-many
+# --------------------------------------------------------------------------- #
+SUMMARY_COLUMNS = ["l3", "name", "exit", "candidates", "retained", "tier", "curves", "decisions",
+                   "open_items", "hard_stops", "staged_version", "seconds", "out", "error"]
+
+
+def write_batch_summary(rows: list[dict], out_root: Path | str) -> tuple[Path, Path]:
+    """``batch_summary.json`` and ``batch_summary.md`` for a multi-region run."""
+    out = Path(out_root)
+    out.mkdir(parents=True, exist_ok=True)
+    jp = out / "batch_summary.json"
+    mp = out / "batch_summary.md"
+    jp.write_text(json.dumps({"schemaVersion": 1, "regions": rows}, indent=1, default=str) + "\n",
+                  encoding="utf-8")
+    lines = ["# Batch summary", "",
+             f"{len(rows)} region(s), {sum(1 for r in rows if r.get('exit') == 0)} staged, "
+             f"{sum(1 for r in rows if r.get('exit') != 0)} not staged. Nothing is promoted by this "
+             "command; each staged region carries its own review packet and promote command.", "",
+             "| " + " | ".join(SUMMARY_COLUMNS) + " |", "|" + "---|" * len(SUMMARY_COLUMNS)]
+    for r in rows:
+        lines.append("| " + " | ".join("" if r.get(c) is None else str(r.get(c)).replace("|", "/")
+                                       for c in SUMMARY_COLUMNS) + " |")
+    lines.append("")
+    mp.write_text("\n".join(lines), encoding="utf-8")
+    return jp, mp
+
+
+def cmd_stage_many(a) -> int:
+    """Stage several regions one after another with the same flags, one run
+    folder each under ``--out-root``, and a summary table. Never promotes."""
+    out_root = Path(a.out_root).resolve()
+    out_root.mkdir(parents=True, exist_ok=True)
+    names = _parse_kv(a.name, "--name")
+    rows: list[dict] = []
+    for code in a.l3:
+        code = str(code).strip()
+        name = names.get(code) or ra.region_name_for(code)
+        slug = lib.slugify(name) if name else f"l3-{code}"
+        out_dir = out_root / f"l3-{code}-{slug}"
+        row: dict = {"l3": code, "name": name, "out": str(out_dir), "exit": None, "error": None}
+        t0 = time.monotonic()
+        if not name:
+            row.update(exit=1, error=f"no NRSA candidate sites for L3 ecoregion {code}")
+        else:
+            ns = argparse.Namespace(
+                l3=code, name=name, out=str(out_dir), screen=a.screen, source_citation="",
+                no_screen=a.no_screen, no_streamcat=a.no_streamcat, maintainer=a.maintainer,
+                n_boot=a.n_boot, coverage_exceptions=a.coverage_exceptions, policy=a.policy,
+                enable_policy=list(a.enable_policy or []), max_iterations=a.max_iterations,
+                approve_portfolio=[], reviewer_decisions=None, finalize_metric=[], remove_metric=[],
+                max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved)
+            try:
+                row["exit"] = int(cmd_stage(ns))
+            except SystemExit as exc:
+                row.update(exit=exc.code if isinstance(exc.code, int) else 1, error=str(exc))
+            except Exception as exc:  # noqa: BLE001 - one region's failure must not end the batch
+                row.update(exit=1, error=f"{type(exc).__name__}: {exc}")
+        row["seconds"] = round(time.monotonic() - t0, 1)
+        packet_path = out_dir / "review_packet.json"
+        if packet_path.is_file():
+            p = json.loads(packet_path.read_text(encoding="utf-8"))
+            scr = p.get("screening") or {}
+            row.update(candidates=scr.get("n_candidates"), retained=scr.get("n_retained"),
+                       tier=p.get("reference_tier"), curves=len(p.get("curves") or []),
+                       decisions=len(p.get("decisions_applied") or []),
+                       open_items=len(p.get("open_items") or []),
+                       hard_stops=len(p.get("hard_stops") or []),
+                       staged_version=(p.get("staged") or {}).get("version"))
+        rows.append(row)
+        print(f"[batch-many] L3-{code} {name or '?'}: exit {row['exit']}"
+              + (f" ({row['error']})" if row.get("error") else ""))
+    jp, mp = write_batch_summary(rows, out_root)
+    print(f"[batch-many] summary -> {mp}")
+    return 0 if all(r.get("exit") == 0 for r in rows) else 1
+
+
+# --------------------------------------------------------------------------- #
 # replay
 # --------------------------------------------------------------------------- #
 def cmd_replay(a) -> int:
@@ -491,7 +611,30 @@ def main(argv=None) -> int:
     s.add_argument("--reviewer-decisions", default=None)
     s.add_argument("--finalize-metric", action="append", default=[])
     s.add_argument("--remove-metric", action="append", default=[])
+    s.add_argument("--max-unresolved-share", type=float, default=0.10,
+                   help="refuse to stage when more than this share of candidates is unresolved by the screen")
+    s.add_argument("--allow-unresolved", action="store_true",
+                   help="stage anyway on the record when the unresolved share is above the limit")
     s.set_defaults(fn=cmd_stage)
+
+    m = sub.add_parser("stage-many", help="stage several regions in sequence with a summary table; never promotes")
+    m.add_argument("--l3", action="append", required=True, metavar="CODE",
+                   help="an EPA Level III code (repeat); the name comes from the NRSA site table")
+    m.add_argument("--name", action="append", default=[], metavar="CODE=NAME",
+                   help="override the region name for a code")
+    m.add_argument("--out-root", required=True)
+    m.add_argument("--screen", default="functional", choices=["functional", "at_risk_or_better"])
+    m.add_argument("--no-screen", action="store_true", help="offline smoke only")
+    m.add_argument("--no-streamcat", action="store_true", help="offline smoke only")
+    m.add_argument("--maintainer", default="gtmenichino")
+    m.add_argument("--n-boot", type=int, default=1000)
+    m.add_argument("--coverage-exceptions", default=None)
+    m.add_argument("--policy", default=None)
+    m.add_argument("--enable-policy", action="append", default=[], metavar="ID")
+    m.add_argument("--max-iterations", type=int, default=3)
+    m.add_argument("--max-unresolved-share", type=float, default=0.10)
+    m.add_argument("--allow-unresolved", action="store_true")
+    m.set_defaults(fn=cmd_stage_many)
 
     p = sub.add_parser("promote", help="confirm the staged decisions and publish canonically")
     p.add_argument("--out", required=True)
