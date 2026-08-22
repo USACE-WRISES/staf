@@ -52,10 +52,13 @@ the top bar, outside the numbered stages.
   workspace: the editable workbook grid, discipline→function mapping,
   redundancy review, validation/QA prechecks.
 - **5 Reference Curves & Flagged Review** — the flagged-curve review queue,
-  the per-metric summary mega-table and the 4-phase workspace (explore →
-  verify → confirm → finalize), the curve editor, and the export hub (OH
-  List-of-Metrics + SQT Reference Curves workbooks, the Science Support HTML,
-  and a DEEP assessment bundle).
+  the curve gallery (one inline-SVG thumbnail per metric with the reference
+  range shaded and the DEEP condition breaks drawn; click a tile to open its
+  analysis, or jump to its table row) beside the per-metric summary
+  mega-table (the strip's Gallery / Table chips switch them), the 4-phase
+  workspace (explore → verify → confirm → finalize), the curve editor, and
+  the export hub (OH List-of-Metrics + SQT Reference Curves workbooks, the
+  Science Support HTML, and a DEEP assessment bundle).
 - **6 Package & Publish** — Draft file downloads and Preliminary/Final
   publishing into the STAF assessment library (`apps/library`), with an
   optional DEEP re-bake.
@@ -63,7 +66,7 @@ the top bar, outside the numbered stages.
 - **Cross-Sections** (top bar) — on-demand geomorphic cross-sections (NLDI snap + 3DEP terrain).
 
 A headless path runs the same pipeline under the governed methodology
-(`config/methodology/`, version 0.6-provisional): `scripts/run_regional_analysis.py`
+(`config/methodology/`, version 0.7-provisional): `scripts/run_regional_analysis.py`
 screens, builds, and stages a publish for one EPA Level III ecoregion with full
 provenance. Recorded human inputs ride as flags: `--reviewer-decisions` (per-item
 adjudications, machine-checked against each record's computed evidence),
@@ -72,6 +75,15 @@ adjudications, machine-checked against each record's computed evidence),
 `--approve-portfolio` (SELECT-01). The direction registries under `config/` declare each
 metric's expectation and its seed geometry (physical domain, signed scale, low-tail
 treatment, caveats).
+
+A batch mode (`scripts/run_region_batch.py`) runs the same pipeline for a new
+ecoregion with no human gate until the end: `stage` runs the evidence pass once,
+applies the standing-decision policy (`config/methodology/standing_decisions.yaml`,
+the owner's class decisions from the pilots) to the review queue, publishes into the
+run's own staged library root, and writes `review_packet.md` for the owner. `promote`
+confirms the staged decisions under the owner's name after the end review and publishes
+the identical content into `apps/library`. `replay` proves the policy reproduces the
+published pilots' recorded decisions.
 
 The import wizard and cross-sections tab pull from public REST services (USGS
 NLDI/3DEP, EPA StreamCAT, USGS StreamStats, and Model My Watershed); each source

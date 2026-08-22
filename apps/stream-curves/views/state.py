@@ -249,6 +249,9 @@ class AppState:
     data_setup_view: reactive.Value = _rv("landing")
     wizard_current_step: reactive.Value = _rv(1)
     workspace_section: reactive.Value = _rv("workbook")
+    # Reference Curves page section (gallery or table); written only by the
+    # summary page's mirror effect. Transient: not in SESSION_FIELDS.
+    curves_section: reactive.Value = _rv("gallery")
 
     # Cross-tab session restore request: a view loads a session payload and asks
     # the Data & Setup tab to restore it (bump the nonce). The Open dialog now

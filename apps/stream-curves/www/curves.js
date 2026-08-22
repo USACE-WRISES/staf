@@ -305,8 +305,31 @@
 /* After the map import hands a compiled table to the setup wizard, scroll to it. */
 (function () {
   if (!window.Shiny || typeof Shiny.addCustomMessageHandler !== "function") return;
-  Shiny.addCustomMessageHandler("scrollToSetupWizard", function () {
+  // shiny.js refuses a handler whose arity is not exactly one, and the throw
+  // ends this script file, so every handler below it would stay unregistered.
+  Shiny.addCustomMessageHandler("scrollToSetupWizard", function (_message) {
     var el = document.querySelector(".setup-wizard-card");
     if (el && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+})();
+
+/* Scroll an element into view by id once it is visible. The server sends this
+   right after a queued navset switch (the curve gallery's "show in table"
+   button), and the custom message reaches the browser before the pane is
+   shown, so wait for the element to have a layout box before scrolling. */
+(function () {
+  if (!window.Shiny || typeof Shiny.addCustomMessageHandler !== "function") return;
+  Shiny.addCustomMessageHandler("scrollToElement", function (message) {
+    var id = message && message.id;
+    if (!id) return;
+    var attempts = 0;
+    (function go() {
+      var el = document.getElementById(id);
+      if (el && el.offsetParent !== null) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      if (attempts++ < 40) window.setTimeout(go, 50);
+    })();
   });
 })();

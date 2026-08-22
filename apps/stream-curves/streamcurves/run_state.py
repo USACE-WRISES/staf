@@ -75,6 +75,13 @@ STAGE_SECTIONS: dict[str, list[tuple[str, str]]] = {
         ("redundancy", "Metric redundancy"),
         ("validation", "Pre-run validation"),
     ],
+    # The Reference Curves page shows its curves two ways: the gallery of
+    # thumbnails (the landing view) and the analysis table. Section values are
+    # unique across stages because the strip registers one chip input per value.
+    "curve_review": [
+        ("gallery", "Gallery"),
+        ("table", "Table"),
+    ],
 }
 
 # stage key -> (main_navbar nav value, wizard step to land on or None).
