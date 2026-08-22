@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "interior-plateau",
+  "history": [
+    {
+      "version": 1,
+      "status": "preliminary",
+      "actor": "StreamCurves Regional Analysis Agent",
+      "timestamp": "2026-08-22T22:51:40Z",
+      "note": "Published new version."
+    }
+  ]
+}

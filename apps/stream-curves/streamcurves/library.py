@@ -134,6 +134,38 @@ def can_publish_canonical(maintainer: Optional[str] = None) -> bool:
     return publish_gate_reason(maintainer) is None
 
 
+# The reviewer marker a staged batch run stamps on its standing decisions
+# (streamcurves.decisions.PENDING_SUFFIX); duplicated here so this storage
+# module does not import the policy machinery.
+_PENDING_MARKER = "(pending owner confirmation)"
+
+
+def _carries_pending_marker(provenance: dict) -> bool:
+    """Whether a provenance document still holds the marker anywhere but the
+    recorded command line (``manifest.agent.argv`` quotes the owner's own
+    ``--approve-portfolio`` input verbatim and is not a decision). Mirrors
+    ``decisions.pending_locations`` without importing it."""
+    doc = dict(provenance or {})
+    manifest = dict(doc.get("manifest") or {})
+    agent = dict(manifest.get("agent") or {})
+    agent.pop("argv", None)
+    manifest["agent"] = agent
+    doc["manifest"] = manifest
+    return _PENDING_MARKER in json.dumps(doc, default=str)
+
+
+def canonical_root() -> Path:
+    """The repo's ``apps/library``, whatever STAF_LIBRARY_ROOT says."""
+    return (ROOT.parent / "library").resolve()
+
+
+def is_canonical_root() -> bool:
+    try:
+        return library_root().resolve() == canonical_root()
+    except OSError:
+        return False
+
+
 def slugify(text: str) -> str:
     s = str(text).strip().lower()
     s = re.sub(r"[^a-z0-9]+", "-", s)
@@ -677,6 +709,14 @@ def publish_version(
         logger.warning(
             "Publishing %s without a provenance document. The version will record "
             "provenance as absent; a reviewer will see it.", assessment_id)
+    elif is_canonical_root() and _carries_pending_marker(provenance):
+        # A staged batch run stamps its standing decisions with a pending
+        # reviewer. They reach the canonical library only through `promote`,
+        # which rewrites them to the confirming owner's name (2026-08-22).
+        raise ValueError(
+            f"Refusing to publish '{assessment_id}' to the canonical library: the "
+            f"provenance still carries decisions marked '{_PENDING_MARKER}'. Confirm "
+            "them with run_region_batch.py promote first.")
 
     manifest = read_manifest(assessment_id) or {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,

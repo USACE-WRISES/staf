@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 2,
+  "assessmentId": "interior-plateau",
+  "assessmentName": "Interior Plateau reference assessment",
+  "region": {
+    "kind": "ecoregion",
+    "code": "71",
+    "name": "Interior Plateau"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA (L3 ecoregion 71), StreamCurves Regional Analysis Agent",
+  "latestVersion": 1,
+  "versions": [
+    {
+      "version": 1,
+      "updatedAt": "2026-08-22T22:51:40Z",
+      "author": "StreamCurves Regional Analysis Agent",
+      "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 23 of 25 candidates.  REF-02 fallback: only 0 Functioning sites, below the exploratory floor of 10; included Functioning-at-Risk to reach 23. Mandatory review; confidence capped; reference tier = best_available.",
+      "contentDigest": "sha256:cb3ff0c4c96f8795d4722637dde58c1c6bfdfadc09982a0cdfa8f06a6719983f",
+      "supersedesVersion": null
+    }
+  ]
+}

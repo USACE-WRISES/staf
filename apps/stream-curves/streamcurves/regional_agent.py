@@ -22,6 +22,7 @@ covers the diagnostics as well.
 """
 from __future__ import annotations
 
+import copy
 import logging
 import math
 import re
@@ -1033,40 +1034,23 @@ def metric_annotations(*, intended, curve_rows, metric_config, sample_sizes,
     return out
 
 
-def run(l3_code: str, name: str, *,
-        screen_preset: str = "functional",
-        source_citation: str = "",
-        assessment_id: Optional[str] = None,
-        assessment_name: Optional[str] = None,
-        author: str = "StreamCurves Regional Analysis Agent",
-        on_event: Optional[Callable] = None,
-        do_screen: bool = True,
-        use_streamcat: bool = True,
-        coverage_exceptions: Optional[list[dict]] = None,
-        cache_dir: Optional[Path] = None,
-        diagnostics_n_boot: int = 200,
-        diagnostics_enabled: bool = True,
-        finalize_metrics: Optional[dict] = None,
-        finalize_actor: str = "",
-        remove_metrics: Optional[dict] = None,
-        reviewer_decisions: Optional[list] = None) -> dict:
-    """Run the full regional analysis for one L3 ecoregion. Returns a structured result
-    (no files written here; the CLI writes outputs and publishes).
+def run_evidence(l3_code: str, name: str, *,
+                 screen_preset: str = "functional",
+                 on_event: Optional[Callable] = None,
+                 do_screen: bool = True,
+                 use_streamcat: bool = True,
+                 cache_dir: Optional[Path] = None,
+                 diagnostics_n_boot: int = 200,
+                 diagnostics_enabled: bool = True) -> dict:
+    """The expensive, decision-free half of a regional run.
 
-    ``remove_metrics`` (metric -> rationale) records a named reviewer decision
-    that takes a built curve out of scope for this run only (the curve is still
-    built and diagnosed, so its evidence is on the record, and the registry row
-    reads removed_from_scope). It is the per-region door the national direction
-    registries do not have (2026-08-21, the Eastern Corn Belt Plains pH decision).
-    ``reviewer_decisions`` (the same list the CLI merges into provenance) lets
-    the confidence heuristic lift the mandatory_review_open cap for adjudicated
-    items and the registry distinguish reviewed_then_finalized from
-    auto_finalized.
-
-    ``coverage_exceptions``: documented reasons a STAF function carries no metric
-    (see ``deep_export.validate_coverage_exceptions``). Without one for each gap the
-    publish step refuses the version, which is deliberate -- an unattended run should
-    not be able to mint an assessment with an unexplained hole in the framework.
+    Screening, data assembly, the registries, redundancy, the stratifier
+    analysis, the curves with their review classification, sample sizes, the
+    seeded diagnostics, RED-06, the STRAT evidence, the per-metric tier table,
+    the domain checks, and the deferred gradients. Nothing here reads a reviewer
+    decision, so the batch runner can compute it once and assemble the
+    decision-dependent tail (:func:`assemble`) as many times as the standing
+    decisions need (2026-08-22).
     """
     # A headless run must not proceed under a config that misdescribes the engine.
     methodology.verify_mirrors(strict=True)
@@ -1145,32 +1129,10 @@ def run(l3_code: str, name: str, *,
     # --- Missingness dispositions (DATA-01/02/03), over the retained pool ---
     missingness = metric_missingness(data, list(metric_config))
 
-    # --- Curves + review ---
+    # --- Curves + the six-status review classification (no decisions yet) ---
     curve_rows = build_curves(data, metric_config)
     curve_review = review_curves(curve_rows, column_functions,
                                  missingness=missingness, metric_config=metric_config)
-    # Recorded reviewer finalizations (``finalize_metrics``: metric -> note).
-    # A flagged curve publishes only through exactly this: a named human
-    # decision with a rationale, stamped on the review entry. The agent never
-    # finalizes a flagged curve on its own.
-    for mk, note in (finalize_metrics or {}).items():
-        entry = curve_review.get(mk)
-        if entry is None:
-            raise ValueError(f"--finalize-metric names unknown metric {mk!r}")
-        if not finalize_actor:
-            raise ValueError("finalize_metrics requires a named finalize_actor")
-        curve_review[mk] = run_state.apply_review_decision(
-            entry, run_state.DECISION_FINALIZED, note=note, actor=finalize_actor)
-    for mk, note in (remove_metrics or {}).items():
-        entry = curve_review.get(mk)
-        if entry is None:
-            raise ValueError(f"--remove-metric names unknown metric {mk!r}")
-        if not finalize_actor:
-            raise ValueError("remove_metrics requires a named finalize_actor")
-        curve_review[mk] = run_state.apply_review_decision(
-            entry, run_state.DECISION_REMOVED, note=note, actor=finalize_actor)
-    intended = run_state.intended_metrics_for_publish(curve_review)
-    flagged = run_state.flagged_metrics(curve_review)
 
     # --- Sample-size disposition (DATA-04/05/06, calibrated v0.3). Flag-and-publish:
     #     curves below the auto floor stay in the preliminary bundle but carry an
@@ -1226,6 +1188,96 @@ def run(l3_code: str, name: str, *,
 
     # --- Deferred gradients (ECO-5): known, unmodeled stratification evidence ---
     deferred_gradients = deferred_gradient_candidates(strat_evidence_df)
+
+    return {
+        "l3_code": str(l3_code),
+        "name": name,
+        "screen_preset": screen_preset,
+        "n_candidates": n_candidates,
+        "screening_method": method,
+        "screening_counts": counts,
+        "tier": tier,
+        "screening": screening,
+        "retained_ids": retained_ids,
+        "n_retained": len(retained),
+        "metric_config": metric_config,
+        "predictor_config": predictor_config,
+        "column_functions": column_functions,
+        "mapping_df": mapping_df,
+        "flagged_direction": flagged_direction,
+        "source_reports": [source_report],
+        "data": data,
+        "curve_rows": curve_rows,
+        "curve_review": curve_review,
+        "sample_sizes": sample_sizes,
+        "sample_size_flags": sample_size_flags,
+        "missingness": missingness,
+        "reference_pool_disposition": reference_pool_disposition,
+        "run_seed": base_seed,
+        "diagnostics_n_boot": diagnostics_n_boot,
+        "diagnostics": diagnostics,
+        "red06_stability": red06_stability,
+        "strat_evidence": strat_evidence_df,
+        "tier_evaluation": tier_eval,
+        "domain_checks": domain_checks,
+        "deferred_gradients": deferred_gradients,
+        "redundancy": redundancy,
+        "stratifiers": strat,
+    }
+
+
+def assemble(evidence: dict, *,
+             source_citation: str = "",
+             assessment_id: Optional[str] = None,
+             assessment_name: Optional[str] = None,
+             author: str = "StreamCurves Regional Analysis Agent",
+             coverage_exceptions: Optional[list[dict]] = None,
+             finalize_metrics: Optional[dict] = None,
+             finalize_actor: str = "",
+             remove_metrics: Optional[dict] = None,
+             reviewer_decisions: Optional[list] = None) -> dict:
+    """The decision-dependent tail of a run, from one evidence dict (seconds).
+
+    Reviewer finalizations and removals are stamped on a COPY of the evidence's
+    curve review, so the same evidence can be assembled again with a different
+    decision set: scope, the mandatory-review triggers against the recorded
+    adjudications, confidence with its caps, the portfolio, the review
+    priorities, the bundle, and coverage. Returns the result dict :func:`run`
+    returns.
+    """
+    l3_code, name = evidence["l3_code"], evidence["name"]
+    tier, screening = evidence["tier"], evidence["screening"]
+    method, screen_preset = evidence["screening_method"], evidence["screen_preset"]
+    n_candidates, retained_ids = evidence["n_candidates"], evidence["retained_ids"]
+    metric_config = evidence["metric_config"]
+    column_functions = evidence["column_functions"]
+    curve_rows, sample_sizes = evidence["curve_rows"], evidence["sample_sizes"]
+    missingness, diagnostics = evidence["missingness"], evidence["diagnostics"]
+    redundancy, deferred_gradients = evidence["redundancy"], evidence["deferred_gradients"]
+
+    curve_review = copy.deepcopy(evidence["curve_review"])
+    # Recorded reviewer finalizations (``finalize_metrics``: metric -> note).
+    # A flagged curve publishes only through exactly this: a named human
+    # decision with a rationale, stamped on the review entry. The agent never
+    # finalizes a flagged curve on its own.
+    for mk, note in (finalize_metrics or {}).items():
+        entry = curve_review.get(mk)
+        if entry is None:
+            raise ValueError(f"--finalize-metric names unknown metric {mk!r}")
+        if not finalize_actor:
+            raise ValueError("finalize_metrics requires a named finalize_actor")
+        curve_review[mk] = run_state.apply_review_decision(
+            entry, run_state.DECISION_FINALIZED, note=note, actor=finalize_actor)
+    for mk, note in (remove_metrics or {}).items():
+        entry = curve_review.get(mk)
+        if entry is None:
+            raise ValueError(f"--remove-metric names unknown metric {mk!r}")
+        if not finalize_actor:
+            raise ValueError("remove_metrics requires a named finalize_actor")
+        curve_review[mk] = run_state.apply_review_decision(
+            entry, run_state.DECISION_REMOVED, note=note, actor=finalize_actor)
+    intended = run_state.intended_metrics_for_publish(curve_review)
+    flagged = run_state.flagged_metrics(curve_review)
 
     # --- Mandatory-review triggers per curve and the recorded adjudications ---
     adjudicated = adjudicated_keys(reviewer_decisions)
@@ -1306,7 +1358,7 @@ def run(l3_code: str, name: str, *,
     region = {"kind": "ecoregion", "code": str(l3_code), "name": name}
     ref_note = (f"Reference tier: {tier['reference_tier']} "
                 f"(screening preset {screening.get('preset', screen_preset)}, method {method}). "
-                f"Retained {len(retained)} of {n_candidates} candidates.")
+                f"Retained {evidence['n_retained']} of {n_candidates} candidates.")
     meta = {
         "assessmentId": aid,
         "assessmentName": a_name,
@@ -1332,7 +1384,7 @@ def run(l3_code: str, name: str, *,
     bundle_error = None
     try:
         bundle = deep_export.build_deep_assessment_bundle(
-            intended_rows, mapping_df, metric_config, meta)
+            intended_rows, evidence["mapping_df"], metric_config, meta)
     except ValueError as exc:  # no complete mappable curve
         bundle_error = str(exc)
 
@@ -1354,42 +1406,42 @@ def run(l3_code: str, name: str, *,
         "region": region,
         "n_candidates": n_candidates,
         "screening_method": method,
-        "screening_counts": counts,
+        "screening_counts": evidence["screening_counts"],
         "reference_tier": tier["reference_tier"],
         "ref02_triggered": tier.get("ref02_triggered", False),
         "review_flags": tier.get("review_flags", []),
         "retained_site_ids": sorted(retained_ids),
         "metric_config": metric_config,
-        "predictor_config": predictor_config,
+        "predictor_config": evidence["predictor_config"],
         "column_functions": column_functions,
-        "discipline_function_mapping": mapping_df,
-        "flagged_direction": flagged_direction,
-        "source_reports": [source_report],
-        "data": data,
+        "discipline_function_mapping": evidence["mapping_df"],
+        "flagged_direction": evidence["flagged_direction"],
+        "source_reports": evidence["source_reports"],
+        "data": evidence["data"],
         "curve_rows": curve_rows,
         "curve_review": curve_review,
         "intended_metrics": intended,
         "flagged_metrics": flagged,
         "sample_sizes": sample_sizes,
-        "sample_size_flags": sample_size_flags,
+        "sample_size_flags": evidence["sample_size_flags"],
         "missingness": missingness,
-        "reference_pool_disposition": reference_pool_disposition,
-        "run_seed": base_seed,
-        "diagnostics_n_boot": diagnostics_n_boot,
+        "reference_pool_disposition": evidence["reference_pool_disposition"],
+        "run_seed": evidence["run_seed"],
+        "diagnostics_n_boot": evidence["diagnostics_n_boot"],
         "diagnostics": diagnostics,
-        "red06_stability": red06_stability,
-        "strat_evidence": strat_evidence_df,
-        "tier_evaluation": tier_eval,
+        "red06_stability": evidence["red06_stability"],
+        "strat_evidence": evidence["strat_evidence"],
+        "tier_evaluation": evidence["tier_evaluation"],
         "confidence": confidence_map,
         "metric_scores": metric_scores,
         "review_priorities": review_priorities,
-        "domain_checks": domain_checks,
+        "domain_checks": evidence["domain_checks"],
         "deferred_gradients": deferred_gradients,
         "mandatory_review": mandatory_review,
         "removed_metrics": dict(remove_metrics or {}),
         "finalized_metrics": dict(finalize_metrics or {}),
         "redundancy": redundancy,
-        "stratifiers": strat,
+        "stratifiers": evidence["stratifiers"],
         "portfolio": portfolio,
         "coverage": coverage,
         "uncovered_functions": uncovered_functions(portfolio),
@@ -1398,6 +1450,56 @@ def run(l3_code: str, name: str, *,
         "bundle_error": bundle_error,
         "screening_tables": screening.get("tables", {}),
     }
+
+
+def run(l3_code: str, name: str, *,
+        screen_preset: str = "functional",
+        source_citation: str = "",
+        assessment_id: Optional[str] = None,
+        assessment_name: Optional[str] = None,
+        author: str = "StreamCurves Regional Analysis Agent",
+        on_event: Optional[Callable] = None,
+        do_screen: bool = True,
+        use_streamcat: bool = True,
+        coverage_exceptions: Optional[list[dict]] = None,
+        cache_dir: Optional[Path] = None,
+        diagnostics_n_boot: int = 200,
+        diagnostics_enabled: bool = True,
+        finalize_metrics: Optional[dict] = None,
+        finalize_actor: str = "",
+        remove_metrics: Optional[dict] = None,
+        reviewer_decisions: Optional[list] = None) -> dict:
+    """Run the full regional analysis for one L3 ecoregion. Returns a structured result
+    (no files written here; the CLI writes outputs and publishes).
+
+    Since 2026-08-22 this is :func:`run_evidence` followed by :func:`assemble`,
+    with an unchanged signature and result.
+
+    ``remove_metrics`` (metric -> rationale) records a named reviewer decision
+    that takes a built curve out of scope for this run only (the curve is still
+    built and diagnosed, so its evidence is on the record, and the registry row
+    reads removed_from_scope). It is the per-region door the national direction
+    registries do not have (2026-08-21, the Eastern Corn Belt Plains pH decision).
+    ``reviewer_decisions`` (the same list the CLI merges into provenance) lets
+    the confidence heuristic lift the mandatory_review_open cap for adjudicated
+    items and the registry distinguish reviewed_then_finalized from
+    auto_finalized.
+
+    ``coverage_exceptions``: documented reasons a STAF function carries no metric
+    (see ``deep_export.validate_coverage_exceptions``). Without one for each gap the
+    publish step refuses the version, which is deliberate -- an unattended run should
+    not be able to mint an assessment with an unexplained hole in the framework.
+    """
+    evidence = run_evidence(
+        l3_code, name, screen_preset=screen_preset, on_event=on_event,
+        do_screen=do_screen, use_streamcat=use_streamcat, cache_dir=cache_dir,
+        diagnostics_n_boot=diagnostics_n_boot, diagnostics_enabled=diagnostics_enabled)
+    return assemble(
+        evidence, source_citation=source_citation, assessment_id=assessment_id,
+        assessment_name=assessment_name, author=author,
+        coverage_exceptions=coverage_exceptions, finalize_metrics=finalize_metrics,
+        finalize_actor=finalize_actor, remove_metrics=remove_metrics,
+        reviewer_decisions=reviewer_decisions)
 
 
 # --------------------------------------------------------------------------- #

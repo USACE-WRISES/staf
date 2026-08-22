@@ -261,6 +261,10 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "removedMetrics": result.get("removed_metrics") or {},
             "deferredGradients": result.get("deferred_gradients") or {},
         },
+        # The standing-decision policy a batch run applied (2026-08-22): its
+        # version and digest, the entries enabled for the run, how many
+        # decisions it made, and who confirmed them (null while staged).
+        "standingDecisions": result.get("standing_decisions"),
         "determinism": {
             "randomSeeds": {"runSeed": result.get("run_seed")},
             "seedPolicy": (
@@ -470,14 +474,28 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
                 recommendation="No curated ecological direction; no curve was built.",
                 review_triggers=["direction_unresolved"])
 
-    # --- SELECT-01: compact portfolio ---
+    # --- SELECT-01: compact portfolio, counted on the BUNDLE when one exists ---
+    # The publish gate counts the bundle's metric blocks, and a metric that
+    # informs a second function adds a third entry there that the compact
+    # portfolio never shows. Both pilots lost a publish attempt to exactly that
+    # gap (2026-08-21), so the record and the queue now carry both counts and
+    # review on the larger one (2026-08-22).
+    bundle_blocks = {}
+    for block in ((result.get("bundle") or {}).get("metricsByFunction") or []):
+        bundle_blocks[str(block.get("functionId"))] = [
+            str(m.get("metricId")) for m in (block.get("metrics") or [])]
     for entry in (result.get("portfolio") or []):
         n_metrics = len(entry.get("metrics") or [])
-        add("SELECT-01", "function", entry.get("function_id") or entry.get("function"),
-            computed={"n_metrics": n_metrics},
-            verdict=VERDICT_REVIEW if n_metrics > 2 else VERDICT_PASS,
-            review_required=n_metrics > 2,
-            review_triggers=["more_than_two_metrics"] if n_metrics > 2 else [])
+        fid = entry.get("function_id") or entry.get("function")
+        in_bundle = bundle_blocks.get(str(fid))
+        n_bundle = len(in_bundle) if in_bundle is not None else None
+        n_review = max(n_metrics, n_bundle or 0)
+        add("SELECT-01", "function", fid,
+            computed={"n_metrics": n_metrics, "bundle_n_metrics": n_bundle,
+                      "bundle_metrics": in_bundle},
+            verdict=VERDICT_REVIEW if n_review > 2 else VERDICT_PASS,
+            review_required=n_review > 2,
+            review_triggers=["more_than_two_metrics"] if n_review > 2 else [])
 
     # --- DATA-01/02/03: missingness dispositions over the reference pool ---
     for metric, info in (result.get("missingness") or {}).items():

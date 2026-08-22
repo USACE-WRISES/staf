@@ -20,9 +20,9 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.6-provisional"
+  methodology_version: "0.7-provisional"
   threshold_status: "provisional"        # global default; rules may override
-  date: "2026-08-21"
+  date: "2026-08-22"
   calibration_note: >
     v0.3 recalibrated the DATA sample-size floors against the two pilots' REAL
     EASI-screened reference sizes (NH-58 = 33 Functioning sites; ECBP-55 = 0 Functioning,
@@ -64,6 +64,13 @@ meta:
     registries instead of inferred from the sample, and a two-sided curve may declare
     a flat low tail (ECO-1, STAT-9, ECO-7). Value changes: none of the numeric
     thresholds moved; the additions are the new cap and deduction.
+    v0.7 (2026-08-22) adds standing decisions: the owner's class decisions from the two
+    pilots, recorded in standing_decisions.yaml with the version they were approved
+    under, may be applied per item by a batch run (scripts/run_region_batch.py) to a
+    STAGED version, and the owner's end review confirms them before any canonical
+    publish. SELECT-01 records now count the bundle's metric blocks as well as the
+    compact portfolio (the count the publish gate reads). No threshold value or
+    status changed.
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
@@ -257,6 +264,21 @@ metric_portfolio:
     nonredundancy_complementarity: 15
     interpretability_management: 10
     operational_availability_reproducibility: 10
+
+# --------------------------------------------------------------------------- #
+# Standing decisions (v0.7). The owner's class decisions a batch run may apply
+# per item without a per-item human decision, with the end review before any
+# canonical publish. The policy file is fingerprinted into every batch manifest.
+# --------------------------------------------------------------------------- #
+standing_decisions:
+  policy_file: "config/methodology/standing_decisions.yaml"
+  pending_reviewer_marker: "(pending owner confirmation)"
+  default_enabled: [curve04-accept-with-flag, data05-exploratory-pool-accepted,
+                    red06-instability-is-noise, strat09-defer-floors, select01-complementary-set]
+  enable_per_run_only: [ref02-accept-best-available, data03-thin-metric-finalized,
+                        data06-insufficient-finalized, curve07-thin-metric-finalized]
+  never_automated: "RED-01 keeper choice, CURVE-07 degenerate / shape_conflict / multi_crossing / insufficient_data, direction_unresolved, coverage gaps, portfolio sets off the crosswalk default, the final publish (promote)"
+  end_review_required_before_promote: true
 
 # --------------------------------------------------------------------------- #
 # EASI reference-condition presets (mirror of _vendor/easi/batch/qualify.PRESETS;

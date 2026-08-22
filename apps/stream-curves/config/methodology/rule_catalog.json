@@ -1,8 +1,8 @@
 {
   "meta": {
-    "methodology_version": "0.6-provisional",
-    "date": "2026-08-21",
-    "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged. v0.6 (2026-08-21) is the adversarial-review release: REF-02 and the DATA sample floors (DATA-04 to DATA-08) return to provisional because the pilots mechanism-verified the implementation without calibrating the values (calibrated is reserved for external evidence); REF-02's automatic trigger fires only below the DATA-05 exploratory floor; CURVE-02 is renamed Leave-one-site-out stability and the confidence vocabulary drops out-of-sample (the component is resampling_stability, the cap no_stability_evidence); CONF-02 gains a mandatory_review_open cap of 79 and a deferred_gradient deduction of 10; the seed clamps to declared physical domains, signed scales are declared, and a two-sided curve may declare a flat low tail. No numeric threshold value moved.",
+    "methodology_version": "0.7-provisional",
+    "date": "2026-08-22",
+    "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged. v0.6 (2026-08-21) is the adversarial-review release: REF-02 and the DATA sample floors (DATA-04 to DATA-08) return to provisional because the pilots mechanism-verified the implementation without calibrating the values (calibrated is reserved for external evidence); REF-02's automatic trigger fires only below the DATA-05 exploratory floor; CURVE-02 is renamed Leave-one-site-out stability and the confidence vocabulary drops out-of-sample (the component is resampling_stability, the cap no_stability_evidence); CONF-02 gains a mandatory_review_open cap of 79 and a deferred_gradient deduction of 10; the seed clamps to declared physical domains, signed scales are declared, and a two-sided curve may declare a flat low tail. No numeric threshold value moved. v0.7 (2026-08-22) adds standing decisions: the owner's class decisions from the two pilots (standing_decisions.yaml) may be applied per item by a batch run to a staged version, with the owner's end review before any canonical publish; SELECT-01 records count the bundle's metric blocks as well as the compact portfolio. No threshold value or status changed.",
     "status_legend": {
       "threshold_status": {
         "provisional": "Operating default, not yet calibrated. Never describe as validated.",
@@ -18,7 +18,8 @@
     "override_permission_values": [
       "none",
       "human_review",
-      "maintainer"
+      "maintainer",
+      "standing_policy"
     ],
     "future_rules": [
       {
@@ -93,7 +94,10 @@
       },
       "confidence_effect": "hard-stop from automation",
       "override_permission": "human_review",
-      "note": "Wired v0.4: above 0.40 the curve is routed to review, never auto-recommended."
+      "note": "Wired v0.4: above 0.40 the curve is routed to review, never auto-recommended.",
+      "standing_decision_ids_optional": [
+        "data03-thin-metric-finalized"
+      ]
     },
     {
       "id": "DATA-04",
@@ -133,7 +137,10 @@
       },
       "confidence_effect": "cap 59",
       "override_permission": "human_review",
-      "verification": "mechanism_verified_v0.3"
+      "verification": "mechanism_verified_v0.3",
+      "standing_decision_ids": [
+        "data05-exploratory-pool-accepted"
+      ]
     },
     {
       "id": "DATA-06",
@@ -153,7 +160,10 @@
       },
       "confidence_effect": "hard-stop; flagged review",
       "override_permission": "human_review",
-      "verification": "mechanism_verified_v0.3"
+      "verification": "mechanism_verified_v0.3",
+      "standing_decision_ids_optional": [
+        "data06-insufficient-finalized"
+      ]
     },
     {
       "id": "DATA-07",
@@ -321,7 +331,10 @@
         "fail": "n/a"
       },
       "confidence_effect": "resampling_stability points",
-      "override_permission": "human_review"
+      "override_permission": "human_review",
+      "standing_decision_ids": [
+        "red06-instability-is-noise"
+      ]
     },
     {
       "id": "RED-07",
@@ -523,7 +536,10 @@
         "fail": "not supporting"
       },
       "confidence_effect": "supporting only",
-      "override_permission": "none"
+      "override_permission": "none",
+      "standing_decision_ids": [
+        "strat09-defer-floors"
+      ]
     },
     {
       "id": "CURVE-01",
@@ -599,7 +615,10 @@
       },
       "confidence_effect": "resampling_stability penalty; mandatory review; mandatory_review_open cap until adjudicated",
       "override_permission": "human_review",
-      "note": "v0.6: the drop-one shift is also recorded in IQR units (max_param_change_iqr) so a zero or near-zero quartile cannot blank or inflate the measure (review STAT-15); the trigger still reads the relative fraction (provisional)."
+      "note": "v0.6: the drop-one shift is also recorded in IQR units (max_param_change_iqr) so a zero or near-zero quartile cannot blank or inflate the measure (review STAT-15); the trigger still reads the relative fraction (provisional).",
+      "standing_decision_ids": [
+        "curve04-accept-with-flag"
+      ]
     },
     {
       "id": "CURVE-05",
@@ -656,7 +675,10 @@
       },
       "confidence_effect": "statistical_strength",
       "override_permission": "human_review",
-      "note": "Owner decision S-01 (2026-08-21): scoped to the regression-candidate track where residual diagnostics exist; not applicable by family for IQR-seed curves."
+      "note": "Owner decision S-01 (2026-08-21): scoped to the regression-candidate track where residual diagnostics exist; not applicable by family for IQR-seed curves.",
+      "standing_decision_ids_optional": [
+        "curve07-thin-metric-finalized"
+      ]
     },
     {
       "id": "CURVE-07a",
@@ -731,7 +753,10 @@
       },
       "confidence_effect": "cap 59 (best_available_reference); mandatory review; stamp reference_tier per curve + bundle",
       "override_permission": "human_review",
-      "verification": "mechanism_verified_v0.5"
+      "verification": "mechanism_verified_v0.5",
+      "standing_decision_ids_optional": [
+        "ref02-accept-best-available"
+      ]
     },
     {
       "id": "REF-03",
@@ -806,7 +831,10 @@
         "fail": "n/a"
       },
       "confidence_effect": "metric_score ranks candidates within a function",
-      "override_permission": "human_review"
+      "override_permission": "human_review",
+      "standing_decision_ids": [
+        "select01-complementary-set"
+      ]
     },
     {
       "id": "SELECT-02",
