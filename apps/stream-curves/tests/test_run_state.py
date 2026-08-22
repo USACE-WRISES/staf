@@ -567,3 +567,16 @@ def test_redundancy_is_a_refine_map_section():
     # It sits beside function mapping, where a flagged pair is actionable.
     keys = [k for k, _ in rs.STAGE_SECTIONS["refine_map"]]
     assert keys.index("redundancy") == keys.index("mapping") + 1
+
+
+def test_curve_review_sections_are_gallery_then_table():
+    # The Reference Curves page lands on the gallery and keeps the table beside it.
+    assert [v for v, _ in rs.STAGE_SECTIONS["curve_review"]] == ["gallery", "table"]
+    assert rs.stage_landing("curve_review") == ("curves", None)
+
+
+def test_section_values_are_unique_across_stages():
+    # The strip registers one chip input per section value and the section
+    # request channel is shared, so a value may belong to one stage only.
+    values = [v for secs in rs.STAGE_SECTIONS.values() for v, _ in secs]
+    assert len(values) == len(set(values))

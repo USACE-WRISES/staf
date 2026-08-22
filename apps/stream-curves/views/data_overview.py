@@ -202,9 +202,11 @@ def data_overview_server(input, output, session, state: AppState):
     def _workspace_section_request():
         with reactive.isolate():
             value = state.workspace_section_request()
+        # The channel is shared with the Reference Curves sections (gallery,
+        # table); only a workspace value touches this view.
         if value in {s["value"] for s in WORKSPACE_STEPS}:
             ws_step.set(value)
-        entry_view.set("landing")
+            entry_view.set("landing")
 
     @reactive.effect
     def _mirror_section():

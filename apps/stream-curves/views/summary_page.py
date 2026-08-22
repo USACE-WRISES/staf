@@ -25,6 +25,7 @@ from shiny import module, reactive, render, req, ui
 
 from streamcurves import curve_automation as ca
 from streamcurves import run_state as rs
+from views import curve_gallery as cg
 from views import state as st
 from views import summary_state as ss
 from views.curve_plots import build_overlay_curve_plot, build_reference_curve_plot
@@ -38,14 +39,9 @@ from views.uihelpers import (
 
 logger = logging.getLogger("streamcurves")
 
-# curve_review status -> short badge text for the flagged-review queue.
-_REVIEW_STATUS_LABELS = {
-    rs.CURVE_STATUS_INSUFFICIENT: "Insufficient data",
-    rs.CURVE_STATUS_DEGENERATE: "Degenerate curve",
-    rs.CURVE_STATUS_UNMAPPED: "Unmapped metric",
-    rs.CURVE_STATUS_STRAT_REVIEW: "Stratification review",
-    rs.CURVE_STATUS_ERROR: "Build error",
-}
+# curve_review status -> short badge text for the flagged-review queue (the
+# gallery's labels, one vocabulary for both views).
+_REVIEW_STATUS_LABELS = cg.REVIEW_STATUS_LABELS
 
 
 class SummaryProgress:
@@ -868,14 +864,81 @@ def summary_page_server(input, output, session, state: AppState):
             class_="alert alert-info d-flex align-items-center gap-2 mb-3",
         )
 
+    # ── curve gallery (the Gallery section) ─────────────────────────────────
+    gallery_filter_mode = reactive.value("all")
+
+    @reactive.effect
+    @reactive.event(input.gallery_filter)  # unset until the gallery first renders: skipped silently
+    def _gallery_filter():
+        gallery_filter_mode.set(input.gallery_filter() or "all")
+
+    @render.ui
+    def curve_gallery():
+        metrics = summary_metrics()
+        review = state.curve_review() or {}
+        mc = state.metric_config() or {}
+        functions = state.column_functions() or {}
+        mode = gallery_filter_mode()
+        rows = []
+        for metric in metrics:
+            # the table's own snapshot, so the gallery invalidates exactly when a row does
+            snap_rv = row_snapshot.get(metric)
+            snap = snap_rv() if snap_rv is not None else None
+            rows.append(cg.tile_row(
+                metric, (snap or {}).get("curve_rows"),
+                metric_entry=mc.get(metric), review_entry=review.get(metric),
+                function_label=functions.get(metric)))
+        return cg.gallery_ui(
+            rows, channel_id=ns("curve_gallery_action"),
+            filter_input_id=ns("gallery_filter"), filter_mode=mode)
+
+    @reactive.effect
+    @reactive.event(input.curve_gallery_action)  # no ignore_init: same rule as summary_row_action
+    async def _gallery_action():
+        payload = input.curve_gallery_action() or {}
+        metric = payload.get("metric")
+        action = payload.get("action")
+        if not metric or metric not in row_snapshot:
+            return
+        with reactive.isolate():
+            if bulk_recompute_active():
+                return
+        if action == "open":
+            request_id = st.next_workspace_modal_request_id(state)
+            st.launch_workspace_modal(state, "analysis", metric, request_id=request_id)
+            return
+        if action == "table":
+            row_expanded[metric].set(True)
+            ui.update_navset("curves_section", selected="table", session=session)
+            # the navset switch is queued until the flush ends, so the browser
+            # side waits for the row to have a layout box before scrolling
+            await session.send_custom_message(
+                "scrollToElement", {"id": ns(f"row_{metric}")})
+
+    @reactive.effect
+    @reactive.event(state.workspace_section_nonce, ignore_init=True)
+    def _curves_section_request():
+        # The strip's Gallery / Table chips (the channel is shared with the
+        # workspace sections; only this page's values are acted on here).
+        with reactive.isolate():
+            value = state.workspace_section_request()
+        if value in cg.curves_sections():
+            ui.update_navset("curves_section", selected=value, session=session)
+
+    @reactive.effect
+    def _mirror_curves_section():
+        # Location mirror for the strip's chip highlight. One writer: this.
+        state.curves_section.set(input.curves_section() or cg.DEFAULT_SECTION)
+
     # ── page shell (R:790-858) ────────────────────────────────────────────────
     @render.ui
     def summary_page():
         if state.data() is None:
             return no_data_alert()
         metrics = summary_metrics()
-        return ui.TagList(
-            ui.output_ui(ns("review_queue")),
+        with reactive.isolate():
+            section = state.curves_section() or cg.DEFAULT_SECTION
+        table_card = (
             ui.card(
                 ui.card_header(
                     ui.div(
@@ -939,5 +1002,16 @@ def summary_page_server(input, output, session, state: AppState):
                     ),
                 ),
                 class_="summary-shell",
+            )
+        )
+        # Both panes stay mounted (the row outputs keep their registrations and
+        # expanded state across switches); the strip's chips pick the pane.
+        return ui.TagList(
+            ui.output_ui(ns("review_queue")),
+            ui.navset_hidden(
+                ui.nav_panel(None, ui.output_ui(ns("curve_gallery")), value="gallery"),
+                ui.nav_panel(None, table_card, value="table"),
+                id=ns("curves_section"),
+                selected=section,
             ),
         )

@@ -1087,6 +1087,56 @@
 .review-queue-badge { background: #f39c12; color: #fff; font-size: 0.68rem; }
 .review-queue-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 
+/* ── Curve gallery (Reference curves page, the Gallery section) ──────────── */
+.curve-gallery-toolbar { display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+.curve-gallery-toolbar .shiny-input-radiogroup { margin-bottom: 0; font-size: 0.8rem; }
+.curve-gallery-toolbar .shiny-input-radiogroup .form-check-inline { margin-right: 0.6rem; }
+.curve-gallery-counts { font-size: 0.85rem; }
+.curve-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.75rem; }
+.curve-gallery-empty { padding: 1rem 0; }
+.curve-gallery-legend { margin-top: 0.75rem; }
+.curve-tile { border: 1px solid #d8e2ec; border-radius: 0.5rem; background: #fff;
+  padding: 0.45rem 0.6rem 0.3rem; cursor: pointer;
+  transition: box-shadow 0.12s ease, transform 0.12s ease, border-color 0.12s ease; }
+.curve-tile:hover, .curve-tile:focus-visible { box-shadow: 0 2px 10px rgba(31, 63, 110, 0.18);
+  transform: translateY(-1px); border-color: #9fb5cc; }
+.curve-tile:focus-visible { outline: 2px solid #1c7ed6; outline-offset: 2px; }
+.curve-tile-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.4rem; }
+.curve-tile-code { font-weight: 600; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; }
+.curve-tile-status { font-size: 0.66rem; padding: 0.05rem 0.4rem; border-radius: 999px;
+  background: #eef1f5; color: #6c757d; white-space: nowrap; }
+.curve-tile-svg { display: block; width: 100%; height: auto; }
+.curve-tile-foot { display: flex; justify-content: space-between; align-items: center; gap: 0.4rem;
+  font-size: 0.7rem; color: #6c757d; }
+.curve-tile-function { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.curve-tile-foot-right { display: flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+.curve-tile-strata { background: #6c757d; color: #fff; border-radius: 999px; padding: 0 0.4rem;
+  font-size: 0.62rem; }
+.curve-tile-table.btn { padding: 0 0.3rem; font-size: 0.75rem; line-height: 1.4; color: #6c757d; }
+.curve-tile-table.btn:hover { color: #1c7ed6; }
+.curve-tile.is-flagged { border-left: 4px solid #f39c12; }
+.curve-tile.is-flagged .curve-tile-status { background: #f39c12; color: #fff; }
+.curve-tile.is-removed { opacity: 0.72; }
+.curve-tile.is-removed .curve-tile-status { background: #d9534f; color: #fff; }
+.curve-tile.is-finalized .curve-tile-status { background: #27ae60; color: #fff; }
+.curve-tile.is-not-run .curve-tile-svg { opacity: 0.6; }
+.curve-tile-band.band-good { fill: var(--band-good, #c8d9f2); }
+.curve-tile-band.band-fair { fill: var(--band-fair, #f5e7a6); }
+.curve-tile-band.band-poor { fill: var(--band-poor, #f5b5b5); }
+.curve-tile-range { fill: #2f4b7c; fill-opacity: 0.10; }
+.curve-tile-break { stroke: #8a93a3; }
+.curve-tile-line { stroke: #2f4b7c; stroke-width: 1.6; fill: none; }
+.curve-tile-line.out-of-scope { stroke: #b04040; }
+.curve-tile-point { fill: #2f4b7c; }
+.curve-tile-line.out-of-scope ~ .curve-tile-point { fill: #b04040; }
+.curve-tile-flag { fill: #f39c12; }
+.curve-tile-tick { font-size: 7px; fill: #6b7689; }
+@media (max-width: 700px) {
+  .curve-gallery { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
+
 /* Open dialog: compact library list */
 .open-dialog-list { max-height: 260px; overflow-y: auto; border: 1px solid #e9ecef;
   border-radius: 0.375rem; }

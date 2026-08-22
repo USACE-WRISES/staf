@@ -135,6 +135,7 @@ def stagebar_server(input, output, session, state: AppState):
         view = state.data_setup_view()
         wiz_step = state.wizard_current_step()
         active_section = state.workspace_section()
+        curves_section = state.curves_section()
 
         snap = ap.run_snapshot(state)
         statuses = rs.derive_stage_status(snap, tasks)
@@ -172,12 +173,16 @@ def stagebar_server(input, output, session, state: AppState):
             # and hang as the wizard sub-row -- one chip idiom -- but the values
             # are section names, not wizard steps, and one is always active.
             secs = rs.STAGE_SECTIONS.get(stage_key) or []
-            if not secs or view != "workspace":
+            # The workspace's chips show only while the workspace is the Data &
+            # Setup view; the Reference Curves chips always show on their stage.
+            if not secs or (stage_key == "refine_map" and view != "workspace"):
                 return None
+            active = {"refine_map": active_section,
+                      "curve_review": curves_section}.get(stage_key)
             chips = []
             for value, label in secs:
                 chip_cls = "substep-chip"
-                if active_section == value:
+                if active == value:
                     chip_cls += " active"
                 # Validation stays quiet until it has something to say: a count
                 # only when metrics need a look (same badge the Reference curves
@@ -279,7 +284,7 @@ def stagebar_server(input, output, session, state: AppState):
     def _go(stage_key: str):
         nav_value, wiz = rs.stage_landing(stage_key)
         _request_nav(nav_value, wizard_step=wiz)
-        if stage_key in rs.STAGE_SECTIONS:
+        if stage_key == "refine_map":
             # Sectioned page stage (the workspace): also ask Data & Setup to
             # close any open wizard back to the workspace view -- entry_view is
             # sticky, so the nav switch alone would leave the wizard showing.
