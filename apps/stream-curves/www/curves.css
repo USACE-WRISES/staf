@@ -1110,8 +1110,30 @@
 .curve-tile-svg { display: block; width: 100%; height: auto; }
 .curve-tile-foot { display: flex; justify-content: space-between; align-items: center; gap: 0.4rem;
   font-size: 0.7rem; color: #6c757d; }
-.curve-tile-function { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.curve-tile-also { font-size: 0.66rem; color: #6c757d; line-height: 1.25; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .curve-tile-foot-right { display: flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+/* discipline sections (the workbench's discipline colors) and function rows */
+.curve-gallery-section { margin-top: 1rem; }
+.curve-gallery-sections > .curve-gallery-section:first-child { margin-top: 0.25rem; }
+.curve-gallery-section-head { display: flex; align-items: baseline; gap: 0.6rem; padding: 0.3rem 0.6rem;
+  margin-bottom: 0.6rem; border-left: 4px solid #adb5bd; background: #f8f9fa;
+  border-bottom: 1px solid #e3e8ee; border-radius: 0 0.3rem 0.3rem 0; }
+.curve-gallery-section-name { font-weight: 600; font-size: 0.95rem; color: #2c3e50; }
+.curve-gallery-section-count { font-size: 0.78rem; color: #6c757d; }
+.curve-gallery-section-head.discipline-hydrology { background: #DCE6F1; border-left-color: #4A6FA5; }
+.curve-gallery-section-head.discipline-hydraulics { background: #B4C7E7; border-left-color: #2F5597; }
+.curve-gallery-section-head.discipline-geomorphology { background: #FBE5D6; border-left-color: #C55A11; }
+.curve-gallery-section-head.discipline-physicochemistry { background: #FFF2CC; border-left-color: #BF8F00; }
+.curve-gallery-section-head.discipline-biology { background: #E2EFDA; border-left-color: #548235; }
+.curve-gallery-fn { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 0.5rem; padding-top: 0.2rem; margin-top: 0.3rem; border-top: 1px dashed #dde3ea; }
+.curve-gallery-fn:first-child { border-top: 0; margin-top: 0; }
+.curve-gallery-fn-name { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em;
+  text-transform: uppercase; color: #3d4a5c; }
+.curve-gallery-fn-count, .curve-gallery-fn-shared { font-size: 0.74rem; color: #6c757d; }
+.curve-gallery-fn-link { color: #1c7ed6; text-decoration: none; }
+.curve-gallery-fn-link:hover { text-decoration: underline; }
 .curve-tile-strata { background: #6c757d; color: #fff; border-radius: 999px; padding: 0 0.4rem;
   font-size: 0.62rem; }
 .curve-tile-table.btn { padding: 0 0.3rem; font-size: 0.75rem; line-height: 1.4; color: #6c757d; }

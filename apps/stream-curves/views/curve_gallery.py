@@ -51,14 +51,23 @@ def tile_row(metric: str, curve_rows: Any, *, metric_entry: Mapping | None,
                                    review_entry=review_entry, function_label=function_label)
 
 
+def assign_functions(rows: Iterable[Mapping], mapping: Any = None) -> list[dict]:
+    """Discipline and function keys on every tile from the session's
+    discipline-function mapping (every function a metric serves, primary
+    first), falling back to the tile's own label."""
+    return cs.assign_functions(rows, mapping)
+
+
 def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None) -> list[dict]:
     """Headless path: every eligible metric's tile straight from the state, in
-    the table's order. The page itself reads its row snapshots instead so the
-    gallery invalidates exactly when a table row does."""
+    the table's order, with its discipline and functions assigned. The page
+    itself reads its row snapshots instead so the gallery invalidates exactly
+    when a table row does."""
     with reactive.isolate():
         mc = state.metric_config() or {}
         review = state.curve_review() or {}
         functions = state.column_functions() or {}
+        mapping = state.discipline_function_mapping()
     keys = list(metrics) if metrics is not None else ss.eligible_summary_metrics(mc)
     out = []
     for m in keys:
@@ -68,7 +77,7 @@ def gallery_rows(state: AppState, metrics: Optional[Iterable[str]] = None) -> li
             rows = None
         out.append(tile_row(m, rows, metric_entry=mc.get(m), review_entry=review.get(m),
                             function_label=functions.get(m)))
-    return out
+    return assign_functions(out, mapping)
 
 
 def filter_rows(rows: Iterable[Mapping], mode: str) -> list[dict]:
@@ -95,8 +104,9 @@ def setinput_onclick(input_id: str, payload: Mapping) -> str:
 def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
             band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS):
     """A clickable tile: head (metric code and status pill), the SVG, and a
-    foot with the function label, a stratum-count badge, and the table button
-    (which stops the click from also opening the analysis)."""
+    foot with the other functions the metric serves (its primary function is
+    the header above it), a stratum-count badge, and the table button (which
+    stops the click from also opening the analysis)."""
     metric = str(row.get("metric") or "")
     open_click = setinput_onclick(channel_id, {"metric": metric, "action": "open"})
     table_click = "event.stopPropagation();" + setinput_onclick(
@@ -108,6 +118,8 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
     right.append(ui.tags.button(
         bi("table"), type="button", class_="btn btn-link btn-sm curve-tile-table",
         onclick=table_click, title="Show this metric's row in the table"))
+    also = [str(f) for f in (row.get("also_functions") or []) if f]
+    also_text = ("also: " + ", ".join(also)) if also else ""
     return ui.div(
         ui.div(
             ui.tags.span(metric, class_="curve-tile-code", title=str(row.get("display_name") or metric)),
@@ -116,15 +128,67 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
         ),
         ui.HTML(cs.tile_svg(row, w=w, h=h, band_breaks=band_breaks)),
         ui.div(
-            ui.tags.span(str(row.get("function") or ""), class_="curve-tile-function"),
+            ui.tags.span(also_text, class_="curve-tile-also",
+                         title=("Also informs: " + ", ".join(also)) if also else None),
             ui.div(*right, class_="curve-tile-foot-right"),
             class_="curve-tile-foot",
         ),
+        id=cs.tile_dom_id(metric),
         class_=" ".join(["curve-tile", *cs.tile_state_classes(row)]),
         role="button", tabindex="0", title=cs.tile_title(row), data_metric=metric,
         onclick=open_click,
         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}",
     )
+
+
+def _scroll_link(metric: str):
+    """An in-page link to a tile that scrolls instead of changing the hash."""
+    tid = cs.tile_dom_id(metric)
+    return ui.tags.a(
+        metric, href="#", class_="curve-gallery-fn-link",
+        onclick=(f"var el=document.getElementById('{tid}');"
+                 "if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}"
+                 "return false;"))
+
+
+def function_header_ui(fn: Mapping):
+    """The full-width row above a function's tiles: its name, its count, and
+    links to metrics that serve it from under another function."""
+    parts = [
+        ui.tags.span(str(fn.get("function_name") or "No function"), class_="curve-gallery-fn-name"),
+        ui.tags.span(cs._count_text(int(fn.get("n") or 0)), class_="curve-gallery-fn-count"),
+    ]
+    shared = list(fn.get("shared") or [])
+    if shared:
+        bits: list = ["also served by "]
+        for i, s in enumerate(shared):
+            if i:
+                bits.append(", ")
+            bits.append(_scroll_link(str(s["metric"])))
+            bits.append(f" (under {s.get('primary_function_name') or 'its primary function'})")
+        parts.append(ui.tags.span(*bits, class_="curve-gallery-fn-shared"))
+    return ui.div(*parts, class_="curve-gallery-fn")
+
+
+def section_ui(section: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
+               band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS):
+    """One discipline: a divider head (name and count, the workbench's
+    discipline colors) over one grid in which each function header spans the
+    full width, so tiles stay column-aligned across functions."""
+    disc = str(section.get("discipline") or cs.UNMAPPED_DISCIPLINE)
+    dcls = cs.discipline_class(disc)
+    items = []
+    for fn in section.get("functions") or []:
+        items.append(function_header_ui(fn))
+        items.extend(tile_ui(t, channel_id=channel_id, w=w, h=h, band_breaks=band_breaks)
+                     for t in fn.get("tiles") or [])
+    head = ui.div(
+        ui.tags.span(disc, class_="curve-gallery-section-name"),
+        ui.tags.span(cs._count_text(int(section.get("n") or 0)), class_="curve-gallery-section-count"),
+        class_=f"curve-gallery-section-head {dcls}",
+    )
+    return ui.tags.section(head, ui.div(*items, class_="curve-gallery"),
+                           class_=f"curve-gallery-section {dcls}")
 
 
 def gallery_counts(rows: Iterable[Mapping]) -> dict:
@@ -155,14 +219,19 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
     )
     shown = filter_rows(rows, mode)
     if shown:
-        grid = ui.div(*[tile_ui(r, channel_id=channel_id, w=w, h=h, band_breaks=band_breaks)
-                        for r in shown], class_="curve-gallery")
+        if any("discipline" not in r for r in shown):
+            cs.assign_functions(shown)
+        # grouped from the tiles actually shown, so a filtered-out tile leaves
+        # no empty header and no dead link behind
+        grid = ui.div(*[section_ui(sec, channel_id=channel_id, w=w, h=h, band_breaks=band_breaks)
+                        for sec in cs.group_tiles(shown)], class_="curve-gallery-sections")
     else:
         grid = ui.div("No curves match this filter.", class_="text-muted curve-gallery-empty")
     legend = ui.div(
         "Shaded column: the reference range. Dashed lines: the condition breaks at "
         f"{cs.fmt_num(band_breaks[0])} and {cs.fmt_num(band_breaks[1])}. Dotted red curve: not in "
-        "scope. Orange marker: needs review. Click a tile to open its analysis.",
+        "scope. Orange marker: needs review. A metric that informs a second function sits under "
+        "its primary function and is linked from the other. Click a tile to open its analysis.",
         class_="text-muted small curve-gallery-legend",
     )
     return ui.div(toolbar, grid, legend, class_="curve-gallery-wrap")
@@ -170,6 +239,7 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
 
 __all__ = [
     "REVIEW_STATUS_LABELS", "DECISION_LABELS", "GALLERY_FILTERS", "DEFAULT_SECTION",
-    "curves_sections", "tile_row", "gallery_rows", "filter_rows", "setinput_onclick",
-    "tile_ui", "gallery_counts", "gallery_ui",
+    "curves_sections", "tile_row", "assign_functions", "gallery_rows", "filter_rows",
+    "setinput_onclick", "tile_ui", "function_header_ui", "section_ui", "gallery_counts",
+    "gallery_ui",
 ]

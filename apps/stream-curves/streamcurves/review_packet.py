@@ -413,7 +413,8 @@ def packet_tiles(result: dict) -> list[dict]:
         tile["flags"] = list(r["flags"])
         tile["badge"] = r.get("confidence_label")
         tiles.append(tile)
-    return tiles
+    # the run's own mapping carries every function a metric serves, primary first
+    return curve_svg.assign_functions(tiles, result.get("discipline_function_mapping"))
 
 
 def write_curve_gallery_html(result: dict, path: Path | str) -> Optional[Path]:

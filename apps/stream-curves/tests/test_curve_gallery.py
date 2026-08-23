@@ -56,12 +56,17 @@ def test_gallery_ui_renders_one_tile_per_row_with_counts():
     assert "4 curves" in html and "1 flagged, 1 not in scope" in html
     assert f'id="{FILTER}"' in html and "Not in scope" in html
     assert "0.39 and 0.69" in html
+    # no mapping given: the tiles' own label places them (Hyporheic connectivity
+    # is a Hydraulics function) under one discipline section and one function row
+    assert html.count("curve-gallery-section-head") == 1 and "discipline-hydraulics" in html
+    assert html.count('class="curve-gallery-fn"') == 1 and "Hyporheic connectivity" in html
 
 
 def test_gallery_ui_empty_filter_shows_a_message():
     rows = [_tile(metric="a"), _tile(metric="b")]
     html = str(cg.gallery_ui(rows, channel_id=CHANNEL, filter_input_id=FILTER, filter_mode="flagged"))
     assert _n_tiles(html) == 0 and "No curves match this filter." in html
+    assert "curve-gallery-section" not in html
 
 
 def test_filter_rows_modes():
@@ -144,6 +149,9 @@ def test_gallery_rows_cover_every_eligible_metric_in_table_order(loaded_state):
     eligible = ss.eligible_summary_metrics(mc)
     rows = cg.gallery_rows(loaded_state)
     assert [r["metric"] for r in rows] == eligible
+    # every tile carries its grouping keys (this fixture has no mapping and no
+    # column_functions, so they resolve to the Unmapped section)
+    assert all("discipline" in r and "also_functions" in r for r in rows)
     # nothing computed yet: every tile is a placeholder, none is dotted
     assert all(r["strata"] == [] for r in rows)
     assert all("curve-tile-empty" in cs.tile_svg(r) and "out-of-scope" not in cs.tile_svg(r) for r in rows)
