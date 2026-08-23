@@ -27,11 +27,15 @@ from __future__ import annotations
 
 import html
 import math
+import re
 from typing import Any, Iterable, Mapping, Optional
 
 import pandas as pd
 
 from . import curves, deep_export, run_state
+
+UNMAPPED_DISCIPLINE = "Unmapped"
+_DISCIPLINE_ORDER_FALLBACK = ["Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology"]
 
 DEEP_INDEX_BANDS: tuple[float, float] = tuple(
     float(v) for v in deep_export.SCORING_CONTRACT_CONSTANTS["indexBands"])  # (0.39, 0.69)
@@ -335,6 +339,23 @@ h1 { font-size: 1.1rem; margin: 0 0 .25rem; }
 .curve-tile-svg { display: block; width: 100%; height: auto; }
 .curve-tile-foot { display: flex; justify-content: space-between; gap: .4rem; font-size: .7rem; color: #6c757d; }
 .curve-tile-strata { background: #6c757d; color: #fff; border-radius: 999px; padding: 0 .4rem; font-size: .62rem; }
+.curve-tile-also { font-size: .66rem; color: #6c757d; }
+.curve-gallery-section { margin-top: 1rem; }
+.curve-gallery-section-head { display: flex; align-items: baseline; gap: .6rem; padding: .3rem .6rem; margin-bottom: .6rem;
+  border-left: 4px solid #adb5bd; background: #f8f9fa; border-bottom: 1px solid #e3e8ee; }
+.curve-gallery-section-name { font-weight: 600; font-size: .95rem; color: #2c3e50; }
+.curve-gallery-section-count { font-size: .78rem; color: #6c757d; }
+.curve-gallery-section-head.discipline-hydrology { background: #DCE6F1; border-left-color: #4A6FA5; }
+.curve-gallery-section-head.discipline-hydraulics { background: #B4C7E7; border-left-color: #2F5597; }
+.curve-gallery-section-head.discipline-geomorphology { background: #FBE5D6; border-left-color: #C55A11; }
+.curve-gallery-section-head.discipline-physicochemistry { background: #FFF2CC; border-left-color: #BF8F00; }
+.curve-gallery-section-head.discipline-biology { background: #E2EFDA; border-left-color: #548235; }
+.curve-gallery-fn { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: .5rem;
+  padding-top: .2rem; margin-top: .3rem; border-top: 1px dashed #dde3ea; }
+.curve-gallery-fn:first-child { border-top: 0; margin-top: 0; }
+.curve-gallery-fn-name { font-size: .78rem; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: #3d4a5c; }
+.curve-gallery-fn-count, .curve-gallery-fn-shared { font-size: .74rem; color: #6c757d; }
+.curve-gallery-fn-shared a { color: #1c7ed6; text-decoration: none; }
 """
 
 
@@ -374,38 +395,219 @@ def status_label(tile: Mapping) -> str:
     return DECISION_LABELS.get(tile.get("decision"), "Unreviewed")
 
 
+# --------------------------------------------------------------------------- #
+# Discipline and function grouping
+# --------------------------------------------------------------------------- #
+def safe_id(metric: Any) -> str:
+    """An element id fragment for a metric code (letters, digits, underscore, hyphen)."""
+    return re.sub(r"[^A-Za-z0-9_-]", "_", str(metric or ""))
+
+
+def tile_dom_id(metric: Any) -> str:
+    return f"curve-tile-{safe_id(metric)}"
+
+
+def _discipline_order() -> list[str]:
+    try:
+        from .mapping import fixed_discipline_order
+        return list(fixed_discipline_order())
+    except Exception:  # pragma: no cover - the mapping module always imports
+        return list(_DISCIPLINE_ORDER_FALLBACK)
+
+
+def _function_orders() -> dict[str, int]:
+    """Canonical function id -> framework position (1..20)."""
+    from . import staf_library
+    meta = staf_library.staf_function_meta()
+    return {str(r["id"]): int(r["order"]) for r in meta.to_dict("records")}
+
+
+def resolve_function(label: Any, *, discipline: str | None = None) -> dict:
+    """A function label (canonical name, a staf_functions.json alias, or the
+    ``"Discipline: Function"`` shape ``column_functions`` stores) as
+    ``{id, name, discipline, order}``. An unknown label keeps its text with no
+    id under the discipline given (or the label's own prefix); nothing at all
+    is Unmapped."""
+    from . import staf_library
+    text = "" if _is_blank(label) else str(label).strip()
+    prefix, bare = (None, text)
+    if ":" in text:
+        prefix, bare = (p.strip() for p in text.split(":", 1))
+    canon = staf_library.staf_canonical_function(bare) if bare else None
+    if canon:
+        return {"id": canon["id"], "name": canon["name"], "discipline": canon["discipline"],
+                "order": _function_orders().get(canon["id"], 999)}
+    if not bare:
+        return {"id": None, "name": None, "discipline": UNMAPPED_DISCIPLINE, "order": 999}
+    return {"id": None, "name": bare, "discipline": discipline or prefix or UNMAPPED_DISCIPLINE,
+            "order": 998}
+
+
+def _mapping_rows(mapping: Any) -> list[dict]:
+    """The discipline-function mapping as row dicts, planned ``lib:`` and blank
+    keys dropped, in ``sort_order`` (row order when absent)."""
+    if mapping is None:
+        return []
+    if isinstance(mapping, pd.DataFrame):
+        rows = mapping.to_dict("records") if len(mapping) else []
+    else:
+        rows = [dict(r) for r in mapping]
+    out = []
+    for i, r in enumerate(rows):
+        mk = r.get("metric_key")
+        if _is_blank(mk) or str(mk).startswith("lib:"):
+            continue
+        so = _num(r.get("sort_order"))
+        out.append((so if so is not None else float(i), i, r))
+    out.sort(key=lambda t: (t[0], t[1]))
+    return [r for _, _, r in out]
+
+
+def assign_functions(tiles: Iterable[Mapping], mapping: Any = None) -> list[dict]:
+    """Set ``discipline``, ``function_id``, ``function_name``, ``function_order``,
+    ``also_functions`` (names) and ``also_function_refs`` on every tile.
+
+    The mapping (the session's ``discipline_function_mapping``: one row per
+    metric and function, the primary first by ``sort_order``) is the source;
+    a metric with no row falls back to the tile's own ``function`` label, and
+    one with neither is Unmapped. Tiles are updated in place and returned."""
+    by_metric: dict[str, list[dict]] = {}
+    for r in _mapping_rows(mapping):
+        disc = None if _is_blank(r.get("discipline")) else str(r.get("discipline")).strip()
+        fn = resolve_function(r.get("function_label"), discipline=disc)
+        if fn["name"] is None:
+            continue
+        lst = by_metric.setdefault(str(r["metric_key"]).strip(), [])
+        if all(x["name"] != fn["name"] for x in lst):
+            lst.append(fn)
+    out = []
+    for t in tiles:
+        fns = by_metric.get(str(t.get("metric") or "")) or [resolve_function(t.get("function"))]
+        primary, rest = fns[0], sorted(fns[1:], key=lambda f: (f["order"], f["name"] or ""))
+        t["discipline"] = primary["discipline"]
+        t["function_id"] = primary["id"]
+        t["function_name"] = primary["name"]
+        t["function_order"] = primary["order"]
+        t["also_functions"] = [f["name"] for f in rest]
+        t["also_function_refs"] = [dict(f) for f in rest]
+        out.append(t)
+    return out
+
+
+def group_tiles(tiles: Iterable[Mapping]) -> list[dict]:
+    """Sections by discipline (framework order, other disciplines after,
+    Unmapped last), each holding its functions in framework order with their
+    primary tiles in input order. A function with no primary tile is kept when
+    a tile elsewhere also serves it, listed under ``shared`` so every covered
+    function appears once. Tiles without the grouping keys are assigned first
+    from their own labels."""
+    tiles = list(tiles)
+    if any("discipline" not in t for t in tiles):
+        assign_functions(tiles)
+    discs = _discipline_order()
+    buckets: dict[tuple[str, str], dict] = {}
+
+    def bucket(disc: str, fid, name, order) -> dict:
+        key = (str(disc), str(name or ""))
+        if key not in buckets:
+            buckets[key] = {"function_id": fid, "function_name": name, "discipline": str(disc),
+                            "order": int(order if order is not None else 999), "tiles": [], "shared": []}
+        return buckets[key]
+
+    for t in tiles:
+        bucket(t["discipline"], t.get("function_id"), t.get("function_name"),
+               t.get("function_order")).get("tiles").append(t)
+    for t in tiles:
+        for f in t.get("also_function_refs") or []:
+            bucket(f["discipline"], f.get("id"), f.get("name"), f.get("order")).get("shared").append({
+                "metric": t["metric"], "primary_function_name": t.get("function_name"),
+                "primary_discipline": t["discipline"]})
+    sections: dict[str, list[dict]] = {}
+    for (disc, _), b in buckets.items():
+        if not b["tiles"] and not b["shared"]:
+            continue
+        b["n"] = len(b["tiles"])
+        sections.setdefault(disc, []).append(b)
+
+    def disc_key(d: str):
+        if d in discs:
+            return (0, discs.index(d), "")
+        if d == UNMAPPED_DISCIPLINE:
+            return (2, 0, "")
+        return (1, 0, d)
+
+    out = []
+    for disc in sorted(sections, key=disc_key):
+        fns = sorted(sections[disc], key=lambda b: (b["order"], b["function_name"] or ""))
+        out.append({"discipline": disc, "n": sum(b["n"] for b in fns), "functions": fns})
+    return out
+
+
+def discipline_class(discipline: Any) -> str:
+    return "discipline-" + re.sub(r"[^a-z0-9]+", "-", str(discipline or "").strip().lower()).strip("-")
+
+
+def _count_text(n: int, noun: str = "curve") -> str:
+    return f"{n} {noun}" + ("" if n == 1 else "s")
+
+
 def gallery_html(tiles: list[Mapping], *, title: str, w: int = 240, h: int = 150,
                  band_breaks: tuple[float, float] = DEEP_INDEX_BANDS) -> str:
-    """A self-contained page: inline CSS, one tile per entry, no scripts."""
+    """A self-contained page: inline CSS, one tile per entry grouped by
+    discipline and function, no scripts beyond the in-page scroll links."""
+    tiles = [dict(t) for t in tiles]
     out = ["<!doctype html>", "<html lang=\"en\"><head><meta charset=\"utf-8\">",
            f"<title>{html.escape(title)}</title>", f"<style>{GALLERY_CSS}</style></head><body>",
            f"<h1>{html.escape(title)}</h1>",
            "<p class=\"curve-gallery-legend\">Shaded column: the reference range. Dashed lines: the "
            f"condition breaks at {fmt_num(band_breaks[0])} and {fmt_num(band_breaks[1])}. "
-           "Dotted red curve: not in scope. Orange marker: needs review.</p>",
-           "<div class=\"curve-gallery\">"]
-    for t in tiles:
-        classes = " ".join(["curve-tile", *tile_state_classes(t)])
-        n_strata = len(t.get("strata") or [])
-        foot = [f"<span>{html.escape(str(t.get('function') or ''))}</span>"]
-        right = []
-        if t.get("badge"):
-            right.append(f"<span>{html.escape(str(t['badge']))}</span>")
-        if n_strata > 1:
-            right.append(f"<span class=\"curve-tile-strata\">{n_strata} strata</span>")
-        foot.append("<span>" + " ".join(right) + "</span>")
-        out.append(
-            f"<div class=\"{classes}\" title=\"{html.escape(tile_title(t), quote=True)}\">"
-            f"<div class=\"curve-tile-head\"><span class=\"curve-tile-code\">{html.escape(str(t.get('metric')))}</span>"
-            f"<span class=\"curve-tile-status\">{html.escape(status_label(t))}</span></div>"
-            + tile_svg(t, w=w, h=h, band_breaks=band_breaks)
-            + "<div class=\"curve-tile-foot\">" + "".join(foot) + "</div></div>")
-    out.append("</div></body></html>")
+           "Dotted red curve: not in scope. Orange marker: needs review. A metric that informs a "
+           "second function sits under its primary function and is linked from the other.</p>"]
+    for sec in group_tiles(tiles):
+        out.append(f"<section class=\"curve-gallery-section {discipline_class(sec['discipline'])}\">"
+                   f"<div class=\"curve-gallery-section-head {discipline_class(sec['discipline'])}\">"
+                   f"<span class=\"curve-gallery-section-name\">{html.escape(sec['discipline'])}</span>"
+                   f"<span class=\"curve-gallery-section-count\">{_count_text(sec['n'])}</span></div>"
+                   "<div class=\"curve-gallery\">")
+        for fn in sec["functions"]:
+            shared = []
+            for s in fn["shared"]:
+                tid = tile_dom_id(s["metric"])
+                shared.append(f"<a href=\"#{tid}\">{html.escape(str(s['metric']))}</a> "
+                              f"(under {html.escape(str(s.get('primary_function_name') or 'its primary function'))})")
+            out.append("<div class=\"curve-gallery-fn\">"
+                       f"<span class=\"curve-gallery-fn-name\">{html.escape(str(fn['function_name'] or 'No function'))}</span>"
+                       f"<span class=\"curve-gallery-fn-count\">{_count_text(fn['n'])}</span>"
+                       + (f"<span class=\"curve-gallery-fn-shared\">also served by {', '.join(shared)}</span>"
+                          if shared else "")
+                       + "</div>")
+            for t in fn["tiles"]:
+                classes = " ".join(["curve-tile", *tile_state_classes(t)])
+                n_strata = len(t.get("strata") or [])
+                also = t.get("also_functions") or []
+                foot = [f"<span class=\"curve-tile-also\">{('also: ' + html.escape(', '.join(also))) if also else ''}</span>"]
+                right = []
+                if t.get("badge"):
+                    right.append(f"<span>{html.escape(str(t['badge']))}</span>")
+                if n_strata > 1:
+                    right.append(f"<span class=\"curve-tile-strata\">{n_strata} strata</span>")
+                foot.append("<span>" + " ".join(right) + "</span>")
+                out.append(
+                    f"<div class=\"{classes}\" id=\"{tile_dom_id(t.get('metric'))}\" "
+                    f"title=\"{html.escape(tile_title(t), quote=True)}\">"
+                    f"<div class=\"curve-tile-head\"><span class=\"curve-tile-code\">{html.escape(str(t.get('metric')))}</span>"
+                    f"<span class=\"curve-tile-status\">{html.escape(status_label(t))}</span></div>"
+                    + tile_svg(t, w=w, h=h, band_breaks=band_breaks)
+                    + "<div class=\"curve-tile-foot\">" + "".join(foot) + "</div></div>")
+        out.append("</div></section>")
+    out.append("</body></html>")
     return "\n".join(out)
 
 
 __all__ = [
     "DEEP_INDEX_BANDS", "DRAWING_BANDS", "STATUS_LABELS", "DECISION_LABELS", "GALLERY_CSS",
-    "fmt_num", "points_from_curve_row", "decision_of", "tile_from_curve_rows", "tile_svg",
-    "tile_state_classes", "tile_title", "status_label", "gallery_html",
+    "UNMAPPED_DISCIPLINE", "fmt_num", "points_from_curve_row", "decision_of",
+    "tile_from_curve_rows", "tile_svg", "tile_state_classes", "tile_title", "status_label",
+    "safe_id", "tile_dom_id", "resolve_function", "assign_functions", "group_tiles",
+    "discipline_class", "gallery_html",
 ]

@@ -878,6 +878,7 @@ def summary_page_server(input, output, session, state: AppState):
         review = state.curve_review() or {}
         mc = state.metric_config() or {}
         functions = state.column_functions() or {}
+        mapping = state.discipline_function_mapping()
         mode = gallery_filter_mode()
         rows = []
         for metric in metrics:
@@ -888,6 +889,8 @@ def summary_page_server(input, output, session, state: AppState):
                 metric, (snap or {}).get("curve_rows"),
                 metric_entry=mc.get(metric), review_entry=review.get(metric),
                 function_label=functions.get(metric)))
+        # every function a metric serves, primary first, from the confirmed mapping
+        rows = cg.assign_functions(rows, mapping)
         return cg.gallery_ui(
             rows, channel_id=ns("curve_gallery_action"),
             filter_input_id=ns("gallery_filter"), filter_mode=mode)
