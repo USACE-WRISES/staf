@@ -1131,9 +1131,14 @@
 .curve-gallery-fn:first-child { border-top: 0; margin-top: 0; }
 .curve-gallery-fn-name { font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em;
   text-transform: uppercase; color: #3d4a5c; }
-.curve-gallery-fn-count, .curve-gallery-fn-shared { font-size: 0.74rem; color: #6c757d; }
+.curve-gallery-fn-count, .curve-gallery-fn-cross, .curve-gallery-section-cross { font-size: 0.74rem;
+  color: #6c757d; }
 .curve-gallery-fn-link { color: #1c7ed6; text-decoration: none; }
 .curve-gallery-fn-link:hover { text-decoration: underline; }
+/* a cross-listed copy: the same curve drawn again under a second function */
+.curve-tile.is-cross-listed { border-style: dashed; background: #fbfcfe; }
+.curve-tile-cross { font-size: 0.66rem; color: #6c757d; margin-bottom: 0.15rem; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
 .curve-tile-strata { background: #6c757d; color: #fff; border-radius: 999px; padding: 0 0.4rem;
   font-size: 0.62rem; }
 .curve-tile-table.btn { padding: 0 0.3rem; font-size: 0.75rem; line-height: 1.4; color: #6c757d; }

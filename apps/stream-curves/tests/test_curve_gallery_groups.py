@@ -88,60 +88,76 @@ def test_resolve_function_handles_prefixes_aliases_and_unknown_text():
     assert cs.resolve_function(float("nan"))["name"] is None
 
 
-def test_group_tiles_framework_order_with_shared_functions():
+def test_group_tiles_framework_order_with_cross_listed_curves():
     sections = cs.group_tiles(_tiles())
     assert [s["discipline"] for s in sections] == [
         "Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology", cs.UNMAPPED_DISCIPLINE]
-    assert sum(s["n"] for s in sections) == 6
+    # six primary tiles in all, three cross listings (pctimp once, BFWD_RAT twice)
+    assert sum(len(f["tiles"]) for s in sections for f in s["functions"]) == 6
+    assert sum(f["n_cross"] for s in sections for f in s["functions"]) == 3
     hyd = {s["discipline"]: s for s in sections}["Hydraulics"]
-    # functions in framework order; the ones served only from elsewhere are kept
-    # with no tiles and a shared link each
+    # functions in framework order; a function served only from elsewhere is
+    # kept, its curves drawn as cross-listed copies, and counted
     assert [f["function_name"] for f in hyd["functions"]] == [
         "Low flow and baseflow dynamics", "High flow dynamics", "Floodplain connectivity", "Hyporheic connectivity"]
-    assert [f["n"] for f in hyd["functions"]] == [0, 0, 0, 1]
-    assert hyd["n"] == 1
-    shared = {f["function_name"]: [s["metric"] for s in f["shared"]] for f in hyd["functions"]}
-    assert shared["High flow dynamics"] == ["pctimp2019ws"]
-    assert shared["Floodplain connectivity"] == ["phab_BFWD_RAT"]
-    assert shared["Low flow and baseflow dynamics"] == ["phab_BFWD_RAT"]
-    assert hyd["functions"][0]["shared"][0]["primary_function_name"] == "Channel evolution"
+    assert [f["n"] for f in hyd["functions"]] == [1, 1, 1, 1]
+    assert [f["n_cross"] for f in hyd["functions"]] == [1, 1, 1, 0]
+    cross = {f["function_name"]: [c["metric"] for c in f["cross"]] for f in hyd["functions"]}
+    assert cross["High flow dynamics"] == ["pctimp2019ws"]
+    assert cross["Floodplain connectivity"] == ["phab_BFWD_RAT"]
+    assert cross["Low flow and baseflow dynamics"] == ["phab_BFWD_RAT"]
+    assert hyd["functions"][0]["cross"][0]["primary_function_name"] == "Channel evolution"
+    assert hyd["functions"][0]["cross"][0]["tile"]["metric"] == "phab_BFWD_RAT"
+    # the section counts its distinct curves, and its cross listings
+    assert hyd["n"] == 3 and hyd["n_cross"] == 3
     geo = {s["discipline"]: s for s in sections}["Geomorphology"]
     assert [t["metric"] for t in geo["functions"][0]["tiles"]] == ["phab_BFWD_RAT"]
+    assert geo["n"] == 1 and geo["n_cross"] == 0
     # tiles without the keys are assigned on the way in
     bare = cs.group_tiles([_tile("a", "Biology: Habitat provision")])
     assert bare[0]["discipline"] == "Biology" and bare[0]["functions"][0]["function_name"] == "Habitat provision"
 
 
-def test_gallery_html_groups_tiles_into_sections_with_links():
+def test_gallery_html_groups_tiles_with_cross_listed_copies():
     page = cs.gallery_html(_tiles(), title="t")
-    assert _n_tiles(page) == 6 and page.count("<svg ") == 6
+    assert page.count('data-role="primary"') == 6 and page.count('data-role="cross"') == 3
+    assert _n_tiles(page) == 9 and page.count("<svg ") == 9
     assert page.index("discipline-hydrology") < page.index("discipline-hydraulics") < page.index("discipline-biology")
     assert 'class="curve-gallery-section-head discipline-geomorphology"' in page
     assert "Channel evolution" in page and "High flow dynamics" in page
+    # the copy links back to the primary tile and carries its own id
     assert 'href="#curve-tile-pctimp2019ws"' in page and 'id="curve-tile-pctimp2019ws"' in page
+    assert 'id="curve-tile-pctimp2019ws--in-high-flow-dynamics"' in page
+    assert "also under " in page and "is-cross-listed" in page
     assert "also: Low flow and baseflow dynamics, Floodplain connectivity" in page
-    assert "also served by" in page and "<script" not in page
+    assert "1 cross-listed" in page and "<script" not in page
 
 
-def test_gallery_ui_groups_with_shared_links_and_also_lines():
+def test_gallery_ui_groups_with_cross_listed_copies_and_also_lines():
     html = str(cg.gallery_ui(_tiles(), channel_id=CHANNEL, filter_input_id=FILTER))
     html = html.replace("&apos;", "'").replace("&quot;", '"')
-    assert _n_tiles(html) == 6 and "6 curves" in html
+    # the toolbar counts distinct curves; the grid draws the copies as well
+    assert "6 curves" in html
+    assert html.count('data-role="primary"') == 6 and html.count('data-role="cross"') == 3
+    assert _n_tiles(html) == 9
     assert 'class="curve-gallery-section-head discipline-geomorphology"' in html
     assert html.index("discipline-hydrology") < html.index("discipline-geomorphology") < html.index("discipline-biology")
     assert "also: Low flow and baseflow dynamics, Floodplain connectivity" in html
-    assert "also served by" in html
+    assert "also under " in html and "cross-listed" in html
+    assert 'id="curve-tile-phab_BFWD_RAT--in-low-flow-baseflow-dynamics"' in html
     assert "getElementById('curve-tile-phab_BFWD_RAT')" in html and 'id="curve-tile-phab_BFWD_RAT"' in html
     assert "curve-gallery-fn-name" in html and "Hyporheic connectivity" in html
-    # the tile root class string is unchanged for the flagged tile
+    # a copy's back-link must not also open the tile it sits in
+    assert "event.stopPropagation();var el=document.getElementById('curve-tile-phab_BFWD_RAT')" in html
+    # the tile root class string is unchanged for the flagged primary tile
     assert 'class="curve-tile is-flagged"' in html
 
 
-def test_gallery_ui_filter_drops_empty_sections_and_dead_links():
+def test_gallery_ui_filter_drops_empty_sections_and_copies():
     html = str(cg.gallery_ui(_tiles(), channel_id=CHANNEL, filter_input_id=FILTER, filter_mode="flagged"))
     assert _n_tiles(html) == 1
     assert "discipline-biology" in html and "discipline-hydrology" not in html
-    assert "also served by" not in html
+    assert 'data-role="cross"' not in html
     empty = str(cg.gallery_ui(_tiles(), channel_id=CHANNEL, filter_input_id=FILTER, filter_mode="stratified"))
     assert _n_tiles(empty) == 0 and "No curves match this filter." in empty
     assert "curve-gallery-section" not in empty
