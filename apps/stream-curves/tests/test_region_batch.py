@@ -323,11 +323,20 @@ def test_html_gallery_has_one_tile_per_curve_row(assembled, tmp_path):
     assert p is not None and p.is_file()
     html = p.read_text(encoding="utf-8")
     rows = rp.curve_rows_for_packet(assembled)
-    n_tiles = html.count('class="curve-tile ') + html.count('class="curve-tile"')
-    assert n_tiles == len(rows) == len(assembled["curve_rows"])
-    assert html.count("<svg ") == len(rows) and "<script" not in html
+    # one primary tile per curve row; a curve serving a second function is
+    # drawn again there as a cross-listed copy
+    groups = cs.group_tiles(rp.packet_tiles(assembled))
+    cross_of: dict[str, int] = {}
+    for sec in groups:
+        for fn in sec["functions"]:
+            for c in fn["cross"]:
+                cross_of[c["metric"]] = cross_of.get(c["metric"], 0) + 1
+    n_cross = sum(cross_of.values())
+    assert html.count('data-role="primary"') == len(rows) == len(assembled["curve_rows"])
+    assert html.count('data-role="cross"') == n_cross
+    assert html.count("<svg ") == len(rows) + n_cross and "<script" not in html
     for r in rows:
         assert r["metric"] in html
-    dotted = sum(1 for r in rows if not r["in_scope"]
+    dotted = sum(1 + cross_of.get(r["metric"], 0) for r in rows if not r["in_scope"]
                  and cs.points_from_curve_row(assembled["curve_rows"][r["metric"]]))
     assert html.count("out-of-scope") == dotted

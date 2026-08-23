@@ -101,12 +101,26 @@ def setinput_onclick(input_id: str, payload: Mapping) -> str:
             "{priority:'event'})")
 
 
+def _scroll_to(dom_id: str) -> str:
+    """An onclick that scrolls to an element and focuses it without changing
+    the hash, and without reaching the clickable tile around it."""
+    return (f"event.stopPropagation();var el=document.getElementById('{dom_id}');"
+            "if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}"
+            "return false;")
+
+
 def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
-            band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS):
+            band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS,
+            cross: Mapping | None = None, under: Any = None):
     """A clickable tile: head (metric code and status pill), the SVG, and a
     foot with the other functions the metric serves (its primary function is
     the header above it), a stratum-count badge, and the table button (which
-    stops the click from also opening the analysis)."""
+    stops the click from also opening the analysis).
+
+    With ``cross`` (a ``group_tiles`` cross entry) the tile is a cross-listed
+    copy placed under the function ``under``: dashed, marked "also under" the
+    function it lives under with a link back to the primary tile, and with an
+    id of its own so the two never collide."""
     metric = str(row.get("metric") or "")
     open_click = setinput_onclick(channel_id, {"metric": metric, "action": "open"})
     table_click = "event.stopPropagation();" + setinput_onclick(
@@ -119,54 +133,54 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
         bi("table"), type="button", class_="btn btn-link btn-sm curve-tile-table",
         onclick=table_click, title="Show this metric's row in the table"))
     also = [str(f) for f in (row.get("also_functions") or []) if f]
-    also_text = ("also: " + ", ".join(also)) if also else ""
+    if cross:
+        primary = str(cross.get("primary_function_name") or "its primary function")
+        head_note = ui.div(
+            "also under ",
+            ui.tags.a(primary, href="#", class_="curve-gallery-fn-link",
+                      onclick=_scroll_to(cs.tile_dom_id(metric)),
+                      title="Go to this curve's primary tile"),
+            class_="curve-tile-cross")
+        foot_left = ui.tags.span("cross-listed", class_="curve-tile-also",
+                                 title=f"This curve lives under {primary}")
+        dom_id = cs.cross_dom_id(metric, under if under is not None else primary)
+        classes = ["curve-tile", *cs.tile_state_classes(row), "is-cross-listed"]
+    else:
+        head_note = None
+        foot_left = ui.tags.span(("also: " + ", ".join(also)) if also else "", class_="curve-tile-also",
+                                 title=("Also informs: " + ", ".join(also)) if also else None)
+        dom_id = cs.tile_dom_id(metric)
+        classes = ["curve-tile", *cs.tile_state_classes(row)]
     return ui.div(
+        head_note,
         ui.div(
             ui.tags.span(metric, class_="curve-tile-code", title=str(row.get("display_name") or metric)),
             ui.tags.span(cs.status_label(row), class_="curve-tile-status"),
             class_="curve-tile-head",
         ),
         ui.HTML(cs.tile_svg(row, w=w, h=h, band_breaks=band_breaks)),
-        ui.div(
-            ui.tags.span(also_text, class_="curve-tile-also",
-                         title=("Also informs: " + ", ".join(also)) if also else None),
-            ui.div(*right, class_="curve-tile-foot-right"),
-            class_="curve-tile-foot",
-        ),
-        id=cs.tile_dom_id(metric),
-        class_=" ".join(["curve-tile", *cs.tile_state_classes(row)]),
+        ui.div(foot_left, ui.div(*right, class_="curve-tile-foot-right"), class_="curve-tile-foot"),
+        id=dom_id,
+        class_=" ".join(classes),
         role="button", tabindex="0", title=cs.tile_title(row), data_metric=metric,
+        data_role="cross" if cross else "primary",
         onclick=open_click,
         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}",
     )
 
 
-def _scroll_link(metric: str):
-    """An in-page link to a tile that scrolls instead of changing the hash."""
-    tid = cs.tile_dom_id(metric)
-    return ui.tags.a(
-        metric, href="#", class_="curve-gallery-fn-link",
-        onclick=(f"var el=document.getElementById('{tid}');"
-                 "if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.focus();}"
-                 "return false;"))
-
-
 def function_header_ui(fn: Mapping):
-    """The full-width row above a function's tiles: its name, its count, and
-    links to metrics that serve it from under another function."""
+    """The full-width row above a function's tiles: its name, the number of
+    curves that serve it, and how many of those are cross-listed from another
+    function."""
     parts = [
         ui.tags.span(str(fn.get("function_name") or "No function"), class_="curve-gallery-fn-name"),
         ui.tags.span(cs._count_text(int(fn.get("n") or 0)), class_="curve-gallery-fn-count"),
     ]
-    shared = list(fn.get("shared") or [])
-    if shared:
-        bits: list = ["also served by "]
-        for i, s in enumerate(shared):
-            if i:
-                bits.append(", ")
-            bits.append(_scroll_link(str(s["metric"])))
-            bits.append(f" (under {s.get('primary_function_name') or 'its primary function'})")
-        parts.append(ui.tags.span(*bits, class_="curve-gallery-fn-shared"))
+    n_cross = int(fn.get("n_cross") or 0)
+    if n_cross:
+        parts.append(ui.tags.span(f"{n_cross} cross-listed", class_="curve-gallery-fn-cross",
+                                  title="Drawn again here; the curve lives under another function"))
     return ui.div(*parts, class_="curve-gallery-fn")
 
 
@@ -174,19 +188,27 @@ def section_ui(section: Mapping, *, channel_id: str, w: int = TILE_W, h: int = T
                band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS):
     """One discipline: a divider head (name and count, the workbench's
     discipline colors) over one grid in which each function header spans the
-    full width, so tiles stay column-aligned across functions."""
+    full width, so tiles stay column-aligned across functions. Each function
+    row holds its primary tiles and then the cross-listed copies."""
     disc = str(section.get("discipline") or cs.UNMAPPED_DISCIPLINE)
     dcls = cs.discipline_class(disc)
     items = []
     for fn in section.get("functions") or []:
         items.append(function_header_ui(fn))
+        under = fn.get("function_id") or fn.get("function_name") or "none"
         items.extend(tile_ui(t, channel_id=channel_id, w=w, h=h, band_breaks=band_breaks)
                      for t in fn.get("tiles") or [])
-    head = ui.div(
+        items.extend(tile_ui(c["tile"], channel_id=channel_id, w=w, h=h, band_breaks=band_breaks,
+                             cross=c, under=under)
+                     for c in fn.get("cross") or [])
+    head_parts = [
         ui.tags.span(disc, class_="curve-gallery-section-name"),
         ui.tags.span(cs._count_text(int(section.get("n") or 0)), class_="curve-gallery-section-count"),
-        class_=f"curve-gallery-section-head {dcls}",
-    )
+    ]
+    n_cross = int(section.get("n_cross") or 0)
+    if n_cross:
+        head_parts.append(ui.tags.span(f"{n_cross} cross-listed", class_="curve-gallery-section-cross"))
+    head = ui.div(*head_parts, class_=f"curve-gallery-section-head {dcls}")
     return ui.tags.section(head, ui.div(*items, class_="curve-gallery"),
                            class_=f"curve-gallery-section {dcls}")
 
@@ -230,8 +252,9 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
     legend = ui.div(
         "Shaded column: the reference range. Dashed lines: the condition breaks at "
         f"{cs.fmt_num(band_breaks[0])} and {cs.fmt_num(band_breaks[1])}. Dotted red curve: not in "
-        "scope. Orange marker: needs review. A metric that informs a second function sits under "
-        "its primary function and is linked from the other. Click a tile to open its analysis.",
+        "scope. Orange marker: needs review. A curve that informs more than one function appears "
+        "under each of them; the dashed copies are cross-listed and name the function the curve "
+        "lives under. Click a tile to open its analysis.",
         class_="text-muted small curve-gallery-legend",
     )
     return ui.div(toolbar, grid, legend, class_="curve-gallery-wrap")

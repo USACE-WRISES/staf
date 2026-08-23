@@ -354,8 +354,10 @@ h1 { font-size: 1.1rem; margin: 0 0 .25rem; }
   padding-top: .2rem; margin-top: .3rem; border-top: 1px dashed #dde3ea; }
 .curve-gallery-fn:first-child { border-top: 0; margin-top: 0; }
 .curve-gallery-fn-name { font-size: .78rem; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: #3d4a5c; }
-.curve-gallery-fn-count, .curve-gallery-fn-shared { font-size: .74rem; color: #6c757d; }
-.curve-gallery-fn-shared a { color: #1c7ed6; text-decoration: none; }
+.curve-gallery-fn-count, .curve-gallery-fn-cross, .curve-gallery-section-cross { font-size: .74rem; color: #6c757d; }
+.curve-tile.is-cross-listed { border-style: dashed; background: #fbfcfe; }
+.curve-tile-cross { font-size: .66rem; color: #6c757d; margin-bottom: .15rem; }
+.curve-tile-cross a { color: #1c7ed6; text-decoration: none; }
 """
 
 
@@ -496,11 +498,15 @@ def assign_functions(tiles: Iterable[Mapping], mapping: Any = None) -> list[dict
 
 def group_tiles(tiles: Iterable[Mapping]) -> list[dict]:
     """Sections by discipline (framework order, other disciplines after,
-    Unmapped last), each holding its functions in framework order with their
-    primary tiles in input order. A function with no primary tile is kept when
-    a tile elsewhere also serves it, listed under ``shared`` so every covered
-    function appears once. Tiles without the grouping keys are assigned first
-    from their own labels."""
+    Unmapped last), each holding its functions in framework order.
+
+    A function row holds every curve that serves it: its primary tiles
+    (``tiles``, input order) and then cross-listed copies of tiles whose
+    primary home is another function (``cross``: the tile plus where it
+    lives), so the row's count ``n`` is the number of curves the function
+    uses. A section's ``n`` is its distinct curves, ``n_cross`` its cross
+    listings. Tiles without the grouping keys are assigned first from their
+    own labels."""
     tiles = list(tiles)
     if any("discipline" not in t for t in tiles):
         assign_functions(tiles)
@@ -511,7 +517,7 @@ def group_tiles(tiles: Iterable[Mapping]) -> list[dict]:
         key = (str(disc), str(name or ""))
         if key not in buckets:
             buckets[key] = {"function_id": fid, "function_name": name, "discipline": str(disc),
-                            "order": int(order if order is not None else 999), "tiles": [], "shared": []}
+                            "order": int(order if order is not None else 999), "tiles": [], "cross": []}
         return buckets[key]
 
     for t in tiles:
@@ -519,14 +525,15 @@ def group_tiles(tiles: Iterable[Mapping]) -> list[dict]:
                t.get("function_order")).get("tiles").append(t)
     for t in tiles:
         for f in t.get("also_function_refs") or []:
-            bucket(f["discipline"], f.get("id"), f.get("name"), f.get("order")).get("shared").append({
-                "metric": t["metric"], "primary_function_name": t.get("function_name"),
-                "primary_discipline": t["discipline"]})
+            bucket(f["discipline"], f.get("id"), f.get("name"), f.get("order")).get("cross").append({
+                "tile": t, "metric": t["metric"], "primary_function_name": t.get("function_name"),
+                "primary_function_id": t.get("function_id"), "primary_discipline": t["discipline"]})
     sections: dict[str, list[dict]] = {}
     for (disc, _), b in buckets.items():
-        if not b["tiles"] and not b["shared"]:
+        if not b["tiles"] and not b["cross"]:
             continue
-        b["n"] = len(b["tiles"])
+        b["n"] = len(b["tiles"]) + len(b["cross"])
+        b["n_cross"] = len(b["cross"])
         sections.setdefault(disc, []).append(b)
 
     def disc_key(d: str):
@@ -539,8 +546,15 @@ def group_tiles(tiles: Iterable[Mapping]) -> list[dict]:
     out = []
     for disc in sorted(sections, key=disc_key):
         fns = sorted(sections[disc], key=lambda b: (b["order"], b["function_name"] or ""))
-        out.append({"discipline": disc, "n": sum(b["n"] for b in fns), "functions": fns})
+        distinct = {t["metric"] for b in fns for t in b["tiles"]} | {c["metric"] for b in fns for c in b["cross"]}
+        out.append({"discipline": disc, "n": len(distinct), "n_cross": sum(b["n_cross"] for b in fns),
+                    "functions": fns})
     return out
+
+
+def cross_dom_id(metric: Any, under: Any) -> str:
+    """The element id of a cross-listed copy: the tile's id plus the function it sits under."""
+    return f"{tile_dom_id(metric)}--in-{safe_id(under)}"
 
 
 def discipline_class(discipline: Any) -> str:
@@ -553,52 +567,65 @@ def _count_text(n: int, noun: str = "curve") -> str:
 
 def gallery_html(tiles: list[Mapping], *, title: str, w: int = 240, h: int = 150,
                  band_breaks: tuple[float, float] = DEEP_INDEX_BANDS) -> str:
-    """A self-contained page: inline CSS, one tile per entry grouped by
-    discipline and function, no scripts beyond the in-page scroll links."""
+    """A self-contained page: inline CSS, the tiles grouped by discipline and
+    function with cross-listed copies under every function a curve serves, no
+    scripts beyond the in-page links."""
     tiles = [dict(t) for t in tiles]
     out = ["<!doctype html>", "<html lang=\"en\"><head><meta charset=\"utf-8\">",
            f"<title>{html.escape(title)}</title>", f"<style>{GALLERY_CSS}</style></head><body>",
            f"<h1>{html.escape(title)}</h1>",
            "<p class=\"curve-gallery-legend\">Shaded column: the reference range. Dashed lines: the "
            f"condition breaks at {fmt_num(band_breaks[0])} and {fmt_num(band_breaks[1])}. "
-           "Dotted red curve: not in scope. Orange marker: needs review. A metric that informs a "
-           "second function sits under its primary function and is linked from the other.</p>"]
+           "Dotted red curve: not in scope. Orange marker: needs review. A curve that informs more "
+           "than one function appears under each of them; the dashed copies are cross-listed and "
+           "name the function the curve lives under.</p>"]
+
+    def tile_html(t: Mapping, *, cross: Mapping | None, under) -> str:
+        classes = ["curve-tile", *tile_state_classes(t)] + (["is-cross-listed"] if cross else [])
+        n_strata = len(t.get("strata") or [])
+        head_note = ""
+        if cross:
+            primary = str(cross.get("primary_function_name") or "its primary function")
+            head_note = (f"<div class=\"curve-tile-cross\">also under "
+                         f"<a href=\"#{tile_dom_id(t.get('metric'))}\">{html.escape(primary)}</a></div>")
+            foot_left = "cross-listed"
+        else:
+            also = t.get("also_functions") or []
+            foot_left = ("also: " + html.escape(", ".join(also))) if also else ""
+        right = []
+        if t.get("badge"):
+            right.append(f"<span>{html.escape(str(t['badge']))}</span>")
+        if n_strata > 1:
+            right.append(f"<span class=\"curve-tile-strata\">{n_strata} strata</span>")
+        tid = cross_dom_id(t.get("metric"), under) if cross else tile_dom_id(t.get("metric"))
+        role = "cross" if cross else "primary"
+        return (f"<div class=\"{' '.join(classes)}\" id=\"{tid}\" data-role=\"{role}\" "
+                f"title=\"{html.escape(tile_title(t), quote=True)}\">" + head_note
+                + f"<div class=\"curve-tile-head\"><span class=\"curve-tile-code\">{html.escape(str(t.get('metric')))}</span>"
+                f"<span class=\"curve-tile-status\">{html.escape(status_label(t))}</span></div>"
+                + tile_svg(t, w=w, h=h, band_breaks=band_breaks)
+                + f"<div class=\"curve-tile-foot\"><span class=\"curve-tile-also\">{foot_left}</span>"
+                + "<span>" + " ".join(right) + "</span></div></div>")
+
     for sec in group_tiles(tiles):
+        cross_note = (f"<span class=\"curve-gallery-section-cross\">{sec['n_cross']} cross-listed</span>"
+                      if sec.get("n_cross") else "")
         out.append(f"<section class=\"curve-gallery-section {discipline_class(sec['discipline'])}\">"
                    f"<div class=\"curve-gallery-section-head {discipline_class(sec['discipline'])}\">"
                    f"<span class=\"curve-gallery-section-name\">{html.escape(sec['discipline'])}</span>"
-                   f"<span class=\"curve-gallery-section-count\">{_count_text(sec['n'])}</span></div>"
+                   f"<span class=\"curve-gallery-section-count\">{_count_text(sec['n'])}</span>{cross_note}</div>"
                    "<div class=\"curve-gallery\">")
         for fn in sec["functions"]:
-            shared = []
-            for s in fn["shared"]:
-                tid = tile_dom_id(s["metric"])
-                shared.append(f"<a href=\"#{tid}\">{html.escape(str(s['metric']))}</a> "
-                              f"(under {html.escape(str(s.get('primary_function_name') or 'its primary function'))})")
+            fn_cross = (f"<span class=\"curve-gallery-fn-cross\">{fn['n_cross']} cross-listed</span>"
+                        if fn.get("n_cross") else "")
             out.append("<div class=\"curve-gallery-fn\">"
                        f"<span class=\"curve-gallery-fn-name\">{html.escape(str(fn['function_name'] or 'No function'))}</span>"
-                       f"<span class=\"curve-gallery-fn-count\">{_count_text(fn['n'])}</span>"
-                       + (f"<span class=\"curve-gallery-fn-shared\">also served by {', '.join(shared)}</span>"
-                          if shared else "")
-                       + "</div>")
+                       f"<span class=\"curve-gallery-fn-count\">{_count_text(fn['n'])}</span>{fn_cross}</div>")
+            under = fn.get("function_id") or fn.get("function_name") or "none"
             for t in fn["tiles"]:
-                classes = " ".join(["curve-tile", *tile_state_classes(t)])
-                n_strata = len(t.get("strata") or [])
-                also = t.get("also_functions") or []
-                foot = [f"<span class=\"curve-tile-also\">{('also: ' + html.escape(', '.join(also))) if also else ''}</span>"]
-                right = []
-                if t.get("badge"):
-                    right.append(f"<span>{html.escape(str(t['badge']))}</span>")
-                if n_strata > 1:
-                    right.append(f"<span class=\"curve-tile-strata\">{n_strata} strata</span>")
-                foot.append("<span>" + " ".join(right) + "</span>")
-                out.append(
-                    f"<div class=\"{classes}\" id=\"{tile_dom_id(t.get('metric'))}\" "
-                    f"title=\"{html.escape(tile_title(t), quote=True)}\">"
-                    f"<div class=\"curve-tile-head\"><span class=\"curve-tile-code\">{html.escape(str(t.get('metric')))}</span>"
-                    f"<span class=\"curve-tile-status\">{html.escape(status_label(t))}</span></div>"
-                    + tile_svg(t, w=w, h=h, band_breaks=band_breaks)
-                    + "<div class=\"curve-tile-foot\">" + "".join(foot) + "</div></div>")
+                out.append(tile_html(t, cross=None, under=under))
+            for c in fn["cross"]:
+                out.append(tile_html(c["tile"], cross=c, under=under))
         out.append("</div></section>")
     out.append("</body></html>")
     return "\n".join(out)
@@ -608,6 +635,6 @@ __all__ = [
     "DEEP_INDEX_BANDS", "DRAWING_BANDS", "STATUS_LABELS", "DECISION_LABELS", "GALLERY_CSS",
     "UNMAPPED_DISCIPLINE", "fmt_num", "points_from_curve_row", "decision_of",
     "tile_from_curve_rows", "tile_svg", "tile_state_classes", "tile_title", "status_label",
-    "safe_id", "tile_dom_id", "resolve_function", "assign_functions", "group_tiles",
+    "safe_id", "tile_dom_id", "cross_dom_id", "resolve_function", "assign_functions", "group_tiles",
     "discipline_class", "gallery_html",
 ]
