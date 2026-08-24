@@ -19,7 +19,10 @@
 
 version: 1
 applies_to: nrsa-l3-ecoregion
-source_dataset: data/nrsa_metrics.parquet
+# The legacy snapshot, or data/nrsa/values.parquet under the multi-cycle dataset.
+# A candidate may name several sources (see ElevationClass); the one covering the
+# most rows of the actual panel wins.
+source_dataset: data/nrsa_metrics.parquet | data/nrsa/values.parquet
 
 candidates:
 
@@ -100,7 +103,12 @@ candidates:
     derived_column_name: ElevationClass
     type: single
     is_custom_grouping: true
+    # NRSA publishes watershed elevation only for 2018-19, so a pooled panel would
+    # lose this stratifier. StreamCat's elevws is COMID-keyed and covers every site;
+    # whichever column covers more of the panel is the one used. source_column stays
+    # as the default because the workbook round-trip requires it.
     source_column: land_ELEVWS
+    source_columns: [land_ELEVWS, elevws]
     source_data_type: continuous
     source_units: m
     min_group_size: 5

@@ -1,0 +1,1433 @@
+metric_key,cycle,dataset_id,source_column,category
+chem_AMMONIA_N,1314,WATER_CHEMISTRY,AMMONIA_N_RESULT,Water chemistry
+chem_AMMONIA_N,1819,WATER_CHEMISTRY,AMMONIA_N_RESULT,Water chemistry
+chem_AMMONIA_N,2324,WATER_CHEMISTRY,AMMONIA_N_RESULT,Water chemistry
+chem_ANC,1314,WATER_CHEMISTRY,ANC_RESULT,Water chemistry
+chem_ANC,1819,WATER_CHEMISTRY,ANC_RESULT,Water chemistry
+chem_ANC,2324,WATER_CHEMISTRY,ANC_RESULT,Water chemistry
+chem_CALCIUM,1314,WATER_CHEMISTRY,CALCIUM_RESULT,Water chemistry
+chem_CALCIUM,1819,WATER_CHEMISTRY,CALCIUM_RESULT,Water chemistry
+chem_CALCIUM,2324,WATER_CHEMISTRY,CALCIUM_RESULT,Water chemistry
+chem_CHLORIDE,1314,WATER_CHEMISTRY,CHLORIDE_RESULT,Water chemistry
+chem_CHLORIDE,1819,WATER_CHEMISTRY,CHLORIDE_RESULT,Water chemistry
+chem_CHLORIDE,2324,WATER_CHEMISTRY,CHLORIDE_RESULT,Water chemistry
+chem_COLOR,1314,WATER_CHEMISTRY,COLOR_RESULT,Water chemistry
+chem_COLOR,1819,WATER_CHEMISTRY,COLOR_RESULT,Water chemistry
+chem_COLOR,2324,WATER_CHEMISTRY,COLOR_RESULT,Water chemistry
+chem_COND,1314,WATER_CHEMISTRY,COND_RESULT,Water chemistry
+chem_COND,1819,WATER_CHEMISTRY,COND_RESULT,Water chemistry
+chem_COND,2324,WATER_CHEMISTRY,COND_RESULT,Water chemistry
+chem_DOC,1314,WATER_CHEMISTRY,DOC_RESULT,Water chemistry
+chem_DOC,1819,WATER_CHEMISTRY,DOC_RESULT,Water chemistry
+chem_DOC,2324,WATER_CHEMISTRY,DOC_RESULT,Water chemistry
+chem_MAGNESIUM,1314,WATER_CHEMISTRY,MAGNESIUM_RESULT,Water chemistry
+chem_MAGNESIUM,1819,WATER_CHEMISTRY,MAGNESIUM_RESULT,Water chemistry
+chem_MAGNESIUM,2324,WATER_CHEMISTRY,MAGNESIUM_RESULT,Water chemistry
+chem_NITRATE_N,1314,WATER_CHEMISTRY,NITRATE_N_RESULT,Water chemistry
+chem_NITRATE_N,1819,WATER_CHEMISTRY,NITRATE_N_RESULT,Water chemistry
+chem_NITRATE_N,2324,WATER_CHEMISTRY,NITRATE_N_RESULT,Water chemistry
+chem_NITRATE_NITRITE_N,1314,WATER_CHEMISTRY,NITRATE_NITRITE_N_RESULT,Water chemistry
+chem_NITRATE_NITRITE_N,1819,WATER_CHEMISTRY,NITRATE_NITRITE_N_RESULT,Water chemistry
+chem_NITRATE_NITRITE_N,2324,WATER_CHEMISTRY,NITRATE_NITRITE_N_RESULT,Water chemistry
+chem_NITRITE_N,1314,WATER_CHEMISTRY,NITRITE_N_RESULT,Water chemistry
+chem_NITRITE_N,1819,WATER_CHEMISTRY,NITRITE_N_RESULT,Water chemistry
+chem_NITRITE_N,2324,WATER_CHEMISTRY,NITRITE_N_RESULT,Water chemistry
+chem_NTL_DISS,1819,WATER_CHEMISTRY,NTL_DISS_RESULT,Water chemistry
+chem_NTL,1314,WATER_CHEMISTRY,NTL_RESULT,Water chemistry
+chem_NTL,1819,WATER_CHEMISTRY,NTL_RESULT,Water chemistry
+chem_NTL,2324,WATER_CHEMISTRY,NTL_RESULT,Water chemistry
+chem_PH,1314,WATER_CHEMISTRY,PH_RESULT,Water chemistry
+chem_PH,1819,WATER_CHEMISTRY,PH_RESULT,Water chemistry
+chem_PH,2324,WATER_CHEMISTRY,PH_RESULT,Water chemistry
+chem_POTASSIUM,1314,WATER_CHEMISTRY,POTASSIUM_RESULT,Water chemistry
+chem_POTASSIUM,1819,WATER_CHEMISTRY,POTASSIUM_RESULT,Water chemistry
+chem_POTASSIUM,2324,WATER_CHEMISTRY,POTASSIUM_RESULT,Water chemistry
+chem_PTL_DISS,1819,WATER_CHEMISTRY,PTL_DISS_RESULT,Water chemistry
+chem_PTL,1314,WATER_CHEMISTRY,PTL_RESULT,Water chemistry
+chem_PTL,1819,WATER_CHEMISTRY,PTL_RESULT,Water chemistry
+chem_PTL,2324,WATER_CHEMISTRY,PTL_RESULT,Water chemistry
+chem_SILICA,1314,WATER_CHEMISTRY,SILICA_RESULT,Water chemistry
+chem_SILICA,1819,WATER_CHEMISTRY,SILICA_RESULT,Water chemistry
+chem_SILICA,2324,WATER_CHEMISTRY,SILICA_RESULT,Water chemistry
+chem_SODIUM,1314,WATER_CHEMISTRY,SODIUM_RESULT,Water chemistry
+chem_SODIUM,1819,WATER_CHEMISTRY,SODIUM_RESULT,Water chemistry
+chem_SODIUM,2324,WATER_CHEMISTRY,SODIUM_RESULT,Water chemistry
+chem_SULFATE,1314,WATER_CHEMISTRY,SULFATE_RESULT,Water chemistry
+chem_SULFATE,1819,WATER_CHEMISTRY,SULFATE_RESULT,Water chemistry
+chem_SULFATE,2324,WATER_CHEMISTRY,SULFATE_RESULT,Water chemistry
+chem_TKN,1819,WATER_CHEMISTRY,TKN_RESULT,Water chemistry
+chem_TSS,1314,WATER_CHEMISTRY,TSS_RESULT,Water chemistry
+chem_TSS,1819,WATER_CHEMISTRY,TSS_RESULT,Water chemistry
+chem_TSS,2324,WATER_CHEMISTRY,TSS_RESULT,Water chemistry
+chem_TURB,1314,WATER_CHEMISTRY,TURB_RESULT,Water chemistry
+chem_TURB,1819,WATER_CHEMISTRY,TURB_RESULT,Water chemistry
+chem_TURB,2324,WATER_CHEMISTRY,TURB_RESULT,Water chemistry
+chem_CHLA,1314,PERIPHYTON_CHLA,CHLA_RESULT,Water chemistry
+chem_CHLA,1819,WATER_CHEMISTRY,CHLA_RESULT,Water chemistry
+chem_CHLA,2324,WATER_CHEMISTRY,CHLA_RESULT,Water chemistry
+chem_PHEO,1819,WATER_CHEMISTRY,PHEO_RESULT,Water chemistry
+phab_XBKA,1314,PHAB_LARGER,XBKA,Physical habitat
+phab_XBKA,1819,PHAB,XBKA,Physical habitat
+phab_XBKA,2324,PHAB,XBKA,Physical habitat
+phab_MEDBK_A,1314,PHAB_LARGER,MEDBK_A,Physical habitat
+phab_MEDBK_A,1819,PHAB,MEDBK_A,Physical habitat
+phab_MEDBK_A,2324,PHAB,MEDBK_A,Physical habitat
+phab_XUN,1314,PHAB_LARGER,XUN,Physical habitat
+phab_XUN,1819,PHAB,XUN,Physical habitat
+phab_XUN,2324,PHAB,XUN,Physical habitat
+phab_MEDBKUN,1314,PHAB_LARGER,MEDBKUN,Physical habitat
+phab_MEDBKUN,1819,PHAB,MEDBKUN,Physical habitat
+phab_MEDBKUN,2324,PHAB,MEDBKUN,Physical habitat
+phab_LTEST,1314,PHAB_LARGER,LTEST,Physical habitat
+phab_LTEST,1819,PHAB,LTEST,Physical habitat
+phab_LTEST,2324,PHAB,LTEST,Physical habitat
+phab_LRBS_TST,1314,PHAB_LARGER,LRBS_TST,Physical habitat
+phab_LRBS_TST,1819,PHAB,LRBS_TST,Physical habitat
+phab_LRBS_TST,2324,PHAB,LRBS_TST,Physical habitat
+phab_LDMB_BW5,1314,PHAB_LARGER,LDMB_BW5,Physical habitat
+phab_LDMB_BW5,1819,PHAB,LDMB_BW5,Physical habitat
+phab_LDMB_BW5,2324,PHAB,LDMB_BW5,Physical habitat
+phab_LRBS_BW5,1314,PHAB_LARGER,LRBS_BW5,Physical habitat
+phab_LRBS_BW5,1819,PHAB,LRBS_BW5,Physical habitat
+phab_LRBS_BW5,2324,PHAB,LRBS_BW5,Physical habitat
+phab_LDCBF_G08,1314,PHAB_LARGER,LDCBF_G08,Physical habitat
+phab_LDCBF_G08,1819,PHAB,LDCBF_G08,Physical habitat
+phab_LDCBF_G08,2324,PHAB,LDCBF_G08,Physical habitat
+phab_LRBS_G08,1314,PHAB_LARGER,LRBS_G08,Physical habitat
+phab_LRBS_G08,1819,PHAB,LRBS_G08,Physical habitat
+phab_LRBS_G08,2324,PHAB,LRBS_G08,Physical habitat
+phab_XCDENMID,1314,PHAB_LARGER,XCDENMID,Physical habitat
+phab_XCDENMID,1819,PHAB,XCDENMID,Physical habitat
+phab_XCDENMID,2324,PHAB,XCDENMID,Physical habitat
+phab_XCDENBK,1314,PHAB_LARGER,XCDENBK,Physical habitat
+phab_XCDENBK,1819,PHAB,XCDENBK,Physical habitat
+phab_XCDENBK,2324,PHAB,XCDENBK,Physical habitat
+phab_CONPERCENT,1314,PHAB_LARGER,CONPERCENT,Physical habitat
+phab_CONPERCENT,1819,PHAB,CONPERCENT,Physical habitat
+phab_CONPERCENT,2324,PHAB,CONPERCENT,Physical habitat
+phab_PCT_FA,1314,PHAB_LARGER,PCT_FA,Physical habitat
+phab_PCT_FA,1819,PHAB,PCT_FA,Physical habitat
+phab_PCT_FA,2324,PHAB,PCT_FA,Physical habitat
+phab_PCT_GL,1314,PHAB_LARGER,PCT_GL,Physical habitat
+phab_PCT_GL,1819,PHAB,PCT_GL,Physical habitat
+phab_PCT_GL,2324,PHAB,PCT_GL,Physical habitat
+phab_PCT_POOL,1314,PHAB_LARGER,PCT_POOL,Physical habitat
+phab_PCT_POOL,1819,PHAB,PCT_POOL,Physical habitat
+phab_PCT_POOL,2324,PHAB,PCT_POOL,Physical habitat
+phab_PCT_DR,1314,PHAB_LARGER,PCT_DR,Physical habitat
+phab_PCT_DR,1819,PHAB,PCT_DR,Physical habitat
+phab_PCT_DR,2324,PHAB,PCT_DR,Physical habitat
+phab_PCT_FAST,1314,PHAB_LARGER,PCT_FAST,Physical habitat
+phab_PCT_FAST,1819,PHAB,PCT_FAST,Physical habitat
+phab_PCT_FAST,2324,PHAB,PCT_FAST,Physical habitat
+phab_PCT_SLOW,1314,PHAB_LARGER,PCT_SLOW,Physical habitat
+phab_PCT_SLOW,1819,PHAB,PCT_SLOW,Physical habitat
+phab_PCT_SLOW,2324,PHAB,PCT_SLOW,Physical habitat
+phab_XWIDTH,1314,PHAB_LARGER,XWIDTH,Physical habitat
+phab_XWIDTH,1819,PHAB,XWIDTH,Physical habitat
+phab_XWIDTH,2324,PHAB,XWIDTH,Physical habitat
+phab_SDWIDTH,1314,PHAB_LARGER,SDWIDTH,Physical habitat
+phab_SDWIDTH,1819,PHAB,SDWIDTH,Physical habitat
+phab_SDWIDTH,2324,PHAB,SDWIDTH,Physical habitat
+phab_XBKF_W,1314,PHAB_LARGER,XBKF_W,Physical habitat
+phab_XBKF_W,1819,PHAB,XBKF_W,Physical habitat
+phab_XBKF_W,2324,PHAB,XBKF_W,Physical habitat
+phab_XBKF_H,1314,PHAB_LARGER,XBKF_H,Physical habitat
+phab_XBKF_H,1819,PHAB,XBKF_H,Physical habitat
+phab_XBKF_H,2324,PHAB,XBKF_H,Physical habitat
+phab_XINC_H,1314,PHAB_LARGER,XINC_H,Physical habitat
+phab_XINC_H,1819,PHAB,XINC_H,Physical habitat
+phab_XINC_H,2324,PHAB,XINC_H,Physical habitat
+phab_SDINC_H,1314,PHAB_LARGER,SDINC_H,Physical habitat
+phab_SDINC_H,1819,PHAB,SDINC_H,Physical habitat
+phab_SDINC_H,2324,PHAB,SDINC_H,Physical habitat
+phab_BFWD_RAT,1314,PHAB_LARGER,BFWD_RAT,Physical habitat
+phab_BFWD_RAT,1819,PHAB,BFWD_RAT,Physical habitat
+phab_BFWD_RAT,2324,PHAB,BFWD_RAT,Physical habitat
+phab_XWXD,1314,PHAB_LARGER,XWXD,Physical habitat
+phab_XWXD,1819,PHAB,XWXD,Physical habitat
+phab_XWXD,2324,PHAB,XWXD,Physical habitat
+phab_XWD_RAT,1314,PHAB_LARGER,XWD_RAT,Physical habitat
+phab_XWD_RAT,1819,PHAB,XWD_RAT,Physical habitat
+phab_XWD_RAT,2324,PHAB,XWD_RAT,Physical habitat
+phab_SDWXD,1314,PHAB_LARGER,SDWXD,Physical habitat
+phab_SDWXD,1819,PHAB,SDWXD,Physical habitat
+phab_SDWXD,2324,PHAB,SDWXD,Physical habitat
+phab_SDWD_RAT,1314,PHAB_LARGER,SDWD_RAT,Physical habitat
+phab_SDWD_RAT,1819,PHAB,SDWD_RAT,Physical habitat
+phab_SDWD_RAT,2324,PHAB,SDWD_RAT,Physical habitat
+phab_XDEPTH,1819,PHAB,XDEPTH,Physical habitat
+phab_XDEPTH,2324,PHAB,XDEPTH,Physical habitat
+phab_SDDEPTH,1819,PHAB,SDDEPTH,Physical habitat
+phab_SDDEPTH,2324,PHAB,SDDEPTH,Physical habitat
+phab_XDEPTH_CM,1314,PHAB_LARGER,XDEPTH_CM,Physical habitat
+phab_XDEPTH_CM,1819,PHAB,XDEPTH_CM,Physical habitat
+phab_XDEPTH_CM,2324,PHAB,XDEPTH_CM,Physical habitat
+phab_SDDEPTH_CM,1314,PHAB_LARGER,SDDEPTH_CM,Physical habitat
+phab_SDDEPTH_CM,1819,PHAB,SDDEPTH_CM,Physical habitat
+phab_SDDEPTH_CM,2324,PHAB,SDDEPTH_CM,Physical habitat
+phab_XFC_ALG,1314,PHAB_LARGER,XFC_ALG,Physical habitat
+phab_XFC_ALG,1819,PHAB,XFC_ALG,Physical habitat
+phab_XFC_ALG,2324,PHAB,XFC_ALG,Physical habitat
+phab_XFC_RCK,1314,PHAB_LARGER,XFC_RCK,Physical habitat
+phab_XFC_RCK,1819,PHAB,XFC_RCK,Physical habitat
+phab_XFC_RCK,2324,PHAB,XFC_RCK,Physical habitat
+phab_XFC_BRS,1314,PHAB_LARGER,XFC_BRS,Physical habitat
+phab_XFC_BRS,1819,PHAB,XFC_BRS,Physical habitat
+phab_XFC_BRS,2324,PHAB,XFC_BRS,Physical habitat
+phab_XFC_LVT,1314,PHAB_LARGER,XFC_LVT,Physical habitat
+phab_XFC_LVT,1819,PHAB,XFC_LVT,Physical habitat
+phab_XFC_LVT,2324,PHAB,XFC_LVT,Physical habitat
+phab_XFC_AQM,1314,PHAB_LARGER,XFC_AQM,Physical habitat
+phab_XFC_AQM,1819,PHAB,XFC_AQM,Physical habitat
+phab_XFC_AQM,2324,PHAB,XFC_AQM,Physical habitat
+phab_XFC_OHV,1314,PHAB_LARGER,XFC_OHV,Physical habitat
+phab_XFC_OHV,1819,PHAB,XFC_OHV,Physical habitat
+phab_XFC_OHV,2324,PHAB,XFC_OHV,Physical habitat
+phab_XFC_HUM,1314,PHAB_LARGER,XFC_HUM,Physical habitat
+phab_XFC_HUM,1819,PHAB,XFC_HUM,Physical habitat
+phab_XFC_HUM,2324,PHAB,XFC_HUM,Physical habitat
+phab_XFC_UCB,1314,PHAB_LARGER,XFC_UCB,Physical habitat
+phab_XFC_UCB,1819,PHAB,XFC_UCB,Physical habitat
+phab_XFC_UCB,2324,PHAB,XFC_UCB,Physical habitat
+phab_XFC_LWD,1314,PHAB_LARGER,XFC_LWD,Physical habitat
+phab_XFC_LWD,1819,PHAB,XFC_LWD,Physical habitat
+phab_XFC_LWD,2324,PHAB,XFC_LWD,Physical habitat
+phab_XFC_NAT,1314,PHAB_LARGER,XFC_NAT,Physical habitat
+phab_XFC_NAT,1819,PHAB,XFC_NAT,Physical habitat
+phab_XFC_NAT,2324,PHAB,XFC_NAT,Physical habitat
+phab_XFC_BIG,1314,PHAB_LARGER,XFC_BIG,Physical habitat
+phab_XFC_BIG,1819,PHAB,XFC_BIG,Physical habitat
+phab_XFC_BIG,2324,PHAB,XFC_BIG,Physical habitat
+phab_XFC_ALL,1314,PHAB_LARGER,XFC_ALL,Physical habitat
+phab_XFC_ALL,1819,PHAB,XFC_ALL,Physical habitat
+phab_XFC_ALL,2324,PHAB,XFC_ALL,Physical habitat
+phab_PCT_SIDE,1314,PHAB_LARGER,PCT_SIDE,Physical habitat
+phab_PCT_SIDE,1819,PHAB,PCT_SIDE,Physical habitat
+phab_PCT_SIDE,2324,PHAB,PCT_SIDE,Physical habitat
+phab_REACHLEN,1314,PHAB_LARGER,REACHLEN,Physical habitat
+phab_REACHLEN,1819,PHAB,REACHLEN,Physical habitat
+phab_REACHLEN,2324,PHAB,REACHLEN,Physical habitat
+phab_W1_HAG,1314,PHAB_LARGER,W1_HAG,Physical habitat
+phab_W1_HAG,1819,PHAB,W1_HAG,Physical habitat
+phab_W1_HAG,2324,PHAB,W1_HAG,Physical habitat
+phab_W1_HNOAG,1314,PHAB_LARGER,W1_HNOAG,Physical habitat
+phab_W1_HNOAG,1819,PHAB,W1_HNOAG,Physical habitat
+phab_W1_HNOAG,2324,PHAB,W1_HNOAG,Physical habitat
+phab_W1_HALL,1314,PHAB_LARGER,W1_HALL,Physical habitat
+phab_W1_HALL,1819,PHAB,W1_HALL,Physical habitat
+phab_W1_HALL,2324,PHAB,W1_HALL,Physical habitat
+phab_W1H_BLDG,1314,PHAB_LARGER,W1H_BLDG,Physical habitat
+phab_W1H_BLDG,1819,PHAB,W1H_BLDG,Physical habitat
+phab_W1H_BLDG,2324,PHAB,W1H_BLDG,Physical habitat
+phab_W1H_LDFL,1314,PHAB_LARGER,W1H_LDFL,Physical habitat
+phab_W1H_LDFL,1819,PHAB,W1H_LDFL,Physical habitat
+phab_W1H_LDFL,2324,PHAB,W1H_LDFL,Physical habitat
+phab_W1H_LOG,1314,PHAB_LARGER,W1H_LOG,Physical habitat
+phab_W1H_LOG,1819,PHAB,W1H_LOG,Physical habitat
+phab_W1H_LOG,2324,PHAB,W1H_LOG,Physical habitat
+phab_W1H_MINE,1314,PHAB_LARGER,W1H_MINE,Physical habitat
+phab_W1H_MINE,1819,PHAB,W1H_MINE,Physical habitat
+phab_W1H_MINE,2324,PHAB,W1H_MINE,Physical habitat
+phab_W1H_PARK,1314,PHAB_LARGER,W1H_PARK,Physical habitat
+phab_W1H_PARK,1819,PHAB,W1H_PARK,Physical habitat
+phab_W1H_PARK,2324,PHAB,W1H_PARK,Physical habitat
+phab_W1H_PSTR,1314,PHAB_LARGER,W1H_PSTR,Physical habitat
+phab_W1H_PSTR,1819,PHAB,W1H_PSTR,Physical habitat
+phab_W1H_PSTR,2324,PHAB,W1H_PSTR,Physical habitat
+phab_W1H_PVMT,1314,PHAB_LARGER,W1H_PVMT,Physical habitat
+phab_W1H_PVMT,1819,PHAB,W1H_PVMT,Physical habitat
+phab_W1H_PVMT,2324,PHAB,W1H_PVMT,Physical habitat
+phab_W1H_PIPE,1314,PHAB_LARGER,W1H_PIPE,Physical habitat
+phab_W1H_PIPE,1819,PHAB,W1H_PIPE,Physical habitat
+phab_W1H_PIPE,2324,PHAB,W1H_PIPE,Physical habitat
+phab_W1H_ROAD,1314,PHAB_LARGER,W1H_ROAD,Physical habitat
+phab_W1H_ROAD,1819,PHAB,W1H_ROAD,Physical habitat
+phab_W1H_ROAD,2324,PHAB,W1H_ROAD,Physical habitat
+phab_W1H_CROP,1314,PHAB_LARGER,W1H_CROP,Physical habitat
+phab_W1H_CROP,1819,PHAB,W1H_CROP,Physical habitat
+phab_W1H_CROP,2324,PHAB,W1H_CROP,Physical habitat
+phab_W1H_WALL,1314,PHAB_LARGER,W1H_WALL,Physical habitat
+phab_W1H_WALL,1819,PHAB,W1H_WALL,Physical habitat
+phab_W1H_WALL,2324,PHAB,W1H_WALL,Physical habitat
+phab_C1TM100,1314,PHAB_LARGER,C1TM100,Physical habitat
+phab_C1TM100,1819,PHAB,C1TM100,Physical habitat
+phab_C1TM100,2324,PHAB,C1TM100,Physical habitat
+phab_C1WM100,1314,PHAB_LARGER,C1WM100,Physical habitat
+phab_C1WM100,1819,PHAB,C1WM100,Physical habitat
+phab_C1WM100,2324,PHAB,C1WM100,Physical habitat
+phab_C2TM100,1314,PHAB_LARGER,C2TM100,Physical habitat
+phab_C2TM100,1819,PHAB,C2TM100,Physical habitat
+phab_C2TM100,2324,PHAB,C2TM100,Physical habitat
+phab_C2WM100,1314,PHAB_LARGER,C2WM100,Physical habitat
+phab_C2WM100,1819,PHAB,C2WM100,Physical habitat
+phab_C2WM100,2324,PHAB,C2WM100,Physical habitat
+phab_C4TM100,1314,PHAB_LARGER,C4TM100,Physical habitat
+phab_C4TM100,1819,PHAB,C4TM100,Physical habitat
+phab_C4TM100,2324,PHAB,C4TM100,Physical habitat
+phab_C4WM100,1314,PHAB_LARGER,C4WM100,Physical habitat
+phab_C4WM100,1819,PHAB,C4WM100,Physical habitat
+phab_C4WM100,2324,PHAB,C4WM100,Physical habitat
+phab_V1WM100,1314,PHAB_LARGER,V1WM100,Physical habitat
+phab_V1WM100,1819,PHAB,V1WM100,Physical habitat
+phab_V1WM100,2324,PHAB,V1WM100,Physical habitat
+phab_V1W_MSQ,1314,PHAB_LARGER,V1W_MSQ,Physical habitat
+phab_V1W_MSQ,1819,PHAB,V1W_MSQ,Physical habitat
+phab_V1W_MSQ,2324,PHAB,V1W_MSQ,Physical habitat
+phab_V2WM100,1314,PHAB_LARGER,V2WM100,Physical habitat
+phab_V2WM100,1819,PHAB,V2WM100,Physical habitat
+phab_V2WM100,2324,PHAB,V2WM100,Physical habitat
+phab_V2W_MSQ,1314,PHAB_LARGER,V2W_MSQ,Physical habitat
+phab_V2W_MSQ,1819,PHAB,V2W_MSQ,Physical habitat
+phab_V2W_MSQ,2324,PHAB,V2W_MSQ,Physical habitat
+phab_V4WM100,1314,PHAB_LARGER,V4WM100,Physical habitat
+phab_V4WM100,1819,PHAB,V4WM100,Physical habitat
+phab_V4WM100,2324,PHAB,V4WM100,Physical habitat
+phab_V4W_MSQ,1314,PHAB_LARGER,V4W_MSQ,Physical habitat
+phab_V4W_MSQ,1819,PHAB,V4W_MSQ,Physical habitat
+phab_V4W_MSQ,2324,PHAB,V4W_MSQ,Physical habitat
+phab_RPXDEP,1819,PHAB,RPXDEP,Physical habitat
+phab_RPXDEP,2324,PHAB,RPXDEP,Physical habitat
+phab_RPMXDEP,1819,PHAB,RPMXDEP,Physical habitat
+phab_RPMXDEP,2324,PHAB,RPMXDEP,Physical habitat
+phab_RPGT50,1314,PHAB_LARGER,RPGT50,Physical habitat
+phab_RPGT50,1819,PHAB,RPGT50,Physical habitat
+phab_RPGT50,2324,PHAB,RPGT50,Physical habitat
+phab_RPGT75,1314,PHAB_LARGER,RPGT75,Physical habitat
+phab_RPGT75,1819,PHAB,RPGT75,Physical habitat
+phab_RPGT75,2324,PHAB,RPGT75,Physical habitat
+phab_RPXDEP_CM,1314,PHAB_LARGER,RPXDEP_CM,Physical habitat
+phab_RPXDEP_CM,1819,PHAB,RPXDEP_CM,Physical habitat
+phab_RPXDEP_CM,2324,PHAB,RPXDEP_CM,Physical habitat
+phab_RPMXDEP_CM,1314,PHAB_LARGER,RPMXDEP_CM,Physical habitat
+phab_RPMXDEP_CM,1819,PHAB,RPMXDEP_CM,Physical habitat
+phab_RPMXDEP_CM,2324,PHAB,RPMXDEP_CM,Physical habitat
+phab_RP100,1314,PHAB_LARGER,RP100,Physical habitat
+phab_RP100,1819,PHAB,RP100,Physical habitat
+phab_RP100,2324,PHAB,RP100,Physical habitat
+phab_PCAN_C,1314,PHAB_LARGER,PCAN_C,Physical habitat
+phab_PCAN_C,1819,PHAB,PCAN_C,Physical habitat
+phab_PCAN_C,2324,PHAB,PCAN_C,Physical habitat
+phab_PCAN_D,1314,PHAB_LARGER,PCAN_D,Physical habitat
+phab_PCAN_D,1819,PHAB,PCAN_D,Physical habitat
+phab_PCAN_D,2324,PHAB,PCAN_D,Physical habitat
+phab_PCAN_E,1314,PHAB_LARGER,PCAN_E,Physical habitat
+phab_PCAN_E,1819,PHAB,PCAN_E,Physical habitat
+phab_PCAN_E,2324,PHAB,PCAN_E,Physical habitat
+phab_PCAN_M,1314,PHAB_LARGER,PCAN_M,Physical habitat
+phab_PCAN_M,1819,PHAB,PCAN_M,Physical habitat
+phab_PCAN_M,2324,PHAB,PCAN_M,Physical habitat
+phab_PCAN_N,1314,PHAB_LARGER,PCAN_N,Physical habitat
+phab_PCAN_N,1819,PHAB,PCAN_N,Physical habitat
+phab_PCAN_N,2324,PHAB,PCAN_N,Physical habitat
+phab_XCL,1314,PHAB_LARGER,XCL,Physical habitat
+phab_XCL,1819,PHAB,XCL,Physical habitat
+phab_XCL,2324,PHAB,XCL,Physical habitat
+phab_XCS,1314,PHAB_LARGER,XCS,Physical habitat
+phab_XCS,1819,PHAB,XCS,Physical habitat
+phab_XCS,2324,PHAB,XCS,Physical habitat
+phab_XMW,1314,PHAB_LARGER,XMW,Physical habitat
+phab_XMW,1819,PHAB,XMW,Physical habitat
+phab_XMW,2324,PHAB,XMW,Physical habitat
+phab_XMH,1314,PHAB_LARGER,XMH,Physical habitat
+phab_XMH,1819,PHAB,XMH,Physical habitat
+phab_XMH,2324,PHAB,XMH,Physical habitat
+phab_XGW,1314,PHAB_LARGER,XGW,Physical habitat
+phab_XGW,1819,PHAB,XGW,Physical habitat
+phab_XGW,2324,PHAB,XGW,Physical habitat
+phab_XGH,1314,PHAB_LARGER,XGH,Physical habitat
+phab_XGH,1819,PHAB,XGH,Physical habitat
+phab_XGH,2324,PHAB,XGH,Physical habitat
+phab_XGB,1314,PHAB_LARGER,XGB,Physical habitat
+phab_XGB,1819,PHAB,XGB,Physical habitat
+phab_XGB,2324,PHAB,XGB,Physical habitat
+phab_XC,1314,PHAB_LARGER,XC,Physical habitat
+phab_XC,1819,PHAB,XC,Physical habitat
+phab_XC,2324,PHAB,XC,Physical habitat
+phab_XM,1314,PHAB_LARGER,XM,Physical habitat
+phab_XM,1819,PHAB,XM,Physical habitat
+phab_XM,2324,PHAB,XM,Physical habitat
+phab_XCMW,1314,PHAB_LARGER,XCMW,Physical habitat
+phab_XCMW,1819,PHAB,XCMW,Physical habitat
+phab_XCMW,2324,PHAB,XCMW,Physical habitat
+phab_XCM,1314,PHAB_LARGER,XCM,Physical habitat
+phab_XCM,1819,PHAB,XCM,Physical habitat
+phab_XCM,2324,PHAB,XCM,Physical habitat
+phab_XG,1314,PHAB_LARGER,XG,Physical habitat
+phab_XG,1819,PHAB,XG,Physical habitat
+phab_XG,2324,PHAB,XG,Physical habitat
+phab_XCMGW,1314,PHAB_LARGER,XCMGW,Physical habitat
+phab_XCMGW,1819,PHAB,XCMGW,Physical habitat
+phab_XCMGW,2324,PHAB,XCMGW,Physical habitat
+phab_XCMG,1314,PHAB_LARGER,XCMG,Physical habitat
+phab_XCMG,1819,PHAB,XCMG,Physical habitat
+phab_XCMG,2324,PHAB,XCMG,Physical habitat
+phab_XPCAN,1314,PHAB_LARGER,XPCAN,Physical habitat
+phab_XPCAN,1819,PHAB,XPCAN,Physical habitat
+phab_XPCAN,2324,PHAB,XPCAN,Physical habitat
+phab_XPMID,1314,PHAB_LARGER,XPMID,Physical habitat
+phab_XPMID,1819,PHAB,XPMID,Physical habitat
+phab_XPMID,2324,PHAB,XPMID,Physical habitat
+phab_XPMGW,1314,PHAB_LARGER,XPMGW,Physical habitat
+phab_XPMGW,1819,PHAB,XPMGW,Physical habitat
+phab_XPMGW,2324,PHAB,XPMGW,Physical habitat
+phab_XPCM,1314,PHAB_LARGER,XPCM,Physical habitat
+phab_XPCM,1819,PHAB,XPCM,Physical habitat
+phab_XPCM,2324,PHAB,XPCM,Physical habitat
+phab_XPCMG,1314,PHAB_LARGER,XPCMG,Physical habitat
+phab_XPCMG,1819,PHAB,XPCMG,Physical habitat
+phab_XPCMG,2324,PHAB,XPCMG,Physical habitat
+phab_PCTCLINOMETER,1314,PHAB_LARGER,PCTCLINOMETER,Physical habitat
+phab_PCTCLINOMETER,1819,PHAB,PCTCLINOMETER,Physical habitat
+phab_PCTCLINOMETER,2324,PHAB,PCTCLINOMETER,Physical habitat
+phab_SINU,1314,PHAB_LARGER,SINU,Physical habitat
+phab_SINU,1819,PHAB,SINU,Physical habitat
+phab_SINU,2324,PHAB,SINU,Physical habitat
+phab_XBEARING,1314,PHAB_LARGER,XBEARING,Physical habitat
+phab_XBEARING,1819,PHAB,XBEARING,Physical habitat
+phab_XBEARING,2324,PHAB,XBEARING,Physical habitat
+phab_XSLOPE,1314,PHAB_LARGER,XSLOPE,Physical habitat
+phab_XSLOPE,1819,PHAB,XSLOPE,Physical habitat
+phab_XSLOPE,2324,PHAB,XSLOPE,Physical habitat
+phab_XSLOPE_FIELD,1314,PHAB_LARGER,XSLOPE_FIELD,Physical habitat
+phab_XSLOPE_FIELD,1819,PHAB,XSLOPE_FIELD,Physical habitat
+phab_XSLOPE_FIELD,2324,PHAB,XSLOPE_FIELD,Physical habitat
+phab_XSLOPE_MAP,1314,PHAB_LARGER,XSLOPE_MAP,Physical habitat
+phab_XSLOPE_MAP,1819,PHAB,XSLOPE_MAP,Physical habitat
+phab_XSLOPE_MAP,2324,PHAB,XSLOPE_MAP,Physical habitat
+phab_LSUB_DMM,1314,PHAB_LARGER,LSUB_DMM,Physical habitat
+phab_LSUB_DMM,1819,PHAB,LSUB_DMM,Physical habitat
+phab_LSUB_DMM,2324,PHAB,LSUB_DMM,Physical habitat
+phab_LSUBD_SD,1314,PHAB_LARGER,LSUBD_SD,Physical habitat
+phab_LSUBD_SD,1819,PHAB,LSUBD_SD,Physical habitat
+phab_LSUBD_SD,2324,PHAB,LSUBD_SD,Physical habitat
+phab_LSUB_DMM_NOR,1314,PHAB_LARGER,LSUB_DMM_NOR,Physical habitat
+phab_LSUB_DMM_NOR,1819,PHAB,LSUB_DMM_NOR,Physical habitat
+phab_LSUB_DMM_NOR,2324,PHAB,LSUB_DMM_NOR,Physical habitat
+phab_PCT_BL,1819,PHAB,PCT_BL,Physical habitat
+phab_PCT_BL,2324,PHAB,PCT_BL,Physical habitat
+phab_PCT_CB,1819,PHAB,PCT_CB,Physical habitat
+phab_PCT_CB,2324,PHAB,PCT_CB,Physical habitat
+phab_PCT_FN,1314,PHAB_LARGER,PCT_FN,Physical habitat
+phab_PCT_FN,1819,PHAB,PCT_FN,Physical habitat
+phab_PCT_FN,2324,PHAB,PCT_FN,Physical habitat
+phab_PCT_GC,1314,PHAB_LARGER,PCT_GC,Physical habitat
+phab_PCT_GC,1819,PHAB,PCT_GC,Physical habitat
+phab_PCT_GC,2324,PHAB,PCT_GC,Physical habitat
+phab_PCT_GF,1314,PHAB_LARGER,PCT_GF,Physical habitat
+phab_PCT_GF,1819,PHAB,PCT_GF,Physical habitat
+phab_PCT_GF,2324,PHAB,PCT_GF,Physical habitat
+phab_PCT_HP,1314,PHAB_LARGER,PCT_HP,Physical habitat
+phab_PCT_HP,1819,PHAB,PCT_HP,Physical habitat
+phab_PCT_HP,2324,PHAB,PCT_HP,Physical habitat
+phab_PCT_OT,1314,PHAB_LARGER,PCT_OT,Physical habitat
+phab_PCT_OT,1819,PHAB,PCT_OT,Physical habitat
+phab_PCT_OT,2324,PHAB,PCT_OT,Physical habitat
+phab_PCT_OM,1314,PHAB_LARGER,PCT_OM,Physical habitat
+phab_PCT_OM,1819,PHAB,PCT_OM,Physical habitat
+phab_PCT_OM,2324,PHAB,PCT_OM,Physical habitat
+phab_PCT_RC,1314,PHAB_LARGER,PCT_RC,Physical habitat
+phab_PCT_RC,1819,PHAB,PCT_RC,Physical habitat
+phab_PCT_RC,2324,PHAB,PCT_RC,Physical habitat
+phab_PCT_RR,1819,PHAB,PCT_RR,Physical habitat
+phab_PCT_RR,2324,PHAB,PCT_RR,Physical habitat
+phab_PCT_RS,1819,PHAB,PCT_RS,Physical habitat
+phab_PCT_RS,2324,PHAB,PCT_RS,Physical habitat
+phab_PCT_SA,1314,PHAB_LARGER,PCT_SA,Physical habitat
+phab_PCT_SA,1819,PHAB,PCT_SA,Physical habitat
+phab_PCT_SA,2324,PHAB,PCT_SA,Physical habitat
+phab_PCT_SB,1819,PHAB,PCT_SB,Physical habitat
+phab_PCT_SB,2324,PHAB,PCT_SB,Physical habitat
+phab_PCT_WD,1314,PHAB_LARGER,PCT_WD,Physical habitat
+phab_PCT_WD,1819,PHAB,PCT_WD,Physical habitat
+phab_PCT_WD,2324,PHAB,PCT_WD,Physical habitat
+phab_PCT_XB,1819,PHAB,PCT_XB,Physical habitat
+phab_PCT_XB,2324,PHAB,PCT_XB,Physical habitat
+phab_PCT_BIGR,1314,PHAB_LARGER,PCT_BIGR,Physical habitat
+phab_PCT_BIGR,1819,PHAB,PCT_BIGR,Physical habitat
+phab_PCT_BIGR,2324,PHAB,PCT_BIGR,Physical habitat
+phab_PCT_BDRK,1314,PHAB_LARGER,PCT_BDRK,Physical habitat
+phab_PCT_BDRK,1819,PHAB,PCT_BDRK,Physical habitat
+phab_PCT_BDRK,2324,PHAB,PCT_BDRK,Physical habitat
+phab_PCT_SAFN,1314,PHAB_LARGER,PCT_SAFN,Physical habitat
+phab_PCT_SAFN,1819,PHAB,PCT_SAFN,Physical habitat
+phab_PCT_SAFN,2324,PHAB,PCT_SAFN,Physical habitat
+phab_PCT_SFGF,1314,PHAB_LARGER,PCT_SFGF,Physical habitat
+phab_PCT_SFGF,1819,PHAB,PCT_SFGF,Physical habitat
+phab_PCT_SFGF,2324,PHAB,PCT_SFGF,Physical habitat
+phab_PCT_ORG,1314,PHAB_LARGER,PCT_ORG,Physical habitat
+phab_PCT_ORG,1819,PHAB,PCT_ORG,Physical habitat
+phab_PCT_ORG,2324,PHAB,PCT_ORG,Physical habitat
+phab_PCT_BH,1314,PHAB_LARGER,PCT_BH,Physical habitat
+phab_PCT_BH,1819,PHAB,PCT_BH,Physical habitat
+phab_PCT_BH,2324,PHAB,PCT_BH,Physical habitat
+phab_PCT_GR,1314,PHAB_LARGER,PCT_GR,Physical habitat
+phab_PCT_GR,1819,PHAB,PCT_GR,Physical habitat
+phab_PCT_GR,2324,PHAB,PCT_GR,Physical habitat
+phab_XEMBED,1314,PHAB_LARGER,XEMBED,Physical habitat
+phab_XEMBED,1819,PHAB,XEMBED,Physical habitat
+phab_XEMBED,2324,PHAB,XEMBED,Physical habitat
+phab_XCEMBED,1314,PHAB_LARGER,XCEMBED,Physical habitat
+phab_XCEMBED,1819,PHAB,XCEMBED,Physical habitat
+phab_XCEMBED,2324,PHAB,XCEMBED,Physical habitat
+phab_SURVEY_YRS,1819,PHAB,SURVEY_YRS,Physical habitat
+phab_SURVEY_YRS,2324,PHAB,SURVEY_YRS,Physical habitat
+phab_XSLOPE_use,1819,PHAB,XSLOPE_USE,Physical habitat
+phab_XSLOPE_use,2324,PHAB,XSLOPE_USE,Physical habitat
+phab_LRBS_use,1314,PHAB_INDICATORS,LRBS_USE,Physical habitat
+phab_LRBS_use,1819,PHAB,LRBS_USE,Physical habitat
+phab_LRBS_use,2324,PHAB,LRBS_USE,Physical habitat
+phab_RP100_cm,1819,PHAB,RP100_CM,Physical habitat
+phab_RP100_cm,2324,PHAB,RP100_CM,Physical habitat
+phab_PCT_SFG,1314,PHAB_LARGER,PCT_SFG,Physical habitat
+phab_PCT_SFG,1819,PHAB,PCT_SFG,Physical habitat
+phab_PCT_SFG,2324,PHAB,PCT_SFG,Physical habitat
+phab_XGveg,1819,PHAB,XGVEG,Physical habitat
+phab_XGveg,2324,PHAB,XGVEG,Physical habitat
+phab_LWDeqVol_msq,1314,PHAB_LARGER,LWDEQVOL_MSQ,Physical habitat
+phab_LWDeqVol_msq,1819,PHAB,LWDEQVOL_MSQ,Physical habitat
+phab_LWDeqVol_msq,2324,PHAB,LWDEQVOL_MSQ,Physical habitat
+phab_LWDeqVolM100,1314,PHAB_LARGER,LWDEQVOLM100,Physical habitat
+phab_LWDeqVolM100,1819,PHAB,LWDEQVOLM100,Physical habitat
+phab_LWDeqVolM100,2324,PHAB,LWDEQVOLM100,Physical habitat
+phab_QRVeg1,1314,PHAB_LARGER,QRVEG1,Physical habitat
+phab_QRVeg1,1819,PHAB,QRVEG1,Physical habitat
+phab_QRVeg1,2324,PHAB,QRVEG1,Physical habitat
+phab_QRVeg2,1314,PHAB_LARGER,QRVEG2,Physical habitat
+phab_QRVeg2,1819,PHAB,QRVEG2,Physical habitat
+phab_QRVeg2,2324,PHAB,QRVEG2,Physical habitat
+phab_RDIST1,1314,PHAB_LARGER,RDIST1,Physical habitat
+phab_RDIST1,1819,PHAB,RDIST1,Physical habitat
+phab_RDIST1,2324,PHAB,RDIST1,Physical habitat
+phab_QRDIST1,1819,PHAB,QRDIST1,Physical habitat
+phab_QRDIST1,2324,PHAB,QRDIST1,Physical habitat
+phab_QR1,1314,PHAB_LARGER,QR1,Physical habitat
+phab_QR1,1819,PHAB,QR1,Physical habitat
+phab_QR1,2324,PHAB,QR1,Physical habitat
+phab_CVdth,1314,PHAB_LARGER,CVDTH,Physical habitat
+phab_CVdth,1819,PHAB,CVDTH,Physical habitat
+phab_CVdth,2324,PHAB,CVDTH,Physical habitat
+phab_RpRat,1314,PHAB_LARGER,RPRAT,Physical habitat
+phab_RpRat,1819,PHAB,RPRAT,Physical habitat
+phab_RpRat,2324,PHAB,RPRAT,Physical habitat
+phab_CVWIDTH,1314,PHAB_LARGER,CVWIDTH,Physical habitat
+phab_CVWIDTH,1819,PHAB,CVWIDTH,Physical habitat
+phab_CVWIDTH,2324,PHAB,CVWIDTH,Physical habitat
+phab_CVWXD,1314,PHAB_LARGER,CVWXD,Physical habitat
+phab_CVWXD,1819,PHAB,CVWXD,Physical habitat
+phab_CVWXD,2324,PHAB,CVWXD,Physical habitat
+bent_AMPHNTAX,1314,BENTHIC_METRICS,AMPHNTAX,Benthic macroinvertebrates
+bent_AMPHNTAX,2324,BENTHIC_METRICS,AMPHNTAX,Benthic macroinvertebrates
+bent_AMPHPIND,1314,BENTHIC_METRICS,AMPHPIND,Benthic macroinvertebrates
+bent_AMPHPIND,2324,BENTHIC_METRICS,AMPHPIND,Benthic macroinvertebrates
+bent_AMPHPTAX,1314,BENTHIC_METRICS,AMPHPTAX,Benthic macroinvertebrates
+bent_AMPHPTAX,2324,BENTHIC_METRICS,AMPHPTAX,Benthic macroinvertebrates
+bent_BURRNTAX,1314,BENTHIC_METRICS,BURRNTAX,Benthic macroinvertebrates
+bent_BURRNTAX,2324,BENTHIC_METRICS,BURRNTAX,Benthic macroinvertebrates
+bent_BURRPIND,1314,BENTHIC_METRICS,BURRPIND,Benthic macroinvertebrates
+bent_BURRPIND,2324,BENTHIC_METRICS,BURRPIND,Benthic macroinvertebrates
+bent_BURRPTAX,1314,BENTHIC_METRICS,BURRPTAX,Benthic macroinvertebrates
+bent_BURRPTAX,2324,BENTHIC_METRICS,BURRPTAX,Benthic macroinvertebrates
+bent_CHIRDOM1PIND,1314,BENTHIC_METRICS,CHIRDOM1PIND,Benthic macroinvertebrates
+bent_CHIRDOM1PIND,2324,BENTHIC_METRICS,CHIRDOM1PIND,Benthic macroinvertebrates
+bent_CHIRDOM3PIND,1314,BENTHIC_METRICS,CHIRDOM3PIND,Benthic macroinvertebrates
+bent_CHIRDOM3PIND,2324,BENTHIC_METRICS,CHIRDOM3PIND,Benthic macroinvertebrates
+bent_CHIRDOM5PIND,1314,BENTHIC_METRICS,CHIRDOM5PIND,Benthic macroinvertebrates
+bent_CHIRDOM5PIND,2324,BENTHIC_METRICS,CHIRDOM5PIND,Benthic macroinvertebrates
+bent_CHIRNTAX,1314,BENTHIC_METRICS,CHIRNTAX,Benthic macroinvertebrates
+bent_CHIRNTAX,2324,BENTHIC_METRICS,CHIRNTAX,Benthic macroinvertebrates
+bent_CHIRPIND,1314,BENTHIC_METRICS,CHIRPIND,Benthic macroinvertebrates
+bent_CHIRPIND,2324,BENTHIC_METRICS,CHIRPIND,Benthic macroinvertebrates
+bent_CHIRPTAX,1314,BENTHIC_METRICS,CHIRPTAX,Benthic macroinvertebrates
+bent_CHIRPTAX,2324,BENTHIC_METRICS,CHIRPTAX,Benthic macroinvertebrates
+bent_CLMBNTAX,1314,BENTHIC_METRICS,CLMBNTAX,Benthic macroinvertebrates
+bent_CLMBNTAX,2324,BENTHIC_METRICS,CLMBNTAX,Benthic macroinvertebrates
+bent_CLMBPIND,1314,BENTHIC_METRICS,CLMBPIND,Benthic macroinvertebrates
+bent_CLMBPIND,2324,BENTHIC_METRICS,CLMBPIND,Benthic macroinvertebrates
+bent_CLMBPTAX,1314,BENTHIC_METRICS,CLMBPTAX,Benthic macroinvertebrates
+bent_CLMBPTAX,2324,BENTHIC_METRICS,CLMBPTAX,Benthic macroinvertebrates
+bent_CLNGNTAX,1314,BENTHIC_METRICS,CLNGNTAX,Benthic macroinvertebrates
+bent_CLNGNTAX,2324,BENTHIC_METRICS,CLNGNTAX,Benthic macroinvertebrates
+bent_CLNGPIND,1314,BENTHIC_METRICS,CLNGPIND,Benthic macroinvertebrates
+bent_CLNGPIND,2324,BENTHIC_METRICS,CLNGPIND,Benthic macroinvertebrates
+bent_CLNGPTAX,1314,BENTHIC_METRICS,CLNGPTAX,Benthic macroinvertebrates
+bent_CLNGPTAX,2324,BENTHIC_METRICS,CLNGPTAX,Benthic macroinvertebrates
+bent_COFINTAX,1314,BENTHIC_METRICS,COFINTAX,Benthic macroinvertebrates
+bent_COFINTAX,2324,BENTHIC_METRICS,COFINTAX,Benthic macroinvertebrates
+bent_COFIPIND,1314,BENTHIC_METRICS,COFIPIND,Benthic macroinvertebrates
+bent_COFIPIND,2324,BENTHIC_METRICS,COFIPIND,Benthic macroinvertebrates
+bent_COFIPTAX,1314,BENTHIC_METRICS,COFIPTAX,Benthic macroinvertebrates
+bent_COFIPTAX,2324,BENTHIC_METRICS,COFIPTAX,Benthic macroinvertebrates
+bent_COFITRICNTAX,1314,BENTHIC_METRICS,COFITRICNTAX,Benthic macroinvertebrates
+bent_COFITRICNTAX,2324,BENTHIC_METRICS,COFITRICNTAX,Benthic macroinvertebrates
+bent_COFITRICPIND,1314,BENTHIC_METRICS,COFITRICPIND,Benthic macroinvertebrates
+bent_COFITRICPIND,2324,BENTHIC_METRICS,COFITRICPIND,Benthic macroinvertebrates
+bent_COFITRICPTAX,1314,BENTHIC_METRICS,COFITRICPTAX,Benthic macroinvertebrates
+bent_COFITRICPTAX,2324,BENTHIC_METRICS,COFITRICPTAX,Benthic macroinvertebrates
+bent_COGANTAX,1314,BENTHIC_METRICS,COGANTAX,Benthic macroinvertebrates
+bent_COGANTAX,2324,BENTHIC_METRICS,COGANTAX,Benthic macroinvertebrates
+bent_COGAPIND,1314,BENTHIC_METRICS,COGAPIND,Benthic macroinvertebrates
+bent_COGAPIND,2324,BENTHIC_METRICS,COGAPIND,Benthic macroinvertebrates
+bent_COGAPTAX,1314,BENTHIC_METRICS,COGAPTAX,Benthic macroinvertebrates
+bent_COGAPTAX,2324,BENTHIC_METRICS,COGAPTAX,Benthic macroinvertebrates
+bent_CRUSNTAX,1314,BENTHIC_METRICS,CRUSNTAX,Benthic macroinvertebrates
+bent_CRUSNTAX,2324,BENTHIC_METRICS,CRUSNTAX,Benthic macroinvertebrates
+bent_CRUSPIND,1314,BENTHIC_METRICS,CRUSPIND,Benthic macroinvertebrates
+bent_CRUSPIND,2324,BENTHIC_METRICS,CRUSPIND,Benthic macroinvertebrates
+bent_CRUSPTAX,1314,BENTHIC_METRICS,CRUSPTAX,Benthic macroinvertebrates
+bent_CRUSPTAX,2324,BENTHIC_METRICS,CRUSPTAX,Benthic macroinvertebrates
+bent_DIPTNTAX,1314,BENTHIC_METRICS,DIPTNTAX,Benthic macroinvertebrates
+bent_DIPTNTAX,2324,BENTHIC_METRICS,DIPTNTAX,Benthic macroinvertebrates
+bent_DIPTPIND,1314,BENTHIC_METRICS,DIPTPIND,Benthic macroinvertebrates
+bent_DIPTPIND,2324,BENTHIC_METRICS,DIPTPIND,Benthic macroinvertebrates
+bent_DIPTPTAX,1314,BENTHIC_METRICS,DIPTPTAX,Benthic macroinvertebrates
+bent_DIPTPTAX,2324,BENTHIC_METRICS,DIPTPTAX,Benthic macroinvertebrates
+bent_DOM1PIND,1314,BENTHIC_METRICS,DOM1PIND,Benthic macroinvertebrates
+bent_DOM1PIND,2324,BENTHIC_METRICS,DOM1PIND,Benthic macroinvertebrates
+bent_DOM3PIND,1314,BENTHIC_METRICS,DOM3PIND,Benthic macroinvertebrates
+bent_DOM3PIND,2324,BENTHIC_METRICS,DOM3PIND,Benthic macroinvertebrates
+bent_DOM5PIND,1314,BENTHIC_METRICS,DOM5PIND,Benthic macroinvertebrates
+bent_DOM5PIND,2324,BENTHIC_METRICS,DOM5PIND,Benthic macroinvertebrates
+bent_EPHENTAX,1314,BENTHIC_METRICS,EPHENTAX,Benthic macroinvertebrates
+bent_EPHENTAX,2324,BENTHIC_METRICS,EPHENTAX,Benthic macroinvertebrates
+bent_EPHEPIND,1314,BENTHIC_METRICS,EPHEPIND,Benthic macroinvertebrates
+bent_EPHEPIND,2324,BENTHIC_METRICS,EPHEPIND,Benthic macroinvertebrates
+bent_EPHEPTAX,1314,BENTHIC_METRICS,EPHEPTAX,Benthic macroinvertebrates
+bent_EPHEPTAX,2324,BENTHIC_METRICS,EPHEPTAX,Benthic macroinvertebrates
+bent_EPOTNTAX,1314,BENTHIC_METRICS,EPOTNTAX,Benthic macroinvertebrates
+bent_EPOTNTAX,2324,BENTHIC_METRICS,EPOTNTAX,Benthic macroinvertebrates
+bent_EPOTPIND,1314,BENTHIC_METRICS,EPOTPIND,Benthic macroinvertebrates
+bent_EPOTPIND,2324,BENTHIC_METRICS,EPOTPIND,Benthic macroinvertebrates
+bent_EPOTPTAX,1314,BENTHIC_METRICS,EPOTPTAX,Benthic macroinvertebrates
+bent_EPOTPTAX,2324,BENTHIC_METRICS,EPOTPTAX,Benthic macroinvertebrates
+bent_EPT_NTAX,1314,BENTHIC_METRICS,EPT_NTAX,Benthic macroinvertebrates
+bent_EPT_NTAX,2324,BENTHIC_METRICS,EPT_NTAX,Benthic macroinvertebrates
+bent_EPT_PIND,1314,BENTHIC_METRICS,EPT_PIND,Benthic macroinvertebrates
+bent_EPT_PIND,2324,BENTHIC_METRICS,EPT_PIND,Benthic macroinvertebrates
+bent_EPT_PTAX,1314,BENTHIC_METRICS,EPT_PTAX,Benthic macroinvertebrates
+bent_EPT_PTAX,2324,BENTHIC_METRICS,EPT_PTAX,Benthic macroinvertebrates
+bent_FACLNTAX,1314,BENTHIC_METRICS,FACLNTAX,Benthic macroinvertebrates
+bent_FACLNTAX,2324,BENTHIC_METRICS,FACLNTAX,Benthic macroinvertebrates
+bent_FACLPIND,1314,BENTHIC_METRICS,FACLPIND,Benthic macroinvertebrates
+bent_FACLPIND,2324,BENTHIC_METRICS,FACLPIND,Benthic macroinvertebrates
+bent_FACLPTAX,1314,BENTHIC_METRICS,FACLPTAX,Benthic macroinvertebrates
+bent_FACLPTAX,2324,BENTHIC_METRICS,FACLPTAX,Benthic macroinvertebrates
+bent_HEMINTAX,1314,BENTHIC_METRICS,HEMINTAX,Benthic macroinvertebrates
+bent_HEMINTAX,2324,BENTHIC_METRICS,HEMINTAX,Benthic macroinvertebrates
+bent_HEMIPIND,1314,BENTHIC_METRICS,HEMIPIND,Benthic macroinvertebrates
+bent_HEMIPIND,2324,BENTHIC_METRICS,HEMIPIND,Benthic macroinvertebrates
+bent_HEMIPTAX,1314,BENTHIC_METRICS,HEMIPTAX,Benthic macroinvertebrates
+bent_HEMIPTAX,2324,BENTHIC_METRICS,HEMIPTAX,Benthic macroinvertebrates
+bent_HPRIME,1314,BENTHIC_METRICS,HPRIME,Benthic macroinvertebrates
+bent_HPRIME,2324,BENTHIC_METRICS,HPRIME,Benthic macroinvertebrates
+bent_INTLNTAX,1314,BENTHIC_METRICS,INTLNTAX,Benthic macroinvertebrates
+bent_INTLNTAX,2324,BENTHIC_METRICS,INTLNTAX,Benthic macroinvertebrates
+bent_INTLPIND,1314,BENTHIC_METRICS,INTLPIND,Benthic macroinvertebrates
+bent_INTLPIND,2324,BENTHIC_METRICS,INTLPIND,Benthic macroinvertebrates
+bent_INTLPTAX,1314,BENTHIC_METRICS,INTLPTAX,Benthic macroinvertebrates
+bent_INTLPTAX,2324,BENTHIC_METRICS,INTLPTAX,Benthic macroinvertebrates
+bent_MITENTAX,1314,BENTHIC_METRICS,MITENTAX,Benthic macroinvertebrates
+bent_MITENTAX,2324,BENTHIC_METRICS,MITENTAX,Benthic macroinvertebrates
+bent_MITEPIND,1314,BENTHIC_METRICS,MITEPIND,Benthic macroinvertebrates
+bent_MITEPIND,2324,BENTHIC_METRICS,MITEPIND,Benthic macroinvertebrates
+bent_MITEPTAX,1314,BENTHIC_METRICS,MITEPTAX,Benthic macroinvertebrates
+bent_MITEPTAX,2324,BENTHIC_METRICS,MITEPTAX,Benthic macroinvertebrates
+bent_MOLLNTAX,1314,BENTHIC_METRICS,MOLLNTAX,Benthic macroinvertebrates
+bent_MOLLNTAX,2324,BENTHIC_METRICS,MOLLNTAX,Benthic macroinvertebrates
+bent_MOLLPIND,1314,BENTHIC_METRICS,MOLLPIND,Benthic macroinvertebrates
+bent_MOLLPIND,2324,BENTHIC_METRICS,MOLLPIND,Benthic macroinvertebrates
+bent_MOLLPTAX,1314,BENTHIC_METRICS,MOLLPTAX,Benthic macroinvertebrates
+bent_MOLLPTAX,2324,BENTHIC_METRICS,MOLLPTAX,Benthic macroinvertebrates
+bent_NOINNTAX,1314,BENTHIC_METRICS,NOINNTAX,Benthic macroinvertebrates
+bent_NOINNTAX,2324,BENTHIC_METRICS,NOINNTAX,Benthic macroinvertebrates
+bent_NOINPIND,1314,BENTHIC_METRICS,NOINPIND,Benthic macroinvertebrates
+bent_NOINPIND,2324,BENTHIC_METRICS,NOINPIND,Benthic macroinvertebrates
+bent_NOINPTAX,1314,BENTHIC_METRICS,NOINPTAX,Benthic macroinvertebrates
+bent_NOINPTAX,2324,BENTHIC_METRICS,NOINPTAX,Benthic macroinvertebrates
+bent_NTOLNTAX,1314,BENTHIC_METRICS,NTOLNTAX,Benthic macroinvertebrates
+bent_NTOLNTAX,2324,BENTHIC_METRICS,NTOLNTAX,Benthic macroinvertebrates
+bent_NTOLPIND,1314,BENTHIC_METRICS,NTOLPIND,Benthic macroinvertebrates
+bent_NTOLPIND,2324,BENTHIC_METRICS,NTOLPIND,Benthic macroinvertebrates
+bent_NTOLPTAX,1314,BENTHIC_METRICS,NTOLPTAX,Benthic macroinvertebrates
+bent_NTOLPTAX,2324,BENTHIC_METRICS,NTOLPTAX,Benthic macroinvertebrates
+bent_ODONNTAX,1314,BENTHIC_METRICS,ODONNTAX,Benthic macroinvertebrates
+bent_ODONNTAX,2324,BENTHIC_METRICS,ODONNTAX,Benthic macroinvertebrates
+bent_ODONPIND,1314,BENTHIC_METRICS,ODONPIND,Benthic macroinvertebrates
+bent_ODONPIND,2324,BENTHIC_METRICS,ODONPIND,Benthic macroinvertebrates
+bent_ODONPTAX,1314,BENTHIC_METRICS,ODONPTAX,Benthic macroinvertebrates
+bent_ODONPTAX,2324,BENTHIC_METRICS,ODONPTAX,Benthic macroinvertebrates
+bent_OLLENTAX,1314,BENTHIC_METRICS,OLLENTAX,Benthic macroinvertebrates
+bent_OLLENTAX,2324,BENTHIC_METRICS,OLLENTAX,Benthic macroinvertebrates
+bent_OLLEPIND,1314,BENTHIC_METRICS,OLLEPIND,Benthic macroinvertebrates
+bent_OLLEPIND,2324,BENTHIC_METRICS,OLLEPIND,Benthic macroinvertebrates
+bent_OLLEPTAX,1314,BENTHIC_METRICS,OLLEPTAX,Benthic macroinvertebrates
+bent_OLLEPTAX,2324,BENTHIC_METRICS,OLLEPTAX,Benthic macroinvertebrates
+bent_ORTHCHIRPIND,1314,BENTHIC_METRICS,ORTHCHIRPIND,Benthic macroinvertebrates
+bent_ORTHCHIRPIND,2324,BENTHIC_METRICS,ORTHCHIRPIND,Benthic macroinvertebrates
+bent_ORTHNTAX,1314,BENTHIC_METRICS,ORTHNTAX,Benthic macroinvertebrates
+bent_ORTHNTAX,2324,BENTHIC_METRICS,ORTHNTAX,Benthic macroinvertebrates
+bent_ORTHPIND,1314,BENTHIC_METRICS,ORTHPIND,Benthic macroinvertebrates
+bent_ORTHPIND,2324,BENTHIC_METRICS,ORTHPIND,Benthic macroinvertebrates
+bent_ORTHPTAX,1314,BENTHIC_METRICS,ORTHPTAX,Benthic macroinvertebrates
+bent_ORTHPTAX,2324,BENTHIC_METRICS,ORTHPTAX,Benthic macroinvertebrates
+bent_PLECNTAX,1314,BENTHIC_METRICS,PLECNTAX,Benthic macroinvertebrates
+bent_PLECNTAX,2324,BENTHIC_METRICS,PLECNTAX,Benthic macroinvertebrates
+bent_PLECPIND,1314,BENTHIC_METRICS,PLECPIND,Benthic macroinvertebrates
+bent_PLECPIND,2324,BENTHIC_METRICS,PLECPIND,Benthic macroinvertebrates
+bent_PLECPTAX,1314,BENTHIC_METRICS,PLECPTAX,Benthic macroinvertebrates
+bent_PLECPTAX,2324,BENTHIC_METRICS,PLECPTAX,Benthic macroinvertebrates
+bent_PREDNTAX,1314,BENTHIC_METRICS,PREDNTAX,Benthic macroinvertebrates
+bent_PREDNTAX,2324,BENTHIC_METRICS,PREDNTAX,Benthic macroinvertebrates
+bent_PREDPIND,1314,BENTHIC_METRICS,PREDPIND,Benthic macroinvertebrates
+bent_PREDPIND,2324,BENTHIC_METRICS,PREDPIND,Benthic macroinvertebrates
+bent_PREDPTAX,1314,BENTHIC_METRICS,PREDPTAX,Benthic macroinvertebrates
+bent_PREDPTAX,2324,BENTHIC_METRICS,PREDPTAX,Benthic macroinvertebrates
+bent_SCRPNTAX,1314,BENTHIC_METRICS,SCRPNTAX,Benthic macroinvertebrates
+bent_SCRPNTAX,2324,BENTHIC_METRICS,SCRPNTAX,Benthic macroinvertebrates
+bent_SCRPPIND,1314,BENTHIC_METRICS,SCRPPIND,Benthic macroinvertebrates
+bent_SCRPPIND,2324,BENTHIC_METRICS,SCRPPIND,Benthic macroinvertebrates
+bent_SCRPPTAX,1314,BENTHIC_METRICS,SCRPPTAX,Benthic macroinvertebrates
+bent_SCRPPTAX,2324,BENTHIC_METRICS,SCRPPTAX,Benthic macroinvertebrates
+bent_SHRDNTAX,1314,BENTHIC_METRICS,SHRDNTAX,Benthic macroinvertebrates
+bent_SHRDNTAX,2324,BENTHIC_METRICS,SHRDNTAX,Benthic macroinvertebrates
+bent_SHRDPIND,1314,BENTHIC_METRICS,SHRDPIND,Benthic macroinvertebrates
+bent_SHRDPIND,2324,BENTHIC_METRICS,SHRDPIND,Benthic macroinvertebrates
+bent_SHRDPTAX,1314,BENTHIC_METRICS,SHRDPTAX,Benthic macroinvertebrates
+bent_SHRDPTAX,2324,BENTHIC_METRICS,SHRDPTAX,Benthic macroinvertebrates
+bent_SPWLNTAX,1314,BENTHIC_METRICS,SPWLNTAX,Benthic macroinvertebrates
+bent_SPWLNTAX,2324,BENTHIC_METRICS,SPWLNTAX,Benthic macroinvertebrates
+bent_SPWLPIND,1314,BENTHIC_METRICS,SPWLPIND,Benthic macroinvertebrates
+bent_SPWLPIND,2324,BENTHIC_METRICS,SPWLPIND,Benthic macroinvertebrates
+bent_SPWLPTAX,1314,BENTHIC_METRICS,SPWLPTAX,Benthic macroinvertebrates
+bent_SPWLPTAX,2324,BENTHIC_METRICS,SPWLPTAX,Benthic macroinvertebrates
+bent_STOLNTAX,1314,BENTHIC_METRICS,STOLNTAX,Benthic macroinvertebrates
+bent_STOLNTAX,2324,BENTHIC_METRICS,STOLNTAX,Benthic macroinvertebrates
+bent_STOLPIND,1314,BENTHIC_METRICS,STOLPIND,Benthic macroinvertebrates
+bent_STOLPIND,2324,BENTHIC_METRICS,STOLPIND,Benthic macroinvertebrates
+bent_STOLPTAX,1314,BENTHIC_METRICS,STOLPTAX,Benthic macroinvertebrates
+bent_STOLPTAX,2324,BENTHIC_METRICS,STOLPTAX,Benthic macroinvertebrates
+bent_SWIMNTAX,1314,BENTHIC_METRICS,SWIMNTAX,Benthic macroinvertebrates
+bent_SWIMNTAX,2324,BENTHIC_METRICS,SWIMNTAX,Benthic macroinvertebrates
+bent_SWIMPIND,1314,BENTHIC_METRICS,SWIMPIND,Benthic macroinvertebrates
+bent_SWIMPIND,2324,BENTHIC_METRICS,SWIMPIND,Benthic macroinvertebrates
+bent_SWIMPTAX,1314,BENTHIC_METRICS,SWIMPTAX,Benthic macroinvertebrates
+bent_SWIMPTAX,2324,BENTHIC_METRICS,SWIMPTAX,Benthic macroinvertebrates
+bent_TANYNTAX,1314,BENTHIC_METRICS,TANYNTAX,Benthic macroinvertebrates
+bent_TANYNTAX,2324,BENTHIC_METRICS,TANYNTAX,Benthic macroinvertebrates
+bent_TANYPIND,1314,BENTHIC_METRICS,TANYPIND,Benthic macroinvertebrates
+bent_TANYPIND,2324,BENTHIC_METRICS,TANYPIND,Benthic macroinvertebrates
+bent_TANYPTAX,1314,BENTHIC_METRICS,TANYPTAX,Benthic macroinvertebrates
+bent_TANYPTAX,2324,BENTHIC_METRICS,TANYPTAX,Benthic macroinvertebrates
+bent_TL01NTAX,1314,BENTHIC_METRICS,TL01NTAX,Benthic macroinvertebrates
+bent_TL01NTAX,2324,BENTHIC_METRICS,TL01NTAX,Benthic macroinvertebrates
+bent_TL01PIND,1314,BENTHIC_METRICS,TL01PIND,Benthic macroinvertebrates
+bent_TL01PIND,2324,BENTHIC_METRICS,TL01PIND,Benthic macroinvertebrates
+bent_TL01PTAX,1314,BENTHIC_METRICS,TL01PTAX,Benthic macroinvertebrates
+bent_TL01PTAX,2324,BENTHIC_METRICS,TL01PTAX,Benthic macroinvertebrates
+bent_TL23NTAX,1314,BENTHIC_METRICS,TL23NTAX,Benthic macroinvertebrates
+bent_TL23NTAX,2324,BENTHIC_METRICS,TL23NTAX,Benthic macroinvertebrates
+bent_TL23PIND,1314,BENTHIC_METRICS,TL23PIND,Benthic macroinvertebrates
+bent_TL23PIND,2324,BENTHIC_METRICS,TL23PIND,Benthic macroinvertebrates
+bent_TL23PTAX,1314,BENTHIC_METRICS,TL23PTAX,Benthic macroinvertebrates
+bent_TL23PTAX,2324,BENTHIC_METRICS,TL23PTAX,Benthic macroinvertebrates
+bent_TL45NTAX,1314,BENTHIC_METRICS,TL45NTAX,Benthic macroinvertebrates
+bent_TL45NTAX,2324,BENTHIC_METRICS,TL45NTAX,Benthic macroinvertebrates
+bent_TL45PIND,1314,BENTHIC_METRICS,TL45PIND,Benthic macroinvertebrates
+bent_TL45PIND,2324,BENTHIC_METRICS,TL45PIND,Benthic macroinvertebrates
+bent_TL45PTAX,1314,BENTHIC_METRICS,TL45PTAX,Benthic macroinvertebrates
+bent_TL45PTAX,2324,BENTHIC_METRICS,TL45PTAX,Benthic macroinvertebrates
+bent_TL67NTAX,1314,BENTHIC_METRICS,TL67NTAX,Benthic macroinvertebrates
+bent_TL67NTAX,2324,BENTHIC_METRICS,TL67NTAX,Benthic macroinvertebrates
+bent_TL67PIND,1314,BENTHIC_METRICS,TL67PIND,Benthic macroinvertebrates
+bent_TL67PIND,2324,BENTHIC_METRICS,TL67PIND,Benthic macroinvertebrates
+bent_TL67PTAX,1314,BENTHIC_METRICS,TL67PTAX,Benthic macroinvertebrates
+bent_TL67PTAX,2324,BENTHIC_METRICS,TL67PTAX,Benthic macroinvertebrates
+bent_TOLRNTAX,1314,BENTHIC_METRICS,TOLRNTAX,Benthic macroinvertebrates
+bent_TOLRNTAX,2324,BENTHIC_METRICS,TOLRNTAX,Benthic macroinvertebrates
+bent_TOLRPIND,1314,BENTHIC_METRICS,TOLRPIND,Benthic macroinvertebrates
+bent_TOLRPIND,2324,BENTHIC_METRICS,TOLRPIND,Benthic macroinvertebrates
+bent_TOLRPTAX,1314,BENTHIC_METRICS,TOLRPTAX,Benthic macroinvertebrates
+bent_TOLRPTAX,2324,BENTHIC_METRICS,TOLRPTAX,Benthic macroinvertebrates
+bent_TOTLNIND,1314,BENTHIC_METRICS,TOTLNIND,Benthic macroinvertebrates
+bent_TOTLNIND,2324,BENTHIC_METRICS,TOTLNIND,Benthic macroinvertebrates
+bent_TOTLNTAX,1314,BENTHIC_METRICS,TOTLNTAX,Benthic macroinvertebrates
+bent_TOTLNTAX,2324,BENTHIC_METRICS,TOTLNTAX,Benthic macroinvertebrates
+bent_TRICNTAX,1314,BENTHIC_METRICS,TRICNTAX,Benthic macroinvertebrates
+bent_TRICNTAX,2324,BENTHIC_METRICS,TRICNTAX,Benthic macroinvertebrates
+bent_TRICPIND,1314,BENTHIC_METRICS,TRICPIND,Benthic macroinvertebrates
+bent_TRICPIND,2324,BENTHIC_METRICS,TRICPIND,Benthic macroinvertebrates
+bent_TRICPTAX,1314,BENTHIC_METRICS,TRICPTAX,Benthic macroinvertebrates
+bent_TRICPTAX,2324,BENTHIC_METRICS,TRICPTAX,Benthic macroinvertebrates
+bent_TUBINAIDNTAX,1314,BENTHIC_METRICS,TUBINAIDNTAX,Benthic macroinvertebrates
+bent_TUBINAIDNTAX,2324,BENTHIC_METRICS,TUBINAIDNTAX,Benthic macroinvertebrates
+bent_TUBINAIDPIND,1314,BENTHIC_METRICS,TUBINAIDPIND,Benthic macroinvertebrates
+bent_TUBINAIDPIND,2324,BENTHIC_METRICS,TUBINAIDPIND,Benthic macroinvertebrates
+bent_TUBINAIDPTAX,1314,BENTHIC_METRICS,TUBINAIDPTAX,Benthic macroinvertebrates
+bent_TUBINAIDPTAX,2324,BENTHIC_METRICS,TUBINAIDPTAX,Benthic macroinvertebrates
+bent_WTD_TV,1314,BENTHIC_METRICS,WTD_TV,Benthic macroinvertebrates
+bent_WTD_TV,2324,BENTHIC_METRICS,WTD_TV,Benthic macroinvertebrates
+fish_ALIENNTAX,1314,FISH_METRICS,ALIENNTAX,Fish
+fish_ALIENNTAX,2324,FISH_METRICS,ALIENNTAX,Fish
+fish_ALIENPIND,1314,FISH_METRICS,ALIENPIND,Fish
+fish_ALIENPIND,2324,FISH_METRICS,ALIENPIND,Fish
+fish_ALIENPTAX,1314,FISH_METRICS,ALIENPTAX,Fish
+fish_ALIENPTAX,2324,FISH_METRICS,ALIENPTAX,Fish
+fish_ANOMPIND,1314,FISH_METRICS,ANOMPIND,Fish
+fish_ANOMPIND,2324,FISH_METRICS,ANOMPIND,Fish
+fish_BENTINVNTAX,1314,FISH_METRICS,BENTINVNTAX,Fish
+fish_BENTINVNTAX,2324,FISH_METRICS,BENTINVNTAX,Fish
+fish_BENTINVPIND,1314,FISH_METRICS,BENTINVPIND,Fish
+fish_BENTINVPIND,2324,FISH_METRICS,BENTINVPIND,Fish
+fish_BENTINVPTAX,1314,FISH_METRICS,BENTINVPTAX,Fish
+fish_BENTINVPTAX,2324,FISH_METRICS,BENTINVPTAX,Fish
+fish_CARNNTAX,1314,FISH_METRICS,CARNNTAX,Fish
+fish_CARNNTAX,2324,FISH_METRICS,CARNNTAX,Fish
+fish_CARNPIND,1314,FISH_METRICS,CARNPIND,Fish
+fish_CARNPIND,2324,FISH_METRICS,CARNPIND,Fish
+fish_CARNPTAX,1314,FISH_METRICS,CARNPTAX,Fish
+fish_CARNPTAX,2324,FISH_METRICS,CARNPTAX,Fish
+fish_CATONTAX,1314,FISH_METRICS,CATONTAX,Fish
+fish_CATONTAX,2324,FISH_METRICS,CATONTAX,Fish
+fish_CATOPIND,1314,FISH_METRICS,CATOPIND,Fish
+fish_CATOPIND,2324,FISH_METRICS,CATOPIND,Fish
+fish_CATOPTAX,1314,FISH_METRICS,CATOPTAX,Fish
+fish_CATOPTAX,2324,FISH_METRICS,CATOPTAX,Fish
+fish_CENTNTAX,1314,FISH_METRICS,CENTNTAX,Fish
+fish_CENTNTAX,2324,FISH_METRICS,CENTNTAX,Fish
+fish_CENTPIND,1314,FISH_METRICS,CENTPIND,Fish
+fish_CENTPIND,2324,FISH_METRICS,CENTPIND,Fish
+fish_CENTPTAX,1314,FISH_METRICS,CENTPTAX,Fish
+fish_CENTPTAX,2324,FISH_METRICS,CENTPTAX,Fish
+fish_COLDNTAX,1314,FISH_METRICS,COLDNTAX,Fish
+fish_COLDNTAX,2324,FISH_METRICS,COLDNTAX,Fish
+fish_COLDPIND,1314,FISH_METRICS,COLDPIND,Fish
+fish_COLDPIND,2324,FISH_METRICS,COLDPIND,Fish
+fish_COLDPTAX,1314,FISH_METRICS,COLDPTAX,Fish
+fish_COLDPTAX,2324,FISH_METRICS,COLDPTAX,Fish
+fish_CYPRNTAX,1314,FISH_METRICS,CYPRNTAX,Fish
+fish_CYPRNTAX,2324,FISH_METRICS,CYPRNTAX,Fish
+fish_CYPRPIND,1314,FISH_METRICS,CYPRPIND,Fish
+fish_CYPRPIND,2324,FISH_METRICS,CYPRPIND,Fish
+fish_CYPRPTAX,1314,FISH_METRICS,CYPRPTAX,Fish
+fish_CYPRPTAX,2324,FISH_METRICS,CYPRPTAX,Fish
+fish_HERBNTAX,1314,FISH_METRICS,HERBNTAX,Fish
+fish_HERBNTAX,2324,FISH_METRICS,HERBNTAX,Fish
+fish_HERBPIND,1314,FISH_METRICS,HERBPIND,Fish
+fish_HERBPIND,2324,FISH_METRICS,HERBPIND,Fish
+fish_HERBPTAX,1314,FISH_METRICS,HERBPTAX,Fish
+fish_HERBPTAX,2324,FISH_METRICS,HERBPTAX,Fish
+fish_ICTANTAX,1314,FISH_METRICS,ICTANTAX,Fish
+fish_ICTANTAX,2324,FISH_METRICS,ICTANTAX,Fish
+fish_ICTAPIND,1314,FISH_METRICS,ICTAPIND,Fish
+fish_ICTAPIND,2324,FISH_METRICS,ICTAPIND,Fish
+fish_ICTAPTAX,1314,FISH_METRICS,ICTAPTAX,Fish
+fish_ICTAPTAX,2324,FISH_METRICS,ICTAPTAX,Fish
+fish_INTLCARNNTAX,1314,FISH_METRICS,INTLCARNNTAX,Fish
+fish_INTLCARNNTAX,2324,FISH_METRICS,INTLCARNNTAX,Fish
+fish_INTLCARNPIND,1314,FISH_METRICS,INTLCARNPIND,Fish
+fish_INTLCARNPIND,2324,FISH_METRICS,INTLCARNPIND,Fish
+fish_INTLCARNPTAX,1314,FISH_METRICS,INTLCARNPTAX,Fish
+fish_INTLCARNPTAX,2324,FISH_METRICS,INTLCARNPTAX,Fish
+fish_INTLINVNTAX,1314,FISH_METRICS,INTLINVNTAX,Fish
+fish_INTLINVNTAX,2324,FISH_METRICS,INTLINVNTAX,Fish
+fish_INTLINVPIND,1314,FISH_METRICS,INTLINVPIND,Fish
+fish_INTLINVPIND,2324,FISH_METRICS,INTLINVPIND,Fish
+fish_INTLINVPTAX,1314,FISH_METRICS,INTLINVPTAX,Fish
+fish_INTLINVPTAX,2324,FISH_METRICS,INTLINVPTAX,Fish
+fish_INTLLOTNTAX,1314,FISH_METRICS,INTLLOTNTAX,Fish
+fish_INTLLOTNTAX,2324,FISH_METRICS,INTLLOTNTAX,Fish
+fish_INTLLOTPIND,1314,FISH_METRICS,INTLLOTPIND,Fish
+fish_INTLLOTPIND,2324,FISH_METRICS,INTLLOTPIND,Fish
+fish_INTLLOTPTAX,1314,FISH_METRICS,INTLLOTPTAX,Fish
+fish_INTLLOTPTAX,2324,FISH_METRICS,INTLLOTPTAX,Fish
+fish_INTLMIGRNTAX,1314,FISH_METRICS,INTLMIGRNTAX,Fish
+fish_INTLMIGRNTAX,2324,FISH_METRICS,INTLMIGRNTAX,Fish
+fish_INTLMIGRPIND,1314,FISH_METRICS,INTLMIGRPIND,Fish
+fish_INTLMIGRPIND,2324,FISH_METRICS,INTLMIGRPIND,Fish
+fish_INTLMIGRPTAX,1314,FISH_METRICS,INTLMIGRPTAX,Fish
+fish_INTLMIGRPTAX,2324,FISH_METRICS,INTLMIGRPTAX,Fish
+fish_INTLNTAX,1314,BENTHIC_METRICS,INTLNTAX,Fish
+fish_INTLNTAX,2324,BENTHIC_METRICS,INTLNTAX,Fish
+fish_INTLPIND,1314,BENTHIC_METRICS,INTLPIND,Fish
+fish_INTLPIND,2324,BENTHIC_METRICS,INTLPIND,Fish
+fish_INTLPTAX,1314,BENTHIC_METRICS,INTLPTAX,Fish
+fish_INTLPTAX,2324,BENTHIC_METRICS,INTLPTAX,Fish
+fish_INTLRHEONTAX,1314,FISH_METRICS,INTLRHEONTAX,Fish
+fish_INTLRHEONTAX,2324,FISH_METRICS,INTLRHEONTAX,Fish
+fish_INTLRHEOPIND,1314,FISH_METRICS,INTLRHEOPIND,Fish
+fish_INTLRHEOPIND,2324,FISH_METRICS,INTLRHEOPIND,Fish
+fish_INTLRHEOPTAX,1314,FISH_METRICS,INTLRHEOPTAX,Fish
+fish_INTLRHEOPTAX,2324,FISH_METRICS,INTLRHEOPTAX,Fish
+fish_INVNTAX,1314,FISH_METRICS,INVNTAX,Fish
+fish_INVNTAX,2324,FISH_METRICS,INVNTAX,Fish
+fish_INVPIND,1314,FISH_METRICS,INVPIND,Fish
+fish_INVPIND,2324,FISH_METRICS,INVPIND,Fish
+fish_INVPTAX,1314,FISH_METRICS,INVPTAX,Fish
+fish_INVPTAX,2324,FISH_METRICS,INVPTAX,Fish
+fish_LITHNTAX,1314,FISH_METRICS,LITHNTAX,Fish
+fish_LITHNTAX,2324,FISH_METRICS,LITHNTAX,Fish
+fish_LITHPIND,1314,FISH_METRICS,LITHPIND,Fish
+fish_LITHPIND,2324,FISH_METRICS,LITHPIND,Fish
+fish_LITHPTAX,1314,FISH_METRICS,LITHPTAX,Fish
+fish_LITHPTAX,2324,FISH_METRICS,LITHPTAX,Fish
+fish_LOTNTAX,1314,FISH_METRICS,LOTNTAX,Fish
+fish_LOTNTAX,2324,FISH_METRICS,LOTNTAX,Fish
+fish_LOTPIND,1314,FISH_METRICS,LOTPIND,Fish
+fish_LOTPIND,2324,FISH_METRICS,LOTPIND,Fish
+fish_LOTPTAX,1314,FISH_METRICS,LOTPTAX,Fish
+fish_LOTPTAX,2324,FISH_METRICS,LOTPTAX,Fish
+fish_MIGRNTAX,1314,FISH_METRICS,MIGRNTAX,Fish
+fish_MIGRNTAX,2324,FISH_METRICS,MIGRNTAX,Fish
+fish_MIGRPIND,1314,FISH_METRICS,MIGRPIND,Fish
+fish_MIGRPIND,2324,FISH_METRICS,MIGRPIND,Fish
+fish_MIGRPTAX,1314,FISH_METRICS,MIGRPTAX,Fish
+fish_MIGRPTAX,2324,FISH_METRICS,MIGRPTAX,Fish
+fish_MTOLNTAX,1314,FISH_METRICS,MTOLNTAX,Fish
+fish_MTOLNTAX,2324,FISH_METRICS,MTOLNTAX,Fish
+fish_MTOLPIND,1314,FISH_METRICS,MTOLPIND,Fish
+fish_MTOLPIND,2324,FISH_METRICS,MTOLPIND,Fish
+fish_MTOLPTAX,1314,FISH_METRICS,MTOLPTAX,Fish
+fish_MTOLPTAX,2324,FISH_METRICS,MTOLPTAX,Fish
+fish_NAT_BENTINVNTAX,1314,FISH_METRICS,NAT_BENTINVNTAX,Fish
+fish_NAT_BENTINVNTAX,2324,FISH_METRICS,NAT_BENTINVNTAX,Fish
+fish_NAT_BENTINVPIND,1314,FISH_METRICS,NAT_BENTINVPIND,Fish
+fish_NAT_BENTINVPIND,2324,FISH_METRICS,NAT_BENTINVPIND,Fish
+fish_NAT_BENTINVPTAX,1314,FISH_METRICS,NAT_BENTINVPTAX,Fish
+fish_NAT_BENTINVPTAX,2324,FISH_METRICS,NAT_BENTINVPTAX,Fish
+fish_NAT_CARNNTAX,1314,FISH_METRICS,NAT_CARNNTAX,Fish
+fish_NAT_CARNNTAX,2324,FISH_METRICS,NAT_CARNNTAX,Fish
+fish_NAT_CARNPIND,1314,FISH_METRICS,NAT_CARNPIND,Fish
+fish_NAT_CARNPIND,2324,FISH_METRICS,NAT_CARNPIND,Fish
+fish_NAT_CARNPTAX,1314,FISH_METRICS,NAT_CARNPTAX,Fish
+fish_NAT_CARNPTAX,2324,FISH_METRICS,NAT_CARNPTAX,Fish
+fish_NAT_CATONTAX,1314,FISH_METRICS,NAT_CATONTAX,Fish
+fish_NAT_CATONTAX,2324,FISH_METRICS,NAT_CATONTAX,Fish
+fish_NAT_CATOPIND,1314,FISH_METRICS,NAT_CATOPIND,Fish
+fish_NAT_CATOPIND,2324,FISH_METRICS,NAT_CATOPIND,Fish
+fish_NAT_CATOPTAX,1314,FISH_METRICS,NAT_CATOPTAX,Fish
+fish_NAT_CATOPTAX,2324,FISH_METRICS,NAT_CATOPTAX,Fish
+fish_NAT_CENTNTAX,1314,FISH_METRICS,NAT_CENTNTAX,Fish
+fish_NAT_CENTNTAX,2324,FISH_METRICS,NAT_CENTNTAX,Fish
+fish_NAT_CENTPIND,1314,FISH_METRICS,NAT_CENTPIND,Fish
+fish_NAT_CENTPIND,2324,FISH_METRICS,NAT_CENTPIND,Fish
+fish_NAT_CENTPTAX,1314,FISH_METRICS,NAT_CENTPTAX,Fish
+fish_NAT_CENTPTAX,2324,FISH_METRICS,NAT_CENTPTAX,Fish
+fish_NAT_COLDNTAX,1314,FISH_METRICS,NAT_COLDNTAX,Fish
+fish_NAT_COLDNTAX,2324,FISH_METRICS,NAT_COLDNTAX,Fish
+fish_NAT_COLDPIND,1314,FISH_METRICS,NAT_COLDPIND,Fish
+fish_NAT_COLDPIND,2324,FISH_METRICS,NAT_COLDPIND,Fish
+fish_NAT_COLDPTAX,1314,FISH_METRICS,NAT_COLDPTAX,Fish
+fish_NAT_COLDPTAX,2324,FISH_METRICS,NAT_COLDPTAX,Fish
+fish_NAT_CYPRNTAX,1314,FISH_METRICS,NAT_CYPRNTAX,Fish
+fish_NAT_CYPRNTAX,2324,FISH_METRICS,NAT_CYPRNTAX,Fish
+fish_NAT_CYPRPIND,1314,FISH_METRICS,NAT_CYPRPIND,Fish
+fish_NAT_CYPRPIND,2324,FISH_METRICS,NAT_CYPRPIND,Fish
+fish_NAT_CYPRPTAX,1314,FISH_METRICS,NAT_CYPRPTAX,Fish
+fish_NAT_CYPRPTAX,2324,FISH_METRICS,NAT_CYPRPTAX,Fish
+fish_NAT_HERBNTAX,1314,FISH_METRICS,NAT_HERBNTAX,Fish
+fish_NAT_HERBNTAX,2324,FISH_METRICS,NAT_HERBNTAX,Fish
+fish_NAT_HERBPIND,1314,FISH_METRICS,NAT_HERBPIND,Fish
+fish_NAT_HERBPIND,2324,FISH_METRICS,NAT_HERBPIND,Fish
+fish_NAT_HERBPTAX,1314,FISH_METRICS,NAT_HERBPTAX,Fish
+fish_NAT_HERBPTAX,2324,FISH_METRICS,NAT_HERBPTAX,Fish
+fish_NAT_ICTANTAX,1314,FISH_METRICS,NAT_ICTANTAX,Fish
+fish_NAT_ICTANTAX,2324,FISH_METRICS,NAT_ICTANTAX,Fish
+fish_NAT_ICTAPIND,1314,FISH_METRICS,NAT_ICTAPIND,Fish
+fish_NAT_ICTAPIND,2324,FISH_METRICS,NAT_ICTAPIND,Fish
+fish_NAT_ICTAPTAX,1314,FISH_METRICS,NAT_ICTAPTAX,Fish
+fish_NAT_ICTAPTAX,2324,FISH_METRICS,NAT_ICTAPTAX,Fish
+fish_NAT_INTLCARNNTAX,1314,FISH_METRICS,NAT_INTLCARNNTAX,Fish
+fish_NAT_INTLCARNNTAX,2324,FISH_METRICS,NAT_INTLCARNNTAX,Fish
+fish_NAT_INTLCARNPIND,1314,FISH_METRICS,NAT_INTLCARNPIND,Fish
+fish_NAT_INTLCARNPIND,2324,FISH_METRICS,NAT_INTLCARNPIND,Fish
+fish_NAT_INTLCARNPTAX,1314,FISH_METRICS,NAT_INTLCARNPTAX,Fish
+fish_NAT_INTLCARNPTAX,2324,FISH_METRICS,NAT_INTLCARNPTAX,Fish
+fish_NAT_INTLINVNTAX,1314,FISH_METRICS,NAT_INTLINVNTAX,Fish
+fish_NAT_INTLINVNTAX,2324,FISH_METRICS,NAT_INTLINVNTAX,Fish
+fish_NAT_INTLINVPIND,1314,FISH_METRICS,NAT_INTLINVPIND,Fish
+fish_NAT_INTLINVPIND,2324,FISH_METRICS,NAT_INTLINVPIND,Fish
+fish_NAT_INTLINVPTAX,1314,FISH_METRICS,NAT_INTLINVPTAX,Fish
+fish_NAT_INTLINVPTAX,2324,FISH_METRICS,NAT_INTLINVPTAX,Fish
+fish_NAT_INTLLOTNTAX,1314,FISH_METRICS,NAT_INTLLOTNTAX,Fish
+fish_NAT_INTLLOTNTAX,2324,FISH_METRICS,NAT_INTLLOTNTAX,Fish
+fish_NAT_INTLLOTPIND,1314,FISH_METRICS,NAT_INTLLOTPIND,Fish
+fish_NAT_INTLLOTPIND,2324,FISH_METRICS,NAT_INTLLOTPIND,Fish
+fish_NAT_INTLLOTPTAX,1314,FISH_METRICS,NAT_INTLLOTPTAX,Fish
+fish_NAT_INTLLOTPTAX,2324,FISH_METRICS,NAT_INTLLOTPTAX,Fish
+fish_NAT_INTLMIGRNTAX,1314,FISH_METRICS,NAT_INTLMIGRNTAX,Fish
+fish_NAT_INTLMIGRNTAX,2324,FISH_METRICS,NAT_INTLMIGRNTAX,Fish
+fish_NAT_INTLMIGRPIND,1314,FISH_METRICS,NAT_INTLMIGRPIND,Fish
+fish_NAT_INTLMIGRPIND,2324,FISH_METRICS,NAT_INTLMIGRPIND,Fish
+fish_NAT_INTLMIGRPTAX,1314,FISH_METRICS,NAT_INTLMIGRPTAX,Fish
+fish_NAT_INTLMIGRPTAX,2324,FISH_METRICS,NAT_INTLMIGRPTAX,Fish
+fish_NAT_INTLNTAX,1314,FISH_METRICS,NAT_INTLNTAX,Fish
+fish_NAT_INTLNTAX,2324,FISH_METRICS,NAT_INTLNTAX,Fish
+fish_NAT_INTLPIND,1314,FISH_METRICS,NAT_INTLPIND,Fish
+fish_NAT_INTLPIND,2324,FISH_METRICS,NAT_INTLPIND,Fish
+fish_NAT_INTLPTAX,1314,FISH_METRICS,NAT_INTLPTAX,Fish
+fish_NAT_INTLPTAX,2324,FISH_METRICS,NAT_INTLPTAX,Fish
+fish_NAT_INTLRHEONTAX,1314,FISH_METRICS,NAT_INTLRHEONTAX,Fish
+fish_NAT_INTLRHEONTAX,2324,FISH_METRICS,NAT_INTLRHEONTAX,Fish
+fish_NAT_INTLRHEOPIND,1314,FISH_METRICS,NAT_INTLRHEOPIND,Fish
+fish_NAT_INTLRHEOPIND,2324,FISH_METRICS,NAT_INTLRHEOPIND,Fish
+fish_NAT_INTLRHEOPTAX,1314,FISH_METRICS,NAT_INTLRHEOPTAX,Fish
+fish_NAT_INTLRHEOPTAX,2324,FISH_METRICS,NAT_INTLRHEOPTAX,Fish
+fish_NAT_INVNTAX,1314,FISH_METRICS,NAT_INVNTAX,Fish
+fish_NAT_INVNTAX,2324,FISH_METRICS,NAT_INVNTAX,Fish
+fish_NAT_INVPIND,1314,FISH_METRICS,NAT_INVPIND,Fish
+fish_NAT_INVPIND,2324,FISH_METRICS,NAT_INVPIND,Fish
+fish_NAT_INVPTAX,1314,FISH_METRICS,NAT_INVPTAX,Fish
+fish_NAT_INVPTAX,2324,FISH_METRICS,NAT_INVPTAX,Fish
+fish_NAT_LITHNTAX,1314,FISH_METRICS,NAT_LITHNTAX,Fish
+fish_NAT_LITHNTAX,2324,FISH_METRICS,NAT_LITHNTAX,Fish
+fish_NAT_LITHPIND,1314,FISH_METRICS,NAT_LITHPIND,Fish
+fish_NAT_LITHPIND,2324,FISH_METRICS,NAT_LITHPIND,Fish
+fish_NAT_LITHPTAX,1314,FISH_METRICS,NAT_LITHPTAX,Fish
+fish_NAT_LITHPTAX,2324,FISH_METRICS,NAT_LITHPTAX,Fish
+fish_NAT_LOTNTAX,1314,FISH_METRICS,NAT_LOTNTAX,Fish
+fish_NAT_LOTNTAX,2324,FISH_METRICS,NAT_LOTNTAX,Fish
+fish_NAT_LOTPIND,1314,FISH_METRICS,NAT_LOTPIND,Fish
+fish_NAT_LOTPIND,2324,FISH_METRICS,NAT_LOTPIND,Fish
+fish_NAT_LOTPTAX,1314,FISH_METRICS,NAT_LOTPTAX,Fish
+fish_NAT_LOTPTAX,2324,FISH_METRICS,NAT_LOTPTAX,Fish
+fish_NAT_MIGRNTAX,1314,FISH_METRICS,NAT_MIGRNTAX,Fish
+fish_NAT_MIGRNTAX,2324,FISH_METRICS,NAT_MIGRNTAX,Fish
+fish_NAT_MIGRPIND,1314,FISH_METRICS,NAT_MIGRPIND,Fish
+fish_NAT_MIGRPIND,2324,FISH_METRICS,NAT_MIGRPIND,Fish
+fish_NAT_MIGRPTAX,1314,FISH_METRICS,NAT_MIGRPTAX,Fish
+fish_NAT_MIGRPTAX,2324,FISH_METRICS,NAT_MIGRPTAX,Fish
+fish_NAT_MTOLNTAX,1314,FISH_METRICS,NAT_MTOLNTAX,Fish
+fish_NAT_MTOLNTAX,2324,FISH_METRICS,NAT_MTOLNTAX,Fish
+fish_NAT_MTOLPIND,1314,FISH_METRICS,NAT_MTOLPIND,Fish
+fish_NAT_MTOLPIND,2324,FISH_METRICS,NAT_MTOLPIND,Fish
+fish_NAT_MTOLPTAX,1314,FISH_METRICS,NAT_MTOLPTAX,Fish
+fish_NAT_MTOLPTAX,2324,FISH_METRICS,NAT_MTOLPTAX,Fish
+fish_NAT_NTOLBENTNTAX,1314,FISH_METRICS,NAT_NTOLBENTNTAX,Fish
+fish_NAT_NTOLBENTNTAX,2324,FISH_METRICS,NAT_NTOLBENTNTAX,Fish
+fish_NAT_NTOLBENTPIND,1314,FISH_METRICS,NAT_NTOLBENTPIND,Fish
+fish_NAT_NTOLBENTPIND,2324,FISH_METRICS,NAT_NTOLBENTPIND,Fish
+fish_NAT_NTOLBENTPTAX,1314,FISH_METRICS,NAT_NTOLBENTPTAX,Fish
+fish_NAT_NTOLBENTPTAX,2324,FISH_METRICS,NAT_NTOLBENTPTAX,Fish
+fish_NAT_NTOLCARNNTAX,1314,FISH_METRICS,NAT_NTOLCARNNTAX,Fish
+fish_NAT_NTOLCARNNTAX,2324,FISH_METRICS,NAT_NTOLCARNNTAX,Fish
+fish_NAT_NTOLCARNPIND,1314,FISH_METRICS,NAT_NTOLCARNPIND,Fish
+fish_NAT_NTOLCARNPIND,2324,FISH_METRICS,NAT_NTOLCARNPIND,Fish
+fish_NAT_NTOLCARNPTAX,1314,FISH_METRICS,NAT_NTOLCARNPTAX,Fish
+fish_NAT_NTOLCARNPTAX,2324,FISH_METRICS,NAT_NTOLCARNPTAX,Fish
+fish_NAT_NTOLINVNTAX,1314,FISH_METRICS,NAT_NTOLINVNTAX,Fish
+fish_NAT_NTOLINVNTAX,2324,FISH_METRICS,NAT_NTOLINVNTAX,Fish
+fish_NAT_NTOLINVPIND,1314,FISH_METRICS,NAT_NTOLINVPIND,Fish
+fish_NAT_NTOLINVPIND,2324,FISH_METRICS,NAT_NTOLINVPIND,Fish
+fish_NAT_NTOLINVPTAX,1314,FISH_METRICS,NAT_NTOLINVPTAX,Fish
+fish_NAT_NTOLINVPTAX,2324,FISH_METRICS,NAT_NTOLINVPTAX,Fish
+fish_NAT_NTOLNTAX,1314,FISH_METRICS,NAT_NTOLNTAX,Fish
+fish_NAT_NTOLNTAX,2324,FISH_METRICS,NAT_NTOLNTAX,Fish
+fish_NAT_NTOLPIND,1314,FISH_METRICS,NAT_NTOLPIND,Fish
+fish_NAT_NTOLPIND,2324,FISH_METRICS,NAT_NTOLPIND,Fish
+fish_NAT_NTOLPTAX,1314,FISH_METRICS,NAT_NTOLPTAX,Fish
+fish_NAT_NTOLPTAX,2324,FISH_METRICS,NAT_NTOLPTAX,Fish
+fish_NAT_OMNINTAX,1314,FISH_METRICS,NAT_OMNINTAX,Fish
+fish_NAT_OMNINTAX,2324,FISH_METRICS,NAT_OMNINTAX,Fish
+fish_NAT_OMNIPIND,1314,FISH_METRICS,NAT_OMNIPIND,Fish
+fish_NAT_OMNIPIND,2324,FISH_METRICS,NAT_OMNIPIND,Fish
+fish_NAT_OMNIPTAX,1314,FISH_METRICS,NAT_OMNIPTAX,Fish
+fish_NAT_OMNIPTAX,2324,FISH_METRICS,NAT_OMNIPTAX,Fish
+fish_NAT_PIND,1314,FISH_METRICS,NAT_PIND,Fish
+fish_NAT_PIND,2324,FISH_METRICS,NAT_PIND,Fish
+fish_NAT_PTAX,1314,FISH_METRICS,NAT_PTAX,Fish
+fish_NAT_PTAX,2324,FISH_METRICS,NAT_PTAX,Fish
+fish_NAT_RBCATONTAX,1314,FISH_METRICS,NAT_RBCATONTAX,Fish
+fish_NAT_RBCATONTAX,2324,FISH_METRICS,NAT_RBCATONTAX,Fish
+fish_NAT_RBCATOPIND,1314,FISH_METRICS,NAT_RBCATOPIND,Fish
+fish_NAT_RBCATOPIND,2324,FISH_METRICS,NAT_RBCATOPIND,Fish
+fish_NAT_RBCATOPTAX,1314,FISH_METRICS,NAT_RBCATOPTAX,Fish
+fish_NAT_RBCATOPTAX,2324,FISH_METRICS,NAT_RBCATOPTAX,Fish
+fish_NAT_RHEONTAX,1314,FISH_METRICS,NAT_RHEONTAX,Fish
+fish_NAT_RHEONTAX,2324,FISH_METRICS,NAT_RHEONTAX,Fish
+fish_NAT_RHEOPIND,1314,FISH_METRICS,NAT_RHEOPIND,Fish
+fish_NAT_RHEOPIND,2324,FISH_METRICS,NAT_RHEOPIND,Fish
+fish_NAT_RHEOPTAX,1314,FISH_METRICS,NAT_RHEOPTAX,Fish
+fish_NAT_RHEOPTAX,2324,FISH_METRICS,NAT_RHEOPTAX,Fish
+fish_NAT_SALMNTAX,1314,FISH_METRICS,NAT_SALMNTAX,Fish
+fish_NAT_SALMNTAX,2324,FISH_METRICS,NAT_SALMNTAX,Fish
+fish_NAT_SALMPIND,1314,FISH_METRICS,NAT_SALMPIND,Fish
+fish_NAT_SALMPIND,2324,FISH_METRICS,NAT_SALMPIND,Fish
+fish_NAT_SALMPTAX,1314,FISH_METRICS,NAT_SALMPTAX,Fish
+fish_NAT_SALMPTAX,2324,FISH_METRICS,NAT_SALMPTAX,Fish
+fish_NAT_TOLRNTAX,1314,FISH_METRICS,NAT_TOLRNTAX,Fish
+fish_NAT_TOLRNTAX,2324,FISH_METRICS,NAT_TOLRNTAX,Fish
+fish_NAT_TOLRPIND,1314,FISH_METRICS,NAT_TOLRPIND,Fish
+fish_NAT_TOLRPIND,2324,FISH_METRICS,NAT_TOLRPIND,Fish
+fish_NAT_TOLRPTAX,1314,FISH_METRICS,NAT_TOLRPTAX,Fish
+fish_NAT_TOLRPTAX,2324,FISH_METRICS,NAT_TOLRPTAX,Fish
+fish_NAT_TOTLNIND,1314,FISH_METRICS,NAT_TOTLNIND,Fish
+fish_NAT_TOTLNIND,2324,FISH_METRICS,NAT_TOTLNIND,Fish
+fish_NAT_TOTLNTAX,1314,FISH_METRICS,NAT_TOTLNTAX,Fish
+fish_NAT_TOTLNTAX,2324,FISH_METRICS,NAT_TOTLNTAX,Fish
+fish_NAT_WTD_TV,1314,FISH_METRICS,NAT_WTD_TV,Fish
+fish_NAT_WTD_TV,2324,FISH_METRICS,NAT_WTD_TV,Fish
+fish_NTOLBENTNTAX,1314,FISH_METRICS,NTOLBENTNTAX,Fish
+fish_NTOLBENTNTAX,2324,FISH_METRICS,NTOLBENTNTAX,Fish
+fish_NTOLBENTPIND,1314,FISH_METRICS,NTOLBENTPIND,Fish
+fish_NTOLBENTPIND,2324,FISH_METRICS,NTOLBENTPIND,Fish
+fish_NTOLBENTPTAX,1314,FISH_METRICS,NTOLBENTPTAX,Fish
+fish_NTOLBENTPTAX,2324,FISH_METRICS,NTOLBENTPTAX,Fish
+fish_NTOLCARNNTAX,1314,FISH_METRICS,NTOLCARNNTAX,Fish
+fish_NTOLCARNNTAX,2324,FISH_METRICS,NTOLCARNNTAX,Fish
+fish_NTOLCARNPIND,1314,FISH_METRICS,NTOLCARNPIND,Fish
+fish_NTOLCARNPIND,2324,FISH_METRICS,NTOLCARNPIND,Fish
+fish_NTOLCARNPTAX,1314,FISH_METRICS,NTOLCARNPTAX,Fish
+fish_NTOLCARNPTAX,2324,FISH_METRICS,NTOLCARNPTAX,Fish
+fish_NTOLINVNTAX,1314,FISH_METRICS,NTOLINVNTAX,Fish
+fish_NTOLINVNTAX,2324,FISH_METRICS,NTOLINVNTAX,Fish
+fish_NTOLINVPIND,1314,FISH_METRICS,NTOLINVPIND,Fish
+fish_NTOLINVPIND,2324,FISH_METRICS,NTOLINVPIND,Fish
+fish_NTOLINVPTAX,1314,FISH_METRICS,NTOLINVPTAX,Fish
+fish_NTOLINVPTAX,2324,FISH_METRICS,NTOLINVPTAX,Fish
+fish_NTOLNTAX,1314,BENTHIC_METRICS,NTOLNTAX,Fish
+fish_NTOLNTAX,2324,BENTHIC_METRICS,NTOLNTAX,Fish
+fish_NTOLPIND,1314,BENTHIC_METRICS,NTOLPIND,Fish
+fish_NTOLPIND,2324,BENTHIC_METRICS,NTOLPIND,Fish
+fish_NTOLPTAX,1314,BENTHIC_METRICS,NTOLPTAX,Fish
+fish_NTOLPTAX,2324,BENTHIC_METRICS,NTOLPTAX,Fish
+fish_OMNINTAX,1314,FISH_METRICS,OMNINTAX,Fish
+fish_OMNINTAX,2324,FISH_METRICS,OMNINTAX,Fish
+fish_OMNIPIND,1314,FISH_METRICS,OMNIPIND,Fish
+fish_OMNIPIND,2324,FISH_METRICS,OMNIPIND,Fish
+fish_OMNIPTAX,1314,FISH_METRICS,OMNIPTAX,Fish
+fish_OMNIPTAX,2324,FISH_METRICS,OMNIPTAX,Fish
+fish_RBCATONTAX,1314,FISH_METRICS,RBCATONTAX,Fish
+fish_RBCATONTAX,2324,FISH_METRICS,RBCATONTAX,Fish
+fish_RBCATOPIND,1314,FISH_METRICS,RBCATOPIND,Fish
+fish_RBCATOPIND,2324,FISH_METRICS,RBCATOPIND,Fish
+fish_RBCATOPTAX,1314,FISH_METRICS,RBCATOPTAX,Fish
+fish_RBCATOPTAX,2324,FISH_METRICS,RBCATOPTAX,Fish
+fish_RHEONTAX,1314,FISH_METRICS,RHEONTAX,Fish
+fish_RHEONTAX,2324,FISH_METRICS,RHEONTAX,Fish
+fish_RHEOPIND,1314,FISH_METRICS,RHEOPIND,Fish
+fish_RHEOPIND,2324,FISH_METRICS,RHEOPIND,Fish
+fish_RHEOPTAX,1314,FISH_METRICS,RHEOPTAX,Fish
+fish_RHEOPTAX,2324,FISH_METRICS,RHEOPTAX,Fish
+fish_SALMNTAX,1314,FISH_METRICS,SALMNTAX,Fish
+fish_SALMNTAX,2324,FISH_METRICS,SALMNTAX,Fish
+fish_SALMPIND,1314,FISH_METRICS,SALMPIND,Fish
+fish_SALMPIND,2324,FISH_METRICS,SALMPIND,Fish
+fish_SALMPTAX,1314,FISH_METRICS,SALMPTAX,Fish
+fish_SALMPTAX,2324,FISH_METRICS,SALMPTAX,Fish
+fish_TOLRNTAX,1314,BENTHIC_METRICS,TOLRNTAX,Fish
+fish_TOLRNTAX,2324,BENTHIC_METRICS,TOLRNTAX,Fish
+fish_TOLRPIND,1314,BENTHIC_METRICS,TOLRPIND,Fish
+fish_TOLRPIND,2324,BENTHIC_METRICS,TOLRPIND,Fish
+fish_TOLRPTAX,1314,BENTHIC_METRICS,TOLRPTAX,Fish
+fish_TOLRPTAX,2324,BENTHIC_METRICS,TOLRPTAX,Fish
+fish_TOTLNIND,1314,BENTHIC_METRICS,TOTLNIND,Fish
+fish_TOTLNIND,2324,BENTHIC_METRICS,TOTLNIND,Fish
+fish_TOTLNTAX,1314,BENTHIC_METRICS,TOTLNTAX,Fish
+fish_TOTLNTAX,2324,BENTHIC_METRICS,TOTLNTAX,Fish
+fish_WTD_TV,1314,BENTHIC_METRICS,WTD_TV,Fish
+fish_WTD_TV,2324,BENTHIC_METRICS,WTD_TV,Fish
+land_AGKFFACTWS,1819,LANDSCAPE,AGKFFACTWS,Landscape
+land_AL2O3WS,1819,LANDSCAPE,AL2O3WS,Landscape
+land_AWCHWS,1819,LANDSCAPE,AWCHWS,Landscape
+land_BDHWS,1819,LANDSCAPE,BDHWS,Landscape
+land_BFIWS,1819,LANDSCAPE,BFIWS,Landscape
+land_CANALDENSWS,1819,LANDSCAPE,CANALDENSWS,Landscape
+land_CAOWS,1819,LANDSCAPE,CAOWS,Landscape
+land_CBNFWS,1819,LANDSCAPE,CBNFWS,Landscape
+land_CLAYWS,1819,LANDSCAPE,CLAYWS,Landscape
+land_COALMINEDENSWS,1819,LANDSCAPE,COALMINEDENSWS,Landscape
+land_COMPSTRGTHWS,1819,LANDSCAPE,COMPSTRGTHWS,Landscape
+land_DAMDENSWS,1819,LANDSCAPE,DAMDENSWS,Landscape
+land_DAMNIDSTORWS,1819,LANDSCAPE,DAMNIDSTORWS,Landscape
+land_DAMNRMSTORWS,1819,LANDSCAPE,DAMNRMSTORWS,Landscape
+land_ELEVWS,1819,LANDSCAPE,ELEVWS,Landscape
+land_ETWS,1819,LANDSCAPE,ETWS,Landscape
+land_FE2O3WS,1819,LANDSCAPE,FE2O3WS,Landscape
+land_FERTWS,1819,LANDSCAPE,FERTWS,Landscape
+land_FSTFRZWS,1819,LANDSCAPE,FSTFRZWS,Landscape
+land_GEOL_HUNT_DOM_PCT_WS,1819,LANDSCAPE,GEOL_HUNT_DOM_PCT_WS,Landscape
+land_GEOL_REEDBUSH_DOM_PCT_WS,1819,LANDSCAPE,GEOL_REEDBUSH_DOM_PCT_WS,Landscape
+land_HUDEN2010WS,1819,LANDSCAPE,HUDEN2010WS,Landscape
+land_HYDRLCONDWS,1819,LANDSCAPE,HYDRLCONDWS,Landscape
+land_INORGNWETDEP_2008WS,1819,LANDSCAPE,INORGNWETDEP_2008WS,Landscape
+land_K2OWS,1819,LANDSCAPE,K2OWS,Landscape
+land_KFFACTWS,1819,LANDSCAPE,KFFACTWS,Landscape
+land_LSTFRZWS,1819,LANDSCAPE,LSTFRZWS,Landscape
+land_MANUREWS,1819,LANDSCAPE,MANUREWS,Landscape
+land_MGOWS,1819,LANDSCAPE,MGOWS,Landscape
+land_MINEDENSWS,1819,LANDSCAPE,MINEDENSWS,Landscape
+land_NA2OWS,1819,LANDSCAPE,NA2OWS,Landscape
+land_NABD_DENSWS,1819,LANDSCAPE,NABD_DENSWS,Landscape
+land_NABD_NIDSTORWS,1819,LANDSCAPE,NABD_NIDSTORWS,Landscape
+land_NABD_NRMSTORWS,1819,LANDSCAPE,NABD_NRMSTORWS,Landscape
+land_NH4_2008WS,1819,LANDSCAPE,NH4_2008WS,Landscape
+land_NO3_2008WS,1819,LANDSCAPE,NO3_2008WS,Landscape
+land_NPDESDENSWS,1819,LANDSCAPE,NPDESDENSWS,Landscape
+land_NWS,1819,LANDSCAPE,NWS,Landscape
+land_OMHWS,1819,LANDSCAPE,OMHWS,Landscape
+land_OMWS,1819,LANDSCAPE,OMWS,Landscape
+land_P2O5WS,1819,LANDSCAPE,P2O5WS,Landscape
+land_PCTAG2006SLP10WS,1819,LANDSCAPE,PCTAG2006SLP10WS,Landscape
+land_PCTAG2006SLP20WS,1819,LANDSCAPE,PCTAG2006SLP20WS,Landscape
+land_PCTALKINTRUVOLWS,1819,LANDSCAPE,PCTALKINTRUVOLWS,Landscape
+land_PCTALLUVCOASTWS,1819,LANDSCAPE,PCTALLUVCOASTWS,Landscape
+land_PCTBL2001WS,1819,LANDSCAPE,PCTBL2001WS,Landscape
+land_PCTBL2004WS,1819,LANDSCAPE,PCTBL2004WS,Landscape
+land_PCTBL2006WS,1819,LANDSCAPE,PCTBL2006WS,Landscape
+land_PCTBL2008WS,1819,LANDSCAPE,PCTBL2008WS,Landscape
+land_PCTBL2011WS,1819,LANDSCAPE,PCTBL2011WS,Landscape
+land_PCTBL2013WS,1819,LANDSCAPE,PCTBL2013WS,Landscape
+land_PCTBL2016WS,1819,LANDSCAPE,PCTBL2016WS,Landscape
+land_PCTBL2019WS,1819,LANDSCAPE,PCTBL2019WS,Landscape
+land_PCTCARBONATEWS,1819,LANDSCAPE,PCTCARBONATEWS,Landscape
+land_PCTCARBRESIDWS,1819,LANDSCAPE,PCTCARBRESIDWS,Landscape
+land_PCTCOASTCRSWS,1819,LANDSCAPE,PCTCOASTCRSWS,Landscape
+land_PCTCOLLUVSEDWS,1819,LANDSCAPE,PCTCOLLUVSEDWS,Landscape
+land_PCTCONIF2001WS,1819,LANDSCAPE,PCTCONIF2001WS,Landscape
+land_PCTCONIF2004WS,1819,LANDSCAPE,PCTCONIF2004WS,Landscape
+land_PCTCONIF2006WS,1819,LANDSCAPE,PCTCONIF2006WS,Landscape
+land_PCTCONIF2008WS,1819,LANDSCAPE,PCTCONIF2008WS,Landscape
+land_PCTCONIF2011WS,1819,LANDSCAPE,PCTCONIF2011WS,Landscape
+land_PCTCONIF2013WS,1819,LANDSCAPE,PCTCONIF2013WS,Landscape
+land_PCTCONIF2016WS,1819,LANDSCAPE,PCTCONIF2016WS,Landscape
+land_PCTCONIF2019WS,1819,LANDSCAPE,PCTCONIF2019WS,Landscape
+land_PCTCROP2001WS,1819,LANDSCAPE,PCTCROP2001WS,Landscape
+land_PCTCROP2004WS,1819,LANDSCAPE,PCTCROP2004WS,Landscape
+land_PCTCROP2006WS,1819,LANDSCAPE,PCTCROP2006WS,Landscape
+land_PCTCROP2008WS,1819,LANDSCAPE,PCTCROP2008WS,Landscape
+land_PCTCROP2011WS,1819,LANDSCAPE,PCTCROP2011WS,Landscape
+land_PCTCROP2013WS,1819,LANDSCAPE,PCTCROP2013WS,Landscape
+land_PCTCROP2016WS,1819,LANDSCAPE,PCTCROP2016WS,Landscape
+land_PCTCROP2019WS,1819,LANDSCAPE,PCTCROP2019WS,Landscape
+land_PCTDECID2001WS,1819,LANDSCAPE,PCTDECID2001WS,Landscape
+land_PCTDECID2004WS,1819,LANDSCAPE,PCTDECID2004WS,Landscape
+land_PCTDECID2006WS,1819,LANDSCAPE,PCTDECID2006WS,Landscape
+land_PCTDECID2008WS,1819,LANDSCAPE,PCTDECID2008WS,Landscape
+land_PCTDECID2011WS,1819,LANDSCAPE,PCTDECID2011WS,Landscape
+land_PCTDECID2013WS,1819,LANDSCAPE,PCTDECID2013WS,Landscape
+land_PCTDECID2016WS,1819,LANDSCAPE,PCTDECID2016WS,Landscape
+land_PCTDECID2019WS,1819,LANDSCAPE,PCTDECID2019WS,Landscape
+land_PCTEOLCRSWS,1819,LANDSCAPE,PCTEOLCRSWS,Landscape
+land_PCTEOLFINEWS,1819,LANDSCAPE,PCTEOLFINEWS,Landscape
+land_PCTEXTRUVOLWS,1819,LANDSCAPE,PCTEXTRUVOLWS,Landscape
+land_PCTFIRE2000WS,1819,LANDSCAPE,PCTFIRE2000WS,Landscape
+land_PCTFIRE2001WS,1819,LANDSCAPE,PCTFIRE2001WS,Landscape
+land_PCTFIRE2002WS,1819,LANDSCAPE,PCTFIRE2002WS,Landscape
+land_PCTFIRE2003WS,1819,LANDSCAPE,PCTFIRE2003WS,Landscape
+land_PCTFIRE2004WS,1819,LANDSCAPE,PCTFIRE2004WS,Landscape
+land_PCTFIRE2005WS,1819,LANDSCAPE,PCTFIRE2005WS,Landscape
+land_PCTFIRE2006WS,1819,LANDSCAPE,PCTFIRE2006WS,Landscape
+land_PCTFIRE2007WS,1819,LANDSCAPE,PCTFIRE2007WS,Landscape
+land_PCTFIRE2008WS,1819,LANDSCAPE,PCTFIRE2008WS,Landscape
+land_PCTFIRE2009WS,1819,LANDSCAPE,PCTFIRE2009WS,Landscape
+land_PCTFIRE2010WS,1819,LANDSCAPE,PCTFIRE2010WS,Landscape
+land_PCTFRSTLOSS2001WS,1819,LANDSCAPE,PCTFRSTLOSS2001WS,Landscape
+land_PCTFRSTLOSS2002WS,1819,LANDSCAPE,PCTFRSTLOSS2002WS,Landscape
+land_PCTFRSTLOSS2003WS,1819,LANDSCAPE,PCTFRSTLOSS2003WS,Landscape
+land_PCTFRSTLOSS2004WS,1819,LANDSCAPE,PCTFRSTLOSS2004WS,Landscape
+land_PCTFRSTLOSS2005WS,1819,LANDSCAPE,PCTFRSTLOSS2005WS,Landscape
+land_PCTFRSTLOSS2006WS,1819,LANDSCAPE,PCTFRSTLOSS2006WS,Landscape
+land_PCTFRSTLOSS2007WS,1819,LANDSCAPE,PCTFRSTLOSS2007WS,Landscape
+land_PCTFRSTLOSS2008WS,1819,LANDSCAPE,PCTFRSTLOSS2008WS,Landscape
+land_PCTFRSTLOSS2009WS,1819,LANDSCAPE,PCTFRSTLOSS2009WS,Landscape
+land_PCTFRSTLOSS2010WS,1819,LANDSCAPE,PCTFRSTLOSS2010WS,Landscape
+land_PCTFRSTLOSS2011WS,1819,LANDSCAPE,PCTFRSTLOSS2011WS,Landscape
+land_PCTFRSTLOSS2012WS,1819,LANDSCAPE,PCTFRSTLOSS2012WS,Landscape
+land_PCTFRSTLOSS2013WS,1819,LANDSCAPE,PCTFRSTLOSS2013WS,Landscape
+land_PCTGLACLAKECRSWS,1819,LANDSCAPE,PCTGLACLAKECRSWS,Landscape
+land_PCTGLACLAKEFINEWS,1819,LANDSCAPE,PCTGLACLAKEFINEWS,Landscape
+land_PCTGLACTILCLAYWS,1819,LANDSCAPE,PCTGLACTILCLAYWS,Landscape
+land_PCTGLACTILCRSWS,1819,LANDSCAPE,PCTGLACTILCRSWS,Landscape
+land_PCTGLACTILLOAMWS,1819,LANDSCAPE,PCTGLACTILLOAMWS,Landscape
+land_PCTGRS2001WS,1819,LANDSCAPE,PCTGRS2001WS,Landscape
+land_PCTGRS2004WS,1819,LANDSCAPE,PCTGRS2004WS,Landscape
+land_PCTGRS2006WS,1819,LANDSCAPE,PCTGRS2006WS,Landscape
+land_PCTGRS2008WS,1819,LANDSCAPE,PCTGRS2008WS,Landscape
+land_PCTGRS2011WS,1819,LANDSCAPE,PCTGRS2011WS,Landscape
+land_PCTGRS2013WS,1819,LANDSCAPE,PCTGRS2013WS,Landscape
+land_PCTGRS2016WS,1819,LANDSCAPE,PCTGRS2016WS,Landscape
+land_PCTGRS2019WS,1819,LANDSCAPE,PCTGRS2019WS,Landscape
+land_PCTHAY2001WS,1819,LANDSCAPE,PCTHAY2001WS,Landscape
+land_PCTHAY2004WS,1819,LANDSCAPE,PCTHAY2004WS,Landscape
+land_PCTHAY2006WS,1819,LANDSCAPE,PCTHAY2006WS,Landscape
+land_PCTHAY2008WS,1819,LANDSCAPE,PCTHAY2008WS,Landscape
+land_PCTHAY2011WS,1819,LANDSCAPE,PCTHAY2011WS,Landscape
+land_PCTHAY2013WS,1819,LANDSCAPE,PCTHAY2013WS,Landscape
+land_PCTHAY2016WS,1819,LANDSCAPE,PCTHAY2016WS,Landscape
+land_PCTHAY2019WS,1819,LANDSCAPE,PCTHAY2019WS,Landscape
+land_PCTHBWET2001WS,1819,LANDSCAPE,PCTHBWET2001WS,Landscape
+land_PCTHBWET2004WS,1819,LANDSCAPE,PCTHBWET2004WS,Landscape
+land_PCTHBWET2006WS,1819,LANDSCAPE,PCTHBWET2006WS,Landscape
+land_PCTHBWET2008WS,1819,LANDSCAPE,PCTHBWET2008WS,Landscape
+land_PCTHBWET2011WS,1819,LANDSCAPE,PCTHBWET2011WS,Landscape
+land_PCTHBWET2013WS,1819,LANDSCAPE,PCTHBWET2013WS,Landscape
+land_PCTHBWET2016WS,1819,LANDSCAPE,PCTHBWET2016WS,Landscape
+land_PCTHBWET2019WS,1819,LANDSCAPE,PCTHBWET2019WS,Landscape
+land_PCTHYDRICWS,1819,LANDSCAPE,PCTHYDRICWS,Landscape
+land_PCTICE2001WS,1819,LANDSCAPE,PCTICE2001WS,Landscape
+land_PCTICE2004WS,1819,LANDSCAPE,PCTICE2004WS,Landscape
+land_PCTICE2006WS,1819,LANDSCAPE,PCTICE2006WS,Landscape
+land_PCTICE2008WS,1819,LANDSCAPE,PCTICE2008WS,Landscape
+land_PCTICE2011WS,1819,LANDSCAPE,PCTICE2011WS,Landscape
+land_PCTICE2013WS,1819,LANDSCAPE,PCTICE2013WS,Landscape
+land_PCTICE2016WS,1819,LANDSCAPE,PCTICE2016WS,Landscape
+land_PCTICE2019WS,1819,LANDSCAPE,PCTICE2019WS,Landscape
+land_PCTIMP2001WS,1819,LANDSCAPE,PCTIMP2001WS,Landscape
+land_PCTIMP2004WS,1819,LANDSCAPE,PCTIMP2004WS,Landscape
+land_PCTIMP2006WS,1819,LANDSCAPE,PCTIMP2006WS,Landscape
+land_PCTIMP2008WS,1819,LANDSCAPE,PCTIMP2008WS,Landscape
+land_PCTIMP2011WS,1819,LANDSCAPE,PCTIMP2011WS,Landscape
+land_PCTIMP2013WS,1819,LANDSCAPE,PCTIMP2013WS,Landscape
+land_PCTIMP2016WS,1819,LANDSCAPE,PCTIMP2016WS,Landscape
+land_PCTIMP2019WS,1819,LANDSCAPE,PCTIMP2019WS,Landscape
+land_PCTMXFST2001WS,1819,LANDSCAPE,PCTMXFST2001WS,Landscape
+land_PCTMXFST2004WS,1819,LANDSCAPE,PCTMXFST2004WS,Landscape
+land_PCTMXFST2006WS,1819,LANDSCAPE,PCTMXFST2006WS,Landscape
+land_PCTMXFST2008WS,1819,LANDSCAPE,PCTMXFST2008WS,Landscape
+land_PCTMXFST2011WS,1819,LANDSCAPE,PCTMXFST2011WS,Landscape
+land_PCTMXFST2013WS,1819,LANDSCAPE,PCTMXFST2013WS,Landscape
+land_PCTMXFST2016WS,1819,LANDSCAPE,PCTMXFST2016WS,Landscape
+land_PCTMXFST2019WS,1819,LANDSCAPE,PCTMXFST2019WS,Landscape
+land_PCTNONAGINTRODMANAGVEGWS,1819,LANDSCAPE,PCTNONAGINTRODMANAGVEGWS,Landscape
+land_PCTNONCARBRESIDWS,1819,LANDSCAPE,PCTNONCARBRESIDWS,Landscape
+land_PCTNOT_PRINCIPLEWS,1819,LANDSCAPE,PCTNOT_PRINCIPLEWS,Landscape
+land_PCTOW2001WS,1819,LANDSCAPE,PCTOW2001WS,Landscape
+land_PCTOW2004WS,1819,LANDSCAPE,PCTOW2004WS,Landscape
+land_PCTOW2006WS,1819,LANDSCAPE,PCTOW2006WS,Landscape
+land_PCTOW2008WS,1819,LANDSCAPE,PCTOW2008WS,Landscape
+land_PCTOW2011WS,1819,LANDSCAPE,PCTOW2011WS,Landscape
+land_PCTOW2013WS,1819,LANDSCAPE,PCTOW2013WS,Landscape
+land_PCTOW2016WS,1819,LANDSCAPE,PCTOW2016WS,Landscape
+land_PCTOW2019WS,1819,LANDSCAPE,PCTOW2019WS,Landscape
+land_PCTSALLAKEWS,1819,LANDSCAPE,PCTSALLAKEWS,Landscape
+land_PCTSANDSTONE_CARBONATEWS,1819,LANDSCAPE,PCTSANDSTONE_CARBONATEWS,Landscape
+land_PCTSANDSTONEWS,1819,LANDSCAPE,PCTSANDSTONEWS,Landscape
+land_PCTSEMICONSOL_SANDWS,1819,LANDSCAPE,PCTSEMICONSOL_SANDWS,Landscape
+land_PCTSHRB2001WS,1819,LANDSCAPE,PCTSHRB2001WS,Landscape
+land_PCTSHRB2004WS,1819,LANDSCAPE,PCTSHRB2004WS,Landscape
+land_PCTSHRB2006WS,1819,LANDSCAPE,PCTSHRB2006WS,Landscape
+land_PCTSHRB2008WS,1819,LANDSCAPE,PCTSHRB2008WS,Landscape
+land_PCTSHRB2011WS,1819,LANDSCAPE,PCTSHRB2011WS,Landscape
+land_PCTSHRB2013WS,1819,LANDSCAPE,PCTSHRB2013WS,Landscape
+land_PCTSHRB2016WS,1819,LANDSCAPE,PCTSHRB2016WS,Landscape
+land_PCTSHRB2019WS,1819,LANDSCAPE,PCTSHRB2019WS,Landscape
+land_PCTSILICICWS,1819,LANDSCAPE,PCTSILICICWS,Landscape
+land_PCTUNCONSOL_SAND_GRAVELWS,1819,LANDSCAPE,PCTUNCONSOL_SAND_GRAVELWS,Landscape
+land_PCTURBHI2001WS,1819,LANDSCAPE,PCTURBHI2001WS,Landscape
+land_PCTURBHI2004WS,1819,LANDSCAPE,PCTURBHI2004WS,Landscape
+land_PCTURBHI2006WS,1819,LANDSCAPE,PCTURBHI2006WS,Landscape
+land_PCTURBHI2008WS,1819,LANDSCAPE,PCTURBHI2008WS,Landscape
+land_PCTURBHI2011WS,1819,LANDSCAPE,PCTURBHI2011WS,Landscape
+land_PCTURBHI2013WS,1819,LANDSCAPE,PCTURBHI2013WS,Landscape
+land_PCTURBHI2016WS,1819,LANDSCAPE,PCTURBHI2016WS,Landscape
+land_PCTURBHI2019WS,1819,LANDSCAPE,PCTURBHI2019WS,Landscape
+land_PCTURBLO2001WS,1819,LANDSCAPE,PCTURBLO2001WS,Landscape
+land_PCTURBLO2004WS,1819,LANDSCAPE,PCTURBLO2004WS,Landscape
+land_PCTURBLO2006WS,1819,LANDSCAPE,PCTURBLO2006WS,Landscape
+land_PCTURBLO2008WS,1819,LANDSCAPE,PCTURBLO2008WS,Landscape
+land_PCTURBLO2011WS,1819,LANDSCAPE,PCTURBLO2011WS,Landscape
+land_PCTURBLO2013WS,1819,LANDSCAPE,PCTURBLO2013WS,Landscape
+land_PCTURBLO2016WS,1819,LANDSCAPE,PCTURBLO2016WS,Landscape
+land_PCTURBLO2019WS,1819,LANDSCAPE,PCTURBLO2019WS,Landscape
+land_PCTURBMD2001WS,1819,LANDSCAPE,PCTURBMD2001WS,Landscape
+land_PCTURBMD2004WS,1819,LANDSCAPE,PCTURBMD2004WS,Landscape
+land_PCTURBMD2006WS,1819,LANDSCAPE,PCTURBMD2006WS,Landscape
+land_PCTURBMD2008WS,1819,LANDSCAPE,PCTURBMD2008WS,Landscape
+land_PCTURBMD2011WS,1819,LANDSCAPE,PCTURBMD2011WS,Landscape
+land_PCTURBMD2013WS,1819,LANDSCAPE,PCTURBMD2013WS,Landscape
+land_PCTURBMD2016WS,1819,LANDSCAPE,PCTURBMD2016WS,Landscape
+land_PCTURBMD2019WS,1819,LANDSCAPE,PCTURBMD2019WS,Landscape
+land_PCTURBOP2001WS,1819,LANDSCAPE,PCTURBOP2001WS,Landscape
+land_PCTURBOP2004WS,1819,LANDSCAPE,PCTURBOP2004WS,Landscape
+land_PCTURBOP2006WS,1819,LANDSCAPE,PCTURBOP2006WS,Landscape
+land_PCTURBOP2008WS,1819,LANDSCAPE,PCTURBOP2008WS,Landscape
+land_PCTURBOP2011WS,1819,LANDSCAPE,PCTURBOP2011WS,Landscape
+land_PCTURBOP2013WS,1819,LANDSCAPE,PCTURBOP2013WS,Landscape
+land_PCTURBOP2016WS,1819,LANDSCAPE,PCTURBOP2016WS,Landscape
+land_PCTURBOP2019WS,1819,LANDSCAPE,PCTURBOP2019WS,Landscape
+land_PCTVOLCANICWS,1819,LANDSCAPE,PCTVOLCANICWS,Landscape
+land_PCTWATERWS,1819,LANDSCAPE,PCTWATERWS,Landscape
+land_PCTWDWET2001WS,1819,LANDSCAPE,PCTWDWET2001WS,Landscape
+land_PCTWDWET2004WS,1819,LANDSCAPE,PCTWDWET2004WS,Landscape
+land_PCTWDWET2006WS,1819,LANDSCAPE,PCTWDWET2006WS,Landscape
+land_PCTWDWET2008WS,1819,LANDSCAPE,PCTWDWET2008WS,Landscape
+land_PCTWDWET2011WS,1819,LANDSCAPE,PCTWDWET2011WS,Landscape
+land_PCTWDWET2013WS,1819,LANDSCAPE,PCTWDWET2013WS,Landscape
+land_PCTWDWET2016WS,1819,LANDSCAPE,PCTWDWET2016WS,Landscape
+land_PCTWDWET2019WS,1819,LANDSCAPE,PCTWDWET2019WS,Landscape
+land_PERDUNWS,1819,LANDSCAPE,PERDUNWS,Landscape
+land_PERHORWS,1819,LANDSCAPE,PERHORWS,Landscape
+land_PERMHWS,1819,LANDSCAPE,PERMHWS,Landscape
+land_PERMWS,1819,LANDSCAPE,PERMWS,Landscape
+land_PESTIC97WS,1819,LANDSCAPE,PESTIC97WS,Landscape
+land_PMAXWS,1819,LANDSCAPE,PMAXWS,Landscape
+land_PMINWS,1819,LANDSCAPE,PMINWS,Landscape
+land_POPDEN2010WS,1819,LANDSCAPE,POPDEN2010WS,Landscape
+land_PRECIP08WS,1819,LANDSCAPE,PRECIP08WS,Landscape
+land_PRECIP09WS,1819,LANDSCAPE,PRECIP09WS,Landscape
+land_PRECIP8110WS,1819,LANDSCAPE,PRECIP8110WS,Landscape
+land_PSUMPY_2004WS,1819,LANDSCAPE,PSUMPY_2004WS,Landscape
+land_PSUMPY_2005WS,1819,LANDSCAPE,PSUMPY_2005WS,Landscape
+land_PSUMPY_2008WS,1819,LANDSCAPE,PSUMPY_2008WS,Landscape
+land_PSUMPY_2009WS,1819,LANDSCAPE,PSUMPY_2009WS,Landscape
+land_PSUMPY_2013WS,1819,LANDSCAPE,PSUMPY_2013WS,Landscape
+land_PSUMPY_2014WS,1819,LANDSCAPE,PSUMPY_2014WS,Landscape
+land_PSUMPY_2018WS,1819,LANDSCAPE,PSUMPY_2018WS,Landscape
+land_PSUMPY_2019WS,1819,LANDSCAPE,PSUMPY_2019WS,Landscape
+land_RCKDEPWS,1819,LANDSCAPE,RCKDEPWS,Landscape
+land_RDCRSSLPWTDWS,1819,LANDSCAPE,RDCRSSLPWTDWS,Landscape
+land_RDCRSWS,1819,LANDSCAPE,RDCRSWS,Landscape
+land_RDDENSWS,1819,LANDSCAPE,RDDENSWS,Landscape
+land_RDHWS,1819,LANDSCAPE,RDHWS,Landscape
+land_RHMEANWS,1819,LANDSCAPE,RHMEANWS,Landscape
+land_RUNOFFWS,1819,LANDSCAPE,RUNOFFWS,Landscape
+land_SANDWS,1819,LANDSCAPE,SANDWS,Landscape
+land_SIO2WS,1819,LANDSCAPE,SIO2WS,Landscape
+land_SN_2008WS,1819,LANDSCAPE,SN_2008WS,Landscape
+land_SUPERFUNDDENSWS,1819,LANDSCAPE,SUPERFUNDDENSWS,Landscape
+land_SWS,1819,LANDSCAPE,SWS,Landscape
+land_TMAX8110WS,1819,LANDSCAPE,TMAX8110WS,Landscape
+land_TMEAN_PW_2004WS,1819,LANDSCAPE,TMEAN_PW_2004WS,Landscape
+land_TMEAN_PW_2005WS,1819,LANDSCAPE,TMEAN_PW_2005WS,Landscape
+land_TMEAN_PW_2008WS,1819,LANDSCAPE,TMEAN_PW_2008WS,Landscape
+land_TMEAN_PW_2009WS,1819,LANDSCAPE,TMEAN_PW_2009WS,Landscape
+land_TMEAN_PW_2013WS,1819,LANDSCAPE,TMEAN_PW_2013WS,Landscape
+land_TMEAN_PW_2014WS,1819,LANDSCAPE,TMEAN_PW_2014WS,Landscape
+land_TMEAN_PW_2018WS,1819,LANDSCAPE,TMEAN_PW_2018WS,Landscape
+land_TMEAN_PW_2019WS,1819,LANDSCAPE,TMEAN_PW_2019WS,Landscape
+land_TMEAN_S_2004WS,1819,LANDSCAPE,TMEAN_S_2004WS,Landscape
+land_TMEAN_S_2005WS,1819,LANDSCAPE,TMEAN_S_2005WS,Landscape
+land_TMEAN_S_2008WS,1819,LANDSCAPE,TMEAN_S_2008WS,Landscape
+land_TMEAN_S_2009WS,1819,LANDSCAPE,TMEAN_S_2009WS,Landscape
+land_TMEAN_S_2013WS,1819,LANDSCAPE,TMEAN_S_2013WS,Landscape
+land_TMEAN_S_2014WS,1819,LANDSCAPE,TMEAN_S_2014WS,Landscape
+land_TMEAN_S_2018WS,1819,LANDSCAPE,TMEAN_S_2018WS,Landscape
+land_TMEAN_S_2019WS,1819,LANDSCAPE,TMEAN_S_2019WS,Landscape
+land_TMEAN_SY_2004WS,1819,LANDSCAPE,TMEAN_SY_2004WS,Landscape
+land_TMEAN_SY_2005WS,1819,LANDSCAPE,TMEAN_SY_2005WS,Landscape
+land_TMEAN_SY_2008WS,1819,LANDSCAPE,TMEAN_SY_2008WS,Landscape
+land_TMEAN_SY_2009WS,1819,LANDSCAPE,TMEAN_SY_2009WS,Landscape
+land_TMEAN_SY_2013WS,1819,LANDSCAPE,TMEAN_SY_2013WS,Landscape
+land_TMEAN_SY_2014WS,1819,LANDSCAPE,TMEAN_SY_2014WS,Landscape
+land_TMEAN_SY_2018WS,1819,LANDSCAPE,TMEAN_SY_2018WS,Landscape
+land_TMEAN_SY_2019WS,1819,LANDSCAPE,TMEAN_SY_2019WS,Landscape
+land_TMEAN_W_2004WS,1819,LANDSCAPE,TMEAN_W_2004WS,Landscape
+land_TMEAN_W_2005WS,1819,LANDSCAPE,TMEAN_W_2005WS,Landscape
+land_TMEAN_W_2008WS,1819,LANDSCAPE,TMEAN_W_2008WS,Landscape
+land_TMEAN_W_2009WS,1819,LANDSCAPE,TMEAN_W_2009WS,Landscape
+land_TMEAN_W_2013WS,1819,LANDSCAPE,TMEAN_W_2013WS,Landscape
+land_TMEAN_W_2014WS,1819,LANDSCAPE,TMEAN_W_2014WS,Landscape
+land_TMEAN_W_2018WS,1819,LANDSCAPE,TMEAN_W_2018WS,Landscape
+land_TMEAN_W_2019WS,1819,LANDSCAPE,TMEAN_W_2019WS,Landscape
+land_TMEAN8110WS,1819,LANDSCAPE,TMEAN8110WS,Landscape
+land_TMIN8110WS,1819,LANDSCAPE,TMIN8110WS,Landscape
+land_TRIDENSWS,1819,LANDSCAPE,TRIDENSWS,Landscape
+land_WDMAXWS,1819,LANDSCAPE,WDMAXWS,Landscape
+land_WDMINWS,1819,LANDSCAPE,WDMINWS,Landscape
+land_WDSUMWS,1819,LANDSCAPE,WDSUMWS,Landscape
+land_WETINDEXWS,1819,LANDSCAPE,WETINDEXWS,Landscape
+land_WTDEPWS,1819,LANDSCAPE,WTDEPWS,Landscape
+land_CATAREASQKM,1819,LANDSCAPE,CATAREASQKM,Landscape
+land_WSAREASQKM,1314,LANDSCAPE,WSAREASQKM,Landscape
+land_WSAREASQKM,1819,LANDSCAPE,WSAREASQKM,Landscape
+land_WSAREASQKM,2324,SITE_INFO,WSAREASQKM,Landscape

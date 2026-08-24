@@ -37,6 +37,7 @@ from ._rcompat import (
     r_signif,
     trim_character_columns,
 )
+from . import metric_names
 
 logger = logging.getLogger("streamcurves")
 
@@ -220,13 +221,18 @@ def suggest_metric_family(x, col_name: str = "") -> str:
 # metric_map.yaml (curated) wins; the NRSA catalog is the broad fallback.
 # Guarded like the R exists()/tryCatch pattern so the profiler works when the
 # metric-map / NRSA modules are not available (isolated tests).
+#
+# NOTE: the fallback used to name streamcurves.nrsa_metrics and two
+# streamcurves.datasources.* paths, none of which exist -- they were guesses at
+# the R filename (app/helpers/nrsa_metrics.R). The import error fell into the
+# except below, so the catalog fallback never ran and 762 of the 788 catalog
+# codes got no role suggestion at all. test_profiler_role_library.py now asserts
+# every path in this tuple imports.
 # ---------------------------------------------------------------------------
 
 _LIBRARY_LOOKUPS = (
     ("streamcurves.metric_map", "metric_map_role_for"),
-    ("streamcurves.nrsa_metrics", "nrsa_catalog_role_for"),
-    ("streamcurves.datasources.nrsa_metrics", "nrsa_catalog_role_for"),
-    ("streamcurves.datasources.nrsa", "nrsa_catalog_role_for"),
+    ("streamcurves.nrsa", "nrsa_catalog_role_for"),
 )
 
 
@@ -844,9 +850,13 @@ def build_config_tables_from_roles(data, assignments, opts=None) -> dict:
         metrics = pd.DataFrame(
             {
                 "metric_key": [metric_keys[c] for c in metric_cols],
-                "display_name": metric_cols,
+                # a bare column name is a code, not a name: resolve it against
+                # the metric dictionary and keep the column name as the fallback
+                "display_name": [
+                    metric_names.display_name_for(metric_keys[c], c) for c in metric_cols
+                ],
                 "column_name": metric_cols,
-                "units": [""] * len(metric_cols),
+                "units": [metric_names.units_for(metric_keys[c], "") or "" for c in metric_cols],
                 "metric_family": fams,
                 "higher_is_better": [higher_is_better_default] * len(metric_cols),
                 "monotonic_linear": ["TRUE"] * len(metric_cols),

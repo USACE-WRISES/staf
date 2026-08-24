@@ -1,0 +1,56 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# metric_names.yaml — curated display names, highest precedence
+# ─────────────────────────────────────────────────────────────────────────────
+# scripts/nrsa/build_metric_dictionary.py folds four label sources plus EPA's
+# own field metadata into data/nrsa/metric_dictionary.csv. This file wins over
+# all of them, and is where a metric goes when the automatic name is wrong,
+# reads as a paragraph, or does not exist.
+#
+# Most metrics need no entry: metric_map.yaml already carries good labels for
+# the metrics the function crosswalk uses, and EPA's metadata covers the rest.
+# Add an entry only when you have looked at the generated name and it is bad.
+#
+# Each entry:
+#   display_name  the readable name (the build derives short_name from it)
+#   units         optional, overrides whatever the build inferred
+#   description   optional, overrides EPA's definition in tooltips
+#
+# After editing, rerun:
+#   py -3.12 scripts/nrsa/build_metric_dictionary.py
+# ─────────────────────────────────────────────────────────────────────────────
+
+metrics:
+
+  # ── Physical habitat ────────────────────────────────────────────────────────
+  # EPA's definition is "Human Disturbance Index(distance-wtd tally of types and
+  # presence used in NRSA)", which does not fit a tile header.
+  phab_W1_HALL:
+    display_name: "Human disturbance index"
+    description: >-
+      Riparian human disturbance index: a distance-weighted tally of the human
+      influence types observed in the riparian plots, so higher means more
+      disturbance.
+
+  # "Mean Slope of water surface-used used in assessment" is EPA's text for the
+  # coalesced field/map slope column.
+  phab_XSLOPE_use:
+    display_name: "Channel slope"
+    units: "%"
+    description: >-
+      Reach mean channel slope, taken from the field measurement where one
+      exists and from the map-based calculation otherwise.
+
+  # EPA spells the formula out: "Riparian Quality Index (Scaled 0 to
+  # 1):QR1=(QRVEG1*QRVEG2*QRDIST1)**(1/3)"
+  phab_QR1:
+    display_name: "Riparian quality index"
+    description: >-
+      Riparian quality index, the geometric mean of the two scaled riparian
+      vegetation indices and the scaled lack-of-disturbance index, on 0 to 1.
+
+  # ── Water chemistry ─────────────────────────────────────────────────────────
+  # The wide chemistry files document these as "Analyte value: <name>", which
+  # leaves the analyte buried behind a template prefix.
+  chem_ANC:
+    display_name: "Acid neutralizing capacity"
+    units: "uEQ/L"

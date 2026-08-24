@@ -141,11 +141,15 @@ def current_stage(
 # numbered sequence. They produce no stage status and gate no publish, so they stay
 # out of STAGE_KEYS / STAGE_LANDINGS -- the strip renders them as unnumbered chips
 # after the five stages, and current_stage() keeps returning None while one is open.
-TOOL_KEYS = ["regional", "xsec"]  # == their main_navbar nav values
+TOOL_KEYS = ["regional", "xsec", "nrsa"]  # == their main_navbar nav values
 TOOL_LABELS = {
     "regional": "Regional curves",
     "xsec": "Cross-sections",
+    # the explorer needs no built dataset: it reads the bundled NRSA archive
+    "nrsa": "NRSA explorer",
 }
+# Tools that work with no project loaded, so the strip must not dim them.
+TOOLS_WITHOUT_DATA = {"nrsa"}
 
 
 def current_tool(tab: Optional[str]) -> Optional[str]:

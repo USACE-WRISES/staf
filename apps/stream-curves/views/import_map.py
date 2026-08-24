@@ -1832,11 +1832,11 @@ def import_map_server(
             ui.div(ui.output_ui("metric_table"), class_="metric-table-scroll"),
             ui.accordion(
                 ui.accordion_panel(
-                    ui.TagList(bi("table"), " Advanced: all NRSA metrics (codes only)"),
+                    ui.TagList(bi("table"), " Advanced: all NRSA metrics"),
                     # The search input is static (outside the reactive output) so
                     # typing does not re-render and clear it.
                     ui.input_text("adv_search", None,
-                                  placeholder="Search NRSA code or category…", width="100%"),
+                                  placeholder="Search NRSA name, code, or category…", width="100%"),
                     ui.output_ui("advanced_nrsa"), value="adv",
                 ),
                 ui.accordion_panel(
@@ -2508,22 +2508,27 @@ def import_map_server(
         tbl = _picker_table()
         un = tbl[(~tbl["named"]) & (tbl["source_key"] == "nrsa")]
         note = ui.div(
-            f"{len(un)} NRSA metrics carry only a code (no name or units in the dataset). "
-            "Search to add a specific one.", class_="text-muted small mb-1")
+            f"{len(un)} further NRSA metrics, named from EPA's own field metadata. The list "
+            "above holds the ones the STAF function crosswalk maps; search here for any other.",
+            class_="text-muted small mb-1")
         q = (_inp("adv_search") or "").strip().lower()
         if not q:
             return note
         hit = un[un.apply(
-            lambda r: q in str(r["code"]).lower() or q in str(r["category"]).lower(), axis=1)]
+            lambda r: q in str(r["name"]).lower() or q in str(r["code"]).lower()
+            or q in str(r["category"]).lower(), axis=1)]
         if len(hit) == 0:
-            return ui.TagList(note, ui.div("No codes match.", class_="text-muted small"))
+            return ui.TagList(note, ui.div("Nothing matches.", class_="text-muted small"))
         sel = _sel_now()
         cap = 200
         rows = []
         for _, r in hit.head(cap).iterrows():
             code = str(r["code"])
+            units = str(r["units"] or "").strip()
             rows.append(ui.tags.label(
                 _pick_checkbox(code, code in sel, "me-2"),
+                ui.tags.span(str(r["name"] or code), class_="me-2"),
+                ui.tags.span(f"({units})", class_="metric-units me-2") if units else None,
                 ui.tags.code(code, class_="metric-code me-2"),
                 ui.tags.span(r["category"], class_="text-muted small"),
                 class_="metric-adv-row d-flex align-items-center gap-1",

@@ -44,6 +44,7 @@ from views import state as st
 from views import summary_state as sst
 from views.analysis_workspace import analysis_workspace_server, analysis_workspace_ui
 from views.cross_section import cross_section_server, cross_section_ui
+from views.nrsa_explorer import nrsa_explorer_server, nrsa_explorer_ui
 from views.data_overview import data_overview_server, data_overview_ui
 from views.stagebar import stagebar_server, stagebar_ui
 from views.publish import publish_server, publish_ui
@@ -191,6 +192,12 @@ app_ui = ui.page_navbar(
         value="xsec",
         icon=bi("graph-down"),
     ),
+    ui.nav_panel(
+        "NRSA Explorer",
+        ui.div(nrsa_explorer_ui("nrsa"), class_="mt-3"),
+        value="nrsa",
+        icon=bi("globe-americas"),
+    ),
     ui.nav_spacer(),
     # Header actions (mirrors the SFARI/DEEP New / Open / Save idiom; the
     # divider before Help is a border-left, not a glyph).
@@ -263,6 +270,10 @@ def server(input, output, session):
     summary_page_server("summary", state)
     regional_curve_server("regional", state)
     cross_section_server("xsec", state)
+    # the map widget gates on this, so its ipywidget comm opens when the tool
+    # shows rather than at session init, where it races the leaflet bundle
+    nrsa_explorer_server("nrsa", state,
+                         active=lambda: state.current_tab() == "nrsa")
     publish_server("publish", state)
     summary_export_server("summary_export", state)
 

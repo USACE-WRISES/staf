@@ -187,6 +187,8 @@ data/
   easi-metrics.json        20 STAF metric defs (names, statements, prose criteria kept as a
                            dormant fallback; generated from the STAF source TSV)
   nrsa-2018-19-evidence.json.gz  deterministic NRSA extract for connected field evidence
+                                 (covers 2013-14, 2018-19 and 2023-24 despite the name;
+                                  rebuild with scripts/build_nrsa_evidence.py)
   nars-ecoregions-9.geojson.gz   EPA NARS nine regions (regional nutrient benchmarks)
   functions.json           function metadata · cwa-mapping.json  function → P/C/B weights
   physio_divisions.geojson Fenneman physiographic divisions (Bieger curve selection)

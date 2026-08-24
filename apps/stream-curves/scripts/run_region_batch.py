@@ -55,6 +55,7 @@ if str(_SCRIPTS) not in sys.path:
 from streamcurves import decisions as dec  # noqa: E402
 from streamcurves import library as lib  # noqa: E402
 from streamcurves import methodology  # noqa: E402
+from streamcurves import nrsa_dataset  # noqa: E402
 from streamcurves import provenance as pv  # noqa: E402
 from streamcurves import regional_agent as ra  # noqa: E402
 from streamcurves import review_packet as rp  # noqa: E402
@@ -218,6 +219,8 @@ def cmd_stage(a) -> int:
         a.l3, a.name, screen_preset=a.screen, do_screen=not a.no_screen,
         use_streamcat=not a.no_streamcat, cache_dir=out_dir,
         diagnostics_n_boot=a.n_boot,
+        nrsa_dataset_id=getattr(a, "nrsa_dataset", nrsa_dataset.DEFAULT_DATASET_ID),
+        nrsa_cycles=getattr(a, "nrsa_cycles", None),
         on_event=lambda ev: print(f"[screen] {ev}") if isinstance(ev, str) else None)
     print(f"[batch] evidence: {evidence['n_retained']} / {evidence['n_candidates']} retained "
           f"(tier {evidence['tier']['reference_tier']}, pool {evidence['reference_pool_disposition']}), "
@@ -611,6 +614,13 @@ def main(argv=None) -> int:
     s.add_argument("--reviewer-decisions", default=None)
     s.add_argument("--finalize-metric", action="append", default=[])
     s.add_argument("--remove-metric", action="append", default=[])
+    s.add_argument("--nrsa-dataset", default=nrsa_dataset.DEFAULT_DATASET_ID,
+                   choices=nrsa_dataset.available_datasets(),
+                   help="which NRSA data to read; the default is the bundled "
+                        "2018-19 snapshot every published assessment used")
+    s.add_argument("--nrsa-cycle", action="append", dest="nrsa_cycles",
+                   choices=list(nrsa_dataset.CYCLES_NEWEST_FIRST),
+                   help="repeatable; limit a pooled run to these survey cycles")
     s.add_argument("--max-unresolved-share", type=float, default=0.10,
                    help="refuse to stage when more than this share of candidates is unresolved by the screen")
     s.add_argument("--allow-unresolved", action="store_true",
@@ -632,6 +642,13 @@ def main(argv=None) -> int:
     m.add_argument("--policy", default=None)
     m.add_argument("--enable-policy", action="append", default=[], metavar="ID")
     m.add_argument("--max-iterations", type=int, default=3)
+    m.add_argument("--nrsa-dataset", default=nrsa_dataset.DEFAULT_DATASET_ID,
+                   choices=nrsa_dataset.available_datasets(),
+                   help="which NRSA data to read; the default is the bundled "
+                        "2018-19 snapshot every published assessment used")
+    m.add_argument("--nrsa-cycle", action="append", dest="nrsa_cycles",
+                   choices=list(nrsa_dataset.CYCLES_NEWEST_FIRST),
+                   help="repeatable; limit a pooled run to these survey cycles")
     m.add_argument("--max-unresolved-share", type=float, default=0.10)
     m.add_argument("--allow-unresolved", action="store_true")
     m.set_defaults(fn=cmd_stage_many)

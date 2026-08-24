@@ -35,7 +35,9 @@ from typing import Any, Callable, Optional
 import pandas as pd
 import yaml
 
-from . import curves, deep_export, library, metric_map, nrsa, run_state, session_io, staf_library
+from . import curves, deep_export, library, metric_map, metric_names, nrsa, nrsa_dataset
+from . import run_state, session_io
+from . import staf_library
 from . import confidence as conf
 from . import curve_stability
 from . import easi_screening, overlap, sites, workbook
@@ -328,9 +330,36 @@ def select_landscape_codes(directions: dict) -> tuple[list[str], list[str]]:
     return metrics, predictors
 
 
-def select_candidates(l3_code: str, sites_path: Path | str | None = None) -> pd.DataFrame:
+def select_candidates_detailed(
+    l3_code: str, sites_path: Path | str | None = None, *,
+    dataset: str | None = None, cycles=None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Candidate sites plus the ledger of stations the panel policy excluded.
+
+    The legacy default reads ``data/nrsa_sites.csv`` exactly as before and the
+    ledger is empty. Any other dataset id goes through
+    ``nrsa_dataset.resolve_site_panel``, which pools the survey cycles and returns
+    one row per station from the most recent cycle that has what the run needs,
+    recording every station it left out and why.
+    """
+    if dataset and dataset != nrsa_dataset.LEGACY_DATASET_ID:
+        return nrsa_dataset.resolve_site_panel(
+            l3_code, dataset=dataset,
+            cycles=cycles or nrsa_dataset.CYCLES_NEWEST_FIRST)
+    return _legacy_candidates(l3_code, sites_path), pd.DataFrame(
+        columns=["station_key", "cycle", "reason", "missing"])
+
+
+def select_candidates(l3_code: str, sites_path: Path | str | None = None, *,
+                      dataset: str | None = None, cycles=None) -> pd.DataFrame:
     """Candidate NRSA sites for an EPA L3 ecoregion (reimplements the view-only
     ``nrsa_in_region`` filter). Returns a frame with at least site_id, lat, lon."""
+    panel, _ = select_candidates_detailed(
+        l3_code, sites_path, dataset=dataset, cycles=cycles)
+    return panel
+
+
+def _legacy_candidates(l3_code: str, sites_path: Path | str | None = None) -> pd.DataFrame:
     path = Path(sites_path) if sites_path else _DATA_DIR / "nrsa_sites.csv"
     df = pd.read_csv(path, dtype={"us_l3code": str})
     sel = df[df["us_l3code"].astype(str) == str(l3_code)].copy()
@@ -371,10 +400,15 @@ def build_metric_config(columns: list[str], directions: dict) -> tuple[dict, lis
         if code not in columns:
             continue
         d = directions.get(code)
+        # the catalog's "label" is the bare mnemonic (XEMBED), so prefer the
+        # metric dictionary's readable name and fall back to the mnemonic
         label = str(cat.loc[code, "label"]) if code in cat.index else code
+        label = metric_names.display_name_for(code, label) or label
         units = str(cat.loc[code, "units"]) if code in cat.index else ""
         if units in ("nan", "None"):
             units = ""
+        if not units:
+            units = metric_names.units_for(code, "") or ""
         if d is None:
             flagged_direction.append({"metric": code, "display_name": label,
                                       "reason": "no curated direction available"})
@@ -530,28 +564,43 @@ def _columns_by_base_code(columns) -> dict[str, str]:
 def attach_comids(data: pd.DataFrame, screening_tables: dict | None = None) -> pd.DataFrame:
     """Add the NHDPlus ``comid`` StreamCat is keyed on.
 
-    Preferred source is the EASI screen, which already snapped every retained site to a
-    reach. Falls back to the bundled NRSA evidence file (``comid_by_site_id``) for sites
-    the screen did not resolve, so an offline run still enriches.
+    Precedence, best first: the EASI screen, which already snapped every retained site
+    to a reach; a ``comid`` the site frame already carries (the multi-cycle panel brings
+    EPA's published one, backfilled across cycles); then the bundled NRSA evidence file
+    (``comid_by_site_id``), so an offline run still enriches.
+
+    A frame that already has the column is filled rather than left alone: the screen's
+    snapped reach is the better answer where it exists, and the panel's value covers the
+    rest.
     """
-    if "comid" in data.columns:
-        return data
     out = data.copy()
-    by_site: dict[str, Any] = {}
-    rows = (screening_tables or {}).get("easi_screening_sites") or []
-    frame = rows if isinstance(rows, pd.DataFrame) else pd.DataFrame(rows)
+    screened: dict[str, Any] = {}
+    # not `or []`: the next line accepts a DataFrame, and truthiness raises on one
+    rows = (screening_tables or {}).get("easi_screening_sites")
+    frame = rows if isinstance(rows, pd.DataFrame) else pd.DataFrame(rows or [])
     if len(frame) and {"site_id", "comid"} <= set(frame.columns):
         for sid, cid in zip(frame["site_id"], frame["comid"]):
             if pd.notna(cid):
-                by_site[str(sid)] = cid
+                screened[str(sid)] = cid
+    evidence: dict[str, Any] = {}
     try:
         from ._vendor.easi.datasources.nrsa import comid_by_site_id
 
-        for sid, cid in (comid_by_site_id() or {}).items():
-            by_site.setdefault(str(sid), cid)
+        evidence = dict(comid_by_site_id() or {})
     except Exception:  # noqa: BLE001 - the evidence file is a convenience, not a requirement
-        pass
-    out["comid"] = [by_site.get(str(s)) for s in out["site_id"]]
+        evidence = {}
+
+    existing = out["comid"] if "comid" in out.columns else None
+    resolved = []
+    for i, sid in enumerate(out["site_id"]):
+        key = str(sid)
+        value = screened.get(key)
+        if value is None or pd.isna(value):
+            value = existing.iloc[i] if existing is not None else None
+        if value is None or pd.isna(value):
+            value = evidence.get(key)
+        resolved.append(value)
+    out["comid"] = resolved
     return out
 
 
@@ -1089,6 +1138,46 @@ def metric_annotations(*, intended, curve_rows, metric_config, sample_sizes,
     return out
 
 
+def _panel_summary(panel: pd.DataFrame, ledger: pd.DataFrame) -> dict:
+    """How the candidate pool was assembled, in a form a manifest can carry."""
+    out = {"nCandidates": int(len(panel)), "nExcluded": int(len(ledger))}
+    for column, key in (("source_cycle", "byCycle"), ("protocol", "byProtocol")):
+        if column in panel.columns:
+            counts = panel[column].value_counts(dropna=False)
+            out[key] = {("unknown" if pd.isna(k) else str(k)): int(v)
+                        for k, v in counts.items()}
+    if len(ledger) and "reason" in ledger.columns:
+        out["exclusionReasons"] = {str(k): int(v) for k, v
+                                   in ledger["reason"].value_counts().items()}
+    return out
+
+
+def _dataset_values(dataset_id: str, panel: pd.DataFrame):
+    """A callable giving the metric values for this run's panel, keyed by site_id.
+
+    The legacy dataset returns the bundled parquet unchanged, so the join behaves
+    exactly as it always has. A pooled dataset resolves each station against the
+    cycle its panel row named, which is why it needs the panel rather than just an
+    id. Called with ``None`` it returns every metric column, which is how the run
+    discovers what exists.
+    """
+    if not dataset_id or dataset_id == nrsa_dataset.LEGACY_DATASET_ID:
+        values = nrsa.load_nrsa_values()
+        return lambda metrics=None: values
+
+    dataset = nrsa_dataset.load_dataset(dataset_id)
+    cache: dict[tuple, pd.DataFrame] = {}
+
+    def values_for(metrics=None) -> pd.DataFrame:
+        key = tuple(sorted(metrics)) if metrics else ()
+        if key not in cache:
+            cache[key] = nrsa_dataset.panel_values(
+                panel, dataset=dataset, metrics=list(metrics) if metrics else None)
+        return cache[key]
+
+    return values_for
+
+
 def run_evidence(l3_code: str, name: str, *,
                  screen_preset: str = "functional",
                  on_event: Optional[Callable] = None,
@@ -1096,7 +1185,9 @@ def run_evidence(l3_code: str, name: str, *,
                  use_streamcat: bool = True,
                  cache_dir: Optional[Path] = None,
                  diagnostics_n_boot: int = 200,
-                 diagnostics_enabled: bool = True) -> dict:
+                 diagnostics_enabled: bool = True,
+                 nrsa_dataset_id: str = nrsa_dataset.DEFAULT_DATASET_ID,
+                 nrsa_cycles=None) -> dict:
     """The expensive, decision-free half of a regional run.
 
     Screening, data assembly, the registries, redundancy, the stratifier
@@ -1110,7 +1201,8 @@ def run_evidence(l3_code: str, name: str, *,
     # A headless run must not proceed under a config that misdescribes the engine.
     methodology.verify_mirrors(strict=True)
     directions = load_directions()
-    candidates = select_candidates(l3_code)
+    candidates, panel_ledger = select_candidates_detailed(
+        l3_code, dataset=nrsa_dataset_id, cycles=nrsa_cycles)
     n_candidates = len(candidates)
     if n_candidates == 0:
         raise ValueError(f"no NRSA candidate sites for L3 ecoregion {l3_code}")
@@ -1149,10 +1241,14 @@ def run_evidence(l3_code: str, name: str, *,
     # carry Hydrology / Watershed connectivity / High flow dynamics come from StreamCat
     # by COMID. Skipping StreamCat is what limited every published assessment to 12 of
     # the 20 STAF functions, so a fetch failure is recorded loudly, never silently NA'd.
-    all_cols = set(nrsa.load_nrsa_values().columns)
+    # Which metric columns exist at all, and where their values come from. The
+    # legacy default is the bundled parquet; a pooled dataset serves each station
+    # from the cycle the panel picked for it.
+    values_for = _dataset_values(nrsa_dataset_id, candidates)
+    all_cols = set(values_for(None).columns)
     metric_config, flagged_direction = build_metric_config(sorted(all_cols), directions)
     nrsa_metric_cols = list(metric_config.keys())
-    data = nrsa.attach_nrsa_metrics(retained, nrsa_metric_cols, nrsa.load_nrsa_values())
+    data = nrsa.attach_nrsa_metrics(retained, nrsa_metric_cols, values_for(nrsa_metric_cols))
 
     landscape_directions = load_landscape_directions()
     data = attach_comids(data, screening.get("tables"))
@@ -1177,7 +1273,7 @@ def run_evidence(l3_code: str, name: str, *,
     # Upstream of build_curves so the session carries one data frame, and safe
     # there because build_curves reads only metric_config columns: the class
     # columns added here cannot change a curve.
-    data = attach_stratifier_sources(data)
+    data = attach_stratifier_sources(data, values=values_for(None))
     strat = run_stratifier_analysis(
         data, metric_config, predictor_config, on_event=on_event)
     data = strat["data"]
@@ -1255,6 +1351,13 @@ def run_evidence(l3_code: str, name: str, *,
         "tier": tier,
         "screening": screening,
         "retained_ids": retained_ids,
+        # which NRSA data this run read, so the manifest and the packet can say so
+        "nrsa_dataset": nrsa_dataset_id,
+        "nrsa_cycles": list(nrsa_cycles) if nrsa_cycles else None,
+        "nrsa_policy": (None if nrsa_dataset_id == nrsa_dataset.LEGACY_DATASET_ID
+                        else nrsa_dataset.POLICY_MOST_RECENT),
+        "nrsa_panel_summary": _panel_summary(candidates, panel_ledger),
+        "nrsa_panel_ledger": panel_ledger.to_dict("records") if len(panel_ledger) else [],
         "n_retained": len(retained),
         "metric_config": metric_config,
         "predictor_config": predictor_config,
@@ -1467,6 +1570,11 @@ def assemble(evidence: dict, *,
         "ref02_triggered": tier.get("ref02_triggered", False),
         "review_flags": tier.get("review_flags", []),
         "retained_site_ids": sorted(retained_ids),
+        "nrsa_dataset": evidence.get("nrsa_dataset"),
+        "nrsa_cycles": evidence.get("nrsa_cycles"),
+        "nrsa_policy": evidence.get("nrsa_policy"),
+        "nrsa_panel_summary": evidence.get("nrsa_panel_summary"),
+        "nrsa_panel_ledger": evidence.get("nrsa_panel_ledger"),
         "metric_config": metric_config,
         "predictor_config": evidence["predictor_config"],
         "column_functions": column_functions,
@@ -1524,7 +1632,9 @@ def run(l3_code: str, name: str, *,
         finalize_metrics: Optional[dict] = None,
         finalize_actor: str = "",
         remove_metrics: Optional[dict] = None,
-        reviewer_decisions: Optional[list] = None) -> dict:
+        reviewer_decisions: Optional[list] = None,
+        nrsa_dataset_id: str = nrsa_dataset.DEFAULT_DATASET_ID,
+        nrsa_cycles=None) -> dict:
     """Run the full regional analysis for one L3 ecoregion. Returns a structured result
     (no files written here; the CLI writes outputs and publishes).
 
@@ -1549,7 +1659,8 @@ def run(l3_code: str, name: str, *,
     evidence = run_evidence(
         l3_code, name, screen_preset=screen_preset, on_event=on_event,
         do_screen=do_screen, use_streamcat=use_streamcat, cache_dir=cache_dir,
-        diagnostics_n_boot=diagnostics_n_boot, diagnostics_enabled=diagnostics_enabled)
+        diagnostics_n_boot=diagnostics_n_boot, diagnostics_enabled=diagnostics_enabled,
+        nrsa_dataset_id=nrsa_dataset_id, nrsa_cycles=nrsa_cycles)
     return assemble(
         evidence, source_citation=source_citation, assessment_id=assessment_id,
         assessment_name=assessment_name, author=author,
@@ -1575,7 +1686,8 @@ PHASE2_SIG_THRESHOLD = 0.05
 PHASE2_SUPPORT_THRESHOLD = 0.5
 
 
-def attach_stratifier_sources(data: pd.DataFrame, registry: dict | None = None) -> pd.DataFrame:
+def attach_stratifier_sources(data: pd.DataFrame, registry: dict | None = None,
+                              values: pd.DataFrame | None = None) -> pd.DataFrame:
     """Attach the raw NRSA columns the stratifier candidates are built from.
 
     None of them is a response metric, so build_metric_config never selects them
@@ -1586,7 +1698,8 @@ def attach_stratifier_sources(data: pd.DataFrame, registry: dict | None = None) 
     wanted = [c for c in stratifiers.source_columns(registry) if c not in data.columns]
     if not wanted:
         return data
-    return nrsa.attach_nrsa_metrics(data, wanted, nrsa.load_nrsa_values())
+    source = nrsa.load_nrsa_values() if values is None else values
+    return nrsa.attach_nrsa_metrics(data, wanted, source)
 
 
 def _phase3_finalists(candidates: pd.DataFrame, ranking, allowed: list[str]) -> list[str]:

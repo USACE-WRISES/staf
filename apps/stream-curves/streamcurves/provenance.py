@@ -28,6 +28,7 @@ import logging
 import os
 import platform
 import hashlib
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -37,6 +38,7 @@ import numpy as np
 import pandas as pd
 
 from . import methodology, run_state
+from .nrsa_dataset import DEFAULT_DATASET_ID as LEGACY_DATASET_ID
 
 logger = logging.getLogger("streamcurves")
 
@@ -178,6 +180,42 @@ def _stratifier_candidates(result: dict) -> list[dict]:
     return out
 
 
+def _nrsa_dataset_record(result: dict, app_root: Path) -> dict:
+    """Which NRSA dataset the run read, and enough to pin it.
+
+    For the legacy default the two bundled file fingerprints already pin it, so
+    this stays minimal. For the multi-cycle archive it carries the manifest digest,
+    which covers every file in it, plus the cycles and the selection policy.
+    """
+    record = {
+        "datasetId": str(result.get("nrsa_dataset") or LEGACY_DATASET_ID),
+        "cycles": result.get("nrsa_cycles"),
+        "policy": result.get("nrsa_policy"),
+    }
+    if record["datasetId"] == LEGACY_DATASET_ID:
+        return record
+
+    manifest_path = app_root / "data" / "nrsa" / "manifest.json"
+    if manifest_path.exists():
+        raw = manifest_path.read_bytes()
+        record["manifestPath"] = manifest_path.relative_to(app_root).as_posix()
+        record["manifestDigest"] = "sha256:" + hashlib.sha256(raw).hexdigest()
+        try:
+            doc = json.loads(raw.decode("utf-8"))
+            record["totalBytes"] = doc.get("totalBytes")
+            record["fileCount"] = len(doc.get("files") or {})
+            if record["cycles"] is None:
+                record["cycles"] = doc.get("cycles")
+        except ValueError:
+            pass
+    else:
+        record["manifestDigest"] = None
+    panel = result.get("nrsa_panel_summary")
+    if panel:
+        record["panel"] = panel
+    return record
+
+
 def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=None,
                        app_root: Path | None = None) -> dict:
     """The reproducibility record for one regional run."""
@@ -194,7 +232,15 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
         app_root / "config" / "staf_functions.json",
         app_root / "config" / "national_stratifier_registry.yaml",
     ])
+    # Which NRSA data the run read. The legacy default keeps fingerprinting the two
+    # bundled files exactly as before, so an unchanged run reproduces its digest;
+    # a pooled run adds the archive's manifest digest, the cycles it drew on and the
+    # selection policy. Without this two runs over the same ecoregion on different
+    # data would share an inputsDigest, which is precisely what the digest promises
+    # cannot happen.
+    dataset = _nrsa_dataset_record(result, app_root)
     inputs = {
+        "nrsa_dataset": dataset,
         "nrsa_values": methodology.file_fingerprints(
             [app_root / "data" / "nrsa_metrics.parquet"])[0],
         "nrsa_sites": methodology.file_fingerprints(
@@ -285,7 +331,7 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "nIntendedMetrics": len(result.get("intended_metrics") or []),
         },
     }
-    manifest["inputsDigest"] = methodology.inputs_digest({
+    digest_payload = {
         "region": region,
         "methodology": manifest["methodology"],
         "configs": configs,
@@ -293,7 +339,17 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
         "nrsa_sites": inputs["nrsa_sites"],
         "easi_preset": inputs["easi"]["preset"],
         "registry_version": manifest["stratifiers"]["registryVersion"],
-    })
+    }
+    # Added only when the run did not use the default dataset, so every digest
+    # published before this existed still reproduces byte for byte.
+    if dataset.get("datasetId") not in (None, LEGACY_DATASET_ID):
+        digest_payload["nrsa_dataset"] = {
+            "datasetId": dataset.get("datasetId"),
+            "manifestDigest": dataset.get("manifestDigest"),
+            "cycles": dataset.get("cycles"),
+            "policy": dataset.get("policy"),
+        }
+    manifest["inputsDigest"] = methodology.inputs_digest(digest_payload)
     return manifest
 
 

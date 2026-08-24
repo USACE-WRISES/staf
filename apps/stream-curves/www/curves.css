@@ -502,8 +502,10 @@
   max-width: 90px;
 }
 
-.summary-main-row:nth-child(4n + 1),
-.summary-main-row:nth-child(4n + 2) {
+/* Each metric renders into its own <tbody> (one output_ui per row), so the main
+   row is always :nth-child(1) inside it and a row-index rule never alternates.
+   Stripe alternate tbodies instead. */
+.summary-progress-table tbody:nth-of-type(even) .summary-main-row {
   background-color: #fcfdfe;
 }
 
@@ -556,57 +558,65 @@
   color: #6c757d;
 }
 
-.summary-col-available,
 .summary-col-curve {
   width: 135px;
   min-width: 135px;
   max-width: 135px;
 }
 
-/* Available-stratifications multiselect: py-shiny renders a selectize (R used a
-   pickerInput that collapsed to "N selected"). In a 135px column its selected
-   pills stack vertically and can make each summary row 500px+ tall; cap the
-   pill area and scroll it so rows stay compact. */
-.summary-col-available .selectize-input {
-  max-height: 4.75rem;
-  overflow-y: auto;
+/* Stratifications available: a read-only one-line chip summary. The editor is a
+   multiselect and lives in the expanded detail row instead, because in a narrow
+   column its selectize pills stack vertically and made every summary row several
+   lines tall (the R original collapsed to "N selected" with a pickerInput). */
+.summary-col-available {
+  width: 210px;
+  min-width: 210px;
+  max-width: 210px;
 }
 
-.summary-select-cell-compact .bootstrap-select {
-  width: 100% !important;
-}
-
-.summary-select-cell-compact .bootstrap-select > .dropdown-toggle {
+.summary-strat-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   width: 100%;
-  background: #ffffff;
-  border: 1px solid #c8d3df;
-  color: #23384d;
-  box-shadow: none;
+  padding: 2px 4px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  line-height: 1.25;
+  overflow: hidden;
 }
 
-.summary-select-cell-compact .bootstrap-select > .dropdown-toggle:hover,
-.summary-select-cell-compact .bootstrap-select > .dropdown-toggle:focus,
-.summary-select-cell-compact .bootstrap-select > .dropdown-toggle:active,
-.summary-select-cell-compact .bootstrap-select.show > .dropdown-toggle {
-  background: #ffffff;
-  border-color: #7ea8d1;
-  color: #23384d;
-  box-shadow: 0 0 0 0.12rem rgba(73, 132, 189, 0.12);
+.summary-strat-btn:hover,
+.summary-strat-btn:focus-visible {
+  border-color: #c8d3df;
+  background: #f7f9fb;
 }
 
-.summary-select-cell-compact .bootstrap-select > .dropdown-toggle.bs-placeholder,
-.summary-select-cell-compact .bootstrap-select > .dropdown-toggle.bs-placeholder:hover,
-.summary-select-cell-compact .bootstrap-select > .dropdown-toggle.bs-placeholder:focus,
-.summary-select-cell-compact .bootstrap-select > .dropdown-toggle.bs-placeholder:active {
-  background: #ffffff;
-  color: #5a6b7c;
-  opacity: 1;
+.summary-strat-btn .metric-count-badge {
+  margin-left: 0;
+  flex: 0 0 auto;
 }
 
-.summary-select-cell-compact .bootstrap-select .filter-option-inner-inner {
+.summary-strat-chips {
+  display: block;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.summary-strat-none {
+  font-size: 0.78rem;
+  color: #6c757d;
+}
+
+.summary-detail-strat {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e4ebf2;
+  max-width: 520px;
 }
 
 .summary-text-cell {
@@ -1102,9 +1112,13 @@
 .curve-tile:hover, .curve-tile:focus-visible { box-shadow: 0 2px 10px rgba(31, 63, 110, 0.18);
   transform: translateY(-1px); border-color: #9fb5cc; }
 .curve-tile:focus-visible { outline: 2px solid #1c7ed6; outline-offset: 2px; }
-.curve-tile-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.4rem; }
-.curve-tile-code { font-weight: 600; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis;
-  white-space: nowrap; }
+.curve-tile-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.4rem; }
+/* the readable name leads, the metric code sits under it as the identifier */
+.curve-tile-id { min-width: 0; display: flex; flex-direction: column; gap: 0.05rem; }
+.curve-tile-name { font-weight: 600; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; color: #23384d; }
+.curve-tile-code { font-size: 0.66rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas,
+  monospace; color: #7a8797; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .curve-tile-status { font-size: 0.66rem; padding: 0.05rem 0.4rem; border-radius: 999px;
   background: #eef1f5; color: #6c757d; white-space: nowrap; }
 .curve-tile-svg { display: block; width: 100%; height: auto; }
@@ -1773,3 +1787,59 @@ table.workbook-grid-table.dataTable tbody tr.selected td {
   vertical-align: middle;
 }
 .metric-count-badge .shiny-text-output { display: inline; }
+
+/* ── NRSA explorer ─────────────────────────────────────────────────────────── */
+/* A read-only browser over the bundled multi-cycle NRSA archive. Unlike the two
+   other tool chips it works with no project loaded, so the strip does not dim it. */
+
+.nrsa-explorer-controls .form-group { margin-bottom: 0; }
+
+.nrsa-explorer-map { height: 560px; }
+
+.nrsa-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: center;
+}
+
+.nrsa-legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #4a5763;
+  white-space: nowrap;
+}
+
+.nrsa-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.nrsa-station-table { font-size: 0.8rem; margin-bottom: 0.75rem; }
+.nrsa-station-table code { font-size: 0.75rem; }
+.nrsa-station-table th { font-weight: 600; color: #4a5763; }
+
+/* An opened category can hold 300+ rows (Landscape), so it scrolls inside the
+   card instead of pushing the map alongside it off the screen. */
+.nrsa-metric-group-scroll {
+  max-height: 22rem;
+  overflow-y: auto;
+}
+.nrsa-metric-group-scroll .nrsa-station-table { margin-bottom: 0; }
+.nrsa-metric-group-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.nrsa-metric-code { line-height: 1.1; }
+.nrsa-station-table .nrsa-metric-code code {
+  font-size: 0.68rem;
+  color: #8a95a1;
+}

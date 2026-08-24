@@ -75,6 +75,59 @@ class SummaryProgress:
         self._progress.close()
 
 
+def strat_summary_ui(labels, *, onclick: str):
+    """Read-only one-line summary of a metric's available stratifications.
+
+    A count badge plus nowrap chips, the whole thing clickable to expand the
+    detail row where the editor lives. The editor is a multiselect and cannot
+    sit in the cell: in a narrow column its selectize pills stack vertically and
+    made every summary row several lines tall.
+    """
+    labels = [str(x) for x in (labels or [])]
+    full = ", ".join(labels) if labels else "None"
+    if labels:
+        body = [
+            ui.tags.span(str(len(labels)), class_="metric-count-badge"),
+            ui.tags.span(
+                *[ui.tags.span(lbl, class_="metric-fn-chip") for lbl in labels],
+                class_="summary-strat-chips",
+            ),
+        ]
+    else:
+        body = [ui.tags.span("None", class_="summary-strat-none")]
+    return ui.tags.button(
+        *body,
+        type="button",
+        class_="summary-strat-btn",
+        title=f"Stratifications available: {full}. Click to edit.",
+        onclick=onclick,
+    )
+
+
+def strat_editor_ui(input_id: str, choices, selected, *, is_locked: bool = False):
+    """The stratifications-available multiselect, for the expanded detail row."""
+    return ui.div(
+        ui.tags.strong("Stratifications available for this metric"),
+        ui.div(
+            "Which stratifications this metric may be split by. The curve "
+            "stratification above chooses the one actually used.",
+            class_="text-muted small mb-2",
+        ),
+        ui.tags.fieldset(
+            ui.input_selectize(
+                input_id,
+                None,
+                choices=dict(choices or {}),
+                selected=list(selected or []),
+                multiple=True,
+                options={"dropdownParent": "body", "plugins": ["remove_button"]},
+            ),
+            **({"disabled": "disabled"} if is_locked else {}),
+        ),
+        class_="summary-detail-strat",
+    )
+
+
 @module.ui
 def summary_page_ui():
     return ui.output_ui("summary_page")
@@ -255,7 +308,24 @@ def summary_page_server(input, output, session, state: AppState):
             class_="table table-sm table-striped summary-detail-table",
         )
 
-    def detail_ui(metric: str, row_data: dict):
+    def _strat_editor(metric: str, row_data: dict, is_locked: bool):
+        return strat_editor_ui(
+            ns(f"available_{metric}"),
+            {sk: row_data["strat_label_map"].get(sk, sk) for sk in row_data["available_choices"]},
+            list(row_data["available_selected"] or []),
+            is_locked=is_locked,
+        )
+
+    def _strat_summary(metric: str, row_data: dict):
+        return strat_summary_ui(
+            [
+                row_data["strat_label_map"].get(sk, sk)
+                for sk in (row_data["available_selected"] or [])
+            ],
+            onclick=_action(metric, "toggle"),
+        )
+
+    def detail_ui(metric: str, row_data: dict, is_locked: bool = False):
         notes = row_data["notes"]
         curve_rows = pd.DataFrame(row_data["curve_rows"])
 
@@ -353,6 +423,7 @@ def summary_page_server(input, output, session, state: AppState):
                 selected_label,
                 class_="summary-detail-footer",
             ),
+            _strat_editor(metric, row_data, is_locked),
         )
 
     def _action(metric: str, action: str) -> str:
@@ -376,10 +447,6 @@ def summary_page_server(input, output, session, state: AppState):
             if row_data["direction"] == "Lower is better"
             else fa("minus")
         )
-        available_choices = {
-            sk: row_data["strat_label_map"].get(sk, sk) for sk in row_data["available_choices"]
-        }
-
         main_row = ui.tags.tr(
             ui.tags.td(
                 ui.tags.button(
@@ -419,19 +486,8 @@ def summary_page_server(input, output, session, state: AppState):
                 class_="summary-col-status",
             ),
             ui.tags.td(
-                ui.tags.fieldset(
-                    ui.input_selectize(
-                        ns(f"available_{metric}"),
-                        None,
-                        choices=available_choices,
-                        selected=list(row_data["available_selected"]),
-                        multiple=True,
-                        options={"dropdownParent": "body", "plugins": ["remove_button"]},
-                    ),
-                    **({"disabled": "disabled"} if is_locked else {}),
-                ),
-                class_="summary-select-cell summary-select-cell-compact summary-picker-cell "
-                "summary-col-available",
+                _strat_summary(metric, row_data),
+                class_="summary-col-available",
             ),
             ui.tags.td(
                 ui.tags.fieldset(
@@ -477,7 +533,9 @@ def summary_page_server(input, output, session, state: AppState):
             class_="summary-main-row",
         )
         detail_row = ui.tags.tr(
-            ui.tags.td(detail_ui(metric, row_data) if is_expanded else None, colspan="10"),
+            ui.tags.td(
+                detail_ui(metric, row_data, is_locked) if is_expanded else None, colspan="10"
+            ),
             class_="summary-detail-row" if is_expanded else "summary-detail-row d-none",
         )
         return ui.TagList(main_row, detail_row)
