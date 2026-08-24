@@ -69,11 +69,13 @@ _CLICK = {
 
 # Side analysis -> click input id. Kept parallel to _CLICK, not merged into it:
 # these route straight to a nav value, with no stage landing and no wizard step.
-_TOOL_CLICK = {"regional": "tool_regional", "xsec": "tool_xsec"}
+_TOOL_CLICK = {"regional": "tool_regional", "xsec": "tool_xsec",
+               "nrsa": "tool_nrsa"}
 
 # Both icons are already carried by the vendored www/vendor/bs-icons.json subset
 # (they are the icons app.py hangs on the two nav panels), so bi() cannot raise.
-_TOOL_ICON = {"regional": "bezier2", "xsec": "graph-down"}
+_TOOL_ICON = {"regional": "bezier2", "xsec": "graph-down",
+              "nrsa": "globe-americas"}
 
 # Why each one exists, and what it needs -- the strip is the only place that says so
 # now that the tools have no tab of their own.
@@ -85,6 +87,10 @@ _TOOL_TITLE = {
     "xsec": (
         "Survey cross-sections. A side analysis outside the staged workflow; "
         "needs a built dataset."
+    ),
+    "nrsa": (
+        "Browse every NRSA station across the 2013-14, 2018-19 and 2023-24 "
+        "surveys. Read-only, and needs no project."
     ),
 }
 
@@ -242,7 +248,7 @@ def stagebar_server(input, output, session, state: AppState):
             chip_cls = "tool-chip"
             if key == tool:
                 chip_cls += " active"
-            elif not has_data:
+            elif not has_data and key not in rs.TOOLS_WITHOUT_DATA:
                 # Dimmed, never disabled: the page's no_data_alert() is what
                 # explains the prerequisite, same as every stage.
                 chip_cls += " tool-blocked"
@@ -332,6 +338,11 @@ def stagebar_server(input, output, session, state: AppState):
     @reactive.event(input.tool_xsec)
     def _tool_xsec():
         _request_nav("xsec")
+
+    @reactive.effect
+    @reactive.event(input.tool_nrsa)
+    def _tool_nrsa():
+        _request_nav("nrsa")
 
     # Sub-step chips jump straight to their wizard step.
     for _n in range(1, 8):

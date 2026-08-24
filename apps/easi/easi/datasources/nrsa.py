@@ -21,6 +21,9 @@ from .. import config
 # (.../_vendor/easi/data). A fixed depth silently resolves to a nonexistent path in
 # the vendored tree, and _records() swallows the OSError, so the whole datasource
 # degrades to "no evidence" without an error.
+# NOTE: the file name says 2018-19 but the index covers 2013-14, 2018-19 and
+# 2023-24 (see its "cycles" field). The name is kept because the Posit
+# deployment records list this path and renaming it risks a redeploy.
 DATA_PATH = config.DATA_DIR / "nrsa-2018-19-evidence.json.gz"
 EARTH_RADIUS_MI = 3958.7613
 

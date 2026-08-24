@@ -32,7 +32,7 @@ from typing import Any, Iterable, Mapping, Optional
 
 import pandas as pd
 
-from . import curves, deep_export, run_state
+from . import curves, deep_export, metric_names, run_state
 
 UNMAPPED_DISCIPLINE = "Unmapped"
 _DISCIPLINE_ORDER_FALLBACK = ["Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology"]
@@ -195,11 +195,23 @@ def tile_from_curve_rows(metric: str, rows: Iterable[Mapping] | None, *,
         scope, needs, status, flags = None, False, None, []
     if in_scope is not None:
         scope = bool(in_scope)
+    # a stored display_name is often just the code (the wizard wrote the column
+    # name, the headless agent the mnemonic), so resolve at render time: sessions
+    # saved before the dictionary existed, and published versions that must never
+    # be edited, still show a readable name.
+    stored_name = mc.get("display_name")
+    if metric_names.is_placeholder_name(stored_name, metric):
+        stored_name = metric_names.display_name_for(metric, stored_name)
+    stored_units = mc.get("units")
+    if stored_units is None or str(stored_units).strip() in ("", "nan", "None"):
+        stored_units = metric_names.units_for(metric)
     return {
         "metric": str(metric),
-        "display_name": str(mc.get("display_name") or metric),
+        "display_name": str(stored_name or metric),
+        "short_name": metric_names.short_name_for(metric, str(stored_name or metric)),
+        "description": mc.get("description") or metric_names.description_for(metric),
         "function": function_label,
-        "units": mc.get("units"),
+        "units": stored_units,
         "in_scope": scope,
         "needs_review": bool(needs),
         "review_status": status,
@@ -330,8 +342,10 @@ h1 { font-size: 1.1rem; margin: 0 0 .25rem; }
 .curve-tile { border: 1px solid #d8e2ec; border-radius: .5rem; background: #fff; padding: .45rem .6rem .35rem; }
 .curve-tile.is-flagged { border-left: 4px solid #f39c12; }
 .curve-tile.is-removed { opacity: .72; }
-.curve-tile-head { display: flex; justify-content: space-between; align-items: baseline; gap: .4rem; }
-.curve-tile-code { font-weight: 600; font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.curve-tile-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .4rem; }
+.curve-tile-id { min-width: 0; display: flex; flex-direction: column; gap: .05rem; }
+.curve-tile-name { font-weight: 600; font-size: .8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #23384d; }
+.curve-tile-code { font-size: .66rem; font-family: ui-monospace, Menlo, Consolas, monospace; color: #7a8797; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .curve-tile-status { font-size: .66rem; padding: .05rem .4rem; border-radius: 999px; background: #eef1f5; color: #6c757d; white-space: nowrap; }
 .is-flagged .curve-tile-status { background: #f39c12; color: #fff; }
 .is-removed .curve-tile-status { background: #d9534f; color: #fff; }
@@ -601,7 +615,9 @@ def gallery_html(tiles: list[Mapping], *, title: str, w: int = 240, h: int = 150
         role = "cross" if cross else "primary"
         return (f"<div class=\"{' '.join(classes)}\" id=\"{tid}\" data-role=\"{role}\" "
                 f"title=\"{html.escape(tile_title(t), quote=True)}\">" + head_note
-                + f"<div class=\"curve-tile-head\"><span class=\"curve-tile-code\">{html.escape(str(t.get('metric')))}</span>"
+                + "<div class=\"curve-tile-head\"><div class=\"curve-tile-id\">"
+                + f"<span class=\"curve-tile-name\">{html.escape(str(t.get('short_name') or t.get('display_name') or t.get('metric')))}</span>"
+                + f"<span class=\"curve-tile-code\">{html.escape(str(t.get('metric')))}</span></div>"
                 f"<span class=\"curve-tile-status\">{html.escape(status_label(t))}</span></div>"
                 + tile_svg(t, w=w, h=h, band_breaks=band_breaks)
                 + f"<div class=\"curve-tile-foot\"><span class=\"curve-tile-also\">{foot_left}</span>"

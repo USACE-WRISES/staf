@@ -31,7 +31,7 @@
 
 meta:
   policy_version: "1.0"
-  methodology_version: "0.7-provisional"
+  methodology_version: "0.8-provisional"
   approved_on: "2026-08-22"
   authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote."
   rationale_origin: "standing_policy"

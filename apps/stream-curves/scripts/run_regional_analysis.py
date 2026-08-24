@@ -29,6 +29,7 @@ import pandas as pd  # noqa: E402
 
 from streamcurves import curves  # noqa: E402
 from streamcurves import methodology  # noqa: E402
+from streamcurves import nrsa_dataset  # noqa: E402
 from streamcurves import provenance as pv  # noqa: E402
 from streamcurves import regional_agent as ra  # noqa: E402
 from streamcurves import run_state  # noqa: E402
@@ -580,6 +581,13 @@ def main(argv=None) -> int:
                     help="Recorded reviewer finalization for a flagged curve (the only "
                          "way a flagged curve publishes). Repeatable; the maintainer "
                          "name is stamped as the actor")
+    ap.add_argument("--nrsa-dataset", default=nrsa_dataset.DEFAULT_DATASET_ID,
+                    choices=nrsa_dataset.available_datasets(),
+                    help="which NRSA data to read; the default is the bundled "
+                         "2018-19 snapshot every published assessment used")
+    ap.add_argument("--nrsa-cycle", action="append", dest="nrsa_cycles",
+                    choices=list(nrsa_dataset.CYCLES_NEWEST_FIRST),
+                    help="repeatable; limit a pooled run to these survey cycles")
     ap.add_argument("--remove-metric", action="append", default=[],
                     metavar="METRIC=RATIONALE",
                     help="Recorded reviewer decision that takes a built curve out of scope "
@@ -627,6 +635,7 @@ def main(argv=None) -> int:
     if args.reviewer_decisions:
         decisions = json.loads(Path(args.reviewer_decisions).read_text(encoding="utf-8"))
     result = ra.run(args.l3, args.name, screen_preset=args.screen,
+                    nrsa_dataset_id=args.nrsa_dataset, nrsa_cycles=args.nrsa_cycles,
                     source_citation=args.source_citation, do_screen=not args.no_screen,
                     coverage_exceptions=coverage_exceptions, cache_dir=out_dir,
                     diagnostics_n_boot=args.n_boot,

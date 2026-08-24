@@ -154,7 +154,15 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
     return ui.div(
         head_note,
         ui.div(
-            ui.tags.span(metric, class_="curve-tile-code", title=str(row.get("display_name") or metric)),
+            ui.div(
+                ui.tags.span(
+                    str(row.get("short_name") or row.get("display_name") or metric),
+                    class_="curve-tile-name",
+                    title=str(row.get("display_name") or metric),
+                ),
+                ui.tags.span(metric, class_="curve-tile-code"),
+                class_="curve-tile-id",
+            ),
             ui.tags.span(cs.status_label(row), class_="curve-tile-status"),
             class_="curve-tile-head",
         ),

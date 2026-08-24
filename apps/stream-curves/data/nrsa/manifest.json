@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "datasetId": "multi-cycle-v1",
+  "cycles": [
+    "1314",
+    "1819",
+    "2324"
+  ],
+  "sourceLockUpdatedAt": "2026-08-23T22:13:44Z",
+  "sourceFileCount": 112,
+  "files": {
+    "benthic_counts.parquet": {
+      "bytes": 2575902,
+      "sha256": "sha256:ba993e480ec5663bd6aefccc700f408aef573bb872ea51f00b32019c765e6d6c"
+    },
+    "benthic_taxa.parquet": {
+      "bytes": 70251,
+      "sha256": "sha256:c522ffaa8ddbec2d1ea238f44197111ed140caaca328245bda6dd1ffe734d362"
+    },
+    "comid_snapped.csv": {
+      "bytes": 95664,
+      "sha256": "sha256:d9e2fde1f0e3b676677cb338270e9c8c02b7eea10b2c23de4bb44cab74ca5b0f"
+    },
+    "fish_counts.parquet": {
+      "bytes": 622430,
+      "sha256": "sha256:6ef7535eea8179ac153fa944dbfe0b08c83f7e3cd603fbbd969e02979a8a88ba"
+    },
+    "fish_taxa.parquet": {
+      "bytes": 43738,
+      "sha256": "sha256:d32b0590eb9548b33e2faee90e36250f9e3d4a2cc3f9c72544ef6fa2b637df5d"
+    },
+    "metric_crosswalk.csv": {
+      "bytes": 80654,
+      "sha256": "sha256:339af41b8bb676e2e94305623937649e96bf3449c8aac0f690dccae53301a177"
+    },
+    "metric_dictionary.csv": {
+      "bytes": 190559,
+      "sha256": "sha256:bd4f3fb39938b400d79ef2112ffd26692c3b79b184aac7d9143659b06a1a635b"
+    },
+    "reference/cycle_comparison.csv": {
+      "bytes": 698972,
+      "sha256": "sha256:d08b65f787bfbc45adcb3cc6ef8a56f75b8c3d4add51f1578370cc6380e67718"
+    },
+    "reference/dataset_index_1314.csv": {
+      "bytes": 7435,
+      "sha256": "sha256:604eca8146ec15a0c329b17ba1965f19869de40a01e6c271cd16b6bbd750c61e"
+    },
+    "reference/dataset_index_1819.csv": {
+      "bytes": 5585,
+      "sha256": "sha256:052c2a5a4cccb0b2cf94b06ead9f43abdc2ad8c3740a0b1aad866d11990889a6"
+    },
+    "reference/dataset_index_2324.csv": {
+      "bytes": 5362,
+      "sha256": "sha256:da949ca4e63e6d5781e3aeff8f2a72994c4efd9432e20a556307d3cfc149c800"
+    },
+    "reference/metadata_detail_1314.csv": {
+      "bytes": 310826,
+      "sha256": "sha256:d5fa8c5d05199b687d3976fb26401b7beac4972e58277621cb7d85e222283945"
+    },
+    "reference/metadata_detail_1819.csv": {
+      "bytes": 442261,
+      "sha256": "sha256:03e786ef2fc09432c18c2f39b5920aa60dce4f384f1568c41ddfac780fba092a"
+    },
+    "reference/metadata_detail_2324.csv": {
+      "bytes": 233481,
+      "sha256": "sha256:088bdb0d34a1a795931b529d08ebaffdd682de84aa3fc8db52b71375bdafc8bd"
+    },
+    "reference/variable_lookup_1314.csv": {
+      "bytes": 346408,
+      "sha256": "sha256:8275b76242a60cc1632916b48f1954ff30546f4c407f1165c25ae97aac0dd6a1"
+    },
+    "reference/variable_lookup_1819.csv": {
+      "bytes": 448140,
+      "sha256": "sha256:c225cfffb384a3e3197a22b211bd0de6275729558b3b9d3853e85b18ab58bc7d"
+    },
+    "reference/variable_lookup_2324.csv": {
+      "bytes": 225510,
+      "sha256": "sha256:66e450b6c20a4a40965e58b5a9b14ce53f0cf2c79e99b49825f824c093e05bd1"
+    },
+    "site_visits.parquet": {
+      "bytes": 221525,
+      "sha256": "sha256:3b4f3f00579cde7062f36e1eef2aa2125f7f8d4bce263c0fdc1b394f471487fd"
+    },
+    "sources.lock.json": {
+      "bytes": 60311,
+      "sha256": "sha256:dfa081a35bb1de3929e1c73f5ab23790c34cecfbf37ce4a13e5a5a9a230a7e72"
+    },
+    "stations.geojson.gz": {
+      "bytes": 79406,
+      "sha256": "sha256:096ff02f98644776ac51a0bdd90d068a92acf5e93f76c8bb833c124c5ca8e460"
+    },
+    "stations.parquet": {
+      "bytes": 152639,
+      "sha256": "sha256:c1288ba273c7c8c538e0b046cb058826d34cb1410627cbaa48d9f3a97c86b5f5"
+    },
+    "value_origins.csv": {
+      "bytes": 67228,
+      "sha256": "sha256:42fb73d9ed2f0d58f6b7aaad275d11707869927aed6b011d7e29db2564f1b624"
+    },
+    "values.parquet": {
+      "bytes": 7547688,
+      "sha256": "sha256:d02331dc74c641a0e295a550f1e57ea145c7dc6368b9a768f9675b5735561396"
+    }
+  },
+  "totalBytes": 14531975
+}

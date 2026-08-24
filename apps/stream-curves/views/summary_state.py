@@ -44,6 +44,7 @@ from streamcurves.screening import (  # noqa: F401  (phase-1 candidate helpers r
     build_metric_phase1_candidate_table_from_sources,
     screen_stratification,
 )
+from streamcurves import metric_names
 from streamcurves.stability import assess_pattern_stability
 from views.state import AppState, empty_phase2_settings
 
@@ -96,6 +97,14 @@ def get_first_value(df, column, default=None):
     if value is None or (isinstance(value, float) and math.isnan(value)):
         return default
     return value
+
+
+def _resolved_display_name(mc, metric: str) -> str:
+    """The metric's readable name, resolving a stored code against the dictionary."""
+    stored = (mc or {}).get("display_name")
+    if metric_names.is_placeholder_name(stored, metric):
+        return metric_names.display_name_for(metric, stored) or str(metric)
+    return str(stored)
 
 
 def metric_direction_label(metric_config: dict, metric: str) -> str:
@@ -2073,9 +2082,11 @@ def build_metric_summary_snapshot(state: AppState, metric: str, context=None) ->
     manual = get_metric_phase4_manual_curve_info(state, metric, phase4=phase4)
     return {
         "metric": metric,
-        "display_name": mc.get("display_name") or metric,
+        # the stored name is often the code itself; resolve against the metric
+        # dictionary so older sessions read as names too
+        "display_name": _resolved_display_name(mc, metric),
         "family": mc.get("metric_family") or "N/A",
-        "units": mc.get("units") or "N/A",
+        "units": mc.get("units") or metric_names.units_for(metric) or "N/A",
         "direction": metric_direction_label(metric_config, metric),
         "n_obs": get_first_value(precheck, "n_obs", "N/A"),
         "status": status,

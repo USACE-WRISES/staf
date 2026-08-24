@@ -7,10 +7,11 @@ SFARI crosswalk (``metric_map.metric_map_entries``) — into ONE tidy table so t
 UI can show a readable name, units, source, and the STAF function(s)/discipline
 each metric informs, and can compute live function coverage.
 
-Only ~40 curated NRSA metrics + StreamCat/StreamStats/MMW carry a human-readable
-name in the repo; the other ~760 NRSA ids have only their code. ``named`` marks
-that split: the UI foregrounds ``named`` rows and tucks the rest into an
-"Advanced" list shown honestly as codes.
+Names come from ``metric_map.yaml`` where the SFARI crosswalk curates one, and
+otherwise from the metric dictionary (``streamcurves.metric_names``), which
+carries EPA's own definition for essentially every NRSA field, so no row renders
+as a bare code any more. ``named`` is a different question: it marks the curated
+metrics the UI foregrounds, and the rest go to the "Advanced" list.
 
 Pure/UI-free by design (domain layer): the coverage helpers return plain dicts so
 the view renders them with ``render_wb_table`` and so tests need no Shiny session.
@@ -23,6 +24,7 @@ import re
 
 import pandas as pd
 
+from . import metric_names
 from .metric_map import metric_map_entries, metric_map_functions_for
 from .nrsa import load_nrsa_catalog
 from .paths import DATA_DIR
@@ -96,13 +98,21 @@ def build_metric_picker_table(
 
     def add_row(code, source_key: str, raw_label="", category="", cat_units=""):
         code = str(code)
-        base = mm_label.get(code) or (raw_label if not _blank(raw_label) else code)
+        # metric_map's curated label wins; otherwise the metric dictionary's
+        # readable name; the catalog's raw label is only the mnemonic
+        dict_name = metric_names.display_name_for(code)
+        base = mm_label.get(code) or dict_name or (raw_label if not _blank(raw_label) else code)
         name, units = _split_units(base)
         if _blank(units) and not _blank(cat_units):
             units = str(cat_units)
+        if _blank(units):
+            units = metric_names.units_for(code, "") or ""
         ffs = metric_map_functions_for(code)
         functions = list(dict.fromkeys(f["function_name"] for f in ffs))
         disciplines = list(dict.fromkeys(f["discipline"] for f in ffs))
+        # "named" means curated-and-foregrounded, not "has a name": it gates
+        # the main picker list, which deliberately shows the crosswalk's
+        # metrics and tucks the rest of the NRSA catalog into Advanced.
         named = (code in mm_label) or (source_key in ("streamcat", "streamstats", "mmw"))
         rows.append({
             "code": code,

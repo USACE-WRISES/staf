@@ -20,9 +20,9 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.7-provisional"
+  methodology_version: "0.8-provisional"
   threshold_status: "provisional"        # global default; rules may override
-  date: "2026-08-22"
+  date: "2026-08-23"
   calibration_note: >
     v0.3 recalibrated the DATA sample-size floors against the two pilots' REAL
     EASI-screened reference sizes (NH-58 = 33 Functioning sites; ECBP-55 = 0 Functioning,
@@ -71,6 +71,15 @@ meta:
     publish. SELECT-01 records now count the bundle's metric blocks as well as the
     compact portfolio (the count the publish gate reads). No threshold value or
     status changed.
+    v0.8 (2026-08-23) adds a second NRSA data source. Runs may now draw candidates from
+    a multi-cycle archive pooling the 2013-14, 2018-19 and 2023-24 surveys instead of
+    the bundled 2018-19 snapshot, under a most-recent-visit policy: each distinct
+    station contributes one row, taken from the newest cycle that carries the metrics
+    the run needs, with every excluded station recorded in a ledger. The default is
+    unchanged, so a run that does not ask for the archive reproduces its inputs digest
+    exactly. The digest itself now carries the dataset id, its cycles and the policy,
+    because two runs over one ecoregion on different data must not share a digest. No
+    threshold value or status changed.
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"

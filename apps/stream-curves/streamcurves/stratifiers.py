@@ -72,15 +72,48 @@ def load_national_registry(path=REGISTRY_PATH) -> dict:
     }
 
 
+def candidate_sources(cfg: dict) -> list[str]:
+    """The columns one candidate may be built from, best-declared first.
+
+    A candidate normally names one ``source_column``. It may instead name an
+    ordered ``source_columns`` list, which is how a stratifier survives a pooled
+    panel: elevation comes from the NRSA landscape table for 2018-19 sites and
+    from StreamCat, which is COMID-keyed and covers every site, for the rest.
+    """
+    cfg = cfg or {}
+    listed = cfg.get("source_columns")
+    if listed:
+        return [str(c) for c in listed if c]
+    single = cfg.get("source_column")
+    return [str(single)] if single else []
+
+
+def resolve_source_column(cfg: dict, data) -> str | None:
+    """Which declared source to actually use: the one covering the most rows.
+
+    Coverage rather than declaration order, because on a pooled panel the
+    preferred column can be present but nearly empty. Returns None when none of
+    them is present with data.
+    """
+    best, best_n = None, 0
+    for column in candidate_sources(cfg):
+        if column not in getattr(data, "columns", []):
+            continue
+        n = int(data[column].notna().sum())
+        if n > best_n:
+            best, best_n = column, n
+    return best
+
+
 def source_columns(registry: dict) -> list[str]:
     """Raw columns the candidates need. The agent attaches these to the data
     before materializing, because none of them is a response metric and so none
     is pulled in by the metric config."""
     out: list[str] = []
     for cfg in (registry.get("candidates") or {}).values():
-        column = (cfg or {}).get("source_column")
-        if column and column not in out:
-            out.append(column)
+        for column in candidate_sources(cfg):
+            if column not in out:
+                out.append(column)
     return out
 
 
@@ -101,13 +134,16 @@ def materialize_candidates(data: pd.DataFrame, registry: dict) -> tuple[pd.DataF
 
     for strat_key, cfg in (registry.get("candidates") or {}).items():
         cfg = cfg or {}
-        source = cfg.get("source_column")
-        if not source or source not in data.columns:
+        declared = candidate_sources(cfg)
+        source = resolve_source_column(cfg, data)
+        if not declared or not any(c in data.columns for c in declared):
             skipped[strat_key] = REASON_SOURCE_MISSING
             continue
-        if data[source].notna().sum() == 0:
+        if not source:
             skipped[strat_key] = REASON_ALL_NULL
             continue
+        # the resolved column is what the materializer must read
+        cfg = {**cfg, "source_column": source}
         try:
             built = derive.materialize_custom_stratifications(data, {strat_key: cfg})
         except Exception as exc:  # noqa: BLE001
@@ -142,7 +178,7 @@ def assess_eligibility(
 
     for strat_key, cfg in (registry.get("candidates") or {}).items():
         cfg = cfg or {}
-        source = cfg.get("source_column")
+        source = resolve_source_column(cfg, data) or (candidate_sources(cfg) or [None])[0]
         column = _class_column(cfg, strat_key)
         min_group_size = int(cfg.get("min_group_size") or min_group_size_default)
         declared = list(cfg.get("levels") or [])
