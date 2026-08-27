@@ -6,7 +6,16 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+import pytest
+
+from streamcurves import nrsa_dataset as nds
+from streamcurves.paths import DATA_DIR
 from views.import_map import (
+    _known_nrsa_site_ids,
+    _nrsa_all,
+    _nrsa_site_id_aliases,
+    _nrsa_values_for,
+    _state_matches,
     _compile_coverage_mapping,
     _js1,
     _nrsa_comids,
@@ -431,3 +440,98 @@ def test_restore_fallback_recognizes_real_nrsa_ids_without_injection():
     sc["site_id"] = ["NRS18_OH_10043", "my-upload-1"]  # id from the evidence file
     got = _restore_candidate_sites(None, sc)
     assert list(got[".source"]) == ["nrsa", "upload"]
+
+
+# --------------------------------------------------------------------------- #
+# The wizard's NRSA source: the three-cycle archive, not the single-cycle CSV
+#
+# "Add data" offered 18 sites for Eastern Corn Belt Plains while the NRSA
+# explorer showed 51, because the wizard read data/nrsa_sites.csv and knew
+# nothing about data/nrsa/.
+# --------------------------------------------------------------------------- #
+
+MULTI = pytest.mark.skipif(
+    not nds.multi_cycle_available(),
+    reason="multi-cycle archive not built (scripts/nrsa/build_values_table.py)",
+)
+
+
+@MULTI
+def test_the_site_source_offers_every_cycle():
+    sites = _nrsa_all()
+    assert "station_key" in sites.columns          # the archive, not the CSV
+    assert len(sites) == 4378
+    in_region = sites["us_l3code"].astype(str)
+    assert int((in_region == "55").sum()) == 51    # was 18 from nrsa_sites.csv
+    assert int((in_region == "71").sum()) == 64    # was 25
+    # one row per station: the panel picks the newest cycle that sampled it
+    assert sites["station_key"].is_unique
+
+
+@MULTI
+def test_the_all_region_panel_agrees_with_a_per_region_one():
+    everything, _ = nds.resolve_site_panel(None, dataset=nds.MULTI_CYCLE_DATASET_ID)
+    ecbp, _ = nds.resolve_site_panel("55", dataset=nds.MULTI_CYCLE_DATASET_ID)
+    subset = everything[everything["us_l3code"].astype(str) == "55"]
+    assert set(subset["station_key"]) == set(ecbp["station_key"])
+
+
+def test_state_matching_survives_abbreviations_and_border_sites():
+    """nrsa_sites.csv was all full names; the archive mixes full names, two
+    letter abbreviations and AL:GA border sites. Comparing raw strings against a
+    full name drops 47 percent of stations with no error."""
+    column = pd.Series(["Indiana", "IN", "in", "AL:GA", "Ohio", "", None])
+    assert list(_state_matches(column, "Indiana")) == [
+        True, True, True, False, False, False, False]
+    # a border site belongs to both of its states
+    assert list(_state_matches(column, "Alabama")) == [
+        False, False, False, True, False, False, False]
+    assert list(_state_matches(column, "Georgia")) == [
+        False, False, False, True, False, False, False]
+
+
+@MULTI
+def test_state_mode_finds_more_sites_than_a_raw_string_compare():
+    sites = _nrsa_all()
+    normalized = int(_state_matches(sites["state"], "Indiana").sum())
+    raw = int((sites["state"].astype(str) == "Indiana").sum())
+    assert normalized > raw, "the abbreviated rows are being dropped again"
+
+
+# --------------------------------------------------------------------------- #
+# a project saved before the archive landed
+# --------------------------------------------------------------------------- #
+
+@MULTI
+def test_every_legacy_site_id_still_resolves():
+    """The archive keys a cross-cycle station by its oldest id, so 930 of the
+    1,906 ids in nrsa_sites.csv are not station keys. All of them resolve
+    through the visit table, so no saved project loses sites."""
+    legacy = pd.read_csv(DATA_DIR / "nrsa_sites.csv", dtype=str)["site_id"].astype(str)
+    aliases = _nrsa_site_id_aliases()
+    keys = set(_nrsa_all()["station_key"].astype(str))
+    unresolvable = [s for s in legacy if s not in aliases and s not in keys]
+    assert unresolvable == []
+    known = _known_nrsa_site_ids()
+    assert all(s in known for s in legacy), "a saved site would read as an upload"
+
+
+@MULTI
+def test_values_follow_the_site_ids_they_were_asked_for():
+    sites = _nrsa_all()
+    asked = sites[sites["us_l3code"].astype(str) == "55"].head(4)[["site_id"]]
+    values = _nrsa_values_for(asked.reset_index(drop=True))
+    assert list(values["site_id"]) == list(asked["site_id"])
+    assert "phab_XEMBED" in values.columns
+
+
+@MULTI
+def test_a_legacy_site_id_still_pulls_its_metrics():
+    """Pulling archive sites but joining single-cycle values would leave about
+    half the columns empty; the alias bridge is what stops that."""
+    keys = set(_nrsa_all()["station_key"].astype(str))
+    aliases = _nrsa_site_id_aliases()
+    legacy_only = next(s for s in aliases if s not in keys)
+    values = _nrsa_values_for(pd.DataFrame({"site_id": [legacy_only]}))
+    assert list(values["site_id"]) == [legacy_only]
+    assert values["bent_EPT_NTAX"].notna().all()

@@ -287,6 +287,21 @@ def publish_server(input, output, session, state: AppState):
         # was to fill the form and read a warning toast. The gate reads env vars
         # only, so it cannot change mid-session and this can stay static.
         blocked = _publish_block_reason()
+        # An assessment the regional agent built carries a full provenance record in
+        # its run folder: the policy hash, the argv, the inputs digest and every rule
+        # record. Publishing from here does not carry it -- this path writes its own
+        # interactive provenance, which is honest once a human has edited the
+        # assessment but is a thinner record than the build produced. Say so rather
+        # than let it be discovered afterwards.
+        with reactive.isolate():
+            built_by = (state.run_meta() or {}).get("built_by")
+        if built_by == "regional-agent" and not blocked:
+            body.append(ui.div(
+                ui.tags.strong("This assessment came from a region build. "),
+                "Publishing here records an interactive provenance; the build's own "
+                "record is not carried. To publish with it, use Publish in the Region "
+                "builder instead.",
+                class_="alert alert-warning py-2 small"))
         body.append(
             ui.input_action_button(
                 "publish_btn",

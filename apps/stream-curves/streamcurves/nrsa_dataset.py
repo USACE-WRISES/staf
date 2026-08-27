@@ -133,9 +133,13 @@ def clear_cache() -> None:
 # panel selection
 # --------------------------------------------------------------------------- #
 
-def _legacy_panel(dataset: NrsaDataset, l3_code: str) -> pd.DataFrame:
+def _legacy_panel(dataset: NrsaDataset, l3_code: Optional[str]) -> pd.DataFrame:
     sites = dataset.sites
-    panel = sites[sites["us_l3code"].astype(str).str.strip() == str(l3_code).strip()].copy()
+    if l3_code is None:
+        panel = sites.copy()
+    else:
+        panel = sites[
+            sites["us_l3code"].astype(str).str.strip() == str(l3_code).strip()].copy()
     panel = panel.drop_duplicates("site_id")
     panel["station_key"] = panel["site_id"]
     panel["source_cycle"] = "1819"
@@ -144,7 +148,7 @@ def _legacy_panel(dataset: NrsaDataset, l3_code: str) -> pd.DataFrame:
 
 
 def resolve_site_panel(
-    l3_code: str,
+    l3_code: Optional[str],
     *,
     dataset: str | NrsaDataset = DEFAULT_DATASET_ID,
     cycles: Sequence[str] = CYCLES_NEWEST_FIRST,
@@ -152,6 +156,11 @@ def resolve_site_panel(
     require_metrics: Iterable[str] = (),
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """One row per station for a Level III ecoregion, plus a rejection ledger.
+
+    ``l3_code=None`` means every station, which is what the import wizard needs:
+    its State and drawn-polygon region modes do not filter by ecoregion, so they
+    have to start from the whole pool. Only the region filter is skipped, so the
+    pooling policy, the ledger and the column shape stay in one implementation.
 
     Each station contributes exactly one row, taken from the most recent cycle in
     ``cycles`` that has a non-null value for every metric in ``require_metrics``.
@@ -192,7 +201,11 @@ def resolve_site_panel(
 
     wanted = [c for c in CYCLES_NEWEST_FIRST if c in set(cycles)]
     stations = ds.stations
-    in_region = stations[stations["us_l3code"].astype(str).str.strip() == str(l3_code).strip()]
+    if l3_code is None:
+        in_region = stations
+    else:
+        in_region = stations[
+            stations["us_l3code"].astype(str).str.strip() == str(l3_code).strip()]
     if in_region.empty:
         return (pd.DataFrame(columns=PANEL_COLUMNS + ["comid", "protocol", "station_key",
                                                       "source_cycle", "visit_no"]),
@@ -206,10 +219,57 @@ def resolve_site_panel(
 
     values = ds.values
     have = [m for m in required if m in values.columns]
+
+    ledger_rows: list[dict] = []
+    if have:
+        chosen = _pick_by_required_metrics(
+            in_region, visits, values, have, wanted, ledger_rows)
+    else:
+        chosen = _pick_newest_cycle(in_region, visits, wanted, ledger_rows)
+
+    panel = _build_panel(chosen, in_region)
+    ledger = pd.DataFrame(ledger_rows, columns=["station_key", "cycle", "reason", "missing"])
+    return panel, ledger
+
+
+def _pick_newest_cycle(in_region, visits, wanted, ledger_rows) -> pd.DataFrame:
+    """The newest cycle each station was visited in.
+
+    With no metric requirement the pick has no per-station decision in it, so it
+    vectorizes. The walk in :func:`_pick_by_required_metrics` costs about five
+    seconds over the whole 4,378-station archive, and the import wizard asks for
+    every station each time the region changes.
+    """
+    rank = {cycle: i for i, cycle in enumerate(wanted)}
+    eligible = visits[visits["cycle"].isin(rank)].copy()
+    eligible["_rank"] = eligible["cycle"].map(rank)
+    eligible = (eligible.sort_values(["station_key", "_rank"])
+                .drop_duplicates("station_key")
+                .drop(columns="_rank")
+                .set_index("station_key"))
+
+    has_any_visit = set(visits["station_key"])
+    picked_keys = []
+    for key in in_region["station_key"]:
+        if key in eligible.index:
+            picked_keys.append(key)
+        else:
+            ledger_rows.append({
+                "station_key": key, "cycle": "", "missing": "",
+                "reason": ("no cycle in the requested set" if key in has_any_visit
+                           else "no visit record"),
+            })
+    if not picked_keys:
+        return pd.DataFrame(columns=eligible.reset_index().columns)
+    return eligible.loc[picked_keys].reset_index()
+
+
+def _pick_by_required_metrics(in_region, visits, values, have, wanted,
+                              ledger_rows) -> pd.DataFrame:
+    """The per-station walk: a cycle only counts when it has every required metric."""
+    chosen = []
     # sorted so the per-station lookups below do not fall back to a linear scan
     value_index = values.set_index(["station_key", "cycle", "visit_no"]).sort_index()
-
-    chosen, ledger_rows = [], []
     visits_by_station = {k: g for k, g in visits.groupby("station_key")}
 
     for key in in_region["station_key"]:
@@ -249,12 +309,17 @@ def resolve_site_panel(
             continue
         chosen.append(picked)
 
-    if not chosen:
+    return pd.DataFrame(chosen) if chosen else pd.DataFrame()
+
+
+def _build_panel(chosen: pd.DataFrame, in_region: pd.DataFrame) -> pd.DataFrame:
+    """The picked visits, shaped like ``data/nrsa_sites.csv`` plus the extras."""
+    if chosen is None or len(chosen) == 0:
         panel = pd.DataFrame(
             columns=PANEL_COLUMNS + ["comid", "protocol", "station_key",
                                      "source_cycle", "visit_no"])
     else:
-        picked = pd.DataFrame(chosen)
+        picked = chosen
         # the station's COMID, which build_station_tables backfills from an older
         # cycle when the newest one has none: StreamCat is joined by COMID and
         # 2023-24 publishes it for only about a third of its sites
@@ -283,8 +348,7 @@ def resolve_site_panel(
             "visit_no": picked["visit_no"],
         }).reset_index(drop=True)
 
-    ledger = pd.DataFrame(ledger_rows, columns=["station_key", "cycle", "reason", "missing"])
-    return panel, ledger
+    return panel
 
 
 def panel_values(

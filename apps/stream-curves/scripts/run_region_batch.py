@@ -59,6 +59,7 @@ from streamcurves import nrsa_dataset  # noqa: E402
 from streamcurves import provenance as pv  # noqa: E402
 from streamcurves import regional_agent as ra  # noqa: E402
 from streamcurves import review_packet as rp  # noqa: E402
+from streamcurves import session_io as sio  # noqa: E402
 
 try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -291,7 +292,24 @@ def cmd_stage(a) -> int:
               "stop and inspect the run folder")
         return 1
 
-    # 3. the staged publish
+    # 3. the assessment as a project file, before any gate has an opinion
+    #
+    # publish_version is the only other writer of a session, and it runs after the
+    # coverage and portfolio gates, so a refused publish used to throw away a payload
+    # that was already complete: the Driftless Area run left twenty reports, an empty
+    # library folder and nothing anyone could open. session_fields() reads nothing the
+    # gates guard, so writing it here costs a file and makes every run reviewable.
+    try:
+        session_payload = sio.dump_session_fields(
+            ra.session_fields(result),
+            session_name=(result.get("meta") or {}).get("assessmentName") or a.name)
+        (out_dir / "assessment.streamcurves.json").write_text(
+            sio.dumps_session(session_payload), encoding="utf-8")
+        print("[batch] assessment -> assessment.streamcurves.json")
+    except Exception as exc:  # noqa: BLE001 - a report is still worth writing
+        print(f"[batch] could not write the session file: {exc}")
+
+    # 4. the staged publish
     publish_info = None
     if result.get("bundle") is not None:
         try:
@@ -303,7 +321,7 @@ def cmd_stage(a) -> int:
     else:
         print(f"[batch] no bundle to stage: {result.get('bundle_error')}")
 
-    # 4. the run folder outputs, the packet, the gallery, the promote command
+    # 5. the run folder outputs, the packet, the gallery, the promote command
     from run_regional_analysis import write_outputs  # noqa: E402 (sibling script)
     write_outputs(result, out_dir, publish_info, doc)
     (out_dir / "standing_decisions_applied.json").write_text(

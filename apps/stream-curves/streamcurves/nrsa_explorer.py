@@ -43,11 +43,18 @@ def cycle_set_label(cycles_sampled: object) -> str:
 
 
 def ecoregion_choices(stations: pd.DataFrame) -> dict[str, str]:
-    """``{us_l3code: "71 Interior Plateau (64)"}``, most stations first."""
+    """``{us_l3code: "71 Interior Plateau (64)"}``, in Level III code order.
+
+    Sorted on the code parsed as a number, not on the string: the column is
+    free text and every code in the archive is a numeric string from 1 to 85,
+    so a plain string sort reads 1, 10, 11, 12 ... 2, 20. A code that is not a
+    number sorts to the end rather than to the front.
+    """
     if stations is None or stations.empty:
         return {}
     counts = stations.groupby(["us_l3code", "us_l3name"]).size().reset_index(name="n")
-    counts = counts.sort_values(["n", "us_l3code"], ascending=[False, True])
+    counts["_code_num"] = pd.to_numeric(counts["us_l3code"], errors="coerce")
+    counts = counts.sort_values(["_code_num", "us_l3code"], na_position="last")
     out: dict[str, str] = {}
     for row in counts.itertuples(index=False):
         code = str(row.us_l3code).strip()
@@ -161,6 +168,33 @@ def _station_values(values: Optional[pd.DataFrame], station_key: str) -> pd.Data
     return values[values["station_key"].astype(str) == str(station_key)]
 
 
+def _values_by_metric(mine: pd.DataFrame) -> dict[str, dict[str, float]]:
+    """``{metric: {cycle: value}}`` for one station, non-null values only.
+
+    One pass over the frame, because the shape that reads naturally is a trap:
+    calling ``mine.itertuples()`` inside a loop over metric columns rebuilds a
+    namedtuple carrying one field per column on every single column. On the
+    792-column values table that is ~47 ms per call paid 788 times, which took
+    **40 seconds** for one station and blocked the whole event loop with it.
+
+    ``GroupBy.first()`` takes the first non-null value per cycle in row order,
+    which is exactly what the per-row ``setdefault`` it replaced did, so a
+    station with several visits in one cycle reports the same value as before.
+    """
+    if mine is None or mine.empty:
+        return {}
+    metrics = [c for c in mine.columns if c not in _NON_METRIC_COLUMNS]
+    if not metrics:
+        return {}
+    per_cycle = mine[metrics].groupby(
+        mine["cycle"].astype(str).to_numpy(), sort=False).first()
+    return {
+        metric: {cycle: float(value) for cycle, value in row.items()
+                 if value is not None and not pd.isna(value)}
+        for metric, row in per_cycle.T.to_dict("index").items()
+    }
+
+
 def _category_rank(category: str) -> tuple[int, str]:
     try:
         return (CATEGORY_ORDER.index(category), "")
@@ -189,6 +223,7 @@ def station_metric_groups(
         return []
 
     needle = str(search or "").strip().lower()
+    by_metric = _values_by_metric(mine)
     grouped: dict[str, list[dict]] = {}
     for metric in mine.columns:
         if metric in _NON_METRIC_COLUMNS:
@@ -201,11 +236,7 @@ def station_metric_groups(
         category = metric_names.category_for(metric, OTHER_CATEGORY) or OTHER_CATEGORY
         static = category in STATIC_CATEGORIES
 
-        per_cycle: dict[str, float] = {}
-        for row in mine.itertuples(index=False):
-            value = getattr(row, metric, None)
-            if value is not None and not pd.isna(value):
-                per_cycle.setdefault(str(row.cycle), float(value))
+        per_cycle = by_metric.get(metric) or {}
         if not per_cycle:
             continue
 
@@ -261,14 +292,13 @@ def station_detail(
     wanted = [m for m in metrics if m]
     mine = _station_values(values, station_key)
     if wanted and not mine.empty:
+        by_metric = _values_by_metric(mine)
         for metric in wanted:
             if metric not in mine.columns:
                 continue
-            per_cycle = {}
-            for v in mine.itertuples(index=False):
-                value = getattr(v, metric, None)
-                if value is not None and not pd.isna(value):
-                    per_cycle.setdefault(str(v.cycle), float(value))
+            # unlike the groups path, a requested metric with no values still
+            # gets a row, with an empty by_cycle
+            per_cycle = by_metric.get(metric) or {}
             metric_rows.append({
                 "metric": metric,
                 "name": metric_names.short_name_for(metric, metric),

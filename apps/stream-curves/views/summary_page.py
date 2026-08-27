@@ -32,6 +32,7 @@ from views.curve_plots import build_overlay_curve_plot, build_reference_curve_pl
 from views.state import AppState
 from views.theme import fa
 from views.uihelpers import (
+    guard,
     no_data_alert,
     remove_final_loading_notification,
     show_final_loading_notification,
@@ -181,6 +182,22 @@ def summary_page_server(input, output, session, state: AppState):
         for metric in metrics:
             refresh_metric_row(metric, context=context, force=force)
 
+    def set_recompute_running(value: bool) -> None:
+        """Publish recompute busy state on the channel the workflow strip reads.
+
+        Navigating mid-recompute is what wedges the session: py-shiny's flush has
+        no re-entrancy guard (see task_flush in views/state.py). The strip refuses
+        to move while this is set, and derive_stage_status turns it into a RUNNING
+        pill for free.
+        """
+        with reactive.isolate():
+            tasks = dict(state.tasks_running() or {})
+        if value:
+            tasks["curve_review"] = True
+        else:
+            tasks.pop("curve_review", None)
+        state.tasks_running.set(tasks)
+
     def set_row_busy(metric: str, value: bool = True):
         if metric in row_busy:
             row_busy[metric].set(bool(value))
@@ -188,6 +205,7 @@ def summary_page_server(input, output, session, state: AppState):
     # ── recompute runners (R:151-262) ────────────────────────────────────────
     async def run_row_recompute(metric: str):
         set_row_busy(metric, True)
+        set_recompute_running(True)
         await st.task_flush()
         await asyncio.sleep(0)
         with reactive.isolate():
@@ -203,15 +221,19 @@ def summary_page_server(input, output, session, state: AppState):
             # Re-score this metric's curve so a manual tweak updates the flagged
             # review queue (without clobbering a reviewer decision on a no-op).
             ca.sync_curve_review_after_recompute(state, [metric])
+            refresh_metric_rows()
         except Exception as e:  # noqa: BLE001
             logger.exception("row recompute failed")
             ui.notification_show(
                 f"Recompute failed for {label}: {e}", type="error", duration=8
             )
         finally:
+            # Inside finally, all of it: this runs in a detached task, so a raise
+            # on the way out is an unretrieved task exception -- no error anyone
+            # sees, and the row stays busy and the strip stays blocked forever.
             progress.close()
-        refresh_metric_rows()
-        set_row_busy(metric, False)
+            set_row_busy(metric, False)
+            set_recompute_running(False)
         await st.task_flush()
 
     async def run_bulk_recompute(metrics: list[str]):
@@ -229,6 +251,7 @@ def summary_page_server(input, output, session, state: AppState):
         remove_final_loading_notification(ns("bulk_refresh_final_loading"))
         bulk_recompute_active.set(True)
         bulk_recompute_phase.set("running")
+        set_recompute_running(True)
         for metric in metrics:
             set_row_busy(metric, True)
         await st.task_flush()
@@ -269,6 +292,7 @@ def summary_page_server(input, output, session, state: AppState):
         remove_final_loading_notification(ns("bulk_refresh_final_loading"))
         bulk_recompute_active.set(False)
         bulk_recompute_phase.set("idle")
+        set_recompute_running(False)
         for metric in metrics:
             set_row_busy(metric, False)
         await st.task_flush()
@@ -589,6 +613,7 @@ def summary_page_server(input, output, session, state: AppState):
 
         @reactive.effect
         @reactive.event(input[f"available_{metric}"], ignore_init=True)
+        @guard("change the available stratifications")
         def _available():
             selected = list(input[f"available_{metric}"]() or [])
             with reactive.isolate():
@@ -603,6 +628,7 @@ def summary_page_server(input, output, session, state: AppState):
 
         @reactive.effect
         @reactive.event(input[f"curve_{metric}"], ignore_init=True)
+        @guard("change the stratification")
         def _curve():
             new_value = input[f"curve_{metric}"]() or "none"
             with reactive.isolate():
@@ -617,6 +643,7 @@ def summary_page_server(input, output, session, state: AppState):
             set_row_busy(metric, False)
 
     @reactive.effect
+    @guard("set up the metric rows")
     def _register_new_metrics():
         metrics = summary_metrics()
         new = [m for m in metrics if m not in registered]
@@ -628,6 +655,7 @@ def summary_page_server(input, output, session, state: AppState):
     # ── row action channel ────────────────────────────────────────────────────
     @reactive.effect
     @reactive.event(input.summary_row_action)  # no ignore_init: first event on a never-set input IS the init run in py-shiny
+    @guard("run that row action")
     def _row_action():
         payload = input.summary_row_action() or {}
         metric = payload.get("metric")
@@ -674,6 +702,7 @@ def summary_page_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.confirm_row_recompute, ignore_init=True)
+    @guard("recompute the row")
     def _confirm_row_recompute():
         pending = pending_row_recompute()
         req(pending and pending.get("metric"))
@@ -684,23 +713,27 @@ def summary_page_server(input, output, session, state: AppState):
     # ── refresh triggers (R:713-735) ──────────────────────────────────────────
     @reactive.effect
     @reactive.event(state.data, ignore_init=True)
+    @guard("refresh the rows for the new data")
     def _on_data():
         if state.data() is not None:
             refresh_metric_rows()
 
     @reactive.effect
     @reactive.event(state.precheck_df, state.strat_config, ignore_init=True)
+    @guard("refresh the rows for the new config")
     def _on_config():
         refresh_metric_rows()
 
     @reactive.effect
     @reactive.event(state.workspace_refresh_nonce, ignore_init=True)
+    @guard("refresh the rows")
     def _on_refresh_nonce():
         refresh_metric_rows()
 
     # ── bulk recompute (R:737-761) ────────────────────────────────────────────
     @reactive.effect
     @reactive.event(input.recompute_all)
+    @guard("start the recompute")
     def _recompute_all():
         with reactive.isolate():
             if bulk_recompute_active():
@@ -753,6 +786,7 @@ def summary_page_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.confirm_bulk_recompute, ignore_init=True)
+    @guard("recompute every row")
     def _confirm_bulk():
         plan = pending_bulk_recompute()
         req(plan)
@@ -768,6 +802,7 @@ def summary_page_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.open_summary_export, ignore_init=True)
+    @guard("open the export")
     def _open_export():
         st.launch_workspace_modal(state, "summary_export")
 
@@ -853,6 +888,7 @@ def summary_page_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.review_queue_action)  # no ignore_init: same rule as summary_row_action
+    @guard("run that review action")
     def _review_queue_action():
         payload = input.review_queue_action() or {}
         metric = payload.get("metric")
@@ -893,6 +929,7 @@ def summary_page_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.review_confirm, ignore_init=True)
+    @guard("record the review decision")
     def _review_confirm():
         pending = pending_review()
         req(pending and pending.get("metric"))
@@ -927,6 +964,7 @@ def summary_page_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.gallery_filter)  # unset until the gallery first renders: skipped silently
+    @guard("filter the gallery")
     def _gallery_filter():
         gallery_filter_mode.set(input.gallery_filter() or "all")
 
@@ -955,6 +993,7 @@ def summary_page_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.curve_gallery_action)  # no ignore_init: same rule as summary_row_action
+    @guard("run that gallery action")
     async def _gallery_action():
         payload = input.curve_gallery_action() or {}
         metric = payload.get("metric")
@@ -978,6 +1017,7 @@ def summary_page_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(state.workspace_section_nonce, ignore_init=True)
+    @guard("switch section")
     def _curves_section_request():
         # The strip's Gallery / Table chips (the channel is shared with the
         # workspace sections; only this page's values are acted on here).
@@ -987,6 +1027,7 @@ def summary_page_server(input, output, session, state: AppState):
             ui.update_navset("curves_section", selected=value, session=session)
 
     @reactive.effect
+    @guard("track the section")
     def _mirror_curves_section():
         # Location mirror for the strip's chip highlight. One writer: this.
         state.curves_section.set(input.curves_section() or cg.DEFAULT_SECTION)

@@ -2022,8 +2022,13 @@ def session_fields(result: dict) -> dict:
         "data_fingerprint": None,
         "config_version": 0,
         "region_of_applicability": result["region"],
+        # built_by rides in run_meta, which is already a persisted session field, so
+        # this needs no schema change. views/publish.py reads it to say that an
+        # interactive publish records an interactive provenance and does not carry
+        # the run's own.
         "run_meta": {**run_state.new_run_meta(region=result["region"]),
-                     "n_candidates": result["n_candidates"]},
+                     "n_candidates": result["n_candidates"],
+                     "built_by": "regional-agent"},
         "run_stage_status": stage_status_for(result),
         # --- STRAT-00 diagnostics (advisory) ---
         # Without these the Exploratory, Cross-Metric and Verification tabs of a

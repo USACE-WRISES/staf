@@ -1051,12 +1051,13 @@
 /* The navbar carries no tab headers at all: the strip switches every page, so
    the top bar is just the brand plus New/Open/Save/STAF/Help -- the same header
    shape EASI, SFARI and DEEP use. Scoped to the navbar so card-level navsets
-   (data-value elsewhere) are untouched. */
-.navbar .nav-item:has(> a.nav-link[data-value="data"]),
-.navbar .nav-item:has(> a.nav-link[data-value="curves"]),
-.navbar .nav-item:has(> a.nav-link[data-value="publish"]),
-.navbar .nav-item:has(> a.nav-link[data-value="regional"]),
-.navbar .nav-item:has(> a.nav-link[data-value="xsec"]) { display: none; }
+   (data-value elsewhere) are untouched.
+
+   Keyed on the presence of data-value rather than a list of values: only a
+   nav_panel header carries one, while every header action is a nav_control with
+   a plain anchor. The list version went stale the moment the NRSA explorer panel
+   was added and its label appeared beside the brand. */
+.navbar .nav-item:has(> a.nav-link[data-value]) { display: none; }
 
 /* Step-3 Map/Table views. Both stay mounted and are toggled by the
    step3_style output: swapping the map out of an output would leave a second,
@@ -1843,3 +1844,20 @@ table.workbook-grid-table.dataTable tbody tr.selected td {
   font-size: 0.68rem;
   color: #8a95a1;
 }
+
+/* ── Region builder ─────────────────────────────────────────────────────────
+   The page is mostly Bootstrap; these are the parts it does not carry. The log
+   and evidence blocks hold a 35-minute build's narration and a record's computed
+   fields, so both scroll inside themselves rather than growing the page. */
+.rb-page { max-width: 980px; }
+.rb-log { background: #f6f8fa; border: 1px solid #e2e7ef; border-radius: 4px;
+  padding: 0.5rem 0.65rem; margin: 0.4rem 0 0; font-size: 0.76rem; line-height: 1.35;
+  max-height: 16rem; overflow: auto; white-space: pre-wrap; word-break: break-word; }
+.rb-facts { margin-bottom: 0.75rem; }
+.rb-facts td { border: 0; padding: 0.15rem 0; font-size: 0.86rem; }
+.rb-item { background: #fbfdff; }
+.rb-item .form-label { font-size: 0.8rem; margin-bottom: 0.15rem; }
+/* The checkbox group carries a rule sentence per entry, so the label wraps
+   instead of being clipped to one line. */
+.rb-form .checkbox label, .rb-form .form-check-label { white-space: normal;
+  line-height: 1.35; }

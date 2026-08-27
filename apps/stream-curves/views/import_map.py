@@ -68,6 +68,7 @@ from streamcurves.metric_map import (
     metric_map_function_label,
     metric_map_functions_for,
 )
+from streamcurves import nrsa_dataset as nds
 from streamcurves.nrsa import (
     attach_nrsa_metrics,
     load_nrsa_catalog,
@@ -245,21 +246,123 @@ def _state_choices() -> dict[str, str]:
     return {ab: nm for nm, ab in pairs}  # value->label handled at UI build
 
 
+def _nrsa_values_for(sites: pd.DataFrame) -> pd.DataFrame:
+    """Metric values keyed by the site ids in ``sites``.
+
+    The site source and the value source have to move together: the archive
+    keys a station by its oldest cycle's id, so pulling archive sites and then
+    joining them against the single-cycle ``nrsa_metrics.parquet`` would leave
+    roughly half the columns empty. A site id saved before the archive landed is
+    translated through the alias table first, so a reopened project still joins.
+    """
+    everything = _nrsa_all()
+    if (not nds.multi_cycle_available() or everything is None
+            or "station_key" not in everything.columns):
+        return load_nrsa_values()
+    try:
+        aliases = _nrsa_site_id_aliases()
+        asked = [str(s) for s in sites.get("site_id", pd.Series(dtype=object))]
+        # caller id -> station key, then back again, so the returned frame is
+        # keyed by whatever the caller already has in its site_id column
+        wanted_key = {sid: aliases.get(sid, sid) for sid in asked}
+        panel = everything[everything["station_key"].astype(str)
+                           .isin(set(wanted_key.values()))]
+        if panel.empty:
+            return load_nrsa_values()
+        values = nds.panel_values(panel, dataset=nds.MULTI_CYCLE_DATASET_ID)
+        by_key = values.set_index(values["site_id"].astype(str))
+        rows = [sid for sid in asked if wanted_key[sid] in by_key.index]
+        out = by_key.loc[[wanted_key[sid] for sid in rows]].reset_index(drop=True)
+        out["site_id"] = rows
+        return out
+    except Exception:  # noqa: BLE001  (fall back to the bundled values)
+        logger.exception("multi-cycle NRSA values unavailable, using nrsa_metrics.parquet")
+        return load_nrsa_values()
+
+
+def _state_matches(column: pd.Series, wanted_name: str) -> pd.Series:
+    """Rows whose state is ``wanted_name``, however the source spells it.
+
+    ``nrsa_sites.csv`` was all full names, but the archive mixes three forms:
+    2,311 full names, 1,972 two-letter abbreviations and 95 border sites listed
+    as ``AL:GA``. Comparing the raw strings against a full name silently drops
+    47 percent of stations, so resolve every form to the full name first and
+    match a border site under either of its states.
+    """
+    to_name = _state_choices()          # {"IN": "Indiana", ...}
+    target = str(wanted_name).strip().casefold()
+
+    def hit(raw) -> bool:
+        for part in str(raw).split(":"):
+            part = part.strip()
+            if not part:
+                continue
+            full = to_name.get(part.upper(), part)
+            if str(full).strip().casefold() == target:
+                return True
+        return False
+
+    return column.astype(str).map(hit)
+
+
 @lru_cache(maxsize=1)
 def _nrsa_all() -> pd.DataFrame | None:
+    """Every NRSA station the wizard can offer, one row each.
+
+    The three-cycle archive when it is built, which is what the NRSA explorer
+    shows: roughly 4,378 stations against the 1,908 in the single-cycle
+    ``nrsa_sites.csv``, so Eastern Corn Belt Plains offers 51 rather than 18.
+    Each station contributes the visit from the most recent cycle that sampled
+    it, the same pooling policy the headless agent uses.
+
+    Falls back to the bundled CSV when ``data/nrsa/`` is absent, since a
+    checkout without the archive still has to run.
+    """
+    if nds.multi_cycle_available():
+        try:
+            panel, _ = nds.resolve_site_panel(
+                None, dataset=nds.MULTI_CYCLE_DATASET_ID)
+            if len(panel):
+                return panel
+        except Exception:  # noqa: BLE001  (fall back to the bundled catalog)
+            logger.exception("multi-cycle NRSA panel unavailable, using nrsa_sites.csv")
     try:
         return pd.read_csv(_NRSA_SITES)
     except Exception:  # noqa: BLE001
         return None
 
 
+@lru_cache(maxsize=1)
+def _nrsa_site_id_aliases() -> dict[str, str]:
+    """Per-cycle EPA site id -> the station key the archive files it under.
+
+    A station sampled in more than one cycle is keyed by its oldest id, so the
+    2018-19 id ``NRS18_IN_10013`` lives under ``INLS-1045``. 930 of the 1,906
+    ids in the old ``nrsa_sites.csv`` are in that position, so without this a
+    project saved before the archive landed would have half its sites read as
+    uploads and join to no metrics. All 1,906 resolve through the visit table.
+    """
+    if not nds.multi_cycle_available():
+        return {}
+    try:
+        visits = nds.load_dataset(nds.MULTI_CYCLE_DATASET_ID).visits
+    except Exception:  # noqa: BLE001
+        return {}
+    if visits is None or "site_id" not in visits.columns:
+        return {}
+    return {str(sid): str(key)
+            for sid, key in zip(visits["site_id"], visits["station_key"])}
+
+
 def _known_nrsa_site_ids() -> set[str]:
     """Every NRSA site id the app can recognize offline: the bundled candidate
-    catalog plus the vendored screening-evidence file."""
+    catalog plus the vendored screening-evidence file, and every per-cycle site
+    id in the archive so a project saved against an older id still reads as NRSA."""
     ids: set[str] = set(_nrsa_comids().keys())
     d = _nrsa_all()
     if d is not None and "site_id" in d.columns:
         ids.update(str(v) for v in d["site_id"].tolist())
+    ids.update(_nrsa_site_id_aliases())
     return ids
 
 
@@ -582,7 +685,7 @@ def import_map_server(
         if kind == "state":
             if not region_name():
                 return None
-            return d[d["state"].astype(str) == str(region_name())]
+            return d[_state_matches(d["state"], region_name())]
         if kind == "polygon":
             # Normalised, so a region restored from a saved session (which may
             # carry a full Polygon geometry rather than bare rings) filters the
@@ -1293,13 +1396,22 @@ def import_map_server(
                 # slower and its endpoint intermittently 502s, which used to
                 # surface as "no NHD stream found near this point".
                 seeded = _nrsa_comids()
+                from_evidence = site_ids.map(seeded)
+                # The archive backfills a COMID for every station, including the
+                # ones EPA published none for, so fall back to it rather than to
+                # the live snap the comment above warns about.
+                from_archive = (nr["comid"].reset_index(drop=True)
+                                if "comid" in nr.columns else None)
+                comid = (from_evidence if from_archive is None
+                         else from_evidence.reset_index(drop=True).fillna(from_archive))
                 nrsa_part = pd.DataFrame({
                     "site_id": site_ids, "lat": nr["lat"], "lon": nr["lon"],
                     "state": nr["state"], "ag_eco9": nr["ag_eco9"], "huc8": nr["huc8"],
-                    "comid": site_ids.map(seeded),
+                    "comid": comid.to_numpy() if hasattr(comid, "to_numpy") else comid,
                 })
                 nrsa_part["comid_source"] = np.where(
-                    nrsa_part["comid"].notna(), "epa_nrsa", "live_snap")
+                    nrsa_part["comid"].isna(), "live_snap",
+                    np.where(pd.notna(from_evidence.to_numpy()), "epa_nrsa", "archive"))
         if upload_part is None and nrsa_part is None:
             _set_sites(None)
             return
@@ -1406,7 +1518,7 @@ def import_map_server(
                 await announce(f"NRSA metrics ({len(nrsa_names)})")
                 nrsa_res = await pull(
                     "nrsa",
-                    lambda: attach_nrsa_metrics(sdf, nrsa_names, load_nrsa_values()),
+                    lambda: attach_nrsa_metrics(sdf, nrsa_names, _nrsa_values_for(sdf)),
                     lambda: None)
                 if nrsa_res is not None:
                     sdf = nrsa_res
@@ -1791,7 +1903,12 @@ def import_map_server(
         return ui.TagList(
             ui.tags.h5(f"Add data{' — ' + region_label() if region_code() else ''}"),
             ui.tags.p("Where should the site data come from? You can combine both.", class_="text-muted"),
-            ui.input_checkbox("use_nrsa", f"Published NRSA monitoring sites in this region ({n_nrsa} available)", value=True),
+            ui.input_checkbox(
+                "use_nrsa",
+                f"Published NRSA monitoring sites in this region ({n_nrsa} available"
+                + (" across the 2013-14, 2018-19 and 2023-24 surveys)"
+                   if nds.multi_cycle_available() else ", 2018-19 survey)"),
+                value=True),
             ui.tags.hr(class_="my-2"),
             ui.input_checkbox("use_upload", "Import additional data — my own site table (CSV / Excel)", value=upload_df() is not None),
             ui.input_file("upload_file", None, accept=[".csv", ".tsv", ".txt", ".xlsx", ".xls"],
@@ -2677,20 +2794,26 @@ def import_map_server(
     @render.ui
     def review_metrics():
         t = _built_tables()
-        cols = [c for c in ("metric_key", "display_name", "column_name", "metric_family", "min_sample_size")
+        # column_name is dropped: metric_key is sanitize_keys(column_name), and
+        # every NRSA and StreamCat column is already a valid identifier, so the
+        # two read the same. The workbook table still carries it.
+        cols = [c for c in ("metric_key", "display_name", "metric_family", "min_sample_size")
                 if c in t["metrics"].columns]
         return _plain_table(t["metrics"][cols])
 
     @render.ui
     def review_predictors():
         t = _built_tables()
-        cols = [c for c in ("predictor_key", "display_name", "column_name", "type")
+        cols = [c for c in ("predictor_key", "display_name", "type")
                 if c in t["predictors"].columns]
         return _plain_table(t["predictors"][cols])
 
     @render.ui
     def review_strats():
         t = _built_tables()
+        # source_column stays: unlike the two tables above, a numeric stratifier
+        # is keyed on its derived binned column, so strat_key elevws_grp comes
+        # from source_column elevws. The pairing is never redundant.
         cols = [c for c in ("strat_key", "display_name", "source_column", "source_data_type", "min_group_size")
                 if c in t["stratifications"].columns]
         return _plain_table(t["stratifications"][cols])

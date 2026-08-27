@@ -3,7 +3,16 @@ phase_tracker.R's phase_tracker_ui()."""
 
 from __future__ import annotations
 
+import functools
+import inspect
+import traceback
+
 from shiny import ui
+from shiny.types import (
+    NotifyException,
+    SilentCancelOutputException,
+    SilentException,
+)
 
 from streamcurves.curves import CURVE_FORM_MONOTONE, CURVE_FORM_OPTIMUM, curve_form_of
 from views.state import PHASE_LABELS
@@ -101,6 +110,79 @@ def explanation_card(title, *body):
         class_="border-info mb-2",
         fill=False,
     )
+
+
+
+# --------------------------------------------------------------------------- #
+# Reactive-effect guard.
+#
+# py-shiny treats the two kinds of failure very differently. An exception raised
+# inside a @render.* output is caught per output: the traceback prints and that
+# one output box shows an error, and the session carries on. An exception raised
+# inside a @reactive.effect reaches Session._unhandled_error, which calls
+# session.close() -- the websocket goes and every reactive value with it. A
+# project lives only in session memory here, so that is not an error message,
+# it is the whole run gone with no way back.
+#
+# So a handler that can raise wears this. It is the innermost decorator, under
+# @reactive.event, because reactive.event has to see the guarded callable:
+#
+#     @reactive.effect
+#     @reactive.event(input.save_mapping)
+#     @guard("save the mapping")
+#     def _save():
+#         ...
+#
+# `action` completes the sentence "Could not ...", so phrase it as the thing the
+# user was trying to do, not the internal step that failed.
+# --------------------------------------------------------------------------- #
+
+
+#: Shiny's own control flow, not failures. SilentException and its subclasses are
+#: what req() and an unset input raise to stop an effect quietly;
+#: SilentOperationInProgressException and SilentCancelOutputException are its
+#: siblings; NotifyException already carries its own message and its own decision
+#: about whether to close. All of them must reach Shiny untouched -- swallowing a
+#: SilentException turns "this input is not set yet" into a red error toast.
+_SHINY_CONTROL_FLOW = (SilentException, SilentCancelOutputException, NotifyException)
+
+
+def _report(action: str, exc: Exception) -> None:
+    traceback.print_exc()
+    ui.notification_show(f"Could not {action}: {exc}", type="error", duration=10)
+
+
+def guard(action: str):
+    """Report a reactive-effect failure instead of ending the session."""
+
+    def decorate(fn):
+        if inspect.iscoroutinefunction(fn):
+
+            @functools.wraps(fn)
+            async def awrapper(*args, **kwargs):
+                try:
+                    return await fn(*args, **kwargs)
+                except _SHINY_CONTROL_FLOW:
+                    raise
+                except Exception as exc:  # noqa: BLE001 - the point is to catch all
+                    _report(action, exc)
+                    return None
+
+            return awrapper
+
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            try:
+                return fn(*args, **kwargs)
+            except _SHINY_CONTROL_FLOW:
+                raise
+            except Exception as exc:  # noqa: BLE001 - the point is to catch all
+                _report(action, exc)
+                return None
+
+        return wrapper
+
+    return decorate
 
 
 # --------------------------------------------------------------------------- #

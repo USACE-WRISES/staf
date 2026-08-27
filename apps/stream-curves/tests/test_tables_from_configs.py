@@ -295,3 +295,55 @@ def test_dangling_metric_links_are_dropped_not_emitted():
         data, mc, {"elevws": {"column_name": "elevws", "type": "continuous"}})
     assert list(tables["metric_predictors"]["predictor_key"]) == ["elevws"]
     assert len(tables["metric_stratifications"]) == 0
+
+
+# --------------------------------------------------------------------------- #
+# What the Review & build tables show
+#
+# metric_key and predictor_key are sanitize_keys(column_name), so for NRSA and
+# StreamCat data the two columns read the same and column_name was dropped from
+# the display. source_column stays on Stratifications, where it is never
+# redundant. These pin the reasoning so a later tidy-up does not take the wrong
+# one away.
+# --------------------------------------------------------------------------- #
+
+def test_a_key_matches_its_column_for_a_published_metric_name():
+    data = pd.DataFrame({"phab_XEMBED": [1.0, 2.0], "bfiws": [3.0, 4.0]})
+    assignments = pd.DataFrame({
+        "column": ["phab_XEMBED", "bfiws"],
+        "is_metric": [True, False], "is_predictor": [False, True],
+        "is_stratifier": [False, False],
+    })
+    tables = build_config_tables_from_roles(data, assignments)
+    assert list(tables["metrics"]["metric_key"]) == list(tables["metrics"]["column_name"])
+    assert list(tables["predictors"]["predictor_key"]) == list(
+        tables["predictors"]["column_name"])
+
+
+def test_an_uploaded_header_makes_the_key_and_the_column_diverge():
+    """Why the workbook table keeps column_name even though the Review tab no
+    longer shows it: an upload's header is not always a valid identifier."""
+    data = pd.DataFrame({"Sand + fines (%)": [1.0, 2.0], "2019 imperv": [3.0, 4.0]})
+    assignments = pd.DataFrame({
+        "column": ["Sand + fines (%)", "2019 imperv"],
+        "is_metric": [True, True], "is_predictor": [False, False],
+        "is_stratifier": [False, False],
+    })
+    metrics = build_config_tables_from_roles(data, assignments)["metrics"]
+    assert set(metrics["metric_key"]) == {"Sand_fines", "X2019_imperv"}
+    assert set(metrics["column_name"]) == {"Sand + fines (%)", "2019 imperv"}
+
+
+def test_a_numeric_stratifier_is_keyed_on_a_derived_column():
+    """source_column is kept on the Stratifications table because of this: the
+    key is the binned column, the source is the one it was binned from."""
+    data = pd.DataFrame({"elevws": [10.0, 200.0, 400.0, 800.0, 1600.0, 3200.0]})
+    assignments = pd.DataFrame({
+        "column": ["elevws"], "is_metric": [False], "is_predictor": [False],
+        "is_stratifier": [True],
+    })
+    strats = build_config_tables_from_roles(data, assignments)["stratifications"]
+    assert len(strats) == 1
+    assert strats["strat_key"].iat[0] != strats["source_column"].iat[0]
+    assert strats["source_column"].iat[0] == "elevws"
+    assert strats["strat_key"].iat[0].startswith("elevws")
