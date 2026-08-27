@@ -240,7 +240,22 @@
     }
   });
 
+  // The step anchors carry no href, so the browser gives them no keyboard activation of
+  // its own; they carry tabindex instead and this supplies Enter and Space.
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " " && e.key !== "Spacebar") return;
+    var step = e.target.closest && e.target.closest("[data-step]");
+    if (!step) return;
+    e.preventDefault();                     // Space would scroll the page otherwise
+    send("step_nav", { key: step.dataset.step });
+  });
+
   document.addEventListener("click", function (e) {
+    // Step navigator. One event id for both steppers (left pane + worksheet rail), so
+    // neither can register a Shiny input the other already owns.
+    var step = e.target.closest("[data-step]");
+    if (step) { send("step_nav", { key: step.dataset.step }); return; }
+
     var rep = e.target.closest("[data-report]");
     if (rep) { send("open_report_evt", {}); return; }
     // Prev / Next / jump. "Done" (Next on the last function) opens the report; every other

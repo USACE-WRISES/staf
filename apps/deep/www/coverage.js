@@ -14,9 +14,30 @@
 (function () {
   "use strict";
 
-  // Bright azure reads on both USGS topo (light) and USGS imagery (dark); fill:false so the
-  // interior passes clicks through to place a survey point.
-  var OUTLINE = { color: "#1f9dff", weight: 3, opacity: 1, fill: false };
+  // Two layers per region. FILL carries the tint and a dark casing and is
+  // interactive:false -> pointer-events:none, so a click inside a region still
+  // reaches the map handler that places a survey point. That is load-bearing,
+  // not cosmetic: a filled path left interactive swallows the click and breaks
+  // the app's main interaction.
+  //
+  // The tint is a warm grey, and both halves of that are measured rather than
+  // taste. All three tile layers sit on the map at once and USGS Topo is the
+  // opaque one on top, so the visible background is LIGHT (mean luminance 220 of
+  // 255) — the tint has to be darker than the basemap to shade it. A near-white
+  // was tried first and moved luminance by 2, which is below the ~4 threshold
+  // where anything is perceptible at all: it drew nothing. 0.12 of this grey
+  // moves it 14, which reads as light shading and stays far below the delineated
+  // watershed's 0.40 yellow so the two never look alike.
+  //
+  // Warm, because the topo tiles average RGB 209,223,223 and the hydrography
+  // overlay washes more blue on top. A cool grey would blend into exactly the
+  // cast the regions need to stand out from. Switching to the imagery basemap
+  // drops this to a delta of about 6, and the dark casing carries the boundary.
+  var FILL = { color: "#0b2a3d", weight: 4, opacity: 0.30,
+               fill: true, fillColor: "#6b6459", fillOpacity: 0.12,
+               interactive: false };
+  var OUTLINE = { color: "#1f9dff", weight: 2, opacity: 1, fill: false };
+  var HOVER_FILL_OPACITY = 0.20;
   var ZOOM_SVG = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
     "stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'>" +
     "<path d='M6 2H2v4M10 2h4v4M10 14h4v-4M6 14H2v-4'/></svg>";
@@ -61,13 +82,25 @@
       var aid = f.assessmentId;
       if (!aid || layers[aid] || !f.geometry) return;
       try {
-        // interactive (default) so the OUTLINE shows a hover tooltip; interior is fill:false,
-        // so clicks pass through to place a survey point.
-        var lyr = window.L.geoJSON({ type: "Feature", geometry: f.geometry },
-          { style: function () { return OUTLINE; } });
-        lyr.bindTooltip(String(f.name || f.region || aid),
+        var geom = { type: "Feature", geometry: f.geometry };
+        // fill first so it renders beneath the outline (children draw in add order)
+        var fill = window.L.geoJSON(geom, { style: function () { return FILL; } });
+        // the outline stays interactive: it carries the tooltip and the hover
+        var outline = window.L.geoJSON(geom, { style: function () { return OUTLINE; } });
+        outline.bindTooltip(String(f.name || f.region || aid),
           { sticky: true, direction: "top", opacity: 0.95 });
-        layers[aid] = lyr;
+        // Hover fires on the boundary, not anywhere inside: hover-anywhere would
+        // need an interactive fill, which is exactly what blocks point placement.
+        // The tooltip already behaved this way, so this is not a regression.
+        outline.on("mouseover", function () {
+          fill.setStyle({ fillOpacity: HOVER_FILL_OPACITY });
+        });
+        outline.on("mouseout", function () {
+          fill.setStyle({ fillOpacity: FILL.fillOpacity });
+        });
+        // featureGroup keeps getBounds(), so the toggle and zoom-to-extent code
+        // below goes on treating layers[aid] as one layer
+        layers[aid] = window.L.featureGroup([fill, outline]);
       } catch (e) { /* bad geometry — skip */ }
     });
     syncFromChecks();

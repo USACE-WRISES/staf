@@ -53,10 +53,13 @@ USGS_ATTR = "USGS The National Map"
 FLOW_ZOOM = 14
 SNAP_TOL_FT = 150.0
 
-STEP_IDENTIFY, STEP_BASIN, STEP_ASSESS, STEP_MEASURE, STEP_REPORT = \
-    "identify", "basin", "assess", "measure", "report"
+# Four steps, the same shape EASI and SFARI use. Nothing sits between delineating and
+# measuring: the assessment follows from the point, so Basin resolves it and reports it
+# rather than asking for it.
+STEP_IDENTIFY, STEP_BASIN, STEP_MEASURE, STEP_REPORT = \
+    "identify", "basin", "measure", "report"
 STEP_LABELS = [(STEP_IDENTIFY, "Identify"), (STEP_BASIN, "Basin"),
-               (STEP_ASSESS, "Region"), (STEP_MEASURE, "Assessment"), (STEP_REPORT, "Report")]
+               (STEP_MEASURE, "Assessment"), (STEP_REPORT, "Report")]
 
 CATEGORY_ORDER = list(config.CATEGORY_ORDER)
 _FNF_SHORT = {"Functioning": "F", "Functioning-at-Risk": "AR", "Non-Functioning": "NF"}
@@ -228,6 +231,112 @@ def _tier_label(tier) -> str:
     return _TIER_LABELS.get(str(tier), str(tier).replace("_", " "))
 
 
+def _ref_to_adopt(current_ref, covering):
+    """The ref Basin should adopt on its own, or None to leave the choice alone.
+
+    Adopting reloads the assessment, which clears every measured value, so this has to
+    be one-shot: once a ref is set (automatically, by hand, by a ?assessment= link, or
+    by a restored session) it stands until the user picks another.
+    """
+    if current_ref:
+        return None
+    if not covering:
+        return None
+    return covering[0].get("defaultRef") or None
+
+
+def _session_ref(state: dict, raw: dict):
+    """The "id@vN" a restored session was scored against, or None if it cannot be named.
+
+    v2 sessions record assessmentId and version in their provenance block; the embedded
+    bundle carries both as a fallback for a migrated v1 file.
+    """
+    prov = (state or {}).get("provenance") or {}
+    aid = prov.get("assessmentId") or (raw or {}).get("assessmentId") or ""
+    ver = prov.get("version") or ((raw or {}).get("library") or {}).get("version")
+    if not aid:
+        return None
+    return f"{aid}@v{ver}" if ver else aid
+
+
+def _assessment_facts(la, ref) -> dict:
+    """The facts the Basin pane states about the assessment it resolved."""
+    cov = assessments.coverage_of(la)
+    nmet = sum(len(fn.get("metrics", [])) for fn in la.metrics_by_function)
+    cov_note = ("" if cov["covered"] >= cov["total"]
+                else f" ({cov['excluded']} documented)" if cov["declared"]
+                else " (not declared)")
+    lib = la.raw.get("library") or {}
+    region = la.raw.get("region") or lib.get("region") or {}
+    return {
+        "name": la.assessment_name,
+        "region": region.get("name") or "",
+        "lifecycle": session.lifecycle_status(la.raw),
+        "version": lib.get("version"),
+        "ref": ref or "",
+        "counts": f"{nmet} metrics · {cov['covered']} of {cov['total']} functions{cov_note}",
+        "tier": _tier_label(la.raw.get("referenceTier")),
+        "best_available": str(la.raw.get("referenceTier")) == "best_available",
+    }
+
+
+def _assessment_pane_block(la, ref, *, can_change: bool, covers_site: bool = True):
+    """The resolved-assessment block that sits under the basin card.
+
+    Everything the old Region step said, in the pane that already holds the basin it
+    applies to. The version chooser moves behind "Change" because a point resolves to
+    one candidate almost every time.
+    """
+    f = _assessment_facts(la, ref)
+    badge_cls = "deep-badge-cert" if f["lifecycle"] == "certified" else "deep-badge-prelim"
+    meta = ([f'v{f["version"]}'] if f["version"] else []) + [f["counts"]]
+    lines = []
+    if f["region"]:
+        lines.append(ui.div(f["region"], class_="deep-pane-line"))
+    lines.append(ui.div(" · ".join(meta), class_="deep-pane-line"))
+    if f["tier"]:
+        lines.append(ui.div(f'Reference tier: {f["tier"]}', class_="deep-pane-line"))
+    if f["best_available"]:
+        lines.append(ui.div("Scores compare the site with the best remaining streams of the "
+                            "region, not with unimpaired condition.", class_="deep-pane-note"))
+    if not covers_site:
+        lines.append(ui.div("This assessment's region does not contain your site.",
+                            class_="deep-pane-caution"))
+    return ui.div(
+        ui.div(ui.span("Assessment", class_="deep-pane-label"),
+               ui.span(f["lifecycle"], class_=f"deep-card-badge {badge_cls}"),
+               class_="deep-pane-head"),
+        ui.div(f["name"], class_="deep-pane-name"),
+        *lines,
+        (ui.div(ui.input_action_link("change_assessment", "Change"),
+                class_="deep-pane-change") if can_change else None),
+        class_="deep-pane-assess")
+
+
+def _no_assessment_block(*, has_candidates: bool = False):
+    """Basin's blocked state.
+
+    ``has_candidates`` is the rare case where assessments do cover the point but none
+    loaded, i.e. load_ref raised; the picker is still worth offering there.
+    """
+    if has_candidates:
+        return ui.div(
+            ui.div("Assessment", class_="deep-pane-label"),
+            ui.div("No assessment loaded", class_="deep-pane-name"),
+            ui.div("Choose one of the assessments that cover this point.",
+                   class_="deep-pane-line"),
+            ui.div(ui.input_action_link("change_assessment", "Choose"),
+                   class_="deep-pane-change"),
+            class_="deep-pane-assess is-blocked")
+    return ui.div(
+        ui.div("Assessment", class_="deep-pane-label"),
+        ui.div("No assessment covers this point", class_="deep-pane-name"),
+        ui.div("Detailed scoring needs a published assessment whose region contains your "
+               "site. The shaded regions on the map are the areas with coverage.",
+               class_="deep-pane-line"),
+        class_="deep-pane-assess is-blocked")
+
+
 def _metric_tip_html(m) -> str:
     """Rich hover card for a metric: how to collect it, plus what stands behind
     its curve. Pulls the assessment's ``metricStatement`` / ``howToMeasure`` /
@@ -350,6 +459,12 @@ def _geo_svg(watershed_gj, reach_gj, w=290, h=180):
 
 
 def _stepper(active):
+    """Step navigator. Plain data-step anchors rather than Shiny action links, matching
+    EASI and SFARI: www/measure.js delegates a click to one `step_nav` event, so the left
+    pane and the worksheet rail cannot register the same input id while both are briefly
+    in the DOM during a step change. tabindex is carried because an anchor with no href
+    is not focusable, which is the one thing input_action_link gave for free.
+    """
     done = True
     items = []
     for key, label in STEP_LABELS:
@@ -358,7 +473,10 @@ def _stepper(active):
             cls += " active"; done = False
         elif done:
             cls += " done"
-        items.append(ui.input_action_link(f"go_{key}", label, class_=cls))
+        attrs = {"data-step": key, "role": "button", "tabindex": "0"}
+        if key == active:
+            attrs["aria-current"] = "step"
+        items.append(ui.tags.a(label, attrs, class_=cls))
     return ui.div(*items, class_="easi-steps")
 
 
@@ -389,13 +507,13 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=9"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=11"),
                     ui.tags.link(rel="stylesheet", href="deep.css?v=7"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
-                    ui.tags.script(src="measure.js?v=3", defer=""),
-                    ui.tags.script(src="coverage.js", defer="")),
+                    ui.tags.script(src="measure.js?v=4", defer=""),
+                    ui.tags.script(src="coverage.js?v=3", defer="")),
     ui.busy_indicators.use(pulse=False),
     ui.div(
         ui.div(
@@ -497,11 +615,10 @@ def server(input, output, session_):  # noqa: C901
     view_bbox = reactive.value(None)
     last_view_change = reactive.value(0.0)
     fetched_bbox = reactive.value(None)
-    step_clicks = reactive.value({k: 0 for k, _ in STEP_LABELS})
 
     loaded_assessment = reactive.value(None)          # LoadedAssessment | None
-    selected_ref = reactive.value(None)               # "id@vN" chosen in the Assessment step
-    covering_cache = reactive.value([])               # covering_refs() entries for pick handlers
+    selected_ref = reactive.value(None)               # "id@vN" resolved on Basin
+    covering_cache = reactive.value([])               # the list the open picker rendered
     measured_values = reactive.value({})              # {metricId: {value, na, note, origin, source}}
     current_fn = reactive.value(0)
     compute_nonce = reactive.value(0)          # bumped when desktop-compute merges values
@@ -549,7 +666,7 @@ def server(input, output, session_):  # noqa: C901
             return
         loaded_assessment.set(la); selected_ref.set(resolved_ref)
         measured_values.set({}); current_fn.set(0)
-        current_step.set(STEP_ASSESS)
+        current_step.set(STEP_IDENTIFY)
         if requested_ref and resolved_ref != requested_ref:
             ui.notification_show(
                 f"Requested v{req_version} of {la.assessment_name} is not available; "
@@ -851,15 +968,16 @@ def server(input, output, session_):  # noqa: C901
 
     # ---- step navigation ----
     @reactive.effect
-    @reactive.event(input.to_assess)
-    def _go_assess():
-        current_step.set(STEP_ASSESS)
-
-    @reactive.effect
     @reactive.event(input.to_measure)
     def _go_measure():
         if loaded_assessment() is None:
-            ui.notification_show("Load an assessment first.", type="warning", duration=3)
+            # The button stays enabled rather than rendering disabled: re-rendering it to
+            # flip the attribute resets its click count, which reactive.event reads as a
+            # click.
+            ui.notification_show(
+                "No assessment covers this point, so there is nothing to score."
+                if not _covering_here() else "Choose an assessment first.",
+                type="warning", duration=4)
             return
         current_fn.set(0)
         current_step.set(STEP_MEASURE)
@@ -874,31 +992,32 @@ def server(input, output, session_):  # noqa: C901
         return True
 
     @reactive.effect
+    @reactive.event(input.step_nav)
     def _stepper_nav():
-        cur = {}
-        for key, _ in STEP_LABELS:
-            try:
-                cur[key] = input[f"go_{key}"]() or 0
-            except Exception:
-                cur[key] = 0
+        """One handler for both steppers; www/measure.js posts the target on a data-step
+        click or an Enter/Space keypress."""
+        target = (input.step_nav() or {}).get("key")
+        if target not in dict(STEP_LABELS):
+            return
+        # _has reads delin() and loaded_assessment(); isolate them or this effect takes
+        # them as dependencies and re-runs on every delineation.
         with reactive.isolate():
-            prev = step_clicks()
-            target = next((k for k, _ in STEP_LABELS if cur[k] > prev.get(k, 0)), None)
-            step_clicks.set(cur)
-            if target is None:
-                return
-            if _has(target):
-                current_step.set(target)
-                if target == STEP_REPORT:
-                    ui.modal_show(_report_modal())
-            else:
-                ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
+            allowed = _has(target)
+        if allowed:
+            current_step.set(target)
+            if target == STEP_REPORT:
+                ui.modal_show(_report_modal())
+        else:
+            ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
 
     def _do_reset():
         for k in ("ws", "reach", "marker"):
             _remove_layer(k)
         snapped_point.set(None); delin.set(None); stage.set("")
         loaded_assessment.set(None); measured_values.set({}); current_fn.set(0)
+        # Basin adopts only when nothing is chosen, so a stale ref here would stop the
+        # next delineation from ever resolving one.
+        selected_ref.set(None); covering_cache.set([])
         computed_for.set(None)
         ui.update_numeric("lat", value=None)
         ui.update_numeric("lon", value=None)
@@ -958,12 +1077,12 @@ def server(input, output, session_):  # noqa: C901
             ui.markdown(
                 "1. **Identify** — zoom in until blue stream lines appear and click a stream (or type "
                 "coordinates / search an address). Set the reach length and click **Delineate**.\n"
-                "2. **Basin** — review the watershed and reach.\n"
-                "3. **Region** — pick a published detailed assessment whose area of "
-                "applicability covers your site (certified before preliminary).\n"
-                "4. **Assessment** — enter each metric's measured value; the reference curve converts "
+                "2. **Basin** — review the watershed and reach. The published assessment "
+                "whose area of applicability covers your site is resolved here (certified "
+                "before preliminary); use **Change** when more than one applies.\n"
+                "3. **Assessment** — enter each metric's measured value; the reference curve converts "
                 "it to an index and the function/outcome scores update live.\n"
-                "5. **Report** — review and export the detailed assessment."),
+                "4. **Report** — review and export the detailed assessment."),
             title="How to use DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
     # ---- left pane ----
@@ -996,8 +1115,9 @@ def server(input, output, session_):  # noqa: C901
         elif step == STEP_BASIN:
             body = ui.TagList(
                 ui.output_ui("basin_card"),
+                ui.output_ui("assess_pane"),
                 ui.div(ui.input_action_button("clear_basin", "Clear", class_="btn-outline-secondary"),
-                       ui.input_action_button("to_assess", "Choose assessment", class_="btn-primary"),
+                       ui.input_action_button("to_measure", "Continue", class_="btn-primary"),
                        class_="easi-pane-actions"))
         else:  # assess / measure / report -> full-width worksheet replaces the left pane
             return None
@@ -1043,7 +1163,7 @@ def server(input, output, session_):  # noqa: C901
         # The map is the workspace only on Identify/Basin; on the worksheet steps the
         # overlay covers it, so hide the zoom/lat-lon readout there (it would poke over
         # the worksheet's bottom-left corner otherwise).
-        if not _HAS_MAP or current_step() in (STEP_ASSESS, STEP_MEASURE, STEP_REPORT):
+        if not _HAS_MAP or current_step() in (STEP_MEASURE, STEP_REPORT):
             return None
         z, c = _view()
         if not c:
@@ -1073,63 +1193,59 @@ def server(input, output, session_):  # noqa: C901
             ".easi-map-wrap .leaflet-container.leaflet-dragging .leaflet-grab{cursor:grabbing !important;}")
 
     # ======================================================================= #
-    # Assessment step
+    # Assessment resolution (Basin step)
     # ======================================================================= #
-    # Full-width Assessment step. covering_refs() groups the eligible versions per
-    # covering assessment id; each card carries a version chooser + a lifecycle badge.
+    # covering_refs() groups the eligible versions per covering assessment id and sorts
+    # certified before preliminary, so the first entry is the one to adopt. The card grid
+    # is unchanged, it just lives behind "Change" now.
     _MAX_ASSESS_CARDS = 16
 
-    def _assess_site() -> dict:
-        with reactive.isolate():
-            pt = snapped_point()
-            dd = (delin() or {}).get("delineation") or {}
+    @reactive.calc
+    def _covering_here():
+        """Assessments whose area of applicability contains this site's point.
+
+        Reactive on the point deliberately. The old Region step re-read this only because
+        the step changed; with the step gone nothing else would trigger it, so an isolated
+        read would go stale the moment a second point was delineated.
+        """
+        pt = snapped_point()
+        dd = (delin() or {}).get("delineation") or {}
         lat = pt[0] if pt else dd.get("snapped_lat")
         lon = pt[1] if pt else dd.get("snapped_lon")
-        regions = (assessments.resolve_site_regions(lat, lon)
-                   if lat is not None and lon is not None else {})
-        return {"lat": lat, "lon": lon,
-                "level3": regions.get("level3") or {}, "state": regions.get("state") or {}}
+        if lat is None or lon is None:
+            return []
+        return assessments.covering_refs(lat, lon, require_polygon=True)
+
+    @reactive.effect
+    def _resolve_assessment():
+        """Adopt an assessment as soon as there is a basin for it to apply to."""
+        if delin() is None:
+            return
+        covering = _covering_here()
+        with reactive.isolate():
+            ref = _ref_to_adopt(selected_ref(), covering)
+        if ref:
+            _load_ref_into_state(ref, quiet=True)
 
     @render.ui
-    def assess_context():
-        if current_step() != STEP_ASSESS:
+    def assess_pane():
+        if current_step() != STEP_BASIN or delin() is None:
             return None
-        site = _assess_site()
-        l3, stt = site["level3"], site["state"]
-        bits = []
-        if site["lat"] is not None:
-            bits.append(f'Lat {site["lat"]:.4f}, Lon {site["lon"]:.4f}')
-        if stt.get("name") or stt.get("code"):
-            bits.append(str(stt.get("name") or stt.get("code")))
-        if l3.get("code"):
-            bits.append(f'Level III ecoregion {l3.get("code")}'
-                        + (f' ({l3.get("name")})' if l3.get("name") else ""))
-        return ui.div(
-            ui.div(_stepper(STEP_ASSESS), class_="deep-assess-stepper"),
-            ui.div("Choose a detailed assessment", class_="deep-assess-title"),
-            ui.div("Each assessment defines the metrics and reference curves used to score "
-                   "this site. Assessments whose area of applicability covers your point are "
-                   "shown below.", class_="deep-assess-sub"),
-            ui.div(ui.span("Site: "), " · ".join(bits) if bits else "No point selected",
-                   class_="deep-assess-context"),
-            class_="deep-assess-context-wrap")
+        covering = _covering_here()
+        la = loaded_assessment()
+        if la is None:
+            return _no_assessment_block(has_candidates=bool(covering))
+        return _assessment_pane_block(
+            la, selected_ref(),
+            can_change=(len(covering) > 1
+                        or sum(len(entry["refs"]) for entry in covering) > 1),
+            # An assessment outlives the point it was loaded for: a ?assessment= link or
+            # a restored session can name a region this site is not in. Compared by id,
+            # not by ref, because every version of an assessment shares one region.
+            covers_site=any(e["assessmentId"] == la.assessment_id for e in covering))
 
-    @render.ui
-    def assess_cards():
-        if current_step() != STEP_ASSESS:
-            return None
-        site = _assess_site()
-        covering = (assessments.covering_refs(site["lat"], site["lon"], require_polygon=True)
-                    if site["lat"] is not None else [])
-        covering_cache.set(covering)
-        if not covering:
-            return ui.div(
-                ui.div("No assessment's area of applicability covers this point.",
-                       class_="deep-assess-empty-title"),
-                ui.div("Detailed scoring needs an assessment whose region contains your site. "
-                       "Try a point inside a published region, or ask the library maintainer "
-                       "to publish one for this area.", class_="deep-assess-empty-sub"),
-                class_="deep-assess-empty")
+    def _assess_cards_ui(covering):
+        """One card per covering assessment, each with its own version chooser."""
         sel = selected_ref()
         cards = []
         for i, entry in enumerate(covering[:_MAX_ASSESS_CARDS]):
@@ -1166,71 +1282,31 @@ def server(input, output, session_):  # noqa: C901
                 class_="deep-assess-card is-selected" if is_sel else "deep-assess-card"))
         return ui.div(*cards, class_="deep-assess-cards")
 
-    @render.ui
-    def assess_detail():
-        if current_step() != STEP_ASSESS:
-            return None
-        la = loaded_assessment()
-        covering = covering_cache()
-        if la is None:
-            if not covering:
-                return ui.div(
-                    ui.input_action_button("to_measure", "Continue to assessment",
-                                           class_="btn-primary", disabled="disabled"),
-                    ui.div("Select an assessment above to continue.",
-                           class_="deep-assess-detail-hint"),
-                    class_="deep-assess-detail")
-            return ui.div("Select an assessment above to see its details.",
-                          class_="deep-assess-placeholder")
-        cov = assessments.coverage_of(la)
-        nfun = cov["covered"]
-        nmet = sum(len(fn.get("metrics", [])) for fn in la.metrics_by_function)
-        cov_note = ("" if nfun >= cov["total"]
-                    else f" ({cov['excluded']} documented)" if cov["declared"]
-                    else " (not declared)")
-        lib = la.raw.get("library") or {}
-        region = la.raw.get("region") or lib.get("region") or {}
-        life = session.lifecycle_status(la.raw)
-        ref = selected_ref() or ""
-        info = []
-        if region.get("name"):
-            info.append(ui.div(f"Region: {region['name']}", class_="deep-assess-detail-line"))
-        if lib.get("version"):
-            updated = (lib.get("updatedAt") or "")[:10]
-            info.append(ui.div(
-                f"Version v{lib['version']}" + (f" · updated {updated}" if updated else "")
-                + f" · {life}", class_="deep-assess-detail-line"))
-        tier = _tier_label(la.raw.get("referenceTier"))
-        if tier:
-            info.append(ui.div(
-                f"Reference tier: {tier}"
-                + (" · scores compare the site with the best remaining streams of the "
-                   "region, not with unimpaired condition"
-                   if str(la.raw.get("referenceTier")) == "best_available" else ""),
-                class_="deep-assess-detail-line"))
-        return ui.div(
-            ui.div(ui.span("✓ ", class_="deep-ok"), la.assessment_name,
-                   class_="deep-assess-detail-name"),
-            ui.div(f"{nmet} metrics · {nfun}/{cov['total']} functions{cov_note}"
-                   + (f" · {ref}" if ref else ""),
-                   class_="deep-assess-detail-line"),
-            *info,
-            ui.div(ui.input_action_button("to_measure", "Continue to assessment",
-                                          class_="btn-primary"),
-                   class_="deep-assess-detail-actions"),
-            class_="deep-assess-detail")
+    @reactive.effect
+    @reactive.event(input.change_assessment)
+    def _change_assessment():
+        covering = _covering_here()
+        # The pick handlers index into this positionally, so snapshot exactly the list
+        # the modal is about to render.
+        covering_cache.set(covering)
+        body = (_assess_cards_ui(covering) if covering
+                else ui.p("No assessment covers this point."))
+        ui.modal_show(ui.modal(body, title="Choose a detailed assessment", size="l",
+                               easy_close=True, footer=ui.modal_button("Cancel")))
 
-    def _load_ref_into_state(ref: str):
+    def _load_ref_into_state(ref: str, *, quiet: bool = False) -> bool:
         try:
             la = assessments.load_ref(ref)
         except Exception as exc:  # noqa: BLE001
             ui.notification_show(f"Could not load assessment: {exc}", type="error", duration=6)
-            return
+            return False
         loaded_assessment.set(la)
         selected_ref.set(ref)
         measured_values.set({})
         current_fn.set(0)
-        ui.notification_show(f"Selected {la.assessment_name}.", type="message", duration=3)
+        if not quiet:
+            ui.notification_show(f"Selected {la.assessment_name}.", type="message", duration=3)
+        return True
 
     def _make_pick_handler(idx: int):
         @reactive.effect
@@ -1244,7 +1320,8 @@ def server(input, output, session_):  # noqa: C901
                 ref = input[f"assess_ver_{idx}"]()
             except Exception:  # noqa: BLE001
                 ref = entry["defaultRef"]
-            _load_ref_into_state(ref or entry["defaultRef"])
+            if _load_ref_into_state(ref or entry["defaultRef"]):
+                ui.modal_remove()
 
     for _i in range(_MAX_ASSESS_CARDS):
         _make_pick_handler(_i)
@@ -1410,12 +1487,6 @@ def server(input, output, session_):  # noqa: C901
     @render.ui
     def worksheet():
         step = current_step()
-        if step == STEP_ASSESS:
-            return ui.div(
-                ui.output_ui("assess_context"),
-                ui.output_ui("assess_cards"),
-                ui.output_ui("assess_detail"),
-                class_="deep-assess-shell")
         if step not in (STEP_MEASURE, STEP_REPORT):
             return None
         return ui.div(
@@ -1804,7 +1875,11 @@ def server(input, output, session_):  # noqa: C901
             try:
                 loaded_assessment.set(assessments.LoadedAssessment.from_dict(raw))
             except Exception:  # noqa: BLE001
-                loaded_assessment.set(None)
+                loaded_assessment.set(None); selected_ref.set(None)
+            else:
+                # Without this the next delineation would see no chosen ref, adopt
+                # whatever covers the point, and wipe the values just restored.
+                selected_ref.set(_session_ref(st, raw))
         if _HAS_MAP and d:
             for k in ("ws", "reach", "marker"):
                 _remove_layer(k)
@@ -1826,7 +1901,7 @@ def server(input, output, session_):  # noqa: C901
             except Exception:  # noqa: BLE001
                 pass
         current_fn.set(0)
-        current_step.set(STEP_MEASURE if loaded_assessment() is not None else STEP_ASSESS)
+        current_step.set(STEP_MEASURE if loaded_assessment() is not None else STEP_BASIN)
         ui.notification_show("Assessment loaded. Resuming.", type="message", duration=4)
 
 
