@@ -9,6 +9,7 @@ from __future__ import annotations
 import pandas as pd
 from shiny import ui
 
+from streamcurves import metric_names
 from streamcurves.profiler import metric_family_levels
 from views.theme import fa
 
@@ -86,10 +87,29 @@ def classify_assignments_from_input(input, profile: pd.DataFrame) -> pd.DataFram
     )
 
 
+def _readable_name_cell(column: str):
+    """What the column actually measures, beside its code.
+
+    The full name rather than ``short_name_for``: that one truncates at about 34
+    characters for tile headers and would render "Road-stream crossings
+    (StreamCat..." in a column with room for the whole thing. Same resolver the
+    Review tab and the metric picker use, so one metric reads identically on
+    every screen. An identifier like ``site_id`` has no dictionary entry and
+    gets an empty cell rather than its code repeated.
+    """
+    name = metric_names.display_name_for(column, "") or ""
+    return ui.tags.td(
+        name,
+        class_="wizard-col-label",
+        title=metric_names.description_for(column, "") or None,
+    )
+
+
 def classify_table_html(ns, profile: pd.DataFrame):
     header = ui.tags.thead(
         ui.tags.tr(
             ui.tags.th("Column"),
+            ui.tags.th("Name"),
             ui.tags.th("Type"),
             ui.tags.th("# Unique"),
             ui.tags.th("% Missing"),
@@ -113,6 +133,7 @@ def classify_table_html(ns, profile: pd.DataFrame):
                     ui.tags.code(str(profile["column"].iat[i])), id_hint,
                     class_="wizard-col-name",
                 ),
+                _readable_name_cell(str(profile["column"].iat[i])),
                 ui.tags.td(str(profile["r_type"].iat[i])),
                 ui.tags.td(str(profile["n_unique"].iat[i])),
                 ui.tags.td(f"{profile['pct_missing'].iat[i]}%"),

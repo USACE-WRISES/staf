@@ -45,6 +45,7 @@ from views import summary_state as sst
 from views.analysis_workspace import analysis_workspace_server, analysis_workspace_ui
 from views.cross_section import cross_section_server, cross_section_ui
 from views.nrsa_explorer import nrsa_explorer_server, nrsa_explorer_ui
+from views.region_builder import region_builder_server, region_builder_ui
 from views.data_overview import data_overview_server, data_overview_ui
 from views.stagebar import stagebar_server, stagebar_ui
 from views.publish import publish_server, publish_ui
@@ -198,6 +199,12 @@ app_ui = ui.page_navbar(
         value="nrsa",
         icon=bi("globe-americas"),
     ),
+    ui.nav_panel(
+        "Region Builder",
+        ui.div(region_builder_ui("build"), class_="mt-3"),
+        value="build",
+        icon=bi("magic"),
+    ),
     ui.nav_spacer(),
     # Header actions (mirrors the SFARI/DEEP New / Open / Save idiom; the
     # divider before Help is a border-left, not a glyph).
@@ -274,6 +281,10 @@ def server(input, output, session):
     # shows rather than at session init, where it races the leaflet bundle
     nrsa_explorer_server("nrsa", state,
                          active=lambda: state.current_tab() == "nrsa")
+    # Same gate: the page reads the site table and a run folder off disk, so it
+    # should do that when it shows rather than at session init.
+    region_builder_server("build", state,
+                          active=lambda: state.current_tab() == "build")
     publish_server("publish", state)
     summary_export_server("summary_export", state)
 

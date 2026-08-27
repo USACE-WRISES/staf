@@ -225,3 +225,24 @@ def test_functions_for_resolved_discipline():
     ])
     assert M.functions_for_resolved_discipline("Hydrology", m) == ["F1", "F2"]
     assert M.functions_for_resolved_discipline("Hydrology", m, include_empty=False) == ["F1"]
+
+
+# --------------------------------------------------------------------------- #
+# What "Clear mappings" produces
+# --------------------------------------------------------------------------- #
+
+def test_a_cleared_mapping_keeps_every_metric_unassigned():
+    """The Clear mappings button resets to this scaffold rather than to an empty
+    frame, so the workbench still has rows to show as unassigned."""
+    cleared = M.blank_function_mapping_scaffold(["phab_XEMBED", "chem_PTL"])
+    assert list(cleared["metric_key"]) == ["phab_XEMBED", "chem_PTL"]
+    assert cleared["discipline"].isna().all()
+    assert cleared["function_label"].isna().all()
+    # and it is a mapping the rest of the stage accepts
+    assert M.validate_discipline_function_mapping(cleared) is not None
+
+
+def test_a_cleared_mapping_covers_nothing():
+    """Exports have to lock: clearing is not a shortcut past the coverage gate."""
+    cleared = M.blank_function_mapping_scaffold(["phab_XEMBED", "chem_PTL"])
+    assert M.function_mapping_full_coverage(cleared, ["phab_XEMBED"]) is False

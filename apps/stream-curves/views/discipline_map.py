@@ -35,6 +35,7 @@ from streamcurves.staf_library import (
     staf_metric_library_entries,
 )
 from views.state import AppState
+from views.uihelpers import guard
 from views.theme import fa
 from views.wb_table import render_wb_table
 
@@ -126,6 +127,11 @@ def discipline_map_ui():
                 class_="btn btn-outline-secondary btn-sm",
             ),
             ui.output_ui("reset_workbook_ui", inline=True),
+            # Last in the group, away from Save: it empties every assignment.
+            ui.input_action_button(
+                "clear_mapping", ui.TagList(fa("eraser"), " Clear mappings"),
+                class_="btn btn-outline-secondary btn-sm",
+            ),
             ui.div(
                 # On by default: the filter is workbench_has_data, i.e. exactly the
                 # metric_config membership that uncovered_functions_from_mapping
@@ -226,6 +232,7 @@ def discipline_map_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.save_mapping)
+    @guard("save the mapping")
     def _save_mapping():
         with reactive.isolate():
             mapping = state.discipline_function_mapping()
@@ -246,6 +253,7 @@ def discipline_map_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.reset_staf)
+    @guard("reset to STAF defaults")
     def _reset_staf():
         with reactive.isolate():
             metric_config = state.metric_config() or {}
@@ -266,7 +274,28 @@ def discipline_map_server(input, output, session, state: AppState):
         )
 
     @reactive.effect
+    @reactive.event(input.clear_mapping)
+    @guard("clear the mapping")
+    def _clear_mapping():
+        """Every metric present, nothing assigned: the scaffold this stage starts
+        from. Not a bare empty frame, which would leave the workbench table with
+        no rows to show as unassigned."""
+        with reactive.isolate():
+            metric_config = state.metric_config() or {}
+        state.discipline_function_mapping.set(
+            blank_function_mapping_scaffold(list(metric_config.keys())))
+        state.discipline_function_mapping_confirmed.set(False)
+        active_function.set(None)
+        ui.notification_show(
+            "Mapping cleared: every metric is now unassigned and exports are "
+            "locked. Assign metrics and Save, or Reset to STAF defaults.",
+            type="warning",
+            duration=8,
+        )
+
+    @reactive.effect
     @reactive.event(input.reset_workbook)
+    @guard("reset to the workbook")
     def _reset_workbook():
         with reactive.isolate():
             startup = state.startup_discipline_function_mapping()
@@ -284,6 +313,7 @@ def discipline_map_server(input, output, session, state: AppState):
     # ---- active function ----------------------------------------------------
     @reactive.effect
     @reactive.event(input.set_active_fn)
+    @guard("select that function")
     def _set_active_fn():
         fn = input.set_active_fn()
         if fn:
@@ -309,6 +339,7 @@ def discipline_map_server(input, output, session, state: AppState):
     # ---- add / remove assignments -------------------------------------------
     @reactive.effect
     @reactive.event(input.add_assign)
+    @guard("assign the metric")
     def _add_assign():
         mk = input.add_assign()
         if not mk:
@@ -352,6 +383,7 @@ def discipline_map_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.remove_assign)
+    @guard("remove the assignment")
     def _remove_assign():
         payload = input.remove_assign()
         if not payload:
@@ -571,7 +603,7 @@ def discipline_map_server(input, output, session, state: AppState):
                     f"{n} STAF function{'' if n == 1 else 's'} with no metric"
                 ),
                 ui.input_action_button(
-                    "open_coverage_exception", "Document a gap",
+                    ns("open_coverage_exception"), "Document a gap",
                     class_="btn btn-outline-secondary btn-sm ms-auto",
                 ),
                 class_="d-flex align-items-center gap-2 mb-1",
@@ -588,6 +620,7 @@ def discipline_map_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.open_coverage_exception)
+    @guard("open the exception form")
     def _open_coverage_exception():
         gaps = _uncovered_functions()
         if not gaps:
@@ -598,25 +631,26 @@ def discipline_map_server(input, output, session, state: AppState):
             ui.p("Recorded on the assessment so a reader can tell a deliberate scope "
                  "decision from an oversight. Travels with the published bundle.",
                  class_="text-muted small"),
-            ui.input_select("exc_function", "Function",
+            ui.input_select(ns("exc_function"), "Function",
                             {fid: name for fid, name in gaps}),
-            ui.input_select("exc_reason", "Reason",
+            ui.input_select(ns("exc_reason"), "Reason",
                             {r: r.replace("-", " ") for r in FUNCTION_EXCLUSION_REASONS}),
             ui.input_text_area(
-                "exc_justification", "Justification", rows=3, width="100%",
+                ns("exc_justification"), "Justification", rows=3, width="100%",
                 placeholder="Why this function carries no metric in this assessment.",
             ),
-            ui.input_text("exc_recorded_by", "Recorded by", value=_default_actor()),
+            ui.input_text(ns("exc_recorded_by"), "Recorded by", value=_default_actor()),
             title="Document an uncovered function",
             footer=ui.TagList(
                 ui.modal_button("Cancel"),
-                ui.input_action_button("exc_save", "Record", class_="btn btn-primary"),
+                ui.input_action_button(ns("exc_save"), "Record", class_="btn btn-primary"),
             ),
             easy_close=True,
         ))
 
     @reactive.effect
     @reactive.event(input.exc_save)
+    @guard("record the exception")
     def _save_coverage_exception():
         record = {
             "functionId": input.exc_function(),

@@ -25,6 +25,8 @@ Statistical positions, stated once:
 
 from __future__ import annotations
 
+import logging
+from contextlib import contextmanager
 from typing import Any, Optional
 
 import numpy as np
@@ -61,12 +63,34 @@ def assert_one_row_per_site(data: pd.DataFrame, site_col: str = "site_id") -> No
 # --------------------------------------------------------------------------- #
 # Engine adapters
 # --------------------------------------------------------------------------- #
+@contextmanager
+def _engine_quiet():
+    """Mute the engine's own warnings for one resample.
+
+    The engine warns when it falls back on a degenerate Q25. That is worth saying
+    once about the curve being published and useless once per resample: a single
+    metric at n_boot=1000 produced 1038 copies in the Interior Plateau run, and
+    they cannot even be attributed, because this adapter feeds the engine the
+    placeholder column name "m". Only the log line is suppressed. The curve_status
+    the engine returns is untouched, and that status is what the review queue, the
+    packet and the confidence caps actually read.
+    """
+    log = logging.getLogger("streamcurves")
+    prior = log.level
+    log.setLevel(max(prior, logging.ERROR))
+    try:
+        yield
+    finally:
+        log.setLevel(prior)
+
+
 def _build_points(values: pd.Series, entry: dict) -> tuple[Optional[list[dict]], str]:
     """(points as [{x, y}], curve_status) for one value series through the real
     engine, so every diagnostic exercises exactly the code that ships."""
     frame = pd.DataFrame({"m": pd.to_numeric(values, errors="coerce")})
     cfg = {"m": {**(entry or {}), "column_name": "m"}}
-    res = curves.build_reference_curve(frame, "m", cfg, build_plots=False)
+    with _engine_quiet():
+        res = curves.build_reference_curve(frame, "m", cfg, build_plots=False)
     row = res["curve_row"]
     status = str(row.iloc[0].get("curve_status") or "")
     pts_df = res.get("curve_points")

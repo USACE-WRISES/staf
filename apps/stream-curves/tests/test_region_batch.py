@@ -340,3 +340,78 @@ def test_html_gallery_has_one_tile_per_curve_row(assembled, tmp_path):
     dotted = sum(1 + cross_of.get(r["metric"], 0) for r in rows if not r["in_scope"]
                  and cs.points_from_curve_row(assembled["curve_rows"][r["metric"]]))
     assert html.count("out-of-scope") == dotted
+
+
+# --------------------------------------------------------------------------- #
+# Every build leaves something you can open.
+#
+# publish_version is the only other writer of a session, and it runs after the
+# coverage and portfolio gates. A refused publish therefore used to throw away a
+# payload that was already complete: the first live Driftless Area build left
+# twenty reports, an empty library folder, and a command to paste. session_fields()
+# reads nothing the gates guard, so the run writes it either way.
+# --------------------------------------------------------------------------- #
+SESSION_NAME = "assessment.streamcurves.json"
+
+
+def test_a_staged_run_writes_an_openable_assessment(staged_run):
+    from streamcurves import session_io as sio
+
+    out, _ = staged_run
+    p = out / SESSION_NAME
+    assert p.is_file(), "the run folder must carry the assessment, not only the library"
+    payload = sio.load_session_payload(p)
+    fields = sio.decode_session_fields(payload)
+    assert fields.get("data") is not None
+    assert fields.get("metric_config"), "a reopened assessment needs its configs"
+
+
+def test_the_session_is_marked_as_built_by_the_agent(staged_run):
+    """views/publish.py reads this to say that publishing there records an
+    interactive provenance rather than the build's own."""
+    from streamcurves import session_io as sio
+
+    out, _ = staged_run
+    fields = sio.decode_session_fields(sio.load_session_payload(out / SESSION_NAME))
+    assert (fields.get("run_meta") or {}).get("built_by") == "regional-agent"
+
+
+@pytest.fixture(scope="module")
+def refused_run(tmp_path_factory):
+    """A build the coverage gate refuses: no --coverage-exceptions offline, so the
+    Hydrology functions have no metric and no documented reason."""
+    out = tmp_path_factory.mktemp("refused") / "run"
+    env = dict(os.environ)
+    env.pop("STAF_LIBRARY_ROOT", None)
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT), "stage", "--l3", L3, "--name", NAME,
+         "--out", str(out), "--no-screen", "--no-streamcat", "--n-boot", "20",
+         "--maintainer", "tester"],
+        capture_output=True, text=True, env=env, timeout=900)
+    assert proc.returncode == 0, proc.stdout[-3000:] + proc.stderr[-3000:]
+    return out, proc.stdout
+
+
+def test_a_refused_publish_still_leaves_an_openable_assessment(refused_run):
+    from streamcurves import session_io as sio
+
+    out, log = refused_run
+    packet = json.loads((out / "review_packet.json").read_text(encoding="utf-8"))
+    assert packet["staged"] is None, "this run is supposed to have been refused"
+    assert "staged publish refused" in log
+    p = out / SESSION_NAME
+    assert p.is_file(), "a refused gate must not cost you the assessment"
+    fields = sio.decode_session_fields(sio.load_session_payload(p))
+    assert fields.get("data") is not None
+
+
+def test_a_refused_run_names_its_uncovered_functions(refused_run):
+    """What the page turns into answerable cards."""
+    out, _ = refused_run
+    packet = json.loads((out / "review_packet.json").read_text(encoding="utf-8"))
+    missing = (packet.get("coverage") or {}).get("missingFunctionIds") or []
+    assert missing, "the refusal has to say which functions it means"
+    from streamcurves import region_build as rb
+    gaps = rb.coverage_gaps(packet)
+    assert {g["function_id"] for g in gaps} == set(missing)
+    assert all(g["label"] and g["question"] for g in gaps)

@@ -37,6 +37,7 @@ from streamcurves.precheck import precheck_summary
 from views import assessment_publish as ap
 from views.state import AppState
 from views.theme import bi
+from views.uihelpers import guard
 
 # Banner-local short labels; the full rs.STAGE_LABELS ride in the tooltip.
 _SHORT = {
@@ -70,12 +71,12 @@ _CLICK = {
 # Side analysis -> click input id. Kept parallel to _CLICK, not merged into it:
 # these route straight to a nav value, with no stage landing and no wizard step.
 _TOOL_CLICK = {"regional": "tool_regional", "xsec": "tool_xsec",
-               "nrsa": "tool_nrsa"}
+               "nrsa": "tool_nrsa", "build": "tool_build"}
 
 # Both icons are already carried by the vendored www/vendor/bs-icons.json subset
 # (they are the icons app.py hangs on the two nav panels), so bi() cannot raise.
 _TOOL_ICON = {"regional": "bezier2", "xsec": "graph-down",
-              "nrsa": "globe-americas"}
+              "nrsa": "globe-americas", "build": "magic"}
 
 # Why each one exists, and what it needs -- the strip is the only place that says so
 # now that the tools have no tab of their own.
@@ -91,6 +92,10 @@ _TOOL_TITLE = {
     "nrsa": (
         "Browse every NRSA station across the 2013-14, 2018-19 and 2023-24 "
         "surveys. Read-only, and needs no project."
+    ),
+    "build": (
+        "Run the whole workflow for one Level III ecoregion, then review what it "
+        "decided. Stages into its own run folder; publishing stays separate."
     ),
 }
 
@@ -287,7 +292,44 @@ def stagebar_server(input, output, session, state: AppState):
         )
 
     # ── navigation: every stage lands on its page ───────────────────────────
+    def _stage_detail(stage_key: str) -> dict:
+        """This pill's own status row, re-derived for the click.
+
+        The strip computes these in its render closure and throws them away. A
+        click needs them too, and re-deriving once per click is nothing next to
+        what navigating into a stage costs.
+        """
+        with reactive.isolate():
+            snap = ap.run_snapshot(state)
+            tasks = dict(state.tasks_running() or {})
+        return rs.derive_stage_status(snap, tasks).get(stage_key) or {}
+
+    # tasks_running is keyed by stage, so a job that is not one of the six needs its
+    # own phrase; without this the toast reads "Still working on region_build".
+    _TASK_LABELS = {"region_build": "a region build"}
+
     def _go(stage_key: str):
+        with reactive.isolate():
+            busy = [rs.STAGE_LABELS.get(k) or _TASK_LABELS.get(k) or k
+                    for k, v in (state.tasks_running() or {}).items() if v]
+        if busy:
+            # A stage switch lands mid-flush here, and py-shiny's flush has no
+            # re-entrancy guard (see the note on task_flush in views/state.py):
+            # two interleaved flushers wedge the session with every output stuck
+            # recalculating. Waiting is cheap; a wedged session is not.
+            ui.notification_show(
+                f"Still working on {busy[0]}. The strip will move once it finishes.",
+                type="message", duration=4)
+            return
+        info = _stage_detail(stage_key)
+        if info.get("status") == rs.STAGE_BLOCKED:
+            # Blocked stages stay reachable on purpose (see the note on the
+            # not-ready panels in views/uihelpers.py) -- you can look ahead. Say
+            # why on the way in, reusing the pill's own detail so the toast and
+            # the tooltip can never drift apart.
+            detail = info.get("detail")
+            if detail:
+                ui.notification_show(detail, type="message", duration=4)
         nav_value, wiz = rs.stage_landing(stage_key)
         _request_nav(nav_value, wizard_step=wiz)
         if stage_key == "refine_map":
@@ -300,56 +342,73 @@ def stagebar_server(input, output, session, state: AppState):
 
     @reactive.effect
     @reactive.event(input.stage_region)
+    @guard("open Region and data")
     def _stage_region():
         _go("region_sources")
 
     @reactive.effect
     @reactive.event(input.stage_screen)
+    @guard("open Screen sites")
     def _stage_screen():
         _go("candidate_screening")
 
     @reactive.effect
     @reactive.event(input.stage_enrich)
+    @guard("open Build dataset")
     def _stage_enrich():
         _go("enrichment_build")
 
     @reactive.effect
     @reactive.event(input.stage_refine)
+    @guard("open Refine and map")
     def _stage_refine():
         _go("refine_map")
 
     @reactive.effect
     @reactive.event(input.stage_review)
+    @guard("open Reference curves")
     def _stage_review():
         _go("curve_review")
 
     @reactive.effect
     @reactive.event(input.stage_publish)
+    @guard("open Publish")
     def _stage_publish():
         _go("publish")
 
     # Side analyses: a nav value with no stage landing and no wizard step.
     @reactive.effect
     @reactive.event(input.tool_regional)
+    @guard("open Regional curves")
     def _tool_regional():
         _request_nav("regional")
 
     @reactive.effect
     @reactive.event(input.tool_xsec)
+    @guard("open Cross-sections")
     def _tool_xsec():
         _request_nav("xsec")
 
     @reactive.effect
     @reactive.event(input.tool_nrsa)
+    @guard("open the NRSA explorer")
     def _tool_nrsa():
         _request_nav("nrsa")
 
-    # Sub-step chips jump straight to their wizard step.
-    for _n in range(1, 8):
+    @reactive.effect
+    @reactive.event(input.tool_build)
+    @guard("open the Region builder")
+    def _tool_build():
+        _request_nav("build")
+
+    # Sub-step chips jump straight to their wizard step. Derived from the declared
+    # steps rather than a fixed range, so adding one cannot leave its chip dead.
+    for _n in sorted({n for steps in rs.STAGE_SUBSTEPS.values() for n, _ in steps}):
 
         def _mk(n):
             @reactive.effect
             @reactive.event(input[f"substep_{n}"])
+            @guard(f"open wizard step {n}")
             def _substep():
                 _request_nav("data", wizard_step=n)
 
@@ -362,6 +421,7 @@ def stagebar_server(input, output, session, state: AppState):
             def _mk_section(value):
                 @reactive.effect
                 @reactive.event(input[f"section_{value}"])
+                @guard(f"open the {value} panel")
                 def _section():
                     with reactive.isolate():
                         state.workspace_section_request.set(value)

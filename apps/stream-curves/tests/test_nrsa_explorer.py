@@ -150,6 +150,31 @@ def test_ecoregion_choices_are_labelled_and_counted(stations):
     assert set(choices) == {"71", "58"}
 
 
+def test_ecoregion_choices_are_ordered_by_number_not_by_string():
+    """us_l3code is a string column holding numeric codes 1 to 85, so a plain
+    string sort reads 10 before 2. The count is deliberately inverted against
+    the code order here, so the old most-stations-first sort fails too."""
+    frame = pd.DataFrame(
+        [{"us_l3code": "85", "us_l3name": "Eighty-five"}] * 9
+        + [{"us_l3code": "10", "us_l3name": "Ten"}] * 4
+        + [{"us_l3code": "9", "us_l3name": "Nine"}] * 2
+        + [{"us_l3code": "2", "us_l3name": "Two"}]
+    )
+    choices = ex.ecoregion_choices(frame)
+    assert list(choices) == ["2", "9", "10", "85"]
+    assert choices["2"] == "2 Two (1)"          # the label keeps its count
+    assert choices["85"] == "85 Eighty-five (9)"
+
+
+def test_an_ecoregion_code_that_is_not_a_number_sorts_last():
+    frame = pd.DataFrame([
+        {"us_l3code": "7", "us_l3name": "Seven"},
+        {"us_l3code": "XX", "us_l3name": "Unknown"},
+        {"us_l3code": "3", "us_l3name": "Three"},
+    ])
+    assert list(ex.ecoregion_choices(frame)) == ["3", "7", "XX"]
+
+
 def test_coverage_summary_reports_what_the_header_shows(stations):
     summary = ex.coverage_summary(stations)
     assert summary == {"stations": 4, "with_comid": 3, "multi_cycle": 2, "ecoregions": 2}
@@ -243,6 +268,64 @@ def test_search_matches_the_name_or_the_code_case_insensitively(values):
 def test_a_search_that_matches_nothing_returns_no_groups(values):
     """Not a group with zero metrics: the view would draw an empty section."""
     assert ex.station_metric_groups("A", values=values, search="zzzz") == []
+
+
+def test_a_cycle_with_several_visits_reports_its_first_non_null_value(stations, visits):
+    """Both halves of the rule the one-pass slice has to preserve: a null first
+    visit does not win, and a later differing value does not overwrite an
+    earlier real one."""
+    frame = pd.DataFrame([
+        {"station_key": "A", "cycle": "1819", "visit_no": "1", "phab_XEMBED": None},
+        {"station_key": "A", "cycle": "1819", "visit_no": "2", "phab_XEMBED": 31.0},
+        {"station_key": "A", "cycle": "2324", "visit_no": "1", "phab_XEMBED": 12.0},
+        {"station_key": "A", "cycle": "2324", "visit_no": "2", "phab_XEMBED": 99.0},
+    ])
+    groups = ex.station_metric_groups("A", values=frame)
+    assert groups[0]["metrics"][0]["by_cycle"] == {"1819": 31.0, "2324": 12.0}
+    # station_detail reads the same slice, so it must agree
+    detail = ex.station_detail("A", stations=stations, visits=visits, values=frame,
+                               metrics=["phab_XEMBED"])
+    assert detail["metrics"][0]["by_cycle"] == {"1819": 31.0, "2324": 12.0}
+
+
+def test_grouping_does_not_re_scan_the_rows_for_every_column(monkeypatch):
+    """Clicking a station froze the app for 40 seconds because the row scan sat
+    inside the loop over metric columns, rebuilding a namedtuple as wide as the
+    whole 792-column table once per column.
+
+    A wall-clock assertion would be flaky, so this pins the invariant instead:
+    the row scan must not scale with the number of columns. The old shape calls
+    itertuples once per column, so it fails this by 700 calls.
+    """
+    def wide(n_columns: int) -> pd.DataFrame:
+        return pd.DataFrame([{
+            "station_key": "A", "cycle": "1819", "visit_no": "1",
+            **{f"phab_M{i}": float(i) for i in range(n_columns)},
+        }])
+
+    # Warm the metric dictionary first. Its one-time lazy load scans a frame of
+    # its own, and with pytest-randomly deciding the order it would otherwise
+    # land inside whichever measurement happens to run first and count as a
+    # phantom extra scan.
+    ex.station_metric_groups("A", values=wide(4))
+
+    calls: list[int] = []
+    real = pd.DataFrame.itertuples
+
+    def counting(self, *args, **kwargs):
+        calls.append(self.shape[1])
+        return real(self, *args, **kwargs)
+
+    monkeypatch.setattr(pd.DataFrame, "itertuples", counting)
+
+    def scans_for(n_columns: int) -> int:
+        calls.clear()
+        groups = ex.station_metric_groups("A", values=wide(n_columns))
+        # guards the count from passing on a function that does nothing
+        assert sum(g["n"] for g in groups) == n_columns
+        return len(calls)
+
+    assert scans_for(800) == scans_for(100) <= 1
 
 
 def test_grouping_an_unknown_station_or_no_values_is_empty(values):
