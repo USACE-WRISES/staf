@@ -543,7 +543,10 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 @keyframes easi-spin { to { transform: rotate(360deg); } }
 
 /* row of pane action buttons */
-.easi-pane-actions { display: flex; gap: 8px; margin-top: 12px; }
+/* wrap, because .btn below cannot shrink past its nowrap label: without this an
+   over-long label overflows the 352px pane and .easi-leftpane's overflow-y turns that
+   into a horizontal scrollbar */
+.easi-pane-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 /* keep labels on one line so a narrow button (e.g. "Compute & report") does not
    wrap to two lines and stretch the whole row taller via align-items: stretch;
    trim the vertical padding so the single-line buttons stay compact */
@@ -571,18 +574,8 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-worksheet { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 1150;
   background: var(--surface-soft); display: flex; overflow: hidden; }
 
-/* Full-width Assessment step (mirrors the worksheet overlay). */
-.deep-assess-shell { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; z-index: 1150;
-  background: var(--surface-soft); overflow-y: auto; padding: 20px; }
-.deep-assess-context-wrap { max-width: 900px; margin: 0 auto 14px; }
-.deep-assess-stepper { margin-bottom: 12px; }
-.deep-assess-title { font-family: var(--font-head); font-size: 20px; font-weight: 700;
-  color: #223; }
-.deep-assess-sub { color: #5a6478; font-size: 13px; margin: 4px 0 8px; }
-.deep-assess-context { font-size: 12.5px; color: #33415c; background: #fff;
-  border: 1px solid var(--card-border); border-radius: 8px; padding: 8px 12px; }
-.deep-assess-context span { font-weight: 600; color: #8a93a3; }
-.deep-assess-cards { max-width: 900px; margin: 0 auto; display: grid;
+/* Assessment picker, opened as a modal from the Basin pane's "Change" link. */
+.deep-assess-cards { display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
 .deep-assess-card { background: #fff; border: 1px solid var(--card-border); border-radius: 10px;
   padding: 14px; display: flex; flex-direction: column; gap: 6px;
@@ -599,20 +592,30 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .deep-badge-prelim { background: #eef1f6; color: #5a6478; }
 .deep-card-region { font-size: 12px; color: #5a6478; }
 .deep-card-verrow { display: flex; align-items: center; gap: 8px; }
+.deep-card-tierrow { display: flex; align-items: baseline; gap: 6px; }
+.deep-card-tier { font-size: 12px; color: #33415c; }
 .deep-card-verlabel { font-size: 11px; color: #8a93a3; text-transform: uppercase;
   letter-spacing: .03em; }
-.deep-assess-empty, .deep-assess-detail { max-width: 900px; margin: 14px auto 0;
-  background: #fff; border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; }
-.deep-assess-empty-title { font-weight: 600; color: #a3521f; }
-.deep-assess-empty-sub, .deep-assess-detail-hint { color: #5a6478; font-size: 13px; margin-top: 4px; }
-.deep-assess-placeholder { max-width: 900px; margin: 14px auto 0; border: 1px dashed var(--card-border);
-  border-radius: 10px; padding: 22px; text-align: center; color: #8a93a3; font-size: 13px; }
-.deep-assess-detail-name { font-size: 16px; font-weight: 700; color: #223; }
-.deep-ok { color: #1f6b32; }
-.deep-assess-detail-line { font-size: 12.5px; color: #33415c; margin-top: 3px; }
-.deep-assess-warning { margin-top: 10px; background: #fdf3d8; border: 1px solid #e0cf94;
-  border-radius: 8px; padding: 8px 12px; font-size: 12.5px; color: #7a5b12; }
-.deep-assess-detail-actions { margin-top: 12px; }
+
+/* The resolved assessment, stated under the basin card. One accent edge, so the corners
+   stay square: rounding a single-sided border reads as a rendering fault. */
+.deep-pane-assess { margin-top: 10px; padding: 8px 10px; background: #f7faff;
+  border: 1px solid var(--card-border); border-left: 3px solid var(--easi-accent);
+  border-radius: 0; }
+.deep-pane-assess.is-blocked { background: #fdf9ec; border-color: #e0cf94;
+  border-left-color: #c9a227; }
+.deep-pane-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.deep-pane-label { font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
+  color: #8a93a3; }
+.deep-pane-name { font-size: 12.5px; font-weight: 600; color: #223; line-height: 1.35;
+  margin-top: 3px; }
+.deep-pane-line { font-size: 11.5px; color: #5a6478; margin-top: 3px; }
+.deep-pane-assess.is-blocked .deep-pane-name,
+.deep-pane-assess.is-blocked .deep-pane-line { color: #7a5b12; }
+.deep-pane-note { font-size: 11px; color: #5a6478; margin-top: 4px; font-style: italic; }
+.deep-pane-caution { font-size: 11.5px; color: #a3521f; margin-top: 4px; }
+.deep-pane-change { text-align: right; margin-top: 5px; }
+.deep-pane-change a { font-size: 11.5px; color: var(--easi-accent); }
 .sfari-nav { width: 240px; flex: none; background: #fff; border-right: 1px solid var(--card-border);
   overflow: hidden auto; padding: 0 0 14px; }
 .sfari-nav-cat { font-family: var(--font-head); font-size: 10.5px; font-weight: 700;
