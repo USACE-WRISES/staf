@@ -12,6 +12,8 @@ from streamcurves import easi_screening
 _VENDOR = Path(__file__).resolve().parents[1] / "streamcurves" / "_vendor" / "easi"
 _REPO = Path(__file__).resolve().parents[3]
 _SRC = _REPO / "apps" / "easi" / "easi"
+_SRC_DATA = _REPO / "apps" / "easi" / "data"
+_DATA_SKIP = {"source", "__pycache__", ".pytest_cache"}   # mirrors vendor_easi_engine.py
 
 
 def _hash_py(root: Path) -> dict[str, str]:
@@ -19,27 +21,47 @@ def _hash_py(root: Path) -> dict[str, str]:
             for p in sorted(root.rglob("*.py"))}
 
 
+def _hash_data(root: Path, skip: set[str] = frozenset()) -> dict[str, str]:
+    out: dict[str, str] = {}
+    for p in sorted(root.rglob("*")):
+        if not p.is_file() or p.suffix == ".pyc":
+            continue
+        rel = p.relative_to(root)
+        if any(part in skip for part in rel.parts):
+            continue
+        out[rel.as_posix()] = hashlib.sha256(p.read_bytes()).hexdigest()
+    return out
+
+
 def test_vendor_info_present():
     info = json.loads((_VENDOR / "VENDOR_INFO.json").read_text(encoding="utf-8"))
     assert info["engine_api_version"] >= 1
     assert info["manifest"], "empty vendor manifest"
+    assert info["data_manifest"], "empty vendor data manifest"
 
 
 def test_vendored_copy_matches_manifest():
-    # The vendored .py files match the hashes recorded at vendor time.
+    # The vendored .py and data files match the hashes recorded at vendor time.
     info = json.loads((_VENDOR / "VENDOR_INFO.json").read_text(encoding="utf-8"))
     current = _hash_py(_VENDOR)
     for rel, digest in info["manifest"].items():
         assert current.get(rel) == digest, f"vendored {rel} diverged from manifest"
+    current_data = _hash_data(_VENDOR / "data", _DATA_SKIP)
+    for rel, digest in info["data_manifest"].items():
+        assert current_data.get(rel) == digest, f"vendored data/{rel} diverged from manifest"
 
 
 @pytest.mark.skipif(not _SRC.is_dir(), reason="EASI source not present (cloud deploy)")
 def test_vendor_in_sync_with_source():
-    # Drift gate: the source engine has not changed since it was last vendored.
+    # Drift gate: neither the source engine nor its data catalogs have changed since
+    # they were last vendored (scoring criteria live in data/screening-methods.json,
+    # so a data-only edit must trip this too).
     # If this fails, re-run scripts/vendor_easi_engine.py and commit the result.
     info = json.loads((_VENDOR / "VENDOR_INFO.json").read_text(encoding="utf-8"))
     assert _hash_py(_SRC) == info["manifest"], (
         "EASI engine changed; re-run vendor_easi_engine.py")
+    assert _hash_data(_SRC_DATA, _DATA_SKIP) == info["data_manifest"], (
+        "EASI data catalogs changed; re-run vendor_easi_engine.py")
 
 
 def _sample_zip() -> bytes:

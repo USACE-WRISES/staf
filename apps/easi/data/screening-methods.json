@@ -121,6 +121,14 @@
     "cbp-wetland-review": {
       "title": "Chesapeake Bay Program 2016, Wetland Expert Panel literature review (Appendix B)",
       "url": "https://d18lev1ok5leia.cloudfront.net/chesapeakebay/documents/appendix_b_wetlands_expert_panel_literature_review_habitat_benefits_mar2016.pdf"
+    },
+    "boano-2006": {
+      "title": "Boano et al. 2006, Sinuosity-driven hyporheic exchange in meandering rivers",
+      "url": "https://doi.org/10.1029/2006GL027630"
+    },
+    "cardenas-2009": {
+      "title": "Cardenas 2009, A model for lateral hyporheic flow based on valley slope and channel sinuosity",
+      "url": "https://doi.org/10.1029/2008WR007442"
     }
   },
   "methods": [
@@ -910,9 +918,9 @@
     {
       "methodKey": "hyporheic-exchange-potential",
       "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
-      "title": "Hyporheic-exchange potential (channel gradient)",
+      "title": "Hyporheic-exchange potential (channel gradient or sinuosity)",
       "status": "computed",
-      "operator": "threshold",
+      "operator": "best_index",
       "basisClass": "provisional STAF screening judgment",
       "provisional": true,
       "confidence": "L",
@@ -921,86 +929,128 @@
           "key": "slope",
           "label": "Channel slope",
           "symbol": "slope",
+          "indexSymbol": "Islope",
           "sourceField": "NHDPlus slope",
           "units": "m/m",
           "required": true,
-          "rationale": "Slope sets the vertical hydraulic gradient that drives bed exchange, the dominant hyporheic pathway in national syntheses.",
+          "rationale": "Slope sets the vertical hydraulic gradient that drives bedform-driven bed exchange, the dominant hyporheic pathway in steeper channels.",
           "slider": {
             "min": 0,
             "max": 0.02,
             "step": 0.0001
-          }
+          },
+          "bands": [
+            {
+              "rating": "Poor",
+              "min": null,
+              "max": 0.003,
+              "minInclusive": false,
+              "maxInclusive": false,
+              "label": "<0.003 m/m"
+            },
+            {
+              "rating": "Fair",
+              "min": 0.003,
+              "max": 0.006,
+              "minInclusive": true,
+              "maxInclusive": false,
+              "label": "0.003-<0.006 m/m"
+            },
+            {
+              "rating": "Good",
+              "min": 0.006,
+              "max": null,
+              "minInclusive": true,
+              "maxInclusive": false,
+              "label": "≥0.006 m/m"
+            }
+          ]
         },
         {
           "key": "sinuosity",
           "label": "Reach sinuosity",
           "symbol": "sinuosity",
+          "indexSymbol": "Isinuosity",
           "sourceField": "reach geometry",
           "units": "ratio",
-          "required": false,
-          "rationale": "Sinuosity indicates lateral exchange potential and is shown for context. It is not rated because sinuosity measured over the fixed assessment reach understates planform sinuosity.",
+          "required": true,
+          "rationale": "Sinuosity indicates lateral exchange through meander necks and point bars, the dominant hyporheic pathway in low-gradient meandering channels. Because the better pathway governs, sinuosity understated by generalized reach geometry can only fail to credit lateral exchange, never lower the rating.",
           "slider": {
             "min": 1,
             "max": 2.5,
             "step": 0.01
           },
-          "contextOnly": true
+          "bands": [
+            {
+              "rating": "Poor",
+              "min": null,
+              "max": 1.05,
+              "minInclusive": false,
+              "maxInclusive": false,
+              "label": "<1.05"
+            },
+            {
+              "rating": "Fair",
+              "min": 1.05,
+              "max": 1.2,
+              "minInclusive": true,
+              "maxInclusive": false,
+              "label": "1.05-<1.2"
+            },
+            {
+              "rating": "Good",
+              "min": 1.2,
+              "max": null,
+              "minInclusive": true,
+              "maxInclusive": false,
+              "label": "≥1.2"
+            }
+          ]
         }
       ],
-      "bands": [
-        {
-          "rating": "Poor",
-          "min": null,
-          "max": 0.003,
-          "minInclusive": false,
-          "maxInclusive": false,
-          "label": "<0.003 m/m"
-        },
-        {
-          "rating": "Fair",
-          "min": 0.003,
-          "max": 0.006,
-          "minInclusive": true,
-          "maxInclusive": false,
-          "label": "0.003-<0.006 m/m"
-        },
-        {
-          "rating": "Good",
-          "min": 0.006,
-          "max": null,
-          "minInclusive": true,
-          "maxInclusive": false,
-          "label": "≥0.006 m/m"
-        }
-      ],
+      "formula": {
+        "allowPartial": true
+      },
       "breakpoints": [
         {
+          "input": "slope",
           "label": "0.003 m/m",
           "description": "Lower screening transition, carried over from the prior exchange-potential index. A screening judgment, not a published threshold."
         },
         {
+          "input": "slope",
           "label": "0.006 m/m",
           "description": "Upper screening transition, carried over from the prior exchange-potential index. A screening judgment, not a published threshold."
+        },
+        {
+          "input": "sinuosity",
+          "label": "1.05",
+          "description": "Boundary between straight and sinuous planform in common geomorphic classifications. A screening judgment, not a published threshold."
+        },
+        {
+          "input": "sinuosity",
+          "label": "1.2",
+          "description": "Boundary above which meandering is well expressed in generalized reach geometry and lateral exchange across bends is expected (Boano et al. 2006, Cardenas 2009). A screening judgment, not a published threshold."
         }
       ],
       "fieldReference": null,
       "limitations": [
-        "Slope screens vertical exchange potential only. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.",
-        "Sinuosity is displayed as context and is not rated. Short fixed-length reaches understate planform sinuosity.",
-        "The slope bands are screening judgments, not published thresholds."
+        "Slope screens vertical bedform-driven exchange and sinuosity screens lateral meander-driven exchange. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.",
+        "The better pathway governs because vertical and lateral exchange are alternative mechanisms. Either alone indicates exchange potential.",
+        "Sinuosity measured over generalized reach geometry understates planform sinuosity. Under the better-pathway rule that bias can only fail to lift a rating, never lower one. The earlier weighted slope and sinuosity composite was retired for exactly that downward bias.",
+        "A result computed from one pathway is labeled partial.",
+        "The slope and sinuosity bands are screening judgments, not published thresholds."
       ],
       "citations": [
         "streamcat",
         "function-framework",
-        "hyporheic-review"
+        "hyporheic-review",
+        "boano-2006",
+        "cardenas-2009"
       ],
       "plot": {
-        "mode": "scalar",
-        "direction": "higher_better",
-        "domain": [
-          0,
-          0.02
-        ]
+        "mode": "best_index",
+        "direction": "higher_better"
       }
     },
     {

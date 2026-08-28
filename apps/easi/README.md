@@ -57,7 +57,7 @@ The 20 metrics span five disciplines:
 | Discipline | Automated method |
 |---|---|
 | **Hydrology** | Land-cover pressure (worse of impervious / agricultural cover) · Wetland extent · Road-density inflow proxy · Degree of regulation (storage ÷ runoff) |
-| **Hydraulics** | Low-flow condition (NRSA wetted channel → StreamCat HYD) · Floodplain engagement (BHR) · Floodplain access (ER) · Hyporheic-exchange potential (channel gradient) |
+| **Hydraulics** | Low-flow condition (NRSA wetted channel → StreamCat HYD) · Floodplain engagement (BHR) · Floodplain access (ER) · Hyporheic-exchange potential (better of channel gradient / sinuosity) |
 | **Geomorphology** | Channel-adjustment susceptibility (FCODE + BHR/ER) · Bank-instability susceptibility (BHR, observed bank evidence supersedes) · Sediment-supply potential (worst of agriculture, soil K-factor, roads) · Substrate condition (NRSA embeddedness → StreamCat SED) |
 | **Physicochemistry** | Thermal-regulation vulnerability (worse of woody riparian and impervious) · Organic-matter supply potential · Nutrient condition (WQP vs NRSA regional benchmarks → StreamCat CHEM) · Regulatory impairment (ATTAINS → StreamCat CHEM) |
 | **Biology** | Habitat-support potential (woody riparian corridor) · Biological integrity (measured NRSA → prG_BMMI → ICI/IWI) · Invasive-species pressure · Nearby dam proximity |

@@ -135,16 +135,40 @@ def test_no_method_uses_a_weighted_composite():
 def test_hyporheic_slope_breakpoints(slope, expected):
     result = sm.evaluate(
         hydraulics.HYPORHEIC_ID, {"slope": slope, "sinuosity": 1.0})
-    assert result.combined_value == pytest.approx(slope)
+    assert result.combined_value == pytest.approx(config.RATING_INDEX[expected])
     assert result.rating == expected
 
 
-def test_hyporheic_sinuosity_is_context_only():
+@pytest.mark.parametrize(
+    "sinuosity,expected",
+    [(1.0499, "Poor"), (1.05, "Fair"), (1.1999, "Fair"), (1.2, "Good")],
+)
+def test_hyporheic_sinuosity_breakpoints(sinuosity, expected):
+    result = sm.evaluate(
+        hydraulics.HYPORHEIC_ID, {"slope": 0.001, "sinuosity": sinuosity})
+    assert result.rating == expected
+
+
+def test_hyporheic_better_pathway_governs():
+    lifted = sm.evaluate(
+        hydraulics.HYPORHEIC_ID, {"slope": 0.001, "sinuosity": 1.6})
+    assert lifted.rating == "Good"
+    assert lifted.trace["governingInput"] == "sinuosity"
+    assert lifted.combined_value == pytest.approx(config.RATING_INDEX["Good"])
+    assert lifted.trace["completeness"] == "complete"
+    steep = sm.evaluate(
+        hydraulics.HYPORHEIC_ID, {"slope": 0.01, "sinuosity": 1.0})
+    assert steep.rating == "Good"
+    assert steep.trace["governingInput"] == "slope"
+
+
+def test_hyporheic_rates_slope_alone_when_sinuosity_is_missing():
     result = sm.evaluate(
         hydraulics.HYPORHEIC_ID, {"slope": 0.01, "sinuosity": None})
     assert result.rating == "Good"
-    sin = next(i for i in result.trace["inputs"] if i["key"] == "sinuosity")
-    assert sin["contextOnly"] is True
+    assert result.trace["governingInput"] == "slope"
+    assert result.trace["completeness"] == "partial"
+    assert sm.evaluate(hydraulics.HYPORHEIC_ID, {}).rating is None
 
 
 @pytest.mark.parametrize(
@@ -286,7 +310,7 @@ def _values(trace):
     return {item["key"]: item.get("value") for item in trace["inputs"]}
 
 
-def test_reference_curve_shows_breakpoints_and_both_markers():
+def test_reference_curve_shows_both_pathway_panels():
     """The worksheet's reference curve is drawn from the catalog bands the evaluator used."""
     method = easi_methods.resolve(hydraulics.HYPORHEIC_ID)
     site = sm.evaluate(hydraulics.HYPORHEIC_ID, {
@@ -294,13 +318,15 @@ def test_reference_curve_shows_breakpoints_and_both_markers():
     }).trace
     explored = easi_methods.evaluate_method(
         method, {"slope": 0.001, "sinuosity": 1.0})
-    svg = method_plot.scalar_svg(method, site["combinedValue"], site["generatedRating"],
-                                 explored["value"], explored["rating"])
+    svg = method_plot.worst_svg(method, _values(site),
+                                explored_inputs={"slope": 0.001, "sinuosity": 1.0},
+                                governing=site["governingInput"])
     assert svg.startswith("<svg")
     for color in ("#c8d9f2", "#f5e7a6", "#f5b5b5"):     # Good / Fair / Poor regions
         assert color in svg
-    assert "0.003 m/m" in svg and "0.006 m/m" in svg    # authored breakpoint labels
-    assert "Site" in svg and "Explore" in svg
+    assert "Channel slope" in svg and "Reach sinuosity" in svg
+    assert "governs" in svg
+    assert site["governingInput"] == "sinuosity"        # 1.2 lifts the Fair slope band
     assert explored["rating"] == "Poor"
 
 

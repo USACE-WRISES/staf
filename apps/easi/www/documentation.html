@@ -2874,22 +2874,22 @@ Table 3: Hydraulics metrics
 <tr class="even">
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Automated method</td>
-<td style="text-align: left;">Hyporheic-exchange potential (channel gradient)</td>
+<td style="text-align: left;">Hyporheic-exchange potential (channel gradient or sinuosity)</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Inputs</td>
-<td style="text-align: left;">Channel slope (m/m) · Reach sinuosity (context only)</td>
+<td style="text-align: left;">Channel slope (m/m) · Reach sinuosity (ratio)</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Equation</td>
-<td style="text-align: left;">Rating = bands(slope)</td>
+<td style="text-align: left;">Icombined = max(Islope, Isinuosity)</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Scoring</td>
-<td style="text-align: left;">Good ≥0.006 m/m · Fair 0.003-&lt;0.006 m/m · Poor &lt;0.003 m/m</td>
+<td style="text-align: left;"><em>Channel slope</em>: Good ≥0.006 m/m · Fair 0.003-&lt;0.006 m/m · Poor &lt;0.003 m/m<br><em>Reach sinuosity</em>: Good ≥1.2 · Fair 1.05-&lt;1.2 · Poor &lt;1.05</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;"></td>
@@ -2904,7 +2904,7 @@ Table 3: Hydraulics metrics
 <tr class="even">
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Known limitations</td>
-<td style="text-align: left;">Slope screens vertical exchange potential only. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.<br>Sinuosity is displayed as context and is not rated. Short fixed-length reaches understate planform sinuosity.<br>The slope bands are screening judgments, not published thresholds.</td>
+<td style="text-align: left;">Slope screens vertical bedform-driven exchange and sinuosity screens lateral meander-driven exchange. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.<br>The better pathway governs because vertical and lateral exchange are alternative mechanisms. Either alone indicates exchange potential.<br>Sinuosity measured over generalized reach geometry understates planform sinuosity. Under the better-pathway rule that bias can only fail to lift a rating, never lower one. The earlier weighted slope and sinuosity composite was retired for exactly that downward bias.<br>A result computed from one pathway is labeled partial.<br>The slope and sinuosity bands are screening judgments, not published thresholds.</td>
 </tr>
 </tbody>
 </table>

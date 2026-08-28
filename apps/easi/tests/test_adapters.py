@@ -176,6 +176,23 @@ def test_hyporheic_slope_sinuosity():
     assert good.rating == "Good" and poor.rating == "Poor"
 
 
+def test_hyporheic_sinuosity_pathway_lifts_low_slope():
+    lifted = hydraulics.hyporheic(_ctx(slope=0.001, sinuosity=1.6))
+    assert lifted.rating == "Good"
+    assert lifted.scoring["governingInput"] == "sinuosity"
+    assert "sinuosity pathway governs" in lifted.value_text
+    assert lifted.value == pytest.approx(1.6)
+
+
+def test_hyporheic_rates_slope_alone_as_partial():
+    partial = hydraulics.hyporheic(_ctx(slope=0.012))
+    assert partial.rating == "Good"
+    assert partial.scoring["completeness"] == "partial"
+    assert "single pathway" in partial.value_text
+    missing = hydraulics.hyporheic(_ctx())
+    assert missing.rating is None
+
+
 # --- high flow dynamics: floodplain engagement from BHR directly ----------- #
 def _geom_ctx(geom, slope=0.004):
     c = AnalysisContext(lat=40.0, lon=-83.0, comid=1, slope=slope)
