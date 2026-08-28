@@ -13,7 +13,7 @@ import asyncio
 from easi import assessment, config, methods, screening_methods as sm
 from easi.metrics import base, biology, physicochemistry
 from easi.metrics.biology import BARRIERS_ID
-from easi.metrics.hydraulics import HYPORHEIC_ID
+from easi.metrics.hydraulics import ENTRENCHMENT_ID, HYPORHEIC_ID
 from easi.metrics.hydrology import IMPERVIOUS_ID
 from easi.metrics.physicochemistry import IMPAIRMENT_ID
 
@@ -62,12 +62,12 @@ def test_every_metric_projects_a_renderable_method():
     projected = methods.METHODS
     assert set(config.metrics_by_id()) == set(projected)
     for mid, method in projected.items():
-        assert method.mode in {"scalar", "combined", "worst", "count", "categorical"}
+        assert method.mode in {"scalar", "combined", "worst", "best", "count", "categorical"}
         assert method.equation, f"{mid} has no equation"
         assert method.method_key and method.title
         if method.mode == "categorical":
             assert method.decisions
-        elif method.mode == "worst":
+        elif method.mode in {"worst", "best"}:
             assert method.per_input or mid.startswith("nutrient-")   # regional: needs a region
         else:
             assert method.bands and method.domain
@@ -99,8 +99,8 @@ def test_projection_uses_the_catalog_bands():
     Only the outer open edges are closed against the plot domain so the first and last
     region have something to draw against; the interior boundaries are the catalog's.
     """
-    method = methods.METHODS[HYPORHEIC_ID]
-    catalog = sm.method_for(HYPORHEIC_ID)
+    method = methods.METHODS[ENTRENCHMENT_ID]
+    catalog = sm.method_for(ENTRENCHMENT_ID)
     assert [b.rating for b in method.bands] == [b["rating"] for b in catalog["bands"]]
     for projected, raw in zip(method.bands, catalog["bands"], strict=True):
         if raw.get("min") is not None:
@@ -111,10 +111,31 @@ def test_projection_uses_the_catalog_bands():
     assert method.bands[-1].hi == method.domain[1]
 
 
+def test_best_projection_uses_the_per_input_catalog_bands():
+    """Each pathway panel of a best-of method draws the evaluator's own bands."""
+    method = methods.METHODS[HYPORHEIC_ID]
+    catalog = sm.method_for(HYPORHEIC_ID)
+    per_input = {key: bands for key, _fn, bands in method.per_input}
+    assert set(per_input) == {"slope", "sinuosity"}
+    for inp in catalog["inputs"]:
+        projected = per_input[inp["key"]]
+        assert [b.rating for b in projected] == [b["rating"] for b in inp["bands"]]
+        for band, raw in zip(projected, inp["bands"], strict=True):
+            if raw.get("min") is not None:
+                assert band.lo == raw["min"]
+            if raw.get("max") is not None:
+                assert band.hi == raw["max"]
+
+
 def test_band_range_texts_scalar_and_worst_and_categorical():
-    combined = methods.band_range_texts(methods.METHODS[HYPORHEIC_ID])
-    assert combined["Good"].endswith("> 0.006 m/m")
-    assert combined["Poor"].endswith("< 0.003 m/m")
+    best = methods.band_range_texts(methods.METHODS[HYPORHEIC_ID])
+    assert "> 0.006 m/m" in best["Good"] and "> 1.2" in best["Good"]
+    assert "< 0.003 m/m" in best["Poor"] and "< 1.05" in best["Poor"]
+    assert " · " in best["Good"]                     # both pathways, joined
+
+    scalar = methods.band_range_texts(methods.METHODS[ENTRENCHMENT_ID])
+    assert scalar["Good"].startswith("Entrenchment")
+    assert "> 2.2" in scalar["Good"] and "< 1.4" in scalar["Poor"]
 
     worst = methods.band_range_texts(methods.METHODS[IMPERVIOUS_ID])
     for rating in ("Good", "Fair", "Poor"):          # both indicators, joined

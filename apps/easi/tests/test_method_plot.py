@@ -3,26 +3,36 @@ from __future__ import annotations
 
 from easi import method_plot, methods
 from easi.metrics.biology import INVASIVES_ID
-from easi.metrics.hydraulics import HYPORHEIC_ID, LOW_FLOW_ID
+from easi.metrics.hydraulics import ENTRENCHMENT_ID, HYPORHEIC_ID, LOW_FLOW_ID
 from easi.metrics.hydrology import IMPERVIOUS_ID
 from easi.metrics.physicochemistry import IMPAIRMENT_ID
 
 
 def test_scalar_svg_regions_markers_breakpoints():
-    svg = method_plot.scalar_svg(methods.METHODS[HYPORHEIC_ID], 0.0075, "Good", 0.0042, "Fair")
+    svg = method_plot.scalar_svg(methods.METHODS[ENTRENCHMENT_ID], 2.5, "Good", 1.3, "Poor")
     assert svg.startswith("<svg")
     for color in ("#c8d9f2", "#f5e7a6", "#f5b5b5"):     # Good / Fair / Poor regions
         assert color in svg
-    assert "Site 0.0075" in svg and "Explore 0.0042" in svg
-    assert "0.003 m/m" in svg and "0.006 m/m" in svg    # authored breakpoint labels
+    assert "Site 2.5" in svg and "Explore 1.3" in svg
+    assert "ER 1.4" in svg and "ER 2.2" in svg          # authored breakpoint labels
     assert "function score" not in svg                  # the summary footer was removed
 
 
 def test_scalar_svg_no_explored_marker_when_unchanged():
-    svg = method_plot.scalar_svg(methods.METHODS[HYPORHEIC_ID], 0.0075, "Good", 0.0075, "Good")
+    svg = method_plot.scalar_svg(methods.METHODS[ENTRENCHMENT_ID], 2.5, "Good", 2.5, "Good")
     # footer gone: no "Explore" marker AND no site/explore summary line
     assert "Explore" not in svg
     assert "function score" not in svg and "unchanged from site" not in svg
+
+
+def test_best_svg_flags_governing_pathway():
+    method = methods.METHODS[HYPORHEIC_ID]
+    assert method.mode == "best"
+    svg = method_plot.worst_svg(method, {"slope": 0.001, "sinuosity": 1.6},
+                                governing="sinuosity")
+    assert svg.startswith("<svg") and "governs" in svg
+    assert "Channel slope" in svg and "Reach sinuosity" in svg
+    assert svg.count("<rect") >= 6                       # two pathway panels x 3 bands
 
 
 def test_count_svg_integer_axis():

@@ -19,6 +19,7 @@ VALID_OPERATORS = {
     "minimum",
     "minimum_of_products",
     "worst_index",
+    "best_index",
     "weighted_capped_sum",
     "sum_capped",
     "categorical_lookup",
@@ -139,10 +140,11 @@ def equation_for(method: dict) -> str:
         result = formula.get("resultSymbol", "V")
         products.append(f"{result} = min({', '.join(names)})")
         return "; ".join(products)
-    if operator == "worst_index":
+    if operator in {"worst_index", "best_index"}:
         symbols = [i.get("indexSymbol", f"I{i['key']}") for i in method.get("inputs", [])
                    if not i.get("contextOnly")]
-        return f"Icombined = min({', '.join(symbols)})"
+        pick = "min" if operator == "worst_index" else "max"
+        return f"Icombined = {pick}({', '.join(symbols)})"
     if operator == "sum_capped":
         symbols = [i.get("symbol", i["key"]) for i in method.get("inputs", [])
                    if not i.get("contextOnly")]
@@ -204,7 +206,7 @@ def rating_for_value(value: float, bands: list[dict]) -> Optional[str]:
 def criteria_for(method: dict, context: dict | None = None) -> dict:
     """Serializable automated and field criteria for the tooltip/viewer."""
     auto: list[dict] = []
-    if method["operator"] == "worst_index":
+    if method["operator"] in {"worst_index", "best_index"}:
         for inp in method.get("inputs", []):
             bands = bands_for_input(method, inp, context)
             if bands:
@@ -354,7 +356,7 @@ def evaluate(metric_id: str, values: dict[str, Any], *, context: dict | None = N
                        completeness="complete" if rating else "context_only",
                        context=context)
 
-    if operator == "worst_index":
+    if operator in {"worst_index", "best_index"}:
         allow_partial = bool((method.get("formula") or {}).get("allowPartial"))
         rated: list[tuple[float, str, str]] = []
         input_ratings: dict[str, str] = {}
@@ -372,7 +374,8 @@ def evaluate(metric_id: str, values: dict[str, Any], *, context: dict | None = N
             return _finish(method, values, input_meta, confidence, rating=None,
                            completeness="not_assessed", input_ratings=input_ratings,
                            context=context)
-        idx, governing, rating = min(rated, key=lambda x: x[0])
+        pick = min if operator == "worst_index" else max
+        idx, governing, rating = pick(rated, key=lambda x: x[0])
         completeness = "complete" if len(rated) == len(required) else "partial"
         return _finish(method, values, input_meta, confidence, rating=rating,
                        combined=idx, governing=governing, completeness=completeness,

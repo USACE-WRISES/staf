@@ -1,6 +1,6 @@
 {
   "computedCount": 20,
-  "ecosystemConditionIndex": 0.76,
+  "ecosystemConditionIndex": 0.77,
   "functionScores": {
     "bed-composition-bedform-dynamics": 8,
     "carbon-processing": 13,
@@ -11,7 +11,7 @@
     "floodplain-connectivity": 13,
     "habitat-provision": 8,
     "high-flow-dynamics": 13,
-    "hyporheic-connectivity": 8,
+    "hyporheic-connectivity": 13,
     "light-thermal-regime": 8,
     "low-flow-baseflow-dynamics": 13,
     "nutrient-cycling": 13,
@@ -74,10 +74,10 @@
       "status": "ok"
     },
     {
-      "functionScore": 8,
-      "index": 0.545,
+      "functionScore": 13,
+      "index": 0.85,
       "metricId": "hyporheic-connectivity-hyporheic-exchange-indicators",
-      "rating": "Fair",
+      "rating": "Good",
       "status": "ok"
     },
     {
@@ -166,9 +166,9 @@
     }
   ],
   "subIndices": {
-    "biological": 0.77,
-    "chemical": 0.77,
-    "physical": 0.73
+    "biological": 0.78,
+    "chemical": 0.78,
+    "physical": 0.76
   },
   "totalCount": 20
 }

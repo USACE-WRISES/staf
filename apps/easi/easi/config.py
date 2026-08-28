@@ -144,7 +144,7 @@ METRIC_REGISTRY: dict[str, dict] = {
         "datasource": "threedep:entrenchment"},
     "hyporheic-connectivity-hyporheic-exchange-indicators": {
         "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
-        "datasource": "nhdplus:slope (sinuosity context)"},
+        "datasource": "nhdplus:slope+reach_sinuosity"},
     "channel-evolution-channel-evolution-stage-and-trends": {
         "scale": "R", "confidence": "L", "proxy": True, "overrideable": True,
         "datasource": "threedep:bhr+er|nhd_fcode|observed"},
@@ -212,7 +212,8 @@ METRIC_DEFINITIONS: dict[str, str] = {
         "(floodprone width ÷ bankfull width).",
     "hyporheic-connectivity-hyporheic-exchange-indicators":
         "Potential for surface water to exchange with the shallow subsurface (hyporheic zone), "
-        "screened from channel slope. Sinuosity is shown for context and is not rated.",
+        "scored on the better of two pathways: channel slope (vertical bedform-driven exchange) "
+        "or reach sinuosity (lateral meander-driven exchange).",
     "channel-evolution-channel-evolution-stage-and-trends":
         "Whether the channel is stable or actively incising/widening, its stage in the "
         "channel-evolution sequence.",
@@ -272,7 +273,8 @@ METRIC_CALCULATIONS: dict[str, str] = {
     "floodplain-connectivity-floodplain-access-entrenchment":
         "Entrenchment ratio = flood-prone width ÷ bankfull width.",
     "hyporheic-connectivity-hyporheic-exchange-indicators":
-        "Channel slope binned to a rating. Sinuosity is displayed as context.",
+        "Better of the slope-pathway and sinuosity-pathway ratings (max of the two rating "
+        "indices). A result from one pathway alone is labeled partial.",
     "channel-evolution-channel-evolution-stage-and-trends":
         "Worse of the bank-height and entrenchment ratios. A canal or ditch classification "
         "rates Poor directly.",

@@ -150,10 +150,11 @@ def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
 
 
 def hyporheic(ctx: AnalysisContext) -> MetricResult:
-    """Channel-gradient screen of hyporheic-exchange potential.
+    """Best of the slope and sinuosity exchange pathways.
 
-    Slope alone is rated (it drives bed exchange, the dominant pathway).
-    Sinuosity rides along as a context-only input in the scoring trace."""
+    Slope screens vertical bedform-driven exchange and sinuosity screens
+    lateral meander-driven exchange. Either mechanism alone indicates exchange
+    potential, so the better pathway governs (max of the two rating indices)."""
     slope, sinuosity = ctx.slope, ctx.sinuosity
     ev = screening_methods.evaluate(
         HYPORHEIC_ID, {"slope": slope, "sinuosity": sinuosity},
@@ -164,17 +165,35 @@ def hyporheic(ctx: AnalysisContext) -> MetricResult:
         confidence="L")
     if ev.rating is None:
         return unavailable(
-            HYPORHEIC_ID, "channel slope is required", "L",
+            HYPORHEIC_ID,
+            "channel slope and reach sinuosity are both unavailable", "L",
             scoring=ev.trace)
-    value = float(ev.combined_value)
-    sin_txt = ("" if sinuosity is None
-               else f" (sinuosity {float(sinuosity):.2f} shown as context)")
+    inputs = {x["key"]: x for x in ev.trace["inputs"]}
+    governing = ev.trace["governingInput"]
+    gov = inputs.get(governing) or {}
+    parts = []
+    # sinuosity at 3 decimals, matching the delineation rounding, so a value
+    # just under a band boundary (1.196) never displays as sitting on it (1.20)
+    for key, spec in (("slope", "slope {:.4f} m/m"),
+                      ("sinuosity", "sinuosity {:.3f}")):
+        row = inputs.get(key) or {}
+        if row.get("value") is not None and row.get("rating"):
+            parts.append(f"{spec.format(float(row['value']))} ({row['rating']})")
+    partial = ev.trace.get("completeness") == "partial"
+    gov_value = float(gov["value"])
+    gov_text = (f"channel slope {gov_value:.4f} m/m" if governing == "slope"
+                else f"sinuosity {gov_value:.3f}")
+    suffix = ", single pathway" if partial else ""
+    sources = [x.get("source") for x in ev.trace["inputs"]
+               if x.get("available") and x.get("source")]
     return MetricResult(
-        HYPORHEIC_ID, value=round(value, 4),
-        value_text=f"channel slope {value:.4f} m/m{sin_txt}",
+        HYPORHEIC_ID, value=round(gov_value, 4),
+        value_text=f"{gov_text} ({governing} pathway governs{suffix})",
         rating=ev.rating, confidence="L",
-        source="NHDPlus slope",
-        note=("Slope screens vertical exchange potential. Bed hydraulic "
-              "conductivity is unavailable, so steep bedrock or fine-bedded "
-              "reaches can overpredict exchange."),
+        source=" + ".join(sources),
+        note=(f"{', '.join(parts)}. The better pathway governs. Slope screens "
+              "vertical bedform-driven exchange and sinuosity screens lateral "
+              "meander-driven exchange. Bed hydraulic conductivity is "
+              "unavailable, so steep bedrock or fine-bedded reaches can "
+              "overpredict exchange."),
         scoring=ev.trace)

@@ -53,6 +53,20 @@ def _hash_manifest(root: Path) -> dict[str, str]:
     return manifest
 
 
+def _hash_data_manifest(root: Path, skip_dirs: set[str]) -> dict[str, str]:
+    # Data files (screening-methods.json etc.) drive scoring just like code, so
+    # they get their own drift manifest; the *.py manifest cannot see them.
+    manifest: dict[str, str] = {}
+    for p in sorted(root.rglob("*")):
+        if not p.is_file() or p.suffix == ".pyc":
+            continue
+        rel = p.relative_to(root)
+        if any(part in skip_dirs for part in rel.parts):
+            continue
+        manifest[rel.as_posix()] = hashlib.sha256(p.read_bytes()).hexdigest()
+    return manifest
+
+
 def _engine_api_version() -> int:
     text = (SRC_PKG / "batch" / "__init__.py").read_text(encoding="utf-8")
     for line in text.splitlines():
@@ -75,6 +89,7 @@ def main() -> int:
         "vendored_from": "apps/easi/easi",
         "engine_api_version": _engine_api_version(),
         "manifest": _hash_manifest(SRC_PKG),
+        "data_manifest": _hash_data_manifest(SRC_DATA, _SKIP_DIRS | _SKIP_DATA_DIRS),
     }
     (DEST / "VENDOR_INFO.json").write_text(
         json.dumps(info, indent=1, sort_keys=True) + "\n", encoding="utf-8")

@@ -25,12 +25,12 @@
 |  | Source hierarchy | Single source, no fallback. |
 |  | Known limitations | This is an unstratified confinement/access screen.<br>Naturally confined valley settings require field interpretation.<br>Published condition standards stratify by stream type. Alluvial C and E channels are functioning above 2.2 and not functioning below 2.0, while confined B channels are functioning above 1.4. This unstratified screen is therefore lenient for alluvial reaches and strict for naturally confined ones. |
 | **Hyporheic Exchange Indicators** | Function | Hyporheic connectivity |
-|  | Automated method | Hyporheic-exchange potential (channel gradient) |
-|  | Inputs | Channel slope (m/m) · Reach sinuosity (context only) |
-|  | Equation | Rating = bands(slope) |
-|  | Scoring | Good ≥0.006 m/m · Fair 0.003-<0.006 m/m · Poor <0.003 m/m |
+|  | Automated method | Hyporheic-exchange potential (channel gradient or sinuosity) |
+|  | Inputs | Channel slope (m/m) · Reach sinuosity (ratio) |
+|  | Equation | Icombined = max(Islope, Isinuosity) |
+|  | Scoring | *Channel slope*: Good ≥0.006 m/m · Fair 0.003-<0.006 m/m · Poor <0.003 m/m<br>*Reach sinuosity*: Good ≥1.2 · Fair 1.05-<1.2 · Poor <1.05 |
 |  | Basis | provisional STAF screening judgment, confidence L, provisional screening transitions |
 |  | Source hierarchy | Single source, no fallback. |
-|  | Known limitations | Slope screens vertical exchange potential only. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.<br>Sinuosity is displayed as context and is not rated. Short fixed-length reaches understate planform sinuosity.<br>The slope bands are screening judgments, not published thresholds. |
+|  | Known limitations | Slope screens vertical bedform-driven exchange and sinuosity screens lateral meander-driven exchange. Bed hydraulic conductivity is a co-dominant control that is unavailable, so steep reaches over bedrock or fine beds can overpredict exchange.<br>The better pathway governs because vertical and lateral exchange are alternative mechanisms. Either alone indicates exchange potential.<br>Sinuosity measured over generalized reach geometry understates planform sinuosity. Under the better-pathway rule that bias can only fail to lift a rating, never lower one. The earlier weighted slope and sinuosity composite was retired for exactly that downward bias.<br>A result computed from one pathway is labeled partial.<br>The slope and sinuosity bands are screening judgments, not published thresholds. |
 
 : Hydraulics metrics {#tbl-metrics-hydraulics}

@@ -137,6 +137,8 @@ def _mode(method: dict) -> Optional[str]:
         return "categorical"
     if operator == "worst_index":
         return "worst"
+    if operator == "best_index":
+        return "best"
     if operator == "threshold":
         inp = next((i for i in method.get("inputs", []) if not i.get("contextOnly")), {})
         return "count" if inp.get("valueType") == "integer" else "scalar"
@@ -188,7 +190,7 @@ def _project(method: dict, context: Optional[dict] = None) -> Optional[ScoringMe
         for i in method.get("inputs", [])
     )
     per_input: tuple = ()
-    if mode == "worst":
+    if mode in {"worst", "best"}:
         per_input = tuple(
             (i["key"], _rate_fn(bands), _bands(bands, _input_domain(i, bands)))
             for i, bands in ((i, sm.bands_for_input(method, i, context))
@@ -314,8 +316,8 @@ def evaluate_method(method: ScoringMethod, values: dict) -> dict:
     result = sm.evaluate(method.metric_id, values, variant_key=method.method_key or None)
     rating, value = result.rating, result.combined_value
     idx = _index_of(rating)
-    if method.mode == "worst":
-        # the combined value of a worst-of method is an index, not a plottable quantity
+    if method.mode in {"worst", "best"}:
+        # the combined value of a worst-of/best-of method is an index, not a plottable quantity
         value = None
     return {"value": _round(value, method), "rating": rating, "index": idx,
             "functionScore": scoring.function_score(idx) if idx is not None else None}
@@ -410,7 +412,7 @@ def band_range_texts(method: ScoringMethod) -> dict:
     ``{}`` for categorical metrics (their criteria are a decision list, not a value range)."""
     if method.mode == "categorical" or not method.mode:
         return {}
-    if method.mode == "worst":
+    if method.mode in {"worst", "best"}:
         # one chip per rating joining each indicator's own range, tagged by its symbol
         per_rating: dict[str, list] = {"Good": [], "Fair": [], "Poor": []}
         for key, _rate_fn, bands in method.per_input:
