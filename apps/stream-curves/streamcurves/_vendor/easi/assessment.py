@@ -70,6 +70,11 @@ async def assess(ctx: AnalysisContext, *,
     ctx.extras["streamcat"] = sc
     ctx.extras["landcover"] = lc
     ctx.huc12 = huc12
+    if isinstance(geom, dict):
+        # Bieger fit-range flag rides the geometry block so the cross-section
+        # adapters can downgrade confidence when bankfull is extrapolated.
+        geom["bankfull_extrapolated"] = bool(bf.get("extrapolated"))
+        geom["bankfull_fit_range_sqkm"] = bf.get("fit_range_sqkm")
     ctx.extras["reach_geomorph"] = geom
     ctx.extras["nrsa"] = nrsa_record
 
@@ -189,11 +194,56 @@ async def assess(ctx: AnalysisContext, *,
             "overrideable": bool(info.get("overrideable")),
         })
 
+    _annotate_anchors(rows, ctx.extras.get("siteAnchor"))
     result = _finalize(rows, len(meta_by_id), overrides)
     if cross_section:
         result["crossSection"] = cross_section
     result["basin"] = basin.basin_characteristics(ctx)
     return result
+
+
+# Labels for the per-metric anchoring, keyed (anchor kind, is routed site).
+_ANCHOR_LABELS = {
+    ("clickedReach", True): "clicked HR reach",
+    ("clickedPoint", True): "clicked point",
+    ("surrogateComid", True): "surrogate reach (COMID {comid})",
+    ("surrogateWatershed", True): "surrogate watershed",
+    ("clickedReach", False): "assessed reach",
+    ("clickedPoint", False): "assessment point",
+    ("surrogateComid", False): "assessed reach (COMID {comid})",
+    ("surrogateWatershed", False): "assessed watershed",
+}
+
+
+def _annotate_anchors(rows: list[dict], site_anchor: Optional[dict]) -> None:
+    """Stamp every row with its framework-fixed anchor + a human label.
+
+    For covered (v2Direct or unanchored) runs the labels are neutral and
+    nothing else changes, so historical results are label-only enriched. For a
+    routed site the labels name the substitution, the StreamCat-fallback rule
+    forces surrogateWatershed, and the per-metric table is stamped onto
+    ``siteAnchor["metricAnchors"]`` for the report banner. If Phase 2
+    re-anchoring did not actually apply (HR data unavailable), every clicked-*
+    label says so rather than claiming a re-anchor that never happened.
+    """
+    anchor = site_anchor or {}
+    routed = anchor.get("anchorKind") == "hrSurrogate"
+    applied = bool((anchor.get("reanchored") or {}).get("applied"))
+    comid = (anchor.get("scoredReach") or {}).get("comid")
+    table: dict[str, dict] = {}
+    for r in rows:
+        a = registry.METRIC_ANCHOR.get(r["metricId"], "surrogateWatershed")
+        if r.get("usedFallback"):
+            a = "surrogateWatershed"     # every fallback source is StreamCat
+        if routed and not applied and a in ("clickedReach", "clickedPoint"):
+            label = "surrogate reach (HR data unavailable)"
+        else:
+            label = _ANCHOR_LABELS[(a, routed)].format(comid=comid)
+        r["anchor"] = a
+        r["anchorLabel"] = label
+        table[r["metricId"]] = {"anchor": a, "label": label, "name": r["name"]}
+    if routed:
+        anchor["metricAnchors"] = table
 
 
 def _xsection_caption(er=None, bhr=None, division=None, *, edited=False) -> str:

@@ -15,7 +15,7 @@ from __future__ import annotations
 import asyncio
 from typing import Callable, Optional
 
-from .. import config, pipeline, scoring
+from .. import config, pipeline, routing, scoring
 from ..metrics import registry
 from . import ENGINE_API_VERSION, contracts, runtime
 from .contracts import (BatchConfig, BatchRequest, Completeness,
@@ -42,7 +42,11 @@ def capabilities() -> dict:
         "index_bands": [list(b) for b in config.INDEX_BANDS],
         "function_score_bands": [list(b) for b in config.FUNCTION_SCORE_BANDS],
         "defaults": {"reach_length_ft": pipeline.DEFAULT_REACH_FT,
-                     "snap_tolerance_ft": 150.0},
+                     "snap_tolerance_ft": routing.HR_SNAP_TOL_FT,
+                     # Published routing policy: uncovered clicks route to the
+                     # nearest covered downstream reach, refused past this
+                     # drainage-area ratio.
+                     "da_ratio_max": routing.DA_RATIO_MAX},
         "criteria_fields": qualify.CRITERIA_FIELDS,
         "criteria_presets": list(qualify.PRESETS.keys()),
         "max_sites": MAX_SITES,
@@ -101,7 +105,8 @@ def _metric_records(rows: list[dict], source_choices: dict) -> list[MetricRecord
             used_fallback=bool(trace.get("usedFallback", r.get("usedFallback", False))),
             observed_overrides_proxy=bool(
                 trace.get("observedOverridesProxy",
-                          r.get("observedOverridesProxy", False)))))
+                          r.get("observedOverridesProxy", False))),
+            anchor=r.get("anchorLabel", "")))
     return out
 
 
@@ -156,17 +161,27 @@ def _build_site_result(site: SiteRequest, delin: dict, report: dict) -> SiteResu
         issues=[Issue(code="metric_unavailable", severity="info", stage="metrics",
                       metric_id=m.metric_id, site_id=site.site_id,
                       message=m.missing_reason or "no data")
-                for m in records if m.availability == "unavailable"])
+                for m in records if m.availability == "unavailable"],
+        anchor=dict(delin.get("siteAnchor") or {}))
+
+
+_SNAP_STAGE_CODES = ("no_stream_found", "snap_service_error",
+                     "surrogate_da_ratio_exceeded", "surrogate_da_unavailable")
 
 
 def _failed_result(site: SiteRequest, delin: dict) -> SiteResult:
+    code = delin.get("code") or "delineation_failed"
     return SiteResult(
         site_id=site.site_id, state="failed",
         input={"lat": site.lat, "lon": site.lon, "comid": site.comid},
-        issues=[Issue(code=delin.get("code") or "delineation_failed",
-                      severity="error", stage="delineation", site_id=site.site_id,
+        issues=[Issue(code=code, severity="error",
+                      stage="snap" if code in _SNAP_STAGE_CODES else "delineation",
+                      site_id=site.site_id,
                       retryable=bool(delin.get("retryable", True)),
-                      message=delin.get("message", "delineation failed"))])
+                      message=delin.get("message", "delineation failed"))],
+        # A routing refusal carries the partial anchor (clicked stream, would-be
+        # surrogate, DA ratio) so exports can say exactly what was declined.
+        anchor=dict(delin.get("anchor") or {}))
 
 
 async def run_site(site: SiteRequest, *, metric_ids: Optional[list[str]] = None,
@@ -175,7 +190,8 @@ async def run_site(site: SiteRequest, *, metric_ids: Optional[list[str]] = None,
     runtime.ensure_cache()
     _emit(on_event, "delineation", site.site_id)
     delin = await pipeline.delineate_only(
-        site.lat, site.lon, site.reach_length_ft, comid=site.comid)
+        site.lat, site.lon, site.reach_length_ft, comid=site.comid,
+        snap_tolerance_ft=site.snap_tolerance_ft)
     if delin.get("status") != "ok":
         return _failed_result(site, delin)
     ctx_inputs = delin.pop("ctx_inputs")
@@ -194,6 +210,7 @@ async def run_site(site: SiteRequest, *, metric_ids: Optional[list[str]] = None,
         "delineation": delin.get("delineation", {}),
         "watershed_geojson": delin.get("watershed_geojson"),
         "reach_geojson": delin.get("reach_geojson"),
+        "siteAnchor": delin.get("siteAnchor"),
         "report": report,
     }
     _emit(on_event, "site_done", site.site_id, state=result.state)

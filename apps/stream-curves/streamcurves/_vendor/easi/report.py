@@ -38,7 +38,7 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
     def pct(value):
         return "—" if value is None else f"{100 * float(value):.0f}%"
 
-    return [
+    pairs = [
         ("Stream", d.get("gnis_name", "")),
         ("COMID", d.get("comid", "")),
         ("HUC12", d.get("huc12") or ""),
@@ -65,7 +65,27 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
         ("Manual metrics", profile.get("manual", 0)),
         ("Unavailable metrics", profile.get("unavailable", 0)),
         ("Overrides applied", ", ".join(rep.get("overridesApplied", [])) or "none"),
-    ] + [(label, val) for label, val in (rep.get("basin") or {}).get("rows", [])]
+    ]
+    # Substitution provenance rows appear ONLY for routed (hrSurrogate) sites so
+    # covered-network exports stay byte-identical to their historical form.
+    anchor = result.get("siteAnchor") or {}
+    if anchor.get("anchorKind") == "hrSurrogate":
+        clicked = anchor.get("clickedStream") or {}
+        routing_info = anchor.get("routing") or {}
+        pairs[7:7] = [
+            ("Scored at surrogate reach", "yes"),
+            ("Clicked stream (NHDPlus HR)",
+             clicked.get("gnisName") or "(unnamed stream)"),
+            ("Clicked stream NHDPlusID", clicked.get("nhdplusId", "")),
+            ("Clicked stream drainage area (km2)",
+             shown(clicked.get("drainageAreaSqkm"))),
+            ("Routed distance (ft)", shown(routing_info.get("routedDistanceFt"))),
+            ("Drainage area ratio", shown(routing_info.get("daRatio"))),
+            ("Drainage area ratio limit", shown(routing_info.get("daRatioLimit"))),
+            ("Routing method", routing_info.get("method") or ""),
+        ]
+    return pairs + [(label, val)
+                    for label, val in (rep.get("basin") or {}).get("rows", [])]
 
 
 # --------------------------------------------------------------------------- #
@@ -80,6 +100,10 @@ def build_csv(result: dict) -> bytes:
     w.writerow([])
     rows = _ordered_rows(result["report"])
     has_notes = any(r.get("userNote") for r in rows)   # only add the column if used
+    # The per-metric anchor column appears ONLY for routed sites so covered
+    # exports stay byte-identical.
+    has_anchor = ((result.get("siteAnchor") or {}).get("anchorKind")
+                  == "hrSurrogate")
     header = ["Discipline", "Function", "Metric", "Value", "Rating", "Index",
               "FunctionScore", "Confidence", "Source", "Status", "MethodKey",
               "MethodKind", "BasisClass", "InputTrace", "CombinedValue",
@@ -88,6 +112,8 @@ def build_csv(result: dict) -> bytes:
               "ObservedOverridesProxy", "RetainedProxyRating",
               "OverallCoverage", "PhysicalCoverage", "ChemicalCoverage",
               "BiologicalCoverage", "ProvisionalCoverage"]
+    if has_anchor:
+        header.append("Anchor")
     if has_notes:
         header.append("Notes")
     w.writerow(header)
@@ -117,6 +143,8 @@ def build_csv(result: dict) -> bytes:
                (outcome_coverage.get("chemical") or {}).get("fraction"),
                (outcome_coverage.get("biological") or {}).get("fraction"),
                bool(rep.get("provisionalCoverage"))]
+        if has_anchor:
+            row.append(r.get("anchorLabel", ""))
         if has_notes:
             row.append(r.get("userNote", ""))
         w.writerow(row)
@@ -144,6 +172,11 @@ def build_geojson(result: dict) -> str:
         "provisional_coverage": bool(rep.get("provisionalCoverage")),
         "basin_characteristics": {lbl: val for lbl, val in (rep.get("basin") or {}).get("rows", [])},
     }
+    # Only routed sites carry the anchor block, so covered-network GeoJSON stays
+    # byte-identical to its historical form.
+    anchor = result.get("siteAnchor") or {}
+    if anchor.get("anchorKind") == "hrSurrogate":
+        summary["site_anchor"] = anchor
 
     def _add(fc, props):
         for f in (fc or {}).get("features", []):
@@ -159,6 +192,7 @@ def build_geojson(result: dict) -> str:
                          "geometry": {"type": "Point",
                                       "coordinates": [d["snapped_lon"], d["snapped_lat"]]}})
     # per-metric ratings travel with the point/reach as a compact attribute table
+    has_anchor = anchor.get("anchorKind") == "hrSurrogate"
     metrics = {}
     for r in rep.get("metricRows", []):
         trace = r.get("scoring") or {}
@@ -180,6 +214,8 @@ def build_geojson(result: dict) -> str:
                  trace.get("observedOverridesProxy",
                            r.get("observedOverridesProxy", False))),
              "retained_proxy": r.get("proxyResult")}
+        if has_anchor:
+            m["anchor"] = r.get("anchorLabel")
         if r.get("userNote"):
             m["note"] = r["userNote"]
         metrics[r["metricId"]] = m
@@ -298,6 +334,23 @@ def build_pdf(result: dict) -> bytes:
     meta = f"Analysis point {pt} · Reach {d.get('reach_length_ft')} ft upstream"
     story.append(Paragraph(meta, styles["Normal"]))
     story.append(Spacer(1, 8))
+    anchor = result.get("siteAnchor") or {}
+    if anchor.get("anchorKind") == "hrSurrogate":
+        clicked = anchor.get("clickedStream") or {}
+        routing_info = anchor.get("routing") or {}
+        clicked_name = clicked.get("gnisName") or "an unnamed stream"
+        dist = routing_info.get("routedDistanceFt")
+        dist_txt = (f"{dist:,.0f} ft downstream" if dist is not None
+                    else "downstream")
+        ratio = routing_info.get("daRatio")
+        ratio_txt = f"{ratio}" if ratio is not None else "unknown"
+        story.append(Paragraph(
+            f"<b>Scored at a surrogate reach.</b> The clicked stream "
+            f"({clicked_name}, NHDPlus HR) is not on the scoring network. "
+            f"Results describe {d.get('gnis_name') or 'the nearest covered reach'} "
+            f"{dist_txt} on the covered network. Drainage area ratio {ratio_txt} "
+            f"(limit {routing_info.get('daRatioLimit')}).", styles["Normal"]))
+        story.append(Spacer(1, 6))
     if rep.get("provisionalCoverage"):
         story.append(Paragraph(
             "<b>Provisional (limited coverage).</b> One or more included coverage "
