@@ -35,6 +35,30 @@ def test_parse_types_and_sentinels():
     assert hr.parse_feature(None) is None
 
 
+def test_chunk_query_escalates_before_failing(monkeypatch):
+    # First pass (base timeout, retried) fails; the second pass at the
+    # escalated timeout succeeds — a chunk gets real patience before it can
+    # fail a whole delineation.
+    calls: list[tuple] = []
+
+    def fake_request(url, params, timeout, retries=1):
+        calls.append((timeout, retries))
+        return {"features": []} if timeout == 120.0 else None
+    monkeypatch.setattr(hr, "_request", fake_request)
+    data = hr._chunk_query("u", {}, 60.0, 120.0)
+    assert data == {"features": []}
+    assert calls == [(60.0, 2), (120.0, 1)]
+
+
+def test_chunk_query_failure_fails_the_call(monkeypatch):
+    monkeypatch.setattr(hr, "_request", lambda *a, **k: None)
+    assert hr._chunk_query("u", {}, 60.0, 120.0) is None
+    # and the level-callers keep the never-partial invariant
+    monkeypatch.setattr(hr, "_chunk_query", lambda *a, **k: None)
+    assert hr.parents_by_dnhydroseq([1, 2]) is None
+    assert hr.catchments_by_ids([1, 2]) is None
+
+
 @pytest.mark.skipif(not _EASI.is_dir(), reason="EASI source not present")
 def test_parse_parity_with_easi():
     # The engine's record is a superset (it adds EROM qama); every field the

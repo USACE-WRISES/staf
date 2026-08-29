@@ -66,10 +66,11 @@ def main() -> int:
                 "secs": secs, "reason": out["reason"],
                 "warnings": "; ".join(out["warnings"]),
             })
+            reason = f" | {out['reason']}" if out.get("reason") else ""
             print(f"  {rec['nhdplusid']}: VAA {rec['totdasqkm']:.2f} km2 -> "
                   f"{out['status']} union {out['areaSqkm']} "
                   f"(agr {out['areaAgreement']}) reaches={out['nReaches']} "
-                  f"{secs}s")
+                  f"{secs}s{reason}")
 
     ok = [r for r in rows if r["status"] == "ok" and r["agreement"]]
     summary = {

@@ -184,8 +184,28 @@ def _chunks(values: Iterable[int], size: int = _CHUNK):
         yield buf
 
 
+def _chunk_query(url: str, params: dict, timeout: float,
+                 escalated_timeout: float) -> Optional[dict]:
+    """One batched chunk with a second, longer-timeout pass before giving up.
+
+    The 2026-08-29 acceptance panel lost 5 of 14 sites to single chunk
+    timeouts on multi-hop walks while every completed union agreed exactly
+    with the published area, so failures here are worth real patience. A
+    chunk that exhausts both passes still fails the whole call — the caller's
+    invariant is a complete tree or None, never a silently partial one.
+    """
+    data = _request(url, params, timeout=timeout, retries=2)
+    if data is None:
+        data = _request(url, params, timeout=escalated_timeout, retries=1)
+    if data is None or _exceeded(data):
+        return None
+    return data
+
+
 def parents_by_dnhydroseq(hydroseqs: list[int], *, with_geometry: bool = True,
-                          timeout: float = 45.0) -> Optional[list[dict]]:
+                          timeout: float = 60.0,
+                          escalated_timeout: float = 120.0
+                          ) -> Optional[list[dict]]:
     """All reaches whose downstream hydroseq is in ``hydroseqs`` (one BFS level).
 
     Includes tributaries and divergences, which is what the upstream TREE walk
@@ -195,11 +215,11 @@ def parents_by_dnhydroseq(hydroseqs: list[int], *, with_geometry: bool = True,
     out: list[dict] = []
     for chunk in _chunks(hydroseqs):
         where = "dnhydroseq IN (" + ",".join(str(x) for x in chunk) + ")"
-        data = _request(FLOWLINE_QUERY_URL, {
+        data = _chunk_query(FLOWLINE_QUERY_URL, {
             "where": where, "outFields": ",".join(_ATTR_FIELDS),
             "returnGeometry": str(with_geometry).lower(), "outSR": "4326",
-            "f": "geojson"}, timeout=timeout)
-        if data is None or _exceeded(data):
+            "f": "geojson"}, timeout, escalated_timeout)
+        if data is None:
             return None
         for f in data.get("features") or []:
             rec = parse_feature(f)
@@ -208,7 +228,8 @@ def parents_by_dnhydroseq(hydroseqs: list[int], *, with_geometry: bool = True,
     return out
 
 
-def catchments_by_ids(nhdplusids: list[int], timeout: float = 60.0
+def catchments_by_ids(nhdplusids: list[int], timeout: float = 90.0,
+                      escalated_timeout: float = 180.0
                       ) -> Optional[list[dict]]:
     """Catchment polygons for the given reach ids.
 
@@ -219,11 +240,11 @@ def catchments_by_ids(nhdplusids: list[int], timeout: float = 60.0
     out: list[dict] = []
     for chunk in _chunks(nhdplusids):
         where = "nhdplusid IN (" + ",".join(str(x) for x in chunk) + ")"
-        data = _request(CATCHMENT_QUERY_URL, {
+        data = _chunk_query(CATCHMENT_QUERY_URL, {
             "where": where, "outFields": "nhdplusid,areasqkm",
             "returnGeometry": "true", "outSR": "4326", "f": "geojson"},
-            timeout=timeout)
-        if data is None or _exceeded(data):
+            timeout, escalated_timeout)
+        if data is None:
             return None
         for f in data.get("features") or []:
             props = f.get("properties") or {}

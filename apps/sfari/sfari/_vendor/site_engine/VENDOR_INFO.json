@@ -16,7 +16,7 @@
   "delineate.py": "4ac7637a0c10a4f1e724db06e6fd73a9ac86f8612bf18695fffb33dc6fb111c2",
   "engine.py": "c729651773884bbbf032e1daa28b16785335ecf9382e7e0d20f2fca2107412b1",
   "geometry.py": "e08eada5a5f43b881b5693bab94033c7b878e670d3eaedc05ebf1710b5833458",
-  "hr.py": "405f76cc4a3fd6803c4640bd245e88847e11d5fcd36cd4899d6dffbc7773fee9",
+  "hr.py": "4190e64f973e6eca5f3412cce788ef38de70d36bddf8e0f0c925813f6c2cb5cc",
   "metrics/__init__.py": "b4d1d2df45f5faab49462993a31ac769be9a69c24b5adf989e7df7dbc117c159",
   "metrics/common.py": "4222ca8a720c91241ba0c9d91ef8ca67b349544aff6dfbff9d3bfe093d842c83",
   "metrics/dams.py": "35026dac6dfa2b3c5131bbda42af0aac5ac6988093d7b2b88b6134423a061e6d",
