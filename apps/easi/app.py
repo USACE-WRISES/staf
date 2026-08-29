@@ -25,11 +25,12 @@ import anyio  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
 
 from easi import (assessment, batch_ui, bieger, config, delineation,  # noqa: E402
-                  geomorph, method_plot, methods as easi_methods, pipeline, report, scoring)
+                  geomorph, method_plot, methods as easi_methods, pipeline, report,
+                  routing, scoring)
 from easi.batch import api as batch_api  # noqa: E402
 from easi.batch import contracts as batch_contracts  # noqa: E402
 from easi.batch import exports as batch_exports  # noqa: E402
-from easi.datasources import flowlines  # noqa: E402
+from easi.datasources import flowlines, nhd_hr  # noqa: E402
 from easi.metrics import geomorphology, hydraulics  # noqa: E402  (cross-section metric ids)
 from easi.datasources.geocode import geocode_address  # noqa: E402
 from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
@@ -53,6 +54,11 @@ except Exception:  # pragma: no cover
 WATERSHED_STYLE = {"color": "#caa700", "weight": 1, "fillColor": "#fdf24a", "fillOpacity": 0.40}
 REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 2, "opacity": 0.9}
+# The full NHDPlus HR network drawn under the V2 scoring network: lighter and
+# thinner so covered (clickable-to-score) streams stay visually primary.
+HR_FLOWLINE_STYLE = {"color": "#7fb3f7", "weight": 1.2, "opacity": 0.75}
+# Dashed connector from a clicked HR-only stream to its covered surrogate reach.
+ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
 # === TEMP: MMW comparison overlay (remove later) ===
 MMW_STYLE = {"color": "#7b2cbf", "weight": 2, "dashArray": "5,4",
              "fillColor": "#b388eb", "fillOpacity": 0.18}  # distinct from yellow WATERSHED_STYLE
@@ -60,6 +66,15 @@ SHOW_MMW_OVERLAY = False  # hides the Basin-page comparison checkbox; the server
 # === END TEMP ===
 RATING_COLOR = {"Good": "#c8d9f2", "Fair": "#f5e7a6", "Poor": "#f5b5b5"}
 _DISC_ORDER = ["Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology"]
+
+
+def _fmt_ratio_limit(value):
+    """10.0 -> 10 for display; anything non-integral passes through."""
+    try:
+        f = float(value)
+        return int(f) if f.is_integer() else f
+    except (TypeError, ValueError):
+        return value
 
 USGS_TOPO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 USGS_IMAGERY_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
@@ -827,13 +842,51 @@ def _metric_toolbar():
     return ui.div(*items, class_="easi-metric-toolbar")
 
 
-def _report_body(d, rep, notes, downloads):
+_ANCHOR_GROUP_ORDER = {"clickedReach": 0, "clickedPoint": 1,
+                       "surrogateComid": 2, "surrogateWatershed": 3}
+
+
+def _anchor_banner(anchor, d):
+    """Substitution banner for routed sites; None on the covered network.
+
+    With Phase 2 metric anchoring present, the banner carries the per-metric
+    source table (grouped by anchor) so a reader sees exactly which rows
+    describe the clicked stream and which describe the surrogate."""
+    if not anchor or anchor.get("anchorKind") != "hrSurrogate":
+        return None
+    clicked = anchor.get("clickedStream") or {}
+    r = anchor.get("routing") or {}
+    dist = r.get("routedDistanceFt")
+    dist_txt = f"{dist:,.0f} ft downstream" if dist is not None else "downstream"
+    groups: dict[tuple, list[str]] = {}
+    for entry in (anchor.get("metricAnchors") or {}).values():
+        key = (_ANCHOR_GROUP_ORDER.get(entry.get("anchor"), 9), entry.get("label"))
+        groups.setdefault(key, []).append(entry.get("name") or "")
+    group_lines = [
+        ui.div(ui.tags.b(f"At the {label}: "), ", ".join(sorted(names)),
+               style="margin-top:.25rem;")
+        for (_o, label), names in sorted(groups.items())]
+    return ui.div(
+        ui.div(
+            ui.tags.b("Scored at a surrogate reach. "),
+            f"The clicked stream ({clicked.get('gnisName') or 'unnamed stream'}, "
+            f"NHDPlus HR) is not in the scoring network. Results describe "
+            f"{(d or {}).get('gnis_name') or 'the nearest covered reach'} {dist_txt}. "
+            f"Drainage area ratio {r.get('daRatio')} "
+            f"(limit {_fmt_ratio_limit(r.get('daRatioLimit'))})."),
+        *group_lines,
+        style=("background:#fff7e0;border:1px solid #e6c96b;border-radius:6px;"
+               "padding:.5rem .7rem;margin:0 0 .6rem;font-size:13px;"))
+
+
+def _report_body(d, rep, notes, downloads, anchor=None):
     """Read-only report body shared by the single-site and batch modals (STAF layout).
     Ratings and notes are edited only in the Assessment worksheet, so this view never posts
     anything: the dense metric table (display toggles reveal detail client-side), the static
     cross-section, the two-panel summary below the table, and the export row (``downloads``).
     The display-toggle classes live on the stable ``#easi-report`` wrapper."""
     return ui.div(
+        _anchor_banner(anchor, d),
         _summary_header(d),
         _basin_block(d, rep),
         _xs_readonly_block(rep),
@@ -854,7 +907,7 @@ def _report_modal(res, notes):
     swapped sources, and edited cross-section already folded in), so it is fully static."""
     d, rep = res["delineation"], res.get("report") or {}
     return ui.modal(
-        _report_body(d, rep, notes, _dl_buttons()),
+        _report_body(d, rep, notes, _dl_buttons(), anchor=res.get("siteAnchor")),
         # ✕ lives in the modal header so it stays put when the body scrolls; the muted
         # hint beside it cues that closing returns to the editable Assessment worksheet.
         title=ui.TagList("EASI Screening Report",
@@ -875,7 +928,7 @@ def _batch_report_modal(site_id, base):
         ui.input_action_button("close_modal", "Close", class_="btn-sm btn-primary"),
         class_="easi-modal-footer")
     return ui.modal(
-        _report_body(d, rep, {}, downloads),
+        _report_body(d, rep, {}, downloads, anchor=base.get("siteAnchor")),
         title=ui.TagList(f"EASI Screening Report: {site_id}",
                          ui.input_action_button("close_modal_x", "✕", class_="easi-modal-x")),
         size="xl", easy_close=True, footer=None,
@@ -921,8 +974,12 @@ def server(input, output, session):
     view_bbox = reactive.value(None)       # rounded bbox at zoom >= FLOW_ZOOM | None
     last_view_change = reactive.value(0.0)
     fetched_bbox = reactive.value(None)
+    hr_geojson = reactive.value(None)      # current viewport NHDPlus HR flowlines | None
+    pending_anchor = reactive.value(None)  # routed siteAnchor awaiting Delineate | None
+    anchor_error = reactive.value(None)    # routing refusal text (DA ratio) | None
 
-    _layers: dict = {"flow": None, "marker": None, "ws": None, "reach": None}
+    _layers: dict = {"flow": None, "hrflow": None, "route": None,
+                     "marker": None, "ws": None, "reach": None}
 
     def _remove_layer(key):
         lyr = _layers.get(key)
@@ -997,6 +1054,10 @@ def server(input, output, session):
         async def flow_task(bbox: tuple) -> dict | None:
             return await anyio.to_thread.run_sync(lambda: flowlines.flowlines_in_bbox(*bbox))
 
+        @reactive.extended_task
+        async def hr_flow_task(bbox: tuple) -> dict | None:
+            return await anyio.to_thread.run_sync(lambda: nhd_hr.hr_flowlines_in_bbox(*bbox))
+
         @reactive.effect
         def _settle_and_fetch():
             import time
@@ -1005,6 +1066,7 @@ def server(input, output, session):
             if bbox is None:
                 with reactive.isolate():
                     _remove_layer("flow"); flow_geojson.set(None); fetched_bbox.set(None)
+                    _remove_layer("hrflow"); hr_geojson.set(None)
                 return
             elapsed = time.monotonic() - changed
             if elapsed < 0.5:                       # wait for panning to settle
@@ -1015,6 +1077,7 @@ def server(input, output, session):
                     return
                 fetched_bbox.set(bbox)
             flow_task(bbox)
+            hr_flow_task(bbox)
 
         @reactive.effect
         def _apply_flowlines():
@@ -1029,12 +1092,38 @@ def server(input, output, session):
                 else:
                     _remove_layer("flow"); flow_geojson.set(None)
 
+        @reactive.effect
+        def _apply_hr_flowlines():
+            try:
+                fc = hr_flow_task.result()
+            except Exception:
+                return
+            with reactive.isolate():
+                if fc and fc.get("features"):
+                    _add_layer("hrflow", GeoJSON(data=fc, style=HR_FLOWLINE_STYLE,
+                                                 name="All streams (NHDPlus HR)"))
+                    hr_geojson.set(fc)
+                    # Keep the V2 scoring network drawn on top of the HR layer:
+                    # whichever fetch settles last would otherwise sit above.
+                    if _layers.get("flow") is not None:
+                        _add_layer("flow", _layers["flow"])
+                else:
+                    _remove_layer("hrflow"); hr_geojson.set(None)
+
+        def _clear_route_state():
+            # A new pick invalidates any routed-substitution state from the last one.
+            _remove_layer("route")
+            pending_anchor.set(None)
+            anchor_error.set(None)
+
         # ---- click -> snap or reject (only during the identify step) ----
         @reactive.effect
         @reactive.event(clicked)
         def _handle_click():
             if current_step() != STEP_IDENTIFY:
                 return
+            with reactive.isolate():
+                _clear_route_state()
             lat, lon = clicked()
             fc = flow_geojson()
             hit = flowlines.nearest_point_on_lines(fc, lat, lon) if fc else None
@@ -1051,12 +1140,22 @@ def server(input, output, session):
             ui.update_numeric("lat", value=round(slat, 5))
             ui.update_numeric("lon", value=round(slon, 5))
 
+        def _snap_both(lat: float, lon: float) -> dict:
+            """V2 snap first; if the click misses the scoring network, try the HR
+            network so the point can be routed to a covered surrogate. Worker-thread
+            sync helper shared by the click and typed-coordinate paths."""
+            d = 0.012  # ~0.8 mi half-box around the click, so the snap uses the
+            hit = flowlines.nearest_point_on_lines(  # line you actually clicked
+                flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d), lat, lon)
+            if hit and hit[2] <= SNAP_TOL_FT:
+                return {"hit": hit}
+            hr_hit = nhd_hr.nearest_point_on_hr_lines(
+                nhd_hr.hr_flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d), lat, lon)
+            return {"hit": hit, "hrHit": hr_hit, "lat": lat, "lon": lon}
+
         @reactive.extended_task
         async def click_snap_task(lat: float, lon: float) -> dict:
-            d = 0.012  # ~0.8 mi half-box around the click, so the snap uses the
-            return {"hit": await anyio.to_thread.run_sync(  # line you actually clicked
-                lambda: flowlines.nearest_point_on_lines(
-                    flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d), lat, lon))}
+            return await anyio.to_thread.run_sync(lambda: _snap_both(lat, lon))
 
         @reactive.effect
         def _apply_click_snap():
@@ -1067,17 +1166,67 @@ def server(input, output, session):
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit)
-            else:
-                ui.notification_show("You didn't click on a stream line. Zoom in and click "
-                                     "a blue stream line.", type="warning", duration=5)
+                return
+            hr_hit = res.get("hrHit")
+            if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                route_task(res["lat"], res["lon"], tuple(hr_hit))
+                return
+            ui.notification_show("You didn't click on a stream line. Zoom in and click "
+                                 "a blue stream line.", type="warning", duration=5)
+
+        # ---- HR-only stream -> deterministic surrogate routing ----
+        @reactive.extended_task
+        async def route_task(lat: float, lon: float, hr_hit: tuple) -> dict:
+            return await anyio.to_thread.run_sync(
+                lambda: routing.route_from_hr(lat, lon, hr_hit))
+
+        @reactive.effect
+        def _route_done():
+            try:
+                res = route_task.result()
+            except Exception:
+                return
+            with reactive.isolate():
+                _clear_route_state()
+                if res.get("error") == "snap_service_error":
+                    ui.notification_show("Could not reach the stream routing service. "
+                                         "Try the click again.", type="warning", duration=6)
+                    return
+                if res.get("error"):
+                    ui.notification_show("No stream in the scoring network could be "
+                                         "reached from this point.", type="warning",
+                                         duration=6)
+                    return
+                if res.get("refused"):
+                    _remove_layer("marker")
+                    snapped_point.set(None)
+                    anchor_error.set(res.get("message"))
+                    ui.notification_show(res.get("message"), type="warning", duration=9)
+                    return
+                anchor = res["anchor"]
+                clicked_s = anchor.get("clickedStream") or {}
+                scored = anchor.get("scoredReach") or {}
+                if (clicked_s.get("snapLat") is not None
+                        and scored.get("snapLat") is not None):
+                    seg = {"type": "FeatureCollection", "features": [{
+                        "type": "Feature", "properties": {},
+                        "geometry": {"type": "LineString", "coordinates": [
+                            [clicked_s["snapLon"], clicked_s["snapLat"]],
+                            [scored["snapLon"], scored["snapLat"]]]}}]}
+                    _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
+                                                name="Routed to surrogate"))
+                s_lat = scored.get("snapLat")
+                s_lon = scored.get("snapLon")
+                if s_lat is None:
+                    s_lat, s_lon = clicked_s.get("snapLat"), clicked_s.get("snapLon")
+                pending_anchor.set(anchor)
+                _apply_snap((s_lat, s_lon, clicked_s.get("snapDistFt") or 0.0,
+                             scored.get("comid")))
 
         # ---- typed lat/long -> recenter the map + snap (same path as a click) ----
         @reactive.extended_task
         async def coord_snap_task(lat: float, lon: float) -> dict:
-            d = 0.012  # same ~0.8 mi half-box as a map click
-            return {"hit": await anyio.to_thread.run_sync(
-                lambda: flowlines.nearest_point_on_lines(
-                    flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d), lat, lon))}
+            return await anyio.to_thread.run_sync(lambda: _snap_both(lat, lon))
 
         @reactive.effect
         def _apply_coord_snap():
@@ -1088,14 +1237,18 @@ def server(input, output, session):
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit)
-            else:
-                # No stream near the typed point: place nothing and clear any stale point
-                # so "Delineate" stays disabled until a real stream is found.
-                _remove_layer("marker")
-                snapped_point.set(None)
-                ui.notification_show(
-                    "No stream within 150 ft of those coordinates. Adjust them, or zoom in "
-                    "and click a blue stream line.", type="warning", duration=6)
+                return
+            hr_hit = res.get("hrHit")
+            if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                route_task(res["lat"], res["lon"], tuple(hr_hit))
+                return
+            # No stream near the typed point: place nothing and clear any stale point
+            # so "Delineate" stays disabled until a real stream is found.
+            _remove_layer("marker")
+            snapped_point.set(None)
+            ui.notification_show(
+                "No stream within 150 ft of those coordinates. Adjust them, or zoom in "
+                "and click a blue stream line.", type="warning", duration=6)
 
         @reactive.effect
         @reactive.event(input.coords_entered)
@@ -1115,6 +1268,8 @@ def server(input, output, session):
                 ui.notification_show("Coordinates must be within the continental "
                                      "United States.", type="warning", duration=5)
                 return
+            with reactive.isolate():
+                _clear_route_state()
             _MAP.center = (lat, lon)   # bring the typed point into view so it is visible
             _MAP.zoom = 15
             coord_snap_task(lat, lon)
@@ -1157,8 +1312,10 @@ def server(input, output, session):
     # ---- staged analysis tasks ----
     @reactive.extended_task
     async def delineate_task(lat: float, lon: float, reach_ft: float,
-                             comid: "int | None" = None) -> dict:
-        return await pipeline.delineate_only(lat, lon, reach_ft, comid=comid)
+                             comid: "int | None" = None,
+                             anchor: "dict | None" = None) -> dict:
+        return await pipeline.delineate_only(lat, lon, reach_ft, comid=comid,
+                                             anchor=anchor)
 
     @reactive.extended_task
     async def assess_task(ctx_inputs: dict, metric_ids: list, sources: dict,
@@ -1289,7 +1446,7 @@ def server(input, output, session):
         stage.set("Delineating basin & reach…")
         ui.notification_show("Delineating basin & reach… please wait", id="stage",
                              type="message", duration=None)
-        delineate_task(lat, lon, float(input.reach_ft()), comid)
+        delineate_task(lat, lon, float(input.reach_ft()), comid, pending_anchor())
 
     @reactive.effect
     def _delineate_done():
@@ -1449,8 +1606,9 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_new, input.clear_basin)
     def _reset():
-        for k in ("ws", "reach", "marker"):
+        for k in ("ws", "reach", "marker", "route"):
             _remove_layer(k)
+        pending_anchor.set(None); anchor_error.set(None)
         snapped_point.set(None); delin.set(None); base_result.set(None)
         _overrides.set({}); _notes.set({})
         _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); current_fn.set(0)
@@ -1476,7 +1634,12 @@ def server(input, output, session):
                 "screening estimate, not a field-validated assessment.\n\n"
                 "**How to use**\n\n"
                 "1. **Zoom in** until blue stream lines appear. **Click a stream** to "
-                "place a point, or enter coordinates, or search an address.\n"
+                "place a point, or enter coordinates, or search an address. Bold "
+                "lines are the scoring network. Thin lines are the full NHD: "
+                "clicking one scores the nearest covered reach downstream, with "
+                "the substitution labeled in the report. EASI declines to score "
+                "when that reach drains more than "
+                f"{int(routing.DA_RATIO_MAX)} times the clicked stream's area.\n"
                 "2. Adjust the reach length if needed, then click "
                 "**Delineate Basin and Reach**.\n"
                 "3. Review the basin, then click **Run screening**. EASI computes the "
@@ -1849,6 +2012,39 @@ def server(input, output, session):
 
     @render.ui
     def snap_status():
+        err = anchor_error()
+        if err:
+            return ui.p(f"⚠ {err}", class_="easi-snap-note",
+                        style="color:#8a5a00;")
+        anchor = pending_anchor()
+        if anchor:
+            clicked_s = anchor.get("clickedStream") or {}
+            scored = anchor.get("scoredReach") or {}
+            r = anchor.get("routing") or {}
+            dist = r.get("routedDistanceFt")
+            dist_txt = f"{dist:,.0f} ft" if dist is not None else "downstream"
+            ratio = r.get("daRatio")
+            return ui.div(
+                ui.p("⚠ This stream is not in EASI's scoring network. EASI will "
+                     "score the nearest covered reach downstream.",
+                     class_="easi-snap-note", style="color:#8a5a00;"),
+                ui.p(ui.span("Clicked stream: "),
+                     ui.tags.b(clicked_s.get("gnisName") or "(unnamed stream)"),
+                     class_="easi-snap-note"),
+                ui.p(ui.span("Scored reach: "),
+                     ui.tags.b(f'{scored.get("gnisName") or "(unnamed reach)"} '
+                               f'(COMID {scored.get("comid")})'),
+                     class_="easi-snap-note"),
+                ui.p(ui.span("Routed distance: "), ui.tags.b(dist_txt),
+                     ui.span("  ·  Drainage area ratio: "),
+                     ui.tags.b(f"{ratio} (limit "
+                               f"{_fmt_ratio_limit(r.get('daRatioLimit'))})"),
+                     class_="easi-snap-note"),
+                ui.p("Click “Delineate Basin and Reach” to score the surrogate "
+                     "reach, or click a different stream.",
+                     class_="easi-snap-note ok"),
+                style=("background:#fff7e0;border:1px solid #e6c96b;"
+                       "border-radius:6px;padding:.4rem .55rem;"))
         pt = snapped_point()
         if not pt:
             return ui.p("No point yet. Enter coordinates, search an address, or zoom in "
@@ -1859,18 +2055,50 @@ def server(input, output, session):
 
     @render.ui
     def basin_card():
-        d = (delin() or {}).get("delineation") or {}
+        res = delin() or {}
+        d = res.get("delineation") or {}
         if not d:
             return None
         def row(label, val):
             return ui.div(ui.span(label), ui.tags.b(str(val)), class_="b-row")
+        anchor = res.get("siteAnchor") or {}
+        anchor_rows = []
+        if anchor.get("anchorKind") == "hrSurrogate":
+            clicked_s = anchor.get("clickedStream") or {}
+            r = anchor.get("routing") or {}
+            dist = r.get("routedDistanceFt")
+            anchor_rows = [
+                row("Scored at", "surrogate reach"),
+                row("Clicked stream", clicked_s.get("gnisName") or "(unnamed stream)"),
+                row("Routed distance",
+                    f"{dist:,.0f} ft" if dist is not None else "downstream"),
+                row("Drainage area ratio",
+                    f"{r.get('daRatio')} "
+                    f"(limit {_fmt_ratio_limit(r.get('daRatioLimit'))})"),
+            ]
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
+            *anchor_rows,
             row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
             row("Reach length", f'{d.get("reach_length_ft")} ft'),
             row("COMID", d.get("comid")),
             class_="easi-basin-card",
         )
+
+    @render.ui
+    def anchor_ribbon():
+        # One-line persistent reminder in the Assessment worksheet for routed sites.
+        anchor = (delin() or {}).get("siteAnchor") or {}
+        if anchor.get("anchorKind") != "hrSurrogate":
+            return None
+        clicked_s = anchor.get("clickedStream") or {}
+        d = (delin() or {}).get("delineation") or {}
+        return ui.div(
+            f"⚠ Surrogate reach: results describe "
+            f"{d.get('gnis_name') or 'the nearest covered reach'}, not the "
+            f"clicked stream ({clicked_s.get('gnisName') or 'unnamed'}).",
+            style=("background:#fff7e0;border:1px solid #e6c96b;border-radius:6px;"
+                   "padding:.3rem .5rem;margin:.3rem 0;font-size:12px;"))
 
     @render.text
     def busy_text():
@@ -1997,6 +2225,7 @@ def server(input, output, session):
         return ui.div(
             ui.div(
                 ui.div("EASI · Assessment", class_="easi-pane-head"),
+                ui.output_ui("anchor_ribbon"),
                 ui.div(_stepper(step), class_="sfari-nav-steps"),
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),

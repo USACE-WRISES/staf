@@ -26,8 +26,13 @@ A StreamStats-style, full-screen map with a left workflow pane and a four-step
 stepper: **Identify → Basin → Assessment → Report**.
 
 1. **Identify** — Pan/zoom a USGS National Map basemap (Topo or Imagery) with an
-   NHD hydrography overlay. At zoom ≥ 14, NHD stream vectors load for the view and
-   **clicking snaps to the nearest stream line** (or tells you if you missed).
+   NHD hydrography overlay. At zoom ≥ 14, two stream layers load for the view:
+   **bold lines** are the NHDPlus V2 scoring network and **thin lines** are the
+   full high-resolution NHD. **Clicking snaps to the nearest stream line** (or
+   tells you if you missed). Clicking a thin (HR-only) stream scores the nearest
+   covered reach downstream with the substitution labeled (stream, routed
+   distance, drainage-area ratio); EASI declines to score past a 10x
+   drainage-area ratio and points to SFARI/DEEP instead.
    A type-ahead **address/place search** (Photon + Nominatim) recenters the map.
 2. **Basin** — Delineate the contributing **watershed** and an **upstream reach**
    (default ~1,000 ft, adjustable) with staged progress feedback. Shows COMID,
@@ -101,6 +106,7 @@ complete availability, not 20 independent field observations.
 | Source | Used for |
 |---|---|
 | **NHDPlus** via HyRiver (`pynhd`, NLDI / WaterData) | Stream vectors, point snap, watershed delineation, reach derivation, VAAs |
+| **NHDPlus HR** (hydro.nationalmap.gov MapServer) | Full-resolution stream display + surrogate routing for streams outside the V2 scoring network (`easi/routing.py`, `easi/datasources/nhd_hr.py`) |
 | **USGS 3DEP** (`py3dep`) | DEM cross-sections → entrenchment, bank-height ratio, slope |
 | **EPA StreamCat** | Watershed landscape metrics (impervious, wetlands, roads, dam storage, runoff, riparian, erodibility) plus the published HYD/SED/CHEM/CONN/TEMP/HABT integrity components and prG_BMMI |
 | **EPA NRSA 2018–19** (bundled extract) | Connected field evidence: wetted channel, embeddedness, benthic/fish condition |

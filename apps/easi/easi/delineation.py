@@ -125,6 +125,26 @@ def geojson_bounds(*geojsons, pad: float = 0.06):
 # --------------------------------------------------------------------------- #
 # steps
 # --------------------------------------------------------------------------- #
+def line_sinuosity(geom) -> Optional[float]:
+    """Flowline length / straight-line endpoint distance, or None.
+
+    ``geom`` is an EPSG:4326 shapely (Multi)LineString; math happens in
+    EPSG:5070. Extracted verbatim from the inline computation that lived in
+    ``flowline_attrs`` so the HR datasource can share it. Never raises.
+    """
+    try:
+        import geopandas as gpd
+        from shapely.geometry import Point
+        g = gpd.GeoSeries([geom], crs=CRS_WGS84).to_crs(CRS_ALBERS).iloc[0]
+        line = g.geoms[0] if g.geom_type == "MultiLineString" else g
+        straight = Point(line.coords[0]).distance(Point(line.coords[-1]))
+        if straight > 0:
+            return round(line.length / straight, 3)
+    except Exception:  # noqa: BLE001 - context is best-effort
+        pass
+    return None
+
+
 def flowline_attrs(comid: int) -> dict:
     """NHDPlus attributes for a COMID (gnis_name, drainage area, huc8, slope,
     fcode, stream order, sinuosity). Best-effort; never raises."""
@@ -154,16 +174,9 @@ def flowline_attrs(comid: int) -> dict:
         for c in ("streamorde", "StreamOrde", "streamorder"):
             if c in fl.columns and row.get(c) is not None:
                 out["stream_order"] = int(row[c]); break
-        try:  # sinuosity = flowline length / straight-line endpoint distance
-            import geopandas as gpd
-            from shapely.geometry import Point
-            g = gpd.GeoSeries([fl.geometry.iloc[0]], crs=CRS_WGS84).to_crs(CRS_ALBERS).iloc[0]
-            line = g.geoms[0] if g.geom_type == "MultiLineString" else g
-            straight = Point(line.coords[0]).distance(Point(line.coords[-1]))
-            if straight > 0:
-                out["sinuosity"] = round(line.length / straight, 3)
-        except Exception:
-            pass
+        sin = line_sinuosity(fl.geometry.iloc[0])
+        if sin is not None:
+            out["sinuosity"] = sin
     except Exception as exc:  # pragma: no cover - network/version guard
         out["_flowline_error"] = str(exc)
     return out
@@ -383,6 +396,23 @@ def derive_reach(comid: int, lat: float, lon: float,
     if not geoms:
         return None, None, warnings or ["no flowline geometry for reach"]
 
+    return _reach_from_lines(geoms, own_geoms, lat, lon, length_ft, warnings)
+
+
+def _reach_from_lines(geoms: list, own_geoms: list, lat: float, lon: float,
+                      length_ft: float, warnings: list[str]
+                      ) -> tuple[Optional[dict], Optional[float], list[str]]:
+    """Merge/orient/trim tail of ``derive_reach``, shared with the HR variant.
+
+    ``geoms`` are EPSG:4326 flowline geometries (the reach + upstream mainstem);
+    ``own_geoms`` are the anchor reach's own geometries for outlet orientation.
+    Pure code motion from ``derive_reach`` — output identical for V2 inputs.
+    """
+    import geopandas as gpd
+    from shapely.geometry import Point
+    from shapely.ops import linemerge
+
+    length_m = length_ft / FT_PER_M
     lines = gpd.GeoSeries(geoms, crs=CRS_WGS84).to_crs(CRS_ALBERS)
     snap = gpd.GeoSeries([Point(lon, lat)], crs=CRS_WGS84).to_crs(CRS_ALBERS).iloc[0]
     merged = lines.iloc[0] if len(lines) == 1 else linemerge(lines.tolist())

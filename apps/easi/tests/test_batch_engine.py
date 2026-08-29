@@ -44,7 +44,7 @@ def _ok_delin(lat, lon, reach_ft, comid=None) -> dict:
 
 
 def _stub_pipeline(monkeypatch):
-    async def fake_delineate(lat, lon, reach_ft, comid=None):
+    async def fake_delineate(lat, lon, reach_ft, comid=None, **kw):
         if lat < 0:                       # sentinel: unresolvable site
             return {"status": "error", "message": "no NHD stream found",
                     "input": {"lat": lat, "lon": lon, "reach_length_ft": reach_ft}}
@@ -123,7 +123,7 @@ def test_over_limit_rejected(monkeypatch):
 def test_failed_site_isolated_and_retried(monkeypatch):
     calls = {"n": 0}
 
-    async def flaky_delineate(lat, lon, reach_ft, comid=None):
+    async def flaky_delineate(lat, lon, reach_ft, comid=None, **kw):
         calls["n"] += 1
         if calls["n"] == 1:                 # first attempt fails transiently
             return {"status": "error", "message": "transient",
@@ -254,11 +254,12 @@ def test_run_batch_all_sites_preset(monkeypatch):
 def test_import_error_is_not_retried(monkeypatch):
     # A missing geospatial dep is a deployment fault, not a transient outage, so
     # the run must fail once and report the real cause rather than retry blindly.
-    # The real delineate_only runs here; only the geo call underneath is stubbed.
+    # The real delineate_only runs here; only the anchor resolution underneath
+    # (the first thing a comid-less site touches) is stubbed.
     def missing_dep(*a, **k):
         raise ModuleNotFoundError("No module named 'pynhd'")
 
-    monkeypatch.setattr("easi.delineation.run_delineation", missing_dep)
+    monkeypatch.setattr("easi.routing.resolve_anchor", missing_dep)
     monkeypatch.setattr("easi.batch.runner._RETRY_BACKOFF_S", 0.0)
 
     res = api.run_batch_sync(C.BatchRequest(sites=[C.SiteRequest("A", 41.0, -83.0)]))
@@ -270,18 +271,16 @@ def test_import_error_is_not_retried(monkeypatch):
     assert "pynhd" in issue.message
 
 
-def _stub_delineation(monkeypatch, *, snap_error=None):
-    class _NoComid:
-        comid = None
-    _NoComid.snap_error = snap_error
-    monkeypatch.setattr("easi.delineation.run_delineation",
-                        lambda *a, **k: _NoComid())
+def _stub_resolve(monkeypatch, result: dict):
+    """Script routing.resolve_anchor (the comid-less resolution seam)."""
+    monkeypatch.setattr("easi.routing.resolve_anchor",
+                        lambda *a, **k: dict(result))
     monkeypatch.setattr("easi.batch.runner._RETRY_BACKOFF_S", 0.0)
 
 
 def test_no_stream_found_not_retried(monkeypatch):
     # An off-network point is a permanent fact about the geometry, not an outage.
-    _stub_delineation(monkeypatch)
+    _stub_resolve(monkeypatch, {"error": "no_stream_found"})
     res = api.run_batch_sync(C.BatchRequest(sites=[C.SiteRequest("A", 41.0, -83.0)]))
     issue = res.sites[0].issues[0]
     assert res.sites[0].state == "failed"
@@ -293,7 +292,8 @@ def test_no_stream_found_not_retried(monkeypatch):
 def test_snap_service_error_is_retried_and_not_called_no_stream(monkeypatch):
     # A failing snap service must never be reported as "no stream near this
     # point": that invents a fact about the geometry from an outage.
-    _stub_delineation(monkeypatch, snap_error="hydrolocation: 502 Bad Gateway")
+    _stub_resolve(monkeypatch, {"error": "snap_service_error",
+                                "detail": "hydrolocation: 502 Bad Gateway"})
     res = api.run_batch_sync(C.BatchRequest(sites=[C.SiteRequest("A", 41.0, -83.0)]))
     issue = res.sites[0].issues[0]
     assert issue.code == "snap_service_error"
