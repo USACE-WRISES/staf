@@ -1,0 +1,4300 @@
+{
+  "schemaVersion": 1,
+  "tier": "detailed",
+  "assessmentId": "eastern-corn-belt-plains",
+  "assessmentName": "Eastern Corn Belt Plains reference assessment",
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+  "applicability": "Eastern Corn Belt Plains",
+  "metricsByFunction": [
+    {
+      "functionId": "catchment-hydrology",
+      "functionName": "Catchment hydrology",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-pctcrop2019ws",
+          "metricName": "Cultivated crops",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Cultivated crops (%)",
+          "howToMeasure": "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 46.410500000000006,
+                "y": 1.0
+              },
+              {
+                "x": 54.5525,
+                "y": 1.0
+              },
+              {
+                "x": 81.6925,
+                "y": 0.7
+              },
+              {
+                "x": 100.0,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            15.55,
+            89.57
+          ],
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-pctimp2019ws",
+          "metricName": "Impervious surface",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Impervious surface (%)",
+          "howToMeasure": "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.49875,
+                "y": 1.0
+              },
+              {
+                "x": 1.2225,
+                "y": 1.0
+              },
+              {
+                "x": 3.635,
+                "y": 0.7
+              },
+              {
+                "x": 6.851666666666667,
+                "y": 0.3
+              },
+              {
+                "x": 9.264166666666664,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.67,
+            15.69
+          ],
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "surface-water-storage",
+      "functionName": "Surface water storage",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-pcthbwet2019ws",
+          "metricName": "Herbaceous wetland",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Herbaceous wetland (%)",
+          "howToMeasure": "Watershed herbaceous wetland (%); wetlands store surface water and attenuate flow peaks.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.004285714285714286,
+                "y": 0.3
+              },
+              {
+                "x": 0.01,
+                "y": 0.7
+              },
+              {
+                "x": 0.1975,
+                "y": 1.0
+              },
+              {
+                "x": 0.25375000000000003,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Reference bands of hundredths of a percent sit below the land-cover product's wetland-class accuracy, and a steep watershed that never held herbaceous wetland reads low without being degraded."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            3.25
+          ],
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-pctwdwet2019ws",
+          "metricName": "Woody wetland",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Woody wetland (%)",
+          "howToMeasure": "Watershed woody wetland (%); wetlands store surface water and attenuate flow peaks.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.07071428571428572,
+                "y": 0.3
+              },
+              {
+                "x": 0.165,
+                "y": 0.7
+              },
+              {
+                "x": 0.7975000000000001,
+                "y": 1.0
+              },
+              {
+                "x": 0.9872500000000001,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Wetland cover follows terrain: a steep watershed that never held wetland reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            16.76
+          ],
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "reach-inflow",
+      "functionName": "Reach inflow",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-rddensws",
+          "metricName": "Road density",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Road density (km/sq km)",
+          "howToMeasure": "Watershed road density; roads concentrate and route runoff to the channel, so higher density means more concentrated inflow pressure. Directional proxy shared with the EASI screening metric; it does not count outfalls.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 1.2103775,
+                "y": 1.0
+              },
+              {
+                "x": 1.480625,
+                "y": 1.0
+              },
+              {
+                "x": 2.38145,
+                "y": 0.7
+              },
+              {
+                "x": 3.5825500000000003,
+                "y": 0.3
+              },
+              {
+                "x": 4.4833750000000006,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            1.0092,
+            3.9889
+          ],
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "streamflow-regime",
+      "functionName": "Streamflow regime",
+      "discipline": "Hydrology",
+      "metrics": [
+        {
+          "metricId": "spring-bfiws",
+          "metricName": "Base flow index",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Base flow index (%)",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.305117857142857,
+                "y": 0.3
+              },
+              {
+                "x": 24.045275,
+                "y": 0.7
+              },
+              {
+                "x": 32.8833,
+                "y": 1.0
+              },
+              {
+                "x": 35.534707499999996,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            16.1181,
+            47.8233
+          ],
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-damdensws",
+          "metricName": "Dam density",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Dam density (per sq km)",
+          "howToMeasure": "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 0.00905,
+                "y": 0.7
+              },
+              {
+                "x": 0.02111666666666667,
+                "y": 0.3
+              },
+              {
+                "x": 0.030166666666666668,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            0.115
+          ],
+          "discipline": "Hydrology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "functionName": "Low flow and baseflow dynamics",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-bfiws",
+          "metricName": "Base flow index",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Base flow index (%)",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.305117857142857,
+                "y": 0.3
+              },
+              {
+                "x": 24.045275,
+                "y": 0.7
+              },
+              {
+                "x": 32.8833,
+                "y": 1.0
+              },
+              {
+                "x": 35.534707499999996,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            16.1181,
+            47.8233
+          ],
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-bfwd-rat",
+          "metricName": "Bankfull width:depth ratio",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Bankfull width:depth ratio",
+          "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.5426000475883486,
+                "y": 0.7
+              },
+              {
+                "x": 8.693416833877563,
+                "y": 1.0
+              },
+              {
+                "x": 29.124321937561035,
+                "y": 1.0
+              },
+              {
+                "x": 36.27513872385025,
+                "y": 0.7
+              },
+              {
+                "x": 49.55522704124451,
+                "y": 0.3
+              },
+              {
+                "x": 69.98613214492798,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 39%, resample recurrence 100%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            4.274810791015625,
+            53.2677001953125
+          ],
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-rp100-cm",
+          "metricName": "Residual pool depth",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Residual pool depth (cm)",
+          "howToMeasure": "Residual pool depth per 100 m; deeper residual pools generally better habitat.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 4.602727890014648,
+                "y": 0.3
+              },
+              {
+                "x": 10.73969841003418,
+                "y": 0.7
+              },
+              {
+                "x": 37.013484954833984,
+                "y": 1.0
+              },
+              {
+                "x": 44.89562091827393,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 16%, resample recurrence 84%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            3.5671708583831787,
+            115.70463562011719
+          ],
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "high-flow-dynamics",
+      "functionName": "High flow dynamics",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-pctimp2019ws",
+          "metricName": "Impervious surface",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Impervious surface (%)",
+          "howToMeasure": "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.49875,
+                "y": 1.0
+              },
+              {
+                "x": 1.2225,
+                "y": 1.0
+              },
+              {
+                "x": 3.635,
+                "y": 0.7
+              },
+              {
+                "x": 6.851666666666667,
+                "y": 0.3
+              },
+              {
+                "x": 9.264166666666664,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.67,
+            15.69
+          ],
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "floodplain-connectivity",
+      "functionName": "Floodplain connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-phab-bfwd-rat",
+          "metricName": "Bankfull width:depth ratio",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Bankfull width:depth ratio",
+          "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.5426000475883486,
+                "y": 0.7
+              },
+              {
+                "x": 8.693416833877563,
+                "y": 1.0
+              },
+              {
+                "x": 29.124321937561035,
+                "y": 1.0
+              },
+              {
+                "x": 36.27513872385025,
+                "y": 0.7
+              },
+              {
+                "x": 49.55522704124451,
+                "y": 0.3
+              },
+              {
+                "x": 69.98613214492798,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 39%, resample recurrence 100%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            4.274810791015625,
+            53.2677001953125
+          ],
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-xbkf-h",
+          "metricName": "Bankfull height above channel",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Bankfull height above channel (m)",
+          "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.09724745154380798,
+                "y": 0.3
+              },
+              {
+                "x": 0.32358205765485765,
+                "y": 0.7
+              },
+              {
+                "x": 0.44545453786849976,
+                "y": 1.0
+              },
+              {
+                "x": 0.7936616241931915,
+                "y": 1.0
+              },
+              {
+                "x": 0.9155341044068337,
+                "y": 0.7
+              },
+              {
+                "x": 1.1418687105178833,
+                "y": 0.3
+              },
+              {
+                "x": 1.490075796842575,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            1.8454545736312866
+          ],
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "hyporheic-connectivity",
+      "functionName": "Hyporheic connectivity",
+      "discipline": "Hydraulics",
+      "metrics": [
+        {
+          "metricId": "spring-phab-pct-safn",
+          "metricName": "Sand + fines",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Sand + fines (%)",
+          "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 8.452381038665772,
+                "y": 1.0
+              },
+              {
+                "x": 18.809523582458496,
+                "y": 1.0
+              },
+              {
+                "x": 53.33333206176758,
+                "y": 0.7
+              },
+              {
+                "x": 99.36507670084634,
+                "y": 0.3
+              },
+              {
+                "x": 100.0,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            100.0
+          ],
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-xembed",
+          "metricName": "Embeddedness",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Embeddedness (%)",
+          "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 40.56363754272461,
+                "y": 1.0
+              },
+              {
+                "x": 50.54545593261719,
+                "y": 1.0
+              },
+              {
+                "x": 83.81818389892578,
+                "y": 0.7
+              },
+              {
+                "x": 100.0,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            26.363636016845703,
+            100.0
+          ],
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-evolution",
+      "functionName": "Channel evolution",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-bfwd-rat",
+          "metricName": "Bankfull width:depth ratio",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Bankfull width:depth ratio",
+          "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.5426000475883486,
+                "y": 0.7
+              },
+              {
+                "x": 8.693416833877563,
+                "y": 1.0
+              },
+              {
+                "x": 29.124321937561035,
+                "y": 1.0
+              },
+              {
+                "x": 36.27513872385025,
+                "y": 0.7
+              },
+              {
+                "x": 49.55522704124451,
+                "y": 0.3
+              },
+              {
+                "x": 69.98613214492798,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 39%, resample recurrence 100%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            4.274810791015625,
+            53.2677001953125
+          ],
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-xbkf-h",
+          "metricName": "Bankfull height above channel",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Bankfull height above channel (m)",
+          "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.09724745154380798,
+                "y": 0.3
+              },
+              {
+                "x": 0.32358205765485765,
+                "y": 0.7
+              },
+              {
+                "x": 0.44545453786849976,
+                "y": 1.0
+              },
+              {
+                "x": 0.7936616241931915,
+                "y": 1.0
+              },
+              {
+                "x": 0.9155341044068337,
+                "y": 0.7
+              },
+              {
+                "x": 1.1418687105178833,
+                "y": 0.3
+              },
+              {
+                "x": 1.490075796842575,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            1.8454545736312866
+          ],
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "channel-floodplain-dynamics",
+      "functionName": "Channel and floodplain dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-sinu",
+          "metricName": "Sinuosity",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Sinuosity",
+          "howToMeasure": "Channel sinuosity; higher generally indicates a more natural planform.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 1.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.0579962730407715,
+                "y": 0.7
+              },
+              {
+                "x": 1.2972058057785034,
+                "y": 1.0
+              },
+              {
+                "x": 1.368968665599823,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            1.0052025318145752,
+            2.6200618743896484
+          ],
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-xbka",
+          "metricName": "Bank angle",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Bank angle (degrees)",
+          "howToMeasure": "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment. low_tail flat added at the adversarial review gate (owner decision, 2026-08-21): a regraded or naturally gentle bank holds at the Functioning edge instead of being penalized, because the flat tail is not symmetric evidence of degradation and the framework's stated use is restoration evaluation.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.7
+              },
+              {
+                "x": 21.381818866729738,
+                "y": 0.7
+              },
+              {
+                "x": 26.090909957885742,
+                "y": 1.0
+              },
+              {
+                "x": 39.54545593261719,
+                "y": 1.0
+              },
+              {
+                "x": 44.25454702377319,
+                "y": 0.7
+              },
+              {
+                "x": 53.00000190734863,
+                "y": 0.3
+              },
+              {
+                "x": 66.45454788208008,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            15.590909004211426,
+            52.10454559326172
+          ],
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "sediment-continuity",
+      "functionName": "Sediment continuity",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-lrbs-use",
+          "metricName": "Relative bed stability",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Relative bed stability (log)",
+          "howToMeasure": "Log relative bed stability; departure from the reference core in EITHER direction departs from reference (negative excess fines, positive an armored, sediment-starved bed, the classic below-impoundment failure). The pilot's rising direction scored armored beds 1.0 and left Sediment continuity blind to its textbook failure mode. Two-sided form is an owner decision at the adversarial review gate, 2026-08-21.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": -3.5421318635344505,
+                "y": 0.0
+              },
+              {
+                "x": -2.286023300141096,
+                "y": 0.3
+              },
+              {
+                "x": -1.4695527339354157,
+                "y": 0.7
+              },
+              {
+                "x": -1.0299147367477417,
+                "y": 1.0
+              },
+              {
+                "x": 0.22619382664561272,
+                "y": 1.0
+              },
+              {
+                "x": 0.6658318238332868,
+                "y": 0.7
+              },
+              {
+                "x": 1.4823023900389671,
+                "y": 0.3
+              },
+              {
+                "x": 2.7384109534323215,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            -2.6466472148895264,
+            1.453444480895996
+          ],
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-pct-safn",
+          "metricName": "Sand + fines",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Sand + fines (%)",
+          "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 8.452381038665772,
+                "y": 1.0
+              },
+              {
+                "x": 18.809523582458496,
+                "y": 1.0
+              },
+              {
+                "x": 53.33333206176758,
+                "y": 0.7
+              },
+              {
+                "x": 99.36507670084634,
+                "y": 0.3
+              },
+              {
+                "x": 100.0,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            100.0
+          ],
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "functionName": "Bed composition and bedform dynamics",
+      "discipline": "Geomorphology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-lsub-dmm",
+          "metricName": "Substrate size",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Substrate size (log mm)",
+          "howToMeasure": "Log mean substrate diameter; coarser substrate generally better, but valley-type dependent.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": -2.033089061578115,
+                "y": 0.0
+              },
+              {
+                "x": -1.0876535971959431,
+                "y": 0.3
+              },
+              {
+                "x": 0.17292702198028564,
+                "y": 0.7
+              },
+              {
+                "x": 1.1183624863624573,
+                "y": 1.0
+              },
+              {
+                "x": 1.4019931256771088,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            -2.110924482345581,
+            2.7457876205444336
+          ],
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-lwdeqvolm100",
+          "metricName": "Large wood volume",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Large wood volume (m3/100m)",
+          "howToMeasure": "Large woody debris volume per 100 m; higher is better.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.09530249450887952,
+                "y": 0.3
+              },
+              {
+                "x": 0.22237248718738556,
+                "y": 0.7
+              },
+              {
+                "x": 8.358416080474854,
+                "y": 1.0
+              },
+              {
+                "x": 10.799229158461094,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            37.37908935546875
+          ],
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-xembed",
+          "metricName": "Embeddedness",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Embeddedness (%)",
+          "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 40.56363754272461,
+                "y": 1.0
+              },
+              {
+                "x": 50.54545593261719,
+                "y": 1.0
+              },
+              {
+                "x": 83.81818389892578,
+                "y": 0.7
+              },
+              {
+                "x": 100.0,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            26.363636016845703,
+            100.0
+          ],
+          "discipline": "Geomorphology",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "light-thermal-regime",
+      "functionName": "Light & thermal regime",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-chem-chla",
+          "metricName": "Chlorophyll a",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Chlorophyll a (ug/L)",
+          "howToMeasure": "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.5197181761264802,
+                "y": 1.0
+              },
+              {
+                "x": 2.0554999709129333,
+                "y": 1.0
+              },
+              {
+                "x": 7.174772620201111,
+                "y": 0.7
+              },
+              {
+                "x": 14.000469485918682,
+                "y": 0.3
+              },
+              {
+                "x": 19.119742135206856,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.027030302211642265,
+            1326.239990234375
+          ],
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-xcdenmid",
+          "metricName": "Canopy density, mid-channel",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Canopy density, mid-channel (%)",
+          "howToMeasure": "Mid-channel canopy density; higher shading generally better for thermal/light regime.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 23.5485109601702,
+                "y": 0.3
+              },
+              {
+                "x": 54.94652557373047,
+                "y": 0.7
+              },
+              {
+                "x": 80.88235473632812,
+                "y": 1.0
+              },
+              {
+                "x": 88.66310348510743,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            99.73262023925781
+          ],
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "carbon-processing",
+      "functionName": "Carbon processing",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-phab-xcmgw",
+          "metricName": "Riparian veg cover, woody",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Riparian veg cover, woody (frac)",
+          "howToMeasure": "Riparian canopy plus mid-layer plus ground cover; higher is better.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.29379058522837503,
+                "y": 0.3
+              },
+              {
+                "x": 0.6855113655328751,
+                "y": 0.7
+              },
+              {
+                "x": 1.3329545855522156,
+                "y": 1.0
+              },
+              {
+                "x": 1.5271875515580178,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            2.081818103790283
+          ],
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "nutrient-cycling",
+      "functionName": "Nutrient cycling",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-chem-ntl-diss",
+          "metricName": "Dissolved nitrogen",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Dissolved nitrogen (mg N/L)",
+          "howToMeasure": "Dissolved nitrogen; higher indicates nutrient enrichment (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.41689993292093275,
+                "y": 1.0
+              },
+              {
+                "x": 1.0962499529123306,
+                "y": 1.0
+              },
+              {
+                "x": 3.3607500195503235,
+                "y": 0.7
+              },
+              {
+                "x": 6.380083441734314,
+                "y": 0.3
+              },
+              {
+                "x": 8.644583508372307,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 12,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 12 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.5199999809265137,
+            6.593999862670898
+          ],
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-chem-ptl",
+          "metricName": "Total phosphorus",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Total phosphorus (ug/L)",
+          "howToMeasure": "Total phosphorus; higher indicates nutrient enrichment (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 10.947499752044678,
+                "y": 1.0
+              },
+              {
+                "x": 57.57499980926514,
+                "y": 1.0
+              },
+              {
+                "x": 213.0,
+                "y": 0.7
+              },
+              {
+                "x": 420.2333335876465,
+                "y": 0.3
+              },
+              {
+                "x": 575.6583337783813,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            12.399999618530273,
+            1055.9000244140625
+          ],
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "water-soil-quality",
+      "functionName": "Water & soil quality",
+      "discipline": "Physicochemistry",
+      "metrics": [
+        {
+          "metricId": "spring-chem-cond",
+          "metricName": "Specific conductivity",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Specific conductivity (uS/cm)",
+          "howToMeasure": "Specific conductance; higher indicates ionic disturbance (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 479.90749206542966,
+                "y": 1.0
+              },
+              {
+                "x": 538.0249938964844,
+                "y": 1.0
+              },
+              {
+                "x": 731.75,
+                "y": 0.7
+              },
+              {
+                "x": 990.0500081380208,
+                "y": 0.3
+              },
+              {
+                "x": 1183.7750142415364,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Specific conductance carries natural carbonate geology as well as disturbance: a pristine stream in a calcareous valley can score low on this curve."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            319.0,
+            979.9000244140625
+          ],
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-chem-ph",
+          "metricName": "pH",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "pH (Std. Units)",
+          "howToMeasure": "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 7.594998836517334,
+                "y": 0.0
+              },
+              {
+                "x": 7.842499256134033,
+                "y": 0.3
+              },
+              {
+                "x": 8.003374528884887,
+                "y": 0.7
+              },
+              {
+                "x": 8.089999675750732,
+                "y": 1.0
+              },
+              {
+                "x": 8.337500095367432,
+                "y": 1.0
+              },
+              {
+                "x": 8.424125242233277,
+                "y": 0.7
+              },
+              {
+                "x": 8.58500051498413,
+                "y": 0.3
+              },
+              {
+                "x": 8.83250093460083,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "pH carries natural geology (calcareous or naturally acidic waters) as well as disturbance, and a two-sided core narrower than measurement precision is noise rather than condition."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            7.619999885559082,
+            8.430000305175781
+          ],
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-chem-turb",
+          "metricName": "Turbidity",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Turbidity (NTU)",
+          "howToMeasure": "Turbidity; higher indicates more suspended sediment (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.6457501649856567,
+                "y": 1.0
+              },
+              {
+                "x": 3.262500047683716,
+                "y": 1.0
+              },
+              {
+                "x": 11.984999656677246,
+                "y": 0.7
+              },
+              {
+                "x": 23.61499913533529,
+                "y": 0.3
+              },
+              {
+                "x": 32.33749874432881,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.75,
+            45.0
+          ],
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "habitat-provision",
+      "functionName": "Habitat provision",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-phab-pct-fast",
+          "metricName": "Fast-water / riffle habitat",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Fast-water / riffle habitat (%)",
+          "howToMeasure": "Percent fast-water (riffle/run) habitat; more generally better for many biota. Ecoregion-dependent.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.063025210584913,
+                "y": 0.3
+              },
+              {
+                "x": 2.4803921580314636,
+                "y": 0.7
+              },
+              {
+                "x": 21.0,
+                "y": 1.0
+              },
+              {
+                "x": 26.55588235259056,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            40.66666793823242
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-xfc-nat",
+          "metricName": "Natural fish cover",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Natural fish cover (frac)",
+          "howToMeasure": "Natural fish cover; higher is better.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.08025974035263062,
+                "y": 0.3
+              },
+              {
+                "x": 0.18727272748947144,
+                "y": 0.7
+              },
+              {
+                "x": 0.46704545617103577,
+                "y": 1.0
+              },
+              {
+                "x": 0.5509772747755051,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.09090909361839294,
+            1.131818175315857
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "population-support",
+      "functionName": "Population support",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-bent-totlntax",
+          "metricName": "Benthic total taxa richness",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Benthic total taxa richness",
+          "howToMeasure": "Total benthic taxa richness; higher is better.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.714285714285714,
+                "y": 0.3
+              },
+              {
+                "x": 25.0,
+                "y": 0.7
+              },
+              {
+                "x": 39.75,
+                "y": 1.0
+              },
+              {
+                "x": 44.175,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 12,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 12 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            12.0,
+            45.0
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-fish-nat-totlntax",
+          "metricName": "Native fish taxa richness",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Native fish taxa richness",
+          "howToMeasure": "Native fish taxa richness; higher is better.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 4.5,
+                "y": 0.3
+              },
+              {
+                "x": 10.5,
+                "y": 0.7
+              },
+              {
+                "x": 25.0,
+                "y": 1.0
+              },
+              {
+                "x": 29.35,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 43,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 41%, resample recurrence 100%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            34.0
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "community-dynamics",
+      "functionName": "Community dynamics",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-bent-ept-ntax",
+          "metricName": "EPT taxa richness",
+          "inputType": "count",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "EPT taxa richness",
+          "howToMeasure": "EPT (mayfly/stonefly/caddisfly) taxa richness; more sensitive taxa indicate better condition.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.2857142857142858,
+                "y": 0.3
+              },
+              {
+                "x": 3.0,
+                "y": 0.7
+              },
+              {
+                "x": 10.0,
+                "y": 1.0
+              },
+              {
+                "x": 12.1,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 18%, resample recurrence 88%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            15.0
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-bent-hprime",
+          "metricName": "Shannon diversity (H')",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Shannon diversity (H')",
+          "howToMeasure": "Benthic Shannon diversity; higher diversity indicates better condition.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 0.9653571418353489,
+                "y": 0.3
+              },
+              {
+                "x": 2.252499997615814,
+                "y": 0.7
+              },
+              {
+                "x": 2.8274999260902405,
+                "y": 1.0
+              },
+              {
+                "x": 2.9999999046325683,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.7699999809265137,
+            3.299999952316284
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-bent-tolrpind",
+          "metricName": "Tolerant individuals (%) ~ HBI",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Tolerant individuals (%) ~ HBI",
+          "howToMeasure": "Percent tolerant individuals; a higher share of pollution-tolerant taxa indicates worse condition.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 3.484000086784363,
+                "y": 1.0
+              },
+              {
+                "x": 9.430000066757202,
+                "y": 1.0
+              },
+              {
+                "x": 29.25,
+                "y": 0.7
+              },
+              {
+                "x": 55.67666657765706,
+                "y": 0.3
+              },
+              {
+                "x": 75.49666651089987,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 12,
+          "sampleDisposition": "exploratory",
+          "metricRole": "response",
+          "curveCaveats": [
+            "Built from 12 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            3.0299999713897705,
+            59.66999816894531
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    },
+    {
+      "functionId": "watershed-connectivity",
+      "functionName": "Watershed connectivity",
+      "discipline": "Biology",
+      "metrics": [
+        {
+          "metricId": "spring-damdensws",
+          "metricName": "Dam density",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Dam density (per sq km)",
+          "howToMeasure": "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 1.0
+              },
+              {
+                "x": 0.00905,
+                "y": 0.7
+              },
+              {
+                "x": 0.02111666666666667,
+                "y": 0.3
+              },
+              {
+                "x": 0.030166666666666668,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            0.115
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "additional-function",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-rdcrsws",
+          "metricName": "Road-stream crossings",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Road-stream crossings (per sq km)",
+          "howToMeasure": "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage. UNITS CAUTION (2026-08-21): values as served by the EPA StreamCat API sit about two orders of magnitude below the classic StreamCat documentation of crossings per sq km (frame national median 0.0098 vs a documented distribution near 0.5 to 1.5). The frame and the live API agree with each other, so scoring is internally consistent, but a manually computed crossings-per-sq-km value will land far off-curve. Enter API-served values only, pending units reconciliation with EPA.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.007614999999999999,
+                "y": 1.0
+              },
+              {
+                "x": 0.00985,
+                "y": 1.0
+              },
+              {
+                "x": 0.0173,
+                "y": 0.7
+              },
+              {
+                "x": 0.02723333333333333,
+                "y": 0.3
+              },
+              {
+                "x": 0.03468333333333333,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 46,
+          "sampleDisposition": "adequate",
+          "metricRole": "stressor_surrogate",
+          "curveCaveats": [
+            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
+            "Units caution: enter the StreamCat API value as served. A crossing density computed by hand in crossings per square kilometer lands about 100 times above this curve."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0043,
+            0.0276
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        }
+      ]
+    }
+  ],
+  "functionCoverage": {
+    "framework": "staf-20",
+    "total": 20,
+    "covered": 20,
+    "excluded": 0,
+    "missing": 0,
+    "coveredFunctionIds": [
+      "catchment-hydrology",
+      "surface-water-storage",
+      "reach-inflow",
+      "streamflow-regime",
+      "low-flow-baseflow-dynamics",
+      "high-flow-dynamics",
+      "floodplain-connectivity",
+      "hyporheic-connectivity",
+      "channel-evolution",
+      "channel-floodplain-dynamics",
+      "sediment-continuity",
+      "bed-composition-bedform-dynamics",
+      "light-thermal-regime",
+      "carbon-processing",
+      "nutrient-cycling",
+      "water-soil-quality",
+      "habitat-provision",
+      "population-support",
+      "community-dynamics",
+      "watershed-connectivity"
+    ],
+    "missingFunctionIds": [],
+    "exclusions": []
+  },
+  "scoringContract": {
+    "method": "STAF detailed reference-curve scoring",
+    "methodVersion": "iqr-seed-v2",
+    "indexBands": [
+      0.39,
+      0.69
+    ],
+    "functionScoreBands": [
+      5,
+      10
+    ],
+    "functionScoreMax": 15,
+    "indirectWeight": 0.1,
+    "rounding": {
+      "index": 2,
+      "functionScore": 0
+    },
+    "settings": {}
+  },
+  "region": {
+    "kind": "ecoregion",
+    "code": "55",
+    "name": "Eastern Corn Belt Plains",
+    "polygon": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -83.4896,
+            42.44
+          ],
+          [
+            -83.6101,
+            42.4491
+          ],
+          [
+            -83.6714,
+            42.4095
+          ],
+          [
+            -83.6928,
+            42.4261
+          ],
+          [
+            -83.6884,
+            42.4454
+          ],
+          [
+            -83.7885,
+            42.4641
+          ],
+          [
+            -83.8928,
+            42.4229
+          ],
+          [
+            -83.9016,
+            42.3837
+          ],
+          [
+            -83.9696,
+            42.3766
+          ],
+          [
+            -83.9989,
+            42.321
+          ],
+          [
+            -84.0443,
+            42.3102
+          ],
+          [
+            -84.05,
+            42.253
+          ],
+          [
+            -84.001,
+            42.2253
+          ],
+          [
+            -83.998,
+            42.2091
+          ],
+          [
+            -84.1192,
+            42.1751
+          ],
+          [
+            -84.1162,
+            42.1382
+          ],
+          [
+            -84.0678,
+            42.0692
+          ],
+          [
+            -84.1086,
+            42.0149
+          ],
+          [
+            -84.1837,
+            42.0237
+          ],
+          [
+            -84.2352,
+            41.9383
+          ],
+          [
+            -84.2924,
+            41.9477
+          ],
+          [
+            -84.3379,
+            42.0064
+          ],
+          [
+            -84.3717,
+            41.9949
+          ],
+          [
+            -84.4082,
+            42.0113
+          ],
+          [
+            -84.4547,
+            41.9975
+          ],
+          [
+            -84.4871,
+            41.9623
+          ],
+          [
+            -84.4997,
+            41.9135
+          ],
+          [
+            -84.5244,
+            41.8896
+          ],
+          [
+            -84.4817,
+            41.869
+          ],
+          [
+            -84.4967,
+            41.8458
+          ],
+          [
+            -84.5782,
+            41.8459
+          ],
+          [
+            -84.6297,
+            41.8108
+          ],
+          [
+            -84.7293,
+            41.8097
+          ],
+          [
+            -84.765,
+            41.8367
+          ],
+          [
+            -84.7993,
+            41.7938
+          ],
+          [
+            -84.8182,
+            41.8239
+          ],
+          [
+            -84.8648,
+            41.81
+          ],
+          [
+            -84.8761,
+            41.7734
+          ],
+          [
+            -84.939,
+            41.7621
+          ],
+          [
+            -84.961,
+            41.7255
+          ],
+          [
+            -84.9486,
+            41.6788
+          ],
+          [
+            -84.9136,
+            41.6358
+          ],
+          [
+            -84.9292,
+            41.5859
+          ],
+          [
+            -85.0452,
+            41.5195
+          ],
+          [
+            -85.0964,
+            41.463
+          ],
+          [
+            -85.1547,
+            41.432
+          ],
+          [
+            -85.2333,
+            41.4159
+          ],
+          [
+            -85.3726,
+            41.425
+          ],
+          [
+            -85.4399,
+            41.3983
+          ],
+          [
+            -85.4195,
+            41.3511
+          ],
+          [
+            -85.3415,
+            41.3358
+          ],
+          [
+            -85.3496,
+            41.3213
+          ],
+          [
+            -85.4302,
+            41.3134
+          ],
+          [
+            -85.4619,
+            41.2891
+          ],
+          [
+            -85.4753,
+            41.2726
+          ],
+          [
+            -85.4143,
+            41.2508
+          ],
+          [
+            -85.4255,
+            41.2364
+          ],
+          [
+            -85.511,
+            41.2474
+          ],
+          [
+            -85.6295,
+            41.2938
+          ],
+          [
+            -85.642,
+            41.2674
+          ],
+          [
+            -85.6155,
+            41.2392
+          ],
+          [
+            -85.6291,
+            41.2105
+          ],
+          [
+            -85.614,
+            41.1676
+          ],
+          [
+            -85.6887,
+            41.1693
+          ],
+          [
+            -85.6952,
+            41.147
+          ],
+          [
+            -85.6806,
+            41.0882
+          ],
+          [
+            -85.6335,
+            41.0737
+          ],
+          [
+            -85.7817,
+            40.9709
+          ],
+          [
+            -85.9366,
+            40.9058
+          ],
+          [
+            -85.9851,
+            40.8577
+          ],
+          [
+            -86.1389,
+            40.8626
+          ],
+          [
+            -86.2327,
+            40.8067
+          ],
+          [
+            -86.3901,
+            40.7627
+          ],
+          [
+            -86.5484,
+            40.7491
+          ],
+          [
+            -86.5517,
+            40.769
+          ],
+          [
+            -86.5666,
+            40.7635
+          ],
+          [
+            -86.5811,
+            40.785
+          ],
+          [
+            -86.6064,
+            40.7767
+          ],
+          [
+            -86.5944,
+            40.8063
+          ],
+          [
+            -86.6333,
+            40.765
+          ],
+          [
+            -86.6657,
+            40.7551
+          ],
+          [
+            -86.7458,
+            40.7663
+          ],
+          [
+            -86.7785,
+            40.7419
+          ],
+          [
+            -86.8575,
+            40.734
+          ],
+          [
+            -86.8779,
+            40.7062
+          ],
+          [
+            -86.9411,
+            40.6735
+          ],
+          [
+            -86.9142,
+            40.6282
+          ],
+          [
+            -86.9422,
+            40.6157
+          ],
+          [
+            -86.9151,
+            40.5928
+          ],
+          [
+            -86.9474,
+            40.535
+          ],
+          [
+            -86.9267,
+            40.5053
+          ],
+          [
+            -86.9373,
+            40.4828
+          ],
+          [
+            -87.0463,
+            40.4724
+          ],
+          [
+            -87.1425,
+            40.403
+          ],
+          [
+            -87.2133,
+            40.3956
+          ],
+          [
+            -87.2713,
+            40.3551
+          ],
+          [
+            -87.3008,
+            40.4109
+          ],
+          [
+            -87.2505,
+            40.451
+          ],
+          [
+            -87.3299,
+            40.4129
+          ],
+          [
+            -87.35,
+            40.45
+          ],
+          [
+            -87.365,
+            40.4487
+          ],
+          [
+            -87.356,
+            40.3448
+          ],
+          [
+            -87.3341,
+            40.3085
+          ],
+          [
+            -87.468,
+            40.227
+          ],
+          [
+            -87.4772,
+            40.1997
+          ],
+          [
+            -87.4571,
+            40.1474
+          ],
+          [
+            -87.3835,
+            40.1121
+          ],
+          [
+            -87.4109,
+            40.0445
+          ],
+          [
+            -87.4081,
+            40.0066
+          ],
+          [
+            -87.3561,
+            39.9531
+          ],
+          [
+            -87.3142,
+            39.8692
+          ],
+          [
+            -87.2915,
+            39.7801
+          ],
+          [
+            -87.3145,
+            39.7558
+          ],
+          [
+            -87.3093,
+            39.7222
+          ],
+          [
+            -87.2828,
+            39.7645
+          ],
+          [
+            -87.2511,
+            39.7417
+          ],
+          [
+            -87.198,
+            39.773
+          ],
+          [
+            -87.19,
+            39.7299
+          ],
+          [
+            -87.1409,
+            39.7764
+          ],
+          [
+            -87.1566,
+            39.7151
+          ],
+          [
+            -87.1152,
+            39.7148
+          ],
+          [
+            -87.0827,
+            39.7558
+          ],
+          [
+            -87.0126,
+            39.7861
+          ],
+          [
+            -86.8766,
+            39.7016
+          ],
+          [
+            -86.8844,
+            39.6303
+          ],
+          [
+            -86.8549,
+            39.5959
+          ],
+          [
+            -86.7882,
+            39.6448
+          ],
+          [
+            -86.7651,
+            39.6277
+          ],
+          [
+            -86.7555,
+            39.5588
+          ],
+          [
+            -86.781,
+            39.5062
+          ],
+          [
+            -86.7148,
+            39.4877
+          ],
+          [
+            -86.677,
+            39.4281
+          ],
+          [
+            -86.5771,
+            39.4558
+          ],
+          [
+            -86.5504,
+            39.5241
+          ],
+          [
+            -86.4524,
+            39.5758
+          ],
+          [
+            -86.4105,
+            39.5788
+          ],
+          [
+            -86.371,
+            39.5446
+          ],
+          [
+            -86.3985,
+            39.5075
+          ],
+          [
+            -86.3526,
+            39.4243
+          ],
+          [
+            -86.2976,
+            39.4155
+          ],
+          [
+            -86.257,
+            39.3831
+          ],
+          [
+            -86.156,
+            39.3821
+          ],
+          [
+            -86.0753,
+            39.3268
+          ],
+          [
+            -86.0737,
+            39.3058
+          ],
+          [
+            -86.0363,
+            39.2694
+          ],
+          [
+            -86.0219,
+            39.1842
+          ],
+          [
+            -86.064,
+            39.0705
+          ],
+          [
+            -86.0337,
+            39.007
+          ],
+          [
+            -86.0793,
+            38.9648
+          ],
+          [
+            -86.0927,
+            38.9306
+          ],
+          [
+            -86.1433,
+            38.9059
+          ],
+          [
+            -86.1658,
+            38.8435
+          ],
+          [
+            -86.2194,
+            38.7816
+          ],
+          [
+            -86.0877,
+            38.7595
+          ],
+          [
+            -86.0623,
+            38.7424
+          ],
+          [
+            -86.0583,
+            38.7068
+          ],
+          [
+            -86.0461,
+            38.7565
+          ],
+          [
+            -86.003,
+            38.749
+          ],
+          [
+            -85.9708,
+            38.6758
+          ],
+          [
+            -85.9028,
+            38.6675
+          ],
+          [
+            -85.8516,
+            38.6339
+          ],
+          [
+            -85.8569,
+            38.592
+          ],
+          [
+            -85.8319,
+            38.5955
+          ],
+          [
+            -85.8254,
+            38.5813
+          ],
+          [
+            -85.8087,
+            38.6051
+          ],
+          [
+            -85.7899,
+            38.5965
+          ],
+          [
+            -85.7812,
+            38.5541
+          ],
+          [
+            -85.8167,
+            38.518
+          ],
+          [
+            -85.8243,
+            38.484
+          ],
+          [
+            -85.8965,
+            38.4566
+          ],
+          [
+            -85.9481,
+            38.468
+          ],
+          [
+            -85.8678,
+            38.4334
+          ],
+          [
+            -85.8528,
+            38.4436
+          ],
+          [
+            -85.8166,
+            38.4326
+          ],
+          [
+            -85.8081,
+            38.3812
+          ],
+          [
+            -85.8443,
+            38.3227
+          ],
+          [
+            -85.8378,
+            38.2775
+          ],
+          [
+            -85.7822,
+            38.2896
+          ],
+          [
+            -85.747,
+            38.2703
+          ],
+          [
+            -85.6814,
+            38.3009
+          ],
+          [
+            -85.6151,
+            38.4444
+          ],
+          [
+            -85.5072,
+            38.4714
+          ],
+          [
+            -85.4324,
+            38.537
+          ],
+          [
+            -85.4175,
+            38.5614
+          ],
+          [
+            -85.4386,
+            38.6054
+          ],
+          [
+            -85.4413,
+            38.6638
+          ],
+          [
+            -85.4712,
+            38.6989
+          ],
+          [
+            -85.4413,
+            38.7692
+          ],
+          [
+            -85.3894,
+            38.7498
+          ],
+          [
+            -85.3591,
+            38.7803
+          ],
+          [
+            -85.3577,
+            38.7484
+          ],
+          [
+            -85.3335,
+            38.7638
+          ],
+          [
+            -85.3115,
+            38.753
+          ],
+          [
+            -85.3592,
+            38.8152
+          ],
+          [
+            -85.371,
+            38.8675
+          ],
+          [
+            -85.3177,
+            38.8667
+          ],
+          [
+            -85.3214,
+            38.8369
+          ],
+          [
+            -85.2887,
+            38.8437
+          ],
+          [
+            -85.2886,
+            38.8752
+          ],
+          [
+            -85.3139,
+            38.9055
+          ],
+          [
+            -85.3072,
+            38.9303
+          ],
+          [
+            -85.2783,
+            38.9328
+          ],
+          [
+            -85.2819,
+            38.9085
+          ],
+          [
+            -85.2526,
+            38.8897
+          ],
+          [
+            -85.2449,
+            38.9274
+          ],
+          [
+            -85.2161,
+            38.9359
+          ],
+          [
+            -85.2176,
+            38.8929
+          ],
+          [
+            -85.1986,
+            38.8898
+          ],
+          [
+            -85.2169,
+            38.8643
+          ],
+          [
+            -85.1848,
+            38.8532
+          ],
+          [
+            -85.1962,
+            38.8279
+          ],
+          [
+            -85.1795,
+            38.8206
+          ],
+          [
+            -85.1961,
+            38.7965
+          ],
+          [
+            -85.1629,
+            38.7807
+          ],
+          [
+            -85.1479,
+            38.7965
+          ],
+          [
+            -85.1653,
+            38.8363
+          ],
+          [
+            -85.1584,
+            38.8566
+          ],
+          [
+            -85.1264,
+            38.8252
+          ],
+          [
+            -85.129,
+            38.8571
+          ],
+          [
+            -85.0728,
+            38.8361
+          ],
+          [
+            -85.0643,
+            38.8213
+          ],
+          [
+            -85.0792,
+            38.802
+          ],
+          [
+            -85.0645,
+            38.7915
+          ],
+          [
+            -85.0592,
+            38.8134
+          ],
+          [
+            -85.0192,
+            38.8346
+          ],
+          [
+            -84.9956,
+            38.8273
+          ],
+          [
+            -85.017,
+            38.7957
+          ],
+          [
+            -85.0072,
+            38.7888
+          ],
+          [
+            -84.972,
+            38.8101
+          ],
+          [
+            -84.9755,
+            38.8439
+          ],
+          [
+            -84.8999,
+            38.8409
+          ],
+          [
+            -84.9721,
+            38.8823
+          ],
+          [
+            -84.9339,
+            38.9059
+          ],
+          [
+            -84.9636,
+            38.9108
+          ],
+          [
+            -84.9651,
+            38.9479
+          ],
+          [
+            -85.0213,
+            38.9366
+          ],
+          [
+            -85.0112,
+            38.9125
+          ],
+          [
+            -85.043,
+            38.8947
+          ],
+          [
+            -85.069,
+            38.9038
+          ],
+          [
+            -85.0726,
+            38.9239
+          ],
+          [
+            -85.1653,
+            38.9057
+          ],
+          [
+            -85.1591,
+            38.9601
+          ],
+          [
+            -85.205,
+            38.9674
+          ],
+          [
+            -85.2035,
+            38.9898
+          ],
+          [
+            -85.2282,
+            39.0103
+          ],
+          [
+            -85.2331,
+            39.061
+          ],
+          [
+            -85.2174,
+            39.0666
+          ],
+          [
+            -85.1922,
+            39.0237
+          ],
+          [
+            -85.164,
+            39.0102
+          ],
+          [
+            -85.1476,
+            39.0203
+          ],
+          [
+            -85.0942,
+            38.9559
+          ],
+          [
+            -85.0772,
+            38.9688
+          ],
+          [
+            -85.0998,
+            38.9962
+          ],
+          [
+            -85.0308,
+            38.9925
+          ],
+          [
+            -85.035,
+            39.0144
+          ],
+          [
+            -84.9654,
+            39.024
+          ],
+          [
+            -85.0615,
+            39.0264
+          ],
+          [
+            -85.1119,
+            39.0516
+          ],
+          [
+            -85.1295,
+            39.0808
+          ],
+          [
+            -85.1156,
+            39.09
+          ],
+          [
+            -85.0855,
+            39.0665
+          ],
+          [
+            -85.0673,
+            39.073
+          ],
+          [
+            -85.0148,
+            39.0483
+          ],
+          [
+            -85.0553,
+            39.08
+          ],
+          [
+            -85.0553,
+            39.1161
+          ],
+          [
+            -85.1079,
+            39.1444
+          ],
+          [
+            -84.9908,
+            39.1232
+          ],
+          [
+            -84.9419,
+            39.1325
+          ],
+          [
+            -84.9403,
+            39.1432
+          ],
+          [
+            -84.9896,
+            39.1535
+          ],
+          [
+            -84.9941,
+            39.1789
+          ],
+          [
+            -85.0609,
+            39.219
+          ],
+          [
+            -85.0501,
+            39.24
+          ],
+          [
+            -85.0247,
+            39.2443
+          ],
+          [
+            -84.9718,
+            39.1984
+          ],
+          [
+            -84.9656,
+            39.2096
+          ],
+          [
+            -84.9984,
+            39.2427
+          ],
+          [
+            -84.9497,
+            39.2535
+          ],
+          [
+            -84.9201,
+            39.2304
+          ],
+          [
+            -84.8988,
+            39.234
+          ],
+          [
+            -84.8952,
+            39.2116
+          ],
+          [
+            -84.8415,
+            39.2023
+          ],
+          [
+            -84.8631,
+            39.2464
+          ],
+          [
+            -84.9341,
+            39.2591
+          ],
+          [
+            -84.9515,
+            39.2777
+          ],
+          [
+            -84.9533,
+            39.2898
+          ],
+          [
+            -84.9357,
+            39.2921
+          ],
+          [
+            -84.9452,
+            39.3105
+          ],
+          [
+            -84.9226,
+            39.3255
+          ],
+          [
+            -84.9306,
+            39.3377
+          ],
+          [
+            -84.946,
+            39.3274
+          ],
+          [
+            -85.0161,
+            39.3887
+          ],
+          [
+            -85.0299,
+            39.3753
+          ],
+          [
+            -85.0158,
+            39.3622
+          ],
+          [
+            -85.0274,
+            39.3377
+          ],
+          [
+            -85.0521,
+            39.3417
+          ],
+          [
+            -85.0437,
+            39.3851
+          ],
+          [
+            -85.0626,
+            39.3857
+          ],
+          [
+            -85.0662,
+            39.4133
+          ],
+          [
+            -85.1158,
+            39.3819
+          ],
+          [
+            -85.0962,
+            39.3278
+          ],
+          [
+            -85.1216,
+            39.3542
+          ],
+          [
+            -85.1627,
+            39.3633
+          ],
+          [
+            -85.1463,
+            39.4068
+          ],
+          [
+            -85.1715,
+            39.4284
+          ],
+          [
+            -85.1931,
+            39.4191
+          ],
+          [
+            -85.1796,
+            39.396
+          ],
+          [
+            -85.2004,
+            39.3579
+          ],
+          [
+            -85.2339,
+            39.371
+          ],
+          [
+            -85.2443,
+            39.4019
+          ],
+          [
+            -85.2172,
+            39.411
+          ],
+          [
+            -85.2265,
+            39.4367
+          ],
+          [
+            -85.1953,
+            39.4578
+          ],
+          [
+            -85.2745,
+            39.5275
+          ],
+          [
+            -85.2855,
+            39.5552
+          ],
+          [
+            -85.2655,
+            39.5665
+          ],
+          [
+            -85.2512,
+            39.5495
+          ],
+          [
+            -85.2379,
+            39.5827
+          ],
+          [
+            -85.1805,
+            39.5729
+          ],
+          [
+            -85.1641,
+            39.5514
+          ],
+          [
+            -85.1052,
+            39.5301
+          ],
+          [
+            -85.0549,
+            39.4593
+          ],
+          [
+            -85.0139,
+            39.4495
+          ],
+          [
+            -84.985,
+            39.4161
+          ],
+          [
+            -84.962,
+            39.4208
+          ],
+          [
+            -84.9663,
+            39.4044
+          ],
+          [
+            -84.9392,
+            39.3861
+          ],
+          [
+            -84.9035,
+            39.4053
+          ],
+          [
+            -84.9172,
+            39.3669
+          ],
+          [
+            -84.8775,
+            39.3474
+          ],
+          [
+            -84.8849,
+            39.3213
+          ],
+          [
+            -84.8531,
+            39.3263
+          ],
+          [
+            -84.7696,
+            39.2807
+          ],
+          [
+            -84.7401,
+            39.2941
+          ],
+          [
+            -84.7059,
+            39.2734
+          ],
+          [
+            -84.6664,
+            39.2713
+          ],
+          [
+            -84.6546,
+            39.3018
+          ],
+          [
+            -84.584,
+            39.3014
+          ],
+          [
+            -84.5767,
+            39.2842
+          ],
+          [
+            -84.6025,
+            39.2672
+          ],
+          [
+            -84.5989,
+            39.216
+          ],
+          [
+            -84.5364,
+            39.1653
+          ],
+          [
+            -84.5358,
+            39.1401
+          ],
+          [
+            -84.4247,
+            39.1287
+          ],
+          [
+            -84.4115,
+            39.1121
+          ],
+          [
+            -84.4166,
+            39.0606
+          ],
+          [
+            -84.2869,
+            39.0555
+          ],
+          [
+            -84.2695,
+            39.0404
+          ],
+          [
+            -84.2876,
+            39.0239
+          ],
+          [
+            -84.241,
+            39.0219
+          ],
+          [
+            -84.2641,
+            38.9887
+          ],
+          [
+            -84.1981,
+            38.9629
+          ],
+          [
+            -84.2431,
+            38.9566
+          ],
+          [
+            -84.2341,
+            38.9447
+          ],
+          [
+            -84.2474,
+            38.9373
+          ],
+          [
+            -84.2166,
+            38.9358
+          ],
+          [
+            -84.2289,
+            38.9168
+          ],
+          [
+            -84.1857,
+            38.9036
+          ],
+          [
+            -84.1692,
+            38.9173
+          ],
+          [
+            -84.1461,
+            38.8915
+          ],
+          [
+            -84.1838,
+            38.8738
+          ],
+          [
+            -84.2028,
+            38.8403
+          ],
+          [
+            -84.1671,
+            38.84
+          ],
+          [
+            -84.139,
+            38.8195
+          ],
+          [
+            -84.1561,
+            38.8052
+          ],
+          [
+            -84.0812,
+            38.7993
+          ],
+          [
+            -84.0264,
+            38.8183
+          ],
+          [
+            -84.0114,
+            38.8071
+          ],
+          [
+            -84.0466,
+            38.7915
+          ],
+          [
+            -84.0167,
+            38.7906
+          ],
+          [
+            -83.9739,
+            38.8111
+          ],
+          [
+            -83.916,
+            38.8843
+          ],
+          [
+            -83.9128,
+            38.8449
+          ],
+          [
+            -83.9445,
+            38.8117
+          ],
+          [
+            -83.9137,
+            38.8064
+          ],
+          [
+            -83.8824,
+            38.8319
+          ],
+          [
+            -83.8686,
+            38.8202
+          ],
+          [
+            -83.8394,
+            38.8336
+          ],
+          [
+            -83.8811,
+            38.7846
+          ],
+          [
+            -83.8081,
+            38.763
+          ],
+          [
+            -83.7152,
+            38.7868
+          ],
+          [
+            -83.6232,
+            38.7872
+          ],
+          [
+            -83.5932,
+            38.7963
+          ],
+          [
+            -83.5938,
+            38.8153
+          ],
+          [
+            -83.4905,
+            38.8364
+          ],
+          [
+            -83.4818,
+            38.9116
+          ],
+          [
+            -83.4949,
+            38.9688
+          ],
+          [
+            -83.457,
+            39.0017
+          ],
+          [
+            -83.5684,
+            39.0324
+          ],
+          [
+            -83.5841,
+            39.0674
+          ],
+          [
+            -83.6397,
+            39.0895
+          ],
+          [
+            -83.6347,
+            39.1108
+          ],
+          [
+            -83.5506,
+            39.1316
+          ],
+          [
+            -83.4374,
+            39.108
+          ],
+          [
+            -83.3154,
+            39.1566
+          ],
+          [
+            -83.2675,
+            39.2316
+          ],
+          [
+            -83.3296,
+            39.292
+          ],
+          [
+            -83.2523,
+            39.3423
+          ],
+          [
+            -83.1988,
+            39.3397
+          ],
+          [
+            -83.1866,
+            39.3625
+          ],
+          [
+            -83.1247,
+            39.3592
+          ],
+          [
+            -83.0999,
+            39.3078
+          ],
+          [
+            -83.0597,
+            39.347
+          ],
+          [
+            -82.9858,
+            39.3416
+          ],
+          [
+            -82.9248,
+            39.3961
+          ],
+          [
+            -82.7755,
+            39.4267
+          ],
+          [
+            -82.7296,
+            39.4899
+          ],
+          [
+            -82.7233,
+            39.5694
+          ],
+          [
+            -82.6881,
+            39.5789
+          ],
+          [
+            -82.6709,
+            39.6193
+          ],
+          [
+            -82.6716,
+            39.6481
+          ],
+          [
+            -82.6921,
+            39.6601
+          ],
+          [
+            -82.6853,
+            39.6765
+          ],
+          [
+            -82.5636,
+            39.7075
+          ],
+          [
+            -82.5118,
+            39.6835
+          ],
+          [
+            -82.3769,
+            39.7989
+          ],
+          [
+            -82.3858,
+            39.8703
+          ],
+          [
+            -82.3728,
+            39.9252
+          ],
+          [
+            -82.4642,
+            39.9662
+          ],
+          [
+            -82.5144,
+            39.9588
+          ],
+          [
+            -82.601,
+            39.9911
+          ],
+          [
+            -82.6217,
+            40.0383
+          ],
+          [
+            -82.7399,
+            40.1538
+          ],
+          [
+            -82.7363,
+            40.3077
+          ],
+          [
+            -82.7909,
+            40.3473
+          ],
+          [
+            -82.8392,
+            40.3583
+          ],
+          [
+            -82.8413,
+            40.4106
+          ],
+          [
+            -82.7582,
+            40.6497
+          ],
+          [
+            -82.5018,
+            41.0481
+          ],
+          [
+            -82.3182,
+            41.2263
+          ],
+          [
+            -82.1333,
+            41.3099
+          ],
+          [
+            -82.1627,
+            41.3579
+          ],
+          [
+            -82.2488,
+            41.3558
+          ],
+          [
+            -82.2745,
+            41.3713
+          ],
+          [
+            -82.3862,
+            41.3498
+          ],
+          [
+            -82.5254,
+            41.2908
+          ],
+          [
+            -82.6602,
+            41.1998
+          ],
+          [
+            -82.8037,
+            41.2272
+          ],
+          [
+            -82.8176,
+            41.1766
+          ],
+          [
+            -82.8827,
+            41.1489
+          ],
+          [
+            -82.9524,
+            41.0598
+          ],
+          [
+            -82.9949,
+            41.0519
+          ],
+          [
+            -83.0936,
+            41.0417
+          ],
+          [
+            -83.1622,
+            41.1001
+          ],
+          [
+            -83.2042,
+            41.0782
+          ],
+          [
+            -83.1956,
+            41.103
+          ],
+          [
+            -83.2537,
+            41.1343
+          ],
+          [
+            -83.4641,
+            41.1657
+          ],
+          [
+            -83.4746,
+            41.147
+          ],
+          [
+            -83.51,
+            41.1586
+          ],
+          [
+            -83.6238,
+            41.1461
+          ],
+          [
+            -83.7886,
+            41.1069
+          ],
+          [
+            -83.8313,
+            41.0828
+          ],
+          [
+            -83.8303,
+            41.0576
+          ],
+          [
+            -83.6807,
+            41.0479
+          ],
+          [
+            -83.8557,
+            40.9523
+          ],
+          [
+            -83.901,
+            40.9676
+          ],
+          [
+            -83.9807,
+            40.9489
+          ],
+          [
+            -84.151,
+            40.881
+          ],
+          [
+            -84.2326,
+            40.7951
+          ],
+          [
+            -84.3175,
+            40.809
+          ],
+          [
+            -84.4605,
+            40.8723
+          ],
+          [
+            -84.6251,
+            40.8726
+          ],
+          [
+            -84.7657,
+            40.9562
+          ],
+          [
+            -84.9546,
+            41.0085
+          ],
+          [
+            -84.9933,
+            41.0535
+          ],
+          [
+            -84.9735,
+            41.1022
+          ],
+          [
+            -85.0001,
+            41.128
+          ],
+          [
+            -84.9947,
+            41.1414
+          ],
+          [
+            -84.6904,
+            41.3375
+          ],
+          [
+            -84.5512,
+            41.4589
+          ],
+          [
+            -84.5512,
+            41.4855
+          ],
+          [
+            -84.4881,
+            41.5414
+          ],
+          [
+            -84.4451,
+            41.5697
+          ],
+          [
+            -84.3995,
+            41.5724
+          ],
+          [
+            -84.4038,
+            41.596
+          ],
+          [
+            -84.2267,
+            41.7178
+          ],
+          [
+            -84.1517,
+            41.7385
+          ],
+          [
+            -84.1279,
+            41.772
+          ],
+          [
+            -84.0005,
+            41.8243
+          ],
+          [
+            -83.9848,
+            41.8596
+          ],
+          [
+            -83.993,
+            41.9216
+          ],
+          [
+            -83.9456,
+            41.9487
+          ],
+          [
+            -83.9281,
+            41.9929
+          ],
+          [
+            -83.8285,
+            42.1077
+          ],
+          [
+            -83.6599,
+            42.1461
+          ],
+          [
+            -83.6111,
+            42.2444
+          ],
+          [
+            -83.4832,
+            42.4015
+          ],
+          [
+            -83.4896,
+            42.44
+          ]
+        ]
+      ]
+    }
+  },
+  "referenceTier": "best_available",
+  "contentDigest": "sha256:354ae57b2f54d0c15ed06213d0b1866e7a991046de28d491d6e64197d135deb5",
+  "library": {
+    "libraryId": "eastern-corn-belt-plains",
+    "version": 4,
+    "updatedAt": "2026-08-28T05:22:43Z",
+    "author": "StreamCurves Regional Analysis Agent",
+    "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 46 of 51 candidates.  REF-02 fallback: only 0 Functioning sites, below the exploratory floor of 10; included Functioning-at-Risk to reach 46. Mandatory review; confidence capped; reference tier = best_available.",
+    "region": {
+      "kind": "ecoregion",
+      "code": "55",
+      "name": "Eastern Corn Belt Plains"
+    },
+    "contentDigest": "sha256:354ae57b2f54d0c15ed06213d0b1866e7a991046de28d491d6e64197d135deb5",
+    "supersedesVersion": 3
+  }
+}

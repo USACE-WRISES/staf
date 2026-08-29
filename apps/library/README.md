@@ -30,7 +30,7 @@ apps/library/
   assessments/
     <assessment-id>/
       manifest.json               # identity + region + full version history
-      status.json                 # lifecycle history (preliminary, under_review, certified, revised, retired)
+      status.json                 # lifecycle history (draft, preliminary, under_review, certified, revised, retired)
       validation.json             # append-only validation records + state history (unvalidated | validated)
       v1/
         assessment.deep.json      # DEEP bundle (curves inlined) + embedded "library" block
@@ -65,7 +65,9 @@ Regenerated on every publish from the per-assessment manifests.
       "latestUpdatedAt": "2026-08-21T00:00:00Z",
       "latestPreliminary": 3,
       "latestCertified": 0,
+      "latestDraft": 0,
       "defaultVersion": 3,
+      "defaultStatus": "preliminary",
       "contentDigest": "sha256:...",
       "validationState": "unvalidated",
       "validationSummary": null,
@@ -75,10 +77,13 @@ Regenerated on every publish from the per-assessment manifests.
 }
 ```
 
-`defaultVersion` is the latest certified version, else the latest preliminary one.
-`validationState` and `validationSummary` come from the assessment's `validation.json`
-(the last state record for the default version); `provenanceState` is `present` when the
-default version folder carries `provenance.json`.
+`defaultVersion` is the latest certified version, else the latest preliminary one, else
+the numeric latest (which may be a draft: the StreamCurves picker needs an openable
+default, and DEEP is protected by per-version eligibility, never by this pointer).
+`defaultStatus` is that version's current lifecycle status; `latestDraft` is the newest
+draft (0 if none). `validationState` and `validationSummary` come from the assessment's
+`validation.json` (the last state record for the default version); `provenanceState` is
+`present` when the default version folder carries `provenance.json`.
 
 `latestVersion: 0` means no version has been published yet (a placeholder awaiting its first
 publish). Such an assessment is **not** offered in DEEP until it has at least one version.
@@ -144,21 +149,39 @@ assessment info button shows version + last-updated).
 }
 ```
 
+## Lifecycle
+
+Stored status literals never change; people see display labels:
+
+| Stored          | Displayed    | Meaning                                                        | Who sets it |
+|-----------------|--------------|----------------------------------------------------------------|-------------|
+| `draft`         | Draft        | Automation output; nobody reviewed the curves in the app yet   | batch stage/promote, the headless agent |
+| `preliminary`   | Preliminary  | A human reviewed and stands behind it                          | interactive publish, or Approve as Preliminary on a draft |
+| `certified`     | Final        | Field-validated and certified                                  | Validate stage certify (gated on a validation record) |
+| `under_review`, `revised`, `retired` | Under review / Revised / Retired | admin states | Python (`set_version_status`) |
+
+Validation is a separate axis (`validation.json`: `unvalidated` | `validated`, displayed
+Unvalidated / **Verified**): a version can be Preliminary and Verified before it is Final.
+Only `preliminary` and `certified` are DEEP-eligible; drafts never bake.
+
 ## Publishing (summary)
 
-1. Builder saves a StreamCurves session (Save > Draft) and shares the file.
-2. Publisher (local/desktop) opens StreamCurves, opens the session (header **Open**), goes to
-   **Publish** (header **Save** or the stage banner), picks Preliminary or Final (Final =
-   validated + certified; certification requires the Validated box), and **Publishes**.
-   StreamCurves:
-   - writes `assessments/<id>/vN/` (bundle + full session + meta),
-   - writes `provenance.json` beside the bundle when the publisher supplies one (the agent
-     always does; the interactive publish builds a leaner one),
-   - updates `manifest.json` + `catalog.json` (+ `status.json` / `validation.json`),
-   - re-bakes DEEP's registry (`apps/deep/scripts/build_deep_data.py`) so the cloud DEEP will
-     ship the new latest version.
-3. Publisher commits `apps/library/**` and `apps/deep/data/**` and pushes; redeploy DEEP.
+1. **Automation path**: `run_region_batch.py stage` builds a region unattended and stages it
+   (as a draft) under its run folder; `promote` confirms the standing decisions under the
+   owner's name and publishes into `apps/library` as a **Draft** (pass `--status preliminary`
+   only for a packet that was reviewed exhaustively). The Region builder inside the app
+   drives the same commands.
+2. **Review path**: open the draft in StreamCurves (header **Open**; drafts are badged),
+   review the stages, then either **Approve as Preliminary** on the Validate stage (records
+   your review in place) or edit and publish a next version from **Publish** (interactive
+   publishes are always Preliminary; provenance carries the originating run plus your edits).
+3. **Verification path**: on the Validate stage, overlay field data, record the validation
+   (the version reads **Verified**), then **Certify** (displayed **Final**).
+   Publishing, approving and certifying each re-bake DEEP's registry
+   (`apps/deep/scripts/bake_library_into_deep.py`).
+4. Publisher commits `apps/library/**` and `apps/deep/data/**` and pushes; redeploy DEEP.
 
-Changing a published version's status later is republish-only: open the assessment, make any
-updates, and publish again at the new level (a new version). `set_version_status` remains
-available from Python for scripted actions such as retiring a version.
+Content never changes in place: edits are a new version. Status changes (`draft` to
+`preliminary`, certification, retiring) append to `status.json` without re-minting the
+version or its digest; `set_version_status` remains available from Python for scripted
+actions such as retiring a version.
