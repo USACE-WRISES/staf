@@ -48,6 +48,18 @@ PANEL = [
     ("Ozark stream (AR/OK)", 35.50, -94.50),
     ("Mountain stream (CO)", 39.00, -107.50),
     ("Pacific Northwest stream (WA)", 46.90, -122.20),
+    ("New England stream (ME)", 44.30, -70.50),
+    ("Northeast stream (VT)", 44.00, -72.70),
+    ("Tennessee stream (TN)", 35.80, -84.20),
+    ("Upper Mississippi stream (WI/IA)", 43.20, -91.50),
+    ("Souris-Red stream (MN/ND)", 47.80, -96.50),
+    ("Missouri stream (KS)", 39.00, -96.50),
+    ("Texas stream (TX)", 30.30, -98.00),
+    ("Rio Grande stream (NM)", 33.90, -105.50),
+    ("Great Basin stream (UT)", 40.50, -111.80),
+    ("Lower Colorado stream (AZ)", 34.20, -111.50),
+    ("California stream (CA)", 38.80, -121.00),
+    ("Black Hills stream (SD)", 44.50, -103.50),
 ]
 
 _SC_NAMES = ["pctimp2019", "pctcrop2019", "pcthay2019", "rddens", "kffact",
@@ -67,40 +79,55 @@ _PAIRS = {
 }
 
 
-def compare_point(label: str, lat: float, lon: float) -> dict | None:
+def compare_point(label: str, lat: float, lon: float) -> dict:
+    """One panel point -> ALWAYS a ledger row.
+
+    ``outcome`` is "ok" for a usable comparison; every other outcome carries
+    the stage that stopped it and a reason, so the full-panel run says exactly
+    why each dropped point dropped (the migration evidence base must account
+    for every site, not just the survivors).
+    """
     d = 0.012
+    base = {"label": label, "lat": lat, "lon": lon, "outcome": "ok",
+            "reason": "", "comid": None, "nhdplusid": None}
     v2_fc = flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d)
     hit = flowlines.nearest_point_on_lines(v2_fc, lat, lon)
     if hit is None or hit[3] is None:
-        print(f"  {label}: no covered reach nearby, skipped")
-        return None
+        base.update(outcome="skipped_no_covered_reach",
+                    reason="no V2 flowline near the panel point")
+        print(f"  {label}: {base['outcome']}")
+        return base
     comid = hit[3]
+    base["comid"] = comid
     sc = streamcat.metrics_by_comid(comid, _SC_NAMES)
     if not sc:
-        print(f"  {label}: StreamCat empty for COMID {comid}, skipped")
-        return None
+        base.update(outcome="skipped_streamcat_empty",
+                    reason=f"StreamCat returned no row for COMID {comid}")
+        print(f"  {label}: {base['outcome']}")
+        return base
     t0 = time.time()
     rec = compute_site(hit[0], hit[1], {"includeGeometry": False})
     secs = round(time.time() - t0, 1)
+    base["engine_secs"] = secs
     if rec["status"] != "ok":
-        print(f"  {label}: engine {rec['status']} ({rec['reason']})")
-        return None
+        base.update(outcome=f"engine_{rec['status']}",
+                    reason=str(rec.get("reason") or ""))
+        print(f"  {label}: {base['outcome']} ({base['reason']}) {secs}s")
+        return base
     engine_da = (rec.get("site") or {}).get("drainageAreaSqkm")
     sc_da = sc.get("wsareasqkm")
-    row = {"label": label, "comid": comid,
-           "nhdplusid": (rec.get("site") or {}).get("nhdplusId"),
-           "engine_da_sqkm": engine_da, "streamcat_da_sqkm": sc_da,
-           "da_ratio": (round(engine_da / sc_da, 3)
-                        if engine_da and sc_da else None),
-           "engine_secs": secs}
+    base.update(
+        nhdplusid=(rec.get("site") or {}).get("nhdplusId"),
+        engine_da_sqkm=engine_da, streamcat_da_sqkm=sc_da,
+        da_ratio=(round(engine_da / sc_da, 3) if engine_da and sc_da else None))
     for key, (col, transform) in _PAIRS.items():
         ev = (rec["metrics"].get(key) or {}).get("value")
         sv = sc.get(col)
-        row[f"engine_{key}"] = (round(transform(float(ev)), 3)
-                                if ev is not None else None)
-        row[f"sc_{col}"] = sv
-    print(f"  {label}: COMID {comid}, DA ratio {row['da_ratio']}, {secs}s")
-    return row
+        base[f"engine_{key}"] = (round(transform(float(ev)), 3)
+                                 if ev is not None else None)
+        base[f"sc_{col}"] = sv
+    print(f"  {label}: COMID {comid}, DA ratio {base['da_ratio']}, {secs}s")
+    return base
 
 
 def main() -> int:
@@ -112,14 +139,17 @@ def main() -> int:
     rows = []
     for label, lat, lon in (PANEL[: args.limit] if args.limit else PANEL):
         print(f"comparing {label} ...", flush=True)
-        row = compare_point(label, lat, lon)
-        if row:
-            rows.append(row)
+        rows.append(compare_point(label, lat, lon))
 
-    summary: dict = {"n_points": len(rows)}
+    ok_rows = [r for r in rows if r["outcome"] == "ok"]
+    outcome_counts: dict[str, int] = {}
+    for r in rows:
+        outcome_counts[r["outcome"]] = outcome_counts.get(r["outcome"], 0) + 1
+    summary: dict = {"n_points": len(rows), "n_ok": len(ok_rows),
+                     "outcomes": outcome_counts}
     for key, (col, _t) in _PAIRS.items():
         diffs = []
-        for r in rows:
+        for r in ok_rows:
             ev, sv = r.get(f"engine_{key}"), r.get(f"sc_{col}")
             if ev is None or sv is None:
                 continue
@@ -134,9 +164,12 @@ def main() -> int:
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     if rows:
+        fieldnames = sorted({k for r in rows for k in r},
+                            key=lambda k: (k not in ("label", "outcome",
+                                                     "reason", "comid"), k))
         with (out_dir / "covered_reach_comparison.csv").open(
                 "w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=list(rows[0]))
+            w = csv.DictWriter(f, fieldnames=fieldnames, restval="")
             w.writeheader()
             w.writerows(rows)
     (out_dir / "covered_reach_comparison.json").write_text(

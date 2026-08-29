@@ -113,22 +113,49 @@ def survey_ratios(limit_boxes: int | None, per_box: int) -> dict:
     }
 
 
-def scoring_pairs(n_pairs: int) -> dict:
+# Ratio bins the threshold decision reads. The first run's 15 km walks put
+# every pair above ratio 20; a ~4 km walk plus bin-aware collection fills the
+# decision zone instead.
+RATIO_BINS = ((1.0, 2.0), (2.0, 5.0), (5.0, 10.0), (10.0, 20.0),
+              (20.0, float("inf")))
+
+
+def _bin_of(ratio: float):
+    for lo, hi in RATIO_BINS:
+        if lo <= ratio < hi:
+            return (lo, hi)
+    return None
+
+
+def scoring_pairs(n_pairs: int, walk_km: float = 4.0) -> dict:
     """Score headwater reaches and their downstream mainstem with the batch
-    engine; report class agreement vs DA ratio. EXPENSIVE (live services)."""
+    engine; report ECI class agreement as a function of the DA ratio.
+    EXPENSIVE (live services): every unique reach is one full metric run.
+
+    Pair collection is bin-aware: the ratio is estimated up front from the
+    published drainage areas (the same numbers the routing policy uses), and a
+    headwater contributes at most one pair, to the least-filled bin its
+    downstream candidates can reach. Every pair gets a ledger row, including
+    the ones that fail to score and why.
+    """
+    import math
+
     from pynhd import NLDI, WaterData
 
+    from easi import delineation
     from easi.batch import api
     from easi.batch import contracts as C
 
-    pairs = []
+    per_bin = max(1, math.ceil(n_pairs / len(RATIO_BINS)))
+    bin_counts = {b: 0 for b in RATIO_BINS}
+    pairs: list[tuple] = []          # (region, up_comid, down_comid, ratio_est)
     for label, blat, blon in SAMPLE_BOXES:
         if len(pairs) >= n_pairs:
             break
         try:
             gdf = WaterData("nhdflowline_network").bybox(
                 (blon - D, blat - D, blon + D, blat + D))
-        except Exception:
+        except Exception:  # noqa: BLE001
             continue
         if gdf is None or gdf.empty or "streamorde" not in gdf.columns:
             continue
@@ -137,33 +164,74 @@ def scoring_pairs(n_pairs: int) -> dict:
             if len(pairs) >= n_pairs:
                 break
             comid = int(row["comid"])
+            up_da = row.get("totdasqkm")
+            try:
+                up_da = float(up_da)
+            except (TypeError, ValueError):
+                continue
+            if not up_da or up_da <= 0:
+                continue
             try:
                 down = NLDI().navigate_byid(
                     fsource="comid", fid=str(comid),
-                    navigation="downstreamMain", source="flowlines", distance=15)
-            except Exception:
+                    navigation="downstreamMain", source="flowlines",
+                    distance=max(1.0, float(walk_km)))
+            except Exception:  # noqa: BLE001
                 continue
             if down is None or down.empty:
                 continue
-            down_ids = [int(c) for c in down.get("nhdplus_comid", down.get("comid", []))
+            down_ids = [int(c) for c in down.get("nhdplus_comid",
+                                                 down.get("comid", []))
                         if str(c).isdigit() and int(c) != comid]
-            if down_ids:
-                pairs.append((label, comid, down_ids[-1]))
-    print(f"collected {len(pairs)} pairs; scoring with the batch engine ...")
+            # Rank this headwater's candidates into the least-filled bin they
+            # can serve; one pair per headwater keeps pairs independent.
+            best = None
+            for did in down_ids:
+                d_da = delineation.flowline_attrs(did).get("drainage_area_sqkm")
+                if not d_da or d_da <= up_da:
+                    continue
+                ratio = round(d_da / up_da, 2)
+                b = _bin_of(ratio)
+                if b is None or bin_counts[b] >= per_bin:
+                    continue
+                if best is None or bin_counts[b] < bin_counts[_bin_of(best[2])]:
+                    best = (did, d_da, ratio)
+            if best is not None:
+                did, _d_da, ratio = best
+                bin_counts[_bin_of(ratio)] += 1
+                pairs.append((label, comid, did, ratio))
+                print(f"  pair {label}: {comid} -> {did} ratio~{ratio}")
+    print(f"collected {len(pairs)} pairs "
+          f"(bins {[bin_counts[b] for b in RATIO_BINS]}); "
+          "scoring with the batch engine ...")
+
+    # One batch over the UNIQUE reaches: shared sites score once.
+    unique = sorted({c for _, u, d, _r in pairs for c in (u, d)})
+    sites = [C.SiteRequest(f"C-{c}", 0.0, 0.0, comid=c) for c in unique]
+    by: dict[str, object] = {}
+    for i in range(0, len(sites), 25):       # stay under the engine's cap
+        batch = api.run_batch_sync(C.BatchRequest(sites=sites[i:i + 25]))
+        by.update({s.site_id: s for s in batch.sites})
 
     results = []
-    for label, up, down in pairs:
-        sites = [C.SiteRequest(f"UP-{up}", 0.0, 0.0, comid=up),
-                 C.SiteRequest(f"DN-{down}", 0.0, 0.0, comid=down)]
-        # lat/lon are unused when a comid is supplied; keep placeholders.
-        batch = api.run_batch_sync(C.BatchRequest(sites=sites))
-        by = {s.site_id: s for s in batch.sites}
-        u, dwn = by.get(f"UP-{up}"), by.get(f"DN-{down}")
-        if not u or not dwn or u.eci is None or dwn.eci is None:
+    ledger = []
+    for label, up, down, ratio_est in pairs:
+        u, dwn = by.get(f"C-{up}"), by.get(f"C-{down}")
+        if not u or u.eci is None:
+            ledger.append({"region": label, "up_comid": up, "down_comid": down,
+                           "ratio_est": ratio_est, "outcome": "up_unscored",
+                           "reason": (u.issues[0].message if u and u.issues
+                                      else "no result")})
+            continue
+        if not dwn or dwn.eci is None:
+            ledger.append({"region": label, "up_comid": up, "down_comid": down,
+                           "ratio_est": ratio_est, "outcome": "down_unscored",
+                           "reason": (dwn.issues[0].message if dwn and dwn.issues
+                                      else "no result")})
             continue
         da_u = u.delineation.drainage_area_sqkm
         da_d = dwn.delineation.drainage_area_sqkm
-        ratio = round(da_d / da_u, 2) if da_u and da_d else None
+        ratio = round(da_d / da_u, 2) if da_u and da_d else ratio_est
         from easi.scoring import index_band_label
         results.append({"region": label, "up_comid": up, "down_comid": down,
                         "da_ratio": ratio, "up_eci": u.eci, "down_eci": dwn.eci,
@@ -175,19 +243,21 @@ def scoring_pairs(n_pairs: int) -> dict:
     for r in results:
         if r["da_ratio"] is None:
             continue
-        for t in CANDIDATE_THRESHOLDS:
-            if r["da_ratio"] <= t:
-                by_bin.setdefault(f"<= {t}", []).append(r["same_class"])
-                break
-        else:
-            by_bin.setdefault(f"> {CANDIDATE_THRESHOLDS[-1]}", []).append(
-                r["same_class"])
+        b = _bin_of(r["da_ratio"])
+        if b is None:
+            continue
+        lo, hi = b
+        key = f"{lo:g}-{hi:g}" if hi != float("inf") else f">= {lo:g}"
+        by_bin.setdefault(key, []).append(r["same_class"])
     return {
         "mode": "class-agreement",
-        "n_pairs": len(results),
+        "walk_km": None,   # filled by main()
+        "n_pairs_collected": len(pairs),
+        "n_pairs_scored": len(results),
         "agreement_by_ratio_bin": {
             k: {"n": len(v), "same_class_share": round(sum(v) / len(v), 2)}
             for k, v in sorted(by_bin.items())},
+        "unscored_ledger": ledger,
         "rows": results,
     }
 
@@ -200,11 +270,17 @@ def main() -> int:
     ap.add_argument("--with-scoring", action="store_true",
                     help="run the expensive class-agreement study")
     ap.add_argument("--pairs", type=int, default=8)
+    ap.add_argument("--walk-km", type=float, default=4.0,
+                    help="class-agreement mode: how far downstream to collect "
+                         "pair candidates; short walks keep pairs in the "
+                         "decision-zone ratio bins")
     ap.add_argument("--out", default=str(Path(__file__).parent / "out"))
     args = ap.parse_args()
 
-    report = (scoring_pairs(args.pairs) if args.with_scoring
+    report = (scoring_pairs(args.pairs, args.walk_km) if args.with_scoring
               else survey_ratios(args.limit, args.per_box))
+    if args.with_scoring:
+        report["walk_km"] = args.walk_km
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
     name = ("derive_da_ratio_scoring.json" if args.with_scoring
