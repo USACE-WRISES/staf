@@ -1,0 +1,9 @@
+# Runtime dependencies of the STAF site computation engine. Consumers vendor
+# the package (see README), so these pins must already be satisfied by the
+# consuming app's own requirements.txt; this file documents the contract.
+requests
+shapely
+geopandas
+# Layer B (metric computation) additionally uses:
+pygeohydro   # NLCD zonal statistics
+py3dep       # cross-section terrain (via the _extracted transect machinery)
