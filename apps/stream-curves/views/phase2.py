@@ -17,7 +17,7 @@ import logging
 from datetime import date
 
 import pandas as pd
-from plotnine import aes, geom_tile, ggplot, labs, scale_fill_manual
+from plotnine import aes, element_text, geom_tile, ggplot, labs, scale_fill_manual, theme
 from shiny import module, reactive, render, req, ui
 
 from streamcurves.plot_theme import minimal_plot_theme
@@ -41,6 +41,27 @@ TIER_BG = {
 }
 
 
+def heatmap_px(n_metrics: int) -> int:
+    """Plot height for the consistency heatmap: a ~26px row band per metric
+    plus title/legend/x-axis chrome, clamped so two metrics still get a
+    readable plot and sixty do not become a wall. The container (results_ui)
+    and the PNG download both size from this, so screen and export agree."""
+    return max(320, min(26 * int(n_metrics or 0) + 170, 1200))
+
+
+def _short_labels(labels, max_len: int = 30) -> dict[str, str]:
+    """Truncate long display names with an ellipsis, uniquified so ggplot can
+    never merge two metrics that truncate identically."""
+    out: dict[str, str] = {}
+    used: dict[str, int] = {}
+    for lbl in dict.fromkeys(str(x) for x in labels):
+        short = lbl if len(lbl) <= max_len else lbl[: max_len - 1].rstrip() + "…"
+        n = used.get(short, 0)
+        used[short] = n + 1
+        out[lbl] = short if n == 0 else f"{short} ({n + 1})"
+    return out
+
+
 def build_consistency_heatmap(result: dict, metric_config: dict, strat_config: dict,
                               sig_threshold: float):
     """plotnine port of the R/05d heatmap (green/red significance tiles)."""
@@ -54,11 +75,18 @@ def build_consistency_heatmap(result: dict, metric_config: dict, strat_config: d
     long["strat_label"] = [
         (strat_config.get(s) or {}).get("display_name") or s for s in long["stratification"]
     ]
+    # Resolved names can run long; unabridged they collide on the y axis as
+    # soon as the metric list grows. Truncated + uniquified, full name in the
+    # downloadable CSV.
+    short_m = _short_labels(long["metric_label"])
+    long["metric_label"] = [short_m[x] for x in long["metric_label"]]
+    short_s = _short_labels(long["strat_label"], max_len=24)
+    long["strat_label"] = [short_s[x] for x in long["strat_label"]]
     long["status"] = [
         None if pd.isna(v) else ("Significant" if v == 1 else "Not Significant")
         for v in long["cell_value"]
     ]
-    return (
+    fig = (
         ggplot(long, aes(x="strat_label", y="metric_label", fill="status"))
         + geom_tile(color="white", size=0.5)
         + scale_fill_manual(
@@ -79,6 +107,14 @@ def build_consistency_heatmap(result: dict, metric_config: dict, strat_config: d
             panel_grid_blank=True,
         )
     )
+    # Data-driven size override on top of the shared profile: 14pt y labels
+    # stop fitting their 26px row bands past ~a dozen metrics.
+    n = long["metric_label"].nunique()
+    if n > 20:
+        fig = fig + theme(axis_text_y=element_text(size=9))
+    elif n > 12:
+        fig = fig + theme(axis_text_y=element_text(size=11))
+    return fig
 
 
 def tier_card(tier_name: str, color: str, tier_data: pd.DataFrame):
@@ -384,6 +420,10 @@ def phase2_server(input, output, session, state: AppState, workspace_scope: str 
             ui.card(
                 ui.card_header("Analysis Controls"),
                 ui.card_body(
+                    # heights_equal="row" + fill=False: the bslib defaults
+                    # ("all", fill) stretch the slider row to the tall
+                    # selectize row and let the grid eat the modal's leftover
+                    # height, which opened a dead band above the button.
                     ui.layout_column_wrap(
                         ui.input_selectize(
                             ns("metric_filter"), "Metrics to Include:",
@@ -406,13 +446,21 @@ def phase2_server(input, output, session, state: AppState, workspace_scope: str 
                             min=0.1, max=0.9, value=settings["support_threshold"], step=0.05,
                         ),
                         width=1 / 2,
+                        heights_equal="row",
+                        fill=False,
                     ),
+                    fillable=False,
+                ),
+                ui.card_footer(
                     ui.input_action_button(
                         ns("compute_matrix"),
                         ui.TagList(fa("table"), " Compute Consistency Matrix"),
                         class_="btn btn-primary",
                     ),
+                    class_="text-end",
                 ),
+                fill=False,
+                class_="phase2-controls-card",
             ),
             ui.output_ui(ns("results_ui"), class_="phase2-consistency-results-output"),
         )
@@ -528,6 +576,8 @@ def phase2_server(input, output, session, state: AppState, workspace_scope: str 
                 id=ns("phase2_current_metric_highlights"),
             )
 
+        matrix = (res or {}).get("consistency_matrix")
+        n_hm = 0 if matrix is None else len(matrix)
         return ui.div(
             ui.card(
                 ui.card_header("Support Score Heatmap"),
@@ -536,7 +586,9 @@ def phase2_server(input, output, session, state: AppState, workspace_scope: str 
                         ui.output_text(ns("sig_threshold_label"), inline=True),
                         class_="text-muted small",
                     ),
-                    ui.output_plot(ns("heatmap"), height="450px"),
+                    # Sized to the metric count so row bands stay readable
+                    # (the fixed 450px squeezed 20+ metrics into overlap).
+                    ui.output_plot(ns("heatmap"), height=f"{heatmap_px(n_hm)}px"),
                     class_="heatmap-container",
                 ),
             ),
@@ -655,6 +707,13 @@ def phase2_server(input, output, session, state: AppState, workspace_scope: str 
             res, metric_config, strat_config, settings["sig_threshold"]
         )
         req(fig is not None)
+        # Same geometry the on-screen plot uses (heatmap_px at ~96 dpi), so
+        # the export never re-crowds what the screen shows readably.
+        matrix = (res or {}).get("consistency_matrix")
+        n_m = 0 if matrix is None else len(matrix)
+        n_s = 0 if matrix is None else max(0, matrix.shape[1] - 1)
         buf = io.BytesIO()
-        fig.save(buf, width=10, height=6, dpi=300, verbose=False)
+        fig.save(buf, width=min(16, max(8, 1.1 * n_s + 4)),
+                 height=min(12.5, max(3.5, heatmap_px(n_m) / 96)),
+                 dpi=300, verbose=False)
         yield buf.getvalue()

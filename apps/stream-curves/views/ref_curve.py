@@ -46,7 +46,7 @@ from views.curve_plots import (
 )
 from views.state import AppState
 from views.theme import fa
-from views.uihelpers import explanation_card, response_shape_label, status_badge
+from views.uihelpers import response_shape_label, status_badge
 
 logger = logging.getLogger("streamcurves")
 
@@ -472,21 +472,15 @@ def reference_curve_editor_server(
 @module.ui
 def ref_curve_ui():
     return ui.TagList(
-        explanation_card(
-            "Empirical Scoring Curve",
-            ui.tags.p(
-                "The reference curve is seeded from the empirical distribution of "
-                "reference-standard sites and can be manually revised below by "
-                "editing metric/index score points."
-            ),
-            ui.tags.p(
-                "Functional categories: ",
-                ui.tags.span("Functioning (0.70-1.00)", class_="text-success fw-bold"),
-                " | ",
-                ui.tags.span("At-Risk (0.30-0.69)", class_="text-warning fw-bold"),
-                " | ",
-                ui.tags.span("Not Functioning (0.00-0.29)", class_="text-danger fw-bold"),
-            ),
+        ui.div(
+            ui.tags.span("Functioning (0.70-1.00)", class_="text-success fw-bold"),
+            " | ",
+            ui.tags.span("At-Risk (0.30-0.69)", class_="text-warning fw-bold"),
+            " | ",
+            ui.tags.span("Not Functioning (0.00-0.29)", class_="text-danger fw-bold"),
+            class_="small mb-2",
+            title="The curve is seeded from the empirical distribution of "
+                  "reference sites; edit the points below to revise it.",
         ),
         ui.output_ui("curve_ui"),
     )

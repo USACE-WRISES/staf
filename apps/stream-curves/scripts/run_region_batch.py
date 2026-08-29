@@ -4,10 +4,13 @@ end-review packet, then a zero-recompute promote after the owner's review.
     stage    run the evidence pass once, apply the standing-decision policy to
              the review queue (re-assembling the decision-dependent tail until
              the queue stops changing), publish into the STAGED library root
-             under <out>/library, and write review_packet.md for the owner.
+             under <out>/library as a draft, and write review_packet.md.
     promote  after the end review: confirm the staged decisions under the
              owner's name (with any recorded overrides), verify nothing drifted,
-             and publish the same content into the canonical apps/library.
+             and publish the same content into the canonical apps/library —
+             as a Draft by default (the curves still await an in-app review;
+             approve them from the Validate page or pass --status preliminary
+             for a packet that was reviewed exhaustively).
     replay   apply the policy to published versions offline and report whether
              it reproduces their recorded decisions.
     stage-many
@@ -44,6 +47,7 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 
 _APP_ROOT = Path(__file__).resolve().parent.parent
 if str(_APP_ROOT) not in sys.path:
@@ -220,8 +224,12 @@ def cmd_stage(a) -> int:
         a.l3, a.name, screen_preset=a.screen, do_screen=not a.no_screen,
         use_streamcat=not a.no_streamcat, cache_dir=out_dir,
         diagnostics_n_boot=a.n_boot,
-        nrsa_dataset_id=getattr(a, "nrsa_dataset", nrsa_dataset.DEFAULT_DATASET_ID),
-        nrsa_cycles=getattr(a, "nrsa_cycles", None),
+        # Direct attribute reads, deliberately: a getattr fallback here once let a
+        # hand-built Namespace (stage-many's) drop the dataset flag and silently
+        # run legacy data. A missing attribute must fail loudly.
+        nrsa_dataset_id=a.nrsa_dataset,
+        nrsa_cycles=a.nrsa_cycles,
+        predictor_source=a.predictor_source,
         on_event=lambda ev: print(f"[screen] {ev}") if isinstance(ev, str) else None)
     print(f"[batch] evidence: {evidence['n_retained']} / {evidence['n_candidates']} retained "
           f"(tier {evidence['tier']['reference_tier']}, pool {evidence['reference_pool_disposition']}), "
@@ -314,8 +322,9 @@ def cmd_stage(a) -> int:
     if result.get("bundle") is not None:
         try:
             publish_info = ra.publish(result, staged_root, maintainer=a.maintainer,
-                                      provenance=doc, portfolio_approvals=approvals)
-            print(f"[batch] staged v{publish_info['version']} -> {publish_info['path']}")
+                                      provenance=doc, portfolio_approvals=approvals,
+                                      status="draft")
+            print(f"[batch] staged v{publish_info['version']} (draft) -> {publish_info['path']}")
         except Exception as exc:  # noqa: BLE001
             print(f"[batch] staged publish refused: {exc}")
     else:
@@ -366,67 +375,19 @@ def cmd_stage(a) -> int:
 # --------------------------------------------------------------------------- #
 # promote
 # --------------------------------------------------------------------------- #
-SCOPE_CHANGING = ("reject", "request_additional_analysis")
-
-
-PENDING_ORIGIN_SUFFIX = "_pending_owner_approval"
+# Confirmation itself lives in decisions.confirm_pending_decisions, the one
+# implementation the in-app publish shares. The script keeps the CLI concerns:
+# SystemExit instead of ValueError. The names below stay as aliases.
+SCOPE_CHANGING = dec.SCOPE_CHANGING
+PENDING_ORIGIN_SUFFIX = dec.PENDING_ORIGIN_SUFFIX
 
 
 def _confirm_doc(doc: dict, *, reviewer: str, date: str, overrides: dict) -> tuple[dict, list[str]]:
-    """Rewrite the pending reviewer on every policy decision to the confirming
-    owner, apply rationale-level overrides, and re-run the consistency lint."""
-    applied: list[str] = []
-    records = doc.get("records") or []
-    for rec in records:
-        key = f"{rec.get('rule_id')}:{rec.get('subject')}"
-        ov = overrides.get(key)
-        pending = dec.PENDING_SUFFIX in str(rec.get("reviewer") or "")
-        if ov:
-            action, rationale = ov
-            if action in SCOPE_CHANGING or (rec.get("reviewer_action") in SCOPE_CHANGING
-                                            and action not in SCOPE_CHANGING):
-                raise SystemExit(
-                    f"override {key}={action} changes the scope of the staged version "
-                    "(a finalization, removal, or approval would change). Re-stage with the "
-                    "decision as an input instead of overriding at promote.")
-            rec["reviewer_action"] = action
-            rec["reviewer_rationale"] = rationale
-            rec["reviewer_decision_class"] = "owner-override"
-            rec["reviewer_rationale_origin"] = "owner_written"
-            applied.append(key)
-            pending = True
-        if pending or ov:
-            problems = pv.decision_consistency_problems(
-                rec, {"rationale": rec.get("reviewer_rationale"),
-                      "asserts": rec.get("reviewer_asserts") or {}})
-            if problems:
-                raise SystemExit(f"{key}: " + "; ".join(problems))
-            rec["reviewer"] = reviewer
-            rec["reviewed_at"] = date
-            origin = str(rec.get("reviewer_rationale_origin") or "")
-            if origin.endswith(PENDING_ORIGIN_SUFFIX):
-                # an owner-drafted entry staged ahead of the end review: the
-                # confirmation turns "pending owner approval" into "owner approved"
-                rec["reviewer_rationale_origin"] = (origin[: -len(PENDING_ORIGIN_SUFFIX)]
-                                                    + "_owner_approved")
-    for item in (doc.get("reviewQueue") or {}).get("items") or []:
-        key = item.get("item_id")
-        ov = overrides.get(key)
-        if ov:
-            item["reviewer_action"], item["reviewer_rationale"] = ov
-        if dec.PENDING_SUFFIX in str(item.get("reviewer") or "") or ov:
-            item["reviewer"] = reviewer
-            item["reviewed_at"] = date
-    unknown = sorted(set(overrides) - set(applied)
-                     - {i.get("item_id") for i in (doc.get("reviewQueue") or {}).get("items") or []})
-    if unknown:
-        raise SystemExit(f"overrides name items that are not on the record: {', '.join(unknown)}")
-    sd = (doc.get("manifest") or {}).get("standingDecisions")
-    if isinstance(sd, dict):
-        sd["confirmedBy"] = reviewer
-        sd["confirmedAt"] = date
-        sd["overrides"] = applied
-    return doc, applied
+    try:
+        return dec.confirm_pending_decisions(doc, reviewer=reviewer, date=date,
+                                             overrides=overrides)
+    except ValueError as exc:
+        raise SystemExit(str(exc)) from exc
 
 
 def cmd_promote(a) -> int:
@@ -493,17 +454,19 @@ def cmd_promote(a) -> int:
     doc.pop("version", None)
     doc.pop("updatedAt", None)
     doc.pop("contentDigest", None)
-    new_version = lib.publish_version(slug, pub_meta, session, bundle, provenance=doc)
+    new_version = lib.publish_version(slug, pub_meta, session, bundle, provenance=doc,
+                                      status=a.status)
     published = lib.load_version_bundle(slug, new_version)
     digest_ok = published.get("contentDigest") == staged_digest
     record = {"stagedVersion": version, "stagedPath": str(vdir), "publishedVersion": new_version,
-              "publishedRoot": str(publish_root), "confirmedBy": a.maintainer,
+              "publishedRoot": str(publish_root), "status": a.status,
+              "confirmedBy": a.maintainer,
               "confirmedAt": date, "overrides": applied,
               "contentDigest": published.get("contentDigest"),
               "contentDigestMatchesStaged": digest_ok}
     (out_dir / "promote_record.json").write_text(json.dumps(record, indent=1) + "\n",
                                                  encoding="utf-8")
-    print(f"[promote] published {slug} v{new_version} -> {publish_root} "
+    print(f"[promote] published {slug} v{new_version} as {a.status} -> {publish_root} "
           f"(content digest {'unchanged' if digest_ok else 'DIFFERS'} from the staged version, "
           f"{len(applied)} override(s), confirmed by {a.maintainer})")
     if not digest_ok:
@@ -567,7 +530,9 @@ def cmd_stage_many(a) -> int:
                 n_boot=a.n_boot, coverage_exceptions=a.coverage_exceptions, policy=a.policy,
                 enable_policy=list(a.enable_policy or []), max_iterations=a.max_iterations,
                 approve_portfolio=[], reviewer_decisions=None, finalize_metric=[], remove_metric=[],
-                max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved)
+                max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved,
+                nrsa_dataset=a.nrsa_dataset, nrsa_cycles=a.nrsa_cycles,
+                predictor_source=a.predictor_source)
             try:
                 row["exit"] = int(cmd_stage(ns))
             except SystemExit as exc:
@@ -632,13 +597,20 @@ def main(argv=None) -> int:
     s.add_argument("--reviewer-decisions", default=None)
     s.add_argument("--finalize-metric", action="append", default=[])
     s.add_argument("--remove-metric", action="append", default=[])
-    s.add_argument("--nrsa-dataset", default=nrsa_dataset.DEFAULT_DATASET_ID,
+    s.add_argument("--nrsa-dataset", default=nrsa_dataset.default_build_dataset_id(),
                    choices=nrsa_dataset.available_datasets(),
-                   help="which NRSA data to read; the default is the bundled "
-                        "2018-19 snapshot every published assessment used")
+                   help="which NRSA data to read; the default is the pooled multi-cycle "
+                        "archive when this checkout has built it; pass legacy-1819 to "
+                        "reproduce the published assessments' inputs")
     s.add_argument("--nrsa-cycle", action="append", dest="nrsa_cycles",
                    choices=list(nrsa_dataset.CYCLES_NEWEST_FIRST),
                    help="repeatable; limit a pooled run to these survey cycles")
+    s.add_argument("--predictor-source", default="streamcat",
+                   choices=("streamcat", "site-engine"),
+                   help="which source computes the curve predictors; site-engine "
+                        "recomputes them at the training sites with the vendored "
+                        "site computation engine (about a minute per uncached "
+                        "site) and stamps the bundle predictorSource")
     s.add_argument("--max-unresolved-share", type=float, default=0.10,
                    help="refuse to stage when more than this share of candidates is unresolved by the screen")
     s.add_argument("--allow-unresolved", action="store_true",
@@ -660,13 +632,17 @@ def main(argv=None) -> int:
     m.add_argument("--policy", default=None)
     m.add_argument("--enable-policy", action="append", default=[], metavar="ID")
     m.add_argument("--max-iterations", type=int, default=3)
-    m.add_argument("--nrsa-dataset", default=nrsa_dataset.DEFAULT_DATASET_ID,
+    m.add_argument("--nrsa-dataset", default=nrsa_dataset.default_build_dataset_id(),
                    choices=nrsa_dataset.available_datasets(),
-                   help="which NRSA data to read; the default is the bundled "
-                        "2018-19 snapshot every published assessment used")
+                   help="which NRSA data to read; the default is the pooled multi-cycle "
+                        "archive when this checkout has built it; pass legacy-1819 to "
+                        "reproduce the published assessments' inputs")
     m.add_argument("--nrsa-cycle", action="append", dest="nrsa_cycles",
                    choices=list(nrsa_dataset.CYCLES_NEWEST_FIRST),
                    help="repeatable; limit a pooled run to these survey cycles")
+    m.add_argument("--predictor-source", default="streamcat",
+                   choices=("streamcat", "site-engine"),
+                   help="which source computes the curve predictors (see stage)")
     m.add_argument("--max-unresolved-share", type=float, default=0.10)
     m.add_argument("--allow-unresolved", action="store_true")
     m.set_defaults(fn=cmd_stage_many)
@@ -679,6 +655,10 @@ def main(argv=None) -> int:
     p.add_argument("--override", action="append", default=[], metavar="ITEM=ACTION:RATIONALE")
     p.add_argument("--date", default=None)
     p.add_argument("--rebake-deep", action="store_true")
+    p.add_argument("--status", choices=("draft", "preliminary"), default="draft",
+                   help="lifecycle status for the promoted version: draft (default; the "
+                        "decisions are confirmed but no one reviewed the curves in the "
+                        "app) or preliminary (the packet was reviewed exhaustively)")
     p.set_defaults(fn=cmd_promote)
 
     r = sub.add_parser("replay", help="apply the policy to published versions offline")

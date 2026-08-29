@@ -51,6 +51,12 @@ _PAIRWISE_COLUMNS = [
     "p_adjusted",
 ]
 
+# The R original's phase-1 selection cut (raw Kruskal-Wallis p, not the BH q of
+# the pairwise table). Mirrored by stratifier_rules.screening_significance_alpha
+# and verified by methodology.mirror_drift; the parity port keeps the value
+# structural rather than injected.
+SCREENING_ALPHA = 0.05
+
 
 # --------------------------------------------------------------------------- #
 # Small R-semantics helpers (shared with effects.py).
@@ -315,7 +321,7 @@ def screen_stratification(
 
     # ── Classification ──────────────────────────────────────────────────────
     classification = "not_selected"
-    if not np.isnan(test_p) and test_p < 0.05:
+    if not np.isnan(test_p) and test_p < SCREENING_ALPHA:
         classification = "selected"
     if min_n < min_group_size:
         classification = classification + "_sparse"

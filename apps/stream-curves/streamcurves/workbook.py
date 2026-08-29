@@ -1632,9 +1632,17 @@ def overlay_metric_settings(tables, metric_config) -> dict:
                 # missing value; the blank is what the reader turns back into None.
                 value = ""
             elif isinstance(value, (int, float)):
-                # Sheet columns are text; a declared domain edge travels as its
-                # repr and the reader parses it back (2026-08-21).
-                value = repr(float(value))
+                if pd.api.types.is_numeric_dtype(metrics[field]):
+                    # The rare typed sheet column (min_sample_size is int64 on a
+                    # fresh build): keep the native number; a repr string raises
+                    # on pandas 3's block setitem.
+                    value = (int(value)
+                             if pd.api.types.is_integer_dtype(metrics[field])
+                             else float(value))
+                else:
+                    # Sheet columns are text; a declared domain edge travels as
+                    # its repr and the reader parses it back (2026-08-21).
+                    value = repr(float(value))
             metrics.at[idx, field] = value
     tables["metrics"] = metrics
     return tables

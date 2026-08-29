@@ -1,8 +1,8 @@
 {
   "meta": {
-    "methodology_version": "0.8-provisional",
-    "date": "2026-08-23",
-    "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged. v0.6 (2026-08-21) is the adversarial-review release: REF-02 and the DATA sample floors (DATA-04 to DATA-08) return to provisional because the pilots mechanism-verified the implementation without calibrating the values (calibrated is reserved for external evidence); REF-02's automatic trigger fires only below the DATA-05 exploratory floor; CURVE-02 is renamed Leave-one-site-out stability and the confidence vocabulary drops out-of-sample (the component is resampling_stability, the cap no_stability_evidence); CONF-02 gains a mandatory_review_open cap of 79 and a deferred_gradient deduction of 10; the seed clamps to declared physical domains, signed scales are declared, and a two-sided curve may declare a flat low tail. No numeric threshold value moved. v0.7 (2026-08-22) adds standing decisions: the owner's class decisions from the two pilots (standing_decisions.yaml) may be applied per item by a batch run to a staged version, with the owner's end review before any canonical publish; SELECT-01 records count the bundle's metric blocks as well as the compact portfolio. No threshold value or status changed. v0.8 (2026-08-23) adds a second NRSA data source. Runs may now draw candidates from a multi-cycle archive pooling the 2013-14, 2018-19 and 2023-24 surveys instead of the bundled 2018-19 snapshot, under a most-recent-visit policy: each distinct station contributes one row, taken from the newest cycle that carries the metrics the run needs, with every excluded station recorded in a ledger. The default is unchanged, so a run that does not ask for the archive reproduces its inputs digest exactly. The digest itself now carries the dataset id, its cycles and the policy, because two runs over one ecoregion on different data must not share a digest. No threshold value or status changed.",
+    "methodology_version": "0.9-provisional",
+    "date": "2026-08-27",
+    "description": "Machine-readable rule catalog for the StreamCurves regional-model methodology. Each rule carries a threshold_status (provisional | calibrated | approved) and an implementation_status (implemented | partial | not_yet_implemented) mapped to the real StreamCurves code, so the catalog never claims the app does something it does not. Thresholds mirror config/methodology_config.yaml; prose lives in ../methodology.md. v0.3 recalibrated the DATA sample-size floors on the two pilots. v0.4 (2026-08-21) records the Wave 3 implementation: the formerly missing machinery (LOO stability, bootstrap intervals and stability, influence, stratifier CV and AICc evidence, missingness actions, shape-conflict checks, numeric confidence with caps, the metric score, and the publish gates) now runs, so 39 of 42 rules are implemented. No threshold value changed in v0.4; threshold statuses were untouched. v0.5 (2026-08-21) promotes REF-02's threshold status to calibrated on the Eastern Corn Belt Plains pilot evidence (owner decision), values unchanged. v0.6 (2026-08-21) is the adversarial-review release: REF-02 and the DATA sample floors (DATA-04 to DATA-08) return to provisional because the pilots mechanism-verified the implementation without calibrating the values (calibrated is reserved for external evidence); REF-02's automatic trigger fires only below the DATA-05 exploratory floor; CURVE-02 is renamed Leave-one-site-out stability and the confidence vocabulary drops out-of-sample (the component is resampling_stability, the cap no_stability_evidence); CONF-02 gains a mandatory_review_open cap of 79 and a deferred_gradient deduction of 10; the seed clamps to declared physical domains, signed scales are declared, and a two-sided curve may declare a flat low tail. No numeric threshold value moved. v0.7 (2026-08-22) adds standing decisions: the owner's class decisions from the two pilots (standing_decisions.yaml) may be applied per item by a batch run to a staged version, with the owner's end review before any canonical publish; SELECT-01 records count the bundle's metric blocks as well as the compact portfolio. No threshold value or status changed. v0.8 (2026-08-23) adds a second NRSA data source. Runs may now draw candidates from a multi-cycle archive pooling the 2013-14, 2018-19 and 2023-24 surveys instead of the bundled 2018-19 snapshot, under a most-recent-visit policy: each distinct station contributes one row, taken from the newest cycle that carries the metrics the run needs, with every excluded station recorded in a ledger. The default is unchanged, so a run that does not ask for the archive reproduces its inputs digest exactly. The digest itself now carries the dataset id, its cycles and the policy, because two runs over one ecoregion on different data must not share a digest. No threshold value or status changed. 2026-08-27: the unused standing_policy value is removed from override_permission_values (no rule ever used it; the standing-decision linkage is the standing_decision_ids cross-links instead). No rule, threshold value or status changed. v0.9 (2026-08-27) is the governance-capture release, driven by a reproducibility audit of the published versions: config keys that read as governance but were never loaded now either govern (metric_portfolio.default_maximum_metrics_per_function, stratifier_rules.min_group_size_current, the reference_tiers ladder, and stratifier_rules.screening_significance_alpha, renamed from group_difference_fdr_q which mislabeled the acting raw-p cut as a BH q) or are marked declarative in the config comments; the curve engine's hard floor, its single family name, and the screening alpha join the mirror check; golden-master tests pin the curve seed geometry, the confidence assembly formulas, and the screening cuts, recorded as CURVE-10; CURVE-09 implements the measurement-precision floor proposed at v0.6, advisory only, with per-metric floors in config (pH 0.2 su provisional); the redundancy view now honors the low-n and binary-coarseness guards on the RED-01 flag everywhere it is consumed; a partially failed StreamCat fetch reports status partial (refused by batch, gated interactively) instead of ok, and is never cached; the screening cache is keyed to its candidate panel and refetches when stale; the bootstrap depth joins the inputs digest under absence semantics (the canonical 1000 adds no key, so published digests reproduce) and both entry points default to 1000; the mandatory-review rule list and the uncovered-hard-stop trigger list are single-sourced. No published threshold value moved.",
     "status_legend": {
       "threshold_status": {
         "provisional": "Operating default, not yet calibrated. Never describe as validated.",
@@ -18,17 +18,9 @@
     "override_permission_values": [
       "none",
       "human_review",
-      "maintainer",
-      "standing_policy"
+      "maintainer"
     ],
     "future_rules": [
-      {
-        "proposed_id": "CURVE-09",
-        "name": "Measurement-precision floor for two-sided curves",
-        "purpose": "A two-sided Functioning core narrower than about twice the documented measurement standard deviation of the metric (NRSA QAPP precision values) flags the curve, because band assignments inside such a core are measurement noise presented as condition classes.",
-        "origin": "Adversarial review 2026-08-21 (ECO-2, STAT-13). The Eastern Corn Belt Plains pH curve (core 0.196 units at n = 16) was removed from scoring by recorded owner decision pending this rule.",
-        "status": "proposed, not implemented"
-      },
       {
         "proposed_id": "CURVE-04b",
         "name": "Scale-free influence threshold",
@@ -234,7 +226,7 @@
       "threshold_status": "provisional",
       "implementation_status": "implemented",
       "maps_to": "streamcurves/overlap.py (Spearman-primary flag, config threshold); agent and interactive view share it",
-      "note": "Resolved v0.4: the divergence is closed, Pearson rides along as supporting output.",
+      "note": "Resolved v0.4: the divergence is closed, Pearson rides along as supporting output. v0.9: the redundancy view consumes the computed flag, so the low-n and binary-coarseness guards apply everywhere the flag is read. The regional keeper choice for a flagged same-function pair is a recorded owner decision (class red01-keep-both-distinct-axes, e.g. NEH conductivity/pH); the standing policy deliberately never makes it.",
       "outcomes": {
         "pass": "not strongly redundant",
         "review": "n/a",
@@ -656,7 +648,7 @@
       },
       "confidence_effect": "resampling_stability",
       "override_permission": "human_review",
-      "note": "v0.6: every interval carries n_matched (the structure-reproducing resamples it summarizes) and the structure_stability rate is reported beside it, because the percentiles condition on matched resamples (review STAT-4). The point intervals ride in the CURVE-06 provenance record (S-02)."
+      "note": "v0.6: every interval carries n_matched (the structure-reproducing resamples it summarizes) and the structure_stability rate is reported beside it, because the percentiles condition on matched resamples (review STAT-4). The point intervals ride in the CURVE-06 provenance record (S-02). v0.9: accepting a fallback/degenerate curve without an interval is a recorded owner decision under class curve06-no-interval-fallback-curve (ECBP v3 precedent); the class is documented here so replay recognizes it, and it stays owner-only."
     },
     {
       "id": "CURVE-07",
@@ -675,7 +667,7 @@
       },
       "confidence_effect": "statistical_strength",
       "override_permission": "human_review",
-      "note": "Owner decision S-01 (2026-08-21): scoped to the regression-candidate track where residual diagnostics exist; not applicable by family for IQR-seed curves.",
+      "note": "Owner decision S-01 (2026-08-21): scoped to the regression-candidate track where residual diagnostics exist; not applicable by family for IQR-seed curves. v0.9: accepting a fallback (degenerate) curve as preliminary is a recorded owner decision under class curve07-fallback-curve-preliminary (ECBP v3 precedent); documented here so replay recognizes it, and it stays owner-only.",
       "standing_decision_ids_optional": [
         "curve07-thin-metric-finalized"
       ]
@@ -716,6 +708,44 @@
       },
       "confidence_effect": "rule_completeness_agreement",
       "override_permission": "maintainer"
+    },
+    {
+      "id": "CURVE-09",
+      "family": "CURVE",
+      "name": "Measurement-precision floor (two-sided cores)",
+      "purpose": "A two-sided Functioning core narrower than the metric's documented measurement precision allows presents measurement noise as condition classes; such a curve is flagged for review.",
+      "test": "functioning_core_width < measurement_precision_core_multiple * precision_sd (metrics with a declared floor only)",
+      "threshold": "core < 2 x precision SD",
+      "threshold_status": "provisional",
+      "implementation_status": "implemented",
+      "maps_to": "streamcurves/provenance.py build_records (CURVE-09 records + measurement_precision_floor queue items); floors in methodology_config.yaml curve_rules.measurement_precision_floors",
+      "outcomes": {
+        "pass": "core resolvable at instrument precision",
+        "review": "narrow core -> measurement_precision_floor review item",
+        "fail": "n/a (advisory; exclusion stays a recorded human decision)"
+      },
+      "confidence_effect": "none directly (advisory queue item; no automatic cap)",
+      "override_permission": "human_review",
+      "note": "v0.9 (2026-08-27): implements the future rule proposed at v0.6 (adversarial review ECO-2/STAT-13). Origin: the ECBP pH curve (core 0.196 su at n = 16) was removed from scoring by recorded owner decision under class measurement-precision-floor, whose rationale called itself 'the proposed rule'. Advisory only: nothing is auto-removed. The pH 0.2 su floor is provisional; floors for further analytes are added to the config as they are documented."
+    },
+    {
+      "id": "CURVE-10",
+      "family": "CURVE",
+      "name": "Curve construction geometry",
+      "purpose": "The IQR-seed geometry (seed coordinates, index ladders, degenerate fallbacks, R type-7 quantiles) is the method itself: it lives in code, is version-stamped, and may only change loudly.",
+      "test": "golden-master fixtures reproduce the exact seed points for every structural branch (rising, signed, falling, optimum, flat low tail, degenerate-Q25, below-floor)",
+      "threshold": "structural (no tunable value)",
+      "threshold_status": "approved",
+      "implementation_status": "implemented",
+      "maps_to": "streamcurves/curves.py (seed geometry, CURVE_ENGINE_HARD_FLOOR_N, CURVE_FAMILY); tests/test_golden_masters.py; run_state.CURVE_METHOD_VERSION",
+      "outcomes": {
+        "pass": "the engine matches the pinned geometry",
+        "review": "n/a",
+        "fail": "a golden-master failure blocks the change until the methodology version is bumped and this catalog notes the revision"
+      },
+      "confidence_effect": "none (definitional)",
+      "override_permission": "maintainer",
+      "note": "v0.9 (2026-08-27), owner capture decision: the geometry stays code rather than config, because thirty seed coordinates in YAML would invite unreviewed tuning; the golden masters make any change loud, and the methodology version (embedded in the run seed) pins which geometry produced a run."
     },
     {
       "id": "REF-01",

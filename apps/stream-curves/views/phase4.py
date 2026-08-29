@@ -1123,8 +1123,8 @@ def phase4_server(
         ca.sync_curve_review_after_recompute(state, [metric])
 
         ui.notification_show(
-            f"{mc.get('display_name') or metric} — all {len(info['levels'])} "
-            "strata marked complete!",
+            f"{mc.get('display_name') or metric}: all {len(info['levels'])} "
+            "strata marked complete.",
             type="message", duration=5,
         )
         st.notify_workspace_refresh(state)

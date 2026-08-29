@@ -24,6 +24,7 @@ Pure: dicts in, dicts out. The CLI writes the files.
 
 from __future__ import annotations
 
+import copy
 import logging
 import os
 import platform
@@ -37,8 +38,13 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
+from . import curves as curve_engine
 from . import methodology, run_state
 from .nrsa_dataset import DEFAULT_DATASET_ID as LEGACY_DATASET_ID
+
+# The canonical bootstrap depth (the batch runner's default). A run at this
+# depth adds no digest key (absence semantics, like the legacy dataset).
+DIGEST_DEFAULT_N_BOOT = 1000
 
 logger = logging.getLogger("streamcurves")
 
@@ -255,6 +261,19 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
         },
         "streamcat": (result.get("source_reports") or [None])[0],
     }
+    # Predictor source: recorded whenever the run declares one. The DERIVED
+    # value (from the predictor columns actually configured) is authoritative;
+    # the requested flag rides beside it for the audit trail.
+    predictor_source = result.get("predictor_source")
+    if predictor_source and predictor_source != "streamcat":
+        se_report = next((r for r in (result.get("source_reports") or [])
+                          if (r or {}).get("source") == "site_engine"), None)
+        inputs["predictor_source"] = {
+            "source": predictor_source,
+            "requestedFlag": result.get("predictor_source_flag"),
+            "engine": (se_report or {}).get("engine"),
+            "report": se_report,
+        }
 
     manifest = {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
@@ -349,6 +368,22 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "cycles": dataset.get("cycles"),
             "policy": dataset.get("policy"),
         }
+    # Same additive rule for the bootstrap depth: every published version ran at
+    # the batch default (1000), which adds no key, so their digests stay stable.
+    # Any other depth changes the resampling evidence (CURVE-06, RED-06,
+    # STRAT-06) and therefore must change the digest.
+    n_boot = manifest["diagnostics"].get("nBoot")
+    if n_boot not in (None, DIGEST_DEFAULT_N_BOOT):
+        digest_payload["n_boot"] = int(n_boot)
+    # Same additive rule for the predictor source: the StreamCat default adds
+    # no key (every previously published digest reproduces byte for byte); an
+    # engine-sourced build changes the predictors and therefore the digest.
+    ps = inputs.get("predictor_source")
+    if ps:
+        digest_payload["predictor_source"] = {
+            "source": ps.get("source"),
+            "engine": ps.get("engine"),
+        }
     manifest["inputsDigest"] = methodology.inputs_digest(digest_payload)
     return manifest
 
@@ -356,6 +391,17 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
 # --------------------------------------------------------------------------- #
 # Decision records
 # --------------------------------------------------------------------------- #
+def _row_value(row, key):
+    """A finite float from a one-row registry frame (or a plain mapping), else
+    None."""
+    try:
+        v = row[key].iloc[0] if hasattr(row, "iloc") else row.get(key)
+        v = float(v)
+        return v if np.isfinite(v) else None
+    except (KeyError, TypeError, ValueError, IndexError):
+        return None
+
+
 def _record(run_id, region_code, rule_id, subject_kind, subject, *,
             inputs=None, thresholds=None, computed=None,
             verdict=VERDICT_PASS, recommendation=None,
@@ -467,8 +513,8 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             inputs={"source_column": candidate["source_column"],
                     "levels_populated": candidate["levels_populated"]},
             thresholds={"min_group_size": candidate["min_group_size_rule"],
-                        "fdr_q": methodology.threshold(
-                            "stratifier_rules.group_difference_fdr_q")},
+                        "screening_alpha": methodology.threshold(
+                            "stratifier_rules.screening_significance_alpha")},
             computed={"eligible": candidate["eligible"],
                       "level_counts": candidate["level_counts"],
                       "reason": candidate["reason"]},
@@ -483,8 +529,8 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             if r.get("tier") != "Broad-Use Candidate":
                 continue
             add("STRAT-09", "stratifier", str(r["stratification"]),
-                thresholds={"fdr_q": methodology.threshold(
-                    "stratifier_rules.group_difference_fdr_q")},
+                thresholds={"screening_alpha": methodology.threshold(
+                    "stratifier_rules.screening_significance_alpha")},
                 computed={"n_metrics_tested": r.get("n_metrics_tested"),
                           "n_significant": r.get("n_significant"),
                           "consistency_score": r.get("consistency_score"),
@@ -511,8 +557,37 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
             review_triggers=["curve_needs_review"] if flagged else [])
     for metric in (result.get("curve_rows") or {}):
         add("CURVE-01", "metric", metric,
-            computed={"family": "iqr-seed piecewise-linear",
+            computed={"family": curve_engine.CURVE_FAMILY,
                       "method_version": run_state.CURVE_METHOD_VERSION})
+
+    # --- CURVE-09: measurement-precision floor for two-sided cores (v0.9).
+    # Advisory only: a narrow core flags for review, nothing is auto-removed.
+    # Only metrics with a declared precision floor are checked.
+    floors = methodology.threshold(
+        "curve_rules.measurement_precision_floors", {}) or {}
+    core_mult = float(methodology.threshold(
+        "curve_rules.measurement_precision_core_multiple", 2.0))
+    for metric, row in (result.get("curve_rows") or {}).items():
+        precision = floors.get(metric)
+        if precision is None:
+            continue
+        mc = (result.get("metric_config") or {}).get(metric) or {}
+        if str(mc.get("curve_form") or "") != "optimum":
+            continue
+        lo = _row_value(row, "functioning_min")
+        hi = _row_value(row, "functioning_max")
+        if lo is None or hi is None:
+            continue
+        core = float(hi) - float(lo)
+        narrow = core < core_mult * float(precision)
+        add("CURVE-09", "metric", metric,
+            thresholds={"precision_sd": float(precision),
+                        "core_multiple": core_mult},
+            computed={"functioning_core_width": core},
+            verdict=VERDICT_REVIEW if narrow else VERDICT_PASS,
+            review_required=narrow,
+            review_triggers=["measurement_precision_floor"] if narrow else [])
+
     for entry in (result.get("flagged_direction") or []):
         if entry.get("documented"):
             # A human-decided, recorded exclusion is a resolved expectation,
@@ -540,6 +615,8 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
     for block in ((result.get("bundle") or {}).get("metricsByFunction") or []):
         bundle_blocks[str(block.get("functionId"))] = [
             str(m.get("metricId")) for m in (block.get("metrics") or [])]
+    max_per_fn = int(methodology.threshold(
+        "metric_portfolio.default_maximum_metrics_per_function"))
     for entry in (result.get("portfolio") or []):
         n_metrics = len(entry.get("metrics") or [])
         fid = entry.get("function_id") or entry.get("function")
@@ -547,11 +624,13 @@ def build_records(result: dict, manifest: dict, *, timestamp=None) -> list[dict]
         n_bundle = len(in_bundle) if in_bundle is not None else None
         n_review = max(n_metrics, n_bundle or 0)
         add("SELECT-01", "function", fid,
+            thresholds={"metric_portfolio.default_maximum_metrics_per_function":
+                        max_per_fn},
             computed={"n_metrics": n_metrics, "bundle_n_metrics": n_bundle,
                       "bundle_metrics": in_bundle},
-            verdict=VERDICT_REVIEW if n_review > 2 else VERDICT_PASS,
-            review_required=n_review > 2,
-            review_triggers=["more_than_two_metrics"] if n_review > 2 else [])
+            verdict=VERDICT_REVIEW if n_review > max_per_fn else VERDICT_PASS,
+            review_required=n_review > max_per_fn,
+            review_triggers=["more_than_two_metrics"] if n_review > max_per_fn else [])
 
     # --- DATA-01/02/03: missingness dispositions over the reference pool ---
     for metric, info in (result.get("missingness") or {}).items():
@@ -777,6 +856,11 @@ _TRIGGER_TIERS = {
         4, False,
         "Bootstrap intervals could not be derived. Accept the curve without an "
         "interval, or drop the metric?"),
+    "measurement_precision_floor": (
+        3, False,
+        "This two-sided Functioning core is narrower than the metric's "
+        "documented measurement precision allows. Keep the curve flagged, or "
+        "exclude the metric for this region?"),
     "unstable_redundancy_category": (
         3, False,
         "This pair's redundancy category is unstable across resamples. Treat the "
@@ -786,6 +870,16 @@ _TRIGGER_TIERS = {
         "Confidence is capped by rule. Accept the capped score, or address the "
         "capping condition first?"),
 }
+
+#: Triggers an automated run must never publish through while uncovered: the
+#: queue's own blocking trigger plus the two per-curve triggers whose absence of
+#: a recorded decision is itself the problem. decisions.apply_policy reads this
+#: so the policy layer and the queue cannot drift apart.
+UNCOVERED_HARD_STOP_TRIGGERS = ("reference_tier_fallback", "curve_needs_review",
+                                "direction_unresolved")
+assert all(t in UNCOVERED_HARD_STOP_TRIGGERS
+           for t, (_, blocking, _q) in _TRIGGER_TIERS.items() if blocking), \
+    "every blocking queue trigger must be an uncovered hard stop"
 
 
 def build_review_queue(records, manifest: dict, *, generated_at=None,
@@ -918,15 +1012,19 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
             review_required=flagged and (review or {}).get("decision") == "pending",
             review_triggers=["curve_needs_review"] if flagged else [])
         add("CURVE-01", "metric", metric,
-            computed={"family": "iqr-seed piecewise-linear",
+            computed={"family": curve_engine.CURVE_FAMILY,
                       "method_version": run_state.CURVE_METHOD_VERSION})
+    max_per_fn = int(methodology.threshold(
+        "metric_portfolio.default_maximum_metrics_per_function"))
     for block in bundle.get("metricsByFunction") or []:
         n_metrics = len(block.get("metrics") or [])
         add("SELECT-01", "function", block.get("functionId"),
+            thresholds={"metric_portfolio.default_maximum_metrics_per_function":
+                        max_per_fn},
             computed={"n_metrics": n_metrics},
-            verdict=VERDICT_REVIEW if n_metrics > 2 else VERDICT_PASS,
+            verdict=VERDICT_REVIEW if n_metrics > max_per_fn else VERDICT_PASS,
             review_required=False,
-            review_triggers=["more_than_two_metrics"] if n_metrics > 2 else [])
+            review_triggers=["more_than_two_metrics"] if n_metrics > max_per_fn else [])
 
     manifest = {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
@@ -966,6 +1064,86 @@ def build_interactive_provenance(bundle: dict, curve_review: Optional[dict], *,
         },
         "reviewQueue": queue,
     })
+
+
+# --------------------------------------------------------------------------- #
+# Carrying an agent build's provenance through an interactive publish
+# --------------------------------------------------------------------------- #
+INTERACTIVE_REVISION_SCHEMA_VERSION = 1
+
+
+def revision_changes(origin: Optional[dict], *, content_digest: Optional[str] = None,
+                     data_fingerprint=None, mapping_digest: Optional[str] = None,
+                     region_code: Optional[str] = None,
+                     curve_fingerprints: Optional[dict] = None) -> dict:
+    """Coarse what-changed flags for an interactive revision, diffed against the
+    baselines captured when the originating build was opened.
+
+    None-safe on both sides: a baseline the open could not compute is treated as
+    unknown, never as a change. The flags are disclosure, not verification; the
+    session itself is the record of what the human did."""
+    base = (origin or {}).get("baselines") or {}
+
+    def moved(key: str, now) -> bool:
+        was = base.get(key)
+        if was is None or now is None:
+            return False
+        return was != now
+
+    prior = base.get("curve_fingerprints") or {}
+    current = curve_fingerprints or {}
+    return {
+        "contentDigestMatches": bool(content_digest)
+        and content_digest == (origin or {}).get("content_digest"),
+        "dataFingerprintChanged": moved("data_fingerprint", data_fingerprint),
+        "mappingChanged": moved("mapping_digest", mapping_digest),
+        "regionChanged": moved("region_code", region_code),
+        "curvesAdded": sorted(set(current) - set(prior)),
+        "curvesRemoved": sorted(set(prior) - set(current)),
+        "curvesChanged": sorted(k for k in set(prior) & set(current)
+                                if prior[k] != current[k]),
+    }
+
+
+def build_carried_provenance(source_doc: dict, *, origin: dict, publisher: str,
+                             session_name: Optional[str] = None,
+                             changes: Optional[dict] = None,
+                             timestamp=None) -> dict:
+    """The originating run's provenance, republished with one appended
+    interactive-revision entry.
+
+    The manifest, decision records, rules_applied and reviewQueue stay
+    byte-identical to the source document: the build's audit chain describes
+    the build, and the appended ``interactiveRevisions`` entry is what says a
+    human edited the assessment afterwards (who, when, based on which staged
+    content, and what moved at coarse granularity). Stale per-version stamps
+    are stripped the way promote strips them; publish_version re-stamps."""
+    doc = copy.deepcopy(source_doc)
+    for k in ("version", "updatedAt", "contentDigest"):
+        doc.pop(k, None)
+    prior = doc.get("interactiveRevisions")
+    entries = list(prior) if isinstance(prior, list) else []
+    entries.append(jsonable({
+        "schemaVersion": INTERACTIVE_REVISION_SCHEMA_VERSION,
+        "editedBy": publisher,
+        "editedAt": timestamp,
+        "sessionName": session_name,
+        "basedOn": {
+            "kind": (origin or {}).get("kind"),
+            "libraryId": (origin or {}).get("library_id"),
+            "version": (origin or {}).get("version"),
+            "stagedPath": (origin or {}).get("staged_path"),
+            "runDir": (origin or {}).get("run_dir"),
+            "contentDigest": (origin or {}).get("content_digest"),
+            "inputsDigest": source_doc.get("inputsDigest"),
+        },
+        "note": ("The manifest, decision records and review queue describe the "
+                 "originating agent run; this entry records the interactive "
+                 "revision published after it."),
+        "changes": changes or {},
+    }))
+    doc["interactiveRevisions"] = entries
+    return doc
 
 
 #: Phrases a templated rationale uses to assert a computed fact, with the

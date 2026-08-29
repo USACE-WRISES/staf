@@ -90,6 +90,20 @@ def available_datasets() -> list[str]:
     return out
 
 
+def default_build_dataset_id() -> str:
+    """The dataset a NEW automated build reads when the owner does not choose.
+
+    The pooled archive, when this checkout has built it: pooling is what lifts
+    most Level III ecoregions over the DATA-04 sample floor (64 of 85 reach 20
+    candidates against 36 on the 2018-19 snapshot). ``DEFAULT_DATASET_ID`` must
+    stay ``legacy-1819`` regardless: it defines what an *absent* dataset means
+    for published manifests and for the inputs-digest stability rule, so
+    changing it would re-digest work already published. New-build entry points
+    (the batch CLI, the Region builder) call this instead.
+    """
+    return MULTI_CYCLE_DATASET_ID if multi_cycle_available() else LEGACY_DATASET_ID
+
+
 @lru_cache(maxsize=4)
 def load_dataset(dataset_id: str = DEFAULT_DATASET_ID) -> NrsaDataset:
     """Load one dataset. Cached, because the parquet reads are not free."""

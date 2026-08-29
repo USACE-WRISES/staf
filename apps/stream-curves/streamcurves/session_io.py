@@ -110,11 +110,22 @@ SESSION_FIELDS = [
     "curve_review",
     "screening_run",
     "site_exclusions",
+    # Screening skipped on purpose (schema v2, additive; absent reads as None ->
+    # False, which is right for sessions saved before the skip existed).
+    "screening_skipped",
     "validation_records",
     # RED-01 pairwise metric redundancy (schema v2, additive). Absent in every
     # session written before it existed; decode_session_fields returns None for a
     # field a payload does not carry, so no migration is needed.
     "metric_redundancy",
+    # Assessment origin + the originating run's provenance document (schema v2,
+    # additive, same absent-reads-as-None contract). What lets an interactive
+    # publish of an edited agent build carry the build's full record.
+    "assessment_source",
+    "source_provenance",
+    # Standing-decision opt-ins chosen on the Rules page (schema v2, additive);
+    # validated through rules_view.validate_selections on restore.
+    "rule_selections",
 ]
 
 ## Fields whose dict payloads may contain non-serializable cached objects

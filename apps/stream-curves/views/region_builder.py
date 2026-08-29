@@ -30,12 +30,19 @@ from shiny import module, reactive, render, ui
 
 from streamcurves import library as lib
 from streamcurves import nrsa_dataset, region_build as rb
+from streamcurves import rules_view
 from streamcurves import session_io as sio
 from streamcurves import regional_agent as ra
 from views import state as st
 from views.state import AppState
 from views.theme import bi
-from views.uihelpers import guard, not_ready_panel
+from views.uihelpers import (
+    _rules_goto_onclick,
+    guard,
+    linkify_rule_ids,
+    not_ready_panel,
+    rule_chip,
+)
 
 #: Working folder for runs. notes/ is gitignored, which is where the pilots' runs
 #: live, so a build leaves nothing in the tracked tree until it is promoted.
@@ -53,7 +60,7 @@ def _maintainer() -> str:
 def _sites_for(dataset_id: str) -> pd.DataFrame:
     """The candidate site table for a dataset, empty when it is not built here."""
     try:
-        if dataset_id == nrsa_dataset.DEFAULT_DATASET_ID:
+        if dataset_id == nrsa_dataset.LEGACY_DATASET_ID:
             return pd.read_csv(ra._DATA_DIR / "nrsa_sites.csv", dtype={"us_l3code": str})
         ds = nrsa_dataset.load_dataset(dataset_id)
         return ds.sites if hasattr(ds, "sites") else pd.DataFrame()
@@ -163,7 +170,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 ui.notification_show("A build is already running.", type="message",
                                      duration=4)
                 return
-            dataset = input.build_dataset() or nrsa_dataset.DEFAULT_DATASET_ID
+            dataset = input.build_dataset() or nrsa_dataset.default_build_dataset_id()
             rows = {r["code"]: r for r in rb.region_choices(_sites_for(dataset))}
         row = rows.get(code) or {}
         name = row.get("name") or ra.region_name_for(code) or f"Ecoregion {code}"
@@ -174,8 +181,13 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             code, name, out_dir,
             maintainer=_maintainer() or "unknown",
             n_boot=int(input.build_nboot() or 1000),
-            enable_policies=list(input.build_policies() or []),
-            dataset_id=None if dataset == nrsa_dataset.DEFAULT_DATASET_ID else dataset,
+            # The Rules page owns the opt-in selection; validate so a stale id
+            # can never reach --enable-policy (the script would refuse the run).
+            enable_policies=rules_view.validate_selections(
+                state.rule_selections())[0],
+            # Always explicit, so every recorded argv says which data it read.
+            dataset_id=dataset,
+            predictor_source=(input.build_predictor_source() or "streamcat"),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None)
         _launch(run_stage(argv, out_dir))
@@ -190,6 +202,51 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         if d is not None:
             log_text.set(_read(Path(d) / "stage.log"))
 
+
+    @reactive.effect
+    @reactive.event(input.restage_ref02)
+    @guard("build again with REF-02")
+    def _restage_ref02():
+        """Re-stage the shown run with exactly one more flag. The dataset and
+        resamples come from the run's own manifest, so the record differs from
+        the refused run only by the enabled entry."""
+        with reactive.isolate():
+            if running():
+                ui.notification_show("A build is already running.", type="message",
+                                     duration=4)
+                return
+            packet = _packet() or {}
+        run_folder = _active_dir()
+        if run_folder is None:
+            ui.notification_show("No run to build again.", type="warning", duration=4)
+            return
+        manifest = _read_json(Path(run_folder) / "run_manifest.json")
+        if manifest is None:
+            doc = _provenance()
+            manifest = (doc or {}).get("manifest") if isinstance(doc, dict) else None
+        kw = rb.restage_args(packet, manifest)
+        if not kw["l3_code"]:
+            ui.notification_show("The packet names no region.", type="warning",
+                                 duration=5)
+            return
+        # Reflect the enable in the app-wide selection, so the Rules page and
+        # the builder's summary line agree with what this run will record.
+        with reactive.isolate():
+            current = list(state.rule_selections() or [])
+        if rb.REF02_POLICY_ID not in current:
+            state.rule_selections.set(current + [rb.REF02_POLICY_ID])
+        out_dir = Path(run_folder)
+        decisions = out_dir / "owner_decisions.json"
+        gaps = out_dir / "coverage_exceptions.json"
+        argv = rb.stage_command(
+            kw["l3_code"], kw["name"], out_dir,
+            maintainer=_maintainer() or "unknown",
+            n_boot=kw["n_boot"],
+            enable_policies=kw["enable_policies"],
+            dataset_id=kw["dataset_id"],
+            reviewer_decisions=decisions if decisions.exists() else None,
+            coverage_exceptions=gaps if gaps.exists() else None)
+        _launch(run_stage(argv, out_dir))
 
     # ── answering an open item ───────────────────────────────────────────────
     def _active_dir():
@@ -315,6 +372,24 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             ui.notification_show(f"Could not read the assessment: {exc}",
                                  type="error", duration=8)
             return
+        # Origin seed: the staged version's own provenance when one was staged,
+        # else the run folder's decision log when it is a full document. What
+        # lets a later in-app publish carry this build's record instead of
+        # dropping it. Best effort; a missing file never blocks the open.
+        run_folder = _active_dir()
+        approvals = None
+        if staged.get("path"):
+            prov = _read_json(Path(staged["path"]) / lib.PROVENANCE_FILE)
+            digest = (_read_json(Path(staged["path"]) / lib.BUNDLE_FILE)
+                      or {}).get("contentDigest")
+            approvals = (_read_json(Path(staged["path"]) / lib.META_FILE)
+                         or {}).get("portfolioApprovals")
+            seed_kind = "staged"
+        else:
+            doc = _provenance()
+            prov = doc if isinstance(doc, dict) and doc.get("records") is not None else None
+            digest = None
+            seed_kind = "run"
         # The same channel the library picker uses; data_overview owns the restore.
         with reactive.isolate():
             nonce = state.session_restore_nonce() or 0
@@ -322,7 +397,15 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             {"payload": payload,
              "source_name": (f"{(packet.get('region') or {}).get('name') or 'assessment'}"
                              + (f" v{staged.get('version')} (staged)" if staged
-                                else " (built, not staged)"))})
+                                else " (built, not staged)")),
+             "origin_seed": {
+                 "kind": seed_kind,
+                 "staged_path": staged.get("path"),
+                 "run_dir": str(run_folder) if run_folder else None,
+                 "content_digest": digest,
+                 "provenance": prov,
+                 "portfolio_approvals": approvals,
+             }})
         state.session_restore_nonce.set(nonce + 1)
 
     # ── publish ──────────────────────────────────────────────────────────────
@@ -349,7 +432,9 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 disabled="disabled" if blocked else None),
             (ui.div(blocked, class_="text-muted small mt-1") if blocked else
              ui.div("Confirms this run's decisions under your name and publishes it "
-                    "with its own provenance.", class_="text-muted small mt-1")),
+                    "with its own provenance as a Draft. Open it from the library "
+                    "to review the curves, then approve it as Preliminary.",
+                    class_="text-muted small mt-1")),
             class_="mt-3")
 
     @reactive.effect
@@ -367,7 +452,8 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         ui.modal_show(ui.modal(
             ui.p(f"Publish {region} into the shared assessment library?"),
             ui.p("This confirms every standing decision under your name and writes a "
-                 "new version. It cannot be undone from here.",
+                 "new Draft version. Review it in the app and approve it as "
+                 "Preliminary when it is ready. It cannot be undone from here.",
                  class_="text-muted small"),
             title="Publish to the library",
             footer=ui.TagList(
@@ -393,7 +479,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         if active is not None and not active():
             return None
         dataset = input.build_dataset() if "build_dataset" in input else None
-        dataset = dataset or nrsa_dataset.DEFAULT_DATASET_ID
+        dataset = dataset or nrsa_dataset.default_build_dataset_id()
         choices = rb.region_choices(_sites_for(dataset))
         if not choices:
             return not_ready_panel(
@@ -403,9 +489,8 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 icon="database")
         return ui.div(
             ui.h4("Region builder", class_="mb-1"),
-            ui.p("Run the whole workflow for one Level III ecoregion, then review what "
-                 "it decided. The build stages into its own run folder; publishing to "
-                 "the library is a separate step you confirm afterwards.",
+            ui.p("Run the whole workflow for one Level III ecoregion, then review "
+                 "what it decided. Publishing stays a separate step you confirm.",
                  class_="text-muted small"),
             _form(choices, dataset),
             ui.output_ui(ns("run_state")),
@@ -419,38 +504,66 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             n = r["n_candidates"]
             noun = "candidate" if n == 1 else "candidates"
             opts[r["code"]] = f'{r["code"]}  {r["name"]}  ({n} {noun}, {r["label"]})'
-        datasets = nrsa_dataset.available_datasets()
+        # The new-build default lists first, so the select opens on it.
+        datasets = sorted(nrsa_dataset.available_datasets(),
+                          key=lambda d: d != nrsa_dataset.default_build_dataset_id())
+        # Detail rides in tooltips (title=); the form itself stays two lines.
         return ui.div(
             ui.row(
-                ui.column(7, ui.input_select(ns("build_region"), "Ecoregion", opts,
-                                             width="100%")),
-                ui.column(3, ui.input_select(
-                    ns("build_dataset"), "NRSA data",
-                    {d: rb.DATASET_LABELS.get(d, d) for d in datasets},
-                    selected=dataset, width="100%")),
-                ui.column(2, ui.input_numeric(ns("build_nboot"), "Bootstrap resamples",
-                                              value=1000, min=100, max=2000, step=100)),
+                ui.column(7, ui.div(
+                    ui.input_select(ns("build_region"), "Ecoregion", opts,
+                                    width="100%"),
+                    title="Counts are candidate stations before the reference "
+                          "screen, not the pool the curves are built from. "
+                          "Interior Plateau went 25 to 23; Eastern Corn Belt "
+                          "Plains went 18 to zero least-disturbed sites, which "
+                          "triggered its best-available fallback.")),
+                ui.column(3, ui.div(
+                    ui.input_select(
+                        ns("build_dataset"), "NRSA data",
+                        {d: rb.DATASET_LABELS.get(d, d) for d in datasets},
+                        selected=dataset, width="100%"),
+                    title=rb.DATASET_NOTE)),
+                ui.column(2, ui.div(
+                    ui.input_numeric(ns("build_nboot"), "Bootstrap resamples",
+                                     value=1000, min=100, max=2000, step=100),
+                    title=rb.RESAMPLES_NOTE)),
+                ui.column(2, ui.div(
+                    ui.input_select(
+                        ns("build_predictor_source"), "Predictor source",
+                        {"streamcat": "StreamCat (default)",
+                         "site-engine": "Site engine (exact watershed)"},
+                        selected="streamcat", width="100%"),
+                    title="Which source computes the curve predictors. The "
+                          "site engine recomputes them at the training sites "
+                          "(about a minute per uncached site) and stamps the "
+                          "bundle predictorSource for the DEEP pairing rule.")),
             ),
-            ui.p(rb.DATASET_NOTE, class_="text-muted small mb-1"),
-            ui.p(rb.RESAMPLES_NOTE, class_="text-muted small mb-2"),
-            ui.p("The count is candidate stations before the reference screen, not the "
-                 "pool the curves are built from. Interior Plateau went 25 to 23; "
-                 "Eastern Corn Belt Plains went 18 to zero least-disturbed sites, which "
-                 "is what triggered its best-available fallback.",
-                 class_="text-muted small mb-2"),
-            ui.input_checkbox_group(
-                ns("build_policies"),
-                "Standing decisions to enable for this run (all are off by default)",
-                {pid: ui.TagList(ui.tags.strong(label), ui.tags.span(f" {detail}",
-                                                                    class_="text-muted"))
-                 for pid, label, detail in rb.OPTIONAL_POLICIES},
-            ),
+            ui.p(rb.RESAMPLES_HINT, class_="text-muted small mb-2"),
+            ui.output_ui(ns("policy_summary")),
             ui.input_action_button(
                 ns("build_run"), ui.TagList(bi("magic"), " Build this region"),
                 class_="btn btn-primary"),
             ui.tags.span(" Around 35 minutes. You can leave this page; the build keeps "
                          "running.", class_="text-muted small ms-2"),
             class_="rb-form card card-body mb-3",
+        )
+
+    @render.ui
+    def policy_summary():
+        """What the Rules page has enabled for this run, read-only here so the
+        selection has exactly one writer."""
+        labels = {pid: label for pid, label, _ in rb.OPTIONAL_POLICIES}
+        enabled = [labels.get(p, p) for p in (state.rule_selections() or [])]
+        return ui.div(
+            ui.tags.span("Standing decisions enabled for this run: ",
+                         class_="text-muted small"),
+            ui.tags.span("; ".join(enabled) if enabled else "none",
+                         class_="small"),
+            ui.tags.a("Change in Rules", href="javascript:void(0)",
+                      class_="small ms-2",
+                      onclick=_rules_goto_onclick("REF-02")),
+            class_="mb-2",
         )
 
     @render.ui
@@ -492,8 +605,11 @@ def region_builder_server(input, output, session, state: AppState, active=None):
         cov = packet.get("coverage") or {}
         staged = packet.get("staged") or {}
         facts = [
-            ("Reference tier", str(packet.get("reference_tier") or "")
-             + (" (REF-02 fallback)" if packet.get("ref02_triggered") else "")),
+            ("Reference tier", ui.TagList(
+                str(packet.get("reference_tier") or ""),
+                (ui.tags.span(rule_chip("REF-02", label="REF-02 fallback"),
+                              class_="ms-1")
+                 if packet.get("ref02_triggered") else None))),
             ("Screened", f'{screening.get("n_candidates")} candidates, '
                          f'{screening.get("n_retained")} retained '
                          f'({screening.get("pool_disposition") or "?"})'),
@@ -562,15 +678,33 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                           "function is covered. Nothing is left for you to answer.",
                           class_="alert alert-success py-2")
         cards = list(gaps)
+        ref02 = rb.blocking_ref02_item(packet)
         for i, item in enumerate(items):
             ev = item.get("evidence") or {}
+            is_ref02 = (ref02 is not None
+                        and item.get("item_id") == ref02.get("item_id"))
             cards.append(ui.div(
                 ui.div(
                     ui.tags.code(item.get("item_id") or ""),
+                    (ui.tags.span(rule_chip(item["rule_id"]), class_="ms-2")
+                     if item.get("rule_id") else None),
                     (ui.tags.span("BLOCKING", class_="badge bg-danger ms-2")
                      if item.get("blocking") else None),
                     class_="mb-1"),
-                ui.p(item.get("question") or "", class_="mb-1"),
+                ui.p(linkify_rule_ids(item.get("question") or ""), class_="mb-1"),
+                # The one-flag fix for the commonest blocker: 3 of 4 regions
+                # built so far had zero Functioning sites.
+                (ui.div(
+                    ui.input_action_button(
+                        ns("restage_ref02"),
+                        ui.TagList(bi("magic"), " Enable REF-02 and build again"),
+                        class_="btn btn-primary btn-sm"),
+                    ui.tags.span(
+                        " Reuses this run's cached screening and landscape data. "
+                        "The resample diagnostics run again, which is most of the "
+                        "remaining time.",
+                        class_="text-muted small ms-2"),
+                    class_="mb-2") if is_ref02 else None),
                 ui.tags.details(
                     ui.tags.summary("Evidence", class_="text-muted small"),
                     ui.tags.pre(json.dumps(ev, indent=1, default=str),
@@ -583,9 +717,6 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 class_="rb-item border rounded p-2 mb-2"))
         return ui.div(
             ui.h6(f"Items left for you ({len(items) + len(gaps)})"),
-            ui.p("Answers are checked against the run's own records before they are "
-                 "written, so a rationale that contradicts the evidence is caught here "
-                 "rather than by the publish step.", class_="text-muted small"),
             *cards,
             ui.input_action_button(ns("save_decisions"),
                                    ui.TagList(bi("ui-checks"), " Save decisions"),

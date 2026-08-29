@@ -33,7 +33,6 @@ from views import assessment_publish as ap
 from views import summary_state as sst
 from views.state import AppState
 from views.theme import bi
-from views.uihelpers import explanation_card
 
 logger = logging.getLogger("streamcurves")
 
@@ -180,14 +179,6 @@ def summary_export_server(input, output, session, state: AppState):
             return ui.download_button(ns(dl_id), label, class_=cls)
 
         parts = [
-            explanation_card(
-                "Export SQT Deliverables",
-                ui.tags.p(
-                    "Download the finalized reference curves as regulatory SQT "
-                    "deliverables and a portable assessment bundle for the DEEP executor app.",
-                    class_="mb-0",
-                ),
-            ),
             ui.div(
                 ui.card_header("Session Status"),
                 ui.div(

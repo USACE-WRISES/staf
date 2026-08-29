@@ -32,7 +32,13 @@ logger = logging.getLogger("streamcurves")
 
 REGISTRY_PATH = CONFIG_DIR / "national_stratifier_registry.yaml"
 
-DEFAULT_MIN_GROUP_SIZE = 5
+
+def default_min_group_size() -> int:
+    """The eligibility floor for candidates whose registry entry declares no
+    min_group_size of its own. stratifier_rules.min_group_size_current GOVERNS
+    this (it used to be a decorative config key beside a hard-coded 5)."""
+    from . import methodology
+    return int(methodology.threshold("stratifier_rules.min_group_size_current"))
 
 #: One row per registered candidate, eligible or not.
 LEDGER_COLUMNS = [
@@ -165,7 +171,7 @@ def assess_eligibility(
     registry: dict,
     *,
     skipped: dict | None = None,
-    min_group_size_default: int = DEFAULT_MIN_GROUP_SIZE,
+    min_group_size_default: int | None = None,
 ) -> pd.DataFrame:
     """One row per registered candidate, eligible or not, with a reason.
 
@@ -175,6 +181,8 @@ def assess_eligibility(
     """
     skipped = skipped or {}
     rows = []
+    if min_group_size_default is None:
+        min_group_size_default = default_min_group_size()
 
     for strat_key, cfg in (registry.get("candidates") or {}).items():
         cfg = cfg or {}
@@ -274,6 +282,11 @@ def strat_config_for(registry: dict, keys, data: pd.DataFrame) -> dict:
         cfg["pairwise_comparisons"] = auto_pairwise_values(cfg["levels"])
         cfg.setdefault("derived_column_name", column)
         cfg["column_name"] = column
+        # The screening/feasibility engines are deliberately config-free, so the
+        # governed default is resolved here for any candidate whose registry
+        # entry declares no floor of its own.
+        if cfg.get("min_group_size") is None:
+            cfg["min_group_size"] = default_min_group_size()
         out[strat_key] = cfg
 
     return out

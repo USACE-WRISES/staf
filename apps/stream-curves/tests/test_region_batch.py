@@ -170,7 +170,11 @@ def staged_run(tmp_path_factory):
     env = dict(os.environ)
     env.pop("STAF_LIBRARY_ROOT", None)
     proc = subprocess.run(
+        # Pinned to the legacy snapshot: this module tests the stage/promote
+        # machinery, whose assertions are calibrated on the 18-candidate pilot.
+        # New builds default to the pooled archive (tested in the wiring module).
         [sys.executable, str(SCRIPT), "stage", "--l3", L3, "--name", NAME, "--out", str(out),
+         "--nrsa-dataset", "legacy-1819",
          "--no-screen", "--no-streamcat", "--n-boot", "20", "--maintainer", "tester",
          "--coverage-exceptions", str(exceptions),
          "--enable-policy", "curve07-thin-metric-finalized",
@@ -234,6 +238,44 @@ def test_promote_keeps_the_digest_and_names_the_owner(staged_run, tmp_path):
     meta = json.loads((vdir / "meta.json").read_text(encoding="utf-8"))
     for a in meta.get("portfolioApprovals") or []:
         assert a["approvedBy"] == "owner"
+    # Automation output is a Draft until a human reviews the curves in the app:
+    # both the staged root and the promoted version carry the status, and the
+    # promote record says which status was chosen.
+    assert record["status"] == "draft"
+    env2 = dict(os.environ)
+    env2["STAF_LIBRARY_ROOT"] = str(target)
+    check = subprocess.run(
+        [sys.executable, "-c",
+         "from streamcurves import library as lib; "
+         "print(lib.version_status('eastern-corn-belt-plains', "
+         f"{record['publishedVersion']}))"],
+        capture_output=True, text=True, env=env2, timeout=120,
+        cwd=str(SCRIPT.parents[1]))
+    assert check.stdout.strip() == "draft", check.stdout + check.stderr
+    staged_status = json.loads(
+        (out / "library" / "assessments" / "eastern-corn-belt-plains" /
+         "status.json").read_text(encoding="utf-8"))
+    assert staged_status["history"][0]["status"] == "draft"
+
+
+def test_promote_status_preliminary_when_the_packet_was_reviewed(staged_run, tmp_path):
+    out, _ = staged_run
+    target = tmp_path / "promoted-prelim"
+    (target / "assessments").mkdir(parents=True)
+    env = dict(os.environ)
+    env.pop("STAF_LIBRARY_ROOT", None)
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT), "promote", "--out", str(out), "--maintainer", "owner",
+         "--publish-root", str(target), "--date", "2026-08-22",
+         "--status", "preliminary"],
+        capture_output=True, text=True, env=env, timeout=300)
+    assert proc.returncode == 0, proc.stdout[-3000:] + proc.stderr[-3000:]
+    record = json.loads((out / "promote_record.json").read_text(encoding="utf-8"))
+    assert record["status"] == "preliminary"
+    status_doc = json.loads(
+        (target / "assessments" / "eastern-corn-belt-plains" /
+         "status.json").read_text(encoding="utf-8"))
+    assert status_doc["history"][0]["status"] == "preliminary"
 
 
 def test_promote_refuses_scope_changing_overrides(staged_run, tmp_path):
@@ -385,7 +427,8 @@ def refused_run(tmp_path_factory):
     env.pop("STAF_LIBRARY_ROOT", None)
     proc = subprocess.run(
         [sys.executable, str(SCRIPT), "stage", "--l3", L3, "--name", NAME,
-         "--out", str(out), "--no-screen", "--no-streamcat", "--n-boot", "20",
+         "--out", str(out), "--nrsa-dataset", "legacy-1819",
+         "--no-screen", "--no-streamcat", "--n-boot", "20",
          "--maintainer", "tester"],
         capture_output=True, text=True, env=env, timeout=900)
     assert proc.returncode == 0, proc.stdout[-3000:] + proc.stderr[-3000:]

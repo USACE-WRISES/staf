@@ -209,6 +209,10 @@ class AppState:
     curve_review: reactive.Value = _rv_factory(dict)
     screening_run: reactive.Value = _rv()
     site_exclusions: reactive.Value = _rv_factory(list)
+    # Screening deliberately skipped: all candidate sites are included without
+    # EASI evidence (exploration workflow). Running or importing a real screen
+    # clears it. Publishing to the library still requires screening (REF-01).
+    screening_skipped: reactive.Value = _rv(False)
     # Live extended tasks by stage key ({stage_key: True}); feeds
     # run_state.derive_stage_status(tasks_running=...) so the stage banner can
     # show a running stage. Transient by design: not in SESSION_FIELDS.
@@ -216,6 +220,24 @@ class AppState:
     # Validation records (restricted): list[dict] of independent-check evidence
     # that a maintainer can attach before certifying a library version.
     validation_records: reactive.Value = _rv_factory(list)
+    # ── assessment origin (provenance carry) ─────────────────────────────────
+    # Where the loaded assessment came from: {kind: "library"|"staged"|"run",
+    # library_id, version, staged_path, run_dir, content_digest, loaded_at,
+    # baselines: {data_fingerprint, mapping_digest, region_code,
+    # curve_fingerprints}}. None for a project built from scratch. Persisted, so
+    # "open staged, save a draft, publish next week" keeps its origin.
+    assessment_source: reactive.Value = _rv()
+    # The originating run's full provenance document, republished by an
+    # interactive publish with an appended interactiveRevisions entry
+    # (provenance.build_carried_provenance). None when the origin carries no
+    # provenance (scratch builds, pre-provenance versions). Persisted.
+    source_provenance: reactive.Value = _rv()
+    # ── standing-decision opt-ins (the Rules page is the only writer) ────────
+    # The per-run-enableable policy entry ids the owner has switched on for
+    # builds started from this app (rules_view.optional_policy_ids vocabulary).
+    # Every build records what was enabled in its own manifest regardless.
+    # Persisted; validated through rules_view.validate_selections on restore.
+    rule_selections: reactive.Value = _rv_factory(list)
 
     # ── root navigation requests (stage banner -> shell) ────────────────────
     # nav_request: a nav_panel value to switch main_navbar to; wizard_step_request:
@@ -239,6 +261,11 @@ class AppState:
     # Header "Open" asks Data & Setup to show the Open dialog (library picker
     # plus project-file upload). Transient: not in SESSION_FIELDS.
     open_dialog_nonce: reactive.Value = _rv(0)
+    # Rules deep link: a rule id chip anywhere in the app asks the Rules page to
+    # scroll to that rule's card after the nav lands. Transient: not in
+    # SESSION_FIELDS.
+    rules_anchor_request: reactive.Value = _rv()
+    rules_anchor_nonce: reactive.Value = _rv(0)
 
     # ── location mirrors (shell/wizard -> workflow strip) ───────────────────
     # The workflow strip derives its "you are here" highlight from these; each
@@ -451,7 +478,11 @@ def reset_app_to_startup(state: AppState) -> None:
         state.run_meta.set(None)
         state.screening_run.set(None)
         state.site_exclusions.set([])
+        state.screening_skipped.set(False)
         state.validation_records.set([])
+        state.assessment_source.set(None)
+        state.source_provenance.set(None)
+        state.rule_selections.set([])
         state.current_metric.set(state.startup_current_metric() or "perRiffle")
         state.app_data_loaded.set(False)
         state.app_reset_nonce.set((state.app_reset_nonce() or 0) + 1)

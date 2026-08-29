@@ -100,6 +100,48 @@ def test_tile_secondary_action_stops_propagation_and_targets_the_table():
         _tile(needs_review=True, decision=rs.DECISION_PENDING), channel_id=CHANNEL)))
 
 
+def test_tile_recompute_action_targets_the_channel_and_spins_when_busy():
+    html = _unescape(str(cg.tile_ui(_tile(), channel_id=CHANNEL)))
+    assert '"action": "recompute"' in html and "curve-tile-recompute" in html
+    busy = _unescape(str(cg.tile_ui(_tile(), channel_id=CHANNEL, busy=True)))
+    assert "streamcurves-inline-spinner" in busy and "disabled" in busy
+    # cross-listed copies carry no recompute button (the primary tile owns it)
+    cross = _unescape(str(cg.tile_ui(
+        _tile(), channel_id=CHANNEL,
+        cross={"primary_function_name": "Hyporheic connectivity"}, under="fn")))
+    assert "curve-tile-recompute" not in cross
+
+
+def test_gallery_toolbar_recompute_all_button():
+    rows = [_tile(metric="a"), _tile(metric="b")]
+    html = str(cg.gallery_ui(rows, channel_id=CHANNEL, filter_input_id=FILTER,
+                             recompute_all_id="gal_recompute"))
+    assert 'id="gal_recompute"' in html and "Recompute all" in html
+    disabled = str(cg.gallery_ui(rows, channel_id=CHANNEL, filter_input_id=FILTER,
+                                 recompute_all_id="gal_recompute",
+                                 recompute_all_disabled=True,
+                                 busy_metrics={"a"}))
+    assert "disabled" in disabled and "streamcurves-inline-spinner" in disabled
+    # without an id, the toolbar carries no recompute button at all
+    plain = str(cg.gallery_ui(rows, channel_id=CHANNEL, filter_input_id=FILTER))
+    assert "Recompute all" not in plain
+
+
+def test_review_queue_breakdown_counts_by_status_label():
+    from views.summary_page import review_queue_breakdown
+
+    review = {
+        "m1": {"status": rs.CURVE_STATUS_INSUFFICIENT},
+        "m2": {"status": rs.CURVE_STATUS_INSUFFICIENT},
+        "m3": {"status": rs.CURVE_STATUS_DEGENERATE},
+        "m4": {},
+    }
+    out = review_queue_breakdown(review, ["m1", "m2", "m3", "m4"])
+    assert "2 Insufficient data" in out
+    assert "1 Degenerate curve" in out
+    assert "1 Needs review" in out
+
+
 def test_review_status_labels_cover_every_status():
     assert set(cg.REVIEW_STATUS_LABELS) == set(rs.CURVE_STATUSES)
     assert cg.DECISION_LABELS[rs.DECISION_REMOVED] == "Removed"

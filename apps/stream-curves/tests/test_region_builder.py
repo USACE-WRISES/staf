@@ -366,8 +366,23 @@ def test_the_dataset_note_corrects_the_obvious_misreading():
     """Only 11 stations appear in all three cycles, so pooling is not repeat
     measurement. A reader who assumes otherwise misreads the sample size."""
     note = rb.DATASET_NOTE
-    assert "not repeat measurements" in note
-    assert "reproducibility" in note, "must say why the older default stands"
+    assert "not repeat visits" in note
+    assert "pooled" in note and "default" in note, "must state the new-build default"
+    assert "reproduce" in note, "must say why 2018-19 stays selectable"
+
+
+def test_the_dataset_labels_list_the_build_default_first():
+    """The select renders in dict order, so the pooled archive leads."""
+    from streamcurves import nrsa_dataset as nd
+    assert list(rb.DATASET_LABELS) == [nd.MULTI_CYCLE_DATASET_ID, nd.LEGACY_DATASET_ID]
+
+
+def test_an_explicit_dataset_always_rides_on_the_command():
+    """The builder passes the dataset unconditionally, so every recorded argv is
+    self-describing even when the choice equals the default."""
+    argv = rb.stage_command("71", "IP", "/tmp/run", maintainer="me",
+                            dataset_id="legacy-1819")
+    assert argv[argv.index("--nrsa-dataset") + 1] == "legacy-1819"
 
 
 def test_the_resamples_note_names_the_rules_it_feeds():
@@ -602,6 +617,72 @@ def test_answered_gaps_ride_into_the_next_build():
     argv = rb.stage_command("52", "Driftless Area", "/tmp/run", maintainer="me",
                             coverage_exceptions="/tmp/run/coverage_exceptions.json")
     assert "--coverage-exceptions" in argv
+
+
+# --------------------------------------------------------------------------- #
+# One-click REF-02 re-stage: the one-flag fix for the commonest blocker
+# (3 of the 4 regions built so far had zero Functioning sites).
+# --------------------------------------------------------------------------- #
+def _refused_packet(enabled=()):
+    """The l3-52 shape: staged refused, one blocking reference-tier item."""
+    return {
+        "region": {"code": "52", "name": "Driftless Area"},
+        "policy": {"version": "1.0", "enabled": list(enabled)},
+        "open_items": [
+            {"item_id": "REF-02:reference_screen", "rule_id": "REF-02",
+             "trigger": "reference_tier_fallback", "blocking": True,
+             "question": "Accept the best-available tier for this region?",
+             "evidence": {"reference_tier": "best_available", "n_retained": 46}},
+            {"item_id": "RED-01:a|b", "rule_id": "RED-01", "trigger": "strong_pair",
+             "blocking": False, "question": "Keep which one?", "evidence": {}},
+        ],
+        "staged": None,
+        "n_boot": 200,
+    }
+
+
+def test_the_blocking_ref02_item_is_found_and_only_when_not_yet_enabled():
+    item = rb.blocking_ref02_item(_refused_packet())
+    assert item and item["item_id"] == "REF-02:reference_screen"
+    assert rb.blocking_ref02_item(_refused_packet(enabled=[rb.REF02_POLICY_ID])) is None
+    assert rb.blocking_ref02_item({"open_items": []}) is None
+    assert rb.blocking_ref02_item(None) is None
+
+
+def test_restage_args_recovers_the_run_record_and_adds_exactly_one_flag():
+    manifest = {"inputs": {"nrsa_dataset": {"datasetId": "multi-cycle-v1"}},
+                "diagnostics": {"nBoot": 1000}}
+    kw = rb.restage_args(_refused_packet(enabled=["data03-thin-metric-finalized"]),
+                         manifest)
+    assert kw == {"l3_code": "52", "name": "Driftless Area", "n_boot": 1000,
+                  "enable_policies": ["data03-thin-metric-finalized",
+                                      rb.REF02_POLICY_ID],
+                  "dataset_id": "multi-cycle-v1"}
+
+
+def test_restage_args_falls_back_to_the_packet_and_the_legacy_dataset():
+    """A run staged before the manifest recorded the dataset: n_boot from the
+    packet, dataset the absence default (legacy)."""
+    kw = rb.restage_args(_refused_packet(), None)
+    assert kw["n_boot"] == 200
+    assert kw["dataset_id"] == "legacy-1819"
+    assert kw["enable_policies"] == [rb.REF02_POLICY_ID]
+
+
+def test_the_restage_command_is_the_same_constructor_with_one_more_flag():
+    kw = rb.restage_args(_refused_packet(), {"diagnostics": {"nBoot": 1000}})
+    # The handler probes the run folder and passes any answered gaps back in,
+    # exactly like a first build (see region_builder._restage_ref02).
+    argv = rb.stage_command(kw["l3_code"], kw["name"], "/tmp/run", maintainer="me",
+                            n_boot=kw["n_boot"],
+                            enable_policies=kw["enable_policies"],
+                            dataset_id=kw["dataset_id"],
+                            coverage_exceptions="/tmp/run/coverage_exceptions.json")
+    assert argv[3] == "stage"
+    assert argv[argv.index("--l3") + 1] == "52"
+    assert argv[argv.index("--enable-policy") + 1] == rb.REF02_POLICY_ID
+    assert argv[argv.index("--nrsa-dataset") + 1] == "legacy-1819"
+    assert argv[argv.index("--n-boot") + 1] == "1000"
     assert argv[argv.index("--coverage-exceptions") + 1].endswith(
         "coverage_exceptions.json")
 

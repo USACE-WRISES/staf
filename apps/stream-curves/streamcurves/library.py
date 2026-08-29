@@ -56,17 +56,59 @@ VALIDATION_UNVALIDATED = "unvalidated"
 VALIDATION_VALIDATED = "validated"
 VALIDATION_STATES = (VALIDATION_UNVALIDATED, VALIDATION_VALIDATED)
 
-# Lifecycle vocabulary (writer side). DEEP the consumer only distinguishes
-# preliminary vs certified; the full 5-state set lives here for history/admin. Only
-# preliminary and certified versions are eligible for new DEEP assessments.
+# Lifecycle vocabulary (writer side). The six states live here for
+# history/admin; DEEP the consumer only distinguishes preliminary vs certified,
+# and only those two are eligible for new DEEP assessments. "draft" is
+# automation output (batch stage/promote, the headless agent) that no human has
+# reviewed curve by curve in the app: never DEEP-eligible, upgraded to
+# preliminary by the Validate page's Approve button or by publishing a reviewed
+# next version. DEFAULT_STATUS stays preliminary: an interactive publish IS the
+# human review, and versions with no status record (v1 libraries) keep reading
+# as preliminary.
 DEFAULT_STATUS = "preliminary"
 VERSION_STATUSES = (
+    "draft",
     "preliminary",
     "under_review",
     "certified",
     "revised",
     "retired",
 )
+
+# The only statuses a FRESH publish may seed. Certification is a separate
+# audited step gated on field validation (set_version_status via the Validate
+# page); letting publish_version seed it would bypass that gate.
+PUBLISH_STATUSES = ("draft", "preliminary")
+
+# Stored literal -> label shown to people. Machine fields (status.json,
+# catalog.json, baked bundles, session provenance) always carry the stored
+# literal; only human-facing text uses these. Keep in sync with the copy in
+# apps/deep/deep/session.py (no shared package yet; the STAF_LINKS precedent).
+STATUS_LABELS = {
+    "draft": "Draft",
+    "preliminary": "Preliminary",
+    "under_review": "Under review",
+    "certified": "Final",
+    "revised": "Revised",
+    "retired": "Retired",
+}
+VALIDATION_LABELS = {
+    VALIDATION_UNVALIDATED: "Unvalidated",
+    VALIDATION_VALIDATED: "Verified",
+}
+
+
+def status_label(status) -> str:
+    """Display label for a lifecycle status; unknown strings title-case rather
+    than render blank."""
+    s = str(status or "").strip().lower()
+    return STATUS_LABELS.get(s) or (s.title() if s else STATUS_LABELS[DEFAULT_STATUS])
+
+
+def validation_label(state) -> str:
+    s = str(state or "").strip().lower()
+    return VALIDATION_LABELS.get(s) or (s.title() if s else
+                                        VALIDATION_LABELS[VALIDATION_UNVALIDATED])
 
 
 # --------------------------------------------------------------------------- #
@@ -326,6 +368,33 @@ def load_version_session(assessment_id: str, version: int) -> dict:
     return session_io.load_session_payload(version_dir(assessment_id, version) / SESSION_FILE)
 
 
+def load_version_provenance(assessment_id: str, version: int) -> Optional[dict]:
+    """The provenance document published beside a version's bundle, or None when
+    that version predates provenance (the SQT-adapted assessments)."""
+    p = version_dir(assessment_id, version) / PROVENANCE_FILE
+    return _read_json(p) if p.is_file() else None
+
+
+def load_version_meta(assessment_id: str, version: int) -> dict:
+    """One published version's meta.json (name, citation, portfolioApprovals),
+    or {} when absent."""
+    p = version_dir(assessment_id, version) / META_FILE
+    return _read_json(p) if p.is_file() else {}
+
+
+def version_content_digest(assessment_id: str, version: int) -> Optional[str]:
+    """The recorded ``contentDigest`` of one published version, or None when
+    nothing records one (manifest first, bundle as the fallback)."""
+    manifest = read_manifest(assessment_id) or {}
+    for v in manifest.get("versions") or []:
+        if int(v.get("version") or 0) == int(version) and v.get("contentDigest"):
+            return str(v["contentDigest"])
+    p = version_dir(assessment_id, version) / BUNDLE_FILE
+    if p.is_file():
+        return (_read_json(p) or {}).get("contentDigest")
+    return None
+
+
 # --------------------------------------------------------------------------- #
 # Lifecycle status — a separate append-only audited record so a status change
 # never touches a version's analytical content (or its content fingerprint)
@@ -359,6 +428,12 @@ def _status_map(assessment_id: str) -> dict[int, str]:
         s = str(rec.get("status") or "").strip().lower()
         if v and s in VERSION_STATUSES:
             out[v] = s
+        elif v and s:
+            # Deliberately skip-to-default (the v1 back-compat mechanism), but
+            # loudly: an old app reading a newer library's vocabulary would
+            # otherwise silently show the wrong status.
+            logger.warning("%s v%s: ignoring unknown status %r (this build knows %s)",
+                           assessment_id, v, s, ", ".join(VERSION_STATUSES))
     return out
 
 
@@ -598,8 +673,13 @@ def _regenerate_catalog() -> None:
 
             prelim = [int(v.get("version") or 0) for v in versions if _cur(v) == "preliminary"]
             certified = [int(v.get("version") or 0) for v in versions if _cur(v) == "certified"]
+            drafts = [int(v.get("version") or 0) for v in versions if _cur(v) == "draft"]
             latest_prelim = max(prelim) if prelim else 0
             latest_cert = max(certified) if certified else 0
+            # Drafts never outrank a reviewed version (they are absent from the
+            # cert/prelim lists); an all-draft assessment falls back to its
+            # numeric latest so the picker always has an openable default, and
+            # DEEP stays protected by per-version eligibility, not this pointer.
             default_v = latest_cert or latest_prelim or latest
             vmap = _validation_state_map(aid)
             default_vdir = sub / f"v{int(default_v)}"
@@ -614,7 +694,9 @@ def _regenerate_catalog() -> None:
                     "latestUpdatedAt": latest_updated,
                     "latestPreliminary": latest_prelim,
                     "latestCertified": latest_cert,
+                    "latestDraft": max(drafts) if drafts else 0,
                     "defaultVersion": default_v,
+                    "defaultStatus": smap.get(int(default_v), DEFAULT_STATUS),
                     "contentDigest": digest_by_v.get(latest),
                     "validationState": vmap.get(int(default_v), {}).get(
                         "state", VALIDATION_UNVALIDATED),
@@ -641,6 +723,9 @@ def _require_portfolio_approval(assessment_id: str, bundle: dict, meta: dict) ->
     recorded human approval (``meta['portfolioApprovals']``: a list of
     ``{functionId, approvedBy, note}``). The approval is written into meta.json,
     so the decision is auditable beside the version it authorized."""
+    from . import methodology  # local: keep the storage layer import-light
+    max_per_fn = int(methodology.threshold(
+        "metric_portfolio.default_maximum_metrics_per_function"))
     approvals = {str(a.get("functionId")): a
                  for a in (meta.get("portfolioApprovals") or [])
                  if a.get("functionId") and a.get("approvedBy")}
@@ -648,12 +733,12 @@ def _require_portfolio_approval(assessment_id: str, bundle: dict, meta: dict) ->
     for block in bundle.get("metricsByFunction") or []:
         metrics = block.get("metrics") or []
         fid = str(block.get("functionId") or "")
-        if len(metrics) > 2 and fid not in approvals:
+        if len(metrics) > max_per_fn and fid not in approvals:
             unapproved.append(f"{fid} ({len(metrics)} metrics)")
     if unapproved:
         raise ValueError(
-            f"Refusing to publish '{assessment_id}': more than two metrics per "
-            f"function requires a recorded human approval (SELECT-01). Missing "
+            f"Refusing to publish '{assessment_id}': more than {max_per_fn} metrics "
+            f"per function requires a recorded human approval (SELECT-01). Missing "
             f"approvals: {', '.join(unapproved)}. Pass meta['portfolioApprovals'] "
             "entries with functionId and approvedBy."
         )
@@ -666,6 +751,7 @@ def publish_version(
     bundle: dict,
     restricted_package: Optional[dict] = None,
     provenance: Optional[dict] = None,
+    status: str = DEFAULT_STATUS,
 ) -> int:
     """Write a new version for ``assessment_id`` and return its version number.
 
@@ -684,6 +770,11 @@ def publish_version(
     :mod:`streamcurves.provenance`, written beside the bundle as ``provenance.json``.
     Without it a published version, the only citable artifact here, carries no record
     of how it was produced; the run folder that has one is untracked scratch.
+    ``status``: the lifecycle status the new version starts at. Automation
+    (batch stage/promote, the headless agent) passes ``"draft"``; interactive
+    publishes keep the default ``"preliminary"`` because the human review IS
+    the upgrade. Only :data:`PUBLISH_STATUSES` are accepted here; certification
+    is a separate audited step.
     """
     if not writable():
         raise RuntimeError(
@@ -694,6 +785,12 @@ def publish_version(
     assessment_id = slugify(assessment_id)
     if not assessment_id:
         raise ValueError("assessment_id is empty after slugify")
+    status = str(status or "").strip().lower()
+    if status not in PUBLISH_STATUSES:
+        raise ValueError(
+            f"A fresh publish may seed only {', '.join(PUBLISH_STATUSES)}; got "
+            f"{status!r}. Certification is a separate audited step "
+            "(set_version_status after field validation).")
 
     # Coverage gate. A published version is a citable artifact, and this is the only
     # place one is minted, so it is where "every STAF function is either covered or
@@ -823,15 +920,16 @@ def publish_version(
     ]
     _write_json(manifest_path(assessment_id), manifest)
 
-    # Seed the append-only lifecycle record: a fresh publish is preliminary. Stored
-    # separately from the analytical content so a later status change never re-mints
-    # the version or its fingerprint.
+    # Seed the append-only lifecycle record. Stored separately from the
+    # analytical content so a later status change never re-mints the version or
+    # its fingerprint.
     _append_status(
         assessment_id,
         new_version,
-        DEFAULT_STATUS,
+        status,
         meta.get("author") or "publisher",
-        "Published new version.",
+        "Published as draft (automation output; not yet human-reviewed)."
+        if status == "draft" else "Published new version.",
     )
 
     _regenerate_catalog()
@@ -852,10 +950,19 @@ def rebake_deep() -> tuple[bool, str]:
     (apps/deep/data) so the cloud DEEP lists them. Runs the sibling DEEP script as a
     subprocess (pure stdlib, so it works from the app interpreter). Returns
     ``(ok, message)``; never raises — publishing already succeeded by the time this runs.
+
+    Canonical root only: DEEP's tracked registry must never be rebuilt from a
+    scratch or staged library (the same boundary every other gate enforces).
+    Before this guard the protection was accidental — a non-canonical root
+    merely failed to find the bake script.
     """
     import subprocess
     import sys
 
+    if not is_canonical_root():
+        return False, (f"library root is {library_root()} (not the canonical "
+                       "apps/library); DEEP's registry is rebuilt only from the "
+                       "canonical root.")
     script = deep_bake_script()
     if not script.is_file():
         return False, f"DEEP bake script not found at {script} (bake DEEP data manually)."

@@ -38,7 +38,7 @@ from streamcurves.plot_theme import geom_text_size, minimal_plot_theme
 from streamcurves.regional import build_regional_boxplot_spec, fit_regional_curve
 from views.state import AppState
 from views.theme import fa
-from views.uihelpers import explanation_card, no_data_alert
+from views.uihelpers import no_data_alert
 
 logger = logging.getLogger("streamcurves")
 
@@ -337,18 +337,12 @@ def regional_curve_server(input, output, session, state: AppState):
         if state.data() is None:
             return no_data_alert()
         return ui.TagList(
-            explanation_card(
-                "Regional / Hydraulic Geometry Curves",
-                ui.tags.p(
-                    "Regional curves describe the power-function relationship "
-                    "between bankfull channel dimensions and drainage area: "
-                    "Y = a × X^b. These are fit via log-log linear regression "
-                    "and are a separate workstream from the standard scoring curves."
-                ),
-                ui.tags.p(
-                    "Select a response variable, predictor, and optional "
-                    "stratification, then fit the curve."
-                ),
+            ui.h4(
+                "Regional curves",
+                class_="mb-2",
+                title="Power-function relationships between bankfull channel "
+                      "dimensions and drainage area (Y = a * X^b), fit by "
+                      "log-log linear regression.",
             ),
             ui.card(
                 ui.card_header("Exploration"),

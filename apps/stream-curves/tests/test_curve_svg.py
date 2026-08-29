@@ -81,6 +81,20 @@ def test_tile_svg_reference_range_rect_present_or_omitted():
     assert "curve-tile-range" not in cs.tile_svg(_tile(reference_range=(None, None)))
 
 
+def test_tile_svg_overlay_markers_draw_and_none_changes_nothing():
+    """The Validate stage's field-data markers: one diamond per (value, score),
+    out-of-range x pinned at the plotted edge, and overlay=None output
+    byte-identical to the pre-parameter drawing."""
+    tile = _tile()
+    assert cs.tile_svg(tile) == cs.tile_svg(tile, overlay=None)
+    assert cs.tile_svg(tile) == cs.tile_svg(tile, overlay=[])
+    svg = cs.tile_svg(tile, overlay=[(40.0, 0.7), (500.0, 0.1)])
+    marks = re.findall(r'<path class="curve-tile-overlay" d="M([\d.]+),', svg)
+    assert len(marks) == 2
+    assert cs.OVERLAY_COLOR in svg
+    assert max(float(x) for x in marks) <= 240.0, "out-of-range x must pin, not leave"
+
+
 def test_tile_svg_escapes_labels():
     svg = cs.tile_svg(_tile(display_name="Embeddedness <b>x</b>", metric='a"b'))
     assert "<b>x</b>" not in svg and "&lt;b&gt;x&lt;/b&gt;" in svg

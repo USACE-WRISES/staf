@@ -25,7 +25,7 @@ CURVE_METHOD_VERSION = "iqr-seed-2"
 SCREENING_METHOD_VERSION = "easi-batch-1"
 
 # --------------------------------------------------------------------------- #
-# The five guided stages, in order.
+# The guided stages, in order (count them here, nowhere else).
 # --------------------------------------------------------------------------- #
 STAGE_KEYS = [
     "region_sources",
@@ -34,6 +34,7 @@ STAGE_KEYS = [
     "refine_map",
     "curve_review",
     "publish",
+    "validate",
 ]
 
 STAGE_LABELS = {
@@ -43,13 +44,40 @@ STAGE_LABELS = {
     "refine_map": "Refine Workbook, Map Functions & Validate",
     "curve_review": "Reference Curves & Flagged Review",
     "publish": "Package & Publish",
+    "validate": "Validate With Field Data",
+}
+
+# Strip-local short labels (the full STAGE_LABELS ride in the tooltip) and the
+# tool tooltips. Canonical here so the strip and the About modal share them.
+STAGE_SHORT = {
+    "region_sources": "Region & data",
+    "candidate_screening": "Screen sites",
+    "enrichment_build": "Build dataset",
+    "refine_map": "Refine & map",
+    "curve_review": "Reference curves",
+    "publish": "Publish",
+    "validate": "Validate",
+}
+
+# One sentence per stage for the About modal, which loops STAGE_KEYS so it can
+# never fall out of step with the strip again (it once said "5. Publish" over a
+# six-stage strip).
+STAGE_HELP = {
+    "region_sources": "Choose a region of applicability and gather candidate sites.",
+    "candidate_screening": "Run EASI reference screening and confirm the sites to keep.",
+    "enrichment_build": "Choose metrics, pull and compile data, classify columns, and build.",
+    "refine_map": "Refine the workbook, map metrics to STAF functions, and validate.",
+    "curve_review": "Build reference curves and resolve any flagged reviews.",
+    "publish": "Save a project file, or publish to the STAF assessment library for DEEP.",
+    "validate": "Overlay field data on the published curves and record a validation.",
 }
 
 # ── Workflow navigation vocabulary ─────────────────────────────────────────
-# The workflow strip is the app's primary navigation: six stages, where
-# stages 1-3 group the Data & Setup wizard's seven internal steps, stage 4 is
-# the opened-project workspace, and stages 5-6 are whole pages. Everything
-# here is pure so the strip, the wizard, and tests share one mapping.
+# The workflow strip is the app's primary navigation: STAGE_KEYS in order,
+# where stages 1-3 group the Data & Setup wizard's seven internal steps,
+# stage 4 is the opened-project workspace, and the later stages are whole
+# pages. Everything here is pure so the strip, the wizard, and tests share
+# one mapping.
 
 # stage key -> ordered (wizard_step, sub-step label) pairs. Only the wizard
 # stages have sub-steps; labels match import_map._STEP_LABELS.
@@ -95,6 +123,7 @@ STAGE_LANDINGS: dict[str, tuple[str, Optional[int]]] = {
     "refine_map": ("data", None),
     "curve_review": ("curves", None),
     "publish": ("publish", None),
+    "validate": ("validate", None),
 }
 
 
@@ -128,6 +157,8 @@ def current_stage(
         return "curve_review"
     if tab == "publish":
         return "publish"
+    if tab == "validate":
+        return "validate"
     if tab != "data":
         return None  # Regional Curves / Cross-Sections tools
     if data_setup_view in ("new", "wizard"):
@@ -140,8 +171,8 @@ def current_stage(
 # Side analyses: real work surfaces that need a built dataset but sit outside the
 # numbered sequence. They produce no stage status and gate no publish, so they stay
 # out of STAGE_KEYS / STAGE_LANDINGS -- the strip renders them as unnumbered chips
-# after the five stages, and current_stage() keeps returning None while one is open.
-TOOL_KEYS = ["regional", "xsec", "nrsa", "build"]  # == their main_navbar nav values
+# after the numbered stages, and current_stage() keeps returning None while one is open.
+TOOL_KEYS = ["regional", "xsec", "nrsa", "build", "rules"]  # == their main_navbar nav values
 TOOL_LABELS = {
     "regional": "Regional curves",
     "xsec": "Cross-sections",
@@ -150,9 +181,37 @@ TOOL_LABELS = {
     # the builder starts from an ecoregion code, so it needs no project either --
     # it is how a project gets made
     "build": "Region builder",
+    # the rule reference reads the methodology configs, never the project
+    "rules": "Rules",
 }
 # Tools that work with no project loaded, so the strip must not dim them.
-TOOLS_WITHOUT_DATA = {"nrsa", "build"}
+TOOLS_WITHOUT_DATA = {"nrsa", "build", "rules"}
+
+# Why each tool exists and what it needs. The strip's chip tooltips and the
+# About modal both read this, so the two cannot drift.
+TOOL_TITLES = {
+    "regional": (
+        "Regional / hydraulic geometry curves (Y = a * X^b). A side analysis "
+        "outside the staged workflow; needs a built dataset."
+    ),
+    "xsec": (
+        "Survey cross-sections. A side analysis outside the staged workflow; "
+        "needs a built dataset."
+    ),
+    "nrsa": (
+        "Browse every NRSA station across the 2013-14, 2018-19 and 2023-24 "
+        "surveys. Read-only, and needs no project."
+    ),
+    "build": (
+        "Run the whole workflow for one Level III ecoregion, then review what it "
+        "decided. Stages into its own run folder; publishing stays separate."
+    ),
+    "rules": (
+        "Every methodology rule the app applies: thresholds, statuses and "
+        "standing decisions. The per-run opt-ins for automated builds are "
+        "chosen here."
+    ),
+}
 
 
 def current_tool(tab: Optional[str]) -> Optional[str]:
@@ -314,6 +373,14 @@ def derive_stage_status(
             "status": STAGE_ATTENTION,
             "detail": "No sites retained yet. Review screening decisions.",
         }
+    elif s.get("screening_skipped") and n_cand > 0:
+        # Exploration path: the owner chose to include every candidate without
+        # EASI evidence. The stage is done for workflow purposes; the publish
+        # checklist (REF-01) still requires a real screen for the library.
+        out["candidate_screening"] = {
+            "status": STAGE_DONE,
+            "detail": f"Screening skipped: all {n_cand} candidate sites included.",
+        }
     elif n_cand > 0:
         out["candidate_screening"] = {
             "status": STAGE_READY,
@@ -350,6 +417,11 @@ def derive_stage_status(
         out["enrichment_build"] = {
             "status": STAGE_READY,
             "detail": "Retained sites ready to enrich.",
+        }
+    elif s.get("screening_skipped") and n_cand > 0:
+        out["enrichment_build"] = {
+            "status": STAGE_READY,
+            "detail": "Candidate sites ready to enrich (screening skipped).",
         }
     else:
         out["enrichment_build"] = {
@@ -423,12 +495,32 @@ def derive_stage_status(
     elif is_ready_to_publish(s):
         out["publish"] = {
             "status": STAGE_READY,
-            "detail": "Ready to publish a preliminary version.",
+            "detail": "Ready to publish a Preliminary version.",
         }
     else:
         out["publish"] = {
             "status": STAGE_BLOCKED,
             "detail": "Finish the checklist to publish.",
+        }
+
+    # 7 - Validate with field data. Post-publish only: it never gates
+    # publishing (readiness_checklist stays exactly its seven items), and it
+    # works on a loaded published version as well as a freshly published one.
+    n_val = int(s.get("n_validation_records") or 0)
+    if n_val > 0:
+        out["validate"] = {
+            "status": STAGE_DONE,
+            "detail": f"{n_val} validation record(s).",
+        }
+    elif s.get("published") or s.get("has_validation_target"):
+        out["validate"] = {
+            "status": STAGE_READY,
+            "detail": "Overlay field data on the published curves.",
+        }
+    else:
+        out["validate"] = {
+            "status": STAGE_BLOCKED,
+            "detail": "Publish a version first.",
         }
 
     return out
@@ -911,8 +1003,18 @@ def readiness_checklist(snapshot: dict) -> list[dict]:
         },
         {
             "key": "screening",
-            "label": "Reference screening complete with retained sites",
+            # A deliberate skip turns the stage green for exploration but never
+            # satisfies this item: the library requires screened references.
+            "label": (
+                "Reference screening complete with retained sites"
+                + (" (screening was skipped; run screening to publish to the library)"
+                   if s.get("screening_skipped") else "")
+            ),
             "ok": bool(s.get("has_screening")) and int(s.get("n_retained") or 0) > 0,
+            # "rule": the catalog rule that governs the item, rendered as a chip
+            # into the Rules page where a governing rule exists. Optional: the
+            # coverage gate, for one, has no single catalog rule.
+            "rule": "REF-01",
         },
         {
             "key": "enriched",
@@ -935,6 +1037,7 @@ def readiness_checklist(snapshot: dict) -> list[dict]:
             "key": "review",
             "label": "No unresolved flagged curves",
             "ok": len(unresolved) == 0,
+            "rule": "CURVE-07",
         },
         {
             "key": "coverage",

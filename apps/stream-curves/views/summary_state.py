@@ -1717,47 +1717,61 @@ def recompute_metric_from_summary(
     return {"phase1": backfill1, "phase3": backfill3, "phase4": completed}
 
 
-def recompute_metrics_from_summary(
-    state: AppState, metrics, mode: str = "summary",
-    progress_cb: Callable | None = None, on_metric_done: Callable | None = None,
-):
+def recompute_steps_from_summary(state: AppState, metrics, mode: str = "summary"):
+    """Ordered ``(phase, metric, index, total, run)`` steps equivalent to
+    ``recompute_metrics_from_summary``: phase1 per metric, the shared phase2
+    once, phase3 per metric, phase4 per metric (3N + 1 steps). Each ``run()``
+    reads state at call time, so a driver can execute the list synchronously
+    (the plural function below, used by curve_automation) or asynchronously
+    with awaits between steps (the summary page's bulk runner, which is what
+    lets the progress bar advance live instead of flushing in one burst)."""
     with reactive.isolate():
         metric_config = state.metric_config() or {}
     eligible = set(eligible_summary_metrics(metric_config))
     metrics = [m for m in (metrics or []) if m in eligible]
     if not metrics:
-        return
+        return []
+    n = len(metrics)
+    steps: list[tuple] = []
+    for i, metric in enumerate(metrics, start=1):
+        steps.append(("phase1", metric, i, n, lambda m=metric:
+                      commit_metric_phase1_backfill(
+                          state, m, build_metric_phase1_backfill(state, m, mode=mode))))
 
-    def cb(phase, m, i, n, stage):
+    def _phase2():
+        recompute_phase2_shared(state)
+        for mk in eligible_summary_metrics(metric_config):
+            ensure_metric_phase3_valid(state, mk)
+
+    steps.append(("phase2", None, 1, 1, _phase2))
+    for i, metric in enumerate(metrics, start=1):
+        steps.append(("phase3", metric, i, n, lambda m=metric:
+                      commit_metric_phase3_backfill(
+                          state, m, build_metric_phase3_backfill(state, m, mode=mode))))
+    for i, metric in enumerate(metrics, start=1):
+        steps.append(("phase4", metric, i, n, lambda m=metric:
+                      recompute_metric_phase4(
+                          state, m,
+                          artifact_mode="summary" if mode == "summary" else "full")))
+    return steps
+
+
+def recompute_metrics_from_summary(
+    state: AppState, metrics, mode: str = "summary",
+    progress_cb: Callable | None = None, on_metric_done: Callable | None = None,
+):
+    """Synchronous driver over recompute_steps_from_summary. The callback
+    protocol is pinned by curve_automation.run_curve_automation: progress_cb
+    fires start/end around every step, and on_metric_done fires after each
+    phase4 build, before that step's end callback."""
+    for phase, metric, i, n, run in recompute_steps_from_summary(state, metrics, mode=mode):
         if progress_cb is not None:
-            progress_cb(phase, m, i, n, stage)
-
-    for i, metric in enumerate(metrics, start=1):
-        cb("phase1", metric, i, len(metrics), "start")
-        backfill = build_metric_phase1_backfill(state, metric, mode=mode)
-        commit_metric_phase1_backfill(state, metric, backfill)
-        cb("phase1", metric, i, len(metrics), "end")
-
-    cb("phase2", None, 1, 1, "start")
-    recompute_phase2_shared(state)
-    for mk in eligible_summary_metrics(metric_config):
-        ensure_metric_phase3_valid(state, mk)
-    cb("phase2", None, 1, 1, "end")
-
-    for i, metric in enumerate(metrics, start=1):
-        cb("phase3", metric, i, len(metrics), "start")
-        backfill = build_metric_phase3_backfill(state, metric, mode=mode)
-        commit_metric_phase3_backfill(state, metric, backfill)
-        cb("phase3", metric, i, len(metrics), "end")
-
-    for i, metric in enumerate(metrics, start=1):
-        cb("phase4", metric, i, len(metrics), "start")
-        recompute_metric_phase4(
-            state, metric, artifact_mode="summary" if mode == "summary" else "full"
-        )
-        if on_metric_done is not None:
+            progress_cb(phase, metric, i, n, "start")
+        run()
+        if phase == "phase4" and on_metric_done is not None:
             on_metric_done(metric)
-        cb("phase4", metric, i, len(metrics), "end")
+        if progress_cb is not None:
+            progress_cb(phase, metric, i, n, "end")
 
 
 # --------------------------------------------------------------------------- #

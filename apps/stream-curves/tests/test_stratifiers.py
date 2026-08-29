@@ -183,3 +183,33 @@ def test_rejected_candidates_carry_a_reason(registry):
     for key, entry in registry["rejected"].items():
         assert entry.get("reason"), key
         assert entry.get("detail"), key
+
+
+def test_min_group_size_default_comes_from_the_config(registry, monkeypatch):
+    """stratifier_rules.min_group_size_current GOVERNS the floor for candidates
+    that declare none of their own (it used to be a decorative key beside a
+    hard-coded 5), and strat_config_for resolves it so the config-free
+    screening/feasibility engines always receive a floor."""
+    from streamcurves import methodology
+    assert stratifiers.default_min_group_size() == int(
+        methodology.threshold("stratifier_rules.min_group_size_current"))
+
+    real = methodology.threshold
+    monkeypatch.setattr(
+        methodology, "threshold",
+        lambda p: 7 if p == "stratifier_rules.min_group_size_current" else real(p))
+    reg = {"version": "test", "candidates": {"K": {
+        "display_name": "K", "strat_type": "categorical",
+        "source_columns": ["K"], "levels": ["a", "b"],
+    }}}
+    data = _frame(K=["a"] * 4 + ["b"] * 4)
+    cfg = stratifiers.strat_config_for(reg, ["K"], data)["K"]
+    assert cfg["min_group_size"] == 7
+
+    # a candidate's own declared floor still wins over the config default
+    for key, cand in registry["candidates"].items():
+        if cand.get("min_group_size") is not None:
+            out = stratifiers.strat_config_for(
+                registry, [key], _nrsa_like())[key]
+            assert out["min_group_size"] == int(cand["min_group_size"])
+            break

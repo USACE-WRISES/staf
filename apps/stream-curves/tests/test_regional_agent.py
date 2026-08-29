@@ -172,6 +172,39 @@ def test_streamcat_without_comid_reports_rather_than_raising():
     assert out is data
 
 
+def test_streamcat_partial_fetch_is_not_reported_ok(tmp_path):
+    """A chunk that fails after retries used to vanish: the joined table came
+    back short, the report said ok, and the partial table was even cached.
+    The failed chunks now ride out on the frame's attrs, the status is partial
+    (which the batch runner refuses like any bad source), and nothing caches."""
+    d = ra.load_landscape_directions()
+    data = pd.DataFrame({"site_id": ["a", "b"], "comid": [1, 2], "chem_PTL": [1.0, 2.0]})
+    wide = pd.DataFrame({"COMID": [1], "pctimp2019ws": [3.5]})   # comid 2's chunk failed
+    wide.attrs["n_chunks"] = 2
+    wide.attrs["failed_chunks"] = [2]
+    cache = tmp_path / "streamcat_cache.json"
+    out, report = ra.enrich_streamcat(data, d, fetch=lambda *a, **k: wide,
+                                      cache_path=cache)
+    assert report["status"] == "partial"
+    assert "2" in report["reason"] and report["failed_chunks"] == [2]
+    assert report["n_columns"] == 1                  # what did arrive still joins
+    assert "pctimp2019ws" in out.columns
+    assert not cache.exists()                        # a partial table never caches
+
+
+def test_streamcat_clean_fetch_with_chunk_attrs_stays_ok(tmp_path):
+    d = ra.load_landscape_directions()
+    data = pd.DataFrame({"site_id": ["a", "b"], "comid": [1, 2], "chem_PTL": [1.0, 2.0]})
+    wide = pd.DataFrame({"COMID": [1, 2], "pctimp2019ws": [3.5, 9.0]})
+    wide.attrs["n_chunks"] = 1
+    wide.attrs["failed_chunks"] = []
+    cache = tmp_path / "streamcat_cache.json"
+    out, report = ra.enrich_streamcat(data, d, fetch=lambda *a, **k: wide,
+                                      cache_path=cache)
+    assert report["status"] == "ok"
+    assert cache.exists()                            # a complete table still caches
+
+
 # --------------------------------------------------------------------------- #
 # Curve building honors direction (lower-is-better inverts)
 # --------------------------------------------------------------------------- #
@@ -326,6 +359,75 @@ def test_choose_reference_tier_ref02_fallback(monkeypatch):
 def test_choose_reference_tier_rejects_below_floor():
     with pytest.raises(ValueError):
         ra.choose_reference_tier([], "all_sites")   # REF-03: never below at_risk_or_better
+
+
+def test_screen_pool_cache_is_keyed_to_the_candidate_panel(tmp_path, monkeypatch):
+    """The cache file carries no key, so screen_pool recovers the cached panel
+    from its own rows. A reused out dir whose candidate panel changed (e.g. a
+    different --nrsa-dataset) must refetch, never silently screen the old list."""
+    calls = []
+
+    def fake_direct(rows, preset, on_event=None):
+        calls.append([r["site_id"] for r in rows])
+        return {"sites": [{"site_id": r["site_id"]} for r in rows]}
+
+    def fake_tables(batch):
+        return {"easi_screening_sites": [
+            {"site_id": s["site_id"], "final_decision": "retained"}
+            for s in batch.get("sites", [])]}
+
+    monkeypatch.setattr(ra.easi_screening, "screen_sites_direct", fake_direct)
+    monkeypatch.setattr(ra.easi_screening, "to_screening_tables", fake_tables)
+    cache = tmp_path / "screening_cache_functional.json"
+    panel_a = [{"site_id": "A1"}, {"site_id": "A2"}]
+
+    first = ra.screen_pool(panel_a, "functional", cache_path=cache)
+    assert first["from_cache"] is False and cache.exists()
+    second = ra.screen_pool(panel_a, "functional", cache_path=cache)
+    assert second["from_cache"] is True
+    assert calls == [["A1", "A2"]]                 # the cache absorbed the rerun
+
+    events = []
+    panel_b = [{"site_id": "B1"}]
+    third = ra.screen_pool(panel_b, "functional", cache_path=cache,
+                           on_event=lambda stage, sid, info: events.append(stage))
+    assert third["from_cache"] is False
+    assert third["cache_stale_refetched"] is True
+    assert calls[-1] == [["B1"]][0]                # refetched the NEW panel
+    assert "screening_cache_stale" in events
+
+    fourth = ra.screen_pool(panel_b, "functional", cache_path=cache)
+    assert fourth["from_cache"] is True            # rewritten cache now matches
+    assert fourth["retained_ids"] == ["B1"]
+
+
+def test_screen_pool_chunks_panels_beyond_the_engine_limit(tmp_path, monkeypatch):
+    """The vendored EASI batch runner refuses requests over 150 sites; the
+    pooled NRSA panels exceed that for four ecoregions (NEH at 186 failed
+    live). screen_pool now splits the panel into engine-sized requests and
+    merges the site lists; the merged batch caches whole."""
+    calls = []
+
+    def fake_direct(rows, preset, on_event=None):
+        calls.append(len(rows))
+        return {"sites": [{"site_id": r["site_id"]} for r in rows],
+                "criteria": preset}
+
+    def fake_tables(batch):
+        return {"easi_screening_sites": [
+            {"site_id": s["site_id"], "final_decision": "retained"}
+            for s in batch.get("sites", [])]}
+
+    monkeypatch.setattr(ra.easi_screening, "screen_sites_direct", fake_direct)
+    monkeypatch.setattr(ra.easi_screening, "to_screening_tables", fake_tables)
+    cache = tmp_path / "screening_cache_functional.json"
+    panel = [{"site_id": f"s{i}"} for i in range(186)]
+
+    res = ra.screen_pool(panel, "functional", cache_path=cache)
+    assert calls == [150, 36]                     # engine-sized requests
+    assert len(res["retained_ids"]) == 186        # nothing lost in the merge
+    again = ra.screen_pool(panel, "functional", cache_path=cache)
+    assert again["from_cache"] is True and calls == [150, 36]
 
 
 # --------------------------------------------------------------------------- #

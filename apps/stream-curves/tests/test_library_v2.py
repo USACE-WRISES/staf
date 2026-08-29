@@ -66,6 +66,18 @@ def libroot(tmp_path, monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
+# DEEP rebake boundary
+# --------------------------------------------------------------------------- #
+def test_rebake_deep_refuses_a_non_canonical_root(libroot):
+    """DEEP's tracked registry is rebuilt only from apps/library. Before the
+    explicit guard the protection was accidental: a scratch root merely failed
+    to find the bake script."""
+    ok, msg = lib.rebake_deep()
+    assert ok is False
+    assert "canonical" in msg
+
+
+# --------------------------------------------------------------------------- #
 # Content digest
 # --------------------------------------------------------------------------- #
 def test_content_digest_is_stable_across_key_order():
@@ -113,6 +125,63 @@ def test_publish_stamps_content_digest_on_bundle_library_and_meta(libroot):
 def test_publish_defaults_to_preliminary(libroot):
     lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION}, _session_payload(), _bundle())
     assert lib.version_status("ecbp", 1) == "preliminary"
+
+
+def test_publish_with_draft_status_and_all_draft_pointers(libroot):
+    """Automation output publishes as draft. An all-draft assessment still gets
+    a defaultVersion (the picker needs an openable default; DEEP is protected
+    by per-version eligibility, never by this pointer)."""
+    lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                        _session_payload(), _bundle(), status="draft")
+    assert lib.version_status("ecbp", 1) == "draft"
+    hist = lib.read_status("ecbp")["history"]
+    assert "not yet human-reviewed" in hist[0]["note"]
+    entry = next(a for a in lib.list_assessments() if a["assessmentId"] == "ecbp")
+    assert entry["latestDraft"] == 1
+    assert entry["latestPreliminary"] == 0
+    assert entry["defaultVersion"] == 1          # deliberate all-draft fallback
+    assert entry["defaultStatus"] == "draft"
+
+
+def test_publish_rejects_a_non_seed_status(libroot):
+    """Fresh publishes may seed only draft/preliminary: certification is a
+    separate audited step gated on field validation."""
+    with pytest.raises(ValueError, match="separate audited step"):
+        lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                            _session_payload(), _bundle(), status="certified")
+    assert not (libroot / "assessments" / "ecbp").exists()
+
+
+def test_a_draft_never_outranks_a_preliminary_default(libroot):
+    lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                        _session_payload(), _bundle())                    # v1 preliminary
+    lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                        _session_payload(), _bundle(0.9), status="draft")  # v2 draft
+    entry = next(a for a in lib.list_assessments() if a["assessmentId"] == "ecbp")
+    assert entry["latestDraft"] == 2
+    assert entry["defaultVersion"] == 1
+    assert entry["defaultStatus"] == "preliminary"
+
+
+def test_a_draft_approved_as_preliminary_updates_the_pointers(libroot):
+    lib.publish_version("ecbp", {"assessmentName": "ECBP", "region": REGION},
+                        _session_payload(), _bundle(), status="draft")
+    lib.set_version_status("ecbp", 1, "preliminary", "owner",
+                           note="Reviewed in StreamCurves; approved as preliminary.")
+    assert [r["status"] for r in lib.read_status("ecbp")["history"]] == \
+        ["draft", "preliminary"]
+    entry = next(a for a in lib.list_assessments() if a["assessmentId"] == "ecbp")
+    assert entry["latestPreliminary"] == 1 and entry["defaultVersion"] == 1
+    assert entry["latestDraft"] == 0 and entry["defaultStatus"] == "preliminary"
+
+
+def test_status_labels_cover_the_vocabulary():
+    assert set(lib.STATUS_LABELS) == set(lib.VERSION_STATUSES)
+    assert lib.status_label("certified") == "Final"
+    assert lib.status_label("draft") == "Draft"
+    assert lib.validation_label("validated") == "Verified"
+    assert lib.status_label("weird_future_state")     # non-empty fallback
+    assert lib.status_label(None) == "Preliminary"
 
 
 def test_status_record_roundtrips_and_is_append_only(libroot):
