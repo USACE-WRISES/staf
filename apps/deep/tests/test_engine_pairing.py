@@ -135,6 +135,30 @@ def test_compute_metrics_only_threads_the_assessment(monkeypatch):
     assert out["catchment-hydrology-impervious-cover"]["engine"] is False
 
 
+def test_pipeline_wrapper_threads_the_assessment(monkeypatch):
+    # The app's compute_task hands the loaded assessment to the pipeline
+    # wrapper, which must pass it through to measure.compute_metrics_only.
+    import asyncio
+
+    from deep import pipeline
+
+    seen: dict = {}
+
+    def fake(ctx_inputs, metric_ids, *, assessment=None):
+        seen.update(ctx_inputs=ctx_inputs, metric_ids=metric_ids,
+                    assessment=assessment)
+        return {"m": {"value": 1.0}}
+    monkeypatch.setattr(measure, "compute_metrics_only", fake)
+    bundle = {"predictorSource": "site-engine v0.1.0"}
+    out = asyncio.run(pipeline.compute_metrics_only({"lat": 1}, ["m"],
+                                                    assessment=bundle))
+    assert out == {"m": {"value": 1.0}}
+    assert seen["assessment"] is bundle
+
+    asyncio.run(pipeline.compute_metrics_only({"lat": 1}, ["m"]))
+    assert seen["assessment"] is None                 # legacy call shape
+
+
 # --------------------------------------------------------------------------- #
 # bake passthrough (tmp library, the test_bake_library fixture pattern)
 # --------------------------------------------------------------------------- #
