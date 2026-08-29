@@ -124,7 +124,10 @@ def ev_impervious(ctx):
 
 def ev_road_density(ctx):
     mid = "catchment-hydrology-road-density"
-    v = _sc(ctx).get("rddens")
+    # StreamCat columns carry the AOI suffix (rddens -> rddensws); the bare
+    # name never matched, which left this tier dead and every site on the
+    # TIGER fallback.
+    v = _sc(ctx).get("rddensws")
     if v is not None:
         return EvidenceResult(mid, value=round(v, 2), value_text=f"{v:.2f} km/km² road density (watershed)",
                               field_value_text=f"Roads {v:.2f} km/km2",
@@ -144,7 +147,7 @@ def ev_road_density(ctx):
 def ev_impoundments(ctx):
     mid = "catchment-hydrology-impoundments"
     nid = ctx.extras.get("nid")
-    stor = _sc(ctx).get("damnrmstor")
+    stor = _sc(ctx).get("damnrmstorws")   # ws-suffixed column (see ev_road_density)
     if nid is None and stor is None:
         return EvidenceResult(mid, status="unavailable", source="USACE NID / StreamCat",
                               source_url="https://nid.sec.usace.army.mil/")
@@ -343,7 +346,7 @@ def ev_flow_statistics(ctx):
 def ev_natural_flow_regime(ctx):
     mid = "streamflow-regime-channel-natural-flow-regime"
     f = ctx.extras.get("flow")
-    dam = _sc(ctx).get("damnrmstor")
+    dam = _sc(ctx).get("damnrmstorws")    # ws-suffixed column (see ev_road_density)
     if not f and dam is None:
         return EvidenceResult(mid, status="unavailable", source="USGS NWIS / StreamCat")
     parts = []
