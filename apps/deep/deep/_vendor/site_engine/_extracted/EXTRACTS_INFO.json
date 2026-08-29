@@ -1,0 +1,29 @@
+{
+ "data": {
+  "ecoregions_l3.geojson": {
+   "sha": "e91f411d4976ef44b4247e3668b09269bd0dbf8e56c5402318b91518d04e865e",
+   "source": "apps/easi/data/ecoregions_l3.geojson"
+  },
+  "physio_divisions.geojson": {
+   "sha": "41f147243333c1b37f448ea4cbade3c7411424794899bdaafc1017a4804b1ff7",
+   "source": "apps/easi/data/physio_divisions.geojson"
+  }
+ },
+ "modules": {
+  "bieger.py": {
+   "extracted_sha": "4421ab46f7706312802ab52beaba7ad258eb1675f7d3354abfa178a49efa9fdd",
+   "source": "apps/easi/easi/bieger.py",
+   "source_sha": "4421ab46f7706312802ab52beaba7ad258eb1675f7d3354abfa178a49efa9fdd"
+  },
+  "geomorph.py": {
+   "extracted_sha": "62b73ac1e28616fa82e510e4c41e9fa720ce731a8e0f22d1d8898f331a5d564b",
+   "source": "apps/easi/easi/geomorph.py",
+   "source_sha": "62b73ac1e28616fa82e510e4c41e9fa720ce731a8e0f22d1d8898f331a5d564b"
+  },
+  "threedep.py": {
+   "extracted_sha": "5b61d1b3a67869dc67cd92084737c707f951f73158e8e937bb42e1e9c8c873fd",
+   "source": "apps/easi/easi/datasources/threedep.py",
+   "source_sha": "3950c99e36e11b500088a2d2ae0d9e969c644791ecc1bbb7f517fc195c36e4f5"
+  }
+ }
+}

@@ -117,14 +117,39 @@ def active_points(metric_spec: dict, stratum: Optional[str] = None) -> list:
     return (metric_spec.get("curve") or {}).get("points") or []
 
 
+def engine_pairing_advisory(measured: Optional[MeasuredValue],
+                            metric_spec: dict) -> Optional[str]:
+    """The train/serve pairing rule, stated: an engine-computed value must not
+    score against a curve fitted on StreamCat predictors.
+
+    Engine values (``measured.engine``) score only when the curve's provenance
+    records engine predictors (the per-metric ``predictorSource`` stamp, or the
+    absent-means-streamcat default). Returns the advisory text when the pairing
+    is blocked, else ``None``. The value still displays as labeled reference
+    evidence; it just never enters the function mean.
+    """
+    if measured is None or not getattr(measured, "engine", False):
+        return None
+    spec_ps = str((metric_spec or {}).get("predictorSource") or "streamcat")
+    if spec_ps != "streamcat":
+        return None
+    return ("engine-computed value shown as reference only: this curve was "
+            "fitted on StreamCat predictors, so scoring it against an "
+            "exact-watershed value would mix training and serving sources")
+
+
 def metric_index(measured: Optional[MeasuredValue], metric_spec: dict) -> Optional[float]:
     """Index (0-1) for one metric's measured value, or ``None`` if unscored.
 
-    Returns ``None`` when the value is missing / Not Applicable, or when the
-    metric carries no curve points (so it drops out of its function's mean). For a
+    Returns ``None`` when the value is missing / Not Applicable, when the
+    metric carries no curve points (so it drops out of its function's mean), or
+    when the train/serve pairing rule blocks an engine-computed value against a
+    StreamCat-fitted curve (:func:`engine_pairing_advisory`). For a
     multi-stratum metric the measured value's ``stratum`` selects the curve layer.
     """
     if measured is None or not measured.is_scored:
+        return None
+    if engine_pairing_advisory(measured, metric_spec) is not None:
         return None
     points = active_points(metric_spec, getattr(measured, "stratum", None))
     return interp_curve(points, float(measured.value))
@@ -184,6 +209,10 @@ def metric_warning(measured: Optional[MeasuredValue], metric_spec: dict) -> Opti
     """
     if measured is None or not measured.is_scored:
         return None
+    pairing = engine_pairing_advisory(measured, metric_spec)
+    if pairing is not None:
+        # The value is excluded from scoring; the advisory is the whole story.
+        return pairing
     points = active_points(metric_spec, getattr(measured, "stratum", None))
     parts = [domain_warning(points, float(measured.value)),
              reference_range_advisory(metric_spec, float(measured.value)),
