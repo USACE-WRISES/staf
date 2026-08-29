@@ -260,8 +260,22 @@ def metric_missingness(data: pd.DataFrame, metric_cols: list) -> dict:
     return out
 
 # The methodology's reference-tier ladder mapped onto easi_screening presets.
-TIER_LEAST_DISTURBED = "least_disturbed"      # functional preset, ECI > 0.69
-TIER_BEST_AVAILABLE = "best_available"        # at_risk_or_better preset, ECI > 0.39
+# reference_tiers.* in the methodology config GOVERNS the tier names and the
+# tier-to-preset mapping (they were literals beside a decorative config block).
+TIER_LEAST_DISTURBED = str(methodology.threshold("reference_tiers.primary_tier"))
+TIER_BEST_AVAILABLE = str(methodology.threshold("reference_tiers.fallback_tier"))
+
+
+def reference_preset_ladder() -> dict[str, str]:
+    """preset -> tier for the two tiers the ladder offers (REF-01 primary and
+    the REF-02 fallback, which is also the REF-03 floor). The config's
+    minimally_disturbed tier stays resolvable but is deliberately not offered
+    to the automated path."""
+    out: dict[str, str] = {}
+    for key in ("primary_tier", "fallback_tier"):
+        tier = str(methodology.threshold(f"reference_tiers.{key}"))
+        out[str(methodology.threshold(f"reference_tiers.tiers.{tier}.preset"))] = tier
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -513,6 +527,13 @@ def build_landscape_metric_config(
     return metric_config, missing
 
 
+def _derived_predictor_source(predictor_config: dict) -> str:
+    """Predictor source derived from the columns actually configured; never a
+    user string. Default StreamCat contributes nothing to the digest."""
+    from . import site_engine_source as ses
+    return ses.predictor_source_of(list((predictor_config or {}).keys()))
+
+
 def build_predictor_config(columns: list[str], directions: dict) -> dict:
     """``predictor_config`` for the scaling/context variables in the compiled data.
 
@@ -639,7 +660,8 @@ def enrich_streamcat(data: pd.DataFrame, directions: dict, *, enabled: bool = Tr
     """Join StreamCat watershed metrics onto the retained sites by COMID.
 
     Returns ``(data, report)``. ``report`` records the outcome honestly -- ``ok`` with a
-    column count, ``skipped``, or ``failed`` with the reason -- so the run report can
+    column count, ``skipped``, ``partial`` when some fetch chunks returned nothing
+    after retries, or ``failed`` with the reason -- so the run report can
     never present a missing landscape source as an ordinary NA column. ``fetch`` is
     injectable for tests; it defaults to the live StreamCat client. ``cache_path``
     names a per-run cache: a table fetched for exactly this COMID set and code list
@@ -680,6 +702,25 @@ def enrich_streamcat(data: pd.DataFrame, directions: dict, *, enabled: bool = Tr
             report["reason"] = "StreamCat returned no rows (service unreachable?)"
             logger.warning("StreamCat fetch returned nothing for %d comids", len(data))
             return data, report
+        failed_chunks = list(getattr(wide, "attrs", {}).get("failed_chunks") or [])
+        if failed_chunks:
+            # A partial outage is not a success: the joined table silently lacks
+            # the failed chunks' COMIDs, which downstream reads as ordinary NAs.
+            # Report it as its own status (the batch runner refuses anything that
+            # is not ok/skipped) and never cache the partial table.
+            n_chunks = getattr(wide, "attrs", {}).get("n_chunks")
+            report["status"] = "partial"
+            report["reason"] = (f"{len(failed_chunks)} of {n_chunks} StreamCat "
+                                "chunk(s) returned nothing after retries")
+            report["failed_chunks"] = failed_chunks
+            logger.warning("StreamCat partial fetch: %s", report["reason"])
+            out = sites.attach_by_comid(data, "comid", wide)
+            added = [c for c in out.columns if c not in data.columns]
+            report.update(n_columns=len(added), columns=added)
+            if callable(on_event):
+                on_event({"event": "streamcat_partial", "n_columns": len(added),
+                          "failed_chunks": failed_chunks})
+            return out, report
         if cache_path:
             _write_streamcat_cache(cache_path, comids, codes, wide)
             report["cache"] = {"path": str(cache_path), "from_cache": False}
@@ -694,6 +735,34 @@ def enrich_streamcat(data: pd.DataFrame, directions: dict, *, enabled: bool = Tr
 # --------------------------------------------------------------------------- #
 # Reference screening (REF ladder)
 # --------------------------------------------------------------------------- #
+def _screen_live(candidate_rows: list[dict], preset: str,
+                 on_event: Optional[Callable]) -> dict:
+    """One live EASI screen, split into engine-sized requests when the panel is
+    larger than the vendored batch runner accepts (150 sites). The pooled NRSA
+    panels exceed it for four ecoregions (e.g. Northeastern Highlands at 186),
+    which single-cycle panels never did. Only the ``sites`` list is merged;
+    ``to_screening_tables`` reads nothing else."""
+    try:
+        from streamcurves._vendor.easi.batch.runner import MAX_SITES as _limit
+    except Exception:  # noqa: BLE001 - the vendored constant moving must not break us
+        _limit = 150
+    if len(candidate_rows) <= int(_limit):
+        return easi_screening.screen_sites_direct(candidate_rows, preset, on_event=on_event)
+    merged: dict | None = None
+    n_chunks = -(-len(candidate_rows) // int(_limit))
+    for k, i in enumerate(range(0, len(candidate_rows), int(_limit)), start=1):
+        logger.info("screening chunk %d/%d (%d sites)", k, n_chunks,
+                    len(candidate_rows[i:i + int(_limit)]))
+        part = easi_screening.screen_sites_direct(
+            candidate_rows[i:i + int(_limit)], preset, on_event=on_event)
+        if merged is None:
+            merged = dict(part)
+            merged["sites"] = list(part.get("sites") or [])
+        else:
+            merged["sites"] += list(part.get("sites") or [])
+    return merged or {"sites": []}
+
+
 def screen_pool(candidate_rows: list[dict], preset: str,
                 on_event: Optional[Callable] = None,
                 cache_path: Optional[Path] = None) -> dict:
@@ -701,15 +770,36 @@ def screen_pool(candidate_rows: list[dict], preset: str,
 
     Returns {tables, sites (rows), retained_ids, counts, preset, from_cache}. Never
     fabricates a 'representative' record; the method is the real engine. If ``cache_path``
-    exists, the prior live-screen batch is reused (reproducible, no re-hitting services).
+    exists, the prior live-screen batch is reused (reproducible, no re-hitting services)
+    ONLY when it covers exactly this candidate panel: the cache file carries no key, so
+    the panel is recovered from its own site rows and compared. A stale cache (a reused
+    out dir after the candidate panel changed, e.g. a different --nrsa-dataset) is
+    refetched and overwritten, never silently screened.
     """
     import json
+    want = {str(r.get("site_id") or "") for r in candidate_rows}
     from_cache = False
+    cache_stale = False
+    batch = None
     if cache_path is not None and Path(cache_path).exists():
-        batch = json.loads(Path(cache_path).read_text(encoding="utf-8"))
-        from_cache = True
-    else:
-        batch = easi_screening.screen_sites_direct(candidate_rows, preset, on_event=on_event)
+        cached = json.loads(Path(cache_path).read_text(encoding="utf-8"))
+        cached_ids = {str(r.get("site_id") or "")
+                      for r in easi_screening.to_screening_tables(cached)
+                      .get("easi_screening_sites", [])}
+        if cached_ids == want:
+            batch = cached
+            from_cache = True
+        else:
+            cache_stale = True
+            if on_event is not None:
+                try:
+                    on_event("screening_cache_stale", "", {
+                        "cache_path": str(cache_path),
+                        "cached_n": len(cached_ids), "candidate_n": len(want)})
+                except TypeError:
+                    pass                      # a caller with another signature
+    if batch is None:
+        batch = _screen_live(candidate_rows, preset, on_event)
         if cache_path is not None:
             Path(cache_path).parent.mkdir(parents=True, exist_ok=True)
             Path(cache_path).write_text(json.dumps(batch, default=str), encoding="utf-8")
@@ -722,6 +812,7 @@ def screen_pool(candidate_rows: list[dict], preset: str,
         "counts": easi_screening.summarize_screening_rows(rows),
         "preset": preset,
         "from_cache": from_cache,
+        "cache_stale_refetched": cache_stale,
     }
 
 
@@ -731,10 +822,15 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
     """Apply REF-01/02/03. Screen at the primary tier (functional by default). If the
     least-disturbed pool is too small to fit curves, fall back to best-available
     (at_risk_or_better), flag it, and stamp the tier. Never silently relaxes; never
-    drops below the best-available floor."""
-    if primary_preset not in ("functional", "at_risk_or_better"):
+    drops below the best-available floor. The preset-to-tier ladder comes from
+    reference_tiers.* in the methodology config."""
+    ladder = reference_preset_ladder()
+    if primary_preset not in ladder:
         raise ValueError(f"unsupported reference preset {primary_preset!r}; "
-                         "reference curves never draw below at_risk_or_better (REF-03)")
+                         "reference curves never draw below the "
+                         f"{methodology.threshold('reference_tiers.floor_tier')} "
+                         "floor (REF-03)")
+    fallback_preset = next(p for p, t in ladder.items() if t == TIER_BEST_AVAILABLE)
 
     def _cache(preset):
         return (Path(cache_dir) / f"screening_cache_{preset}.json") if cache_dir else None
@@ -743,8 +839,7 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
                           cache_path=_cache(primary_preset))
     n_primary = len(primary["retained_ids"])
     result = {
-        "reference_tier": TIER_LEAST_DISTURBED if primary_preset == "functional"
-        else TIER_BEST_AVAILABLE,
+        "reference_tier": ladder[primary_preset],
         "primary": primary,
         "fallback": None,
         "ref02_triggered": False,
@@ -752,12 +847,12 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
         "screening": primary,
     }
 
-    if primary_preset == "functional" and n_primary < REF_FALLBACK_FLOOR:
+    if ladder[primary_preset] == TIER_LEAST_DISTURBED and n_primary < REF_FALLBACK_FLOOR:
         # REF-02: the Functioning-only pool cannot support curves even as
         # exploratory. Fall back explicitly. (A pool of 10 to 19 does NOT land
         # here: it stays least-disturbed at DATA-05 exploratory status.)
-        fallback = screen_pool(candidate_rows, "at_risk_or_better", on_event=on_event,
-                               cache_path=_cache("at_risk_or_better"))
+        fallback = screen_pool(candidate_rows, fallback_preset, on_event=on_event,
+                               cache_path=_cache(fallback_preset))
         result.update({
             "reference_tier": TIER_BEST_AVAILABLE,
             "fallback": fallback,
@@ -770,7 +865,7 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
                 "Mandatory review; confidence capped; reference tier = best_available."
             ],
         })
-    elif primary_preset == "functional" and n_primary < MIN_N_AUTO:
+    elif ladder[primary_preset] == TIER_LEAST_DISTURBED and n_primary < MIN_N_AUTO:
         result["review_flags"] = [
             f"Least-disturbed pool is exploratory ({n_primary} sites, DATA-05 band "
             f"{REF_FALLBACK_FLOOR} to {MIN_N_AUTO - 1}). Stays at tier; the owner may "
@@ -937,6 +1032,8 @@ def compact_portfolio(intended: list[str], column_functions: dict,
         for fid in dict.fromkeys(fids):
             by_fid.setdefault(fid, []).append(mk)
 
+    max_per_fn = int(methodology.threshold(
+        "metric_portfolio.default_maximum_metrics_per_function"))
     out = []
     for f in deep_export.deep_read_staf_crosswalk():
         fid = str(f.get("id"))
@@ -949,7 +1046,7 @@ def compact_portfolio(intended: list[str], column_functions: dict,
             "n_metrics": len(ms),
             "metrics": ms,
             "primary_metric": ms[0] if ms else None,
-            "select01_flag": len(ms) > 2,
+            "select01_flag": len(ms) > max_per_fn,
         })
     if unmapped:
         out.append({
@@ -960,7 +1057,7 @@ def compact_portfolio(intended: list[str], column_functions: dict,
             "n_metrics": len(unmapped),
             "metrics": unmapped,
             "primary_metric": unmapped[0],
-            "select01_flag": len(unmapped) > 2,
+            "select01_flag": len(unmapped) > max_per_fn,
         })
     return out
 
@@ -989,9 +1086,11 @@ def uncovered_functions(portfolio: list[dict]) -> list[dict]:
 # Rule ids whose per-metric review records are mandatory-review triggers for the
 # CONF-02 mandatory_review_open cap (2026-08-21). CONF-02's own "confidence_capped"
 # item is a consequence, not a cause, and stays out; pair and function records
-# are not per-curve.
-MANDATORY_REVIEW_RULES = ("CURVE-07", "CURVE-04", "CURVE-02", "CURVE-06",
-                          "DATA-03", "DATA-05", "DATA-06")
+# are not per-curve. mandatory_review_triggers ITERATES this tuple (in this
+# order), so the documented list is the acting list; REF-02 rides separately as
+# the one run-level trigger.
+MANDATORY_REVIEW_RULES = ("CURVE-07", "DATA-05", "DATA-06", "DATA-03",
+                          "CURVE-02", "CURVE-04", "CURVE-06")
 ADJUDICATING_ACTIONS = ("accept", "accept_with_conditions", "modify")
 
 
@@ -1013,27 +1112,26 @@ def mandatory_review_triggers(mk: str, *, review_entry: dict, sample_disposition
                               missingness_disposition, diag: dict,
                               ref02_triggered: bool) -> list[tuple[str, str]]:
     """The (rule_id, subject) review items the run raises on one curve, derived
-    from the same evidence the provenance records are built from."""
-    triggers: list[tuple[str, str]] = []
+    from the same evidence the provenance records are built from. Emission is an
+    iteration over MANDATORY_REVIEW_RULES, so adding a rule there without a
+    predicate here (or vice versa) fails loudly instead of drifting."""
     status = (review_entry or {}).get("status")
-    if status not in (run_state.CURVE_STATUS_AUTO_OK, None):
-        triggers.append(("CURVE-07", mk))
-    if str(sample_disposition) == "exploratory":
-        triggers.append(("DATA-05", mk))
-    elif str(sample_disposition) in ("insufficient", "too_few"):
-        triggers.append(("DATA-06", mk))
-    if str(missingness_disposition) == "review":
-        triggers.append(("DATA-03", mk))
     loo = (diag or {}).get("loo") or {}
     infl = (diag or {}).get("influence") or {}
     boot = (diag or {}).get("bootstrap") or {}
-    if diag:
-        if not loo.get("evaluable"):
-            triggers.append(("CURVE-02", mk))
-        if infl.get("flagged"):
-            triggers.append(("CURVE-04", mk))
-        if not boot.get("evaluable"):
-            triggers.append(("CURVE-06", mk))
+    fired = {
+        "CURVE-07": status not in (run_state.CURVE_STATUS_AUTO_OK, None),
+        "DATA-05": str(sample_disposition) == "exploratory",
+        "DATA-06": str(sample_disposition) in ("insufficient", "too_few"),
+        "DATA-03": str(missingness_disposition) == "review",
+        "CURVE-02": bool(diag) and not loo.get("evaluable"),
+        "CURVE-04": bool(diag) and bool(infl.get("flagged")),
+        "CURVE-06": bool(diag) and not boot.get("evaluable"),
+    }
+    if set(fired) != set(MANDATORY_REVIEW_RULES):
+        raise RuntimeError("mandatory-review predicates out of step with "
+                           "MANDATORY_REVIEW_RULES")
+    triggers = [(rule, mk) for rule in MANDATORY_REVIEW_RULES if fired[rule]]
     if ref02_triggered:
         triggers.append(("REF-02", "reference_screen"))
     return triggers
@@ -1187,7 +1285,8 @@ def run_evidence(l3_code: str, name: str, *,
                  diagnostics_n_boot: int = 200,
                  diagnostics_enabled: bool = True,
                  nrsa_dataset_id: str = nrsa_dataset.DEFAULT_DATASET_ID,
-                 nrsa_cycles=None) -> dict:
+                 nrsa_cycles=None,
+                 predictor_source: str = "streamcat") -> dict:
     """The expensive, decision-free half of a regional run.
 
     Screening, data assembly, the registries, redundancy, the stratifier
@@ -1258,6 +1357,30 @@ def run_evidence(l3_code: str, name: str, *,
     landscape_config, landscape_missing = build_landscape_metric_config(
         list(data.columns), landscape_directions)
     predictor_config = build_predictor_config(list(data.columns), landscape_directions)
+
+    # Engine-sourced predictor recomputation (the recalibration mechanism):
+    # exact-watershed columns are computed at every retained site, joined by
+    # site_id, and swapped in for their StreamCat predictor analogs. The
+    # honesty report rides source_reports (the batch runner refuses a stage
+    # whose sources are not ok/skipped). StreamCat stays on for the SCORED
+    # landscape metrics; only the predictor role re-sources.
+    se_reports: list[dict] = []
+    if predictor_source == "site-engine":
+        from . import site_engine_source as ses
+        rows = [{"site_id": r["site_id"], "lat": r["lat"], "lon": r["lon"]}
+                for _, r in data.iterrows()]
+        if on_event:
+            on_event("enrich_site_engine",
+                     {"n_sites": len(rows),
+                      "note": "about a minute per uncached site"})
+        se_values, se_report = ses.enrich_site_engine(
+            rows,
+            cache_path=(str(Path(cache_dir) / "site_engine_cache.json")
+                        if cache_dir else None))
+        data = ses.attach_engine_columns(data, se_values)
+        predictor_config = ses.replace_predictors(predictor_config,
+                                                  list(data.columns))
+        se_reports.append(se_report)
     metric_config.update(landscape_config)
     metric_cols = list(metric_config.keys())
     flagged_direction = flagged_direction + landscape_missing
@@ -1364,7 +1487,11 @@ def run_evidence(l3_code: str, name: str, *,
         "column_functions": column_functions,
         "mapping_df": mapping_df,
         "flagged_direction": flagged_direction,
-        "source_reports": [source_report],
+        "source_reports": [source_report] + se_reports,
+        # Requested build input + the source derived from the predictors
+        # actually configured (the derived value stamps the bundle).
+        "predictor_source_flag": predictor_source,
+        "predictor_source": _derived_predictor_source(predictor_config),
         "data": data,
         "curve_rows": curve_rows,
         "curve_review": curve_review,
@@ -1533,6 +1660,9 @@ def assemble(evidence: dict, *,
         "functionCoverageExceptions": coverage_exceptions or [],
         # REF stamp for the bundle and every metric entry (REF-02 provenance).
         "referenceTier": tier["reference_tier"],
+        # Train/serve provenance: the predictor source DERIVED from the build
+        # (deep_export omits the StreamCat default).
+        "predictorSource": evidence.get("predictor_source"),
     }
     meta["metricAnnotations"] = metric_annotations(
         intended=intended, curve_rows=curve_rows, metric_config=metric_config,
@@ -1682,7 +1812,11 @@ def run(l3_code: str, name: str, *,
 # metric_config columns, so the class columns added here cannot perturb a curve.
 # A candidate that passes STRAT-00 becomes a review item, not a decision.
 # --------------------------------------------------------------------------- #
-PHASE2_SIG_THRESHOLD = 0.05
+# stratifier_rules.screening_significance_alpha GOVERNS the phase-2 significance
+# cut (and mirrors the phase-1 engine cut, screening.SCREENING_ALPHA). The
+# support threshold stays a structural constant of the ranking method.
+PHASE2_SIG_THRESHOLD = float(methodology.threshold(
+    "stratifier_rules.screening_significance_alpha"))
 PHASE2_SUPPORT_THRESHOLD = 0.5
 
 
@@ -2088,8 +2222,11 @@ def session_fields(result: dict) -> dict:
 
 def publish(result: dict, publish_root: Path | str, *, maintainer: str = "regional-agent",
             provenance: dict | None = None,
-            portfolio_approvals: list[dict] | None = None) -> dict:
-    """Publish the result's bundle as a preliminary version into a (staging) library root.
+            portfolio_approvals: list[dict] | None = None,
+            status: str = library.DEFAULT_STATUS) -> dict:
+    """Publish the result's bundle into a (staging) library root at ``status``
+    (automation callers pass ``"draft"``: no human has reviewed the curves in
+    the app yet).
 
     ``publish_root`` is set as STAF_LIBRARY_ROOT so this never touches canonical apps/library
     unless the caller points it there. ``portfolio_approvals`` carries the recorded
@@ -2122,7 +2259,8 @@ def publish(result: dict, publish_root: Path | str, *, maintainer: str = "region
     if portfolio_approvals:
         meta["portfolioApprovals"] = list(portfolio_approvals)
     version = library.publish_version(result["assessment_id"], meta, payload,
-                                      result["bundle"], provenance=provenance)
+                                      result["bundle"], provenance=provenance,
+                                      status=status)
     return {"version": version, "root": str(root),
             "path": str(root / "assessments" / library.slugify(result["assessment_id"])
                         / f"v{version}")}

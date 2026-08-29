@@ -12,6 +12,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
+from streamcurves import nrsa_dataset as nd
 from streamcurves import regional_agent as ra
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "run_region_batch.py"
@@ -114,6 +115,25 @@ def test_write_batch_summary_has_one_row_per_region(tmp_path):
     assert md.count("\n| ") == 3  # header + two rows
 
 
+@pytest.mark.skipif(not nd.multi_cycle_available(),
+                    reason="multi-cycle archive not built (scripts/nrsa/build_values_table.py)")
+def test_stage_many_threads_the_dataset_choice_into_each_stage(tmp_path, monkeypatch):
+    """stage-many builds cmd_stage's namespace by hand and once omitted the two
+    dataset attributes, so a pooled sweep silently ran on the legacy data and
+    recorded it as such. cmd_stage now reads the attributes directly (no getattr
+    fallback), so the namespace must carry both."""
+    mod = _batch_module()
+    seen = []
+    monkeypatch.setattr(mod, "cmd_stage", lambda ns: (seen.append(ns), 0)[1])
+    rc = mod.main(["stage-many", "--l3", "55", "--out-root", str(tmp_path / "many"),
+                   "--maintainer", "tester",
+                   "--nrsa-dataset", nd.MULTI_CYCLE_DATASET_ID, "--nrsa-cycle", "2324"])
+    assert rc == 0 and len(seen) == 1
+    ns = seen[0]
+    assert ns.nrsa_dataset == nd.MULTI_CYCLE_DATASET_ID
+    assert ns.nrsa_cycles == ["2324"]
+
+
 def test_stage_many_stages_each_region_and_records_failures(tmp_path):
     """Offline: the Eastern Corn Belt Plains stages, an unknown code fails, and
     both land in the summary. The pipeline's fixture cost (about a minute) is
@@ -127,8 +147,11 @@ def test_stage_many_stages_each_region_and_records_failures(tmp_path):
     env.pop("STAF_LIBRARY_ROOT", None)
     out_root = tmp_path / "many"
     proc = subprocess.run(
+        # Pinned to the legacy snapshot: the assertions below are calibrated on
+        # the 18-candidate pilot; new builds default to the pooled archive.
         [sys.executable, str(SCRIPT), "stage-many", "--l3", "55", "--l3", "999",
-         "--out-root", str(out_root), "--no-screen", "--no-streamcat", "--n-boot", "20",
+         "--out-root", str(out_root), "--nrsa-dataset", "legacy-1819",
+         "--no-screen", "--no-streamcat", "--n-boot", "20",
          "--maintainer", "tester", "--coverage-exceptions", str(exceptions),
          "--enable-policy", "curve07-thin-metric-finalized",
          "--enable-policy", "data03-thin-metric-finalized",

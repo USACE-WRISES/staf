@@ -16,15 +16,17 @@ manager, and the map-first import wizard (M7).
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
 import re
-from datetime import date
+from datetime import date, datetime, timezone
 
 import pandas as pd
 from shiny import module, reactive, render, req, ui
 
 from streamcurves import library as lib
 from streamcurves import overlap
+from streamcurves import rules_view
 from streamcurves import run_state as rs
 from streamcurves import session_io as sio
 from streamcurves import workbook as wb
@@ -42,7 +44,7 @@ from views.discipline_map import discipline_map_server, discipline_map_ui
 from views.import_map import import_map_server, import_map_ui
 from views.state import AppState, deep_copy_value, empty_phase2_settings
 from views.theme import STAF_LINKS, bi, fa
-from views.uihelpers import status_badge
+from views.uihelpers import lifecycle_badge, linkify_rule_ids, status_badge
 from views.workbook_grid import workbook_grid_server, workbook_grid_ui
 
 logger = logging.getLogger("streamcurves")
@@ -94,17 +96,8 @@ def _upload_format_tooltip():
 def _session_tooltip():
     rows = [
         ("File type:", "StreamCurves session snapshot (.streamcurves.json)."),
-        (
-            "Includes:",
-            "Current derived analysis data, workbook tables/metadata, site masks, current "
-            "app selections/settings, saved results/caches, reference-curve choices/results, "
-            "and decision history.",
-        ),
-        (
-            "Original workbook:",
-            "Stores the workbook tables and upload filename, but not the original .xlsx "
-            "file itself as an attached binary.",
-        ),
+        ("Includes:", "The full analysis state: data, settings, results, curve "
+                      "choices, and decision history."),
         ("Restore:", "Uploading the .json restores the saved workspace state."),
     ]
     return ui.div(
@@ -241,8 +234,8 @@ def data_overview_server(input, output, session, state: AppState):
                             ui.div(bi("plus-circle-fill"), class_="landing-card-icon text-primary"),
                             ui.tags.h4("Start New Project", class_="landing-card-title"),
                             ui.tags.p(
-                                "Build a new stream reference-curve dataset: choose a region, "
-                                "gather monitoring sites, pull metrics, classify columns, and build.",
+                                "Choose a region, gather and screen sites, and build "
+                                "reference curves.",
                                 class_="text-muted landing-card-blurb",
                             ),
                             ui.input_action_button(
@@ -531,7 +524,21 @@ def data_overview_server(input, output, session, state: AppState):
         state.curve_review.set(fields.get("curve_review") or {})
         state.screening_run.set(fields.get("screening_run"))
         state.site_exclusions.set(fields.get("site_exclusions") or [])
+        state.screening_skipped.set(bool(fields.get("screening_skipped")))
         state.validation_records.set(fields.get("validation_records") or [])
+        # Origin + carried provenance: restored when a saved draft recorded them,
+        # cleared otherwise so a fresh open never wears a stale origin. Open
+        # paths that KNOW their origin (library picker, Region builder's staged
+        # open) re-seed both right after this restore returns.
+        state.assessment_source.set(fields.get("assessment_source"))
+        state.source_provenance.set(fields.get("source_provenance"))
+        # Standing-decision opt-ins: validated against the live policy, so a
+        # renamed or newly-standing entry falls away instead of riding along.
+        kept, dropped = rules_view.validate_selections(
+            fields.get("rule_selections") or [])
+        if dropped:
+            logger.info("restore: dropped rule selections %s", dropped)
+        state.rule_selections.set(kept)
         # Absent in a session written before gaps had to be justified -> no
         # exceptions, which is the honest reading of that file.
         state.function_coverage_exceptions.set(
@@ -590,6 +597,16 @@ def data_overview_server(input, output, session, state: AppState):
             logger.exception("open dialog: reading catalog failed")
             return []
 
+    def _open_click(aid: str, ver: int) -> str:
+        """Delegated per-row Open: one channel, {aid, ver} payload (the same
+        idiom as summary_page's row actions), so N rows need no N inputs."""
+        payload = json.dumps({"aid": str(aid), "ver": int(ver)})
+        return (
+            f"Shiny.setInputValue('{ns('open_dialog_action')}',"
+            f"{payload.replace(chr(39), chr(92) + chr(39))},"
+            "{priority:'event'})"
+        )
+
     def _open_library_list(items: list[dict]):
         if not items:
             return ui.div(
@@ -600,32 +617,107 @@ def data_overview_server(input, output, session, state: AppState):
         deep_base = (STAF_LINKS.get("deep") or "").rstrip("/")
         rows = []
         for a in items:
+            aid = str(a.get("assessmentId") or "")
             latest = int(a.get("latestVersion") or 0)
             badge = (
                 ui.tags.span(f"v{latest}", class_="badge bg-primary ms-1")
                 if latest > 0
                 else ui.tags.span("no versions", class_="badge bg-secondary ms-1")
             )
-            region_txt = ap.region_label(a.get("region"))
-            deep_link = None
+            # The lifecycle of the version the badge NAMES (the latest), derived
+            # from the catalog pointers, so review debt is visible right here:
+            # an unreviewed automated build reads "v4 Draft", never "v4" beside
+            # the default version's Preliminary. Older catalogs lack the draft
+            # pointers and fall back to defaultStatus.
+            lifecycle = None
             if latest > 0:
+                if latest == (a.get("latestDraft") or 0):
+                    st_ = "draft"
+                elif latest == (a.get("latestCertified") or 0):
+                    st_ = "certified"
+                elif latest == (a.get("latestPreliminary") or 0):
+                    st_ = "preliminary"
+                else:
+                    st_ = a.get("defaultStatus") or lib.DEFAULT_STATUS
+                lifecycle = ui.tags.span(lifecycle_badge(st_), class_="ms-1")
+            region_txt = ap.region_label(a.get("region"))
+            open_btn = None
+            deep_link = None
+            toggle = None
+            versions_pane = None
+            if latest > 0:
+                open_btn = ui.tags.button(
+                    ui.TagList(bi("folder2-open"), " Open"),
+                    type="button",
+                    class_="btn btn-sm btn-primary",
+                    onclick=_open_click(aid, latest),
+                    title=f"Open v{latest} (latest)",
+                )
                 deep_link = ui.tags.a(
                     ui.TagList(bi("arrow-right-circle"), " DEEP"),
-                    href=f"{deep_base}/?assessment={a.get('assessmentId')}",
+                    href=f"{deep_base}/?assessment={aid}",
                     target="_blank",
                     rel="noopener",
-                    class_="btn btn-sm btn-outline-primary ms-auto",
+                    class_="btn btn-sm btn-outline-primary",
                     title="Review this assessment read-only in DEEP",
                 )
+                # Earlier versions live in a per-row expander (client-side
+                # Bootstrap collapse; content prebuilt here, each version with
+                # its own Open and lifecycle label).
+                manifest = lib.read_manifest(aid) or {}
+                versions = sorted(
+                    (int(v.get("version") or 0) for v in (manifest.get("versions") or [])),
+                    reverse=True,
+                )
+                if len(versions) > 1:
+                    dom = f"open-vers-{lib.slugify(aid)}"
+                    toggle = ui.tags.button(
+                        fa("chevron-down"),
+                        type="button",
+                        class_="btn btn-sm btn-link open-dialog-toggle",
+                        data_bs_toggle="collapse",
+                        data_bs_target=f"#{dom}",
+                        aria_expanded="false",
+                        aria_controls=dom,
+                        title="Show all versions",
+                    )
+                    vrows = []
+                    for v in versions:
+                        vlabel = (
+                            f"v{v} - {lib.status_label(lib.version_status(aid, v))}"
+                            + (" (latest)" if v == latest else "")
+                        )
+                        vrows.append(ui.div(
+                            ui.tags.span(vlabel, class_="small"),
+                            ui.tags.button(
+                                "Open", type="button",
+                                class_="btn btn-sm btn-outline-primary",
+                                onclick=_open_click(aid, v),
+                            ),
+                            class_="d-flex align-items-center justify-content-between "
+                                   "open-dialog-version",
+                        ))
+                    versions_pane = ui.div(*vrows, id=dom,
+                                           class_="collapse open-dialog-versions")
             rows.append(
                 ui.div(
                     ui.div(
-                        ui.tags.strong(a.get("assessmentName") or a.get("assessmentId")),
-                        badge,
-                        ui.div(region_txt, class_="text-muted small"),
+                        ui.div(
+                            ui.tags.strong(a.get("assessmentName") or aid),
+                            badge,
+                            lifecycle,
+                            ui.div(region_txt, class_="text-muted small"),
+                        ),
+                        ui.div(
+                            open_btn,
+                            deep_link,
+                            toggle,
+                            class_="d-flex align-items-center gap-1 ms-auto",
+                        ),
+                        class_="d-flex align-items-center",
                     ),
-                    deep_link,
-                    class_="list-group-item d-flex align-items-center",
+                    versions_pane,
+                    class_="list-group-item",
                 )
             )
         return ui.div(*rows, class_="list-group list-group-flush open-dialog-list mb-2")
@@ -633,12 +725,10 @@ def data_overview_server(input, output, session, state: AppState):
     @reactive.effect
     @reactive.event(state.open_dialog_nonce, ignore_init=True)
     def _show_open_dialog():
+        # Library first (the primary shared workflow): rows carry their own
+        # Open buttons and a version expander, so the old Assessment/Version
+        # selects and their fill effect are gone. Project file below.
         items = _lib_assessments()
-        published = [a for a in items if int(a.get("latestVersion") or 0) > 0]
-        choices = {
-            a["assessmentId"]: (a.get("assessmentName") or a["assessmentId"])
-            for a in published
-        }
         ui.modal_show(
             ui.modal(
                 ui.tags.h6(
@@ -646,32 +736,11 @@ def data_overview_server(input, output, session, state: AppState):
                     class_="fw-bold mb-1",
                 ),
                 ui.p(
-                    "Open an assessment to review or keep working on it. Loading restores "
-                    "its saved session and replaces whatever is currently open. Use the "
-                    "DEEP links to review one read-only instead.",
+                    "Opening an assessment restores its saved session and "
+                    "replaces whatever is open.",
                     class_="text-muted small mb-2",
                 ),
                 _open_library_list(items),
-                ui.div(
-                    ui.div(
-                        ui.input_select(
-                            ns("open_assessment"), "Assessment",
-                            choices=choices or {"": "No published assessments yet"},
-                        ),
-                        class_="col-sm-7",
-                    ),
-                    ui.div(
-                        ui.input_select(ns("open_version"), "Version", choices={}),
-                        class_="col-sm-5",
-                    ),
-                    class_="row g-2",
-                ),
-                ui.input_action_button(
-                    ns("open_btn"),
-                    ui.TagList(bi("folder2-open"), " Open assessment"),
-                    class_="btn btn-primary btn-sm",
-                    disabled=None if published else "disabled",
-                ),
                 ui.tags.hr(class_="my-3"),
                 ui.tags.h6(
                     ui.TagList(bi("file-earmark-arrow-up"), " Project file"),
@@ -696,41 +765,27 @@ def data_overview_server(input, output, session, state: AppState):
             )
         )
 
-    @reactive.effect
-    def _fill_open_version():
-        # Plain effect (not event-guarded): the open_assessment select is created
-        # fresh each time the Open modal mounts, and this must populate Version on
-        # that first render, not only on a later change.
+    def _seed_origin(*, kind: str, library_id=None, version=None, staged_path=None,
+                     run_dir=None, content_digest=None, provenance=None,
+                     portfolio_approvals=None):
+        """Stamp where the just-restored assessment came from (and its build's
+        provenance, when it has one). Disclosure only: a failure here must
+        never block the open. Called AFTER the restore so the baselines
+        describe what actually loaded."""
         try:
-            aid = input.open_assessment()
-        except Exception:  # noqa: BLE001 — select not mounted yet
-            return
-        if not aid:
-            ui.update_select("open_version", choices={})
-            return
-        manifest = lib.read_manifest(aid) or {}
-        latest = int(manifest.get("latestVersion") or 0)
-        versions = sorted(
-            (int(v.get("version") or 0) for v in (manifest.get("versions") or [])),
-            reverse=True,
-        )
-        choices = {
-            str(v): (f"v{v}" + (" (latest)" if v == latest else "")) for v in versions
-        }
-        ui.update_select(
-            "open_version", choices=choices, selected=str(latest) if latest else None
-        )
+            state.source_provenance.set(provenance)
+            state.assessment_source.set(ap.build_origin(
+                state, kind=kind, library_id=library_id, version=version,
+                staged_path=staged_path, run_dir=run_dir,
+                content_digest=content_digest,
+                portfolio_approvals=portfolio_approvals,
+                loaded_at=datetime.now(timezone.utc).isoformat()))
+        except Exception:  # noqa: BLE001
+            logger.exception("open: origin seeding failed")
 
-    @reactive.effect
-    @reactive.event(input.open_btn)
-    def _open_from_library():
-        aid = input.open_assessment()
-        ver = input.open_version()
-        if not aid or not ver:
-            ui.notification_show(
-                "Pick an assessment and version to open.", type="warning", duration=5
-            )
-            return
+    def _open_version_from_library(aid: str, ver: int) -> None:
+        """Open one library version into the session (shared by every per-row
+        and per-version Open button in the dialog)."""
         try:
             payload = lib.load_version_session(aid, int(ver))
         except Exception as e:  # noqa: BLE001
@@ -747,18 +802,42 @@ def data_overview_server(input, output, session, state: AppState):
                 f"Could not load the assessment: {e}", type="error", duration=8
             )
             return
+        try:
+            prov = lib.load_version_provenance(aid, int(ver))
+            digest = lib.version_content_digest(aid, int(ver))
+            approvals = lib.load_version_meta(aid, int(ver)).get("portfolioApprovals")
+        except Exception:  # noqa: BLE001
+            prov, digest, approvals = None, None, None
+        _seed_origin(kind="library", library_id=lib.slugify(aid), version=int(ver),
+                     content_digest=digest, provenance=prov,
+                     portfolio_approvals=approvals)
+        try:
+            # The library's own records for this version, so the Validate stage
+            # reads what is on disk rather than what the session last saw.
+            state.validation_records.set(
+                lib._validation_records_for(aid, int(ver)))
+        except Exception:  # noqa: BLE001
+            logger.exception("open: validation records read failed")
         ui.modal_remove()
         with reactive.isolate():
             has_data = state.data() is not None
         # Region-only sessions (e.g. migrated SQTs) have no dataset; open the
         # hydrated wizard at the Region step instead of the landing screen.
         _request_data_tab(wizard_step=None if has_data else 1)
-        ui.notification_show(
-            f"Loaded {name} v{ver}. Everything from the saved run is restored; use the "
-            "workflow strip to revisit any stage.",
-            type="message",
-            duration=7,
-        )
+        ui.notification_show(f"Loaded {name} v{ver}.", type="message", duration=5)
+
+    @reactive.effect
+    @reactive.event(input.open_dialog_action)  # no ignore_init: first event on a never-set input IS the init run
+    def _open_dialog_action():
+        payload = input.open_dialog_action() or {}
+        aid = str(payload.get("aid") or "")
+        try:
+            ver = int(payload.get("ver") or 0)
+        except (TypeError, ValueError):
+            ver = 0
+        if not aid or ver < 1:
+            return
+        _open_version_from_library(aid, ver)
 
     @reactive.effect
     @reactive.event(state.session_restore_nonce, ignore_init=True)
@@ -776,12 +855,18 @@ def data_overview_server(input, output, session, state: AppState):
                 f"Could not load the assessment: {e}", type="error", duration=8
             )
             return
-        ui.notification_show(
-            f"Loaded {rq.get('source_name') or 'assessment'}. Open Reference curves in the "
-            "workflow strip to keep working, or revisit earlier stages.",
-            type="message",
-            duration=7,
-        )
+        seed = rq.get("origin_seed")
+        if seed:
+            _seed_origin(kind=seed.get("kind") or "run",
+                         library_id=seed.get("library_id"),
+                         version=seed.get("version"),
+                         staged_path=seed.get("staged_path"),
+                         run_dir=seed.get("run_dir"),
+                         content_digest=seed.get("content_digest"),
+                         provenance=seed.get("provenance"),
+                         portfolio_approvals=seed.get("portfolio_approvals"))
+        ui.notification_show(f"Loaded {rq.get('source_name') or 'assessment'}.",
+                             type="message", duration=5)
 
     @reactive.effect
     @reactive.event(input.open_project_file)
@@ -978,10 +1063,11 @@ def data_overview_server(input, output, session, state: AppState):
         table = _redundancy_table(state)
         header = ui.TagList(
             ui.tags.p(
-                "Every pair of metric columns is correlated on this project's site "
-                "data. Spearman rank correlation is primary; Pearson is shown "
-                "alongside so you can see when the two disagree. RED-01 flags a pair "
-                f"at absolute Spearman {overlap.DEFAULT_RHO_THRESHOLD:.2f} or above.",
+                linkify_rule_ids(
+                    "Every pair of metric columns is correlated on this project's site "
+                    "data. Spearman rank correlation is primary; Pearson is shown "
+                    "alongside so you can see when the two disagree. RED-01 flags a pair "
+                    f"at absolute Spearman {overlap.DEFAULT_RHO_THRESHOLD:.2f} or above."),
                 class_="small mb-1",
             ),
             ui.tags.p(
@@ -1030,8 +1116,9 @@ def data_overview_server(input, output, session, state: AppState):
         return ui.TagList(
             header,
             ui.tags.p(
-                f"{len(table)} pair(s) above the reporting floor, {flagged} flagged "
-                "by RED-01.",
+                linkify_rule_ids(
+                    f"{len(table)} pair(s) above the reporting floor, {flagged} flagged "
+                    "by RED-01."),
                 class_="text-muted small mb-2",
             ),
             ui.tags.table(

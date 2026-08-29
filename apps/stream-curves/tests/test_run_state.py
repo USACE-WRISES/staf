@@ -440,6 +440,36 @@ def test_derive_stage_status_screening_zero_retained_is_attention():
     assert out["candidate_screening"]["status"] == rs.STAGE_ATTENTION
 
 
+def test_derive_stage_status_screening_skipped_is_done():
+    """A deliberate skip turns stage 2 green and readies stage 3 without any
+    retained site (exploration workflow)."""
+    out = rs.derive_stage_status(
+        {"has_region": True, "n_candidates": 71, "screening_skipped": True}
+    )
+    assert out["candidate_screening"]["status"] == rs.STAGE_DONE
+    assert "skipped" in out["candidate_screening"]["detail"]
+    assert out["enrichment_build"]["status"] == rs.STAGE_READY
+
+
+def test_derive_stage_status_real_screening_outranks_the_skip():
+    out = rs.derive_stage_status(
+        {"has_region": True, "n_candidates": 71, "screening_skipped": True,
+         "has_screening": True, "n_retained": 3}
+    )
+    assert out["candidate_screening"]["status"] == rs.STAGE_DONE
+    assert "retained" in out["candidate_screening"]["detail"]
+
+
+def test_readiness_screening_item_stays_failing_when_skipped():
+    """Exploration only: the skip never satisfies REF-01."""
+    snap = {"has_region": True, "screening_skipped": True, "n_candidates": 71,
+            "enriched": True}
+    item = next(i for i in rs.readiness_checklist(snap) if i["key"] == "screening")
+    assert item["ok"] is False
+    assert "skipped" in item["label"]
+    assert not rs.is_ready_to_publish(snap)
+
+
 def test_derive_stage_status_flagged_review_attention():
     out = rs.derive_stage_status(
         {"enriched": True, "n_retained": 5, "curve_review": _review_map()}
@@ -467,6 +497,35 @@ def test_derive_stage_status_refine_map():
     assert out["refine_map"]["status"] == rs.STAGE_DONE
     # Every stage the strip renders has a status.
     assert set(out) == set(rs.STAGE_KEYS)
+
+
+def test_derive_stage_status_validate():
+    """Post-publish only: blocked until a version exists to validate, ready on a
+    fresh publish OR a loaded published version, done once a record exists."""
+    out = rs.derive_stage_status({})
+    assert out["validate"]["status"] == rs.STAGE_BLOCKED
+    out = rs.derive_stage_status({"published": True})
+    assert out["validate"]["status"] == rs.STAGE_READY
+    out = rs.derive_stage_status({"has_validation_target": True})
+    assert out["validate"]["status"] == rs.STAGE_READY
+    out = rs.derive_stage_status({"has_validation_target": True,
+                                  "n_validation_records": 2})
+    assert out["validate"]["status"] == rs.STAGE_DONE
+    assert "2" in out["validate"]["detail"]
+
+
+def test_the_readiness_checklist_never_gains_a_validate_item():
+    """Validation happens AFTER publishing; the publish gate must stay exactly
+    its seven items or the loop deadlocks (cannot validate an unpublished
+    version, cannot publish without validating)."""
+    keys = [i["key"] for i in rs.readiness_checklist({})]
+    assert keys == ["region", "screening", "enriched", "mapping",
+                    "curves", "review", "coverage"]
+
+
+def test_current_stage_resolves_the_validate_tab():
+    assert rs.current_stage("validate", None, None) == "validate"
+    assert rs.stage_landing("validate") == ("validate", None)
 
 
 # --- workspace resolves to a stage that can show its section chips ---------- #

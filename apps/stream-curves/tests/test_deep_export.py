@@ -719,3 +719,89 @@ def test_covered_ids_are_canonical_function_ids(bundle):
     cov = bundle["functionCoverage"]
     assert set(cov["coveredFunctionIds"]) <= canonical
     assert set(cov["missingFunctionIds"]) <= canonical
+
+
+# --------------------------------------------------------------------------- #
+# Crosswalk cache + the quick coverage path (the workflow-strip snapshot)
+# --------------------------------------------------------------------------- #
+def test_crosswalk_cache_returns_the_same_object_until_the_file_changes(tmp_path):
+    import os
+    import time
+
+    # default path: two calls hit the cache (identity, not just equality)
+    assert deep_export.deep_read_staf_crosswalk() is deep_export.deep_read_staf_crosswalk()
+    # explicit path: an mtime bump invalidates
+    p = tmp_path / "staf_functions.json"
+    p.write_text(json.dumps({"functions": [{"id": "f1", "name": "One"}]}),
+                 encoding="utf-8")
+    first = deep_export.deep_read_staf_crosswalk(p)
+    assert [f["id"] for f in first] == ["f1"]
+    assert deep_export.deep_read_staf_crosswalk(p) is first
+    p.write_text(json.dumps({"functions": [{"id": "f1", "name": "One"},
+                                           {"id": "f2", "name": "Two"}]}),
+                 encoding="utf-8")
+    os.utime(p, ns=(time.time_ns(), time.time_ns() + 1_000_000))  # coarse-clock safe
+    assert [f["id"] for f in deep_export.deep_read_staf_crosswalk(p)] == ["f1", "f2"]
+
+
+def _quick_fixture():
+    """completed_metrics + mapping + exceptions exercising every quick-coverage
+    regime: a complete metric (covers 2 functions incl. one via alias walk), a
+    never-complete metric (covers nothing), a None entry, an unmappable label,
+    and a documented exclusion."""
+    cp = pd.DataFrame({"metric_value": [1, 2, 3], "index_score": [0, 0.5, 1]})
+    rows_ok = pd.DataFrame({"metric": ["mA"], "stratum": [""],
+                            "curve_status": ["complete"]})
+    rows_ok["curve_points"] = [cp]
+    rows_bad = pd.DataFrame({"metric": ["mB"], "stratum": [""],
+                             "curve_status": ["insufficient_data"]})
+    rows_bad["curve_points"] = [None]
+    completed = {
+        "mA": {"phase4_curve_rows": rows_ok},
+        "mB": {"phase4_curve_rows": rows_bad},
+        "mC": None,
+    }
+    mapping = _mapping_df([
+        ("mA", "Hydrology", "Catchment hydrology", 1),
+        ("mA", "Hydraulics", "Floodplain connectivity", 2),
+        ("mB", "Hydrology", "Surface water storage", 3),
+        ("mA", "Hydrology", "Not a canonical function", 4),
+    ])
+    exceptions = [{
+        "functionId": "sediment-continuity", "reason": "no-suitable-metric",
+        "justification": "No sediment metric exists in this demo fixture.",
+        "recordedBy": "tester",
+    }]
+    return completed, mapping, exceptions
+
+
+def test_function_coverage_quick_matches_the_bundle():
+    """The snapshot's quick coverage mirrors the bundle's functionCoverage
+    byte-for-byte on this fixture: the incomplete metric covers nothing, the
+    unmappable label adds nothing, and the exclusion validates identically."""
+    completed, mapping, exceptions = _quick_fixture()
+    b = build_deep_assessment_bundle(
+        deep_collect_curve_rows(completed), mapping, {},
+        {"functionCoverageExceptions": exceptions})
+    quick = deep_export.function_coverage_quick(completed, mapping, exceptions)
+    assert quick is not None
+    assert quick["missingFunctionIds"] == b["functionCoverage"]["missingFunctionIds"]
+    assert quick["coveredFunctionIds"] == b["functionCoverage"]["coveredFunctionIds"]
+    assert quick["coveredFunctionIds"] == ["catchment-hydrology", "floodplain-connectivity"]
+    assert quick["excluded"] == b["functionCoverage"]["excluded"] == 1
+    assert quick["missing"] == b["functionCoverage"]["missing"] == 17
+
+
+def test_function_coverage_quick_none_only_when_nothing_to_judge():
+    """None exactly when deep_collect_curve_rows would come back empty (the
+    bundle-raise case); a session with only incomplete candidates still gets a
+    real all-missing verdict, matching what the bundle reports."""
+    _completed, mapping, _exc = _quick_fixture()
+    assert deep_export.function_coverage_quick({}, mapping) is None
+    assert deep_export.function_coverage_quick({"mC": None}, mapping) is None
+    rows_bad = pd.DataFrame({"metric": ["mB"], "stratum": [""],
+                             "curve_status": ["insufficient_data"]})
+    rows_bad["curve_points"] = [None]
+    only_incomplete = {"mB": {"phase4_curve_rows": rows_bad}}
+    quick = deep_export.function_coverage_quick(only_incomplete, mapping)
+    assert quick is not None and quick["covered"] == 0 and quick["missing"] == 20

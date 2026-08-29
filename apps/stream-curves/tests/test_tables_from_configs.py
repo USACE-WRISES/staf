@@ -127,6 +127,43 @@ def test_overlay_restores_settings_onto_role_regenerated_tables(nh_fields):
         assert got["metric_family"] == cfg["metric_family"], cfg["column_name"]
 
 
+def test_overlay_preserves_integer_typed_sheet_columns(nh_fields):
+    """min_sample_size is the one metrics-sheet column typed int64 on a fresh
+    build (the profiler fills it with Python ints). App-built configs always
+    carry it (the workbook reader sets it), and the overlay used to stringify
+    it via repr(float(...)); pandas 3 raises TypeError writing '10.0' into an
+    int64 column, which broke Review & build for any session that had built
+    once. Library-registry configs (this fixture) lack the key, which is why
+    the sibling tests never caught it."""
+    mc = {k: dict(v) for k, v in nh_fields["metric_config"].items()}
+    for cfg in mc.values():
+        cfg["min_sample_size"] = 12
+    tables = build_config_tables_from_roles(nh_fields["data"], _assignments_for(nh_fields))
+    assert str(tables["metrics"]["min_sample_size"].dtype) == "int64"
+    out = wb.overlay_metric_settings(tables, mc)  # raised TypeError before the fix
+    m = out["metrics"]
+    assert str(m["min_sample_size"].dtype) == "int64"
+    assert set(m["min_sample_size"].tolist()) == {12}
+
+
+def test_overlay_type_preservation_without_the_fixture():
+    """Fixture-free variant so the pin holds even where the library assessment
+    is absent: ints stay native in integer columns, the text protocol stays for
+    the declared domain edges, and bools still stringify."""
+    metrics = pd.DataFrame({
+        "column_name": ["x", "y"],
+        "min_sample_size": [10, 10],
+        "higher_is_better": ["TRUE", "TRUE"],
+    })
+    cfg = {"x": {"column_name": "x", "min_sample_size": 10,
+                 "higher_is_better": False, "domain_max": 100}}
+    m = wb.overlay_metric_settings({"metrics": metrics}, cfg)["metrics"]
+    assert str(m["min_sample_size"].dtype) == "int64"
+    assert m["min_sample_size"].tolist() == [10, 10]
+    assert m.loc[0, "domain_max"] == "100.0"
+    assert m.loc[0, "higher_is_better"] == "FALSE"
+
+
 def test_overlay_leaves_unknown_columns_on_their_defaults(nh_fields):
     """A column added after the fact has no curated settings to restore."""
     mc = dict(nh_fields["metric_config"])

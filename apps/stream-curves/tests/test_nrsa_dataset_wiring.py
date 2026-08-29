@@ -58,6 +58,34 @@ def test_the_legacy_digest_ignores_the_dataset_block_entirely():
         assert plain["inputs"][key]["sha256"]
 
 
+def test_the_digest_distinguishes_bootstrap_depths():
+    """CURVE-06/RED-06/STRAT-06 evidence depends on the depth, so two runs at
+    different depths must not share an inputsDigest."""
+    a = pv.build_run_manifest(_result(diagnostics_n_boot=1000), argv=[])
+    b = pv.build_run_manifest(_result(diagnostics_n_boot=200), argv=[])
+    assert a["inputsDigest"] != b["inputsDigest"]
+
+
+def test_the_canonical_bootstrap_depth_adds_no_digest_key():
+    """Every published version ran at 1000 before the depth entered the digest,
+    so the canonical depth (and an absent value) must not contribute."""
+    assert pv.DIGEST_DEFAULT_N_BOOT == 1000
+    plain = pv.build_run_manifest(_result(), argv=[])
+    canonical = pv.build_run_manifest(_result(diagnostics_n_boot=1000), argv=[])
+    assert plain["inputsDigest"] == canonical["inputsDigest"]
+
+
+def test_both_entry_points_default_to_the_canonical_depth():
+    import re
+    from pathlib import Path
+    scripts = Path(__file__).resolve().parents[1] / "scripts"
+    for name in ("run_regional_analysis.py", "run_region_batch.py"):
+        text = (scripts / name).read_text(encoding="utf-8")
+        for m in re.finditer(r'"--n-boot", type=int, default=(\d+)', text):
+            assert int(m.group(1)) == pv.DIGEST_DEFAULT_N_BOOT, \
+                f"{name} defaults --n-boot to {m.group(1)}, not the canonical depth"
+
+
 def test_the_manifest_records_which_dataset_was_read():
     legacy = pv.build_run_manifest(_result(), argv=[])
     assert legacy["inputs"]["nrsa_dataset"]["datasetId"] == nd.LEGACY_DATASET_ID
@@ -225,3 +253,28 @@ def test_the_dataset_flag_is_passed_through_not_just_parsed(script, call):
     window = text[start:start + 900]
     assert "nrsa_dataset_id=" in window, f"{script}: {call} does not pass nrsa_dataset_id"
     assert "nrsa_cycles=" in window, f"{script}: {call} does not pass nrsa_cycles"
+
+
+@pytest.mark.parametrize("script", ["run_region_batch.py", "run_regional_analysis.py"])
+def test_new_builds_default_to_the_pooled_archive(script):
+    """Every --nrsa-dataset declaration defaults through default_build_dataset_id,
+    never through DEFAULT_DATASET_ID (which means "absent" and must stay legacy)."""
+    text = _source(script)
+    declarations = text.count('"--nrsa-dataset"')
+    assert declarations >= 1
+    assert text.count("default=nrsa_dataset.default_build_dataset_id()") == declarations
+    assert "default=nrsa_dataset.DEFAULT_DATASET_ID" not in text
+
+
+def test_stage_many_hands_the_dataset_flags_to_each_stage():
+    """stage-many builds cmd_stage's namespace by hand and once omitted the two
+    dataset attributes; cmd_stage's getattr fallback then silently ran the legacy
+    data. The namespace must carry both, and the fallback must stay gone so a
+    future hand-built namespace fails loudly instead."""
+    text = _source("run_region_batch.py")
+    start = text.index("argparse.Namespace(")
+    window = text[start:start + 900]
+    assert "nrsa_dataset=" in window, "stage-many namespace drops nrsa_dataset"
+    assert "nrsa_cycles=" in window, "stage-many namespace drops nrsa_cycles"
+    assert 'getattr(a, "nrsa_dataset"' not in text, "the silent legacy fallback is back"
+    assert 'getattr(a, "nrsa_cycles"' not in text, "the silent cycles fallback is back"

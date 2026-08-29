@@ -1,6 +1,6 @@
 """Driving a batch region build from the app.
 
-``scripts/run_region_batch.py stage`` already runs the whole six-stage workflow for
+``scripts/run_region_batch.py stage`` already runs the whole staged workflow for
 one Level III ecoregion, applies the standing-decision policy, publishes into a
 staged library and writes a review packet. Everything here is the thin layer the UI
 needs around it: what a region's candidate count means before you spend half an
@@ -21,7 +21,7 @@ from typing import Optional
 
 import pandas as pd
 
-from streamcurves import methodology, provenance
+from streamcurves import methodology, nrsa_dataset, provenance
 
 _APP_DIR = Path(__file__).resolve().parents[1]
 _REPO_ROOT = _APP_DIR.parents[1]
@@ -58,16 +58,14 @@ REVIEWER_ACTIONS = ["accept", "accept_with_conditions", "modify", "reject",
 #: cycles are mostly different places. Each station still contributes one row,
 #: taken from its most recent cycle that carries the metrics the run needs.
 DATASET_LABELS = {
-    "legacy-1819": "NRSA 2018-19 only (what the three published assessments used)",
     "multi-cycle-v1": "Pooled 2013-14, 2018-19 and 2023-24 (one row per station, "
                       "newest visit that has the metrics)",
+    "legacy-1819": "NRSA 2018-19 only (what the first published assessments used)",
 }
 
 DATASET_NOTE = (
-    "Pooling adds places, not repeat measurements: the three surveys mostly visited "
-    "different streams, so the station pool goes from about 1,900 to about 4,400. "
-    "2018-19 stays the default because the published assessments fingerprint those "
-    "exact files, and changing it would break their reproducibility."
+    "Pooling adds stations, not repeat visits. New builds default to the pooled "
+    "archive; 2018-19 stays selectable to reproduce the published assessments."
 )
 
 RESAMPLES_NOTE = (
@@ -79,6 +77,9 @@ RESAMPLES_NOTE = (
     "matters for a curve sitting near the 0.80 threshold. Use 200 for a first look and "
     "1000 for anything you intend to publish."
 )
+
+#: The one visible line; the full RESAMPLES_NOTE rides as the input's tooltip.
+RESAMPLES_HINT = "200 for a first look (about 8 minutes), 1000 to publish (about 33)."
 
 
 # --------------------------------------------------------------------------- #
@@ -161,6 +162,7 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
                   maintainer: str, n_boot: int = 1000,
                   enable_policies: Optional[list[str]] = None,
                   dataset_id: Optional[str] = None,
+                  predictor_source: Optional[str] = None,
                   reviewer_decisions: Optional[Path | str] = None,
                   coverage_exceptions: Optional[Path | str] = None,
                   source_citation: str = "",
@@ -189,6 +191,8 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
         argv += ["--enable-policy", str(pid)]
     if dataset_id:
         argv += ["--nrsa-dataset", str(dataset_id)]
+    if predictor_source and predictor_source != "streamcat":
+        argv += ["--predictor-source", str(predictor_source)]
     if reviewer_decisions:
         argv += ["--reviewer-decisions", str(reviewer_decisions)]
     if coverage_exceptions:
@@ -201,6 +205,59 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
 def repo_root() -> Path:
     """cwd for the subprocess: the script resolves its paths from the repo root."""
     return _REPO_ROOT
+
+
+# --------------------------------------------------------------------------- #
+# One-click REF-02 re-stage
+# --------------------------------------------------------------------------- #
+REF02_POLICY_ID = "ref02-accept-best-available"
+
+
+def blocking_ref02_item(packet: Optional[dict]) -> Optional[dict]:
+    """The blocking reference-tier-fallback open item, or None.
+
+    Also None when the entry was already enabled for the run: re-running with
+    the same flags could not resolve the item, so no button should offer to."""
+    if not packet:
+        return None
+    if REF02_POLICY_ID in ((packet.get("policy") or {}).get("enabled") or []):
+        return None
+    for item in packet.get("open_items") or []:
+        if item.get("trigger") == "reference_tier_fallback" and item.get("blocking"):
+            return item
+    return None
+
+
+def restage_args(packet: Optional[dict], manifest: Optional[dict]) -> dict:
+    """``stage_command`` kwargs that rebuild THIS run with REF-02 enabled.
+
+    Everything else is recovered from the run's own record (dataset and
+    resamples from the manifest, prior enables from the packet), so the
+    re-stage differs from the refused run by exactly one flag. The screening
+    and landscape caches in the run folder make the evidence pass reproduce
+    offline; the resample diagnostics are the part that runs again."""
+    packet = packet or {}
+    manifest = manifest or {}
+    region = packet.get("region") or {}
+    dataset = (((manifest.get("inputs") or {}).get("nrsa_dataset") or {})
+               .get("datasetId") or nrsa_dataset.DEFAULT_DATASET_ID)
+    n_boot = ((manifest.get("diagnostics") or {}).get("nBoot")
+              or packet.get("n_boot") or 1000)
+    enabled = sorted(set((packet.get("policy") or {}).get("enabled") or [])
+                     | {REF02_POLICY_ID})
+    out = {
+        "l3_code": str(region.get("code") or ""),
+        "name": str(region.get("name") or ""),
+        "n_boot": int(n_boot),
+        "enable_policies": enabled,
+        "dataset_id": str(dataset),
+    }
+    # Predictor source recovered from the run's own record so a re-stage
+    # reproduces the same predictors (absent means the StreamCat default).
+    ps = ((manifest.get("inputs") or {}).get("predictor_source") or {})
+    if ps.get("requestedFlag") and ps["requestedFlag"] != "streamcat":
+        out["predictor_source"] = str(ps["requestedFlag"])
+    return out
 
 
 #: cmd_stage's exit codes, as sentences rather than numbers.

@@ -43,6 +43,16 @@ def test_candidate_sites_registered():
     assert "candidate_sites" in sio.SESSION_FIELDS
 
 
+def test_screening_skipped_registered_and_roundtrips():
+    """The deliberate-skip flag survives save/reopen; sessions written before
+    it existed decode it as None, which the restore reads as False."""
+    assert "screening_skipped" in sio.SESSION_FIELDS
+    payload = sio.dump_session_fields({"screening_skipped": True})
+    decoded = sio.decode_session_fields(sio.load_session_payload(sio.dumps_session(payload)))
+    assert decoded["screening_skipped"] is True
+    assert sio.decode_session_fields({})["screening_skipped"] is None
+
+
 def test_candidate_sites_survive_save_and_reopen():
     # The regression: re-entry used to rebuild candidates from the screening
     # table, which has no coordinates and reuses `state` for the EASI run state,

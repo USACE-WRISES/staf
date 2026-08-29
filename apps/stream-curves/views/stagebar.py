@@ -39,15 +39,9 @@ from views.state import AppState
 from views.theme import bi
 from views.uihelpers import guard
 
-# Banner-local short labels; the full rs.STAGE_LABELS ride in the tooltip.
-_SHORT = {
-    "region_sources": "Region & data",
-    "candidate_screening": "Screen sites",
-    "enrichment_build": "Build dataset",
-    "refine_map": "Refine & map",
-    "curve_review": "Reference curves",
-    "publish": "Publish",
-}
+# Short labels + tool tooltips are canonical in run_state (the About modal
+# reads them too); local names kept for the render code below.
+_SHORT = rs.STAGE_SHORT
 
 # Stage status -> pill modifier class (see .stage-pill.stage-* in curves.css).
 _STATUS_CLS = {
@@ -66,38 +60,25 @@ _CLICK = {
     "refine_map": "stage_refine",
     "curve_review": "stage_review",
     "publish": "stage_publish",
+    "validate": "stage_validate",
 }
 
 # Side analysis -> click input id. Kept parallel to _CLICK, not merged into it:
 # these route straight to a nav value, with no stage landing and no wizard step.
 _TOOL_CLICK = {"regional": "tool_regional", "xsec": "tool_xsec",
-               "nrsa": "tool_nrsa", "build": "tool_build"}
+               "nrsa": "tool_nrsa", "build": "tool_build",
+               "rules": "tool_rules"}
 
-# Both icons are already carried by the vendored www/vendor/bs-icons.json subset
-# (they are the icons app.py hangs on the two nav panels), so bi() cannot raise.
+# Every icon here must exist in the vendored www/vendor/bs-icons.json subset or
+# bi() raises at render (test_rules_page_nav pins the whole map against it).
 _TOOL_ICON = {"regional": "bezier2", "xsec": "graph-down",
-              "nrsa": "globe-americas", "build": "magic"}
+              "nrsa": "globe-americas", "build": "magic",
+              "rules": "ui-checks"}
 
-# Why each one exists, and what it needs -- the strip is the only place that says so
-# now that the tools have no tab of their own.
-_TOOL_TITLE = {
-    "regional": (
-        "Regional / hydraulic geometry curves (Y = a * X^b). A side analysis "
-        "outside the staged workflow; needs a built dataset."
-    ),
-    "xsec": (
-        "Survey cross-sections. A side analysis outside the staged workflow; "
-        "needs a built dataset."
-    ),
-    "nrsa": (
-        "Browse every NRSA station across the 2013-14, 2018-19 and 2023-24 "
-        "surveys. Read-only, and needs no project."
-    ),
-    "build": (
-        "Run the whole workflow for one Level III ecoregion, then review what it "
-        "decided. Stages into its own run folder; publishing stays separate."
-    ),
-}
+# The Tools menu toggle glyph (same vendored-subset rule as _TOOL_ICON).
+_TOOLS_MENU_ICON = "tools"
+
+_TOOL_TITLE = rs.TOOL_TITLES
 
 
 def stagebar_ui(id: str):
@@ -108,6 +89,10 @@ def stagebar_ui(id: str):
 @module.server
 def stagebar_server(input, output, session, state: AppState):
     ns = session.ns
+    # The strip's last computed snapshot, for _stage_detail to reuse (plain
+    # holder, deliberately not reactive: reading it must never add a
+    # dependency).
+    _last_snap: dict = {"snap": None}
 
     def _request_nav(value: str, *, wizard_step: int | None = None):
         with reactive.isolate():
@@ -140,6 +125,9 @@ def stagebar_server(input, output, session, state: AppState):
         state.all_layer1_results()
         state.phase2_ranking()
         state.summary_available_overrides()
+        # The Validate stage's status inputs (run_snapshot isolates its reads).
+        state.validation_records()
+        state.assessment_source()
         precheck = state.precheck_df()
         tasks = dict(state.tasks_running() or {})
         tab = state.current_tab()
@@ -149,6 +137,7 @@ def stagebar_server(input, output, session, state: AppState):
         curves_section = state.curves_section()
 
         snap = ap.run_snapshot(state)
+        _last_snap["snap"] = snap
         statuses = rs.derive_stage_status(snap, tasks)
         n_flagged = len(rs.flagged_metrics(snap.get("curve_review") or {}))
         current = rs.current_stage(tab, view, wiz_step)
@@ -157,9 +146,10 @@ def stagebar_server(input, output, session, state: AppState):
         n_precheck_warnings = precheck_summary(precheck)["n_warnings"]
 
         def _sub_row(stage_key: str):
-            # Wizard sub-step chips for the current stage, rendered inside that
-            # stage's group so they anchor under their parent pill. Wizard views
-            # only: the workspace is stage 4's own surface and gets _section_row.
+            # Wizard sub-step chips for the current stage, hung directly under
+            # its pill (absolute, overlaying the second line the subrow
+            # reserves). Wizard views only: the workspace is stage 4's own
+            # surface and gets _section_row.
             if tab != "data" or view not in ("new", "wizard"):
                 return None
             subs = rs.STAGE_SUBSTEPS.get(stage_key) or []
@@ -214,6 +204,11 @@ def stagebar_server(input, output, session, state: AppState):
                 class_="stage-substeps",
             )
 
+        # The current stage's sub-step (or section) chips hang under its own
+        # pill, so they read as that stage's children wherever it sits in the
+        # bar. The subrow below reserves the line they overlay.
+        sub = (_sub_row(current) or _section_row(current)) if current else None
+
         groups = []
         for i, key in enumerate(rs.STAGE_KEYS):
             info = statuses[key]
@@ -236,72 +231,91 @@ def stagebar_server(input, output, session, state: AppState):
                 class_=cls,
                 title=f"Step {i + 1}: {rs.STAGE_LABELS[key]}. {info['detail']}",
             )
-            sub = (_sub_row(key) or _section_row(key)) if key == current else None
-            # The reservation for the sub-row rides on the group that owns it, not
-            # on the shell: the bar wraps at narrow widths, and a shell-level
-            # reservation double-counts once the sub-row lands inside a wrapped
-            # row -- leaving a band of dead grey under the strip.
-            group_cls = "stage-group has-substeps" if sub is not None else "stage-group"
-            groups.append(ui.div(pill, sub, class_=group_cls))
+            group_sub = sub if key == current else None
+            group_cls = ("stage-group has-substeps" if group_sub is not None
+                         else "stage-group")
+            groups.append(ui.div(pill, group_sub, class_=group_cls))
             if i < len(rs.STAGE_KEYS) - 1:
                 groups.append(ui.tags.span(class_="stage-connector"))
 
-        # Side analyses, past a divider. No numbers: only the six stages are
-        # numbered, so nothing else ever reads as a step.
-        chips = []
+        # Side analyses, folded into one Tools menu. No numbers: only the
+        # numbered stages are numbered, so nothing else ever reads as a step.
+        # While a tool page is open the toggle wears that tool's name, which
+        # (with the dimmed pills) is what says where you are.
+        items = []
         for key in rs.TOOL_KEYS:
-            chip_cls = "tool-chip"
+            item_cls = "dropdown-item tool-item"
             if key == tool:
-                chip_cls += " active"
+                item_cls += " active"
             elif not has_data and key not in rs.TOOLS_WITHOUT_DATA:
                 # Dimmed, never disabled: the page's no_data_alert() is what
                 # explains the prerequisite, same as every stage.
-                chip_cls += " tool-blocked"
-            chips.append(ui.input_action_link(
+                item_cls += " tool-blocked"
+            items.append(ui.tags.li(ui.input_action_link(
                 ns(_TOOL_CLICK[key]),
-                ui.TagList(
-                    bi(_TOOL_ICON[key]),
-                    ui.tags.span(rs.TOOL_LABELS[key], class_="tool-label"),
-                ),
-                class_=chip_cls,
+                ui.TagList(bi(_TOOL_ICON[key]), rs.TOOL_LABELS[key]),
+                class_=item_cls,
                 title=_TOOL_TITLE[key],
-            ))
-        # A sibling of the pill row, not a member of it: inside .stage-bar the
-        # chips join the pills' wrap, so a narrow window drops them onto a row of
-        # their own BELOW the sub-step band. As a sibling they stay pinned to the
-        # top right whatever the pills do.
-        tools = ui.div(*chips, class_="stage-tools")
+            )))
+        toggle = ui.tags.a(
+            bi(_TOOLS_MENU_ICON),
+            ui.tags.span(rs.TOOL_LABELS[tool] if tool else "Tools",
+                         class_="tool-label"),
+            class_="tool-chip dropdown-toggle" + (" active" if tool else ""),
+            href="#",
+            title="Side analyses and tools",
+            # display=static: pure-CSS right alignment (dropdown-menu-end)
+            # instead of Popper, whose first async update can lag the click.
+            **{"data-bs-toggle": "dropdown", "data-bs-display": "static",
+               "aria-expanded": "false"},
+        )
+        tools = ui.div(
+            toggle,
+            ui.tags.ul(*items, class_="dropdown-menu dropdown-menu-end"),
+            class_="stage-tools dropdown",
+        )
 
         hint = None
         if snap["has_region"] and not snap["region_is_ecoregion"]:
             hint = ui.div(
                 bi("info-circle"),
-                f" Your region is a {snap['region_kind']}. The staged workflow "
-                "assumes a Level III ecoregion; the stages and tools still "
-                "work with any region.",
+                f" Your region is a {snap['region_kind']}; every stage and tool "
+                "still works.",
                 class_="stage-bar-hint")
 
         # No stage is current inside a side analysis, so dimming the numbered
         # pills is what says "you stepped out" -- they would otherwise sit there
         # fully lit with nothing highlighted.
         bar_cls = "stage-bar aside" if tool else "stage-bar"
+        # Row 1 is the numbered stages alone, full width. Row 2 is always
+        # rendered and holds only the Tools menu, right-aligned: its min-height
+        # reserves the line the current stage's sub-step chips overlay (they
+        # hang absolutely from their stage group above), so the strip height
+        # never jumps as the current stage changes and the steps are never
+        # squeezed by the tools.
+        subrow = ui.div(tools, class_="stage-bar-subrow")
         return ui.div(
-            ui.div(ui.div(*groups, class_=bar_cls), tools, class_="stage-bar-row"),
+            ui.div(*groups, class_=bar_cls),
+            subrow,
             hint,
             class_="stage-bar-shell",
         )
 
     # ── navigation: every stage lands on its page ───────────────────────────
     def _stage_detail(stage_key: str) -> dict:
-        """This pill's own status row, re-derived for the click.
+        """This pill's own status row for the click.
 
-        The strip computes these in its render closure and throws them away. A
-        click needs them too, and re-deriving once per click is nothing next to
-        what navigating into a stage costs.
+        Reuses the snapshot the strip computed on its last render: every
+        snapshot input is a declared dependency of that render, so the cache is
+        at most one flush stale, and it only feeds the blocked-stage toast.
+        Recomputing it here doubled the click's cost (the snapshot is the
+        expensive part). tasks_running is re-read fresh so RUNNING never lags.
         """
+        snap = _last_snap["snap"]
         with reactive.isolate():
-            snap = ap.run_snapshot(state)
             tasks = dict(state.tasks_running() or {})
+            if snap is None:
+                snap = ap.run_snapshot(state)
         return rs.derive_stage_status(snap, tasks).get(stage_key) or {}
 
     # tasks_running is keyed by stage, so a job that is not one of the six needs its
@@ -376,6 +390,12 @@ def stagebar_server(input, output, session, state: AppState):
     def _stage_publish():
         _go("publish")
 
+    @reactive.effect
+    @reactive.event(input.stage_validate)
+    @guard("open Validate")
+    def _stage_validate():
+        _go("validate")
+
     # Side analyses: a nav value with no stage landing and no wizard step.
     @reactive.effect
     @reactive.event(input.tool_regional)
@@ -400,6 +420,12 @@ def stagebar_server(input, output, session, state: AppState):
     @guard("open the Region builder")
     def _tool_build():
         _request_nav("build")
+
+    @reactive.effect
+    @reactive.event(input.tool_rules)
+    @guard("open the Rules page")
+    def _tool_rules():
+        _request_nav("rules")
 
     # Sub-step chips jump straight to their wizard step. Derived from the declared
     # steps rather than a fixed range, so adding one cannot leave its chip dead.

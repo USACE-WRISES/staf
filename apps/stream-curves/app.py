@@ -37,6 +37,7 @@ except Exception:  # noqa: BLE001
 import logging
 
 from streamcurves import methodology
+from streamcurves import run_state as rs
 from streamcurves.mapping import realign_discipline_function_mapping
 from streamcurves.paths import WWW_DIR
 from streamcurves.staf_library import default_discipline_function_mapping
@@ -46,6 +47,8 @@ from views.analysis_workspace import analysis_workspace_server, analysis_workspa
 from views.cross_section import cross_section_server, cross_section_ui
 from views.nrsa_explorer import nrsa_explorer_server, nrsa_explorer_ui
 from views.region_builder import region_builder_server, region_builder_ui
+from views.rules import rules_server, rules_ui
+from views.validate_page import validate_server, validate_ui
 from views.data_overview import data_overview_server, data_overview_ui
 from views.stagebar import stagebar_server, stagebar_ui
 from views.publish import publish_server, publish_ui
@@ -58,7 +61,7 @@ from views.state import AppState
 from views.summary_export import summary_export_server, summary_export_ui
 from views.summary_page import summary_page_server, summary_page_ui
 from views.theme import STAF_LINKS, app_theme, bi, fa, versioned_www_asset
-from views.uihelpers import WORKFLOW_GOTO_INPUT
+from views.uihelpers import RULES_GOTO_INPUT, WORKFLOW_GOTO_INPUT
 from views.workspace_modal import register_workspace_modal
 
 logger = logging.getLogger("streamcurves")
@@ -76,80 +79,44 @@ methodology.verify_mirrors(strict=False)
 
 
 def app_help_content():
+    # Derived from the strip's own vocabulary (run_state), so adding a stage or
+    # a tool updates this modal for free instead of leaving it stale.
+    stages = ui.tags.ul(
+        *[ui.tags.li(ui.tags.strong(f"{i}. {rs.STAGE_SHORT[k]}"),
+                     f": {rs.STAGE_HELP[k]}")
+          for i, k in enumerate(rs.STAGE_KEYS, start=1)],
+        class_="mb-2",
+    )
+    tools = ui.tags.ul(
+        *[ui.tags.li(ui.tags.strong(rs.TOOL_LABELS[k]), f": {rs.TOOL_TITLES[k]}")
+          for k in rs.TOOL_KEYS],
+        class_="mb-2",
+    )
     return ui.TagList(
         ui.tags.p(
-            "StreamCurves helps you develop ",
+            "StreamCurves develops ",
             ui.tags.strong("reference and regional curves"),
-            " for geomorphic stream metrics, from your own measurements and/or published ",
-            "monitoring data. No pre-formatted workbook is required: add raw data and the app ",
-            "helps you classify your columns and set everything up.",
+            " for stream metrics from published monitoring data and your own "
+            "measurements.",
         ),
-        ui.tags.h6("How it works", class_="fw-bold mt-3 mb-1"),
+        ui.tags.h6("Workflow", class_="fw-bold mt-3 mb-1"),
         ui.tags.p(
-            "Follow the numbered workflow strip at the top; each stage is a page:",
+            "Follow the numbered strip at the top; each stage is a page.",
             class_="text-muted mb-1",
         ),
-        ui.tags.ul(
-            ui.tags.li(
-                ui.tags.strong("1. Region & data"),
-                ": choose a region of applicability and gather candidate sites "
-                "(published NRSA monitoring sites and/or your own upload).",
-            ),
-            ui.tags.li(
-                ui.tags.strong("2. Screen sites"),
-                ": run EASI reference screening and confirm the sites to keep.",
-            ),
-            ui.tags.li(
-                ui.tags.strong("3. Build dataset"),
-                ": choose metrics, pull and compile data, classify columns, "
-                "and build.",
-            ),
-            ui.tags.li(
-                ui.tags.strong("4. Reference curves"),
-                ": run the 4-phase evaluation for each metric and resolve any "
-                "flagged curves.",
-            ),
-            ui.tags.li(
-                ui.tags.strong("5. Publish"),
-                ": save your project as a Draft file, or publish it to the STAF "
-                "assessment library as Preliminary or Final for DEEP to score against.",
-            ),
-            class_="mb-2",
-        ),
+        stages,
+        ui.tags.h6("Tools", class_="fw-bold mt-3 mb-1"),
+        tools,
         ui.tags.p(
-            ui.tags.strong("Tools"),
-            " (top bar): ",
-            ui.tags.strong("Regional Curves"),
-            " develops regional (e.g. bankfull) relationships and ",
-            ui.tags.strong("Cross-Sections"),
-            " builds per-site geomorphic cross-sections. Both are optional and "
-            "ride into the published assessment.",
-            class_="text-muted mb-0",
-        ),
-        ui.tags.p(
-            "Use ",
             ui.tags.strong("New / Open / Save"),
-            " in the top right to start a project, resume a saved one (or a "
-            "library assessment), and save or publish your work.",
-            class_="text-muted mb-0",
+            " (top right): start a project, resume a saved one or a library "
+            "assessment, and save or publish your work.",
+            class_="text-muted mb-2",
         ),
-        ui.tags.h6("The 4-phase evaluation", class_="fw-bold mt-3 mb-1"),
         ui.tags.p(
-            "For each metric you ",
-            ui.tags.strong("explore"),
-            " candidate stratifications, ",
-            ui.tags.strong("verify"),
-            " consistency across metrics, ",
-            ui.tags.strong("confirm"),
-            " your selection, then ",
-            ui.tags.strong("build and finalize"),
-            " reference curves scored on a 0-1 scale.",
-            class_="mb-0",
-        ),
-        ui.tags.h6("Data sources", class_="fw-bold mt-3 mb-1"),
-        ui.tags.p(
-            "Use your own upload and/or published sources: NRSA field & lab data, "
-            "EPA StreamCAT, USGS StreamStats, Model My Watershed, and USGS 3DEP / NLDI.",
+            ui.tags.strong("Data sources"),
+            ": NRSA field and lab data, EPA StreamCat, USGS StreamStats, "
+            "Model My Watershed, and USGS 3DEP/NLDI.",
             class_="mb-0",
         ),
     )
@@ -178,6 +145,12 @@ app_ui = ui.page_navbar(
         value="publish",
         icon=bi("file-earmark-arrow-up"),
     ),
+    ui.nav_panel(
+        "Validate",
+        ui.div(validate_ui("validate"), class_="mt-3"),
+        value="validate",
+        icon=bi("graph-up"),
+    ),
     # Side analyses (run_state.TOOL_KEYS). They need the built dataset but are not
     # stages, so the strip renders them as unnumbered chips past a divider rather
     # than as steps 6 and 7 -- keep these nav values in sync with TOOL_KEYS.
@@ -204,6 +177,12 @@ app_ui = ui.page_navbar(
         ui.div(region_builder_ui("build"), class_="mt-3"),
         value="build",
         icon=bi("magic"),
+    ),
+    ui.nav_panel(
+        "Rules",
+        ui.div(rules_ui("rules"), class_="mt-3"),
+        value="rules",
+        icon=bi("ui-checks"),
     ),
     ui.nav_spacer(),
     # Header actions (mirrors the SFARI/DEEP New / Open / Save idiom; the
@@ -285,6 +264,12 @@ def server(input, output, session):
     # should do that when it shows rather than at session init.
     region_builder_server("build", state,
                           active=lambda: state.current_tab() == "build")
+    # Same gate: the page reads the three methodology files.
+    rules_server("rules", state,
+                 active=lambda: state.current_tab() == "rules")
+    # Same gate: the page reads the library's validation records off disk.
+    validate_server("validate", state,
+                    active=lambda: state.current_tab() == "validate")
     publish_server("publish", state)
     summary_export_server("summary_export", state)
 
@@ -363,6 +348,21 @@ def server(input, output, session):
                 state.wizard_step_request.set(int(step))
                 state.wizard_step_nonce.set((state.wizard_step_nonce() or 0) + 1)
 
+    # Rule chips anywhere in the app: switch to the Rules page, then hand the
+    # rule id to its server, which scrolls to the card once the panel shows.
+    @reactive.effect
+    @reactive.event(input[RULES_GOTO_INPUT])
+    def _rules_goto():
+        payload = input[RULES_GOTO_INPUT]() or {}
+        rule_id = payload.get("rule")
+        if not rule_id:
+            return
+        with reactive.isolate():
+            state.nav_request.set("rules")
+            state.nav_request_nonce.set((state.nav_request_nonce() or 0) + 1)
+            state.rules_anchor_request.set(str(rule_id))
+            state.rules_anchor_nonce.set((state.rules_anchor_nonce() or 0) + 1)
+
     # Location mirror for the workflow strip's "you are here" highlight.
     @reactive.effect
     def _mirror_current_tab():
@@ -415,7 +415,8 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_save)
     def _nav_save():
-        # Save is the Publish page: Draft (file downloads), Preliminary, Final.
+        # Save is the Publish page: save-to-file downloads, or publish to the
+        # library as Preliminary (Draft is automation output; Final = certified).
         with reactive.isolate():
             state.nav_request.set("publish")
             state.nav_request_nonce.set((state.nav_request_nonce() or 0) + 1)

@@ -71,6 +71,23 @@ def test_three_metric_function_is_refused_without_approval(libroot):
     assert not (libroot / "assessments" / "gate-test").exists()
 
 
+def test_the_portfolio_maximum_comes_from_the_config(libroot, monkeypatch):
+    """metric_portfolio.default_maximum_metrics_per_function GOVERNS the
+    SELECT-01 gate (it used to be a decorative key beside a hard-coded 2)."""
+    from streamcurves import methodology
+    real = methodology.threshold
+
+    def relaxed(path):
+        if path == "metric_portfolio.default_maximum_metrics_per_function":
+            return 3
+        return real(path)
+
+    monkeypatch.setattr(methodology, "threshold", relaxed)
+    bundle = _bundle(("m1", "m2", "m3"))
+    v = lib.publish_version("gate-test-relaxed", dict(META), _payload(), bundle)
+    assert v == 1                       # three metrics pass with the limit at 3
+
+
 def test_recorded_approval_publishes_and_lands_in_meta(libroot):
     bundle = _bundle(("m1", "m2", "m3"))
     fid = bundle["metricsByFunction"][0]["functionId"]

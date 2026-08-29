@@ -47,6 +47,26 @@ def test_policy_reproduces_eastern_corn_belt_plains_v3():
     assert rep.owner_only_records[0]["rationale_origin"] == "owner_written"
 
 
+def test_policy_reproduces_interior_plateau_v1():
+    """The first batch-built pilot (methodology 0.7): the policy reproduces all
+    34 of its own decisions; the 7 it leaves open are exactly the recorded
+    ai-drafted, owner-approved residual."""
+    rep = dec.replay(_version_dir("interior-plateau", 1), dec.load_policy(),
+                     enabled=OPTIONAL)
+    assert rep.mismatches() == []
+    assert rep.counts() == {"match": 34, "stricter_open": 7}
+    stricter = {r["item_id"] for r in rep.rows if r["outcome"] == dec.STRICTER_OPEN}
+    assert stricter == {"CURVE-04:pcthbwet2019ws", "CURVE-06:pcthbwet2019ws",
+                        "CURVE-06:phab_PCT_FAST", "CURVE-07:pcthbwet2019ws",
+                        "CURVE-07:phab_PCT_FAST",
+                        "RED-01:phab_PCT_SAFN|phab_XEMBED",
+                        "SELECT-01:bed-composition-bedform-dynamics"}
+    assert rep.owner_only_records == []
+    # substrate diameter and embeddedness correlate at |rho| ~ 0.96 there, above
+    # the band the policy accepts on its own, so the acceptance stays the owner's
+    assert rep.portfolio_approvals_not_derived == ["bed-composition-bedform-dynamics"]
+
+
 def test_without_the_optional_entries_the_fallback_region_stays_open():
     rep = dec.replay(_version_dir("eastern-corn-belt-plains", 3), dec.load_policy())
     assert rep.mismatches() == []

@@ -6,15 +6,20 @@ export screen (Finalize / Test in DEEP) and the Publish page can't drift.
 
 from __future__ import annotations
 
+import hashlib
+import json
+
 import pandas as pd
 from shiny import reactive
 
+from streamcurves import provenance as pv
 from streamcurves import run_state as rs
 from streamcurves import session_io as sio
 from streamcurves.deep_export import (
     build_deep_assessment_bundle,
     deep_collect_curve_rows,
     deep_slug,
+    function_coverage_quick,
     uncovered_functions_from_mapping,
 )
 from views.state import AppState
@@ -44,18 +49,25 @@ def region_label(region: dict | None) -> str:
 
 
 def coverage_from_state(state: AppState) -> dict | None:
-    """STAF function coverage the current session would publish, or None if it
-    cannot build a bundle yet.
+    """STAF function coverage the current session would publish, or None while
+    there is nothing to judge yet.
 
-    Reads the same builder the publisher uses so the checklist and the publish gate
-    can never disagree; a build failure (no finalized curve yet) is not a coverage
-    verdict, so it reports None rather than a fake shortfall.
+    Computed by the quick mapping walk (deep_export.function_coverage_quick)
+    rather than a full bundle build: run_snapshot calls this on every workflow-
+    strip render, and building the whole DEEP bundle each time is what made
+    stage clicks and the Validate/Publish pages feel seconds slow. The quick
+    path mirrors the bundle's coverage contract (see its docstring for the one
+    documented divergence); the publish gate in library.publish_version still
+    judges the real bundle, so the two can never disagree where it counts.
     """
+    with reactive.isolate():
+        completed = state.completed_metrics() or {}
+        mapping = state.discipline_function_mapping()
+        exceptions = state.function_coverage_exceptions() or []
     try:
-        bundle = build_bundle_from_state(state)
-    except Exception:  # noqa: BLE001 - nothing to judge until a curve is finalized
+        return function_coverage_quick(completed, mapping, exceptions)
+    except Exception:  # noqa: BLE001 - malformed exceptions are not a coverage verdict
         return None
-    return bundle.get("functionCoverage")
 
 
 def run_snapshot(state: AppState) -> dict:
@@ -75,6 +87,9 @@ def run_snapshot(state: AppState) -> dict:
         coverage_exceptions = state.function_coverage_exceptions() or []
         layer1 = state.all_layer1_results() or {}
         ranking = state.phase2_ranking()
+        validation_records = state.validation_records() or []
+        origin = state.assessment_source() or {}
+        screening_skipped = bool(state.screening_skipped())
     kind = (region or {}).get("kind") if region else None
     n_candidates = int(meta.get("n_candidates") or 0)
     has_screening = sc is not None and not (hasattr(sc, "empty") and sc.empty)
@@ -116,6 +131,9 @@ def run_snapshot(state: AppState) -> dict:
         "has_data_source": has_screening or n_candidates > 0 or data is not None,
         "n_candidates": n_candidates,
         "has_screening": has_screening,
+        # Skip only counts while no real screening table exists; running or
+        # importing a screen supersedes the skip even if the flag lingers.
+        "screening_skipped": screening_skipped and not has_screening,
         "n_retained": n_retained,
         # "attention" still means a build happened; it flags missing diagnostics,
         # not a missing dataset. Reading it as not-enriched would block stages 4
@@ -129,12 +147,87 @@ def run_snapshot(state: AppState) -> dict:
         "mapping_confirmed": mapping_confirmed,
         "n_unmapped_functions": n_unmapped,
         "n_missing_diagnostics": n_missing_diagnostics,
+        # The Validate stage: a published version is loaded (the origin points
+        # into the library), and how many validation records it carries.
+        "has_validation_target": origin.get("kind") == "library",
+        "n_validation_records": len(validation_records),
     }
 
 
 def region_from_state(state: AppState) -> dict | None:
     with reactive.isolate():
         return state.region_of_applicability()
+
+
+# --------------------------------------------------------------------------- #
+# Assessment origin (provenance carry)
+# --------------------------------------------------------------------------- #
+def _digest16(obj) -> str | None:
+    """Short stable digest of a state value, None-safe. Coarse by design: it
+    exists to say "this moved", never to verify what it became."""
+    if obj is None:
+        return None
+    try:
+        text = (obj.to_json(orient="split") if hasattr(obj, "to_json")
+                else json.dumps(obj, sort_keys=True, default=str))
+    except Exception:  # noqa: BLE001 - a digest failure must not block an open
+        text = str(obj)
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
+def origin_baselines(state: AppState) -> dict:
+    """Change-detection baselines captured when an assessment is opened, diffed
+    at publish time by ``provenance.revision_changes``."""
+    with reactive.isolate():
+        fingerprint = state.data_fingerprint()
+        mapping = state.discipline_function_mapping()
+        region = state.region_of_applicability()
+        curve_review = state.curve_review() or {}
+    return {
+        "data_fingerprint": fingerprint,
+        "mapping_digest": _digest16(mapping),
+        "region_code": (region or {}).get("code") if region else None,
+        "curve_fingerprints": {str(m): _digest16(entry)
+                               for m, entry in curve_review.items()},
+    }
+
+
+def build_origin(state: AppState, *, kind: str, library_id: str | None = None,
+                 version: int | None = None, staged_path: str | None = None,
+                 run_dir: str | None = None, content_digest: str | None = None,
+                 portfolio_approvals: list | None = None,
+                 loaded_at: str | None = None) -> dict:
+    """The ``assessment_source`` record for a just-restored assessment. Called
+    AFTER the restore so the baselines describe what was actually loaded.
+
+    ``portfolio_approvals`` are the origin's recorded SELECT-01 approvals
+    (staged or published meta.json): the publish form builds fresh meta, so
+    without carrying these an opened agent build with a >2-metric function
+    would be refused by the very gate its own build already satisfied."""
+    return {
+        "kind": kind,
+        "library_id": library_id,
+        "version": int(version) if version else None,
+        "staged_path": str(staged_path) if staged_path else None,
+        "run_dir": str(run_dir) if run_dir else None,
+        "content_digest": content_digest,
+        "portfolio_approvals": list(portfolio_approvals or []) or None,
+        "loaded_at": loaded_at,
+        "baselines": origin_baselines(state),
+    }
+
+
+def origin_changes(state: AppState, origin: dict | None, *,
+                   content_digest: str | None = None) -> dict:
+    """What moved since the origin was captured, in the coarse flags an
+    ``interactiveRevisions`` entry records."""
+    now = origin_baselines(state)
+    return pv.revision_changes(
+        origin, content_digest=content_digest,
+        data_fingerprint=now["data_fingerprint"],
+        mapping_digest=now["mapping_digest"],
+        region_code=now["region_code"],
+        curve_fingerprints=now["curve_fingerprints"])
 
 
 def default_assessment_id(state: AppState) -> str:
@@ -166,6 +259,7 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
         session_name = state.session_name()
         region = state.region_of_applicability()
         exceptions = state.function_coverage_exceptions() or []
+        predictor_config = state.predictor_config() or {}
 
     curve_rows = deep_collect_curve_rows(completed)
     if not curve_rows:
@@ -174,11 +268,15 @@ def build_bundle_from_state(state: AppState, meta: dict | None = None) -> dict:
             "metric's Phase 4 curve first."
         )
 
+    from streamcurves import site_engine_source as _ses
     full_meta: dict = {
         "assessmentId": deep_slug(session_name or "spring-assessment"),
         "assessmentName": session_name or "Spring Assessment",
         "sourceCitation": DEFAULT_SOURCE_CITATION,
         "functionCoverageExceptions": exceptions,
+        # Derived from the predictors actually configured, never user-chosen;
+        # deep_export omits the StreamCat default.
+        "predictorSource": _ses.predictor_source_of(list(predictor_config)),
     }
     if region:
         full_meta["region"] = region

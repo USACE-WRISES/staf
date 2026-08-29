@@ -18,7 +18,7 @@ from streamcurves import curve_svg as cs
 from streamcurves import run_state as rs
 from views import summary_state as ss
 from views.state import AppState
-from views.theme import bi
+from views.theme import bi, fa
 
 REVIEW_STATUS_LABELS = cs.STATUS_LABELS
 DECISION_LABELS = cs.DECISION_LABELS
@@ -111,11 +111,13 @@ def _scroll_to(dom_id: str) -> str:
 
 def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
             band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS,
-            cross: Mapping | None = None, under: Any = None):
+            cross: Mapping | None = None, under: Any = None, busy: bool = False):
     """A clickable tile: head (metric code and status pill), the SVG, and a
     foot with the other functions the metric serves (its primary function is
-    the header above it), a stratum-count badge, and the table button (which
-    stops the click from also opening the analysis).
+    the header above it), a stratum-count badge, a recompute button (primary
+    tiles only; ``busy`` swaps it for the inline spinner while the row
+    recomputes), and the table button. Both foot buttons stop the click from
+    also opening the analysis.
 
     With ``cross`` (a ``group_tiles`` cross entry) the tile is a cross-listed
     copy placed under the function ``under``: dashed, marked "also under" the
@@ -125,10 +127,19 @@ def tile_ui(row: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
     open_click = setinput_onclick(channel_id, {"metric": metric, "action": "open"})
     table_click = "event.stopPropagation();" + setinput_onclick(
         channel_id, {"metric": metric, "action": "table"})
+    recompute_click = "event.stopPropagation();" + setinput_onclick(
+        channel_id, {"metric": metric, "action": "recompute"})
     n_strata = len(row.get("strata") or [])
     right = []
     if n_strata > 1:
         right.append(ui.tags.span(f"{n_strata} strata", class_="curve-tile-strata"))
+    if cross is None:
+        right.append(ui.tags.button(
+            (ui.tags.span(class_="streamcurves-inline-spinner", aria_hidden="true")
+             if busy else fa("arrows-rotate")),
+            type="button", class_="btn btn-link btn-sm curve-tile-recompute",
+            onclick=recompute_click, title="Recompute this reference curve",
+            **({"disabled": "disabled"} if busy else {})))
     right.append(ui.tags.button(
         bi("table"), type="button", class_="btn btn-link btn-sm curve-tile-table",
         onclick=table_click, title="Show this metric's row in the table"))
@@ -193,7 +204,8 @@ def function_header_ui(fn: Mapping):
 
 
 def section_ui(section: Mapping, *, channel_id: str, w: int = TILE_W, h: int = TILE_H,
-               band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS):
+               band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS,
+               busy_metrics: frozenset | set = frozenset()):
     """One discipline: a divider head (name and count, the workbench's
     discipline colors) over one grid in which each function header spans the
     full width, so tiles stay column-aligned across functions. Each function
@@ -204,7 +216,8 @@ def section_ui(section: Mapping, *, channel_id: str, w: int = TILE_W, h: int = T
     for fn in section.get("functions") or []:
         items.append(function_header_ui(fn))
         under = fn.get("function_id") or fn.get("function_name") or "none"
-        items.extend(tile_ui(t, channel_id=channel_id, w=w, h=h, band_breaks=band_breaks)
+        items.extend(tile_ui(t, channel_id=channel_id, w=w, h=h, band_breaks=band_breaks,
+                             busy=str(t.get("metric") or "") in busy_metrics)
                      for t in fn.get("tiles") or [])
         items.extend(tile_ui(c["tile"], channel_id=channel_id, w=w, h=h, band_breaks=band_breaks,
                              cross=c, under=under)
@@ -233,8 +246,12 @@ def gallery_counts(rows: Iterable[Mapping]) -> dict:
 
 def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str,
                filter_mode: str = "all", w: int = TILE_W, h: int = TILE_H,
-               band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS):
+               band_breaks: tuple[float, float] = cs.DEEP_INDEX_BANDS,
+               busy_metrics: Iterable[str] = (),
+               recompute_all_id: str | None = None,
+               recompute_all_disabled: bool = False):
     rows = [dict(r) for r in rows]
+    busy = {str(m) for m in (busy_metrics or ())}
     c = gallery_counts(rows)
     mode = filter_mode if filter_mode in GALLERY_FILTERS else "all"
     counts = ui.div(
@@ -242,9 +259,18 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
         ui.tags.span(f", {c['flagged']} flagged, {c['out_of_scope']} not in scope", class_="text-muted"),
         class_="curve-gallery-counts",
     )
+    actions = []
+    if recompute_all_id:
+        actions.append(ui.input_action_button(
+            recompute_all_id,
+            ui.TagList(fa("arrows-rotate"), " Recompute all"),
+            class_="btn btn-sm btn-outline-primary curve-gallery-recompute",
+            **({"disabled": "disabled"} if recompute_all_disabled else {})))
+    actions.append(ui.input_radio_buttons(
+        filter_input_id, None, GALLERY_FILTERS, selected=mode, inline=True))
     toolbar = ui.div(
         counts,
-        ui.input_radio_buttons(filter_input_id, None, GALLERY_FILTERS, selected=mode, inline=True),
+        ui.div(*actions, class_="curve-gallery-actions"),
         class_="curve-gallery-toolbar",
     )
     shown = filter_rows(rows, mode)
@@ -253,7 +279,8 @@ def gallery_ui(rows: Iterable[Mapping], *, channel_id: str, filter_input_id: str
             cs.assign_functions(shown)
         # grouped from the tiles actually shown, so a filtered-out tile leaves
         # no empty header and no dead link behind
-        grid = ui.div(*[section_ui(sec, channel_id=channel_id, w=w, h=h, band_breaks=band_breaks)
+        grid = ui.div(*[section_ui(sec, channel_id=channel_id, w=w, h=h, band_breaks=band_breaks,
+                                   busy_metrics=busy)
                         for sec in cs.group_tiles(shown)], class_="curve-gallery-sections")
     else:
         grid = ui.div("No curves match this filter.", class_="text-muted curve-gallery-empty")

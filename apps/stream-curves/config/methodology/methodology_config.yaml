@@ -20,9 +20,9 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.8-provisional"
+  methodology_version: "0.9-provisional"
   threshold_status: "provisional"        # global default; rules may override
-  date: "2026-08-23"
+  date: "2026-08-27"
   calibration_note: >
     v0.3 recalibrated the DATA sample-size floors against the two pilots' REAL
     EASI-screened reference sizes (NH-58 = 33 Functioning sites; ECBP-55 = 0 Functioning,
@@ -143,9 +143,17 @@ stratifier_rules:
   min_resample_support: 0.80             # STRAT-06 (seeded bootstrap recurrence)
   breakpoint_interval_support: 0.70      # STRAT-07 (guard; no data-derived binning exists)
   max_data_derived_bins: 3               # STRAT-08
-  group_difference_fdr_q: 0.05           # STRAT-09 (screening.py BH already)
-  min_group_size_current: 5              # implemented today: stratification_registry.yaml
-  # Registry stratifiers already defined in config/stratification_registry.yaml:
+  # STRAT-00/09 phase-1 selection cut: the raw Kruskal-Wallis p the screening
+  # engine acts on (screening.py SCREENING_ALPHA, R-parity structural; mirror
+  # checked). The old group_difference_fdr_q key mislabeled this as a BH q the
+  # classification never used (renamed 2026-08-27); BH-adjusted p values still
+  # ride in the pairwise table as supporting evidence.
+  screening_significance_alpha: 0.05
+  min_group_size_current: 5              # GOVERNS the national-registry default floor (stratifiers.default_min_group_size; a candidate's own min_group_size wins)
+  # Two registries exist. The interactive workbook path reads the Ohio field-survey
+  # registry (config/stratification_registry.yaml), whose keys are listed here. The
+  # regional agent screens the national NRSA candidates instead (STRAT-00), from:
+  national_registry: config/national_stratifier_registry.yaml  # DrainageAreaClass, ChannelSlopeClass, ElevationClass
   registered_stratifiers:
     - Ecoregion
     - DACAT
@@ -165,7 +173,12 @@ stratifier_rules:
 # selection (CURVE-03) stays moot with a single family.
 # --------------------------------------------------------------------------- #
 curve_rules:
-  approved_families: ["iqr_seed_piecewise_linear"]   # CURVE-01 (the only Approved family)
+  # The require_*/clamp_*/signed_* booleans below are DECLARATIVE method
+  # properties: they record behavior the engine implements structurally and the
+  # golden-master tests pin. Editing one changes the description, not the
+  # engine; the mirror check (methodology.mirror_drift) and tests keep the
+  # numeric keys and the engine in step.
+  approved_families: ["iqr_seed_piecewise_linear"]   # CURVE-01 (mirror checked vs curves.CURVE_FAMILY)
   # Geometric validation gate (implemented in validate_reference_curve_points):
   index_low_band: 0.30                   # curve must span 0.30 (drawing band)
   index_high_band: 0.70                  # curve must span 0.70 (drawing band)
@@ -186,6 +199,18 @@ curve_rules:
   deep_index_bands: [0.39, 0.69]
   deep_function_score_bands: [5, 10]
   deep_function_score_max: 15
+  deep_indirect_weight: 0.10             # indirect-metric weight in the DEEP contract
+  # CURVE-09 measurement-precision floor (advisory, v0.9): a two-sided curve
+  # whose Functioning core is narrower than core_multiple times the metric's
+  # documented measurement standard deviation is flagged for review, because
+  # band assignments inside such a core are measurement noise presented as
+  # condition classes (adversarial review 2026-08-21, ECO-2/STAT-13; the ECBP
+  # pH curve, core 0.196 su at n = 16, was removed by owner decision pending
+  # this rule). Floors are per metric, from instrument/QAPP precision; only
+  # metrics listed here are checked. The pH 0.2 su value is provisional.
+  measurement_precision_core_multiple: 2
+  measurement_precision_floors:
+    chem_PH: 0.2
 
 # --------------------------------------------------------------------------- #
 # Reference-tier ladder (rule family REF). Encodes the user-authorized ECBP
@@ -211,8 +236,13 @@ reference_tiers:
   fallback_tier: "best_available"        # REF-02 fallback target
   floor_tier: "best_available"           # REF-03: never below this for reference curves
   fallback_trigger: "least_disturbed pool below the DATA-05 exploratory floor (n < 10) for the region; a pool of 10 to 19 stays at tier as exploratory unless the owner opts into the fallback"
+  # fallback_trigger / fallback_is_hard_stop / never_relax_* / stamp_* below are
+  # declarative statements of behavior the pipeline implements structurally
+  # (choose_reference_tier + the blocking review queue), not runtime switches.
   fallback_is_hard_stop: true            # mandatory human review whenever REF-02 is used
-  fallback_confidence_cap: 59            # best-available reference cannot score High
+  # The best-available confidence cap lives ONLY at confidence_rules.caps
+  # .best_available_reference (the acting copy); a second copy here drifted
+  # from nothing but invited it (removed 2026-08-27).
   # REF-02 provisional (v0.6). The ECBP pilot mechanism-verified the trigger and the
   # cap (v0.5); the tie-break to the DATA-05 floor resolves the contradiction with
   # the exploratory band (v0.6, review STAT-8). The 0.39 cutoff is not calibrated.
@@ -253,7 +283,7 @@ confidence_rules:
     unresolved_leakage_or_circularity: 39
     mandatory_review_open: 79            # v0.6: an unadjudicated mandatory-review trigger
                                          # cannot read as streamlined (High)
-  high_confidence_audit_rate: 0.10       # production drift audit
+  high_confidence_audit_rate: 0.10       # production drift audit: a PROCESS commitment (sample 10 percent of High-confidence curves for owner audit); not enforced in code
   # Review Priority = Impact x Uncertainty x Novelty (net-new; scales in methodology.md)
 
 # --------------------------------------------------------------------------- #

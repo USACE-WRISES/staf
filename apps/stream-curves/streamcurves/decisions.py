@@ -426,6 +426,7 @@ def apply_policy(doc: dict, policy: dict, *, bundle: Optional[dict] = None,
     never finalizes), and the side effects the batch runner must feed back into
     assembly (finalizations, portfolio approvals).
     """
+    from . import provenance as pv  # local, matching the lint import in _confirm
     active = enabled_entries(policy, enabled)
     version = policy_version(policy)
     origin = f"{(policy.get('meta') or {}).get('rationale_origin') or 'standing_policy'}:{version}"
@@ -442,8 +443,7 @@ def apply_policy(doc: dict, policy: dict, *, bundle: Optional[dict] = None,
                    "question": item.get("question"), "blocking": bool(item.get("blocking")),
                    "evidence": ev}
             out.uncovered.append(rec)
-            if item.get("blocking") or item.get("trigger") in (
-                    "curve_needs_review", "direction_unresolved", "reference_tier_fallback"):
+            if item.get("blocking") or item.get("trigger") in pv.UNCOVERED_HARD_STOP_TRIGGERS:
                 out.hard_stops.append(rec)
             continue
         eid = str(entry["id"])
@@ -536,6 +536,87 @@ def is_pending(text_or_doc) -> bool:
     if isinstance(text_or_doc, str):
         return PENDING_SUFFIX in text_or_doc
     return bool(pending_locations(text_or_doc))
+
+
+# --------------------------------------------------------------------------- #
+# Confirming a staged document under the owner's name
+# --------------------------------------------------------------------------- #
+#: Actions that would change what the staged version contains (a finalization,
+#: removal, or approval would move), so they can never ride in as a confirmation
+#: override; the owner re-stages with the decision as an input instead.
+SCOPE_CHANGING = ("reject", "request_additional_analysis")
+
+#: A rationale origin ending in this was drafted by the owner ahead of the end
+#: review; confirmation turns it into "owner approved".
+PENDING_ORIGIN_SUFFIX = "_pending_owner_approval"
+
+
+def confirm_pending_decisions(doc: dict, *, reviewer: str, date: str,
+                              overrides: Optional[dict] = None) -> tuple[dict, list[str]]:
+    """Rewrite the pending reviewer on every policy decision to the confirming
+    owner, apply rationale-level overrides, and re-run the consistency lint.
+
+    The one implementation both confirmation paths share: ``promote`` calls it
+    with the end review's ``--override`` map, and an in-app publish of an
+    edited agent build calls it with none, because the human publishing after
+    the full in-app review is the owner confirming. Mutates ``doc`` in place
+    and returns ``(doc, applied_override_keys)``. Raises ``ValueError`` on a
+    scope-changing override, a rationale that contradicts its record, or an
+    override naming an unknown item; the caller owns the exit."""
+    from . import provenance as pv  # local: the document lint lives there
+
+    overrides = dict(overrides or {})
+    applied: list[str] = []
+    for rec in doc.get("records") or []:
+        key = f"{rec.get('rule_id')}:{rec.get('subject')}"
+        ov = overrides.get(key)
+        pending = PENDING_SUFFIX in str(rec.get("reviewer") or "")
+        if ov:
+            action, rationale = ov
+            if action in SCOPE_CHANGING or (rec.get("reviewer_action") in SCOPE_CHANGING
+                                            and action not in SCOPE_CHANGING):
+                raise ValueError(
+                    f"override {key}={action} changes the scope of the staged version "
+                    "(a finalization, removal, or approval would change). Re-stage with the "
+                    "decision as an input instead of overriding at promote.")
+            rec["reviewer_action"] = action
+            rec["reviewer_rationale"] = rationale
+            rec["reviewer_decision_class"] = "owner-override"
+            rec["reviewer_rationale_origin"] = "owner_written"
+            applied.append(key)
+            pending = True
+        if pending or ov:
+            problems = pv.decision_consistency_problems(
+                rec, {"rationale": rec.get("reviewer_rationale"),
+                      "asserts": rec.get("reviewer_asserts") or {}})
+            if problems:
+                raise ValueError(f"{key}: " + "; ".join(problems))
+            rec["reviewer"] = reviewer
+            rec["reviewed_at"] = date
+            origin = str(rec.get("reviewer_rationale_origin") or "")
+            if origin.endswith(PENDING_ORIGIN_SUFFIX):
+                # an owner-drafted entry staged ahead of the end review: the
+                # confirmation turns "pending owner approval" into "owner approved"
+                rec["reviewer_rationale_origin"] = (origin[: -len(PENDING_ORIGIN_SUFFIX)]
+                                                    + "_owner_approved")
+    for item in (doc.get("reviewQueue") or {}).get("items") or []:
+        key = item.get("item_id")
+        ov = overrides.get(key)
+        if ov:
+            item["reviewer_action"], item["reviewer_rationale"] = ov
+        if PENDING_SUFFIX in str(item.get("reviewer") or "") or ov:
+            item["reviewer"] = reviewer
+            item["reviewed_at"] = date
+    unknown = sorted(set(overrides) - set(applied)
+                     - {i.get("item_id") for i in (doc.get("reviewQueue") or {}).get("items") or []})
+    if unknown:
+        raise ValueError(f"overrides name items that are not on the record: {', '.join(unknown)}")
+    sd = (doc.get("manifest") or {}).get("standingDecisions")
+    if isinstance(sd, dict):
+        sd["confirmedBy"] = reviewer
+        sd["confirmedAt"] = date
+        sd["overrides"] = applied
+    return doc, applied
 
 
 # --------------------------------------------------------------------------- #

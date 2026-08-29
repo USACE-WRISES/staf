@@ -28,7 +28,7 @@ from __future__ import annotations
 import html
 import math
 import re
-from typing import Any, Iterable, Mapping, Optional
+from typing import Any, Iterable, Mapping, Optional, Sequence
 
 import pandas as pd
 
@@ -244,14 +244,26 @@ def _x_range(tile: Mapping) -> Optional[tuple[float, float]]:
     return (xmin - pad, xmax + pad)
 
 
+#: Field-data overlay markers (the Validate stage). Distinct from every band
+#: fill and from the curve line so a marker cannot be misread as a seed point.
+OVERLAY_COLOR = "#8031a7"
+
+
 def tile_svg(tile: Mapping, *, w: int = 240, h: int = 150,
-             band_breaks: tuple[float, float] = DEEP_INDEX_BANDS) -> str:
+             band_breaks: tuple[float, float] = DEEP_INDEX_BANDS,
+             overlay: Optional[Sequence[tuple[float, float]]] = None) -> str:
     """The thumbnail: band rects split at ``band_breaks``, two dashed break
     lines, the reference range shaded, one polyline per stratum (dash patterns
     cycle; every line dotted and red when the metric is out of scope), the seed
     points, min and max x ticks, y ticks at 0, the breaks, and 1, and a flag
     glyph carrying the first flag when the metric needs review. A tile with no
-    points keeps its full size and says so."""
+    points keeps its full size and says so.
+
+    ``overlay`` draws one diamond per ``(value, score)`` pair on top of the
+    curves (the Validate stage's field-data markers); x clamps into the plotted
+    range so an out-of-range value pins at the edge instead of leaving the
+    plot. ``overlay=None`` output is byte-identical to before the parameter
+    existed."""
     lo_b, hi_b = float(band_breaks[0]), float(band_breaks[1])
     ml, mr, mt, mb = 30, 8, 8, 18
     x0, x1 = ml, w - mr
@@ -322,6 +334,14 @@ def tile_svg(tile: Mapping, *, w: int = 240, h: int = 150,
                      f'stroke-width="1.6"{dash_attr}{label_attr}/>')
         for x, y in pts:
             parts.append(f'<circle class="curve-tile-point" cx="{sx(x):.1f}" cy="{sy(y):.1f}" r="1.8" fill="{color}"/>')
+    for ox, oy in overlay or []:
+        cxp = sx(min(max(float(ox), xmin), xmax))
+        cyp = sy(float(oy))
+        parts.append(f'<path class="curve-tile-overlay" d="M{cxp:.1f},{cyp - 3.4:.1f} '
+                     f'L{cxp + 3.4:.1f},{cyp:.1f} L{cxp:.1f},{cyp + 3.4:.1f} '
+                     f'L{cxp - 3.4:.1f},{cyp:.1f} Z" fill="{OVERLAY_COLOR}" '
+                     f'stroke="#fff" stroke-width="0.6">'
+                     f'<title>{fmt_num(float(ox))}</title></path>')
     if tile.get("needs_review"):
         fx, fy = x1 - 9, y0 + 2
         tip = flags[0] if flags else "Needs review"

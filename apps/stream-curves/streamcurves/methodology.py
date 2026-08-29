@@ -159,8 +159,29 @@ def mirror_drift() -> list[str]:
             problems.append(
                 "curve_rules.max_band_crossings differs from the curve engine's "
                 f"{_curves.MAX_BAND_CROSSINGS}.")
+        if int(threshold("data_rules.curve_engine_hard_floor_n")) != int(
+                _curves.CURVE_ENGINE_HARD_FLOOR_N):
+            problems.append(
+                "data_rules.curve_engine_hard_floor_n differs from the curve "
+                f"engine's {_curves.CURVE_ENGINE_HARD_FLOOR_N}.")
+        approved = [str(f) for f in threshold("curve_rules.approved_families")]
+        if _curves.CURVE_FAMILY not in approved:
+            problems.append(
+                f"the engine's curve family {_curves.CURVE_FAMILY!r} is not in "
+                f"curve_rules.approved_families {approved}.")
     except Exception as exc:  # noqa: BLE001
         problems.append(f"could not compare the curve-gate geometry: {exc}")
+
+    # 3b. The stratifier screening engine's phase-1 significance cut.
+    try:
+        from . import screening as _screening
+        if float(threshold("stratifier_rules.screening_significance_alpha")) != float(
+                _screening.SCREENING_ALPHA):
+            problems.append(
+                "stratifier_rules.screening_significance_alpha differs from the "
+                f"screening engine's {_screening.SCREENING_ALPHA}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the screening significance cut: {exc}")
 
     # 4. The curve method version mirrors run_state.
     try:
@@ -182,6 +203,7 @@ def mirror_drift() -> list[str]:
             ("curve_rules.deep_function_score_bands",
              list(contract["functionScoreBands"])),
             ("curve_rules.deep_function_score_max", contract["functionScoreMax"]),
+            ("curve_rules.deep_indirect_weight", contract["indirectWeight"]),
         ]
         for path, engine_value in pairs:
             if list_or_value(threshold(path)) != list_or_value(engine_value):

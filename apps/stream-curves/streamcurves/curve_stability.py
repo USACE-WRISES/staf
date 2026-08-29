@@ -122,7 +122,7 @@ def loo_curve_stability(values: Any, entry: dict) -> dict:
     out = {"n": n, "n_folds": 0, "held_out_mean_abs_delta": None,
            "held_out_max_abs_delta": None, "seed_max_shift_frac": None,
            "structural_change": False, "evaluable": False}
-    if n < 5:
+    if n < curves.CURVE_ENGINE_HARD_FLOOR_N:
         return out
     full_pts, full_status = _build_points(v, entry)
     if full_pts is None:
@@ -180,7 +180,7 @@ def influence_check(values: Any, entry: dict,
     out = {"n": n, "max_param_change_frac": None, "max_param_change_iqr": None,
            "driver": None, "decision_flip": False, "flagged": False,
            "evaluable": False}
-    if n < 5:
+    if n < curves.CURVE_ENGINE_HARD_FLOOR_N:
         return out
     arr = v.to_numpy()
     q25, q75 = np.quantile(arr, [0.25, 0.75])
@@ -242,7 +242,7 @@ def bootstrap_curve(values: Any, entry: dict, *, n_boot: int = 200,
     out = {"n": n, "n_boot": int(n_boot), "seed": int(seed),
            "structure_stability": None, "shape_stability": None,
            "point_intervals": None, "evaluable": False}
-    if n < 5:
+    if n < curves.CURVE_ENGINE_HARD_FLOOR_N:
         return out
     full_pts, _ = _build_points(v, entry)
     if full_pts is None:

@@ -1,15 +1,16 @@
-"""Publish page — save the open project as a Draft file, or promote it into the
-shared STAF assessment library as a Preliminary or Final (certified) version.
+"""Publish page — save the open project to a file, or publish it into the
+shared STAF assessment library as a Preliminary version (an interactive publish
+IS the human review; automation publishes Drafts through the Region builder).
 
 Replaces the old Library tab: browsing and opening moved to the header Open
-dialog (views/data_overview.py), and lifecycle/governance collapsed into
-publish-time choices. A version is validated and certified when it is published
-that way; changing a published version's status means opening it and publishing
-again at the new level (republish-only governance).
+dialog (views/data_overview.py). Lifecycle after publishing lives on the
+Validate stage: a published version is validated there against field data and
+certified in place, so this page carries no validation form of its own.
 
 See apps/library/README.md for the on-disk format. Reading the catalog works
 anywhere the folder is reachable; publishing is a local/desktop action (writable
-folder) and degrades to "save a Draft and send it to the publisher" on the web.
+folder) and degrades to "save a project file and send it to the publisher" on
+the web.
 """
 
 from __future__ import annotations
@@ -18,12 +19,13 @@ import io
 import logging
 import os
 import tempfile
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from urllib.parse import quote
 
 from shiny import module, reactive, render, req, ui
 
+from streamcurves import decisions as dec
 from streamcurves import library as lib
 from streamcurves import provenance as pv
 from streamcurves import run_state as rs
@@ -34,17 +36,32 @@ from views import assessment_publish as ap
 from views.data_overview import _default_session_name, _sanitize_file_stem
 from views.state import AppState
 from views.theme import STAF_LINKS, bi, fa
-from views.uihelpers import not_ready_panel
+from views.uihelpers import _goto_onclick, guard, not_ready_panel, rule_chip
 
 logger = logging.getLogger("streamcurves")
 
 _NEW = "__new__"
 
-_LEVEL_CHOICES = {
-    "draft": "Draft: save a file to your computer",
-    "preliminary": "Preliminary: publish to the assessment library",
-    "final": "Final: publish as validated and certified",
-}
+# Save-level values: "file" downloads the project to the user's computer,
+# "library" publishes a Preliminary version. ("Draft" is NOT a save level: it
+# is the library lifecycle status automation output carries; renamed 2026-08-27
+# so the two never collide on this page.)
+def _level_choices() -> dict:
+    """Two-line labels for the save-level segmented control. Still a plain
+    input_radio_buttons under the hood (id, value protocol, level_style
+    toggler all unchanged); .pub-seg CSS renders the options as cards."""
+    return {
+        "file": ui.TagList(
+            ui.tags.span("Save to file", class_="pub-seg-title"),
+            ui.tags.span("Download the project to your computer",
+                         class_="pub-seg-caption"),
+        ),
+        "library": ui.TagList(
+            ui.tags.span("Publish to library", class_="pub-seg-title"),
+            ui.tags.span("Add a version to the shared assessment library",
+                         class_="pub-seg-caption"),
+        ),
+    }
 
 
 def _is_desktop() -> bool:
@@ -66,19 +83,56 @@ def _maintainer_name() -> str:
 
 
 def _publish_block_reason() -> str | None:
-    """One plain sentence when publishing cannot work here, else None.
+    """The actionable gate reason from library.publish_gate_reason, or None.
 
-    library.publish_gate_reason explains how to switch publishing on, in terms of
-    an env var and a repository checkout. That belongs in the runbook, not over a
-    form, so its branches are mapped to short copy and the Publish button carries
-    the state by being disabled. The not-writable branch has no case here:
-    _publish_pane already replaces the whole form for that.
+    The library's own copy names the fix (STAF_LIBRARY_PUBLISH=1 in a verified
+    repository checkout; a maintainer name for the audit trail), which is what
+    a blocked publisher actually needs to read. The page used to compress it to
+    "Publishing is off in this session.", which read as an unexplained fault,
+    and its branch order could mask the flag message behind the maintainer one.
+    The not-writable branch never reaches this note: _publish_pane replaces the
+    whole form for that case.
     """
-    if not lib.publish_gate_reason(_maintainer_name()):
+    reason = lib.publish_gate_reason(_maintainer_name())
+    if reason is None:
         return None
-    if not _maintainer_name():
-        return "No publisher name is available for the audit trail."
-    return "Publishing is off in this session."
+    if not _maintainer_name() and lib.can_publish_canonical("anyone"):
+        # Flag and writability are fine; only the audit name is missing. The
+        # library's wording ("Enter a maintainer name...") assumes a form
+        # field this page deliberately does not have.
+        return ("No publisher name is available for the audit trail. Set "
+                "STAF_LIBRARY_MAINTAINER (or run where USERNAME is set), then reload.")
+    return reason
+
+
+def _origin_steer(state: AppState, origin: dict | None, has_doc: bool, built_by):
+    """One line saying what this publish records, or the promote steer when the
+    staged content is untouched (promote keeps the build's record verbatim)."""
+    if (origin or {}).get("kind") == "staged" and (origin or {}).get("content_digest"):
+        try:
+            unchanged = (lib.content_digest(ap.build_bundle_from_state(state))
+                         == origin["content_digest"])
+        except Exception:  # noqa: BLE001 - no finalized curves yet
+            unchanged = False
+        if unchanged:
+            return ui.div(
+                "Content unchanged from the staged build. Publish it from the "
+                "Region builder to confirm and publish with the build's own record.",
+                ui.tags.button("Open Region builder",
+                               class_="btn btn-outline-primary btn-sm ms-2",
+                               onclick=_goto_onclick("build", None), type="button"),
+                class_="alert alert-info py-2 small")
+    if has_doc:
+        return ui.div(
+            "Publishing carries the originating run's provenance and records your "
+            "edits.", class_="text-muted small mb-2")
+    if built_by == "regional-agent":
+        return ui.div(
+            ui.tags.strong("This assessment came from a region build. "),
+            "Publishing here records an interactive provenance without the build's "
+            "own record. To keep it, publish from the Region builder.",
+            class_="alert alert-warning py-2 small")
+    return None
 
 
 @module.ui
@@ -121,6 +175,9 @@ def publish_server(input, output, session, state: AppState):
         state.all_layer1_results()
         state.phase2_ranking()
         state.summary_available_overrides()
+        # The Validate stage's status inputs (run_snapshot isolates its reads).
+        state.validation_records()
+        state.assessment_source()
         snap = ap.run_snapshot(state)
         if not snap.get("curve_review"):
             return None
@@ -140,7 +197,11 @@ def publish_server(input, output, session, state: AppState):
                 f"{n} item{'' if n == 1 else 's'} left before publishing", class_="mb-1"
             ),
             ui.tags.ul(
-                *[ui.tags.li(i["label"]) for i in outstanding],
+                *[ui.tags.li(
+                    i["label"],
+                    (ui.tags.span(rule_chip(i["rule"]), class_="ms-1")
+                     if i.get("rule") else None),
+                ) for i in outstanding],
                 class_="small mb-0",
             ),
             class_="publish-checklist border rounded p-2 mb-3",
@@ -149,50 +210,48 @@ def publish_server(input, output, session, state: AppState):
     # ── save-level pane visibility (CSS, so form inputs keep their values) ────
     @render.ui
     def level_style():
-        lvl = "draft"
+        lvl = "file"
         try:
-            lvl = input.save_level() or "draft"
+            lvl = input.save_level() or "file"
         except Exception:  # noqa: BLE001 — radio not bound yet
             pass
         css = ".pub-pane {display: none;} "
-        if lvl == "draft":
-            css += ".pub-pane-draft {display: block;}"
+        if lvl == "file":
+            css += ".pub-pane-file {display: block;}"
         else:
             css += ".pub-pane-publish {display: block;}"
-        css += (
-            " .pub-final-only {display: block;}"
-            if lvl == "final"
-            else " .pub-final-only {display: none;}"
-        )
         return ui.tags.style(css)
 
-    def _draft_pane():
+    def _file_pane():
         return ui.div(
             ui.div(
-                ui.download_button(
-                    "download_session",
-                    ui.TagList(fa("floppy-disk"), " Project (.json)"),
-                    class_="btn btn-primary w-100",
+                ui.div(
+                    ui.download_button(
+                        "download_session",
+                        ui.TagList(fa("floppy-disk"), " Project (.json)"),
+                        class_="btn btn-primary w-100",
+                    ),
+                    ui.tags.small(
+                        "Full session. Reopen and continue where you left off.",
+                        class_="text-muted d-block mt-1",
+                    ),
+                    class_="col-md-6",
                 ),
-                ui.tags.small(
-                    "Full session. Reopen and continue where you left off.",
-                    class_="text-muted d-block mt-1",
+                ui.div(
+                    ui.download_button(
+                        "download_workbook",
+                        ui.TagList(fa("file-excel"), " Workbook (.xlsx)"),
+                        class_="btn btn-outline-primary w-100",
+                    ),
+                    ui.tags.small(
+                        "Data and setup sheets for Excel. Reopening rebuilds the analysis.",
+                        class_="text-muted d-block mt-1",
+                    ),
+                    class_="col-md-6",
                 ),
-                class_="mb-3",
+                class_="row g-3",
             ),
-            ui.div(
-                ui.download_button(
-                    "download_workbook",
-                    ui.TagList(fa("file-excel"), " Workbook (.xlsx)"),
-                    class_="btn btn-outline-primary w-100",
-                ),
-                ui.tags.small(
-                    "Data and setup sheets for Excel. Reopening rebuilds the analysis.",
-                    class_="text-muted d-block mt-1",
-                ),
-            ),
-            class_="pub-pane pub-pane-draft",
-            style="max-width: 420px;",
+            class_="pub-pane pub-pane-file pub-form",
         )
 
     def _publish_pane(session_name: str, region: dict | None):
@@ -201,11 +260,11 @@ def publish_server(input, output, session, state: AppState):
                 ui.div(
                     bi("info-circle"),
                     " Publishing writes to the version-controlled library, which is "
-                    "a local or desktop action. On the hosted app, save a Draft "
-                    "(above) and send the file to whoever maintains the library.",
+                    "a local or desktop action. On the hosted app, choose Save to "
+                    "file and send the project to whoever maintains the library.",
                     class_="alert alert-info mb-0",
                 ),
-                class_="pub-pane pub-pane-publish",
+                class_="pub-pane pub-pane-publish pub-form",
             )
 
         existing = {
@@ -216,16 +275,25 @@ def publish_server(input, output, session, state: AppState):
         target_choices[_NEW] = "New assessment..."
 
         body = [
-            ui.input_select(
-                "pub_assessment",
-                "Assessment",
-                choices=target_choices,
-                selected=_NEW,
+            ui.div(
+                ui.div(
+                    ui.input_select(
+                        "pub_assessment",
+                        "Assessment",
+                        choices=target_choices,
+                        selected=_NEW,
+                    ),
+                    class_="col-md-6",
+                ),
+                ui.div(
+                    ui.input_text("pub_name", "Assessment name", value=session_name),
+                    class_="col-md-6",
+                ),
+                class_="row g-2",
             ),
             # Only rendered when the target is a new assessment; the field is inert
             # when updating one, and its old label carried that as a parenthetical.
             ui.output_ui("new_id_field"),
-            ui.input_text("pub_name", "Assessment name", value=session_name),
             ui.div(
                 ui.tags.label("Region of applicability", class_="form-label mb-0"),
                 ui.div(ap.region_label(region), class_="text-muted small"),
@@ -249,18 +317,6 @@ def publish_server(input, output, session, state: AppState):
                 ),
                 id="pub_optional", open=False, class_="mb-2",
             ),
-            # Validation: optional for Preliminary, required for Final. Detail
-            # fields + the certify control are server-rendered (output_ui) off
-            # pub_validated, which is more robust than a namespaced client-side
-            # conditionalPanel inside a module.
-            ui.tags.hr(class_="my-2"),
-            ui.input_checkbox("pub_validated", "Validated", value=False),
-            ui.div(
-                "An independent check was completed for this version.",
-                class_="text-muted small mb-2",
-            ),
-            ui.output_ui("validation_detail"),
-            ui.div(ui.output_ui("final_certify"), class_="pub-final-only"),
         ]
         if _is_desktop():
             body.append(
@@ -268,13 +324,13 @@ def publish_server(input, output, session, state: AppState):
                     ui.hr(class_="mt-2 mb-2"),
                     ui.tags.label("Test before publishing", class_="form-label mb-1"),
                     ui.div(
-                        "Open the current draft in DEEP to try scoring before committing a "
+                        "Open the current work in DEEP to try scoring before committing a "
                         "version.",
                         class_="text-muted small mb-2",
                     ),
                     ui.input_action_button(
                         "draft_to_deep",
-                        ui.TagList(bi("arrow-right-circle"), " Prepare draft for DEEP"),
+                        ui.TagList(bi("arrow-right-circle"), " Preview in DEEP"),
                         class_="btn btn-outline-primary btn-sm",
                     ),
                     ui.output_ui("draft_deep_link"),
@@ -287,21 +343,17 @@ def publish_server(input, output, session, state: AppState):
         # was to fill the form and read a warning toast. The gate reads env vars
         # only, so it cannot change mid-session and this can stay static.
         blocked = _publish_block_reason()
-        # An assessment the regional agent built carries a full provenance record in
-        # its run folder: the policy hash, the argv, the inputs digest and every rule
-        # record. Publishing from here does not carry it -- this path writes its own
-        # interactive provenance, which is honest once a human has edited the
-        # assessment but is a thinner record than the build produced. Say so rather
-        # than let it be discovered afterwards.
+        # An assessment that came from an agent build carries its origin and the
+        # build's provenance in state; say what this publish will record before
+        # it runs, and steer an untouched staged build to promote instead.
         with reactive.isolate():
             built_by = (state.run_meta() or {}).get("built_by")
-        if built_by == "regional-agent" and not blocked:
-            body.append(ui.div(
-                ui.tags.strong("This assessment came from a region build. "),
-                "Publishing here records an interactive provenance; the build's own "
-                "record is not carried. To publish with it, use Publish in the Region "
-                "builder instead.",
-                class_="alert alert-warning py-2 small"))
+            origin = state.assessment_source()
+            has_doc = state.source_provenance() is not None
+        if not blocked:
+            steer = _origin_steer(state, origin, has_doc, built_by)
+            if steer is not None:
+                body.append(steer)
         body.append(
             ui.input_action_button(
                 "publish_btn",
@@ -311,14 +363,8 @@ def publish_server(input, output, session, state: AppState):
             )
         )
         if blocked:
-            body.append(ui.div(blocked, class_="text-muted small mt-1"))
-        return ui.div(*body, class_="pub-pane pub-pane-publish")
-
-    def _validated_checked() -> bool:
-        try:
-            return bool(input.pub_validated())
-        except Exception:  # noqa: BLE001 — checkbox not mounted yet
-            return False
+            body.append(ui.div(blocked, class_="text-muted small mt-1 pub-blocked-note"))
+        return ui.div(*body, class_="pub-pane pub-pane-publish pub-form")
 
     def _new_id_value() -> str:
         """The typed id, or "" when the field is not on screen (updating, not new)."""
@@ -340,52 +386,29 @@ def publish_server(input, output, session, state: AppState):
             placeholder="letters, numbers and hyphens",
         )
 
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def validation_detail():
-        # Independent-check fields, shown once Validated is checked.
-        if not _validated_checked():
-            return None
-        return ui.div(
-            ui.div(
-                ui.div(
-                    ui.input_text("pub_val_method", "Check method",
-                                  placeholder="independent recompute / field re-measure"),
-                    class_="col-sm-6",
-                ),
-                ui.div(
-                    ui.input_text("pub_val_checker", "Checker",
-                                  placeholder="name or organization"),
-                    class_="col-sm-6",
-                ),
-                class_="row g-2",
-            ),
-            ui.input_select("pub_val_outcome", "Outcome",
-                            choices={"match": "Matches", "minor": "Minor differences",
-                                     "major": "Major differences"}),
-            ui.input_text_area("pub_val_note", "Validation note", rows=2,
-                               placeholder="Aggregate only, no site data"),
-            class_="border rounded p-2 mb-2 bg-light",
-        )
-
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def final_certify():
-        # Final only (the parent div is CSS-gated on save_level==final): the
-        # certify checkbox once Validated is checked, else a nudge to validate.
-        if _validated_checked():
-            return ui.TagList(
-                ui.input_checkbox("pub_certified", "Certify this version", value=False),
-                ui.div(
-                    "EcoPCX independent review is complete.",
-                    class_="text-muted small mb-2",
-                ),
-            )
-        return ui.div(
-            fa("triangle-exclamation"),
-            " Final requires validation. Check Validated above first.",
-            class_="alert alert-warning py-1 px-2 small mb-2",
-        )
+    @reactive.effect
+    @reactive.event(input.pub_assessment, ignore_init=True)
+    @guard("autofill the assessment name")
+    def _autofill_pub_name():
+        # Selecting an existing assessment fills its recorded name into the
+        # name field. Without this, a publish under an existing id silently
+        # RENAMED the assessment to the current session name (meta writes
+        # input.pub_name at submit). Fires only on selection change, so hand
+        # edits to the name are never clobbered mid-edit.
+        target = input.pub_assessment()
+        if target == _NEW:
+            with reactive.isolate():
+                fallback = _default_session_name(
+                    state.session_name(), state.upload_filename()
+                )
+            ui.update_text("pub_name", value=fallback)
+            return
+        names = {
+            a["assessmentId"]: a.get("assessmentName") or a["assessmentId"]
+            for a in _assessments()
+        }
+        if target in names:
+            ui.update_text("pub_name", value=names[target])
 
     # suspend_when_hidden=False: this output lives in a nav panel that may be
     # hidden at first render; without it the output never resumes when the tab
@@ -399,17 +422,20 @@ def publish_server(input, output, session, state: AppState):
             return not_ready_panel(
                 "Nothing to publish yet",
                 "Build a project first. Once one is open you can save it here as a "
-                "Draft file, or publish it to the shared STAF assessment library.",
+                "project file, or publish it to the shared STAF assessment library.",
                 action_label="Go to Region & data",
                 goto_nav="data",
                 goto_step=1,
                 icon="file-arrow-up",
             )
-        with reactive.isolate():
-            session_name = _default_session_name(
-                state.session_name(), state.upload_filename()
-            )
-            region = state.region_of_applicability()
+        # Deliberate dependencies, NOT isolated: opening a different assessment
+        # leaves app_data_loaded True, and with these isolated the form kept the
+        # previous session's name and target, so a publish landed under the old
+        # assessment's id (found live on the end-to-end verification).
+        session_name = _default_session_name(
+            state.session_name(), state.upload_filename()
+        )
+        region = state.region_of_applicability()
         return ui.TagList(
             ui.card(
                 ui.card_header(
@@ -418,19 +444,23 @@ def publish_server(input, output, session, state: AppState):
                 ),
                 ui.card_body(
                     ui.output_ui("publish_checklist"),
-                    ui.input_radio_buttons(
-                        "save_level", "Save level", choices=_LEVEL_CHOICES,
-                        selected="draft",
+                    ui.div(
+                        ui.input_radio_buttons(
+                            "save_level", "How do you want to save this work?",
+                            choices=_level_choices(),
+                            selected="file",
+                        ),
+                        class_="pub-seg",
                     ),
                     ui.output_ui("level_style"),
-                    _draft_pane(),
+                    _file_pane(),
                     _publish_pane(session_name, region),
                 ),
-                class_="mb-3",
+                class_="mb-3 publish-card",
             ),
         )
 
-    # ── Draft downloads (moved from the Data & Setup Save modal) ──────────────
+    # ── File downloads (moved from the Data & Setup Save modal) ──────────────
     # suspend_when_hidden=False: the Publish panel may never have been shown
     # when the user clicks download; default suspension would leave the links
     # permanently disabled (the bb98c92 wedge).
@@ -468,43 +498,27 @@ def publish_server(input, output, session, state: AppState):
         write_input_workbook(tables, buf)
         yield buf.getvalue()
 
-    # ── publish (Preliminary / Final) ─────────────────────────────────────────
+    # ── publish (preliminary; validation lives on the Validate stage) ─────────
     @reactive.effect
     @reactive.event(input.publish_btn)
     def _publish():
         if not lib.writable():
             ui.notification_show(
-                "The library is read-only here. Save a Draft and send it to the "
-                "publisher.",
+                "The library is read-only here. Save a project file and send it "
+                "to the publisher.",
                 type="warning",
                 duration=8,
             )
             return
 
-        level = input.save_level() or "preliminary"
-        if level == "draft":
+        level = input.save_level() or "library"
+        if level == "file":
             ui.notification_show(
-                "Draft saves a file instead: use the download buttons above.",
+                "'Save to file' downloads the project instead: use the download "
+                "buttons above.",
                 type="warning", duration=6,
             )
             return
-        validated = bool(input.pub_validated())
-        certify = level == "final"
-        if certify and not validated:
-            ui.notification_show(
-                "Final publishes a certified version, and certification requires "
-                "validation. Check Validated first (or publish as Preliminary).",
-                type="warning", duration=8,
-            )
-            return
-        if certify and not bool(input.pub_certified()):
-            ui.notification_show(
-                "Confirm certification: check the certify box (EcoPCX review "
-                "complete) or publish as Preliminary.",
-                type="warning", duration=8,
-            )
-            return
-
         target = input.pub_assessment()
         if target == _NEW:
             aid = lib.slugify(_new_id_value() or input.pub_name() or "")
@@ -588,18 +602,42 @@ def publish_server(input, output, session, state: AppState):
                 meta={"assessmentName": name, "sourceCitation": meta["sourceCitation"]},
             )
             full_payload = ap.session_payload_from_state(state)
-            # Every published version carries a provenance document. The
-            # interactive one records what this path genuinely applied (curve
-            # review, family, portfolio counts) and lists the rest as not
-            # evaluated, so an interactive publish is auditable without faking
-            # an agent-grade chain.
+            # Every published version carries a provenance document. When the
+            # assessment came from an agent build, the build's own document is
+            # carried through with an appended interactive-revision entry, and
+            # the human publishing after the full in-app review is the owner
+            # confirming any standing decisions still marked pending. Otherwise
+            # the interactive document records what this path genuinely applied
+            # and lists the rest as not evaluated, so an interactive publish is
+            # auditable without faking an agent-grade chain.
             with reactive.isolate():
                 curve_review = dict(state.curve_review() or {})
-                region = state.region_of_applicability()
+                region_now = state.region_of_applicability()
                 session_name = state.session_name()
-            provenance_doc = pv.build_interactive_provenance(
-                bundle, curve_review, region=region,
-                publisher=_maintainer_name(), session_name=session_name)
+                source_doc = state.source_provenance()
+                origin = state.assessment_source()
+            # SELECT-01 approvals recorded on the origin ride into the publish
+            # meta: this form builds fresh meta, and without them an opened
+            # agent build with a >2-metric function would be refused by the
+            # very gate its own build already satisfied.
+            if (origin or {}).get("portfolio_approvals"):
+                meta["portfolioApprovals"] = origin["portfolio_approvals"]
+            now_iso = datetime.now(timezone.utc).isoformat()
+            if source_doc:
+                changes = ap.origin_changes(
+                    state, origin, content_digest=lib.content_digest(bundle))
+                provenance_doc = pv.build_carried_provenance(
+                    source_doc, origin=origin or {}, publisher=_maintainer_name(),
+                    session_name=session_name, changes=changes, timestamp=now_iso)
+                if dec.is_pending(provenance_doc):
+                    # ValueError (a rationale contradicting its record) aborts
+                    # below before anything is written.
+                    dec.confirm_pending_decisions(
+                        provenance_doc, reviewer=maintainer, date=now_iso)
+            else:
+                provenance_doc = pv.build_interactive_provenance(
+                    bundle, curve_review, region=region_now,
+                    publisher=_maintainer_name(), session_name=session_name)
             version = lib.publish_version(aid, meta, full_payload, bundle,
                                           provenance=provenance_doc)
         except Exception as e:  # noqa: BLE001
@@ -614,55 +652,41 @@ def publish_server(input, output, session, state: AppState):
             ss["publish"] = {"status": "done", "label": f"Published {name} v{version}."}
             state.run_stage_status.set(ss)
 
-        # Validation and certification writers (append-only, audited). A failure
-        # here leaves the version published as preliminary and says so.
-        governed = "preliminary"
-        gov_problem = None
-        if validated:
-            try:
-                checker = (input.pub_val_checker() or "").strip() or maintainer
-                lib.add_validation_record(aid, version, {
-                    "method": input.pub_val_method() or "",
-                    "checker": checker,
-                    "outcome": input.pub_val_outcome() or "match",
-                }, actor=maintainer, note=input.pub_val_note() or None)
-                n_records = len(lib._validation_records_for(lib.slugify(aid), version))
-                lib.set_version_validation(aid, version, "validated",
-                                           {"n_records": n_records}, maintainer)
-                governed = "validated"
-            except Exception as e:  # noqa: BLE001
-                logger.exception("publish: validation writers failed")
-                gov_problem = f"validation record failed ({e})"
-        if certify and governed == "validated":
-            try:
-                lib.set_version_status(
-                    aid, version, "certified", maintainer,
-                    note="Published as Final; validated and certified at publish.",
-                )
-                governed = "certified"
-            except Exception as e:  # noqa: BLE001
-                logger.exception("publish: certification failed")
-                gov_problem = f"certification failed ({e})"
+        # The published version becomes the new origin: Validate targets it
+        # immediately, and a later revision chains on this publish's record.
+        # The validation-record mirror follows the new version too (it starts
+        # unvalidated; without this the strip kept the old version's count).
+        # Disclosure only; a failure here never undoes the publish.
+        try:
+            state.source_provenance.set(
+                lib.load_version_provenance(aid, version) or provenance_doc)
+            state.assessment_source.set(ap.build_origin(
+                state, kind="library", library_id=lib.slugify(aid), version=version,
+                content_digest=lib.version_content_digest(aid, version),
+                portfolio_approvals=meta.get("portfolioApprovals"),
+                loaded_at=datetime.now(timezone.utc).isoformat()))
+            state.validation_records.set(
+                lib._validation_records_for(lib.slugify(aid), version))
+        except Exception:  # noqa: BLE001
+            logger.exception("publish: origin re-establish failed")
 
         refresh.set(refresh() + 1)
 
         # Fold the new latest into DEEP's baked registry so the cloud DEEP ships it.
+        # Validation and certification live on the Validate stage now.
         baked_ok, baked_msg = lib.rebake_deep()
-        status_txt = {"preliminary": "as a preliminary version",
-                      "validated": "as a validated preliminary version",
-                      "certified": "as a certified (Final) version"}[governed]
-        suffix = f" Note: {gov_problem}." if gov_problem else ""
         if baked_ok:
             ui.notification_show(
-                f"Published {name} v{version} {status_txt}, and updated DEEP's "
-                f"registry.{suffix} Commit apps/library and apps/deep/data, then "
-                "redeploy DEEP.",
+                f"Published {name} v{version} as a Preliminary version, and updated "
+                "DEEP's registry. Commit apps/library and apps/deep/data, then "
+                "redeploy DEEP. Validate it with field data in the Validate stage "
+                "when ready.",
                 type="message",
                 duration=10,
             )
         else:
             ui.notification_show(
-                f"Published {name} v{version} {status_txt}.{suffix} DEEP registry "
+                f"Published {name} v{version} as a Preliminary version. DEEP registry "
                 f"not auto-updated ({baked_msg}). Run "
                 "apps/deep/scripts/bake_library_into_deep.py, then commit "
                 "apps/library and apps/deep/data.",
@@ -670,7 +694,7 @@ def publish_server(input, output, session, state: AppState):
                 duration=12,
             )
 
-    # ── desktop-only: stage the current draft and hand it to DEEP (?handoff=) ──
+    # ── desktop-only: stage a preview bundle and hand it to DEEP (?handoff=) ──
     @reactive.effect
     @reactive.event(input.draft_to_deep)
     def _prepare_draft_handoff():
@@ -680,20 +704,21 @@ def publish_server(input, output, session, state: AppState):
             ui.notification_show(str(e), type="warning", duration=8)
             return
         except Exception as e:  # noqa: BLE001
-            ui.notification_show(f"Could not build the draft: {e}", type="error", duration=8)
+            ui.notification_show(f"Could not build the preview: {e}", type="error", duration=8)
             return
         handoff_dir = Path(tempfile.gettempdir()) / "staf-handoff"
         try:
             handoff_dir.mkdir(parents=True, exist_ok=True)
-            path = handoff_dir / "draft.deep.json"
+            path = handoff_dir / "preview.deep.json"
             write_deep_assessment_bundle(bundle, path)
         except Exception as e:  # noqa: BLE001
-            ui.notification_show(f"Could not stage the draft: {e}", type="error", duration=8)
+            ui.notification_show(f"Could not stage the preview: {e}", type="error", duration=8)
             return
         deep_base = (STAF_LINKS.get("deep") or "").rstrip("/")
         draft_handoff_url.set(f"{deep_base}/?handoff={quote(str(path))}")
         ui.notification_show(
-            "Draft staged. Click 'Open draft in DEEP' to load it.", type="message", duration=6
+            "Preview staged. Click 'Open preview in DEEP' to load it.",
+            type="message", duration=6
         )
 
     @output(suspend_when_hidden=False)
@@ -703,7 +728,7 @@ def publish_server(input, output, session, state: AppState):
         if not url:
             return None
         return ui.tags.a(
-            ui.TagList(bi("arrow-right-circle"), " Open draft in DEEP"),
+            ui.TagList(bi("arrow-right-circle"), " Open preview in DEEP"),
             href=url,
             target="_blank",
             rel="noopener",

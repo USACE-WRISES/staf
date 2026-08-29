@@ -29,11 +29,10 @@ from views.state import AppState
 from views.theme import bi
 from views.uihelpers import no_data_alert
 
-# the same basemaps the import wizard uses
+# the same basemap the import wizard uses
 _USGS_TOPO = ("https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/"
               "MapServer/tile/{z}/{y}/{x}")
 _USGS_ATTR = "USGS The National Map"
-_CARTO_LIGHT = "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
 
 _POINT_STYLE = {"radius": 5, "weight": 1, "fillOpacity": 0.85, "opacity": 1}
 
@@ -211,11 +210,13 @@ def nrsa_explorer_server(input, output, session, state: AppState, active=None):
         return ui.TagList(
             ui.h4(ui.TagList(bi("globe-americas"), " NRSA explorer"), class_="mb-1"),
             ui.div(
-                "Every NRSA station across the three survey cycles. EPA renames sites "
-                "each cycle, so a station here is a physical location, matched across "
-                "cycles by the persistent NARS id where it exists and by flowline and "
-                "position otherwise. Read-only: nothing here changes your project.",
+                "Every NRSA station across the 2013-14, 2018-19 and 2023-24 "
+                "surveys. Read-only.",
                 class_="text-muted small mb-3",
+                title="EPA renames sites each cycle, so a station here is a "
+                      "physical location, matched across cycles by the "
+                      "persistent NARS id where it exists and by flowline and "
+                      "position otherwise.",
             ),
             controls,
             ui.output_ui(ns("summary_line")),
@@ -284,7 +285,6 @@ def nrsa_explorer_server(input, output, session, state: AppState, active=None):
             m.clear_layers()
             m.add(TileLayer(url=_USGS_TOPO, name="USGS Topo", base=True,
                             attribution=_USGS_ATTR, max_native_zoom=16, max_zoom=18))
-            m.add(TileLayer(url=_CARTO_LIGHT, name="Light", base=True, max_zoom=18))
             m.add(LayersControl(position="topright"))
             m.add(ScaleControl(position="bottomright"))
             map_holder["map"] = m

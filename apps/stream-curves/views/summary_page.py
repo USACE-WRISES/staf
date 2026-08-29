@@ -33,6 +33,7 @@ from views.state import AppState
 from views.theme import fa
 from views.uihelpers import (
     guard,
+    linkify_rule_ids,
     no_data_alert,
     remove_final_loading_notification,
     show_final_loading_notification,
@@ -43,6 +44,17 @@ logger = logging.getLogger("streamcurves")
 # curve_review status -> short badge text for the flagged-review queue (the
 # gallery's labels, one vocabulary for both views).
 _REVIEW_STATUS_LABELS = cg.REVIEW_STATUS_LABELS
+
+
+def review_queue_breakdown(review: dict, flagged: list[str]) -> str:
+    """Per-status counts for the queue header, e.g.
+    "17 Insufficient data, 2 Degenerate curve, 1 Multiple crossings"."""
+    counts: dict[str, int] = {}
+    for metric in flagged:
+        label = _REVIEW_STATUS_LABELS.get(
+            ((review.get(metric) or {}).get("status")) or "", "Needs review")
+        counts[label] = counts.get(label, 0) + 1
+    return ", ".join(f"{n} {label}" for label, n in counts.items())
 
 
 class SummaryProgress:
@@ -156,6 +168,7 @@ def summary_page_server(input, output, session, state: AppState):
     pending_bulk_recompute = reactive.value(None)
     pending_row_recompute = reactive.value(None)
     pending_review = reactive.value(None)  # {"metric", "decision"} awaiting a rationale
+    review_queue_collapsed = reactive.value(False)  # session-scoped; default expanded
 
     @reactive.calc
     def summary_metrics() -> list[str]:
@@ -261,14 +274,27 @@ def summary_page_server(input, output, session, state: AppState):
             state, total_steps=len(metrics) * 3 + 1, message="Recomputing reference curves"
         )
         try:
-            ss.recompute_metrics_from_summary(
-                state, metrics, mode="summary",
-                progress_cb=lambda phase, m, i, n, stage: progress.update(phase, m, i, n, stage),
-                on_metric_done=lambda metric: (
-                    ss.set_metric_summary_edit_notes(state, metric, "Reference Curves", []),
-                    set_row_busy(metric, False),
-                ),
-            )
+            # Drive the shared step plan with awaits between steps so each
+            # progress frame actually transmits while the loop runs; the sync
+            # monolith had no yield points, so every update flushed in one
+            # burst at the end and the button looked dead throughout. Each
+            # finished metric also repaints its own row (spinner off, fresh
+            # numbers) as its curve lands.
+            context = None
+            for phase, metric, i, n, run in ss.recompute_steps_from_summary(
+                    state, metrics, mode="summary"):
+                progress.update(phase, metric, i, n, "start")
+                await asyncio.sleep(0)
+                run()
+                progress.update(phase, metric, i, n, "end")
+                if phase == "phase4" and metric is not None:
+                    ss.set_metric_summary_edit_notes(state, metric, "Reference Curves", [])
+                    set_row_busy(metric, False)
+                    if context is None:
+                        # Stable after the shared phase2 pass; built once.
+                        context = ss.build_summary_snapshot_context(state)
+                    refresh_metric_row(metric, context=context, force=True)
+                    await st.task_flush()
             ca.sync_curve_review_after_recompute(state, metrics)
         except Exception as e:  # noqa: BLE001
             logger.exception("bulk recompute failed")
@@ -653,6 +679,36 @@ def summary_page_server(input, output, session, state: AppState):
         refresh_metric_rows(metrics)
 
     # ── row action channel ────────────────────────────────────────────────────
+    def _request_row_recompute(metric: str) -> None:
+        """Shared row-recompute entry (table row + gallery tile): confirm
+        before overwriting a manual curve, else launch straight away."""
+        manual_info = ss.get_metric_phase4_manual_curve_info(state, metric)
+        if manual_info["has_manual_curve"]:
+            pending_row_recompute.set({"metric": metric, "manual_info": manual_info})
+            ui.modal_show(
+                ui.modal(
+                    ui.tags.p(
+                        f"{manual_info['display_name']} has "
+                        f"{(manual_info['summary_label'] or 'a manual curve').lower()}."
+                    ),
+                    ui.tags.p(
+                        "Recomputing this row will replace the current manual reference "
+                        "curve output with a fresh auto-generated curve."
+                    ),
+                    title="Overwrite Manual Curve?",
+                    footer=ui.TagList(
+                        ui.modal_button("Cancel"),
+                        ui.input_action_button(
+                            ns("confirm_row_recompute"),
+                            "Overwrite And Recompute",
+                            class_="btn btn-primary",
+                        ),
+                    ),
+                )
+            )
+            return
+        _launch(run_row_recompute(metric))
+
     @reactive.effect
     @reactive.event(input.summary_row_action)  # no ignore_init: first event on a never-set input IS the init run in py-shiny
     @guard("run that row action")
@@ -673,32 +729,7 @@ def summary_page_server(input, output, session, state: AppState):
             st.launch_workspace_modal(state, "analysis", metric, request_id=request_id)
             return
         if action == "recompute":
-            manual_info = ss.get_metric_phase4_manual_curve_info(state, metric)
-            if manual_info["has_manual_curve"]:
-                pending_row_recompute.set({"metric": metric, "manual_info": manual_info})
-                ui.modal_show(
-                    ui.modal(
-                        ui.tags.p(
-                            f"{manual_info['display_name']} has "
-                            f"{(manual_info['summary_label'] or 'a manual curve').lower()}."
-                        ),
-                        ui.tags.p(
-                            "Recomputing this row will replace the current manual reference "
-                            "curve output with a fresh auto-generated curve."
-                        ),
-                        title="Overwrite Manual Curve?",
-                        footer=ui.TagList(
-                            ui.modal_button("Cancel"),
-                            ui.input_action_button(
-                                ns("confirm_row_recompute"),
-                                "Overwrite And Recompute",
-                                class_="btn btn-primary",
-                            ),
-                        ),
-                    )
-                )
-                return
-            _launch(run_row_recompute(metric))
+            _request_row_recompute(metric)
 
     @reactive.effect
     @reactive.event(input.confirm_row_recompute, ignore_init=True)
@@ -731,17 +762,22 @@ def summary_page_server(input, output, session, state: AppState):
         refresh_metric_rows()
 
     # ── bulk recompute (R:737-761) ────────────────────────────────────────────
-    @reactive.effect
-    @reactive.event(input.recompute_all)
-    @guard("start the recompute")
-    def _recompute_all():
-        with reactive.isolate():
-            if bulk_recompute_active():
-                return
-            metrics = summary_metrics()
-        plan = ss.build_summary_recompute_plan(state, metrics)
+    async def _prepare_bulk_recompute(metrics: list[str]):
+        # Off the click flush, so the "Preparing..." toast paints before the
+        # plan build (one manual-curve probe per metric; the old handler ran it
+        # synchronously inside the click and the button looked dead for
+        # seconds). Detached task: every raise here must be caught or it is an
+        # unretrieved task exception nobody sees.
+        await st.task_flush()
+        await asyncio.sleep(0)
+        try:
+            plan = ss.build_summary_recompute_plan(state, metrics)
+        except Exception as e:  # noqa: BLE001
+            logger.exception("bulk recompute plan failed")
+            ui.notification_show(f"Recompute all failed: {e}", type="error", duration=8)
+            return
         if not plan["manual_metrics"]:
-            _launch(run_bulk_recompute(metrics))
+            await run_bulk_recompute(metrics)
             return
         pending_bulk_recompute.set(plan)
         manual_choices = {
@@ -783,6 +819,25 @@ def summary_page_server(input, output, session, state: AppState):
                 ),
             )
         )
+        await st.task_flush()
+
+    @reactive.effect
+    @reactive.event(input.recompute_all)
+    @guard("start the recompute")
+    def _recompute_all():
+        with reactive.isolate():
+            if bulk_recompute_active():
+                return
+            metrics = summary_metrics()
+        if not metrics:
+            ui.notification_show("No metrics to recompute.", type="message", duration=4)
+            return
+        # Feedback in the click's own flush; the plan build runs in the task.
+        ui.notification_show(
+            f"Preparing to recompute {len(metrics)} curves...",
+            type="message", duration=4,
+        )
+        _launch(_prepare_bulk_recompute(metrics))
 
     @reactive.effect
     @reactive.event(input.confirm_bulk_recompute, ignore_init=True)
@@ -820,13 +875,41 @@ def summary_page_server(input, output, session, state: AppState):
             "{priority:'event'})"
         )
 
+    @reactive.effect
+    @reactive.event(input.review_queue_toggle, ignore_init=True)
+    @guard("toggle the review queue")
+    def _review_queue_toggle():
+        review_queue_collapsed.set(not review_queue_collapsed())
+
     @render.ui
     def review_queue():
         review = state.curve_review() or {}
         flagged = rs.flagged_metrics(review)
         if not flagged:
             return None
+        collapsed = bool(review_queue_collapsed())
         mc = state.metric_config() or {}
+        n = len(flagged)
+        headline = f"{n} curve needs review" if n == 1 else f"{n} curves need review"
+        header = ui.div(
+            fa("triangle-exclamation"),
+            ui.tags.strong(f" {headline}."),
+            ui.tags.span(
+                f" {review_queue_breakdown(review, flagged)}.",
+                class_="review-queue-blurb",
+            ),
+            ui.input_action_link(
+                ns("review_queue_toggle"),
+                ui.TagList(
+                    fa("chevron-right" if collapsed else "chevron-down"),
+                    " Show" if collapsed else " Hide",
+                ),
+                class_="review-queue-toggle small",
+            ),
+            class_="review-queue-header",
+        )
+        if collapsed:
+            return ui.div(header, class_="review-queue")
         rows = []
         for metric in flagged:
             entry = review.get(metric) or {}
@@ -834,24 +917,21 @@ def summary_page_server(input, output, session, state: AppState):
             status = entry.get("status") or ""
             reason = (entry.get("reasons") or ["Needs review."])[0]
             rows.append(ui.div(
-                ui.div(
-                    ui.div(
-                        ui.tags.strong(label),
-                        ui.tags.span(
-                            _REVIEW_STATUS_LABELS.get(status, "Needs review"),
-                            class_="badge review-queue-badge",
-                        ),
-                        class_="d-flex align-items-center gap-2 flex-wrap",
-                    ),
-                    ui.div(reason, class_="text-muted small"),
-                    class_="review-queue-info",
+                ui.tags.span(label, class_="review-queue-name", title=label),
+                ui.tags.span(
+                    _REVIEW_STATUS_LABELS.get(status, "Needs review"),
+                    class_="badge review-queue-badge",
                 ),
+                # Rule ids in the reason render as chips into the Rules page;
+                # the full reason rides in the tooltip since the line clips.
+                ui.div(linkify_rule_ids(reason), class_="review-queue-reason",
+                       title=str(reason)),
                 ui.div(
                     ui.tags.button(
-                        "Adjust and rerun",
+                        "Adjust",
                         class_="btn btn-sm btn-outline-primary",
                         onclick=_review_action(metric, "adjust"),
-                        title="Open the analysis workspace for this metric",
+                        title="Open the analysis workspace and rerun this metric",
                     ),
                     ui.tags.button(
                         "Accept",
@@ -869,20 +949,9 @@ def summary_page_server(input, output, session, state: AppState):
                 ),
                 class_="review-queue-row",
             ))
-        n = len(flagged)
-        headline = f"{n} curve needs review" if n == 1 else f"{n} curves need review"
         return ui.div(
-            ui.div(
-                fa("triangle-exclamation"),
-                ui.tags.strong(f" {headline}."),
-                ui.tags.span(
-                    " Resolve each one: adjust and rerun it, accept it with a "
-                    "rationale, or remove it from the published scope.",
-                    class_="review-queue-blurb",
-                ),
-                class_="review-queue-header",
-            ),
-            *rows,
+            header,
+            ui.div(*rows, class_="review-queue-grid"),
             class_="review-queue",
         )
 
@@ -976,11 +1045,18 @@ def summary_page_server(input, output, session, state: AppState):
         functions = state.column_functions() or {}
         mapping = state.discipline_function_mapping()
         mode = gallery_filter_mode()
+        bulk_running = bulk_recompute_active()
         rows = []
+        busy: set[str] = set()
         for metric in metrics:
             # the table's own snapshot, so the gallery invalidates exactly when a row does
             snap_rv = row_snapshot.get(metric)
             snap = snap_rv() if snap_rv is not None else None
+            # row_busy is a dependency too, so a tile's recompute spinner
+            # appears and clears live (same values the table rows read).
+            busy_rv = row_busy.get(metric)
+            if busy_rv is not None and busy_rv():
+                busy.add(metric)
             rows.append(cg.tile_row(
                 metric, (snap or {}).get("curve_rows"),
                 metric_entry=mc.get(metric), review_entry=review.get(metric),
@@ -989,7 +1065,28 @@ def summary_page_server(input, output, session, state: AppState):
         rows = cg.assign_functions(rows, mapping)
         return cg.gallery_ui(
             rows, channel_id=ns("curve_gallery_action"),
-            filter_input_id=ns("gallery_filter"), filter_mode=mode)
+            filter_input_id=ns("gallery_filter"), filter_mode=mode,
+            busy_metrics=busy,
+            recompute_all_id=ns("gallery_recompute_all"),
+            recompute_all_disabled=bulk_running)
+
+    @reactive.effect
+    @reactive.event(input.gallery_recompute_all)
+    @guard("start the recompute")
+    def _gallery_recompute_all():
+        # Same path as the table's Recompute All Rows button; one preparer.
+        with reactive.isolate():
+            if bulk_recompute_active():
+                return
+            metrics = summary_metrics()
+        if not metrics:
+            ui.notification_show("No metrics to recompute.", type="message", duration=4)
+            return
+        ui.notification_show(
+            f"Preparing to recompute {len(metrics)} curves...",
+            type="message", duration=4,
+        )
+        _launch(_prepare_bulk_recompute(metrics))
 
     @reactive.effect
     @reactive.event(input.curve_gallery_action)  # no ignore_init: same rule as summary_row_action
@@ -1006,6 +1103,12 @@ def summary_page_server(input, output, session, state: AppState):
         if action == "open":
             request_id = st.next_workspace_modal_request_id(state)
             st.launch_workspace_modal(state, "analysis", metric, request_id=request_id)
+            return
+        if action == "recompute":
+            with reactive.isolate():
+                if metric in row_busy and row_busy[metric]():
+                    return
+            _request_row_recompute(metric)
             return
         if action == "table":
             row_expanded[metric].set(True)

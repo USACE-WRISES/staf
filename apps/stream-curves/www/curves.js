@@ -129,7 +129,15 @@
 
   function clearWorkspaceModalBackdrop(force) {
     window.setTimeout(function () {
-      if (!force && $(".modal.show").length > 0) {
+      if ($(".modal.show").length > 0) {
+        if (!force) {
+          return;
+        }
+        // A modal is open: only surplus backdrops from a swapped-out modal are
+        // stale. Removing them all here used to delete the live backdrop too
+        // (the timeout runs after Bootstrap creates it), leaving the workspace
+        // modal undimmed.
+        $(".modal-backdrop").slice(0, -1).remove();
         return;
       }
 
@@ -327,6 +335,33 @@
       var el = document.getElementById(id);
       if (el && el.offsetParent !== null) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      if (attempts++ < 40) window.setTimeout(go, 50);
+    })();
+  });
+})();
+
+/* Rules page: open a rule row's detail before the scroll lands, so a deep
+   link shows the rule opened, not a collapsed row. Same wait-for-layout
+   retry as scrollToElement above (the row may still be re-rendering after
+   the server cleared the filters). */
+(function () {
+  if (!window.Shiny || typeof Shiny.addCustomMessageHandler !== "function") return;
+  Shiny.addCustomMessageHandler("rulesExpandRow", function (message) {
+    var id = message && message.id;
+    if (!id) return;
+    var attempts = 0;
+    (function go() {
+      var el = document.getElementById(id);
+      if (el && el.offsetParent !== null) {
+        var d = el.nextElementSibling;
+        if (d && d.classList && d.classList.contains("rules-detail-row")) {
+          d.hidden = false;
+          el.classList.add("rules-open");
+          var b = el.querySelector(".rules-toggle");
+          if (b) b.setAttribute("aria-expanded", "true");
+        }
         return;
       }
       if (attempts++ < 40) window.setTimeout(go, 50);

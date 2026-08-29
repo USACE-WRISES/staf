@@ -405,6 +405,11 @@ def redundancy_view(analysis: dict, column_functions: Optional[dict] = None) -> 
         fb = column_functions.get(b) or "(unmapped)"
         sp = float(r["spearman"])
         pe = _maybe_float(r["pearson"])
+        # The low-n / binary-coarseness guards invalidate a coefficient however
+        # it is computed, so both flags honor them (pairwise_correlations is the
+        # single computer of the spearman flag; recomputing it here without the
+        # guards is exactly the bug this delegation exists to prevent).
+        guards_ok = not bool(r.get("low_n", False)) and not bool(r.get("low_variety", False))
         rows.append({
             "metric_a": a, "metric_b": b,
             "function_a": fa, "function_b": fb,
@@ -414,8 +419,9 @@ def redundancy_view(analysis: dict, column_functions: Optional[dict] = None) -> 
             "pearson": pe,
             "p_value": _maybe_float(r["p_value"]) if "p_value" in r else None,
             "fdr_q": _maybe_float(r["fdr_q"]) if "fdr_q" in r else None,
-            "red01_spearman_flag": abs(sp) >= strong,
-            "code_pearson_flag": pe is not None and abs(pe) >= strong,
+            "red01_spearman_flag": bool(r["flagged"]) if "flagged" in r
+                                   else abs(sp) >= strong and guards_ok,
+            "code_pearson_flag": pe is not None and abs(pe) >= strong and guards_ok,
             "divergence": None if pe is None else abs(abs(sp) - abs(pe)),
         })
     out = pd.DataFrame(rows, columns=cols)

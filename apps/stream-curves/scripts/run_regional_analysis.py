@@ -124,7 +124,7 @@ def curve_registry(result: dict) -> pd.DataFrame:
         rows.append({
             "metric": mk,
             "function": result["column_functions"].get(mk) or "(unmapped)",
-            "curve_family": "iqr_seed_piecewise_linear",
+            "curve_family": curves.CURVE_FAMILY,
             "curve_status": row.get("curve_status"),
             "n_reference": row.get("n_reference"),
             "higher_is_better": result["metric_config"][mk].get("higher_is_better"),
@@ -325,7 +325,7 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
         f"# Regional Analysis: {result['name']} (EPA L3-{result['l3_code']})", "",
         f"Produced by the StreamCurves Regional Analysis Agent "
         f"(methodology {methodology.methodology_version()}). "
-        "Preliminary and for review; not certified.", "",
+        "Draft build for review; not certified.", "",
         "## Reference screening", "",
         f"- Candidates: {result['n_candidates']} NRSA sites in the ecoregion.",
         f"- Screening method: **{result['screening_method']}**"
@@ -392,7 +392,7 @@ def write_report(result: dict, publish_info: dict | None, path: Path) -> None:
         "## Publish", "",
     ]
     if publish_info:
-        lines.append(f"- Published preliminary version {publish_info['version']} to "
+        lines.append(f"- Published draft version {publish_info['version']} to "
                      f"`{publish_info['path']}` (staging library).")
     elif result.get("bundle") is not None:
         lines.append("- Not published: the publish gate refused the version "
@@ -563,9 +563,11 @@ def main(argv=None) -> int:
                     help="Exit 0 even when a landscape source (StreamCat) failed to join. "
                          "Without this the run exits non-zero, because a silent StreamCat "
                          "outage drops the Hydrology functions from the published bundle")
-    ap.add_argument("--n-boot", type=int, default=200,
+    ap.add_argument("--n-boot", type=int, default=1000,
                     help="Bootstrap resamples for the CURVE-06/RED-06/STRAT-06 "
-                         "diagnostics (default 200; seeded from the run identity)")
+                         "diagnostics (default 1000, the same depth as the batch "
+                         "runner, so both entry points produce the same evidence; "
+                         "seeded from the run identity)")
     ap.add_argument("--approve-portfolio", action="append", default=[],
                     metavar="FUNCTIONID=APPROVER[:NOTE]",
                     help="Recorded human approval for a function carrying more than "
@@ -581,10 +583,11 @@ def main(argv=None) -> int:
                     help="Recorded reviewer finalization for a flagged curve (the only "
                          "way a flagged curve publishes). Repeatable; the maintainer "
                          "name is stamped as the actor")
-    ap.add_argument("--nrsa-dataset", default=nrsa_dataset.DEFAULT_DATASET_ID,
+    ap.add_argument("--nrsa-dataset", default=nrsa_dataset.default_build_dataset_id(),
                     choices=nrsa_dataset.available_datasets(),
-                    help="which NRSA data to read; the default is the bundled "
-                         "2018-19 snapshot every published assessment used")
+                    help="which NRSA data to read; the default is the pooled multi-cycle "
+                         "archive when this checkout has built it; pass legacy-1819 to "
+                         "reproduce the published assessments' inputs")
     ap.add_argument("--nrsa-cycle", action="append", dest="nrsa_cycles",
                     choices=list(nrsa_dataset.CYCLES_NEWEST_FIRST),
                     help="repeatable; limit a pooled run to these survey cycles")
@@ -692,8 +695,9 @@ def main(argv=None) -> int:
         try:
             publish_info = ra.publish(result, publish_root, maintainer=args.maintainer,
                                       provenance=provenance_doc,
-                                      portfolio_approvals=portfolio_approvals)
-            print(f"[agent] published preliminary v{publish_info['version']} -> {publish_info['path']}")
+                                      portfolio_approvals=portfolio_approvals,
+                                      status="draft")
+            print(f"[agent] published draft v{publish_info['version']} -> {publish_info['path']}")
         except Exception as exc:  # noqa: BLE001
             print(f"[agent] publish failed: {exc}")
     else:

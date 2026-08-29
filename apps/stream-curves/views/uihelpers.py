@@ -14,6 +14,7 @@ from shiny.types import (
     SilentException,
 )
 
+from streamcurves import rules_view
 from streamcurves.curves import CURVE_FORM_MONOTONE, CURVE_FORM_OPTIMUM, curve_form_of
 from views.state import PHASE_LABELS
 from views.theme import fa
@@ -101,16 +102,6 @@ def p_value_badge(p):
     if p < 0.10:
         return status_badge("caution", f"p = {p:.3f}")
     return status_badge("not_applicable", f"p = {p:.3f}")
-
-
-def explanation_card(title, *body):
-    return ui.card(
-        ui.card_header(title, class_="bg-info text-white"),
-        ui.card_body(*body),
-        class_="border-info mb-2",
-        fill=False,
-    )
-
 
 
 # --------------------------------------------------------------------------- #
@@ -206,6 +197,54 @@ def _goto_onclick(nav: str, step: int | None) -> str:
     return (
         f"Shiny.setInputValue('{WORKFLOW_GOTO_INPUT}',{payload},{{priority:'event'}})"
     )
+
+
+# Rules deep link: same fixed-input idiom as WORKFLOW_GOTO_INPUT, so a chip
+# rendered inside any module reaches the Rules page with zero wiring of its own
+# (app.py consumes it: nav to the rules panel, then scroll to the rule's card).
+RULES_GOTO_INPUT = "rules_goto"
+
+
+def _rules_goto_onclick(rule_id: str) -> str:
+    safe = str(rule_id).replace("'", "")
+    return (f"Shiny.setInputValue('{RULES_GOTO_INPUT}',{{rule:'{safe}'}},"
+            "{priority:'event'})")
+
+
+def rule_chip(rule_id: str, *, label: str | None = None):
+    """A small inline chip that opens the Rules page at this rule's card."""
+    return ui.tags.a(
+        label or str(rule_id),
+        class_="rule-chip",
+        href="javascript:void(0)",
+        onclick=_rules_goto_onclick(rule_id),
+        title="Open this rule on the Rules page",
+    )
+
+
+def linkify_rule_ids(text: str):
+    """The sentence with every rule id rendered as a chip. Render-time only:
+    the string itself stays plain wherever it also lands in provenance."""
+    return ui.TagList(*[
+        rule_chip(value) if kind == "rule" else value
+        for kind, value in rules_view.split_rule_ids(text or "")
+    ])
+
+
+#: Lifecycle badge colors: Draft amber (review debt), Final green, rest neutral.
+_LIFECYCLE_BADGE_CLASSES = {"draft": "text-bg-warning", "certified": "text-bg-success"}
+
+
+def lifecycle_badge(status):
+    """A small badge showing a library lifecycle status by its display label
+    (library.STATUS_LABELS). The one place the lifecycle color rule lives.
+    Distinct from status_badge above, which renders the generic disposition
+    chips (caution/ok/...)."""
+    from streamcurves import library as lib  # local: keep this module import-light
+    s = str(status or "").strip().lower()
+    return ui.tags.span(
+        lib.status_label(s),
+        class_=f"badge {_LIFECYCLE_BADGE_CLASSES.get(s, 'text-bg-secondary')}")
 
 
 def not_ready_panel(
@@ -411,6 +450,7 @@ class CompileProgress:
         nrsa: bool = False,
         streamstats: bool = False,
         mmw: bool = False,
+        site_engine: bool = False,
     ) -> "CompileProgress":
         """Total work units for a run: NLDI snap + final assembly always run;
         per-site sources add one unit per site; other active sources add one."""
@@ -427,6 +467,8 @@ class CompileProgress:
         if streamstats:
             total += n
         if mmw:
+            total += n
+        if site_engine:
             total += n
         return cls(total)
 

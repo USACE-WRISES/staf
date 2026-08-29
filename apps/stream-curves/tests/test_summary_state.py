@@ -145,3 +145,40 @@ def test_config_change_invalidates_phase4(loaded_state):
         loaded_state.config_version.set((loaded_state.config_version() or 0) + 1)
     assert not ss.metric_has_phase4_cache(loaded_state, "WDR", artifact_mode="summary")
     assert ss.count_metric_phase4_preload_steps(loaded_state, "WDR") > 0
+
+
+def test_recompute_steps_match_the_sync_chain(loaded_state):
+    """The step plan is the sync driver's exact decomposition: phase order,
+    3N + 1 count, and running every step leaves official curves behind. The
+    bulk runner drives this same list with awaits between steps."""
+    metrics = ["perRiffle", "WDR"]
+    steps = ss.recompute_steps_from_summary(loaded_state, metrics, mode="summary")
+    assert [s[0] for s in steps] == [
+        "phase1", "phase1", "phase2", "phase3", "phase3", "phase4", "phase4"]
+    assert len(steps) == 3 * len(metrics) + 1
+    assert [s[1] for s in steps] == [
+        "perRiffle", "WDR", None, "perRiffle", "WDR", "perRiffle", "WDR"]
+    for _phase, _metric, _i, _n, run in steps:
+        run()
+    assert ss.metric_has_official_curve(loaded_state, "perRiffle")
+    assert ss.metric_has_official_curve(loaded_state, "WDR")
+
+
+def test_recompute_metrics_from_summary_callback_protocol(loaded_state):
+    """Pins the plural driver's rebase onto the step list: start/end fire
+    around every step, and on_metric_done fires after each phase4 build,
+    before that step's end (curve_automation.run_curve_automation relies on
+    this exact protocol)."""
+    events = []
+    ss.recompute_metrics_from_summary(
+        loaded_state, ["perRiffle", "WDR"], mode="summary",
+        progress_cb=lambda phase, m, i, n, stage: events.append((phase, m, stage)),
+        on_metric_done=lambda metric: events.append(("done", metric, None)),
+    )
+    starts = [(p, m) for p, m, s in events if s == "start"]
+    assert starts == [("phase1", "perRiffle"), ("phase1", "WDR"), ("phase2", None),
+                      ("phase3", "perRiffle"), ("phase3", "WDR"),
+                      ("phase4", "perRiffle"), ("phase4", "WDR")]
+    i_done = events.index(("done", "perRiffle", None))
+    assert events[i_done - 1] == ("phase4", "perRiffle", "start")
+    assert events[i_done + 1] == ("phase4", "perRiffle", "end")

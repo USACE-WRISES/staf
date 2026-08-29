@@ -62,6 +62,17 @@ _OPTIMUM_OFFSETS = (0.35, 1.0, 2.0)   # 0.70 / 0.30 / 0.00 crossings
 INDEX_DRAWING_BANDS = (0.30, 0.70)
 MAX_BAND_CROSSINGS = 2
 
+# The engine's hard floor: below this many reference values no curve is fit at
+# all (insufficient_data), and the LOO/influence/bootstrap diagnostics in
+# curve_stability are not evaluable. Mirrored by data_rules.curve_engine_hard_floor_n
+# and verified by methodology.mirror_drift, same as the drawing bands above.
+CURVE_ENGINE_HARD_FLOOR_N = 5
+
+# The one curve family this engine builds (CURVE-01). Every writer (registry
+# CSV, provenance records) reads this name, and mirror_drift verifies it against
+# curve_rules.approved_families, so the spelling exists exactly once.
+CURVE_FAMILY = "iqr_seed_piecewise_linear"
+
 
 def curve_form_of(metric_entry: Mapping | None) -> str:
     """The declared curve form for a metric_config entry (default monotone)."""
@@ -1619,7 +1630,7 @@ def build_reference_curve(
         else bool(math.isfinite(stats["min_val"]) and stats["min_val"] < 0)
     )
 
-    if len(ref_values) < 5:
+    if len(ref_values) < CURVE_ENGINE_HARD_FLOOR_N:
         logger.warning(f"{metric_key}: too few reference values ({len(ref_values)})")
         empty_row = build_reference_curve_row(
             metric_key=metric_key,

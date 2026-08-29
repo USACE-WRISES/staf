@@ -159,6 +159,48 @@ def test_no_input_built_inside_the_mapping_server_has_a_bare_id():
     assert _bare_ids_inside_server("discipline_map.py", "discipline_map_server") == []
 
 
+def test_every_stage_key_has_a_click_input_a_handler_and_a_short_label():
+    """Adding a stage without its chip wiring crashes the strip render, and a
+    chip without a handler renders and does nothing."""
+    src = _src("stagebar.py")
+    m = re.search(r"_CLICK = \{(.*?)\}", src, re.S)
+    click = dict(re.findall(r'"([\w-]+)":\s*"(\w+)"', m.group(1)))
+    assert set(click) == set(rs.STAGE_KEYS)
+    for input_id in click.values():
+        assert f"input.{input_id}" in src, f"no handler listens on {input_id}"
+    assert set(rs.STAGE_SHORT) == set(rs.STAGE_KEYS)
+    assert set(rs.TOOL_TITLES) == set(rs.TOOL_KEYS)
+
+
+def test_no_validate_or_rules_handler_can_close_the_session():
+    assert _unguarded_effects("validate_page.py") == []
+    assert _unguarded_effects("rules.py") == []
+
+
+def test_no_input_built_inside_the_new_servers_has_a_bare_id():
+    assert _bare_ids_inside_server("validate_page.py", "validate_server") == []
+    assert _bare_ids_inside_server("rules.py", "rules_server") == []
+
+
+def test_the_about_modal_derives_from_the_strip_vocabulary():
+    """The modal loops STAGE_KEYS and TOOL_KEYS, so it can never again say
+    "5. Publish" over a seven-stage strip. Loaded by path under a unique module
+    name: a bare ``import app`` collides with whatever other module named
+    ``app`` an earlier test left in sys.modules."""
+    import importlib.util
+    from html import unescape
+
+    spec = importlib.util.spec_from_file_location(
+        "streamcurves_app_about_modal", _VIEWS.parent / "app.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    text = unescape(str(mod.app_help_content()))
+    for label in rs.STAGE_SHORT.values():
+        assert label in text, f"stage label missing from the About modal: {label}"
+    for label in rs.TOOL_LABELS.values():
+        assert label in text, f"tool label missing from the About modal: {label}"
+
+
 def test_a_non_stage_job_gets_a_readable_busy_label():
     """tasks_running is keyed by stage, so a job that is not one of the six falls
     through STAGE_LABELS and the toast would read its raw key."""
@@ -166,3 +208,28 @@ def test_a_non_stage_job_gets_a_readable_busy_label():
     assert '"region_build": "a region build"' in src
     go = src[src.index("def _go(stage_key"):src.index("@reactive.effect", src.index("def _go(stage_key"))]
     assert "_TASK_LABELS.get(k)" in go
+
+
+def test_the_tools_fold_into_one_menu_and_substeps_anchor_to_their_stage():
+    """The strip's second-line contract: the five tools collapse into a single
+    Bootstrap dropdown (same ids, so the guarded handlers keep firing), the
+    toggle glyph is vendored so bi() cannot raise, and the sub-step chips hang
+    absolutely from their stage group over the band the subrow's min-height
+    reserves -- the anchored-under-their-pill + stable-height pairing."""
+    import json
+
+    src = _src("stagebar.py")
+    assert '"data-bs-toggle": "dropdown"' in src
+    assert 'class_="dropdown-menu dropdown-menu-end"' in src
+    assert 'class_="stage-tools dropdown"' in src
+    icon = re.search(r'_TOOLS_MENU_ICON = "([\w-]+)"', src).group(1)
+    vendored = json.loads(io.open(
+        _VIEWS.parent / "www" / "vendor" / "bs-icons.json", encoding="utf-8").read())
+    assert icon in vendored, f"Tools toggle icon {icon!r} is not vendored"
+
+    css = io.open(_VIEWS.parent / "www" / "curves.css", encoding="utf-8").read()
+    substeps = css[css.index(".stage-substeps {"):]
+    substeps = substeps[:substeps.index("}")]
+    assert "position: absolute" in substeps and "top: 100%" in substeps
+    subrow = css[css.index(".stage-bar-subrow {"):]
+    assert "min-height" in subrow[:subrow.index("}")]

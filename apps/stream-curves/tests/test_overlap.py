@@ -202,3 +202,35 @@ def test_redundancy_view_carries_the_legacy_columns():
 def test_redundancy_view_of_an_empty_analysis():
     a = ov.analyze_overlap(pd.DataFrame(), metric_columns=[], partner_columns=[])
     assert len(ov.redundancy_view(a)) == 0
+
+
+def test_redundancy_view_honors_the_low_n_guard():
+    """A perfectly correlated pair with n below the pair floor is reported but
+    must NOT carry the RED-01 flag: the guards computed by pairwise_correlations
+    invalidate the coefficient however it is consumed. (Regression: the view
+    used to recompute the flag from the raw spearman and drop the guards.)"""
+    x, y = _linear(n=5)                          # n=5 < DEFAULT_MIN_PAIR_N=8
+    df = _frame(m1=x, m2=y)
+    a = ov.analyze_overlap(df, metric_columns=["m1", "m2"],
+                           partner_columns=["m1", "m2"],
+                           partner_role=ov.PARTNER_METRIC)
+    view = ov.redundancy_view(a)
+    assert len(view) == 1
+    assert abs(view.iloc[0]["spearman"]) >= 0.80          # strong on its face
+    assert not bool(view.iloc[0]["red01_spearman_flag"])  # but guarded off
+    assert not bool(view.iloc[0]["code_pearson_flag"])
+
+
+def test_redundancy_view_honors_the_binary_coarseness_guard():
+    """A two-valued column correlates perfectly with anything splitting the same
+    way; that is coarseness, not redundancy, so the view must not flag it."""
+    x = np.arange(20, dtype=float)
+    binary = (x >= 10).astype(float)
+    df = _frame(m1=binary, m2=x)
+    a = ov.analyze_overlap(df, metric_columns=["m1", "m2"],
+                           partner_columns=["m1", "m2"],
+                           partner_role=ov.PARTNER_METRIC)
+    view = ov.redundancy_view(a)
+    assert len(view) == 1
+    assert bool(view.iloc[0]["red01_spearman_flag"]) is False
+    assert bool(view.iloc[0]["code_pearson_flag"]) is False

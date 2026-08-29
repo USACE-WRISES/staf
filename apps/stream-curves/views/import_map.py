@@ -31,6 +31,7 @@ from functools import lru_cache
 import numpy as np
 import pandas as pd
 from shiny import module, reactive, render, req, ui
+from shiny.types import SilentException
 
 from pathlib import Path  # noqa: E402
 
@@ -57,6 +58,7 @@ except Exception:  # noqa: BLE001
 
 from streamcurves.datasources.dep3 import epqs_elev
 from streamcurves.datasources.mmw import mmw_available, mmw_core_metrics, mmw_site_metrics
+from streamcurves import site_engine_source as ses
 from streamcurves.datasources.nldi import nldi_comids
 from streamcurves.datasources.streamcat import streamcat_metrics
 from streamcurves.datasources.streamstats import ss_basin_characteristics, ss_core_bcs
@@ -160,7 +162,6 @@ def _js1(s) -> str:
 
 _USGS_TOPO = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 _USGS_IMAGERY = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}"
-_CARTO_LIGHT = "https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
 _USGS_ATTR = "Basemaps © USGS National Map"
 
 _ECO_STYLE = {"weight": 1, "color": "#2f4b7c", "opacity": 0.7, "fillColor": "#4a7fb5", "fillOpacity": 0.15}
@@ -497,6 +498,7 @@ def build_col_provenance(compiled, streamcat_wide, nrsa_cols, upload_cols) -> di
     tag(["elev_3dep_m"], "USGS 3DEP")
     tag([c for c in nm if c.startswith("ss_")], "USGS StreamStats")
     tag([c for c in nm if c.startswith("mmw_")], "Model My Watershed")
+    tag([c for c in nm if c.startswith("se_")], "STAF site engine")
     for c in [c for c in (upload_cols or []) if c in nm]:
         if not src.get(c):
             src[c] = "Uploaded (user)"
@@ -637,6 +639,7 @@ def import_map_server(
     nrsa_sel = reactive.value(None)
     ss_sel = reactive.value(None)
     mmw_sel = reactive.value(None)
+    se_sel = reactive.value(None)
     picker_sel = reactive.value(None)  # step-4 unified selection: set[code]
     compiled = reactive.value(None)
     # Whether compiled() came from a compile run THIS session (vs hydrated from
@@ -721,16 +724,25 @@ def import_map_server(
         except Exception:  # noqa: BLE001
             return {}
 
+    def _se_catalog() -> dict:
+        try:
+            return ses.se_core_metrics()   # {} when the engine is unavailable
+        except Exception:  # noqa: BLE001
+            return {}
+
     @reactive.calc
     def _picker_table():
         # Static across a session (the catalogs don't change): built once. MMW
-        # rows appear only when a key is configured, so they never dead-select.
+        # and site-engine rows appear only when available, so they never
+        # dead-select.
         try:
             return mpick.build_metric_picker_table(
-                streamstats=ss_core_bcs(), mmw=_mmw_catalog())
+                streamstats=ss_core_bcs(), mmw=_mmw_catalog(),
+                site_engine=_se_catalog())
         except Exception:  # noqa: BLE001
             logger.exception("metric picker table build failed")
-            return mpick.build_metric_picker_table(streamstats={}, mmw={})
+            return mpick.build_metric_picker_table(streamstats={}, mmw={},
+                                                   site_engine={})
 
     def _selectable_table() -> pd.DataFrame:
         """The picker table minus sources the current run can't use (NRSA metrics
@@ -777,7 +789,6 @@ def import_map_server(
             m.clear_layers()
             m.add(TileLayer(url=_USGS_TOPO, name="USGS Topo", base=True,
                             attribution=_USGS_ATTR, max_native_zoom=16, max_zoom=18))
-            m.add(TileLayer(url=_CARTO_LIGHT, name="Light", base=True, max_zoom=18))
             m.add(LayersControl(position="topright"))
             m.add(ScaleControl(position="bottomright"))
             return m
@@ -1175,6 +1186,7 @@ def import_map_server(
             nrsa_sel.set(split["nrsa"])
             ss_sel.set(split["streamstats"])
             mmw_sel.set(split["mmw"])
+            se_sel.set(split["site_engine"])
         if cur == 6:
             live = classify_assignments_from_input(input, _classify_profile())
             if int(live["is_metric"].sum()) < 1:
@@ -1295,6 +1307,7 @@ def import_map_server(
                 nrsa_sel.set(split["nrsa"])
                 ss_sel.set(split["streamstats"])
                 mmw_sel.set(split["mmw"])
+                se_sel.set(split["site_engine"])
         # Steps 6 and 7 key off `compiled`/`saved_assignments`, which only the
         # compile worker ever wrote -- so a reopened project had both replaced
         # by a "Nothing compiled yet" panel and no way back in short of
@@ -1439,15 +1452,16 @@ def import_map_server(
         task.add_done_callback(_compile_tasks.discard)
 
     async def _run_compile(sdf, upload_kept, metric_names, nrsa_names, ss_codes,
-                           mmw_codes, want_da, want_regional, want_elev, mmw_ok,
-                           exclusions=None):
+                           mmw_codes, se_codes, want_da, want_regional,
+                           want_elev, mmw_ok, se_ok, exclusions=None):
         n = len(sdf)
         run_mmw = bool(mmw_codes) and mmw_ok
+        run_se = bool(se_codes) and se_ok
         prog = CompileProgress.for_run(
             n,
             want_da=want_da, want_elev=want_elev,
             streamcat=bool(metric_names), nrsa=bool(nrsa_names),
-            streamstats=bool(ss_codes), mmw=run_mmw,
+            streamstats=bool(ss_codes), mmw=run_mmw, site_engine=run_se,
         )
         # Per-source diagnostics feed run_stage_status["enrichment_build"] so the
         # stage banner can say which sources succeeded, retried, or were isolated.
@@ -1570,6 +1584,34 @@ def import_map_server(
                 if mmw_fail:
                     diag["site_failures"]["mmw"] = mmw_fail
 
+            if run_se:
+                # Exact-watershed predictors from the vendored site engine.
+                # Slow by design (roughly a minute per site: true point
+                # watershed + zonal statistics); the progress toast names it.
+                for cc in se_codes:
+                    sdf[cc] = np.nan
+                se_fail = 0
+                for i in range(n):
+                    await announce("Site engine (exact watershed)",
+                                   site=i + 1, n_sites=n)
+                    try:
+                        vals = await asyncio.to_thread(
+                            ses.se_site_metrics, sdf["lat"].iloc[i],
+                            sdf["lon"].iloc[i])
+                        if not vals:
+                            se_fail += 1
+                        for c in se_codes:
+                            sdf.loc[sdf.index[i], c] = vals.get(c)
+                    except Exception as exc:  # noqa: BLE001 — isolate one site
+                        se_fail += 1
+                        logger.warning("site engine failed for site %d: %s",
+                                       i + 1, exc)
+                    prog.complete()
+                diag["sources"]["site_engine"] = ("ok" if se_fail == 0
+                                                  else f"partial ({se_fail} failed)")
+                if se_fail:
+                    diag["site_failures"]["site_engine"] = se_fail
+
             await announce("Assembling table + regional predictions")
             comp = compile_site_table(
                 sdf, lat_col="lat", lon_col="lon", comid_col="comid",
@@ -1677,14 +1719,17 @@ def import_map_server(
         nrsa_names = nrsa_sel() or []
         ss_codes = ss_sel() or []
         mmw_codes = mmw_sel() or []
+        se_codes = se_sel() or []
         want_da = bool(_inp("want_da"))
         want_regional = bool(_inp("want_regional"))
         want_elev = bool(_inp("want_elev"))
         mmw_ok = mmw_available()
+        se_ok = ses.site_engine_available()
         exclusions = list(state.site_exclusions() or [])
         _launch(_run_compile(
             sdf, upload_kept, metric_names, nrsa_names, ss_codes, mmw_codes,
-            want_da, want_regional, want_elev, mmw_ok, exclusions,
+            se_codes, want_da, want_regional, want_elev, mmw_ok, se_ok,
+            exclusions,
         ))
 
     # ── classify + build ──────────────────────────────────────────────────────
@@ -1764,8 +1809,16 @@ def import_map_server(
         if int(saved_assignments()["is_metric"].sum()) < 1:
             ui.notification_show("Mark at least one column as Metric before building.", type="warning")
             return
+        try:
+            tables = _built_tables()
+        except SilentException:
+            return
+        except Exception as e:  # noqa: BLE001 - surfaced to the user, not swallowed
+            logger.exception("Review & build table assembly failed")
+            ui.notification_show(f"Could not build dataset: {e}", type="error", duration=8)
+            return
         ok = rebuild_app_from_tables(
-            state, _built_tables(),
+            state, tables,
             success_text=f"Dataset built from import ({region_label()}).",
             error_prefix="Could not build dataset",
         )
@@ -1901,7 +1954,7 @@ def import_map_server(
         nr = nrsa_in_region()
         n_nrsa = 0 if nr is None else len(nr)
         return ui.TagList(
-            ui.tags.h5(f"Add data{' — ' + region_label() if region_code() else ''}"),
+            ui.tags.h5(f"Add data{': ' + region_label() if region_code() else ''}"),
             ui.tags.p("Where should the site data come from? You can combine both.", class_="text-muted"),
             ui.input_checkbox(
                 "use_nrsa",
@@ -1910,7 +1963,7 @@ def import_map_server(
                    if nds.multi_cycle_available() else ", 2018-19 survey)"),
                 value=True),
             ui.tags.hr(class_="my-2"),
-            ui.input_checkbox("use_upload", "Import additional data — my own site table (CSV / Excel)", value=upload_df() is not None),
+            ui.input_checkbox("use_upload", "Import my own site table (CSV / Excel)", value=upload_df() is not None),
             ui.input_file("upload_file", None, accept=[".csv", ".tsv", ".txt", ".xlsx", ".xls"],
                           button_label="Choose file", placeholder="Optional upload"),
             ui.output_ui("upload_colmap"),
@@ -1918,7 +1971,8 @@ def import_map_server(
 
     def _body_step4():
         src_choices = {"": "All sources", "NRSA": "NRSA", "StreamCat": "StreamCat",
-                       "StreamStats": "StreamStats", "MMW": "Model My Watershed"}
+                       "StreamStats": "StreamStats", "MMW": "Model My Watershed",
+                       "Site engine": "Site engine (exact watershed)"}
         disc_choices = {"": "All disciplines"}
         for d in _DISCIPLINE_ORDER:
             disc_choices[d] = d
@@ -1928,9 +1982,7 @@ def import_map_server(
                         "function": "Sort: function"}
         return ui.TagList(
             ui.tags.h5("Choose metrics"),
-            ui.tags.p("Pick the metrics to pull for each site. Every metric shows the STAF "
-                      "function it informs, and the matrix tracks how many of the 20 functions "
-                      "your selection covers.", class_="text-muted"),
+            ui.tags.p("Pick the metrics to pull for each site.", class_="text-muted"),
             ui.output_ui("coverage_panel"),
             ui.output_ui("metric_selected_count"),
             ui.div(
@@ -1957,7 +2009,7 @@ def import_map_server(
                     ui.output_ui("advanced_nrsa"), value="adv",
                 ),
                 ui.accordion_panel(
-                    ui.TagList(bi("rulers"), " Computed — USGS NLDI / 3DEP / regional curves"),
+                    ui.TagList(bi("rulers"), " Computed: USGS NLDI / 3DEP / regional curves"),
                     ui.input_checkbox("want_da", "Drainage area (NLDI basin)", value=False),
                     ui.input_checkbox("want_regional", "Regional bankfull predictions (Bieger curves)", value=False),
                     ui.input_checkbox("want_elev", "Site elevation (USGS 3DEP point)", value=False),
@@ -1988,8 +2040,8 @@ def import_map_server(
     def _body_step6():
         return ui.TagList(
             ui.tags.h5("Classify columns"),
-            ui.tags.p("We guessed a role for each column. A column can have more than one role. "
-                      "Mark what you want to build curves for as Metric.", class_="text-muted"),
+            ui.tags.p("Mark the columns to build curves for as Metric.",
+                      class_="text-muted"),
             ui.output_ui("role_summary"),
             ui.div(ui.output_ui("classify_table"), class_="wizard-classify-scroll"),
         )
@@ -1997,7 +2049,6 @@ def import_map_server(
     def _body_step7():
         return ui.TagList(
             ui.tags.h5("Review & build"),
-            ui.tags.p("Here's the setup we'll create; fine-tune later in the Workbook.", class_="text-muted"),
             ui.output_ui("build_summary"),
             ui.navset_pill(
                 ui.nav_panel("Metrics", ui.div(ui.output_ui("review_metrics"), class_="mt-3")),
@@ -2166,6 +2217,8 @@ def import_map_server(
         state.easi_screening_sites.set(sites_df)
         state.easi_screening_metrics.set(pd.DataFrame(tables["easi_screening_metrics"]))
         state.easi_screening_criteria.set(tables["easi_screening_criteria"])
+        # A real screen supersedes a deliberate skip.
+        state.screening_skipped.set(False)
         _sync_screening_derivations(sites_df, method=method)
 
     @reactive.extended_task
@@ -2282,6 +2335,47 @@ def import_map_server(
         state.easi_screening_criteria.set(None)
         state.site_exclusions.set([])
         state.screening_run.set(None)
+
+    @reactive.effect
+    @reactive.event(input.screening_skip)
+    def _screening_skip():
+        s = sites()
+        n = 0 if s is None else len(s)
+        ui.modal_show(ui.modal(
+            ui.tags.p(f"All {n} candidate sites will be included without EASI "
+                      "reference-condition evidence."),
+            ui.tags.p("You can build curves, save the project to a file, and "
+                      "preview in DEEP. Publishing to the assessment library "
+                      "still requires screening (REF-01). Running screening "
+                      "later replaces the skip.",
+                      class_="text-muted small mb-0"),
+            title="Skip screening?",
+            easy_close=True,
+            footer=ui.TagList(
+                ui.modal_button("Cancel"),
+                ui.input_action_button(
+                    ns("screening_skip_confirm"), "Skip screening",
+                    class_="btn btn-primary"),
+            ),
+        ))
+
+    @reactive.effect
+    @reactive.event(input.screening_skip_confirm)
+    def _screening_skip_confirm():
+        ui.modal_remove()
+        state.screening_skipped.set(True)
+        with reactive.isolate():
+            state.run_meta.set(rs.touch_run_meta(state.run_meta()))
+        ui.notification_show(
+            "Screening skipped. All candidate sites will be included.",
+            type="message", duration=6)
+
+    @reactive.effect
+    @reactive.event(input.screening_skip_undo)
+    def _screening_skip_undo():
+        state.screening_skipped.set(False)
+        ui.notification_show("Skip removed. Candidate sites are ready to screen.",
+                             type="message", duration=5)
 
     def _apply_reviewer_override(decision: str) -> None:
         sc = state.easi_screening_sites()
@@ -2403,6 +2497,28 @@ def import_map_server(
                        "somewhere that has it.",
                        class_="text-muted small mb-2")
             )
+            if state.screening_skipped():
+                skip_block = ui.div(
+                    ui.tags.p(
+                        f"Screening skipped: all {len(s)} candidate sites will "
+                        "be included without EASI evidence. Publishing to the "
+                        "assessment library still requires screening (REF-01).",
+                        class_="text-muted small mb-1"),
+                    ui.input_action_button(
+                        ns("screening_skip_undo"), "Undo skip",
+                        class_="btn btn-sm btn-outline-secondary"),
+                )
+            else:
+                skip_block = ui.div(
+                    ui.input_action_button(
+                        ns("screening_skip"),
+                        "Skip screening and include all sites",
+                        class_="btn btn-sm btn-outline-secondary"),
+                    ui.tags.p(
+                        "For exploration: continue with every candidate site "
+                        "and no reference-condition evidence.",
+                        class_="text-muted small mb-0 mt-1"),
+                )
             return ui.div(
                 ui.tags.h6("EASI reference-condition screening", class_="mb-1"),
                 run_controls,
@@ -2410,6 +2526,8 @@ def import_map_server(
                 ui.tags.p("Or import a finalized EASI batch ZIP (cloud-safe, no engine):",
                           class_="text-muted small mb-1"),
                 ui.input_file(ns("screening_zip"), None, accept=[".zip"]),
+                ui.tags.hr(class_="my-2"),
+                skip_block,
                 class_="easi-screening-panel border rounded p-2 mt-3")
         df = sc if hasattr(sc, "columns") else pd.DataFrame(sc)
         c = easi_screening.summarize_screening_rows(df.to_dict("records"))
@@ -2604,6 +2722,11 @@ def import_map_server(
             notes.append(ui.div(
                 bi("info-circle"), " Model My Watershed metrics need an API key and are omitted.",
                 class_="text-muted small mb-1"))
+        if not ses.site_engine_available():
+            notes.append(ui.div(
+                bi("info-circle"), " Site engine metrics need the vendored "
+                "engine and geospatial stack and are omitted.",
+                class_="text-muted small mb-1"))
         view = _filtered_named()
         if view is None or len(view) == 0:
             return ui.TagList(*notes, ui.div("No metrics match your filters.",
@@ -2782,9 +2905,42 @@ def import_map_server(
         req(compiled() is not None)
         return classify_table_html(ns, _classify_profile())
 
+    def _try_built_tables():
+        """Tables for the Review & build renderers, or (None, guidance card).
+
+        Without this, an overlay/reconcile failure surfaced as Shiny's bare red
+        "Error: ..." with no guidance, twice (once above the tab strip, once in
+        the open tab). req()-driven not-ready passes through untouched.
+        """
+        try:
+            return _built_tables(), None
+        except SilentException:
+            raise
+        except Exception as e:  # noqa: BLE001 - rendered as guidance below
+            logger.exception("Review & build table assembly failed")
+            card = ui.div(
+                ui.tags.strong("Could not assemble the dataset preview."),
+                ui.div(
+                    "A saved metric, predictor, or stratification setting could "
+                    "not be applied to the compiled table. Go back to Choose "
+                    "metrics and re-save the column assignments, or rerun "
+                    "Compile, then return here.",
+                    class_="small mt-1",
+                ),
+                ui.tags.details(
+                    ui.tags.summary("Technical details", class_="small text-muted"),
+                    ui.tags.code(f"{type(e).__name__}: {e}"),
+                    class_="mt-1",
+                ),
+                class_="alert alert-warning py-2",
+            )
+            return None, card
+
     @render.ui
     def build_summary():
-        t = _built_tables()
+        t, err = _try_built_tables()
+        if err is not None:
+            return err
         return ui.div(
             f"Will create {len(t['metrics'])} metric(s), {len(t['predictors'])} predictor(s), "
             f"and {len(t['stratifications'])} stratification(s) from {len(t['data'])} rows.",
@@ -2793,7 +2949,9 @@ def import_map_server(
 
     @render.ui
     def review_metrics():
-        t = _built_tables()
+        t, err = _try_built_tables()
+        if err is not None:
+            return err
         # column_name is dropped: metric_key is sanitize_keys(column_name), and
         # every NRSA and StreamCat column is already a valid identifier, so the
         # two read the same. The workbook table still carries it.
@@ -2803,14 +2961,18 @@ def import_map_server(
 
     @render.ui
     def review_predictors():
-        t = _built_tables()
+        t, err = _try_built_tables()
+        if err is not None:
+            return err
         cols = [c for c in ("predictor_key", "display_name", "type")
                 if c in t["predictors"].columns]
         return _plain_table(t["predictors"][cols])
 
     @render.ui
     def review_strats():
-        t = _built_tables()
+        t, err = _try_built_tables()
+        if err is not None:
+            return err
         # source_column stays: unlike the two tables above, a numeric stratifier
         # is keyed on its derived binned column, so strat_key elevws_grp comes
         # from source_column elevws. The pairing is never redundant.

@@ -109,6 +109,7 @@ def streamcat_metrics(
     aoi_suffix = _STREAMCAT_AOI_SUFFIX.get(area, "ws")
     chunks = [ids[i : i + int(batch)] for i in range(0, len(ids), int(batch))]
     frames: list[pd.DataFrame] = []
+    failed_chunks: list[int] = []
     for k, chunk in enumerate(chunks, start=1):
         ch = ",".join(str(c) for c in chunk)
         params = {"name": name_param, "areaOfInterest": area, "comid": ch}
@@ -123,11 +124,20 @@ def streamcat_metrics(
                 fr = None
         if fr is not None and len(fr):
             frames.append(fr)
+        else:
+            # Both endpoints came back empty for this chunk. A partial outage
+            # must be distinguishable from success, so the chunk is recorded
+            # and rides out on the frame's attrs for the caller's source report.
+            failed_chunks.append(k)
         if callable(progress):
             progress(k, len(chunks))
     if not frames:
-        return _empty_comid_frame()
-    return pd.concat(frames, ignore_index=True, sort=False)
+        out = _empty_comid_frame()
+    else:
+        out = pd.concat(frames, ignore_index=True, sort=False)
+    out.attrs["n_chunks"] = len(chunks)
+    out.attrs["failed_chunks"] = failed_chunks
+    return out
 
 
 def parse_streamcat_catalog(j: Any) -> pd.DataFrame:

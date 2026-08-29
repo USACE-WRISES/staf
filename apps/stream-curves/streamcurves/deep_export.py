@@ -85,6 +85,14 @@ def deep_norm_label(x: Any) -> str:
 
 
 # ---- canonical STAF function crosswalk --------------------------------------
+#: path -> (mtime_ns, parsed functions). The crosswalk is read on every
+#: snapshot/coverage computation, so an uncached read made each workflow-strip
+#: render pay two disk reads + JSON parses. Path RESOLUTION (env vars included)
+#: still runs on every call; only the file read is memoized, keyed on mtime so
+#: an edited file is picked up. Consumers treat the list as read-only.
+_CROSSWALK_CACHE: dict[str, tuple[int, list[dict]]] = {}
+
+
 def deep_read_staf_crosswalk(path: Optional[str | Path] = None) -> list[dict]:
     if path is None:
         # NOTE(parity): R probes cwd-relative "config/staf_functions.json" first;
@@ -103,7 +111,14 @@ def deep_read_staf_crosswalk(path: Optional[str | Path] = None) -> list[dict]:
         if not hit:
             raise ValueError("config/staf_functions.json not found; pass `crosswalk_path` explicitly")
         path = hit[0]
-    doc = json.loads(Path(path).read_text(encoding="utf-8"))
+    resolved = Path(path)
+    key = str(resolved)
+    mtime = resolved.stat().st_mtime_ns
+    cached = _CROSSWALK_CACHE.get(key)
+    if cached is not None and cached[0] == mtime:
+        return cached[1]
+    doc = json.loads(resolved.read_text(encoding="utf-8"))
+    _CROSSWALK_CACHE[key] = (mtime, doc["functions"])
     return doc["functions"]
 
 
@@ -283,6 +298,83 @@ def uncovered_functions_from_mapping(mapping, metric_config,
     excused = {str(e.get("functionId")) for e in (exceptions or [])}
     return [(str(f.get("id")), str(f.get("name"))) for f in crosswalk
             if str(f.get("id")) not in covered and str(f.get("id")) not in excused]
+
+
+def _completed_metric_candidates_status(cm) -> tuple[bool, bool]:
+    """(has_candidates, has_complete): does a completed_metrics entry hold any
+    curve-row candidate at all, and does any of them count as complete? Mirrors
+    deep_collect_curve_rows' candidate gathering (phase4_curve_rows first, the
+    stratum_results fallback only when those are empty) and its default of
+    "complete" when curve_status is absent/NA."""
+    rows = (cm or {}).get("phase4_curve_rows")
+    if isinstance(rows, pd.DataFrame) and len(rows) > 0:
+        if "curve_status" not in rows.columns:
+            return True, True
+        return True, bool((rows["curve_status"].fillna("complete") == "complete").any())
+    sr = (cm or {}).get("stratum_results")
+    has_candidates = False
+    if isinstance(sr, dict):
+        for res in sr.values():
+            try:
+                cr = (res or {}).get("reference_curve", {}).get("curve_row")
+            except AttributeError:
+                continue
+            if isinstance(cr, pd.DataFrame) and len(cr) > 0:
+                has_candidates = True
+                if "curve_status" not in cr.columns:
+                    return True, True
+                v = cr.iloc[0].get("curve_status")
+                if _is_na(v) or str(v) == "complete":
+                    return True, True
+    return has_candidates, False
+
+
+def function_coverage_quick(completed_metrics, mapping, exceptions=None) -> Optional[dict]:
+    """``functionCoverage`` as the full bundle would report it, judged from
+    curve presence and the mapping walk alone; no bundle build, so the workflow
+    strip's snapshot can afford it on every render.
+
+    Contract parity with ``build_deep_assessment_bundle``:
+
+    * returns None exactly when ``deep_collect_curve_rows`` would come back
+      empty (which makes ``build_bundle_from_state`` raise and the snapshot's
+      coverage read None: nothing to judge yet);
+    * a metric covers its mapped functions when any of its candidate rows is
+      complete (missing ``curve_status`` defaults to complete), matching the
+      exporter's pick-then-skip;
+    * unmapped or non-canonical function labels add nothing;
+    * exceptions run through the same ``function_coverage`` /
+      ``validate_coverage_exceptions``, so shape and exclusion semantics are
+      identical.
+
+    One documented divergence: curve points are not parsed here, so a complete
+    row whose points fail extraction counts covered. Advisory-only drift; the
+    publish gate (library.publish_version) still judges the real bundle.
+    """
+    lookup = deep_function_lookup(deep_read_staf_crosswalk())
+    by_metric: dict[str, list[str]] = {}
+    if isinstance(mapping, pd.DataFrame) and len(mapping) > 0:
+        for mk, lbl in zip(mapping.get("metric_key"), mapping.get("function_label")):
+            if not _mapping_cell_blank(mk) and not _mapping_cell_blank(lbl):
+                by_metric.setdefault(str(mk), []).append(str(lbl))
+    any_candidates = False
+    covered: set[str] = set()
+    for mk, cm in (completed_metrics or {}).items():
+        if cm is None:
+            continue
+        has_candidates, has_complete = _completed_metric_candidates_status(cm)
+        any_candidates = any_candidates or has_candidates
+        if not has_complete:
+            continue
+        for lbl in by_metric.get(str(mk), []):
+            fn = deep_map_function(lbl, lookup)
+            if fn is not None:
+                covered.add(str(fn.get("id")))
+    if not any_candidates:
+        return None
+    return function_coverage(
+        [{"functionId": fid, "metrics": [True]} for fid in covered],
+        deep_read_staf_crosswalk(), exceptions)
 
 
 # ---- curve points -----------------------------------------------------------
@@ -699,6 +791,19 @@ def build_deep_assessment_bundle(
         for block in bundle.get("metricsByFunction") or []:
             for m in block.get("metrics") or []:
                 m["referenceTier"] = tier
+    # Predictor-source provenance (train/serve pairing): which source computed
+    # the predictors these curves were fitted against. Derived from the build,
+    # never user-chosen; absent means the StreamCat default (DEEP treats a
+    # missing field as "streamcat"). Follows the referenceTier pattern: the
+    # bundle-level declaration plus per-metric stamps inside metricsByFunction,
+    # so the field is part of the content digest — the same curve from a
+    # different predictor source is a different assessment.
+    predictor_source = meta.get("predictorSource")
+    if predictor_source and predictor_source != "streamcat":
+        bundle["predictorSource"] = predictor_source
+        for block in bundle.get("metricsByFunction") or []:
+            for m in block.get("metrics") or []:
+                m["predictorSource"] = predictor_source
     return bundle
 
 

@@ -26,8 +26,20 @@ LEGACY_IP_SITES = 25
 # --------------------------------------------------------------------------- #
 
 def test_the_default_dataset_is_the_legacy_snapshot():
+    """DEFAULT_DATASET_ID defines what an ABSENT dataset means (old manifests,
+    the digest rule). It must never move, even though new builds default to the
+    pooled archive via default_build_dataset_id."""
     assert nd.DEFAULT_DATASET_ID == nd.LEGACY_DATASET_ID
     assert nd.available_datasets()[0] == nd.LEGACY_DATASET_ID
+
+
+def test_a_new_build_defaults_to_the_pooled_archive_when_it_exists(monkeypatch):
+    monkeypatch.setattr(nd, "multi_cycle_available", lambda: True)
+    assert nd.default_build_dataset_id() == nd.MULTI_CYCLE_DATASET_ID
+    monkeypatch.setattr(nd, "multi_cycle_available", lambda: False)
+    assert nd.default_build_dataset_id() == nd.LEGACY_DATASET_ID
+    # and the absence default did not move with it
+    assert nd.DEFAULT_DATASET_ID == nd.LEGACY_DATASET_ID
 
 
 def test_the_legacy_panel_matches_the_bundled_site_file():
