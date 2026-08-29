@@ -78,12 +78,17 @@ async def delineate_only(lat: float, lon: float,
     }
 
 
-async def compute_metrics_only(ctx_inputs: dict, metric_ids: list) -> dict:
+async def compute_metrics_only(ctx_inputs: dict, metric_ids: list,
+                               assessment=None) -> dict:
     """Desktop-compute the auto-derivable metrics on a worker thread (DEEP Phase 3).
 
     Reuses EASI's StreamCat / NLCD / 3DEP code via :func:`deep.measure.compute_metrics_only`.
-    Returns ``{metricId: measured-value-entry}``; never raises.
+    ``assessment`` (the loaded bundle) gates the vendored site engine: engine
+    adapters supply exact-watershed values only when the bundle's curves were
+    fitted on engine predictors (its ``predictorSource``). Returns
+    ``{metricId: measured-value-entry}``; never raises.
     """
     from . import measure
     return await anyio.to_thread.run_sync(
-        lambda: measure.compute_metrics_only(ctx_inputs, metric_ids))
+        lambda: measure.compute_metrics_only(ctx_inputs, metric_ids,
+                                             assessment=assessment))

@@ -1437,8 +1437,10 @@ def server(input, output, session_):  # noqa: C901
 
     # ---- desktop auto-compute (Phase 3): prefill the computable metrics ----
     @reactive.extended_task
-    async def compute_task(ctx_inputs: dict, metric_ids: list) -> dict:
-        return await pipeline.compute_metrics_only(ctx_inputs, metric_ids)
+    async def compute_task(ctx_inputs: dict, metric_ids: list,
+                           assessment=None) -> dict:
+        return await pipeline.compute_metrics_only(ctx_inputs, metric_ids,
+                                                   assessment=assessment)
 
     @reactive.effect
     def _maybe_compute():
@@ -1459,7 +1461,9 @@ def server(input, output, session_):  # noqa: C901
         if not ids:
             return
         computed_for.set(key)
-        compute_task(ci, ids)
+        # The loaded assessment rides along so the site-engine adapters can be
+        # gated on its predictorSource (the train/serve pairing rule).
+        compute_task(ci, ids, la)
         ui.notification_show("Computing desktop metrics (StreamCat / 3DEP)…", id="deep_compute",
                              type="message", duration=None)
 
