@@ -53,8 +53,14 @@ The Detailed tier uses surveys, data collection, and modeling to support final
 design and crediting.
 
 EASI is the Screening tier of STAF. It evaluates a comprehensive set of stream
-functions for any wadeable stream in the conterminous United States, drawing
-entirely on public national data services. EASI is semi-quantitative, so it is
+functions for wadeable streams across the conterminous United States, drawing
+entirely on public national data services. EASI scores on the NHDPlus Version 2
+stream network, the network the national landscape datasets describe. The map
+shows the full National Hydrography Dataset, and a stream mapped only at high
+resolution is handled by a fixed substitution rule: EASI scores the nearest
+covered reach downstream, labels the substitution in the report, and declines
+to score when that reach drains more than ten times the selected stream's area.
+EASI is semi-quantitative, so it is
 useful for screening many sites, evaluating alternatives, and tracking change
 over time. Existing screening tools often cover only some stream functions or
 apply only to certain regions. EASI was built to close that gap by compiling

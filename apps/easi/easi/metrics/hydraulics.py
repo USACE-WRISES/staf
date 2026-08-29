@@ -28,7 +28,8 @@ def floodplain_engagement(ctx: AnalysisContext) -> MetricResult:
     """Floodplain engagement from bank-height ratio directly."""
     geom = ctx.extras.get("reach_geomorph") or {}
     bhr = geom.get("bank_height_ratio")
-    confidence = "L" if geom.get("edge_limited") else "M"
+    extrapolated = bool(geom.get("bankfull_extrapolated"))
+    confidence = "L" if (geom.get("edge_limited") or extrapolated) else "M"
     ev = screening_methods.evaluate(
         FLOODPLAIN_ENGAGEMENT_ID, {"bhr": bhr},
         input_meta={"bhr": {"source": "USGS 3DEP representative cross section"}},
@@ -39,12 +40,16 @@ def floodplain_engagement(ctx: AnalysisContext) -> MetricResult:
             "bank-height ratio unavailable for the representative cross section",
             confidence, scoring=ev.trace)
     warning = " ".join(ev.trace.get("warnings") or [])
+    note = warning or "Direct BHR screen; surveyed cross-section geometry may refine."
+    if extrapolated:
+        note += (" Drainage area is outside the Bieger fit range;"
+                 " bankfull is extrapolated.")
     return MetricResult(
         FLOODPLAIN_ENGAGEMENT_ID, value=round(float(bhr), 3),
         value_text=f"bank-height ratio {float(bhr):.2f} (low-bank height / max bankfull depth)",
         rating=ev.rating, confidence=confidence,
         source="USGS 3DEP representative cross section",
-        note=warning or "Direct BHR screen; surveyed cross-section geometry may refine.",
+        note=note,
         scoring=ev.trace)
 
 
@@ -58,7 +63,8 @@ def floodplain_access(ctx: AnalysisContext) -> MetricResult:
     geom = ctx.extras.get("reach_geomorph") or {}
     er = geom.get("entrenchment_ratio")
     edge = bool(geom.get("edge_limited"))
-    confidence = "L" if edge else "M"
+    extrapolated = bool(geom.get("bankfull_extrapolated"))
+    confidence = "L" if (edge or extrapolated) else "M"
     ev = screening_methods.evaluate(
         ENTRENCHMENT_ID, {"er": er},
         input_meta={"er": {"source": "USGS 3DEP representative cross section"}},
@@ -71,6 +77,8 @@ def floodplain_access(ctx: AnalysisContext) -> MetricResult:
     note = f"DEM {res} m, bankfull from national curve."
     if edge:
         note += " Flood-prone width reached the buffer edge and ER may be underestimated."
+    if extrapolated:
+        note += " Drainage area is outside the Bieger fit range; bankfull is extrapolated."
     note += " Naturally confined valleys require field interpretation."
     return MetricResult(
         ENTRENCHMENT_ID, value=round(float(er), 3),

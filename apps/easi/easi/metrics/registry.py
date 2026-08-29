@@ -50,6 +50,41 @@ EXTERNAL_SERVICE = {
     biology.BARRIERS_ID: "USACE NID",
 }
 
+# Framework-fixed per-metric anchoring for routed (hrSurrogate) sites: which
+# location each metric's evidence describes. Never user-selected. clickedReach
+# metrics derive from the HR reach's geometry/VAAs (3DEP cross-section set +
+# hyporheic); clickedPoint metrics query location services at the true clicked
+# point; surrogateComid metrics ride COMID-keyed evidence (NRSA, EPA modeled
+# indices); surrogateWatershed metrics ride the StreamCat watershed summaries.
+# One dynamic rule in assessment._annotate_anchors: a row that scored via a
+# StreamCat fallback anchors surrogateWatershed regardless of its entry here.
+METRIC_ANCHOR = {
+    # clicked HR reach (geometry + VAAs of the true stream)
+    hydraulics.HYPORHEIC_ID: "clickedReach",
+    hydraulics.ENTRENCHMENT_ID: "clickedReach",
+    hydraulics.FLOODPLAIN_ENGAGEMENT_ID: "clickedReach",
+    geomorphology.BANK_EROSION_ID: "clickedReach",
+    geomorphology.CHANNEL_EVOL_ID: "clickedReach",
+    # true clicked point (location-keyed services)
+    physicochemistry.IMPAIRMENT_ID: "clickedPoint",
+    physicochemistry.NUTRIENTS_ID: "clickedPoint",
+    biology.INVASIVES_ID: "clickedPoint",
+    biology.BARRIERS_ID: "clickedPoint",
+    # surrogate COMID (COMID-keyed evidence and modeled indices)
+    hydraulics.LOW_FLOW_ID: "surrogateComid",
+    geomorphology.SUBSTRATE_ID: "surrogateComid",
+    biology.BIOINTEGRITY_ID: "surrogateComid",
+    # surrogate watershed (StreamCat summaries)
+    hydrology.IMPERVIOUS_ID: "surrogateWatershed",
+    hydrology.WETLANDS_ID: "surrogateWatershed",
+    hydrology.FLOW_ALTERATION_ID: "surrogateWatershed",
+    hydrology.REACH_INFLOW_ID: "surrogateWatershed",
+    geomorphology.SEDIMENT_ID: "surrogateWatershed",
+    physicochemistry.CPOM_ID: "surrogateWatershed",
+    physicochemistry.TEMPERATURE_ID: "surrogateWatershed",
+    biology.HABITAT_ID: "surrogateWatershed",
+}
+
 # StreamCat base metric names needed by the registered adapters (one batched call
 # returns ws / cat / wsrp100 / catrp100 variants for each).
 STREAMCAT_NAMES = [
