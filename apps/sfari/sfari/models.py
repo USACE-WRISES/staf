@@ -28,6 +28,12 @@ class EvidenceResult:
     source_url: str = ""
     status: str = "ok"                           # ok | unavailable
     note: str = ""
+    # Provenance of the entry itself. "pull" = the standard desktop pull,
+    # "engine" = the vendored site computation engine (exact watershed),
+    # cross-section attach entries keep their source-string convention.
+    # Additive with safe defaults so saved sessions round-trip unchanged.
+    origin: str = "pull"
+    engine_version: Optional[str] = None
 
     def to_dict(self) -> dict:
         return asdict(self)
