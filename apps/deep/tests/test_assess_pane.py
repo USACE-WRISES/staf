@@ -93,7 +93,7 @@ def test_the_block_states_the_assessment_version_counts_and_tier():
     assert "40 metrics" in out
     assert "20 of 20 functions" in out
     assert "Reference tier: Least disturbed" in out
-    assert "preliminary" in out
+    assert "Preliminary" in out    # the display label, not the stored literal
 
 
 def test_undeclared_coverage_is_labelled_rather_than_implied_complete():
@@ -111,10 +111,10 @@ def test_documented_exclusions_are_counted_as_documented():
     assert "12 of 20 functions (8 documented)" in out
 
 
-def test_a_certified_bundle_reads_certified():
+def test_a_certified_bundle_reads_final():
     out = _text(app._assessment_pane_block(
         _loaded(lifecycle="certified"), "x@v2", can_change=False))
-    assert "certified" in out and "preliminary" not in out
+    assert "Final" in out and "Preliminary" not in out
 
 
 def test_the_best_available_caveat_survives_the_move():

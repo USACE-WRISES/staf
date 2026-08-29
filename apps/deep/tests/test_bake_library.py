@@ -139,6 +139,31 @@ def test_bake_excludes_retired_versions(tmp_path, libroot):
     assert refs == {"ecbp@v2"}  # retired v1 is not eligible
 
 
+def test_bake_excludes_draft_versions(tmp_path, libroot):
+    """A draft is automation output no human reviewed: never DEEP-eligible."""
+    out = tmp_path / "data"
+    _write_library(libroot, "ecbp", "ECBP", [1, 2], statuses={1: "draft", 2: "preliminary"})
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=2, default=2, prelim=2)])
+    bake = _load_bake_module()
+    bake.bake(out=out)
+    doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
+    refs = {r["assessmentRef"] for r in doc["assessments"]}
+    assert refs == {"ecbp@v2"}
+    assert not (out / "bundles" / "ecbp@v1.deep.json").exists()
+
+
+def test_an_all_draft_assessment_is_absent_from_the_bake(tmp_path, libroot):
+    out = tmp_path / "data"
+    _write_library(libroot, "ecbp", "ECBP", [1], statuses={1: "draft"})
+    _write_catalog(libroot, [_catalog_entry("ecbp", "ECBP", latest=1, default=1)])
+    bake = _load_bake_module()
+    result = bake.bake(out=out)
+    assert result["records"] == 0
+    doc = json.loads((out / "deep-assessments.json").read_text("utf-8"))
+    assert doc["assessments"] == []
+    assert not (out / "bundles" / "ecbp.deep.json").exists()
+
+
 def test_bake_is_idempotent(tmp_path, libroot):
     out = tmp_path / "data"
     _write_library(libroot, "ecbp", "ECBP", [1])

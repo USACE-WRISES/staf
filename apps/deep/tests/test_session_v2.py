@@ -105,6 +105,17 @@ def test_lifecycle_status_defaults_and_sources():
     assert session.lifecycle_status({"status": "CERTIFIED"}) == "certified"
     assert session.lifecycle_status({}) == "preliminary"
     assert session.lifecycle_status({"status": "weird"}) == "preliminary"
+    # A draft can never reach DEEP (the bake filters it), so the two-state
+    # fallback deliberately maps it to preliminary rather than growing a state.
+    assert session.lifecycle_status({"status": "draft"}) == "preliminary"
+
+
+def test_status_labels_render_the_writer_vocabulary():
+    assert session.status_label("certified") == "Final"
+    assert session.status_label("preliminary") == "Preliminary"
+    assert session.status_label("draft") == "Draft"
+    assert session.status_label("weird_future_state") == "Weird_Future_State"
+    assert session.status_label(None) == "Preliminary"
 
 
 def test_bundle_digest_prefers_publisher_digest():

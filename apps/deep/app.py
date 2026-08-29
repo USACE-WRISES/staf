@@ -304,7 +304,8 @@ def _assessment_pane_block(la, ref, *, can_change: bool, covers_site: bool = Tru
                             class_="deep-pane-caution"))
     return ui.div(
         ui.div(ui.span("Assessment", class_="deep-pane-label"),
-               ui.span(f["lifecycle"], class_=f"deep-card-badge {badge_cls}"),
+               ui.span(session.status_label(f["lifecycle"]),
+                       class_=f"deep-card-badge {badge_cls}"),
                class_="deep-pane-head"),
         ui.div(f["name"], class_="deep-pane-name"),
         *lines,
@@ -1253,7 +1254,8 @@ def server(input, output, session_):  # noqa: C901
             ver_by_ref = entry["versionByRef"]
             life_by_ref = entry["lifecycleByRef"]
             ver_choices = {
-                ref: f'v{ver_by_ref.get(ref)} ({life_by_ref.get(ref, "preliminary")})'
+                ref: (f'v{ver_by_ref.get(ref)} '
+                      f'({session.status_label(life_by_ref.get(ref, "preliminary"))})')
                 for ref in refs
             }
             default_life = life_by_ref.get(entry["defaultRef"], "preliminary")
@@ -1266,7 +1268,8 @@ def server(input, output, session_):  # noqa: C901
             cards.append(ui.div(
                 ui.div(
                     ui.span(entry["assessmentName"], class_="deep-card-name"),
-                    ui.span(default_life, class_=f"deep-card-badge {badge_cls}"),
+                    ui.span(session.status_label(default_life),
+                            class_=f"deep-card-badge {badge_cls}"),
                     class_="deep-card-head"),
                 ui.div(entry.get("regionName") or "", class_="deep-card-region"),
                 (ui.div(ui.span("Reference tier", class_="deep-card-verlabel"),
