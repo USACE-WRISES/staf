@@ -42,6 +42,16 @@ AREA_R2: dict[str, float] = {
     "LUP": 0.50, "APL": 0.84, "AHI": 0.90, "IPL": 0.65, "IHI": 0.55,
     "RMS": 0.74, "IMP": 0.64, "PMS": 0.66, "USA": 0.58,
 }
+
+# Drainage-area range (km^2) of the field sites behind each division's
+# regressions (Bieger et al. 2015, Table 2). A drainage area outside its
+# division's range means the power curve is extrapolating beyond its data;
+# callers flag the estimate rather than refuse it.
+DA_FIT_RANGE_SQKM: dict[str, tuple[float, float]] = {
+    "LUP": (43.0, 948.0), "APL": (0.8, 2815.0), "AHI": (0.2, 2435.0),
+    "IPL": (0.5, 155213.0), "IHI": (78.0, 2484.0), "RMS": (0.4, 25201.0),
+    "IMP": (9.4, 19632.0), "PMS": (16.0, 20927.0), "USA": (0.2, 155213.0),
+}
 # Display order for the divisions (national curve last).
 _AREA_ORDER = ("LUP", "APL", "AHI", "IPL", "IHI", "RMS", "IMP", "PMS", "USA")
 
@@ -111,13 +121,16 @@ def bankfull_geometry(da_sqkm: float, lat: Optional[float] = None,
 
     Uses the Bieger 2015 physiographic-division curve at (lat, lon); falls back
     to the national curve outside CONUS or when the location is unknown. Returns
-    ``{width_m, depth_m, area_m2, division, division_name, regional}`` — metres
-    and square metres.
+    ``{width_m, depth_m, area_m2, division, division_name, regional,
+    extrapolated, fit_range_sqkm}`` — metres and square metres. ``extrapolated``
+    is True when the drainage area falls outside the division's fitted range
+    (Table 2), so small-headwater estimates carry an honest flag.
     """
     da = max(float(da_sqkm or 0.0), 0.01)
     abbr = division_at(lat, lon)
     key = abbr if abbr in COEF else "USA"
     c = COEF[key]
+    lo, hi = DA_FIT_RANGE_SQKM.get(key, DA_FIT_RANGE_SQKM["USA"])
     return {
         "width_m": round(_power(c["width"], da), 2),
         "depth_m": round(_power(c["depth"], da), 3),
@@ -125,6 +138,8 @@ def bankfull_geometry(da_sqkm: float, lat: Optional[float] = None,
         "division": key,
         "division_name": DIV_NAME.get(key, "National curve"),
         "regional": key != "USA",
+        "extrapolated": not (lo <= da <= hi),
+        "fit_range_sqkm": [lo, hi],
     }
 
 

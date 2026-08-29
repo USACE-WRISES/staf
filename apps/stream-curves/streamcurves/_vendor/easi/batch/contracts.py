@@ -188,6 +188,8 @@ class MetricRecord:
     evidence_family: str = ""
     used_fallback: bool = False
     observed_overrides_proxy: bool = False
+    # Per-metric anchoring label for routed sites (empty on covered sites).
+    anchor: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -258,6 +260,10 @@ class SiteResult:
     issues: list[Issue] = field(default_factory=list)
     qualification: Qualification = field(default_factory=Qualification)
     revision: int = 0
+    # The siteAnchor payload (camelCase, from easi.routing): where the click
+    # landed vs which reach was scored. Empty dict for legacy results. Additive,
+    # so CONTRACTS_SCHEMA_VERSION is unchanged.
+    anchor: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -274,6 +280,7 @@ class SiteResult:
             "issues": [i.to_dict() for i in self.issues],
             "qualification": self.qualification.to_dict(),
             "revision": self.revision,
+            "anchor": self.anchor,
             # ``_``-prefixed metadata (e.g. the heavy per-site artifact source) is
             # private and kept out of the compact serialization.
             "metadata": {k: v for k, v in self.metadata.items()
@@ -297,6 +304,7 @@ class SiteResult:
             issues=[Issue.from_dict(i) for i in d.get("issues", [])],
             qualification=Qualification.from_dict(d.get("qualification") or {}),
             revision=int(d.get("revision", 0)),
+            anchor=dict(d.get("anchor") or {}),
             metadata=dict(d.get("metadata") or {}))
 
 

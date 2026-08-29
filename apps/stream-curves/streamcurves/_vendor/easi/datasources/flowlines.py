@@ -70,14 +70,16 @@ def flowlines_in_bbox(west: float, south: float, east: float, north: float,
     return _fetch(*_round_bbox(west, south, east, north))
 
 
-def nearest_point_on_lines(geojson: Optional[dict], lat: float, lon: float
+def nearest_point_on_lines(geojson: Optional[dict], lat: float, lon: float,
+                           id_prop: str = "comid"
                            ) -> Optional[tuple[float, float, float, Optional[int]]]:
     """Snap (lat, lon) to the nearest flowline in ``geojson``.
 
-    Returns ``(snap_lat, snap_lon, distance_ft, comid)`` or ``None`` if there are
-    no usable lines. The COMID of the nearest flowline lets the caller delineate
-    directly (bypassing the less reliable NLDI point-snap). Distance is the
-    straight-line click-to-line distance in feet.
+    Returns ``(snap_lat, snap_lon, distance_ft, ident)`` or ``None`` if there are
+    no usable lines, where ``ident`` is the nearest line's ``id_prop`` property
+    (``comid`` for the V2 layer, ``nhdplusid`` for the HR layer). The id lets the
+    caller delineate directly (bypassing the less reliable NLDI point-snap).
+    Distance is the straight-line click-to-line distance in feet.
     """
     if not geojson or not geojson.get("features"):
         return None
@@ -96,8 +98,8 @@ def nearest_point_on_lines(geojson: Optional[dict], lat: float, lon: float
         snapped_m = nearest_points(line, click)[0]
         dist_ft = click.distance(snapped_m) * FT_PER_M
         back = gpd.GeoSeries([snapped_m], crs=CRS_ALBERS).to_crs(CRS_WGS84).iloc[0]
-        comid = gdf.loc[idx]["comid"] if "comid" in gdf.columns else None
-        comid_val = int(comid) if comid is not None and comid == comid else None  # filter NaN
-        return (float(back.y), float(back.x), float(dist_ft), comid_val)
+        ident = gdf.loc[idx][id_prop] if id_prop in gdf.columns else None
+        ident_val = int(ident) if ident is not None and ident == ident else None  # filter NaN
+        return (float(back.y), float(back.x), float(dist_ft), ident_val)
     except Exception:  # noqa: BLE001 - resilience by design
         return None
