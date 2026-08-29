@@ -462,4 +462,14 @@ async def pull(ctx_inputs: dict, *, progress: Optional[dict] = None) -> dict:
         out[mid] = res.to_dict()
         if progress is not None:
             progress["done"] = len(out)
+
+    # Exact-watershed upgrades from the vendored site engine, when available.
+    # One computation per site (slow: roughly a minute); the mapped entries
+    # replace their COMID-catchment proxies with true point-watershed values,
+    # labeled with origin="engine" + version. Failure means no upgrade.
+    from . import engine_prefill
+    if engine_prefill.site_engine_available():
+        engine_out = await _thread(engine_prefill.pull_engine_evidence,
+                                   ctx_inputs)
+        out.update(engine_out)
     return out
