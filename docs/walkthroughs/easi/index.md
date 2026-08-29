@@ -11,6 +11,10 @@ description: "Video walkthrough of the EASI screening app, with the full referen
   Your browser cannot play this video. <a href="{{ '/assets/videos/easi-walkthrough.mp4' | relative_url }}">Download the video</a> instead.
 </video>
 
+<h2>Where EASI works</h2>
+
+<p>EASI scores on the NHDPlus V2 stream network, the network the national landscape datasets describe. The map shows the full National Hydrography Dataset: bold lines are the scoring network and thin lines are the additional high-resolution streams, mostly small headwaters. Clicking a thin line scores the nearest covered reach downstream, and the app labels the substitution with the clicked stream, the routed distance, and the drainage-area ratio. When that reach drains more than ten times the area of the clicked stream, EASI declines to score it. Use SFARI or DEEP for an exact answer on those streams.</p>
+
 <!--
   Reference content for the Screening tier metrics computed automatically by the EASI app.
   The section between the BEGIN/END GENERATED markers is written by
