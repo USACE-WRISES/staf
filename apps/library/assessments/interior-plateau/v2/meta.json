@@ -1,0 +1,44 @@
+{
+  "assessmentId": "interior-plateau",
+  "assessmentName": "Interior Plateau reference assessment",
+  "version": 2,
+  "updatedAt": "2026-08-28T06:14:32Z",
+  "author": "StreamCurves Regional Analysis Agent",
+  "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 61 of 64 candidates.  REF-02 fallback: only 1 Functioning sites, below the exploratory floor of 10; included Functioning-at-Risk to reach 61. Mandatory review; confidence capped; reference tier = best_available.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "71",
+    "name": "Interior Plateau"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA (L3 ecoregion 71), StreamCurves Regional Analysis Agent",
+  "contentDigest": "sha256:07507d4a7de7087ad31003498326e1a3b5ef019c734c38656f25f3daa7e6176f",
+  "supersedesVersion": 1,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Substrate size, wood volume, and embeddedness read different aspects of bed condition (IP v1 recorded approval)"
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "standing decision select01-complementary-set (policy 1.0): Complementary set approved under standing decision select01-complementary-set (policy 1.0): the 3 metrics on this function (bfiws, phab_BFWD_RAT, phab_RP100_cm) are the crosswalk's own assignment, and no pair among them reaches the strong redundancy band (largest within-function rank correlation 0.000). The approval is recorded in the publish metadata.",
+      "confirmedAt": "2026-08-28T06:14:32.010363+00:00"
+    },
+    {
+      "functionId": "water-soil-quality",
+      "approvedBy": "gtmenichino",
+      "note": "standing decision select01-complementary-set (policy 1.0): Complementary set approved under standing decision select01-complementary-set (policy 1.0): the 3 metrics on this function (chem_COND, chem_PH, chem_TURB) are the crosswalk's own assignment, and no pair among them reaches the strong redundancy band (largest within-function rank correlation 0.682). The approval is recorded in the publish metadata.",
+      "confirmedAt": "2026-08-28T06:14:32.010363+00:00"
+    },
+    {
+      "functionId": "community-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "standing decision select01-complementary-set (policy 1.0): Complementary set approved under standing decision select01-complementary-set (policy 1.0): the 3 metrics on this function (bent_EPT_NTAX, bent_HPRIME, bent_TOLRPIND) are the crosswalk's own assignment, and no pair among them reaches the strong redundancy band (largest within-function rank correlation 0.000). The approval is recorded in the publish metadata.",
+      "confirmedAt": "2026-08-28T06:14:32.010363+00:00"
+    }
+  ]
+}
