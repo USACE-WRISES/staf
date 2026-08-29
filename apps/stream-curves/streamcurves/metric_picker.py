@@ -41,6 +41,7 @@ _SRC_DISPLAY = {
     "streamcat": "StreamCat",
     "streamstats": "StreamStats",
     "mmw": "MMW",
+    "site_engine": "Site engine",
 }
 _STREAMCAT_CATALOG = DATA_DIR / "streamcat_metrics.csv"
 
@@ -72,7 +73,8 @@ def _split_units(label: str) -> tuple[str, str]:
 
 
 def build_metric_picker_table(
-    *, nrsa=None, streamcat=None, streamstats=None, mmw=None, entries=None
+    *, nrsa=None, streamcat=None, streamstats=None, mmw=None,
+    site_engine=None, entries=None
 ) -> pd.DataFrame:
     """One row per selectable metric across all catalog sources.
 
@@ -113,7 +115,9 @@ def build_metric_picker_table(
         # "named" means curated-and-foregrounded, not "has a name": it gates
         # the main picker list, which deliberately shows the crosswalk's
         # metrics and tucks the rest of the NRSA catalog into Advanced.
-        named = (code in mm_label) or (source_key in ("streamcat", "streamstats", "mmw"))
+        named = (code in mm_label) or (source_key in
+                                       ("streamcat", "streamstats", "mmw",
+                                        "site_engine"))
         rows.append({
             "code": code,
             "name": name or code,
@@ -149,6 +153,12 @@ def build_metric_picker_table(
     for key, meta in (mmw or {}).items():
         label = meta.get("label") if isinstance(meta, dict) else meta
         add_row(key, "mmw", raw_label=label, category="Watershed")
+
+    # Site computation engine — {key: {"label": ...}} (exact-watershed
+    # predictors; rows appear only when the vendored engine is available).
+    for key, meta in (site_engine or {}).items():
+        label = meta.get("label") if isinstance(meta, dict) else meta
+        add_row(key, "site_engine", raw_label=label, category="Exact watershed")
 
     if not rows:
         return pd.DataFrame(columns=PICKER_COLUMNS)
@@ -203,7 +213,8 @@ def codes_for_columns(columns, table: pd.DataFrame) -> set[str]:
 def split_selection_by_source(selected_codes, table: pd.DataFrame) -> dict[str, list[str]]:
     """Map a flat set of selected codes back to the per-source lists the compile
     step consumes (``metric_sel``/``nrsa_sel``/``ss_sel``/``mmw_sel``)."""
-    out: dict[str, list[str]] = {"nrsa": [], "streamcat": [], "streamstats": [], "mmw": []}
+    out: dict[str, list[str]] = {"nrsa": [], "streamcat": [], "streamstats": [],
+                                 "mmw": [], "site_engine": []}
     if table is None or len(table) == 0:
         return out
     src = dict(zip(table["code"].astype(str), table["source_key"]))

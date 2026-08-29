@@ -195,6 +195,20 @@ def _mmw_core_metrics_codes() -> list[str]:
     ]
 
 
+def _site_engine_codes() -> list[str]:
+    # Mirrors site_engine_source.SE_PREDICTORS (names only, kept import-light
+    # like the other validator lists).
+    return [
+        "se_pctimpws",
+        "se_agws",
+        "se_rddensws",
+        "se_runoffmm",
+        "se_wsareasqkm",
+        "se_damnrmstor",
+        "se_kffactws",
+    ]
+
+
 def _streamcat_catalog_names() -> list[str]:
     try:
         df = pd.read_csv(DATA_DIR / "streamcat_metrics.csv")
@@ -221,7 +235,7 @@ def metric_map_validate() -> list[str]:
             f"metric_map: expected 20 discipline/function pairs, found {len(keys)}"
         )
 
-    valid_src = {"nrsa", "streamcat", "streamstats", "mmw"}
+    valid_src = {"nrsa", "streamcat", "streamstats", "mmw", "site_engine"}
     bad_src = [s for s in pd.unique(df["source"]) if s not in valid_src]
     if bad_src:
         w.append("metric_map: unknown source(s): " + ", ".join(str(s) for s in bad_src))
@@ -240,6 +254,7 @@ def metric_map_validate() -> list[str]:
         "streamcat": _streamcat_catalog_names(),
         "streamstats": _ss_core_bcs_codes(),
         "mmw": _mmw_core_metrics_codes(),
+        "site_engine": _site_engine_codes(),
     }
     for _, row in df.iterrows():
         src = row["source"]
