@@ -28,20 +28,32 @@ def measured_from_state(state: dict) -> dict:
     return out
 
 
-def compute_metrics_only(ctx_inputs: dict, metric_ids) -> dict:
+def compute_metrics_only(ctx_inputs: dict, metric_ids, *, assessment=None) -> dict:
     """Desktop-compute the auto-derivable metrics for a delineated site.
 
-    Returns ``{metricId: {value, na, note, origin, source}}`` entries (the shape
-    the app's measured-values state uses) for every ``metricId`` that has a
-    desktop adapter and yields a value. Never raises; the heavy datasource
-    imports are lazy so this module stays importable without the geospatial stack.
+    Returns ``{metricId: {value, na, note, origin, source, engine}}`` entries
+    (the shape the app's measured-values state uses) for every ``metricId``
+    that has a desktop adapter and yields a value.
+
+    ``assessment`` (a LoadedAssessment or raw bundle) gates the site engine:
+    engine adapters may supply values only when the bundle's curves were fitted
+    on engine predictors (``predictorSource``); against StreamCat-fitted curves
+    the adapters keep the StreamCat/NLCD sources those curves were trained on,
+    and the scoring layer's pairing rule backstops any state that slips past.
+    Never raises; the heavy datasource imports are lazy so this module stays
+    importable without the geospatial stack.
     """
+    from . import assessments
     from .metrics import computed
     from .metrics.base import AnalysisContext
 
     ctx = AnalysisContext.from_inputs(ctx_inputs)
+    if assessment is not None:
+        ctx.extras["allow_engine"] = (
+            assessments.predictor_source_of(assessment) != "streamcat")
     out: dict[str, dict] = {}
     for mid, cv in computed.compute_for(metric_ids, ctx).items():
         out[mid] = {"value": cv.value, "na": False, "note": "",
-                    "origin": "desktop", "source": cv.source}
+                    "origin": "desktop", "source": cv.source,
+                    "engine": bool(getattr(cv, "engine", False))}
     return out

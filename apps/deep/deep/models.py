@@ -25,6 +25,13 @@ class MeasuredValue:
     note: str = ""
     na: bool = False
     stratum: Optional[str] = None   # chosen curve-layer stratum (multi-stratum metrics)
+    # True when the value was computed by the site engine (exact watershed).
+    # Meaningful only for desktop-origin values: a user edit sets origin to
+    # "field", which clears the flag on the next load, so an edited value can
+    # never carry engine provenance it no longer has. The scoring layer uses
+    # this for the train/serve pairing rule. Additive; legacy sessions default
+    # to False.
+    engine: bool = False
 
     @property
     def is_scored(self) -> bool:
@@ -39,18 +46,21 @@ class MeasuredValue:
             "note": self.note,
             "na": self.na,
             "stratum": self.stratum,
+            "engine": self.engine,
         }
 
     @classmethod
     def from_dict(cls, d: dict) -> "MeasuredValue":
+        origin = d.get("origin", "field")
         return cls(
             metric_id=d["metricId"],
             value=d.get("value"),
-            origin=d.get("origin", "field"),
+            origin=origin,
             source=d.get("source", ""),
             note=d.get("note", ""),
             na=bool(d.get("na", False)),
             stratum=d.get("stratum"),
+            engine=bool(d.get("engine", False)) and origin == "desktop",
         )
 
 

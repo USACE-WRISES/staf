@@ -362,6 +362,22 @@ def from_bundle(bundle: dict) -> LoadedAssessment:
     return LoadedAssessment.from_dict(bundle)
 
 
+def predictor_source_of(assessment) -> str:
+    """The predictor source the assessment's curves were fitted against.
+
+    Reads the bundle-level ``predictorSource`` stamped by StreamCurves; an
+    absent field means the StreamCat default (every bundle published before
+    the field existed). The declared-vs-derived pattern of ``coverage_of``,
+    reduced to its declaration half: this field is provenance, never derived
+    here. Accepts a :class:`LoadedAssessment` or a raw bundle dict.
+    """
+    raw = getattr(assessment, "raw", None)
+    if raw is None:
+        raw = assessment if isinstance(assessment, dict) else {}
+    value = (raw or {}).get("predictorSource")
+    return str(value) if value else "streamcat"
+
+
 def validate_bundle(bundle: dict) -> list[str]:
     """Structural checks for an assessment (predefined or uploaded). Empty == OK."""
     problems: list[str] = []

@@ -26,6 +26,11 @@ class ComputedValue:
     value: float
     source: str
     confidence: str = "M"
+    # True when the value came from the vendored site engine (exact watershed).
+    # Rides into the measured-value state so the scoring layer can enforce the
+    # train/serve pairing rule (engine values never score against curves
+    # fitted on StreamCat predictors).
+    engine: bool = False
 
 
 _ADAPTERS: dict[str, Callable[[AnalysisContext], Optional[ComputedValue]]] = {}
@@ -47,6 +52,47 @@ def computable_ids() -> set[str]:
 # --------------------------------------------------------------------------- #
 # Shared prefetch (cached on ctx.extras; lazy imports keep the module light)
 # --------------------------------------------------------------------------- #
+def site_engine_available() -> bool:
+    """The vendored site engine and its geospatial stack are importable."""
+    import importlib.util
+    for mod in ("deep._vendor.site_engine", "requests", "shapely", "geopandas"):
+        if importlib.util.find_spec(mod) is None:
+            return False
+    return True
+
+
+def _engine_record(ctx: AnalysisContext) -> dict:
+    """One exact-watershed engine computation per site, cached on ctx.
+
+    Runs ONLY when the caller allowed it (``ctx.extras["allow_engine"]``,
+    set from the bundle's predictorSource): against StreamCat-fitted curves
+    the engine must not supply scoring inputs, so the adapters fall back to
+    the StreamCat/NLCD paths those curves were trained on. Never raises.
+    """
+    if "site_engine_record" not in ctx.extras:
+        rec: dict = {}
+        try:
+            if ctx.extras.get("allow_engine") and site_engine_available():
+                from deep._vendor.site_engine import compute_site
+                rec = compute_site(ctx.lat, ctx.lon,
+                                   {"includeGeometry": False}) or {}
+                if rec.get("status") != "ok":
+                    rec = {}
+        except Exception:  # noqa: BLE001
+            rec = {}
+        ctx.extras["site_engine_record"] = rec
+    return ctx.extras["site_engine_record"]
+
+
+def _engine_metric(ctx: AnalysisContext, key: str):
+    rec = _engine_record(ctx)
+    return ((rec.get("metrics") or {}).get(key) or {}).get("value")
+
+
+def _engine_version(ctx: AnalysisContext) -> str:
+    return str(_engine_record(ctx).get("engineVersion") or "")
+
+
 def _streamcat(ctx: AnalysisContext) -> dict:
     if "streamcat" not in ctx.extras:
         from ..datasources import streamcat
@@ -90,6 +136,11 @@ def _reach_geom(ctx: AnalysisContext) -> dict:
          "catchment-hydrology-percent-impervious-cover",
          "catchment-hydrology-effective-impervious-cover")
 def _impervious(ctx):
+    ev = _engine_metric(ctx, "imperviousPctWatershed")
+    if ev is not None:
+        return ComputedValue(round(float(ev), 2),
+                             f"Site engine v{_engine_version(ctx)} impervious "
+                             "(exact watershed, NLCD 2021)", "H", engine=True)
     v = _streamcat(ctx).get("pctimp2019ws")
     src = "EPA StreamCat pctimp2019 (watershed)"
     if v is None:
@@ -100,6 +151,15 @@ def _impervious(ctx):
 
 @adapter("catchment-hydrology-anthropogenic-land-cover")
 def _anthropogenic(ctx):
+    e_imp = _engine_metric(ctx, "imperviousPctWatershed")
+    e_crop = _engine_metric(ctx, "cropPctWatershed")
+    e_hay = _engine_metric(ctx, "hayPasturePctWatershed")
+    if any(v is not None for v in (e_imp, e_crop, e_hay)):
+        total = (e_imp or 0.0) + (e_crop or 0.0) + (e_hay or 0.0)
+        return ComputedValue(
+            round(float(total), 2),
+            f"Site engine v{_engine_version(ctx)} crop+hay+impervious "
+            "(exact watershed, NLCD 2021)", "M", engine=True)
     sc = _streamcat(ctx)
     crop, hay, imp = sc.get("pctcrop2019ws"), sc.get("pcthay2019ws"), sc.get("pctimp2019ws")
     if crop is not None or hay is not None or imp is not None:
