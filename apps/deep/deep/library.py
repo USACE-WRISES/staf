@@ -78,6 +78,10 @@ def latest_bundles() -> list[dict]:
 # --------------------------------------------------------------------------- #
 # All-versions view (bake source): one record per eligible (id, version)
 # --------------------------------------------------------------------------- #
+# "draft" (automation output not yet human-reviewed in StreamCurves) is
+# deliberately ineligible, exactly like under_review/revised/retired: DEEP
+# consumes only what a person has stood behind. Approving a draft as
+# preliminary on the StreamCurves Validate page makes it appear here.
 _ELIGIBLE = ("preliminary", "certified")
 
 

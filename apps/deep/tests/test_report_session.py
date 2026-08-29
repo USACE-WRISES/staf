@@ -62,7 +62,7 @@ def test_report_includes_version_status_region_and_digest():
 
     csv_txt = report.build_csv({}, la, state, sc, region=region)
     assert "Assessment version" in csv_txt
-    assert "Certified" in csv_txt                      # lifecycle status, title-cased
+    assert "Final" in csv_txt                          # certified's display label
     assert "Ohio (OH)" in csv_txt                      # state region match
     assert "55 Eastern Corn Belt Plains" in csv_txt    # Level III ecoregion match
     assert "Content digest" in csv_txt and "sha256:" in csv_txt

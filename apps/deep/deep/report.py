@@ -96,7 +96,7 @@ def _header_pairs(delin, assessment, sc, region=None):
     return [
         ("Assessment", _attr(assessment, "assessment_name", "assessmentName")),
         ("Assessment version", "" if version is None else version),
-        ("Lifecycle status", status.title()),
+        ("Lifecycle status", session.status_label(status)),
         ("Scoring method version", _method_version(assessment)),
         ("Source", _attr(assessment, "source_citation", "sourceCitation")),
         ("State (region match)", _state_label(st)),

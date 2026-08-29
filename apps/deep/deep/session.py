@@ -46,6 +46,29 @@ def lifecycle_status(bundle: dict | None) -> str:
     return "preliminary"
 
 
+# Stored literal -> label shown to people. Machine fields (saved sessions,
+# geojson properties, lifecycleByRef) keep the raw literal; only human-facing
+# text uses these. Keep in sync with the copy in
+# apps/stream-curves/streamcurves/library.py (no shared package yet).
+STATUS_LABELS = {
+    "draft": "Draft",
+    "preliminary": "Preliminary",
+    "under_review": "Under review",
+    "certified": "Final",
+    "revised": "Revised",
+    "retired": "Retired",
+}
+
+
+def status_label(status) -> str:
+    """Display label for a lifecycle status; unknown strings title-case rather
+    than render blank. (DEEP only ever renders preliminary/certified — the bake
+    filters everything else — but the map carries the writer's full vocabulary
+    so a foreign value still reads sensibly.)"""
+    s = str(status or "").strip().lower()
+    return STATUS_LABELS.get(s) or (s.title() if s else STATUS_LABELS["preliminary"])
+
+
 def content_digest(bundle: dict | None) -> str:
     """Stable ``sha256:<hex>`` over the inlined assessment bundle.
 

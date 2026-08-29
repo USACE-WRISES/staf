@@ -88,7 +88,10 @@ adversarial review):**
 - Curves may be two-sided (`curve.form: optimum`), including a flat-low-tail
   variant; `interp_curve` is shape-agnostic and scores them unchanged.
 - Published regional assessments are preliminary until the scientific team
-  certifies them; nothing in DEEP implies certification.
+  certifies them; nothing in DEEP implies certification. DEEP lists only
+  Preliminary and Final (the display label for stored `certified`) versions:
+  drafts (automation output not yet human-reviewed in StreamCurves) are never
+  baked into the registry.
 
 ## Run the app (dev)
 
