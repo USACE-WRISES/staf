@@ -38,12 +38,12 @@ assessment bundles.
   is curve-based (numeric value → live index + computed 0–15 function score).
 - `deep/report.py` — CSV / GeoJSON / PDF exports. `deep/session.py` — save/resume
   (delineation + inlined assessment + measured values). `deep/measure.py` —
-  measured-value assembly (Phase 3 will add desktop auto-compute here).
+  measured-value assembly (desktop auto-compute merges here; Phases 3 and 6).
 - `www/measure.js`, `www/deep.css` — worksheet interactions + styling.
 - `examples/spring-sample.deep.json` — a synthetic SPRING-built assessment bundle
   for exercising the upload path until the real SPRING export exists.
 
-**Phase 3 — desktop auto-compute (done):**
+**Phase 3 — desktop auto-compute (done; extended by Phase 6):**
 
 - `deep/metrics/{base,computed}.py` — a registry mapping desktop-derivable
   detailed metricIds to adapters that compute the raw value, reusing EASI's
@@ -75,16 +75,22 @@ adversarial review):**
 - Bundles now carry per-metric annotations stamped by StreamCurves:
   `referenceN`, `sampleDisposition`, `metricRole` (`response` or
   `stressor_surrogate`), `curveCaveats`, `confidenceLabel`, `confidenceTotal`,
-  and `referenceRange`. DEEP retains unknown fields, so older bundles still load.
+  `referenceRange`, and (Phase 6) `predictorSource` — which source computed the
+  predictors the curves were fitted on (`streamcat` when absent, or
+  `site-engine vX`). DEEP retains unknown fields, so older bundles still load.
 - The assessment card and detail pane show the **reference tier** the curves were
   drawn at (least disturbed or best available); a best-available bar is never
   mistaken for reference condition.
 - The metric information card lists the curve basis (tier, role, reference
   sites, builder confidence band) and the builder's caveats ("Read with care").
-- Three scoring advisories compose beside a score (`deep/curves.py:metric_warning`):
-  the endpoint clamp, a value outside the reference pool's observed range, and a
+- Four scoring advisories compose beside a score (`deep/curves.py:metric_warning`):
+  the endpoint clamp, a value outside the reference pool's observed range, a
   thin-sample curve (`sampleDisposition` insufficient) that should be read as a
-  band, not a point value. None changes the index.
+  band, not a point value, and the train/serve pairing advisory (Phase 6). The
+  first three never change the index; the pairing advisory does — an
+  engine-computed value against a curve fitted on StreamCat predictors renders
+  as labeled reference evidence and is withheld from scoring
+  (`curves.metric_index` returns no index for it).
 - Curves may be two-sided (`curve.form: optimum`), including a flat-low-tail
   variant; `interp_curve` is shape-agnostic and scores them unchanged.
 - Published regional assessments are preliminary until the scientific team
@@ -93,17 +99,29 @@ adversarial review):**
   drafts (automation output not yet human-reviewed in StreamCurves) are never
   baked into the registry.
 
+**Phase 6 — site-engine auto-pull + the train/serve pairing rule (2026-08-29):**
+
+- The STAF site engine (`libs/site_engine`, vendored at `deep/_vendor/site_engine/`
+  by `scripts/vendor_site_engine.py`, drift-gated) joins the auto-compute
+  registry: exact-watershed values (impervious, anthropogenic cover, and the
+  engine reach for geomorphic ratios) computed at the assessed point on the
+  full-resolution NHD. Engine adapters run only when the loaded bundle's
+  `predictorSource` records engine predictors.
+- `MeasuredValue.engine` marks engine-origin values; a user edit clears it.
+- The pairing rule is enforced at the scoring layer, not just at pull time:
+  `deep/curves.py:metric_index` withholds the index whenever an engine value
+  meets a StreamCat-fitted curve, and `metric_warning` explains why. Engine
+  values score only against curves whose provenance records engine predictors.
+
 ## Run the app (dev)
 
-Phase 2 reuses EASI's virtualenv (it already has the shiny + HyRiver stack). From
-the DEEP repo root:
+Uses the shared repo-root `.venv` (see the monorepo README). From `apps/deep`:
 
 ```sh
-D:/Code/Work/easi_claude/.venv/Scripts/python.exe -m shiny run --port 8011 app.py
+..\..\.venv\Scripts\python.exe -m shiny run --port 8003 app.py
 ```
 
-Then open <http://127.0.0.1:8011>. (`.claude/launch.json` encodes this.) A
-dedicated DEEP `.venv` from `requirements.txt` can replace the borrowed one later.
+Then open <http://127.0.0.1:8003>. (`.claude/launch.json` encodes this.)
 
 ## Data model / contract
 
@@ -119,7 +137,11 @@ STAF site data (`staf/docs/assets/data`) and emits, into `data/`:
 
 An uploaded assessment is one object of the same shape as an entry in
 `deep-assessments.json` (curves inlined), so predefined and uploaded load
-through one path.
+through one path. Bundles carry a top-level `predictorSource` stamped by
+StreamCurves at publish (with per-metric stamps inside `metricsByFunction`);
+absent means `streamcat`. The pairing rule reads it at scoring time, so
+everything the rule needs rides inside the bundle — cloud DEEP never reads
+`apps/library/` at runtime.
 
 Two boundary layers back the Region step's site line and the session and report
 region stamp (`deep/geo.py`, exact boundary-inclusive point-in-polygon):

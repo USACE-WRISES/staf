@@ -1082,7 +1082,10 @@ def server(input, output, session_):  # noqa: C901
                 "whose area of applicability covers your site is resolved here (certified "
                 "before preliminary); use **Change** when more than one applies.\n"
                 "3. **Assessment** — enter each metric's measured value; the reference curve converts "
-                "it to an index and the function/outcome scores update live.\n"
+                "it to an index and the function/outcome scores update live. Desktop-derivable "
+                "metrics prefill with a source badge and stay editable. A value computed from a "
+                "different predictor source than the one the curves were fitted on is shown as "
+                "reference evidence and is not scored.\n"
                 "4. **Report** — review and export the detailed assessment."),
             title="How to use DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
