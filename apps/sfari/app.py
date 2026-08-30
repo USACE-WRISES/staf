@@ -740,7 +740,10 @@ def server(input, output, session):
                 "**Delineate**.\n"
                 "2. **Basin** — review the watershed and reach.\n"
                 "3. **Assessment** — for each function, review the pulled evidence, "
-                "Likert-score each metric, and assign the 0–15 function score.\n"
+                "Likert-score each metric, and assign the 0–15 function score. "
+                "Evidence arrives labeled by source. Some values are computed for the "
+                "exact upstream watershed by the STAF site engine and carry a suggested "
+                "rating. Every score stays yours to set.\n"
                 "4. **Report** — review the screening report and export."),
             title="How to use SFARI", easy_close=True, footer=ui.modal_button("Close")))
 
