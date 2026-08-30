@@ -9,7 +9,7 @@ functions a 0–15 score. Scores roll up to Physical / Chemical / Biological out
 sub-indices and an overall **Ecosystem Condition Index**, and out to an EASI-style
 screening report.
 
-SFARI is a near-clone of the **EASI** app (`../easi_claude`) — same look, feel,
+SFARI is a near-clone of the **EASI** app (`../easi`) — same look, feel,
 mapping, and report — with scoring authority moved from the system to the user.
 
 ## Method structure
@@ -24,19 +24,40 @@ mapping, and report — with scoring authority moved from the system to the user
 - **Rollup:** normalize ÷15 → outcome sub-indices with Direct=1.0 / indirect=0.10
   weights → ECI = mean(Physical, Chemical, Biological).
 
+## Desktop evidence sources
+
+Evidence is pulled per metric from national services and shown with a source
+label and a suggested Likert; the assessor always scores. Tiers, best first:
+
+1. **STAF site engine** (`sfari/engine_prefill.py` + the vendored
+   `sfari/_vendor/site_engine/`): exact-watershed values computed at the clicked
+   point on the full-resolution NHD (true point watershed + 100 m riparian
+   buffer) for impervious cover, land cover, road density, impoundments, soil
+   erodibility, runoff, and cross-section geometry. Entries carry
+   `origin="engine"` and the engine version. The vendored copy is refreshed by
+   `scripts/vendor_site_engine.py` and guarded by a drift-gate test.
+2. **EPA StreamCat** by COMID (catchment/watershed summaries), including
+   `rddensws` (road density) and `damnrmstorws` (normalized dam storage).
+3. **Direct services** as fallbacks — e.g. TIGERweb road counts sum the
+   primary, secondary, and local road layers (a failed layer yields no count,
+   never a partial sum), NID dams, NLCD.
+
 ## Layout
 
 ```
-sfari/            Python package (config, scoring, models, evidence, datasources, …)
+sfari/            Python package (config, scoring, models, evidence, engine_prefill, datasources, …)
+sfari/_vendor/    vendored STAF site engine (libs/site_engine), drift-gated
 data/             generated JSONs: sfari-functions, sfari-metrics (82), sfari-outcome-mapping
-scripts/          build_sfari_data.py — regenerates data/ from docs/SFARI_Clean.docx
-tests/            scoring + likert parity tests
+scripts/          build_sfari_data.py (regenerates data/ from docs/SFARI_Clean.docx),
+                  vendor_site_engine.py, build_fieldform_manifest.py, acceptance.py
+tests/            scoring + likert parity + evidence + engine-prefill tests
 www/              CSS/JS (mirrors EASI)
 ```
 
 ## Develop / test
 
-The pinned stack matches EASI; during development you can reuse the EASI venv.
+The pinned stack matches EASI; development uses the shared repo-root `.venv`
+(see the monorepo README).
 
 ```
 # regenerate data from the SFARI docx (one-time / when the doc changes)
@@ -58,7 +79,10 @@ can be deployed to **Posit Connect Cloud** straight from VS Code:
    reuse the same content.
 
 The bundle is `app.py`, `requirements.txt`, and the `sfari/`, `data/`, and `www/`
-folders. No API keys are required at runtime; a free USGS NWIS key is optional
+folders (the vendored site engine rides inside `sfari/`). Engine prefill needs
+`requests`, `shapely`, and `geopandas` importable at runtime; if that stack is
+absent the prefill silently skips and the other evidence tiers still run.
+No API keys are required at runtime; a free USGS NWIS key is optional
 (higher rate limit on the shared egress IP), set as a Connect Cloud environment
 variable. The HyRiver cache is directed to `/tmp` (ephemeral filesystem). Exports
 (CSV / GeoJSON / PDF) and the cross-section plot are matplotlib-free (reportlab +
