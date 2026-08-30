@@ -18,7 +18,7 @@ STAF Desktop shell that runs those same apps locally.
 - `apps/` — the four Shiny for Python apps. Each folder is self-contained (own `requirements.txt`, `www/`, `data/`, tests, and Posit Publisher config) and deploys to its own Posit Connect Cloud content item.
 - `apps/library/` — the shared, version-controlled **STAF assessment library**: completed detailed assessments that StreamCurves publishes and DEEP runs (latest version only). See `apps/library/README.md` and "The assessment library" below.
 - `desktop/` — STAF Desktop: a C#/.NET 10 WebView2 shell that supervises the same four apps as local processes on a self-managed Python runtime (downloaded on first run, auto-updated from this repo's GitHub Releases). `dotnet test desktop\Staf.Desktop.slnx` runs its suite; launching a dev build from a checkout runs the apps from the repo `.venv`. Release model: `desktop/RELEASING.md`.
-- `libs/` — reserved for `staf-core`, the future shared package for code duplicated across the apps.
+- `libs/` — shared packages consumed by the apps via per-app vendored copies (never imported across app folders at runtime). `libs/site_engine` is the STAF site computation engine: true point-watershed delineation on the full-resolution NHD plus exact-watershed metrics, vendored into SFARI (field-form evidence prefill), StreamCurves (selectable predictor source), and DEEP (metric auto-pull with the train/serve pairing rule). EASI does not use it; its scoring stays on published EPA StreamCat. See `libs/site_engine/README.md`.
 - `scripts/`, `src/` — TypeScript build pipeline for the metric library (see below).
 - `notes/` — internal working notes; anything outside `docs/` is not published.
 
