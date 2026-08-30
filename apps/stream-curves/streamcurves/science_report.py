@@ -178,13 +178,22 @@ def build_science_support_html(context: dict, metric_config=None) -> str:
         "and will be developed in future revisions once suitable reference data are compiled.</div>"
     )
     if session_meta:
+        # Provenance: which source computed the curve predictors. The stamp is
+        # derived from the configured predictor columns, never user-chosen.
+        psrc = session_meta.get("predictor_source")
+        psrc_display = (
+            "EPA StreamCat"
+            if psrc == "streamcat"
+            else f"STAF site engine ({psrc}), exact-watershed values"
+        )
         body_parts.append(
             "<p><strong>Session snapshot:</strong></p><ul>"
             f"<li><strong>Generated:</strong> {_esc(session_meta.get('generated_at') or 'Unknown')}</li>"
             f"<li><strong>Summary metrics:</strong> {_esc(session_meta.get('metric_count') or 0)}</li>"
             f"<li><strong>Curves ready:</strong> {_esc(session_meta.get('complete_metrics') or 0)}</li>"
             f"<li><strong>Needs review:</strong> {_esc(session_meta.get('review_metrics') or 0)}</li>"
-            "</ul>"
+            + (f"<li><strong>Predictor source:</strong> {_esc(psrc_display)}</li>" if psrc else "")
+            + "</ul>"
         )
 
     # ── Methodology (static prose) ────────────────────────────────────────────

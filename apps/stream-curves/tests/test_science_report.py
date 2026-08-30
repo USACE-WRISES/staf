@@ -109,6 +109,23 @@ def test_science_report_empty_context():
     assert "Physicochemistry" in html
 
 
+def test_science_report_states_the_predictor_source():
+    # StreamCat default renders by name.
+    ctx = _mock_context()
+    ctx["session_meta"]["predictor_source"] = "streamcat"
+    html = build_science_support_html(ctx)
+    assert "Predictor source:" in html
+    assert "EPA StreamCat" in html
+    # An engine-built session names the engine and its version stamp.
+    ctx = _mock_context()
+    ctx["session_meta"]["predictor_source"] = "site-engine v0.1.0"
+    html = build_science_support_html(ctx)
+    assert "STAF site engine (site-engine v0.1.0), exact-watershed values" in html
+    # A context without the stamp (older callers) renders no provenance row.
+    html = build_science_support_html(_mock_context())
+    assert "Predictor source:" not in html
+
+
 # --------------------------------------------------------------------------- #
 # helpers
 # --------------------------------------------------------------------------- #

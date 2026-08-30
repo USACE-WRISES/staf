@@ -2337,6 +2337,7 @@ def build_summary_export_context(
         completed_metrics = state.completed_metrics() or {}
         decision_log = state.decision_log()
         mapping = state.discipline_function_mapping()
+        predictor_config = state.predictor_config() or {}
 
     eligible = eligible_summary_metrics(metric_config)
     metrics = [m for m in (metrics or eligible) if m in eligible]
@@ -2432,8 +2433,13 @@ def build_summary_export_context(
             info["plot_png"] = _plot_png
         metrics_info[metric] = info
 
+    # Same derived-not-chosen stamp the publish path uses (assessment_publish,
+    # deep_export): which source computed the configured predictors.
+    from streamcurves import site_engine_source as _ses
+
     session_meta = {
         "generated_at": None,  # stamped by the caller (Date.now() unavailable here)
+        "predictor_source": _ses.predictor_source_of(list(predictor_config)),
         "metric_count": len(metrics),
         "complete_metrics": int((metric_status["status_label"] != "Incomplete").sum())
         if len(metric_status)
