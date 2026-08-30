@@ -115,7 +115,8 @@ def test_split_selection_maps_codes_back_to_sources():
 def test_split_ignores_unknown_codes():
     t = _table()
     split = mp.split_selection_by_source(["not_a_real_code"], t)
-    assert split == {"nrsa": [], "streamcat": [], "streamstats": [], "mmw": []}
+    assert split == {"nrsa": [], "streamcat": [], "streamstats": [], "mmw": [],
+                     "site_engine": []}
 
 
 def test_units_split_off_a_trailing_parenthetical():

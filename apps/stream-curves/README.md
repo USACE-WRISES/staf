@@ -13,10 +13,14 @@ implementation is preserved on the
 - `app.py` — thin Shiny shell: navbar, theme, STAF cross-app nav, help modal; mounts view modules.
 - `streamcurves/` — pure domain package (no `shiny` imports): workbook I/O, cleaning/derivation,
   stratification screening, effect sizes, model candidates/diagnostics, the reference-curve
-  engine, exports (OH SQT workbook, DEEP assessment bundles), REST data sources.
+  engine, exports (OH SQT workbook, DEEP assessment bundles), REST data sources, and
+  `site_engine_source.py` (the selectable site-engine predictor source).
   Each module's docstring names the R source file it ports.
+- `streamcurves/_vendor/` — vendored copies of the EASI screening engine and the STAF site
+  engine (`libs/site_engine`), each refreshed by its `scripts/vendor_*.py` and drift-gated.
 - `views/` — py-shiny UI/server modules (one per R `mod_*` module) sharing a typed `AppState`.
-- `config/`, `data/` — copied from the R repo (YAML/JSON registries, catalogs, geojson, OH templates).
+- `config/`, `data/` — copied from the R repo (YAML/JSON registries, catalogs, geojson, OH templates);
+  `config/metric_map.yaml` also carries the `se_*` site-engine predictor vocabulary.
 - `tests/` — pytest; `tests/golden/` holds fixtures generated from the R pipeline
   (`scripts/export_golden.R`) that the Python port must reproduce. The fixtures
   and the workbook they derive from are internal data and are not committed —
@@ -85,6 +89,14 @@ over `data/nrsa/manifest.json`, and the **dataset is part of `inputsDigest`** fo
 anything other than the default. Without that, two runs over one ecoregion on
 different data would share a digest, which is precisely what that digest promises
 cannot happen.
+
+The predictor source works the same way: the manifest records
+`inputs.predictor_source` (engine id, version, and the vendored-copy hash for a
+site-engine run), it joins `inputsDigest` for anything other than the default
+`streamcat`, and published bundles carry a `predictorSource` stamp (bundle-level
+plus per-metric, inside the content digest) because the same curve fitted on a
+different predictor source is a different assessment. The default contributes no
+digest key, so every previously published digest still reproduces byte for byte.
 
 Two properties of a pooled pool to expect rather than be surprised by. The cycles
 are mostly *different places*, so pooling roughly doubles the pool rather than
@@ -157,7 +169,8 @@ the top bar, outside the numbered stages.
   so its chip is never dimmed.
 
 A headless path runs the same pipeline under the governed methodology
-(`config/methodology/`, version 0.8-provisional): `scripts/run_regional_analysis.py`
+(`config/methodology/`; the version is stamped into every run manifest):
+`scripts/run_regional_analysis.py`
 screens, builds, and stages a publish for one EPA Level III ecoregion with full
 provenance. Recorded human inputs ride as flags: `--reviewer-decisions` (per-item
 adjudications, machine-checked against each record's computed evidence),
@@ -181,11 +194,19 @@ more than a share of the candidates unresolved (a service outage, `--max-unresol
 default 10 percent; `--allow-unresolved` stages anyway on the record), reads its own
 `streamcat_cache.json` on a re-stage so the evidence pass reproduces offline, and
 screens each site once even where the bundled NRSA table repeats an id.
+`--predictor-source` (default `streamcat`, or `site-engine`) selects which source
+computes the curve predictors: `site-engine` recomputes them at the training sites
+with the vendored site computation engine (about a minute per uncached site) and
+stamps the bundle's `predictorSource`; a replay recovers the choice from the run's
+own manifest.
 
 The import wizard and cross-sections tab pull from public REST services (USGS
 NLDI/3DEP, EPA StreamCAT, USGS StreamStats, and Model My Watershed); each source
-fails to NA rather than aborting. Model My Watershed needs an API key: set
-`MMW_API_KEY`, or put the key in the gitignored `scripts/.mmw_api_key`.
+fails to NA rather than aborting. The STAF site engine (vendored) is an optional
+predictor source beside StreamCat — the wizard and the region builder offer a
+Predictor source select, exact-watershed values arrive labeled in column
+provenance, and the default stays StreamCat. Model My Watershed needs an API key:
+set `MMW_API_KEY`, or put the key in the gitignored `scripts/.mmw_api_key`.
 
 ## Deploy (Posit Connect Cloud)
 
