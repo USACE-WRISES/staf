@@ -17,6 +17,7 @@ from . import ENGINE_ID, ENGINE_VERSION
 VINTAGES = {
     "nhdplusHr": "USGS NHDPlus HR (hydro.nationalmap.gov, live service)",
     "nlcd": "2021",
+    "nlcdBaseline": "2001",
     "tigerRoads": "current TIGERweb service",
     "nid": "current NID service",
 }
@@ -36,7 +37,20 @@ DEFAULT_CONFIG = {
     "maxHops": 200,
     "maxReaches": 5000,
     "includeGeometry": True,
+    # None = every registered metric family; else a list of family names
+    # (see ``metrics.FAMILIES``). Consumers with their own cross-section path
+    # pass the five watershed families and skip ``xsection``.
+    "metricFamilies": None,
+    # Also compute NLCD 2001 impervious cover (the land-use-change baseline).
+    "landcoverBaseline": False,
 }
+
+# The budget a web app can wait for: about five minutes on a typical site
+# after the 0.2.0 geometry-free walk. Calibrated by
+# ``scripts/engine_runtime_profile.py`` (its output names the numbers); the
+# values below are provisional until that profile runs. A refusal past the
+# budget is a structured result, never an error.
+INTERACTIVE_CONFIG = {**DEFAULT_CONFIG, "maxReaches": 60, "maxHops": 40}
 
 
 def resolve_config(config: Optional[dict]) -> dict:
@@ -44,6 +58,10 @@ def resolve_config(config: Optional[dict]) -> dict:
     for k, v in (config or {}).items():
         if k in out and v is not None:
             out[k] = v
+    families = out.get("metricFamilies")
+    if families is not None:
+        out["metricFamilies"] = sorted({str(f) for f in families})
+    out["landcoverBaseline"] = bool(out.get("landcoverBaseline"))
     return out
 
 
