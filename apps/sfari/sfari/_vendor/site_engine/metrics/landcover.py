@@ -3,7 +3,9 @@
 Zonal statistics via ``pygeohydro`` (the same client EASI's NLCD fallback
 uses, generalized to the engine's two supports). The riparian buffer is the
 union of the upstream tree flowlines buffered 100 m, clipped to the watershed.
-Never raises; failed supports contribute warning entries.
+With ``config["landcoverBaseline"]`` the NLCD 2001 impervious cover is added
+for both supports (the land-use-change baseline). Never raises; failed
+supports contribute warning entries.
 """
 from __future__ import annotations
 
@@ -12,7 +14,9 @@ from . import register
 from .common import watershed_geom
 
 NLCD_YEAR = 2021
+BASELINE_YEAR = 2001
 RIPARIAN_BUFFER_M = 100.0
+_SRC = "NLCD (MRLC via pygeohydro)"
 
 # metric key stem -> NLCD class-name keywords (cover_statistics naming)
 _CLASS_KEYWORDS = {
@@ -53,6 +57,22 @@ def _stats_for(geom) -> dict | None:
         return None
 
 
+def _impervious_for(geom, year: int) -> float | None:
+    """Mean impervious percent of one polygon for another NLCD year, or None."""
+    try:
+        import geopandas as gpd
+        import pygeohydro
+
+        gs = gpd.GeoSeries([geom], crs=4326)
+        ds = pygeohydro.nlcd_bygeom(gs, resolution=30,
+                                    years={"impervious": [year]})
+        da = next(iter(ds.values()))
+        imp_da = da[f"impervious_{year}"]
+        return round(float(imp_da.where(imp_da >= 0).mean()), 2)
+    except Exception:  # noqa: BLE001 - resilience by design
+        return None
+
+
 def riparian_buffer(watershed, tree_geoms: list):
     """Union of the tree flowlines buffered 100 m, clipped to the watershed."""
     try:
@@ -71,6 +91,11 @@ def riparian_buffer(watershed, tree_geoms: list):
         return gpd.GeoSeries([clipped], crs=5070).to_crs(4326).iloc[0]
     except Exception:  # noqa: BLE001
         return None
+
+
+def _baseline_wanted(record: dict) -> bool:
+    cfg = ((record.get("input") or {}).get("config") or {})
+    return bool(cfg.get("landcoverBaseline"))
 
 
 @register("landcover")
@@ -94,6 +119,7 @@ def compute(record: dict, tree_geoms: list) -> dict:
             ["watershed polygon unavailable"])
         return out
 
+    baseline = _baseline_wanted(record)
     for label, support, geom in supports:
         stats = _stats_for(geom)
         if stats is None:
@@ -103,6 +129,11 @@ def compute(record: dict, tree_geoms: list) -> dict:
             continue
         for key, value in stats.items():
             out[f"{key}{label}"] = metric_entry(
-                value, "percent", "NLCD (MRLC via pygeohydro)",
-                VINTAGES["nlcd"], support)
+                value, "percent", _SRC, VINTAGES["nlcd"], support)
+        if baseline:
+            base = _impervious_for(geom, BASELINE_YEAR)
+            out[f"imperviousPct{BASELINE_YEAR}{label}"] = metric_entry(
+                base, "percent", _SRC, VINTAGES["nlcdBaseline"], support,
+                [] if base is not None else
+                [f"NLCD {BASELINE_YEAR} impervious unavailable"])
     return out
