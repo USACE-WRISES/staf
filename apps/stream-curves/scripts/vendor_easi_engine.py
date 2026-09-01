@@ -11,6 +11,14 @@ A ``VENDOR_INFO.json`` records the engine API version and a per-file hash manife
 ``tests/test_easi_screening.py`` uses it as a drift gate (fails when the vendored
 copy diverges from the source, when the source is present locally).
 
+EASI itself vendors the STAF site engine under ``easi/_vendor/site_engine``
+(about 2.3 MB, two thirds of it the ecoregion and physiographic polygons), so
+that nested copy rides along here beside StreamCurves' own
+``streamcurves/_vendor/site_engine``. Its ``.py`` files enter the py manifest;
+its other files (the nested ``VENDOR_INFO.json``, ``EXTRACTS_INFO.json`` and
+the geojson data) enter ``package_data_manifest`` so the drift gate sees them.
+``tests/test_site_engine_vendor.py`` checks the two engine copies match.
+
 Run from anywhere:  python apps/stream-curves/scripts/vendor_easi_engine.py
 """
 from __future__ import annotations
@@ -67,6 +75,21 @@ def _hash_data_manifest(root: Path, skip_dirs: set[str]) -> dict[str, str]:
     return manifest
 
 
+def _hash_package_data_manifest(root: Path, skip_dirs: set[str]) -> dict[str, str]:
+    # Non-py files inside the package tree (the nested site engine's manifests
+    # and data): the py manifest cannot see them and the data manifest covers
+    # apps/easi/data only.
+    manifest: dict[str, str] = {}
+    for p in sorted(root.rglob("*")):
+        if not p.is_file() or p.suffix in (".py", ".pyc"):
+            continue
+        rel = p.relative_to(root)
+        if any(part in skip_dirs for part in rel.parts):
+            continue
+        manifest[rel.as_posix()] = hashlib.sha256(p.read_bytes()).hexdigest()
+    return manifest
+
+
 def _engine_api_version() -> int:
     text = (SRC_PKG / "batch" / "__init__.py").read_text(encoding="utf-8")
     for line in text.splitlines():
@@ -90,6 +113,7 @@ def main() -> int:
         "engine_api_version": _engine_api_version(),
         "manifest": _hash_manifest(SRC_PKG),
         "data_manifest": _hash_data_manifest(SRC_DATA, _SKIP_DIRS | _SKIP_DATA_DIRS),
+        "package_data_manifest": _hash_package_data_manifest(SRC_PKG, _SKIP_DIRS),
     }
     (DEST / "VENDOR_INFO.json").write_text(
         json.dumps(info, indent=1, sort_keys=True) + "\n", encoding="utf-8")

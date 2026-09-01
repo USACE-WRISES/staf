@@ -13,6 +13,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Optional, Protocol
 
+from .. import watershed
+
 
 @dataclass
 class AnalysisContext:
@@ -30,7 +32,8 @@ class AnalysisContext:
     fcode: Optional[int] = None                    # 46006 perennial / 46003 interm / 46007 ephem
     stream_order: Optional[int] = None
     sinuosity: Optional[float] = None
-    # cached shared pulls fetched once per run, e.g. extras['streamcat'], extras['landcover']
+    # cached shared pulls fetched once per run, e.g. extras['streamcat'], extras['landcover'],
+    # extras['watershed'] (the watershed evidence layer, see easi.watershed)
     extras: dict[str, Any] = field(default_factory=dict)
 
 
@@ -73,21 +76,25 @@ def integrity_products(ctx: "AnalysisContext") -> Optional[dict[str, float]]:
     """
     values: dict[str, float] = {}
     for component in ("hyd", "chem", "sed", "conn", "temp", "habt"):
-        catchment, watershed = integrity_pair(ctx, component)
-        if catchment is None or watershed is None:
+        catchment, watershed_value = integrity_pair(ctx, component)
+        if catchment is None or watershed_value is None:
             return None
         values[f"{component}Cat"] = catchment
-        values[f"{component}Ws"] = watershed
+        values[f"{component}Ws"] = watershed_value
     return values
 
 
+# --- watershed evidence accessors (the layer decides which engine answers) ---
+# The composite math lives in ``easi.watershed`` so the StreamCat lookup engine
+# and the STAF site engine share it; a bare StreamCat row on ``ctx.extras`` is
+# the lookup engine.
+def ws(ctx: "AnalysisContext") -> dict:
+    """The watershed evidence layer for this run."""
+    return watershed.layer(ctx)
+
+
 def riparian_forest_pct(ctx: "AnalysisContext") -> Optional[float]:
-    s = sc(ctx)
-    vals = [s.get("pctconif2019wsrp100"), s.get("pctdecid2019wsrp100"),
-            s.get("pctmxfst2019wsrp100")]
-    if any(v is None for v in vals):
-        return None
-    return round(sum(float(v) for v in vals), 2)
+    return watershed.riparian_forest_pct(watershed.layer(ctx))
 
 
 # Natural riparian vegetation classes in the 100 m buffer (StreamCat *wsrp100). Forest, shrub,
@@ -105,39 +112,18 @@ def riparian_veg_breakdown(ctx: "AnalysisContext") -> Optional[dict]:
     """Per-group natural-vegetation cover in the 100 m riparian buffer, or None if incomplete.
 
     Returns ``{forest, shrub, grassland, wetland, total}`` (percent). Every expected source
-    field is required — an absent class is unknown, not zero.
+    field is required: an absent class is unknown, not zero.
     """
-    s = sc(ctx)
-    groups: dict[str, float] = {}
-    for grp, keys in _RIPARIAN_VEG_KEYS.items():
-        vals = [s.get(k) for k in keys]
-        if any(v is None for v in vals):
-            return None
-        groups[grp] = round(sum(float(v) for v in vals), 1)
-    groups["total"] = round(sum(groups[g] for g in _RIPARIAN_VEG_KEYS), 1)
-    return groups
+    return watershed.riparian_veg_breakdown(watershed.layer(ctx))
 
 
 def riparian_woody_breakdown(ctx: "AnalysisContext") -> Optional[dict]:
     """Forest + shrub + woody-wetland cover in the 100 m riparian corridor.
 
-    All five expected StreamCat fields are required. Grassland and herbaceous wetland are
+    All expected source fields are required. Grassland and herbaceous wetland are
     excluded: they do not provide the canopy shade this supports.
     """
-    s = sc(ctx)
-    groups = {
-        "forest": ("pctconif2019wsrp100", "pctdecid2019wsrp100", "pctmxfst2019wsrp100"),
-        "shrub": ("pctshrb2019wsrp100",),
-        "woodyWetland": ("pctwdwet2019wsrp100",),
-    }
-    out: dict[str, float] = {}
-    for group, keys in groups.items():
-        vals = [s.get(k) for k in keys]
-        if any(v is None for v in vals):
-            return None
-        out[group] = round(sum(float(v) for v in vals), 1)
-    out["total"] = round(sum(out.values()), 1)
-    return out
+    return watershed.riparian_woody_breakdown(watershed.layer(ctx))
 
 
 def riparian_woody_pct(ctx: "AnalysisContext") -> Optional[float]:
@@ -154,11 +140,7 @@ def riparian_natural_veg_pct(ctx: "AnalysisContext") -> Optional[float]:
 
 
 def ag_pct(ctx: "AnalysisContext") -> Optional[float]:
-    s = sc(ctx)
-    vals = [s.get("pctcrop2019ws"), s.get("pcthay2019ws")]
-    if any(v is None for v in vals):
-        return None
-    return round(sum(float(v) for v in vals), 2)
+    return watershed.ag_pct(watershed.layer(ctx))
 
 
 def band(value: float, good_below: float, fair_below: float,

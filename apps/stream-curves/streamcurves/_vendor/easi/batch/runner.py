@@ -53,12 +53,13 @@ def _cancelled_result(site: SiteRequest) -> SiteResult:
 
 
 async def _run_one_with_retry(site: SiteRequest, metric_ids, on_event,
-                              diag: dict) -> SiteResult:
+                              diag: dict, watershed_engine: str = "auto") -> SiteResult:
     from .api import run_site
     attempt = 0
     while True:
         with diagnostics.capture() as outcomes:
-            res = await run_site(site, metric_ids=metric_ids, on_event=on_event)
+            res = await run_site(site, metric_ids=metric_ids, on_event=on_event,
+                                 watershed_engine=watershed_engine)
         summary = diagnostics.summarize(outcomes)
         diag["timeouts"] += summary["timeouts"]
         diag["throttled"] += summary["throttled"]
@@ -102,7 +103,8 @@ async def run_batch(request: BatchRequest, *, on_event: EventCb = None,
             if _is_cancelled(cancel):     # re-check after acquiring a slot
                 results[site.site_id] = _cancelled_result(site)
                 return
-            res = await _run_one_with_retry(site, metric_ids, on_event, diag)
+            res = await _run_one_with_retry(site, metric_ids, on_event, diag,
+                                            request.config.watershed_engine)
             qualify.qualify_site(res, rule, criteria_id=criteria_id)
             results[site.site_id] = res
 

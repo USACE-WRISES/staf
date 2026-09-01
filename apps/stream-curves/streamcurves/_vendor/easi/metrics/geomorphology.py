@@ -1,7 +1,7 @@
 """Geomorphology-discipline EASI metric adapters."""
 from __future__ import annotations
 
-from .. import screening_methods
+from .. import screening_methods, watershed
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
 
@@ -75,23 +75,24 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
 
 def sediment_supply(ctx: AnalysisContext) -> MetricResult:
     """Most limiting of agriculture, soil erodibility, and road density."""
-    s = base.sc(ctx)
     agriculture = base.ag_pct(ctx)
-    k_factor = s.get("kffactws")
-    road_density = s.get("rddensws")
+    k_factor = watershed.value(ctx, "soilKFactor")
+    road_density = watershed.value(ctx, "roadDensity")
     ev = screening_methods.evaluate(
         SEDIMENT_ID,
         {"agriculture": agriculture, "kFactor": k_factor,
          "roadDensity": road_density},
         input_meta={
-            "agriculture": {"source": "EPA StreamCat crop + hay"},
-            "kFactor": {"source": "EPA StreamCat KffactWs"},
-            "roadDensity": {"source": "EPA StreamCat RddensWs"},
+            "agriculture": {"source": watershed.input_source(ctx, "sediment.agriculture")},
+            "kFactor": {"source": watershed.input_source(ctx, "sediment.kFactor")},
+            "roadDensity": {"source": watershed.input_source(ctx, "sediment.roadDensity")},
         },
         confidence="M")
     if ev.rating is None:
         return unavailable(
-            SEDIMENT_ID, "agriculture, K-factor, and road density are all required",
+            SEDIMENT_ID,
+            watershed.guidance(
+                ctx, "agriculture, K-factor, and road density are all required"),
             "M", scoring=ev.trace)
     inputs = {x["key"]: x for x in ev.trace["inputs"]}
     governing = ev.trace["governingInput"]
@@ -111,7 +112,7 @@ def sediment_supply(ctx: AnalysisContext) -> MetricResult:
         value=(None if gov.get("value") is None else float(gov["value"])),
         value_text=f"{gov_label} governs ({', '.join(parts)})",
         rating=ev.rating, confidence="M",
-        source="EPA StreamCat agriculture + K-factor + road density",
+        source=watershed.result_source(ctx, "sediment"),
         note=("The most limiting source indicator governs. K-factor is "
               "intrinsic erodibility and can lower the rating without "
               "disturbance."),

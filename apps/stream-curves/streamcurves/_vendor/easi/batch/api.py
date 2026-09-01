@@ -43,14 +43,28 @@ def capabilities() -> dict:
         "function_score_bands": [list(b) for b in config.FUNCTION_SCORE_BANDS],
         "defaults": {"reach_length_ft": pipeline.DEFAULT_REACH_FT,
                      "snap_tolerance_ft": routing.HR_SNAP_TOL_FT,
-                     # Published routing policy: uncovered clicks route to the
-                     # nearest covered downstream reach, refused past this
-                     # drainage-area ratio.
-                     "da_ratio_max": routing.DA_RATIO_MAX},
+                     # Published routing policy: COMID-keyed evidence for an
+                     # uncovered click rides the nearest covered downstream
+                     # reach within this drainage-area ratio.
+                     "da_ratio_max": routing.DA_RATIO_MAX,
+                     # Watershed engine policy for streams outside the
+                     # StreamCat lookup network (see easi.routing).
+                     "watershed_engine": routing.POLICY_AUTO},
+        "watershed_engine_options": list(routing.WATERSHED_ENGINE_POLICIES),
+        "site_engine_version": _site_engine_version(),
         "criteria_fields": qualify.CRITERIA_FIELDS,
         "criteria_presets": list(qualify.PRESETS.keys()),
         "max_sites": MAX_SITES,
     }
+
+
+def _site_engine_version() -> Optional[str]:
+    """The vendored STAF site engine version, or None when it is not shipped."""
+    try:
+        from .._vendor.site_engine import ENGINE_VERSION  # noqa: PLC0415
+        return ENGINE_VERSION
+    except Exception:  # noqa: BLE001 - absence is a valid deployment state
+        return None
 
 
 def _emit(cb: EventCb, stage: str, site_id: str, **info) -> None:
@@ -185,13 +199,15 @@ def _failed_result(site: SiteRequest, delin: dict) -> SiteResult:
 
 
 async def run_site(site: SiteRequest, *, metric_ids: Optional[list[str]] = None,
-                   on_event: EventCb = None) -> SiteResult:
+                   on_event: EventCb = None,
+                   watershed_engine: str = routing.POLICY_AUTO) -> SiteResult:
     """Assess a single site end-to-end (delineate + assess) -> ``SiteResult``."""
     runtime.ensure_cache()
     _emit(on_event, "delineation", site.site_id)
     delin = await pipeline.delineate_only(
         site.lat, site.lon, site.reach_length_ft, comid=site.comid,
-        snap_tolerance_ft=site.snap_tolerance_ft)
+        snap_tolerance_ft=site.snap_tolerance_ft,
+        watershed_engine=watershed_engine)
     if delin.get("status") != "ok":
         return _failed_result(site, delin)
     ctx_inputs = delin.pop("ctx_inputs")

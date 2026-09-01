@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 
-from .. import geo, screening_methods
+from .. import geo, screening_methods, watershed
 from ..datasources import attains, wqp
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
@@ -123,20 +123,21 @@ def detrital_cpom(ctx: AnalysisContext) -> MetricResult:
     })
     ev = screening_methods.evaluate(
         CPOM_ID, values,
-        input_meta={key: {"source": "EPA StreamCat rp100"}
+        input_meta={key: {"source": watershed.input_source(ctx, f"cpom.{key}")}
                     for key in values},
         confidence="M")
     if ev.rating is None:
         return unavailable(
             CPOM_ID,
-            "forest, shrub, grassland, and wetland source fields are all required",
+            watershed.guidance(
+                ctx, "forest, shrub, grassland, and wetland source fields are all required"),
             "M", scoring=ev.trace)
     total = float(ev.combined_value)
     return MetricResult(
         CPOM_ID, value=round(total, 1),
         value_text=f"{total:.1f}% organic-matter supply potential (100 m corridor)",
         rating=ev.rating, confidence="M",
-        source="EPA StreamCat riparian land cover (rp100)",
+        source=watershed.result_source(ctx, "cpom"),
         note=("Proxy for supply potential only; it does not measure CPOM retention "
               "or shredder condition."),
         detail={"kind": "riparian_veg", **breakdown},
@@ -216,7 +217,7 @@ def stream_temperature(ctx: AnalysisContext) -> MetricResult:
     """Thermal-regulation vulnerability, not stream-temperature scoring."""
     woody_breakdown = base.riparian_woody_breakdown(ctx)
     woody = None if woody_breakdown is None else woody_breakdown["total"]
-    impervious = base.sc(ctx).get("pctimp2019ws")
+    impervious = watershed.value(ctx, "imperviousPct")
     # Temperature observations are retained as context only.
     temperature = wqp.sample_summary("temp", ctx.lat, ctx.lon)
     ev = screening_methods.evaluate(
@@ -224,17 +225,18 @@ def stream_temperature(ctx: AnalysisContext) -> MetricResult:
         {"woodyRiparian": woody, "impervious": impervious},
         input_meta={
             "woodyRiparian": {
-                "source": "EPA StreamCat forest + shrub + woody wetland (rp100)",
+                "source": watershed.input_source(ctx, "temperature.woodyRiparian"),
                 "details": woody_breakdown,
             },
-            "impervious": {"source": "EPA StreamCat pctimp2019ws"},
+            "impervious": {"source": watershed.input_source(ctx, "temperature.impervious")},
         },
         confidence="L")
     ev.trace["context"]["wqpTemperature"] = temperature
     if ev.rating is None:
         return unavailable(
             TEMPERATURE_ID,
-            "both woody riparian cover and watershed impervious cover are required",
+            watershed.guidance(
+                ctx, "both woody riparian cover and watershed impervious cover are required"),
             "L", scoring=ev.trace)
     inputs = {item["key"]: item for item in ev.trace["inputs"]}
     governing = ev.trace["governingInput"]
@@ -248,7 +250,7 @@ def stream_temperature(ctx: AnalysisContext) -> MetricResult:
         value_text=(f"thermal vulnerability: woody riparian {float(woody):.1f}%, "
                     f"impervious {float(impervious):.1f}% ({governing} governs)"),
         rating=ev.rating, confidence="L",
-        source="EPA StreamCat woody riparian cover + watershed impervious cover",
+        source=watershed.result_source(ctx, "temperature"),
         note=("Vulnerability proxy for thermal loading and shade loss; not stream temperature."
               + context_note),
         detail={"woody": woody_breakdown, "temperatureContext": temperature,

@@ -41,6 +41,22 @@ SCREENING_PRESET_CHOICES: dict[str, str] = {
 }
 DEFAULT_SCREENING_PRESET = "functional"
 
+# The reference screen runs on the StreamCat lookup engine only. This is a
+# fixed policy, not a setting: "streamcat-legacy" keeps uncovered NRSA sites
+# on the surrogate-within-10x routing and the refusal beyond it that every
+# published version was screened under, so screening caches, retained sets
+# and inputsDigest values stay byte-identical. EASI's own default is "auto"
+# (the STAF site engine computes the exact watershed for HR-only streams).
+SCREENING_WATERSHED_ENGINE = "streamcat-legacy"
+
+
+def _batch_config():
+    """The vendored ``BatchConfig`` pinned to the screening policy. The kwarg
+    is passed directly so a vendored contract without the field fails loudly
+    (the drift gate catches the same thing)."""
+    from streamcurves._vendor.easi.batch.contracts import BatchConfig  # lazy: geo stack
+    return BatchConfig(watershed_engine=SCREENING_WATERSHED_ENGINE)
+
 
 @functools.lru_cache(maxsize=1)
 def missing_engine_requirements() -> tuple[str, ...]:
@@ -74,8 +90,7 @@ def screen_sites_direct(sites: list[dict], criteria: Optional[Any] = None,
     rule dict, or None (defaults to the Only Functioning preset).
     """
     from streamcurves._vendor.easi.batch import api  # lazy: geo stack
-    from streamcurves._vendor.easi.batch.contracts import (BatchConfig,
-                                                           BatchRequest,
+    from streamcurves._vendor.easi.batch.contracts import (BatchRequest,
                                                            SiteRequest)
     reqs = [SiteRequest(site_id=str(s.get("site_id") or ""),
                         lat=float(s["lat"]), lon=float(s["lon"]),
@@ -83,7 +98,7 @@ def screen_sites_direct(sites: list[dict], criteria: Optional[Any] = None,
                         metadata={k: v for k, v in s.items()
                                   if k not in ("site_id", "lat", "lon", "comid")})
             for s in sites]
-    req = BatchRequest(sites=reqs, config=BatchConfig(), criteria=criteria)
+    req = BatchRequest(sites=reqs, config=_batch_config(), criteria=criteria)
     result = api.run_batch_sync(req, on_event=on_event, cancel=cancel)
     return result.to_dict()
 
@@ -97,8 +112,7 @@ async def screen_sites_direct_async(sites: list[dict], criteria: Optional[Any] =
     engine still returns a full ``BatchResult`` (including cancelled rows) on cancel.
     """
     from streamcurves._vendor.easi.batch import api  # lazy: geo stack
-    from streamcurves._vendor.easi.batch.contracts import (BatchConfig,
-                                                           BatchRequest,
+    from streamcurves._vendor.easi.batch.contracts import (BatchRequest,
                                                            SiteRequest)
     reqs = [SiteRequest(site_id=str(s.get("site_id") or ""),
                         lat=float(s["lat"]), lon=float(s["lon"]),
@@ -106,7 +120,7 @@ async def screen_sites_direct_async(sites: list[dict], criteria: Optional[Any] =
                         metadata={k: v for k, v in s.items()
                                   if k not in ("site_id", "lat", "lon", "comid")})
             for s in sites]
-    req = BatchRequest(sites=reqs, config=BatchConfig(), criteria=criteria)
+    req = BatchRequest(sites=reqs, config=_batch_config(), criteria=criteria)
     result = await api.run_batch(req, on_event=on_event, cancel=cancel)
     return result.to_dict()
 
