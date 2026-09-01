@@ -29,6 +29,28 @@ async def _empty() -> dict:
     return {}
 
 
+async def _none():
+    return None
+
+
+def comid_evidence_withheld(ctx: AnalysisContext) -> Optional[str]:
+    """The reason COMID-keyed evidence is withheld on this run, or None.
+
+    A routed site whose nearest covered reach lies past the substitution
+    limit (or has no drainage area to check) keeps its exact watershed but
+    gets no StreamCat or NRSA evidence for that reach: the three COMID-keyed
+    metrics and the StreamCat integrity fallbacks come out unavailable with
+    this reason.
+    """
+    anchor = ctx.extras.get("siteAnchor") or {}
+    routing_block = anchor.get("routing") or {}
+    if anchor.get("anchorKind") != "hrSurrogate" or not routing_block.get("declined"):
+        return None
+    return (routing_block.get("declineMessage")
+            or "The nearest covered reach lies past the substitution limit, so "
+               "reach-keyed evidence is unavailable here.")
+
+
 async def assess(ctx: AnalysisContext, *,
                  metric_ids: Optional[list[str]] = None,
                  sources: Optional[dict[str, str]] = None,
@@ -63,9 +85,12 @@ async def assess(ctx: AnalysisContext, *,
 
     # --- prefetch shared data concurrently (off the event loop) ---
     # The NLCD outage fallback belongs to the StreamCat lookup engine; a run
-    # the STAF site engine answered (or failed to answer) never pulls it.
+    # the STAF site engine answered (or failed to answer) never pulls it. A
+    # declined routing withholds every COMID-keyed pull (StreamCat, NRSA).
+    withheld = comid_evidence_withheld(ctx)
     sc, lc, huc12, geom, nrsa_record = await asyncio.gather(
-        _to_thread(streamcat.metrics_by_comid, ctx.comid, registry.STREAMCAT_NAMES),
+        (_empty() if withheld else
+         _to_thread(streamcat.metrics_by_comid, ctx.comid, registry.STREAMCAT_NAMES)),
         (_to_thread(nlcd.watershed_landcover, ctx.watershed_geojson)
          if watershed.wants_nlcd_fallback(ctx) else _empty()),
         _to_thread(wbd.huc12_at_point, ctx.lat, ctx.lon),
@@ -73,10 +98,13 @@ async def assess(ctx: AnalysisContext, *,
             ctx.reach_geojson, ctx.drainage_area_sqkm,
             bankfull=(bf["width_m"], bf["depth_m"]), bankfull_area_m2=bf["area_m2"],
             division=bf["division_name"])),
-        _to_thread(nrsa.evidence_for_reach, ctx.comid, ctx.lat, ctx.lon),
+        (_none() if withheld else
+         _to_thread(nrsa.evidence_for_reach, ctx.comid, ctx.lat, ctx.lon)),
     )
     ctx.extras["streamcat"] = sc
     ctx.extras["landcover"] = lc
+    if withheld:
+        ctx.extras["comidEvidence"] = {"withheld": True, "reason": withheld}
     # The watershed evidence layer: which engine answers the eight watershed
     # metrics, with its values and labels (see easi.watershed).
     ctx.extras["watershed"] = watershed.build(ctx, sc)
@@ -129,7 +157,8 @@ async def assess(ctx: AnalysisContext, *,
         for mid, meta in meta_by_id.items()
     ]
 
-    _annotate_anchors(rows, ctx.extras.get("siteAnchor"))
+    _annotate_anchors(rows, ctx.extras.get("siteAnchor"),
+                      watershed_layer=ctx.extras.get("watershed"))
     result = _finalize(rows, len(meta_by_id), overrides)
     if cross_section:
         result["crossSection"] = cross_section
@@ -255,7 +284,8 @@ def recompute_watershed_rows(report: dict, ctx: AnalysisContext, *,
                                    selected={mid}, overrides=overrides))
         elif base_row is not None:
             rows.append(dict(base_row))
-    _annotate_anchors(rows, ctx.extras.get("siteAnchor"))
+    _annotate_anchors(rows, ctx.extras.get("siteAnchor"),
+                      watershed_layer=ctx.extras.get("watershed"))
     result = _finalize(rows, report.get("totalCount", len(meta_by_id)),
                        overrides_applied)
     for key in ("crossSection", "basin"):
@@ -264,46 +294,88 @@ def recompute_watershed_rows(report: dict, ctx: AnalysisContext, *,
     return result
 
 
-# Labels for the per-metric anchoring, keyed (anchor kind, is routed site).
-_ANCHOR_LABELS = {
-    ("clickedReach", True): "clicked HR reach",
-    ("clickedPoint", True): "clicked point",
-    ("surrogateComid", True): "surrogate reach (COMID {comid})",
-    ("surrogateWatershed", True): "surrogate watershed",
-    ("clickedReach", False): "assessed reach",
-    ("clickedPoint", False): "assessment point",
-    ("surrogateComid", False): "assessed reach (COMID {comid})",
-    ("surrogateWatershed", False): "assessed watershed",
+# Labels for the per-metric anchoring on covered (not routed) runs: neutral.
+_COVERED_LABELS = {
+    "clickedReach": "assessed reach",
+    "clickedPoint": "assessment point",
+    "surrogateComid": "assessed reach (COMID {comid})",
+    "watershed": "assessed watershed",
+}
+# Watershed-row labels on routed runs, by the evidence layer's provider.
+_ROUTED_WATERSHED_LABELS = {
+    watershed.SITE_ENGINE: "exact watershed (STAF site engine)",
+    watershed.STREAMCAT: "surrogate watershed (StreamCat lookup engine)",
+    None: "unavailable (exact watershed not calculated)",
+}
+_ENGINE_LABELS = {
+    watershed.STREAMCAT: "StreamCat lookup engine",
+    watershed.SITE_ENGINE: "STAF site engine",
+    "unavailable": "watershed evidence unavailable",
+    "": "",
 }
 
 
-def _annotate_anchors(rows: list[dict], site_anchor: Optional[dict]) -> None:
-    """Stamp every row with its framework-fixed anchor + a human label.
+def _annotate_anchors(rows: list[dict], site_anchor: Optional[dict], *,
+                      watershed_layer: Optional[dict] = None) -> None:
+    """Stamp every row with its framework-fixed anchor, a human label, and the
+    engine token that answered it.
 
     For covered (v2Direct or unanchored) runs the labels are neutral and
     nothing else changes, so historical results are label-only enriched. For a
-    routed site the labels name the substitution, the StreamCat-fallback rule
-    forces surrogateWatershed, and the per-metric table is stamped onto
-    ``siteAnchor["metricAnchors"]`` for the report banner. If Phase 2
-    re-anchoring did not actually apply (HR data unavailable), every clicked-*
-    label says so rather than claiming a re-anchor that never happened.
+    routed site the labels name where each row's evidence comes from: the
+    clicked HR reach, the clicked point, the nearest covered reach (or
+    "unavailable past the substitution limit" when the routing was declined),
+    and the watershed evidence layer's provider (the exact watershed of the
+    STAF site engine, the surrogate watershed of the StreamCat lookup engine
+    under the legacy policy, or unavailable). The StreamCat-integrity
+    fallback rule makes such rows COMID-keyed, and the per-metric table is
+    stamped onto ``siteAnchor["metricAnchors"]`` for the report banner. If
+    Phase 2 re-anchoring did not actually apply (HR data unavailable), every
+    clicked-* label says so rather than claiming a re-anchor that never
+    happened.
     """
     anchor = site_anchor or {}
     routed = anchor.get("anchorKind") == "hrSurrogate"
     applied = bool((anchor.get("reanchored") or {}).get("applied"))
     comid = (anchor.get("scoredReach") or {}).get("comid")
+    routing_block = anchor.get("routing") or {}
+    declined = bool(routing_block.get("declined"))
+    dist = routing_block.get("routedDistanceFt")
+    provider = ((watershed_layer or {}).get("provider", watershed.STREAMCAT)
+                if watershed_layer is not None else watershed.STREAMCAT)
+    if routed and declined:
+        comid_label = "unavailable past the substitution limit"
+    elif routed:
+        comid_label = (f"nearest covered reach (COMID {comid}, {dist:,.0f} ft downstream)"
+                       if dist is not None else f"nearest covered reach (COMID {comid})")
+    else:
+        comid_label = ""
     table: dict[str, dict] = {}
     for r in rows:
-        a = registry.METRIC_ANCHOR.get(r["metricId"], "surrogateWatershed")
-        if r.get("usedFallback"):
-            a = "surrogateWatershed"     # every fallback source is StreamCat
-        if routed and not applied and a in ("clickedReach", "clickedPoint"):
-            label = "surrogate reach (HR data unavailable)"
+        a = registry.METRIC_ANCHOR.get(r["metricId"], "watershed")
+        if (r.get("usedFallback")
+                and (r.get("evidenceFamily") in registry.STREAMCAT_FALLBACK_FAMILIES)):
+            a = "surrogateComid"         # a StreamCat integrity component: COMID-keyed
+        engine = ""
+        if a == "watershed":
+            engine = provider if provider else "unavailable"
+        elif a == "surrogateComid":
+            engine = "unavailable" if (routed and declined) else watershed.STREAMCAT
+        if not routed:
+            label = _COVERED_LABELS[a].format(comid=comid)
+        elif a in ("clickedReach", "clickedPoint"):
+            label = ("surrogate reach (HR data unavailable)" if not applied
+                     else ("clicked HR reach" if a == "clickedReach" else "clicked point"))
+        elif a == "surrogateComid":
+            label = comid_label
         else:
-            label = _ANCHOR_LABELS[(a, routed)].format(comid=comid)
+            label = _ROUTED_WATERSHED_LABELS[provider]
         r["anchor"] = a
         r["anchorLabel"] = label
-        table[r["metricId"]] = {"anchor": a, "label": label, "name": r["name"]}
+        r["engine"] = engine
+        r["engineLabel"] = _ENGINE_LABELS[engine]
+        table[r["metricId"]] = {"anchor": a, "label": label, "name": r["name"],
+                                "engine": engine}
     if routed:
         anchor["metricAnchors"] = table
 

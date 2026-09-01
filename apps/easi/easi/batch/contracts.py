@@ -212,6 +212,9 @@ class MetricRecord:
     observed_overrides_proxy: bool = False
     # Per-metric anchoring label for routed sites (empty on covered sites).
     anchor: str = ""
+    # The engine that answered the row (streamcat | site-engine | unavailable),
+    # empty for reach and point evidence that no watershed engine touches.
+    engine: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -234,6 +237,10 @@ class DelineationSummary:
     snapped_lon: Optional[float] = None
     reach_length_ft: Optional[float] = None
     warnings: list[str] = field(default_factory=list)
+    # Which watershed the metrics describe: nhdplus-v2-basin (the StreamCat
+    # lookup engine's basin), site-engine (the exact watershed) or
+    # not-calculated (the engine failed or refused on a routed site).
+    watershed_source: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -286,6 +293,10 @@ class SiteResult:
     # landed vs which reach was scored. Empty dict for legacy results. Additive,
     # so CONTRACTS_SCHEMA_VERSION is unchanged.
     anchor: dict[str, Any] = field(default_factory=dict)
+    # The STAF site engine's summary block for a routed site under the auto
+    # policy (engine, engineVersion, status, reason, nReaches, nHops, areaSqkm,
+    # vaaAreaSqkm, areaAgreement). Empty dict otherwise. Additive.
+    watershed_engine: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict:
@@ -303,6 +314,7 @@ class SiteResult:
             "qualification": self.qualification.to_dict(),
             "revision": self.revision,
             "anchor": self.anchor,
+            "watershed_engine": self.watershed_engine,
             # ``_``-prefixed metadata (e.g. the heavy per-site artifact source) is
             # private and kept out of the compact serialization.
             "metadata": {k: v for k, v in self.metadata.items()
@@ -327,6 +339,7 @@ class SiteResult:
             qualification=Qualification.from_dict(d.get("qualification") or {}),
             revision=int(d.get("revision", 0)),
             anchor=dict(d.get("anchor") or {}),
+            watershed_engine=dict(d.get("watershed_engine") or {}),
             metadata=dict(d.get("metadata") or {}))
 
 

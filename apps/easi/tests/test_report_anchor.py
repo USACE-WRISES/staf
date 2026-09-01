@@ -99,20 +99,70 @@ def test_surrogate_block_in_geojson():
 def test_anchor_column_only_for_routed_sites():
     plain = _result()
     csv_plain = report.build_csv(plain)
-    assert b",Anchor" not in csv_plain
+    assert b",Anchor" not in csv_plain and b",Engine" not in csv_plain
 
     routed = _result()
     routed["siteAnchor"] = _hr_anchor()
-    routed["report"]["metricRows"][0]["anchor"] = "surrogateWatershed"
+    routed["report"]["metricRows"][0]["anchor"] = "watershed"
     routed["report"]["metricRows"][0]["anchorLabel"] = "surrogate watershed"
+    routed["report"]["metricRows"][0]["engine"] = "streamcat"
+    routed["report"]["metricRows"][0]["engineLabel"] = "StreamCat lookup engine"
     csv_routed = report.build_csv(routed)
-    assert b"Anchor" in csv_routed
+    assert b"Anchor" in csv_routed and b"Engine" in csv_routed
     assert b"surrogate watershed" in csv_routed
+    assert b"StreamCat lookup engine" in csv_routed
 
     gj = json.loads(report.build_geojson(routed))
     pt = next(f for f in gj["features"] if f["properties"]["type"] == "point")
     mid = "catchment-hydrology-impervious-surface-cover"
     assert pt["properties"]["metrics"][mid]["anchor"] == "surrogate watershed"
+    assert pt["properties"]["metrics"][mid]["engine"] == "StreamCat lookup engine"
+
+
+def _site_engine_result(*, declined=False) -> dict:
+    res = _result()
+    res["siteAnchor"] = _hr_anchor()
+    res["siteAnchor"]["routing"]["declined"] = declined
+    res["delineation"].update({
+        "gnis_name": "(unnamed stream)", "drainage_area_sqkm": 2.72,
+        "watershed_area_sqkm": 2.61, "watershed_source": "site-engine",
+        "watershed_engine": {"engine": "site-engine", "engineVersion": "0.2.0",
+                             "status": "ok", "reason": None, "nReaches": 7,
+                             "nHops": 2, "areaSqkm": 2.61, "vaaAreaSqkm": 2.72,
+                             "areaAgreement": 0.96}})
+    row = res["report"]["metricRows"][0]
+    row.update(anchor="watershed", anchorLabel="exact watershed (STAF site engine)",
+               engine="site-engine", engineLabel="STAF site engine")
+    return res
+
+
+def test_site_engine_rows_in_csv_and_pdf():
+    res = _site_engine_result()
+    b = report.build_csv(res)
+    assert b"Stream outside the StreamCat lookup network" in b
+    assert b"Assessed stream (NHDPlus HR)" in b
+    assert b"STAF site engine v0.2.0" in b
+    assert b"COMID-keyed evidence reach,COMID 5215053" in b
+    assert b"Exact watershed area (km2),2.61" in b
+    assert b"Scored at surrogate reach" not in b
+    assert b"exact watershed (STAF site engine),STAF site engine" in b
+    pdf = report.build_pdf(res)
+    assert pdf[:4] == b"%PDF"
+
+    declined = _site_engine_result(declined=True)
+    b2 = report.build_csv(declined)
+    assert b"COMID-keyed evidence reach,unavailable past the substitution limit" in b2
+
+
+def test_not_calculated_rows_in_csv():
+    res = _site_engine_result()
+    res["delineation"].update({"watershed_source": "not-calculated",
+                               "watershed_area_sqkm": None})
+    res["delineation"]["watershed_engine"].update(
+        {"status": "refused", "reason": "watershed exceeds the engine budget",
+         "areaSqkm": None})
+    b = report.build_csv(res)
+    assert b"Watershed engine,unavailable (watershed exceeds the engine budget)" in b
 
 
 def test_surrogate_banner_in_pdf():

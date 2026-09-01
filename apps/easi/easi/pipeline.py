@@ -17,10 +17,36 @@ from typing import Optional
 
 import anyio
 
-from . import assessment, delineation, routing
+from . import assessment, delineation, routing, watershed
 from .metrics.base import AnalysisContext
 
 DEFAULT_REACH_FT = delineation.DEFAULT_REACH_FT
+
+# ``delineation["watershed_source"]`` vocabulary.
+WATERSHED_V2_BASIN = "nhdplus-v2-basin"      # the StreamCat lookup engine's basin
+WATERSHED_SITE_ENGINE = "site-engine"        # the exact watershed (STAF site engine)
+WATERSHED_NOT_CALCULATED = "not-calculated"  # engine failed or refused: no polygon
+
+
+def _engine_progress(progress: Optional[dict]):
+    """Adapter from the engine's progress events to the UI's shared dict."""
+    if progress is None:
+        return None
+
+    def _cb(event: dict) -> None:
+        progress["stage"] = event.get("stage")
+        progress["reaches"] = event.get("reaches")
+        progress["hops"] = event.get("hops")
+        progress["family"] = event.get("family")
+    return _cb
+
+
+def _engine_summary(block: dict) -> dict:
+    """The compact engine block for the delineation result, exports and the
+    UI (no record, no polygon)."""
+    return {k: block.get(k) for k in
+            ("engine", "engineVersion", "status", "reason", "nReaches",
+             "nHops", "areaSqkm", "vaaAreaSqkm", "areaAgreement")}
 
 
 def _error(msg: str, lat: float, lon: float, reach_ft: float, *,
@@ -63,7 +89,8 @@ async def delineate_only(lat: float, lon: float,
         try:
             resolved = await anyio.to_thread.run_sync(
                 lambda: routing.resolve_anchor(lat, lon,
-                                               snap_tol_ft=snap_tolerance_ft))
+                                               snap_tol_ft=snap_tolerance_ft,
+                                               policy=watershed_engine))
         except ImportError as exc:        # ModuleNotFoundError is a subclass
             return _error(f"geospatial engine dependency missing: {exc}", lat,
                           lon, reach_length_ft, code="engine_dependency_missing",
@@ -141,10 +168,20 @@ async def delineate_only(lat: float, lon: float,
     # the watershed and its COMID-keyed sources stay on the surrogate. Covered
     # clicks never enter this branch.
     reanchor: dict = {}
-    if site_anchor.get("anchorKind") == "hrSurrogate":
+    routed = site_anchor.get("anchorKind") == "hrSurrogate"
+    if routed:
         reanchor = await anyio.to_thread.run_sync(
             lambda: routing.reanchor_inputs(site_anchor, reach_length_ft))
         d.warnings.extend(reanchor.pop("_warnings", []) or [])
+
+    # The exact watershed (STAF site engine) for a routed site under the auto
+    # policy. The legacy policy never runs the engine: every metric rides the
+    # surrogate's NLDI basin, exactly as before.
+    engine_block: Optional[dict] = None
+    if routed and watershed_engine == routing.POLICY_AUTO:
+        cb = _engine_progress(progress)
+        engine_block = await anyio.to_thread.run_sync(
+            lambda: watershed.compute_exact_watershed(site_anchor, progress=cb))
 
     ctx_inputs = {
         "lat": d.snapped_lat or lat, "lon": d.snapped_lon or lon, "comid": d.comid,
@@ -163,24 +200,52 @@ async def delineate_only(lat: float, lon: float,
                 ctx_inputs[k] = reanchor[k]
         out_reach = reanchor.get("reach_geojson")
         out_reach_len = reanchor.get("reach_length_ft")
+
+    out_watershed = d.watershed_geojson
+    watershed_area = round(d.watershed_area_sqkm, 2) if d.watershed_area_sqkm else None
+    watershed_source = WATERSHED_V2_BASIN
+    delineation_da = d.drainage_area_sqkm
+    gnis_name = d.gnis_name or "(unnamed reach)"
+    engine_summary = None
+    if engine_block is not None:
+        polygon = engine_block.pop("polygon", None)
+        engine_summary = _engine_summary(engine_block)
+        ctx_inputs["watershedEngine"] = engine_block
+        clicked = site_anchor.get("clickedStream") or {}
+        gnis_name = clicked.get("gnisName") or "(unnamed stream)"
+        delineation_da = ctx_inputs.get("drainage_area_sqkm")
+        if engine_block.get("status") == "ok":
+            ctx_inputs["watershed_geojson"] = polygon
+            out_watershed = polygon
+            watershed_area = engine_block.get("areaSqkm")
+            watershed_source = WATERSHED_SITE_ENGINE
+        else:
+            # No silent proxy: the surrogate's basin is neither drawn nor scored.
+            ctx_inputs["watershed_geojson"] = None
+            out_watershed = None
+            watershed_area = None
+            watershed_source = WATERSHED_NOT_CALCULATED
+            d.warnings.append(watershed.GUIDANCE_UNAVAILABLE.format(
+                reason=engine_block.get("reason") or engine_block.get("status")))
     return {
         "status": "ok",
         "siteAnchor": site_anchor,
         "input": {"lat": lat, "lon": lon, "reach_length_ft": reach_length_ft},
         "delineation": {
             "comid": d.comid,
-            "gnis_name": d.gnis_name or "(unnamed reach)",
+            "gnis_name": gnis_name,
             "huc8": d.huc8,
             "huc12": None,  # filled in after assess (the HUC12 pull lives there)
-            "drainage_area_sqkm": d.drainage_area_sqkm,
+            "drainage_area_sqkm": delineation_da,
             "snapped_lat": d.snapped_lat,
             "snapped_lon": d.snapped_lon,
-            "watershed_area_sqkm": round(d.watershed_area_sqkm, 2)
-            if d.watershed_area_sqkm else None,
+            "watershed_area_sqkm": watershed_area,
+            "watershed_source": watershed_source,
+            "watershed_engine": engine_summary,
             "reach_length_ft": out_reach_len,
             "warnings": d.warnings,
         },
-        "watershed_geojson": d.watershed_geojson,
+        "watershed_geojson": out_watershed,
         "reach_geojson": out_reach,
         "ctx_inputs": ctx_inputs,
     }
