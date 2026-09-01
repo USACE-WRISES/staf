@@ -1,7 +1,7 @@
 """Biology-discipline EASI metric adapters."""
 from __future__ import annotations
 
-from .. import screening_methods
+from .. import screening_methods, watershed
 from ..datasources import nas, nid_barriers
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
@@ -84,13 +84,13 @@ def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
         HABITAT_ID,
         {"woodyRiparian": woody, "sinuosity": sinuosity},
         input_meta={
-            "woodyRiparian": {"source": "EPA StreamCat woody riparian cover (rp100)"},
+            "woodyRiparian": {"source": watershed.input_source(ctx, "habitat.woodyRiparian")},
             "sinuosity": {"source": "selected reach geometry"},
         },
         confidence="L")
     if ev.rating is None:
         return unavailable(
-            HABITAT_ID, "woody riparian cover is required",
+            HABITAT_ID, watershed.guidance(ctx, "woody riparian cover is required"),
             "L", scoring=ev.trace)
     value = float(ev.combined_value)
     sin_txt = ("" if sinuosity is None
@@ -99,7 +99,7 @@ def habitat_complexity(ctx: AnalysisContext) -> MetricResult:
         HABITAT_ID, value=round(value, 1),
         value_text=f"woody riparian cover {value:.1f}%{sin_txt}",
         rating=ev.rating, confidence="L",
-        source="EPA StreamCat woody riparian cover (rp100)",
+        source=watershed.result_source(ctx, "habitat"),
         note=("Corridor-cover proxy for habitat support, not a field habitat "
               "inventory. Grass-dominated natural channels can provide "
               "habitat this proxy does not credit."),

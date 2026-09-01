@@ -33,11 +33,29 @@ def _hash_data(root: Path, skip: set[str] = frozenset()) -> dict[str, str]:
     return out
 
 
+def _hash_package_data(root: Path) -> dict[str, str]:
+    # Non-py files inside the package tree (the nested site engine's manifests
+    # and geojson data). The package's own copied data/ folder and the top-level
+    # VENDOR_INFO.json belong to the other manifests.
+    out: dict[str, str] = {}
+    for p in sorted(root.rglob("*")):
+        if not p.is_file() or p.suffix in (".py", ".pyc"):
+            continue
+        rel = p.relative_to(root)
+        if any(part in _DATA_SKIP for part in rel.parts):
+            continue
+        if rel.parts[0] == "data" or rel.as_posix() == "VENDOR_INFO.json":
+            continue
+        out[rel.as_posix()] = hashlib.sha256(p.read_bytes()).hexdigest()
+    return out
+
+
 def test_vendor_info_present():
     info = json.loads((_VENDOR / "VENDOR_INFO.json").read_text(encoding="utf-8"))
     assert info["engine_api_version"] >= 1
     assert info["manifest"], "empty vendor manifest"
     assert info["data_manifest"], "empty vendor data manifest"
+    assert info["package_data_manifest"], "empty package data manifest"
 
 
 def test_vendored_copy_matches_manifest():
@@ -49,6 +67,9 @@ def test_vendored_copy_matches_manifest():
     current_data = _hash_data(_VENDOR / "data", _DATA_SKIP)
     for rel, digest in info["data_manifest"].items():
         assert current_data.get(rel) == digest, f"vendored data/{rel} diverged from manifest"
+    current_pkg = _hash_package_data(_VENDOR)
+    for rel, digest in info["package_data_manifest"].items():
+        assert current_pkg.get(rel) == digest, f"vendored {rel} diverged from manifest"
 
 
 @pytest.mark.skipif(not _SRC.is_dir(), reason="EASI source not present (cloud deploy)")
@@ -62,6 +83,8 @@ def test_vendor_in_sync_with_source():
         "EASI engine changed; re-run vendor_easi_engine.py")
     assert _hash_data(_SRC_DATA, _DATA_SKIP) == info["data_manifest"], (
         "EASI data catalogs changed; re-run vendor_easi_engine.py")
+    assert _hash_package_data(_SRC) == info["package_data_manifest"], (
+        "EASI package data (the nested site engine) changed; re-run vendor_easi_engine.py")
 
 
 def _sample_zip() -> bytes:
@@ -147,7 +170,7 @@ def test_screen_sites_direct_async_runs_with_stubbed_engine(monkeypatch):
 
     api_mod = types.SimpleNamespace(run_batch=fake_run_batch)
     contracts_mod = types.SimpleNamespace(
-        BatchConfig=lambda: object(),
+        BatchConfig=lambda **kw: types.SimpleNamespace(**kw),
         BatchRequest=lambda *, sites, config, criteria: types.SimpleNamespace(
             sites=sites, config=config, criteria=criteria),
         SiteRequest=lambda **kw: types.SimpleNamespace(**kw),
@@ -161,6 +184,12 @@ def test_screen_sites_direct_async_runs_with_stubbed_engine(monkeypatch):
     def on_event(stage, site_id, info):
         if stage == "site_done":
             ticks["n"] += 1
+        calls["config"] = None
+
+    async def spy_run_batch(request, *, on_event=None, cancel=None):
+        calls["config"] = request.config
+        return await fake_run_batch(request, on_event=on_event, cancel=cancel)
+    api_mod.run_batch = spy_run_batch
 
     result = asyncio.run(easi_screening.screen_sites_direct_async(
         [{"site_id": "REF-1", "lat": 44.0, "lon": -71.0}], "functional",
@@ -168,6 +197,8 @@ def test_screen_sites_direct_async_runs_with_stubbed_engine(monkeypatch):
     assert result["criteria"] == "functional"
     assert calls["cancel_is_callable"] is True
     assert ticks["n"] == 1
+    # the screen is pinned to the StreamCat lookup engine's legacy policy
+    assert calls["config"].watershed_engine == "streamcat-legacy"
 
 
 # --- preset wiring ---------------------------------------------------------- #

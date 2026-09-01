@@ -258,6 +258,11 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "n_screened": (result.get("screening_counts") or {}).get("n_screened"),
             "n_retained": (result.get("screening_counts") or {}).get("n_retained"),
             "method_version": run_state.SCREENING_METHOD_VERSION,
+            # The watershed-engine policy the screen was pinned to, and the
+            # vendored engine's own echo of it from the batch config. Outside
+            # the digest: the pin reproduces the historical behavior.
+            "watershed_engine": result.get("screening_watershed_engine"),
+            "watershed_engine_echo": _screening_engine_echo(result),
         },
         "streamcat": (result.get("source_reports") or [None])[0],
     }
@@ -350,14 +355,44 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "nIntendedMetrics": len(result.get("intended_metrics") or []),
         },
     }
+    manifest["inputsDigest"] = methodology.inputs_digest(
+        digest_payload_from_manifest(manifest))
+    return manifest
+
+
+def _screening_engine_echo(result: dict) -> Optional[str]:
+    """The ``watershed_engine`` the vendored EASI batch config actually carried
+    (None for screening caches written before the field existed)."""
+    try:
+        tables = (result.get("screening") or {}).get("tables") or {}
+        config = (tables.get("easi_screening_criteria") or {}).get("config") or {}
+        value = config.get("watershed_engine")
+        return str(value) if value else None
+    except AttributeError:
+        return None
+
+
+def digest_payload_from_manifest(manifest: dict) -> dict:
+    """The ``inputsDigest`` payload of a run manifest, rebuilt from the
+    manifest's own recorded blocks.
+
+    Pure, so a published version's digest can be re-derived from its stored
+    manifest (``tests/test_screening_engine_pin.py`` does exactly that). The
+    additive-key rules live here: the StreamCat default predictor source, the
+    legacy NRSA dataset, the default bootstrap depth and the pinned screening
+    policy add NO key, so every digest published before each of them existed
+    still reproduces byte for byte.
+    """
+    inputs = manifest.get("inputs") or {}
+    dataset = inputs.get("nrsa_dataset") or {}
     digest_payload = {
-        "region": region,
-        "methodology": manifest["methodology"],
-        "configs": configs,
-        "nrsa_values": inputs["nrsa_values"],
-        "nrsa_sites": inputs["nrsa_sites"],
-        "easi_preset": inputs["easi"]["preset"],
-        "registry_version": manifest["stratifiers"]["registryVersion"],
+        "region": manifest.get("region") or {},
+        "methodology": manifest.get("methodology"),
+        "configs": manifest.get("configs"),
+        "nrsa_values": inputs.get("nrsa_values"),
+        "nrsa_sites": inputs.get("nrsa_sites"),
+        "easi_preset": (inputs.get("easi") or {}).get("preset"),
+        "registry_version": (manifest.get("stratifiers") or {}).get("registryVersion"),
     }
     # Added only when the run did not use the default dataset, so every digest
     # published before this existed still reproduces byte for byte.
@@ -372,7 +407,7 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
     # the batch default (1000), which adds no key, so their digests stay stable.
     # Any other depth changes the resampling evidence (CURVE-06, RED-06,
     # STRAT-06) and therefore must change the digest.
-    n_boot = manifest["diagnostics"].get("nBoot")
+    n_boot = (manifest.get("diagnostics") or {}).get("nBoot")
     if n_boot not in (None, DIGEST_DEFAULT_N_BOOT):
         digest_payload["n_boot"] = int(n_boot)
     # Same additive rule for the predictor source: the StreamCat default adds
@@ -384,8 +419,7 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "source": ps.get("source"),
             "engine": ps.get("engine"),
         }
-    manifest["inputsDigest"] = methodology.inputs_digest(digest_payload)
-    return manifest
+    return digest_payload
 
 
 # --------------------------------------------------------------------------- #

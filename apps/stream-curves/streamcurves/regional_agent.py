@@ -1471,6 +1471,12 @@ def run_evidence(l3_code: str, name: str, *,
         "n_candidates": n_candidates,
         "screening_method": method,
         "screening_counts": counts,
+        # The fixed watershed-engine policy the reference screen ran under
+        # (the StreamCat lookup engine's legacy routing); recorded, never a
+        # digest key, since it reproduces the behavior every version had.
+        "screening_watershed_engine": (
+            easi_screening.SCREENING_WATERSHED_ENGINE
+            if method == "direct_engine" else None),
         "tier": tier,
         "screening": screening,
         "retained_ids": retained_ids,

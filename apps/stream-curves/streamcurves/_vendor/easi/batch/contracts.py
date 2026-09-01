@@ -67,6 +67,19 @@ class SiteRequest:
             metadata=dict(d.get("metadata") or {}))
 
 
+WATERSHED_ENGINE_POLICIES = ("auto", "streamcat-legacy")
+
+
+def validate_watershed_engine(value: Optional[str]) -> str:
+    """The batch watershed-engine policy (see ``easi.routing``); absent means
+    ``auto``, anything else is a contract error."""
+    policy = "auto" if value in (None, "") else str(value)
+    if policy not in WATERSHED_ENGINE_POLICIES:
+        raise ValueError(f"unknown watershed_engine policy {value!r}; expected one of "
+                         f"{WATERSHED_ENGINE_POLICIES}")
+    return policy
+
+
 @dataclass
 class BatchConfig:
     """Batch-wide defaults captured as a snapshot in the request and result."""
@@ -74,6 +87,14 @@ class BatchConfig:
     reach_length_ft: float = 1000.0
     snap_tolerance_ft: float = 150.0
     source_choices: dict[str, str] = field(default_factory=dict)
+    # Policy for streams outside the StreamCat lookup network: "auto" (the
+    # STAF site engine computes the exact watershed) or "streamcat-legacy"
+    # (the historical surrogate routing with the DA-ratio refusal). Additive:
+    # CONTRACTS_SCHEMA_VERSION is unchanged and older dicts read as "auto".
+    watershed_engine: str = "auto"
+
+    def __post_init__(self) -> None:
+        self.watershed_engine = validate_watershed_engine(self.watershed_engine)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -84,7 +105,8 @@ class BatchConfig:
             metric_ids=list(d["metric_ids"]) if d.get("metric_ids") is not None else None,
             reach_length_ft=float(d.get("reach_length_ft", 1000.0)),
             snap_tolerance_ft=float(d.get("snap_tolerance_ft", 150.0)),
-            source_choices=dict(d.get("source_choices") or {}))
+            source_choices=dict(d.get("source_choices") or {}),
+            watershed_engine=validate_watershed_engine(d.get("watershed_engine")))
 
 
 @dataclass

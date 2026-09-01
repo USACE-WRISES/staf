@@ -54,3 +54,17 @@ def test_vendor_in_sync_with_source():
         "re-run scripts/vendor_site_engine.py"
     assert _hash_tree(_SRC, False) == info["data_manifest"], \
         "re-run scripts/vendor_site_engine.py"
+
+
+def test_nested_engine_copy_matches_the_direct_vendor():
+    # The vendored EASI package carries its own copy of the site engine
+    # (easi/_vendor/site_engine). StreamCurves therefore ships two copies, and
+    # they must come from the same engine version and the same files.
+    nested = _VENDOR.parent / "easi" / "_vendor" / "site_engine" / "VENDOR_INFO.json"
+    assert nested.exists(), \
+        "re-run scripts/vendor_easi_engine.py (EASI vendors the site engine now)"
+    direct = _info()
+    other = json.loads(nested.read_text(encoding="utf-8"))
+    assert other["engine_version"] == direct["engine_version"]
+    assert other["manifest"] == direct["manifest"]
+    assert other["data_manifest"] == direct["data_manifest"]
