@@ -27,30 +27,55 @@ mapping, and report — with scoring authority moved from the system to the user
 ## Desktop evidence sources
 
 Evidence is pulled per metric from national services and shown with a source
-label and a suggested Likert; the assessor always scores. Tiers, best first:
+label, a provenance badge, and a suggested Likert; the assessor always scores.
+Two watershed engines answer the watershed metrics, in a fixed order that is
+never a user choice (the definitions live in `libs/README.md` and on the STAF
+site's Computation Engines page):
 
-1. **STAF site engine** (`sfari/engine_prefill.py` + the vendored
-   `sfari/_vendor/site_engine/`): exact-watershed values computed at the clicked
-   point on the full-resolution NHD (true point watershed + 100 m riparian
-   buffer) for impervious cover, land cover, road density, impoundments, soil
-   erodibility, runoff, and cross-section geometry. Entries carry
-   `origin="engine"` and the engine version. The vendored copy is refreshed by
-   `scripts/vendor_site_engine.py` and guarded by a drift-gate test.
-2. **EPA StreamCat** by COMID (catchment/watershed summaries), including
-   `rddensws` (road density) and `damnrmstorws` (normalized dam storage).
-3. **Direct services** as fallbacks — e.g. TIGERweb road counts sum the
-   primary, secondary, and local road layers (a failed layer yields no count,
-   never a partial sum), NID dams, NLCD.
+1. **STAF site engine** (`sfari/engine_prefill.py` over the vendored
+   `sfari/_vendor/site_engine/`): the exact watershed at the clicked point on
+   the full-resolution NHD (true point watershed + 100 m riparian buffer) for
+   impervious cover, agriculture, wetlands, riparian vegetation, road density,
+   impoundments (NID normal storage), soil erodibility (area-weighted K), the
+   2001 to 2021 impervious change, and dam storage per km2. Entries carry
+   `origin="engine"`, the engine version, and a value text ending in
+   "(exact watershed)". On a stream outside the NHDPlus V2 network the engine
+   also supplies the watershed and the reach themselves.
+2. **StreamCat lookup engine**: EPA StreamCat by NHDPlus V2 COMID, including
+   `rddensws` (road density) and `damnrmstorws` (normal dam storage). The
+   labeled fallback: `origin="streamcat"`, `fallback_reason` when the site
+   engine failed or refused, `upgrade_pending` while it still runs on a
+   covered site, and `anchor_label` naming the nearest covered reach the value
+   describes on a stream outside V2 (withheld past a 10x drainage-area ratio).
+3. **Direct services** (`origin="pull"`): NWIS gages, WQP nutrients, NWI
+   wetlands, NID dams near the reach, TIGERweb road counts (the primary,
+   secondary, and local layers, a failed layer yields no count, never a
+   partial sum), and NHDPlus attributes.
+
+### Any NHD stream
+
+The map draws the NHDPlus V2 network (blue, clickable, StreamCat data
+available) over the full high-resolution NHD (light blue) from the engine's HR
+client. A V2 click delineates the NLDI basin at once and starts the site
+engine in the background; StreamCat values show immediately and upgrade in
+place when the engine finishes (typically 2 to 5 minutes, refused past the
+interactive reach budget). An HR-only click is anchored to the nearest covered
+reach downstream (`sfari/hr_site.py`, the engine's shared classification),
+Delineate computes the exact watershed and reach with the engine, and the
+mapped rows stay `pending` until it finishes. If the engine fails there, the
+app offers the covered reach's V2 basin behind a confirm, labeled as describing
+that reach. Sessions carry `siteAnchor`, `siteEngine` (geometry stripped), and
+`watershedBasis` inside the delineation block; the schema version is unchanged.
 
 ## Layout
 
 ```
-sfari/            Python package (config, scoring, models, evidence, engine_prefill, datasources, …)
+sfari/            Python package (config, scoring, models, evidence, engine_prefill, hr_site, datasources, …)
 sfari/_vendor/    vendored STAF site engine (libs/site_engine), drift-gated
 data/             generated JSONs: sfari-functions, sfari-metrics (82), sfari-outcome-mapping
 scripts/          build_sfari_data.py (regenerates data/ from docs/SFARI_Clean.docx),
                   vendor_site_engine.py, build_fieldform_manifest.py, acceptance.py
-tests/            scoring + likert parity + evidence + engine-prefill tests
+tests/            scoring + likert parity + evidence + engine bridge + HR site tests
 www/              CSS/JS (mirrors EASI)
 ```
 
@@ -79,9 +104,10 @@ can be deployed to **Posit Connect Cloud** straight from VS Code:
    reuse the same content.
 
 The bundle is `app.py`, `requirements.txt`, and the `sfari/`, `data/`, and `www/`
-folders (the vendored site engine rides inside `sfari/`). Engine prefill needs
+folders (the vendored site engine rides inside `sfari/`). The site engine needs
 `requests`, `shapely`, and `geopandas` importable at runtime; if that stack is
-absent the prefill silently skips and the other evidence tiers still run.
+absent the HR layer is not drawn, every engine-backed row falls to the labeled
+StreamCat value, and the other evidence tiers still run.
 No API keys are required at runtime; a free USGS NWIS key is optional
 (higher rate limit on the shared egress IP), set as a Connect Cloud environment
 variable. The HyRiver cache is directed to `/tmp` (ephemeral filesystem). Exports

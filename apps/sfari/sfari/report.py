@@ -63,6 +63,7 @@ def _header_pairs(delin, sc):
         ("COMID", dl.get("comid")), ("HUC8", dl.get("huc8")),
         ("Drainage area (km2)", dl.get("drainage_area_sqkm")),
         ("Reach length (ft)", dl.get("reach_length_ft")),
+        ("Watershed basis", watershed_basis_label(delin)),
         ("Ecosystem Condition Index", sc.get("ecosystemConditionIndex")),
         ("Physical sub-index", si.get("physical")),
         ("Chemical sub-index", si.get("chemical")),
@@ -77,13 +78,16 @@ def build_csv(delin, metric_scores, function_scores, evidence, sc) -> str:
     for k, v in _header_pairs(delin, sc):
         w.writerow([k, v])
     w.writerow([])
-    w.writerow(["Category", "Function", "Metric", "Scale", "Likert", "Pulled evidence", "Source", "Note"])
+    w.writerow(["Category", "Function", "Metric", "Scale", "Likert", "Pulled evidence", "Source",
+                "Origin", "Describes", "Note"])
     for cat, f, m in _ordered_metrics():
         mid = m["metricId"]
         rc = metric_scores.get(mid) or {}
         ev = evidence.get(mid) or {}
         w.writerow([cat, f["name"], m["name"], m.get("scale", ""), rc.get("likert") or "",
-                    ev.get("value_text") or "", ev.get("source") or "", rc.get("note") or ""])
+                    ev.get("value_text") or "", ev.get("source") or "",
+                    ev.get("origin") or "", ev.get("anchor_label") or "",
+                    rc.get("note") or ""])
     w.writerow([])
     w.writerow(["Category", "Function", "Function score (0-15)", "Condition", "Justification"])
     fbc = config.functions_by_category()
@@ -265,6 +269,8 @@ def _value_or_status(ev, ds):
     source client + the evidence status."""
     if ev.get("status") == "ok" and (ev.get("value_text") or ev.get("field_value_text")):
         return to_print_safe(ev.get("value_text") or ev.get("field_value_text")), False
+    if ev.get("status") == "pending":
+        return "Pending: STAF site engine running", True
     client = (ds or {}).get("client")
     if client == "manual":
         return "Local review required", True
@@ -302,11 +308,17 @@ def _metrics_summary_table(delin, evidence):
         val = Paragraph(escape(text), small_it if is_status else small)
         url = ev.get("source_url") or ds.get("url") or ""
         name = ev.get("source") or (urlparse(url).netloc if url else "")
+        extra = ""
+        if ev.get("anchor_label"):
+            extra += f"<br/>Describes: {escape(to_print_safe(ev['anchor_label']))}"
+        if ev.get("fallback_reason"):
+            extra += f"<br/>Fallback: {escape(to_print_safe(ev['fallback_reason']))}"
         if url:
             href = escape(url, {'"': "&quot;"})
-            src = Paragraph(f'<link href="{href}" color="#1f4e8c">{escape(name or url)}</link>', small)
+            src = Paragraph(f'<link href="{href}" color="#1f4e8c">{escape(name or url)}</link>'
+                            + extra, small)
         else:
-            src = Paragraph(escape(name), small)
+            src = Paragraph(escape(name) + extra, small)
         data.append([Paragraph(escape(cat), small_dim), Paragraph(escape(f["name"]), small_dim),
                      Paragraph(escape(m["name"]), small),
                      Paragraph(escape(to_print_safe(ds.get("label") or "")), small), val, src])
@@ -327,7 +339,8 @@ def _site_header_table(delin):
     hdr = [["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
            ["COMID / HUC8", f"{dl.get('comid')} / {dl.get('huc8')}"],
            ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
-           ["Reach length", f"{dl.get('reach_length_ft')} ft"]]
+           ["Reach length", f"{dl.get('reach_length_ft')} ft"],
+           ["Watershed basis", watershed_basis_label(delin)]]
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
     t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9),
                            ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#d5deea")),
@@ -388,8 +401,29 @@ def _field_form_bytes(filename: str) -> bytes:
     return _ff_bytes_cache[filename]
 
 
+def watershed_basis_label(delin) -> str:
+    """Plain words for ``watershedBasis``: which engine's watershed the
+    evidence describes."""
+    basis = (delin or {}).get("watershedBasis") or ""
+    eng = (delin or {}).get("siteEngine") or {}
+    if basis == "site-engine":
+        ver = eng.get("engineVersion")
+        return f"exact watershed (STAF site engine v{ver})" if ver else \
+            "exact watershed (STAF site engine)"
+    if basis == "nhdplus-v2-basin-of-surrogate":
+        return "NHDPlus V2 basin of the nearest covered reach (StreamCat lookup engine)"
+    if eng.get("status") == "ok":
+        ver = eng.get("engineVersion")
+        tail = f"STAF site engine v{ver}" if ver else "STAF site engine"
+        return f"NHDPlus V2 basin drawn, watershed metrics from the exact watershed ({tail})"
+    return "NHDPlus V2 basin (StreamCat lookup engine)"
+
+
 def _reach_id_str(dl: dict) -> str:
-    """Canonical Reach ID: ``COMID <id>`` or, when COMID is missing, snapped lat/lon."""
+    """Canonical Reach ID: ``COMID <id>``, ``NHDPlusID <id>`` for a reach on the
+    high-resolution NHD, or, when both are missing, snapped lat/lon."""
+    if dl.get("network") == "nhdplus-hr" and dl.get("nhdplus_id") not in (None, "", "None"):
+        return f"NHDPlusID {dl['nhdplus_id']}"
     comid = dl.get("comid")
     if comid not in (None, "", "None"):
         return f"COMID {comid}"
@@ -410,6 +444,8 @@ def field_forms_filename(delin) -> str:
     """Download filename: ``sfari-field-forms-comid-<id>.pdf`` or a safe
     hemisphere-based coordinate fallback when COMID is absent."""
     dl = (delin or {}).get("delineation", {})
+    if dl.get("network") == "nhdplus-hr" and dl.get("nhdplus_id") not in (None, "", "None"):
+        return f"sfari-field-forms-nhdplusid-{dl['nhdplus_id']}.pdf"
     comid = dl.get("comid")
     if comid not in (None, "", "None"):
         return f"sfari-field-forms-comid-{comid}.pdf"
@@ -665,6 +701,8 @@ def build_field_forms_pdf(delineation, evidence) -> bytes:
     story += [NextPageTemplate("appendix"), PageBreak(),
               Paragraph("Desktop Metrics Summary", st["h1"]),
               Paragraph(f"{stream} - {reach_id}", st["small_dim"]),
+              Paragraph("Watershed basis: "
+                        + to_print_safe(watershed_basis_label(delineation)), st["small_dim"]),
               Spacer(1, 6), _metrics_summary_table(delineation, evidence), Spacer(1, 8),
               Paragraph("All 26 desktop-supportable metrics. Available values are also printed "
                         "in each function's Notes row on the form pages; unavailable and "

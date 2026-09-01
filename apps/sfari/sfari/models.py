@@ -26,14 +26,26 @@ class EvidenceResult:
     confidence: str = "M"                        # H/M/L — confidence in the DATA
     source: str = ""
     source_url: str = ""
-    status: str = "ok"                           # ok | unavailable
+    status: str = "ok"                           # ok | unavailable | pending
     note: str = ""
-    # Provenance of the entry itself. "pull" = the standard desktop pull,
-    # "engine" = the vendored site computation engine (exact watershed),
-    # cross-section attach entries keep their source-string convention.
+    # Provenance of the entry itself: which engine or service produced it.
+    #   "engine"    the STAF site engine (exact watershed)
+    #   "streamcat" the StreamCat lookup engine (COMID-keyed StreamCat values)
+    #   "pull"      other direct services (NWIS, WQP, NWI, NID, TIGER, NHD VAAs)
+    # Cross-section attach entries keep their source-string convention.
     # Additive with safe defaults so saved sessions round-trip unchanged.
     origin: str = "pull"
     engine_version: Optional[str] = None
+    # The reach a COMID-keyed value describes on a site outside NHDPlus V2
+    # ("nearest covered reach, COMID x, N ft downstream, DA ratio r"); empty
+    # on covered sites and for values that are not COMID-keyed.
+    anchor_label: str = ""
+    # Set when a StreamCat value stands in because the site engine failed or
+    # refused: the plain reason, shown beside the value.
+    fallback_reason: str = ""
+    # True while the site engine is still running on a covered site and this
+    # StreamCat value will be replaced by the exact-watershed value.
+    upgrade_pending: bool = False
 
     def to_dict(self) -> dict:
         return asdict(self)

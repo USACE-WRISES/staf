@@ -1,37 +1,38 @@
-"""Field-form prefill from the vendored STAF site computation engine.
+"""The STAF site engine bridge for SFARI.
 
-When the vendored engine and its geospatial stack are importable, the desktop
-pull runs one ``compute_site`` at the assessment point and upgrades a mapped
-subset of evidence entries from COMID-catchment proxies to EXACT-watershed
-values (true point watershed + 100 m riparian buffer on the full-resolution
-NHD). Entries are labeled with the engine version and data vintage, carry
-``origin="engine"``, and remain evidence: the assessor scores, the suggested
-Likert is a chip, and an edit always wins.
+Everything SFARI asks of the vendored engine goes through here: availability,
+one ``compute_site`` per site with the five watershed families (the
+cross-section family is skipped, SFARI has its own Manning tool), the
+flattened metric values the evidence adapters read, the labels, and a
+geometry-stripped record for the session file. The adapters in
+``evidence.py`` map the values onto SFARI's metrics themselves, so the engine
+is the FIRST source for every metric it covers and the StreamCat lookup
+engine is a labeled fallback.
 
-Only metrics whose engine value is a strict analog of the existing evidence
-basis are mapped, so the number the assessor sees stays comparable. Never
-raises; unavailable simply means no upgrade.
+Never raises; an unavailable engine simply means no exact-watershed evidence.
 """
 from __future__ import annotations
 
 import importlib.util
 from functools import lru_cache
-from typing import Optional
-
-from . import likert
-from .models import EvidenceResult
+from typing import Any, Callable, Optional
 
 _VENDOR_ROOT = "sfari._vendor.site_engine"
 _GEO_REQUIREMENTS = ("requests", "shapely", "geopandas")
 
-_SC_URL = "https://www.epa.gov/national-aquatic-resource-surveys/streamcat-dataset"
+# The engine has no page of its own; the STAF site documents both engines.
+ENGINE_URL = "https://usace-wrises.github.io/staf/computation-engines/"
+SFARI_FAMILIES = ["dams", "landcover", "roads", "runoff", "soils"]
 
 
 @lru_cache(maxsize=1)
 def missing_engine_requirements() -> tuple[str, ...]:
     missing = []
     for mod in (_VENDOR_ROOT,) + _GEO_REQUIREMENTS:
-        if importlib.util.find_spec(mod) is None:
+        try:
+            if importlib.util.find_spec(mod) is None:
+                missing.append(mod)
+        except (ImportError, ValueError):
             missing.append(mod)
     return tuple(missing)
 
@@ -48,104 +49,82 @@ def engine_version() -> Optional[str]:
     return site_engine.ENGINE_VERSION
 
 
-def _metric(record: dict, key: str):
-    entry = (record.get("metrics") or {}).get(key) or {}
-    return entry.get("value")
+def engine_label(version: Optional[str] = None) -> str:
+    """``STAF site engine v0.2.0`` from the vendored vocabulary when present."""
+    try:
+        from sfari._vendor.site_engine import naming
+        return naming.engine_label(version)
+    except Exception:  # noqa: BLE001 - vocabulary fallback
+        return f"STAF site engine v{version or engine_version() or 'unknown'}"
 
 
-def _entry(mid: str, value, value_text: str, field_text: str,
-           note: str, rec: dict) -> EvidenceResult:
-    ver = rec.get("engineVersion") or ""
-    label = f"STAF site engine v{ver} (exact watershed)"
-    return EvidenceResult(
-        mid, value=value, value_text=value_text, field_value_text=field_text,
-        suggested_likert=likert.suggest(mid, value) if value is not None else None,
-        confidence="M", source=label, source_url=_SC_URL,
-        note=note, origin="engine", engine_version=ver)
+def anchor_label(anchor: Optional[dict]) -> str:
+    """The reach a COMID-keyed value describes (empty on covered sites)."""
+    try:
+        from sfari._vendor.site_engine import naming
+        return naming.anchor_label(anchor)
+    except Exception:  # noqa: BLE001
+        if not anchor or anchor.get("anchorKind") != "hrSurrogate":
+            return ""
+        comid = (anchor.get("scoredReach") or {}).get("comid")
+        return f"nearest covered reach, COMID {comid}" if comid else "nearest covered reach"
 
 
-def pull_engine_evidence(ctx_inputs: dict) -> dict[str, dict]:
-    """{metricId: evidence-dict} of exact-watershed upgrades, or {}.
+def run_engine(lat: float, lon: float, *, families: Optional[list[str]] = None,
+               include_geometry: bool = True,
+               progress: Optional[Callable[[dict], Any]] = None) -> dict:
+    """One ``compute_site`` at the point with the interactive budget.
 
-    Sync (call from a worker thread): one engine computation per site, then a
-    fixed mapping onto the SFARI metrics whose basis it strictly matches.
+    Returns the engine record (``status`` ok | refused | failed) or a small
+    failed record when the engine is not available here. Never raises.
     """
     if not site_engine_available():
-        return {}
+        return {"status": "unavailable",
+                "reason": "the STAF site engine is not available in this deployment",
+                "engineVersion": None, "watershed": None, "reach": None, "metrics": {}}
     try:
-        from sfari._vendor.site_engine import compute_site
+        from sfari._vendor.site_engine.engine import compute_site
+        from sfari._vendor.site_engine.provenance import INTERACTIVE_CONFIG
 
-        rec = compute_site(ctx_inputs["lat"], ctx_inputs["lon"],
-                           {"includeGeometry": False})
-        if rec.get("status") != "ok":
-            return {}
-        out: dict[str, dict] = {}
-        ws_note = ("True point watershed on the full-resolution NHD "
-                   "(area agreement "
-                   f"{(rec.get('watershed') or {}).get('areaAgreement')}). "
-                   "NLCD 2021.")
+        cfg = {**INTERACTIVE_CONFIG, "includeGeometry": bool(include_geometry),
+               "metricFamilies": list(families or SFARI_FAMILIES)}
+        return compute_site(float(lat), float(lon), cfg, progress=progress)
+    except Exception as exc:  # noqa: BLE001 - the bridge never raises
+        return {"status": "failed", "reason": f"engine error: {exc}",
+                "engineVersion": engine_version(), "watershed": None,
+                "reach": None, "metrics": {}}
 
-        imp = _metric(rec, "imperviousPctWatershed")
-        if imp is not None:
-            out["catchment-hydrology-impervious-surface-area"] = _entry(
-                "catchment-hydrology-impervious-surface-area", imp,
-                f"{imp:.1f}% impervious (exact watershed)",
-                f"Impervious {imp:.1f}% (engine)", ws_note, rec).to_dict()
 
-        rd = _metric(rec, "roadDensity")
-        if rd is not None:
-            out["catchment-hydrology-road-density"] = _entry(
-                "catchment-hydrology-road-density", rd,
-                f"{rd:.2f} km/km2 road density (exact watershed)",
-                f"Roads {rd:.2f} km/km2 (engine)",
-                "TIGERweb primary + secondary + local roads clipped to the "
-                "watershed. " + ws_note, rec).to_dict()
-
-        dams = _metric(rec, "damCount")
-        storage = _metric(rec, "damStorageAcreFt")
-        if dams is not None:
-            txt = (f"{dams} NID dam(s) in the watershed"
-                   + (f", {storage:,.0f} acre-ft storage"
-                      if storage is not None else ""))
-            out["catchment-hydrology-impoundments"] = _entry(
-                "catchment-hydrology-impoundments", dams, txt,
-                f"Dams {dams} in watershed (engine)", ws_note, rec).to_dict()
-
-        wet = None
-        woody = _metric(rec, "woodyWetlandPctWatershed")
-        herb = _metric(rec, "herbWetlandPctWatershed")
-        if woody is not None or herb is not None:
-            wet = round((woody or 0.0) + (herb or 0.0), 2)
-            out["surface-water-storage-wetland-coverage"] = _entry(
-                "surface-water-storage-wetland-coverage", wet,
-                f"{wet:.1f}% wetland (exact watershed)",
-                f"Wetlands {wet:.1f}% (engine)", ws_note, rec).to_dict()
-
-        rip_forest = _metric(rec, "forestPctRiparian")
-        if rip_forest is not None:
-            out["light-thermal-regime-riparian-canopy-cover"] = _entry(
-                "light-thermal-regime-riparian-canopy-cover", rip_forest,
-                f"{rip_forest:.1f}% forest in the 100 m riparian buffer",
-                f"Riparian forest {rip_forest:.1f}% (engine)",
-                "100 m buffer of the upstream network, exact watershed. "
-                "NLCD 2021.", rec).to_dict()
-
-        rip_parts = [_metric(rec, k) for k in
-                     ("forestPctRiparian", "shrubPctRiparian",
-                      "grasslandPctRiparian", "woodyWetlandPctRiparian",
-                      "herbWetlandPctRiparian")]
-        if any(v is not None for v in rip_parts):
-            veg = round(sum(v or 0.0 for v in rip_parts), 1)
-            for mid in ("carbon-processing-riparian-corridor-width-and-quality",
-                        "nutrient-cycling-vegetated-riparian-corridor-width",
-                        "community-dynamics-riparian-communities"):
-                out[mid] = _entry(
-                    mid, veg,
-                    f"{veg:.1f}% natural vegetation in the 100 m riparian "
-                    "buffer (forest + shrub + grassland + wetland)",
-                    f"Riparian natural veg {veg:.1f}% (engine)",
-                    "100 m buffer of the upstream network, exact watershed. "
-                    "NLCD 2021.", rec).to_dict()
-        return out
-    except Exception:  # noqa: BLE001 - prefill must never break the pull
+def engine_metrics(record: Optional[dict]) -> dict[str, Any]:
+    """``{metricKey: value}`` for an ok record, else ``{}``."""
+    if not record or record.get("status") != "ok":
         return {}
+    return {k: (v or {}).get("value") for k, v in (record.get("metrics") or {}).items()}
+
+
+def engine_source(record: Optional[dict]) -> str:
+    return f"{engine_label((record or {}).get('engineVersion'))} (exact watershed)"
+
+
+def engine_note(record: Optional[dict]) -> str:
+    ws = (record or {}).get("watershed") or {}
+    area = ws.get("areaSqkm")
+    agreement = ws.get("areaAgreement")
+    parts = ["True point watershed on the full-resolution NHD"]
+    if area is not None:
+        parts.append(f"{area} km2")
+    if agreement is not None:
+        parts.append(f"area agreement {agreement}")
+    return ", ".join(parts) + ". NLCD 2021."
+
+
+def strip_geometry(record: Optional[dict]) -> Optional[dict]:
+    """The record without its polygon and reach geometry (session storage)."""
+    if not record:
+        return record
+    out = dict(record)
+    if out.get("watershed"):
+        out["watershed"] = {**out["watershed"], "polygon": None}
+    if out.get("reach"):
+        out["reach"] = {**out["reach"], "geometry": None}
+    return out
