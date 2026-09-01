@@ -73,7 +73,8 @@ def _chem_fallback(ctx: AnalysisContext, metric_id: str, *, reason: str) -> Metr
     if ev.rating is None:
         return unavailable(
             metric_id,
-            f"{reason} and both StreamCat CHEM components are also required",
+            base.comid_evidence_note(
+                ctx, f"{reason} and both StreamCat CHEM components are also required"),
             "L", scoring=ev.trace,
             value_text=f"{label} evidence unavailable")
     value = float(ev.combined_value)

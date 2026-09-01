@@ -27,16 +27,23 @@ stepper: **Identify → Basin → Assessment → Report**.
 
 1. **Identify** — Pan/zoom a USGS National Map basemap (Topo or Imagery) with an
    NHD hydrography overlay. At zoom ≥ 14, two stream layers load for the view:
-   **bold lines** are the NHDPlus V2 scoring network and **thin lines** are the
-   full high-resolution NHD. **Clicking snaps to the nearest stream line** (or
-   tells you if you missed). Clicking a thin (HR-only) stream scores the nearest
-   covered reach downstream with the substitution labeled (stream, routed
-   distance, drainage-area ratio); EASI declines to score past a 10x
-   drainage-area ratio and points to SFARI/DEEP instead.
+   **bold lines** have StreamCat data (the NHDPlus V2 network) and **thin
+   lines** are the rest of the high-resolution NHD. **Clicking snaps to the
+   nearest stream line** (or tells you if you missed). On a bold line the
+   StreamCat lookup engine answers the watershed metrics in seconds. On a thin
+   line the STAF site engine calculates the exact watershed at the clicked
+   point (about one to five minutes, with a progress line); the three
+   reach-keyed metrics (low flow, substrate, biological integrity) come from
+   the nearest covered reach downstream, labeled with the routed distance and
+   drainage-area ratio, and are unavailable past a 10x ratio. The policy is
+   fixed by the framework: nothing asks the user to pick a method, and every
+   value says which engine produced it.
    A type-ahead **address/place search** (Photon + Nominatim) recenters the map.
 2. **Basin** — Delineate the contributing **watershed** and an **upstream reach**
    (default ~1,000 ft, adjustable) with staged progress feedback. Shows COMID,
-   HUC12, drainage area, watershed area, and reach length.
+   HUC12, drainage area, watershed area, and reach length. On a thin-line
+   stream the card names the watershed engine, the exact watershed area and the
+   reaches walked, and says where reach-keyed evidence comes from.
 3. **Assessment** — All 20 metrics compute automatically, then a worksheet walks
    the functions by discipline. Each card shows the metric, its scoring method
    (inputs, breakpoints, and the resulting rating), and the evidence source, with
@@ -106,9 +113,10 @@ complete availability, not 20 independent field observations.
 | Source | Used for |
 |---|---|
 | **NHDPlus** via HyRiver (`pynhd`, NLDI / WaterData) | Stream vectors, point snap, watershed delineation, reach derivation, VAAs |
-| **NHDPlus HR** (hydro.nationalmap.gov MapServer) | Full-resolution stream display + surrogate routing for streams outside the V2 scoring network (`easi/routing.py`, `easi/datasources/nhd_hr.py`) |
+| **NHDPlus HR** (hydro.nationalmap.gov MapServer) | Full-resolution stream display, the clicked reach's attributes, and the nearest-covered-reach routing for streams outside the V2 network (`easi/routing.py`, `easi/datasources/nhd_hr.py`) |
+| **STAF site engine** (vendored from `libs/site_engine`, `easi/watershed.py`) | The exact point watershed and its land cover, roads, dams, soil K and EROM runoff for streams outside the StreamCat lookup network. Never used on covered streams. Definitions of both engines: `libs/README.md` |
 | **USGS 3DEP** (`py3dep`) | DEM cross-sections → entrenchment, bank-height ratio, slope |
-| **EPA StreamCat** | Watershed landscape metrics (impervious, wetlands, roads, dam storage, runoff, riparian, erodibility) plus the published HYD/SED/CHEM/CONN/TEMP/HABT integrity components and prG_BMMI |
+| **EPA StreamCat** (the StreamCat lookup engine) | Watershed landscape metrics on the V2 network (impervious, wetlands, roads, dam storage, runoff, riparian, erodibility) plus the published HYD/SED/CHEM/CONN/TEMP/HABT integrity components and prG_BMMI, which exist only per V2 COMID |
 | **EPA NRSA 2018–19** (bundled extract) | Connected field evidence: wetted channel, embeddedness, benthic/fish condition |
 | **NLCD** (via `pygeohydro`) | Land cover (fallback where StreamCat is absent) |
 | **EPA Water Quality Portal (WQP)** | Total N / total P observations (normalized); context-only temperature |
@@ -123,6 +131,21 @@ complete availability, not 20 independent field observations.
 Source selection is automatic and fixed per metric (see **Evidence hierarchy** above);
 a fallback is recorded in the trace and shown in the Scoring method panel, so it is
 always visible which tier produced a rating.
+
+**Two watershed engines, one fixed policy.** The eight watershed metrics read
+their inputs from a watershed evidence layer (`easi/watershed.py`) with two
+providers. On the NHDPlus V2 network the StreamCat lookup engine supplies them
+(precomputed EPA StreamCat summaries keyed by COMID). On any other NHD stream
+the STAF site engine delineates the exact watershed at the clicked point and
+computes them from NLCD, TIGERweb, NID, SSURGO and EROM. If the engine fails or
+refuses (a basin past its budget), the watershed metrics are unavailable with
+guidance rather than a proxy. The batch engine exposes the policy as
+`BatchConfig.watershed_engine`: `auto` (the default described here) and
+`streamcat-legacy` (the pre-2026-09 behavior: every metric on the nearest
+covered reach, refused past the 10x ratio), which StreamCurves pins its
+reference screen to. Whether the site engine should also answer covered
+streams is decided by the score-level equivalence study in
+`libs/site_engine/scripts/score_equivalence_study.py`, not by a setting.
 
 ## Tech stack
 

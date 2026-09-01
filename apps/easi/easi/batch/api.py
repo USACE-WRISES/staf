@@ -120,7 +120,8 @@ def _metric_records(rows: list[dict], source_choices: dict) -> list[MetricRecord
             observed_overrides_proxy=bool(
                 trace.get("observedOverridesProxy",
                           r.get("observedOverridesProxy", False))),
-            anchor=r.get("anchorLabel", "")))
+            anchor=r.get("anchorLabel", ""),
+            engine=r.get("engine", "") or ""))
     return out
 
 
@@ -176,7 +177,8 @@ def _build_site_result(site: SiteRequest, delin: dict, report: dict) -> SiteResu
                       metric_id=m.metric_id, site_id=site.site_id,
                       message=m.missing_reason or "no data")
                 for m in records if m.availability == "unavailable"],
-        anchor=dict(delin.get("siteAnchor") or {}))
+        anchor=dict(delin.get("siteAnchor") or {}),
+        watershed_engine=dict(d.get("watershed_engine") or {}))
 
 
 _SNAP_STAGE_CODES = ("no_stream_found", "snap_service_error",

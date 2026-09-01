@@ -17,6 +17,24 @@ def basin_characteristics(ctx) -> dict:
     extras = getattr(ctx, "extras", None) or {}
     sc = extras.get("streamcat") or {}
     rows: list[list[str]] = []
+    anchor = extras.get("siteAnchor") or {}
+    routed = anchor.get("anchorKind") == "hrSurrogate"
+    layer = extras.get("watershed") or {}
+    # The engine answering the watershed metrics is a site characteristic on
+    # routed sites (covered runs stay the StreamCat lookup engine and add no row).
+    if routed:
+        provider = layer.get("provider")
+        if provider == "site-engine":
+            meta = layer.get("meta") or {}
+            rows.append(["Watershed engine", str(layer.get("label") or "STAF site engine")])
+            if meta.get("areaSqkm") is not None:
+                rows.append(["Exact watershed area", f"{round(float(meta['areaSqkm']), 2)} km²"])
+        elif provider is None:
+            rows.append(["Watershed engine",
+                         f"unavailable ({layer.get('unavailableReason') or 'not calculated'})"])
+        else:
+            rows.append(["Watershed engine",
+                         "StreamCat lookup engine (nearest covered reach)"])
 
     da = getattr(ctx, "drainage_area_sqkm", None)
     if da is not None:
@@ -49,11 +67,12 @@ def basin_characteristics(ctx) -> dict:
 
     # climate normals (only shown when present in the StreamCat pull). Mean annual air
     # temp was dropped from the report as not needed for screening.
+    suffix = " (nearest covered reach)" if routed else ""
     elev = sc.get("elevws")
     if elev is not None:
-        rows.append(["Mean basin elevation", f"{elev:.0f} m"])
+        rows.append(["Mean basin elevation" + suffix, f"{elev:.0f} m"])
     precip = sc.get("precip8110ws")
     if precip is not None:
-        rows.append(["Mean annual precipitation", f"{precip:.0f} mm"])
+        rows.append(["Mean annual precipitation" + suffix, f"{precip:.0f} mm"])
 
     return {"rows": rows}

@@ -842,38 +842,69 @@ def _metric_toolbar():
     return ui.div(*items, class_="easi-metric-toolbar")
 
 
-_ANCHOR_GROUP_ORDER = {"clickedReach": 0, "clickedPoint": 1,
-                       "surrogateComid": 2, "surrogateWatershed": 3}
+_ANCHOR_GROUP_ORDER = {"watershed": 0, "clickedReach": 1, "clickedPoint": 2,
+                       "surrogateComid": 3, "surrogateWatershed": 4}
 
 
-def _anchor_banner(anchor, d):
-    """Substitution banner for routed sites; None on the covered network.
-
-    With Phase 2 metric anchoring present, the banner carries the per-metric
-    source table (grouped by anchor) so a reader sees exactly which rows
-    describe the clicked stream and which describe the surrogate."""
-    if not anchor or anchor.get("anchorKind") != "hrSurrogate":
-        return None
+def _routed_summary(anchor, d) -> tuple[str, str]:
+    """(bold lead, sentence) for a routed site, by the watershed policy that
+    ran: the exact watershed (auto) or the legacy surrogate."""
     clicked = anchor.get("clickedStream") or {}
     r = anchor.get("routing") or {}
     dist = r.get("routedDistanceFt")
     dist_txt = f"{dist:,.0f} ft downstream" if dist is not None else "downstream"
+    name = clicked.get("gnisName") or "unnamed stream"
+    ratio_txt = (f"Drainage area ratio {r.get('daRatio')} "
+                 f"(limit {_fmt_ratio_limit(r.get('daRatioLimit'))}).")
+    source = (d or {}).get("watershed_source") or ""
+    eng = (d or {}).get("watershed_engine") or {}
+    if source == "site-engine":
+        lead = "Stream outside the StreamCat lookup network. "
+        text = (f"{name} (NHDPlus HR) is assessed at the clicked point. Watershed "
+                f"metrics describe its exact watershed ({eng.get('areaSqkm')} km², "
+                f"STAF site engine v{eng.get('engineVersion')}). ")
+    elif source == "not-calculated":
+        lead = "Exact watershed not calculated. "
+        text = (f"{name} (NHDPlus HR) is outside the StreamCat lookup network and the "
+                f"STAF site engine could not compute its watershed "
+                f"({eng.get('reason') or 'not calculated'}). Watershed metrics are "
+                "unavailable. Use SFARI or DEEP for this site, or enter rating "
+                "overrides. ")
+    else:
+        lead = "Scored at a surrogate reach. "
+        text = (f"The clicked stream ({name}, NHDPlus HR) is not in the scoring "
+                f"network. Results describe "
+                f"{(d or {}).get('gnis_name') or 'the nearest covered reach'} "
+                f"{dist_txt}. ")
+        return lead, text + ratio_txt
+    if r.get("declined"):
+        text += ("Reach-keyed evidence (low flow, substrate, biological integrity) "
+                 "is unavailable past the substitution limit. ")
+    else:
+        text += (f"Reach-keyed evidence comes from the nearest covered reach "
+                 f"(COMID {(d or {}).get('comid')}, {dist_txt}). ")
+    return lead, text + ratio_txt
+
+
+def _anchor_banner(anchor, d):
+    """Banner for routed sites; None on the covered network.
+
+    With per-metric anchoring present, the banner carries the source table
+    (grouped by anchor) so a reader sees exactly which rows describe the exact
+    watershed, the clicked stream, and the nearest covered reach."""
+    if not anchor or anchor.get("anchorKind") != "hrSurrogate":
+        return None
+    lead, text = _routed_summary(anchor, d)
     groups: dict[tuple, list[str]] = {}
     for entry in (anchor.get("metricAnchors") or {}).values():
         key = (_ANCHOR_GROUP_ORDER.get(entry.get("anchor"), 9), entry.get("label"))
         groups.setdefault(key, []).append(entry.get("name") or "")
     group_lines = [
-        ui.div(ui.tags.b(f"At the {label}: "), ", ".join(sorted(names)),
+        ui.div(ui.tags.b(f"{label[:1].upper()}{label[1:]}: "), ", ".join(sorted(names)),
                style="margin-top:.25rem;")
         for (_o, label), names in sorted(groups.items())]
     return ui.div(
-        ui.div(
-            ui.tags.b("Scored at a surrogate reach. "),
-            f"The clicked stream ({clicked.get('gnisName') or 'unnamed stream'}, "
-            f"NHDPlus HR) is not in the scoring network. Results describe "
-            f"{(d or {}).get('gnis_name') or 'the nearest covered reach'} {dist_txt}. "
-            f"Drainage area ratio {r.get('daRatio')} "
-            f"(limit {_fmt_ratio_limit(r.get('daRatioLimit'))})."),
+        ui.div(ui.tags.b(lead), text),
         *group_lines,
         style=("background:#fff7e0;border:1px solid #e6c96b;border-radius:6px;"
                "padding:.5rem .7rem;margin:0 0 .6rem;font-size:13px;"))
@@ -962,6 +993,9 @@ def server(input, output, session):
     base_result = reactive.value(None)     # merged delineation + report dict
     stage = reactive.value("")             # progress label
     _assess_prog = {"done": 0, "total": 0, "waiting": {}}  # shared metric-progress state (poller reads)
+    # shared delineation-progress state: the STAF site engine's stage events
+    # (walk / catchments / union / geometry / reach / metrics) for routed sites
+    _delin_prog = {"stage": None, "reaches": None, "hops": None, "family": None}
     _overrides = reactive.value({})        # {metricId: "Good"/"Fair"/"Poor"} from the worksheet
     _notes = reactive.value({})            # {metricId: note text} from the worksheet
     _geom_owned = reactive.value(set())    # metricIds whose rating is currently derived from
@@ -1087,7 +1121,8 @@ def server(input, output, session):
                 return
             with reactive.isolate():
                 if fc and fc.get("features"):
-                    _add_layer("flow", GeoJSON(data=fc, style=FLOWLINE_STYLE, name="Stream lines"))
+                    _add_layer("flow", GeoJSON(data=fc, style=FLOWLINE_STYLE,
+                                               name="StreamCat data available (NHDPlus V2)"))
                     flow_geojson.set(fc)
                 else:
                     _remove_layer("flow"); flow_geojson.set(None)
@@ -1101,7 +1136,7 @@ def server(input, output, session):
             with reactive.isolate():
                 if fc and fc.get("features"):
                     _add_layer("hrflow", GeoJSON(data=fc, style=HR_FLOWLINE_STYLE,
-                                                 name="All streams (NHDPlus HR)"))
+                                                 name="Watershed calculation required (NHDPlus HR)"))
                     hr_geojson.set(fc)
                     # Keep the V2 scoring network drawn on top of the HR layer:
                     # whichever fetch settles last would otherwise sit above.
@@ -1172,7 +1207,9 @@ def server(input, output, session):
                 route_task(res["lat"], res["lon"], tuple(hr_hit))
                 return
             ui.notification_show("You didn't click on a stream line. Zoom in and click "
-                                 "a blue stream line.", type="warning", duration=5)
+                                 "a stream line: bold blue lines have StreamCat data, "
+                                 "thin lines get a calculated watershed.",
+                                 type="warning", duration=5)
 
         # ---- HR-only stream -> deterministic surrogate routing ----
         @reactive.extended_task
@@ -1206,6 +1243,14 @@ def server(input, output, session):
                 anchor = res["anchor"]
                 clicked_s = anchor.get("clickedStream") or {}
                 scored = anchor.get("scoredReach") or {}
+                routing_block = anchor.get("routing") or {}
+                if routing_block.get("declined"):
+                    # Not a refusal under the auto policy: the exact watershed
+                    # still comes from the site engine; only reach-keyed
+                    # evidence is withheld, and the card says so.
+                    ui.notification_show(routing_block.get("declineMessage") or
+                                         "Reach-keyed evidence is unavailable here.",
+                                         type="warning", duration=9)
                 if (clicked_s.get("snapLat") is not None
                         and scored.get("snapLat") is not None):
                     seg = {"type": "FeatureCollection", "features": [{
@@ -1214,7 +1259,7 @@ def server(input, output, session):
                             [clicked_s["snapLon"], clicked_s["snapLat"]],
                             [scored["snapLon"], scored["snapLat"]]]}}]}
                     _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
-                                                name="Routed to surrogate"))
+                                                name="Nearest covered reach"))
                 s_lat = scored.get("snapLat")
                 s_lon = scored.get("snapLon")
                 if s_lat is None:
@@ -1315,7 +1360,7 @@ def server(input, output, session):
                              comid: "int | None" = None,
                              anchor: "dict | None" = None) -> dict:
         return await pipeline.delineate_only(lat, lon, reach_ft, comid=comid,
-                                             anchor=anchor)
+                                             anchor=anchor, progress=_delin_prog)
 
     @reactive.extended_task
     async def assess_task(ctx_inputs: dict, metric_ids: list, sources: dict,
@@ -1443,10 +1488,43 @@ def server(input, output, session):
             ui.notification_show("Set a point first.", type="warning", duration=3)
             return
         comid = pt[3] if pt else None
-        stage.set("Delineating basin & reach…")
-        ui.notification_show("Delineating basin & reach… please wait", id="stage",
+        for key in _delin_prog:
+            _delin_prog[key] = None
+        routed = bool((pending_anchor() or {}).get("anchorKind") == "hrSurrogate")
+        label = ("Calculating the exact watershed…" if routed
+                 else "Delineating basin & reach…")
+        stage.set(label)
+        ui.notification_show(label + " please wait", id="stage",
                              type="message", duration=None)
         delineate_task(lat, lon, float(input.reach_ft()), comid, pending_anchor())
+
+    _ENGINE_STAGE_TEXT = {
+        "site": "locating the stream", "walk": "walking upstream",
+        "catchments": "fetching catchments", "union": "building the polygon",
+        "geometry": "fetching flowlines", "reach": "trimming the reach",
+        "metrics": "computing watershed metrics", "done": "finishing",
+    }
+
+    @reactive.effect
+    def _delineate_progress_poll():
+        # While a routed site's exact watershed computes, poll the shared engine
+        # progress twice a second and narrate the stage (reaches walked, hops).
+        if delineate_task.status() != "running":
+            return
+        reactive.invalidate_later(0.5)
+        st = _delin_prog.get("stage")
+        if not st:
+            return
+        detail = _ENGINE_STAGE_TEXT.get(st, st)
+        if st == "metrics" and _delin_prog.get("family"):
+            detail += f" ({_delin_prog['family']})"
+        if _delin_prog.get("reaches") is not None:
+            detail += (f", {_delin_prog['reaches']} reaches, "
+                       f"{_delin_prog.get('hops') or 0} hops")
+        label = f"Calculating the exact watershed: {detail}"
+        stage.set(label)
+        ui.notification_show(label + ", please wait", id="stage",
+                             type="message", duration=None)
 
     @reactive.effect
     def _delineate_done():
@@ -1487,6 +1565,16 @@ def server(input, output, session):
             ui.notification_show(f"Could not draw the basin on the map: {exc}",
                                  type="error", duration=8)
             return  # keep the marker; don't advance half-rendered
+        d = res.get("delineation") or {}
+        if d.get("watershed_source") == "not-calculated":
+            # The engine failed or refused: no watershed polygon, watershed
+            # metrics unavailable, and the guidance says what to do next.
+            _remove_layer("ws")
+            guidance = next((w for w in reversed(d.get("warnings") or [])
+                             if "SFARI or DEEP" in w), None)
+            ui.notification_show(guidance or "The exact watershed could not be "
+                                 "calculated. Watershed metrics are unavailable.",
+                                 type="warning", duration=12)
         delin.set(res)
         current_step.set(STEP_BASIN)
 
@@ -1635,11 +1723,16 @@ def server(input, output, session):
                 "**How to use**\n\n"
                 "1. **Zoom in** until blue stream lines appear. **Click a stream** to "
                 "place a point, or enter coordinates, or search an address. Bold "
-                "lines are the scoring network. Thin lines are the full NHD: "
-                "clicking one scores the nearest covered reach downstream, with "
-                "the substitution labeled in the report. EASI declines to score "
-                "when that reach drains more than "
-                f"{int(routing.DA_RATIO_MAX)} times the clicked stream's area.\n"
+                "lines have StreamCat data: the StreamCat lookup engine answers "
+                "their watershed metrics in seconds. Thin lines are the rest of "
+                "the NHD: the STAF site engine calculates the exact watershed at "
+                "the clicked point, which takes about one to five minutes. On "
+                "those streams the three reach-keyed metrics (low flow, "
+                "substrate, biological integrity) come from the nearest covered "
+                "reach downstream, labeled, and are unavailable when that reach "
+                f"drains more than {int(routing.DA_RATIO_MAX)} times the clicked "
+                "stream's area. Every value in the report says which engine "
+                "produced it.\n"
                 "2. Adjust the reach length if needed, then click "
                 "**Delineate Basin and Reach**.\n"
                 "3. Review the basin, then click **Run screening**. EASI computes the "
@@ -2024,24 +2117,34 @@ def server(input, output, session):
             dist = r.get("routedDistanceFt")
             dist_txt = f"{dist:,.0f} ft" if dist is not None else "downstream"
             ratio = r.get("daRatio")
+            if r.get("declined"):
+                reach_line = ui.p(
+                    "Reach-keyed evidence (low flow, substrate, biological "
+                    "integrity) will be unavailable: the nearest covered reach "
+                    f"drains more than {_fmt_ratio_limit(r.get('daRatioLimit'))} "
+                    "times this stream, or its drainage area is unknown.",
+                    class_="easi-snap-note", style="color:#8a5a00;")
+            else:
+                reach_line = ui.p(
+                    ui.span("Reach-keyed evidence from: "),
+                    ui.tags.b(f'{scored.get("gnisName") or "(unnamed reach)"} '
+                              f'(COMID {scored.get("comid")}), {dist_txt} downstream'),
+                    class_="easi-snap-note")
             return ui.div(
-                ui.p("⚠ This stream is not in EASI's scoring network. EASI will "
-                     "score the nearest covered reach downstream.",
+                ui.p("This stream is not in the StreamCat lookup network. EASI "
+                     "will calculate the exact watershed for this stream with "
+                     "the STAF site engine. This takes about one to five minutes.",
                      class_="easi-snap-note", style="color:#8a5a00;"),
                 ui.p(ui.span("Clicked stream: "),
                      ui.tags.b(clicked_s.get("gnisName") or "(unnamed stream)"),
                      class_="easi-snap-note"),
-                ui.p(ui.span("Scored reach: "),
-                     ui.tags.b(f'{scored.get("gnisName") or "(unnamed reach)"} '
-                               f'(COMID {scored.get("comid")})'),
-                     class_="easi-snap-note"),
-                ui.p(ui.span("Routed distance: "), ui.tags.b(dist_txt),
-                     ui.span("  ·  Drainage area ratio: "),
-                     ui.tags.b(f"{ratio} (limit "
+                reach_line,
+                ui.p(ui.span("Drainage area ratio: "),
+                     ui.tags.b(f"{ratio if ratio is not None else 'unknown'} (limit "
                                f"{_fmt_ratio_limit(r.get('daRatioLimit'))})"),
                      class_="easi-snap-note"),
-                ui.p("Click “Delineate Basin and Reach” to score the surrogate "
-                     "reach, or click a different stream.",
+                ui.p("Click “Delineate Basin and Reach” to calculate the "
+                     "watershed, or click a different stream.",
                      class_="easi-snap-note ok"),
                 style=("background:#fff7e0;border:1px solid #e6c96b;"
                        "border-radius:6px;padding:.4rem .55rem;"))
@@ -2063,25 +2166,44 @@ def server(input, output, session):
             return ui.div(ui.span(label), ui.tags.b(str(val)), class_="b-row")
         anchor = res.get("siteAnchor") or {}
         anchor_rows = []
+        comid_label = "COMID"
         if anchor.get("anchorKind") == "hrSurrogate":
             clicked_s = anchor.get("clickedStream") or {}
             r = anchor.get("routing") or {}
             dist = r.get("routedDistanceFt")
-            anchor_rows = [
-                row("Scored at", "surrogate reach"),
-                row("Clicked stream", clicked_s.get("gnisName") or "(unnamed stream)"),
-                row("Routed distance",
-                    f"{dist:,.0f} ft" if dist is not None else "downstream"),
+            source = d.get("watershed_source") or ""
+            eng = d.get("watershed_engine") or {}
+            if source == "site-engine":
+                anchor_rows = [
+                    row("Watershed engine", f"STAF site engine v{eng.get('engineVersion')}"),
+                    row("Exact watershed area", f"{eng.get('areaSqkm')} km²"),
+                    row("Reaches walked", eng.get("nReaches")),
+                ]
+            elif source == "not-calculated":
+                anchor_rows = [
+                    row("Watershed engine",
+                        f"unavailable ({eng.get('reason') or 'not calculated'})"),
+                ]
+            else:
+                anchor_rows = [row("Scored at", "surrogate reach")]
+            anchor_rows += [
+                row("Reach-keyed evidence",
+                    "unavailable past the substitution limit" if r.get("declined")
+                    else (f"nearest covered reach, "
+                          f"{dist:,.0f} ft downstream" if dist is not None
+                          else "nearest covered reach")),
                 row("Drainage area ratio",
-                    f"{r.get('daRatio')} "
+                    f"{r.get('daRatio') if r.get('daRatio') is not None else 'unknown'} "
                     f"(limit {_fmt_ratio_limit(r.get('daRatioLimit'))})"),
             ]
+            if source in ("site-engine", "not-calculated"):
+                comid_label = "Evidence reach COMID"
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
             *anchor_rows,
             row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
             row("Reach length", f'{d.get("reach_length_ft")} ft'),
-            row("COMID", d.get("comid")),
+            row(comid_label, d.get("comid")),
             class_="easi-basin-card",
         )
 
@@ -2093,10 +2215,23 @@ def server(input, output, session):
             return None
         clicked_s = anchor.get("clickedStream") or {}
         d = (delin() or {}).get("delineation") or {}
+        source = d.get("watershed_source") or ""
+        r = anchor.get("routing") or {}
+        if source == "site-engine":
+            text = ("Exact watershed: watershed metrics come from the STAF site "
+                    "engine. Reach-keyed metrics "
+                    + ("are unavailable past the substitution limit."
+                       if r.get("declined") else
+                       "describe the nearest covered reach downstream."))
+        elif source == "not-calculated":
+            text = ("Exact watershed not calculated: watershed metrics are "
+                    "unavailable for this stream.")
+        else:
+            text = (f"Surrogate reach: results describe "
+                    f"{d.get('gnis_name') or 'the nearest covered reach'}, not the "
+                    f"clicked stream ({clicked_s.get('gnisName') or 'unnamed'}).")
         return ui.div(
-            f"⚠ Surrogate reach: results describe "
-            f"{d.get('gnis_name') or 'the nearest covered reach'}, not the "
-            f"clicked stream ({clicked_s.get('gnisName') or 'unnamed'}).",
+            "⚠ " + text,
             style=("background:#fff7e0;border:1px solid #e6c96b;border-radius:6px;"
                    "padding:.3rem .5rem;margin:.3rem 0;font-size:12px;"))
 

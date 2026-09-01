@@ -58,17 +58,21 @@ def test_route_payload_and_determinism(monkeypatch):
     assert r["routedDistanceFt"] and r["routedDistanceFt"] > 0
 
 
+_LEGACY = routing.POLICY_STREAMCAT_LEGACY
+
+
 def test_refusal_boundary_is_exactly_the_limit(monkeypatch):
-    # ratio == limit passes; anything above refuses.
+    # ratio == limit passes; anything above refuses under the legacy policy.
     _stub(monkeypatch, hr_rec=_hr_rec(da=1.0), snap=_SNAP_OK,
           attrs={"gnis_name": "Big Run",
                  "drainage_area_sqkm": routing.DA_RATIO_MAX * 1.0})
-    assert "anchor" in routing.route_from_hr(40.0, -83.0, _HR_SNAP)
+    res = routing.route_from_hr(40.0, -83.0, _HR_SNAP, policy=_LEGACY)
+    assert "anchor" in res and res["anchor"]["routing"]["declined"] is False
 
     _stub(monkeypatch, hr_rec=_hr_rec(da=1.0), snap=_SNAP_OK,
           attrs={"gnis_name": "Big Run",
                  "drainage_area_sqkm": routing.DA_RATIO_MAX + 0.05})
-    res = routing.route_from_hr(40.0, -83.0, _HR_SNAP)
+    res = routing.route_from_hr(40.0, -83.0, _HR_SNAP, policy=_LEGACY)
     assert res["refused"] is True
     assert res["code"] == "surrogate_da_ratio_exceeded"
     assert "limit 10" in res["message"]
@@ -77,10 +81,41 @@ def test_refusal_boundary_is_exactly_the_limit(monkeypatch):
 
 def test_missing_da_refuses_with_reason(monkeypatch):
     _stub(monkeypatch, hr_rec=_hr_rec(da=None), snap=_SNAP_OK, attrs=_ATTRS_OK)
-    res = routing.route_from_hr(40.0, -83.0, _HR_SNAP)
+    res = routing.route_from_hr(40.0, -83.0, _HR_SNAP, policy=_LEGACY)
     assert res["refused"] is True
     assert res["code"] == "surrogate_da_unavailable"
     assert res["anchor"]["routing"]["daRatio"] is None
+
+
+def test_auto_policy_declines_instead_of_refusing(monkeypatch):
+    # The default (auto) policy never refuses: past the bound the routing is
+    # declined with a code and a plain message, and the site still proceeds
+    # (the exact watershed comes from the site engine; COMID-keyed evidence
+    # is withheld).
+    _stub(monkeypatch, hr_rec=_hr_rec(da=1.0), snap=_SNAP_OK,
+          attrs={"gnis_name": "Big Run",
+                 "drainage_area_sqkm": routing.DA_RATIO_MAX + 0.05})
+    res = routing.route_from_hr(40.0, -83.0, _HR_SNAP)
+    assert "refused" not in res and "error" not in res
+    r = res["anchor"]["routing"]
+    assert r["declined"] is True
+    assert r["declineCode"] == "surrogate_da_ratio_exceeded"
+    assert "limit 10" in r["declineMessage"]
+    assert "low flow" in r["declineMessage"]
+
+    _stub(monkeypatch, hr_rec=_hr_rec(da=None), snap=_SNAP_OK, attrs=_ATTRS_OK)
+    r = routing.route_from_hr(40.0, -83.0, _HR_SNAP)["anchor"]["routing"]
+    assert r["declined"] is True and r["declineCode"] == "surrogate_da_unavailable"
+
+
+def test_policies_share_the_payload_but_not_the_note(monkeypatch):
+    _stub(monkeypatch, snap=_SNAP_OK, attrs=_ATTRS_OK)
+    auto = routing.route_from_hr(40.0, -83.0, _HR_SNAP)["anchor"]
+    legacy = routing.route_from_hr(40.0, -83.0, _HR_SNAP, policy=_LEGACY)["anchor"]
+    assert {k: v for k, v in auto.items() if k != "notes"} == \
+        {k: v for k, v in legacy.items() if k != "notes"}
+    assert auto["notes"] != legacy["notes"]
+    assert routing.WATERSHED_ENGINE_POLICIES == ("auto", "streamcat-legacy")
 
 
 def test_outage_is_retryable_error_not_an_answer(monkeypatch):

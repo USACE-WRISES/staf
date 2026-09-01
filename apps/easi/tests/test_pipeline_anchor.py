@@ -76,12 +76,16 @@ def test_ui_anchor_passes_through_and_enriches(monkeypatch):
     assert anchor["scoredReach"]["gnisName"] == "Test Creek"
 
 
+_LEGACY = routing.POLICY_STREAMCAT_LEGACY
+
+
 def test_resolved_hr_anchor_drives_surrogate_delineation(monkeypatch):
     captured: dict = {}
     monkeypatch.setattr("easi.delineation.run_delineation", _fake_delin(captured))
     monkeypatch.setattr("easi.routing.resolve_anchor",
                         lambda lat, lon, **k: {"anchor": _hr_anchor()})
-    res = asyncio.run(pipeline.delineate_only(40.0962, -83.0203, 1000.0))
+    res = asyncio.run(pipeline.delineate_only(40.0962, -83.0203, 1000.0,
+                                              watershed_engine=_LEGACY))
     assert captured["comid"] == 5215053                   # the surrogate
     assert captured["snapped_lat"] == 40.0953             # the V2 snap point
     anchor = res["siteAnchor"]
@@ -102,7 +106,8 @@ def test_refusal_is_structured_error(monkeypatch):
                                "code": "surrogate_da_ratio_exceeded",
                                "message": "EASI can't score this stream. limit 10.",
                                "anchor": declined})
-    res = asyncio.run(pipeline.delineate_only(40.0, -83.0, 1000.0))
+    res = asyncio.run(pipeline.delineate_only(40.0, -83.0, 1000.0,
+                                              watershed_engine=_LEGACY))
     assert res["status"] == "error"
     assert res["code"] == "surrogate_da_ratio_exceeded"
     assert res["retryable"] is False
@@ -147,7 +152,8 @@ def test_hr_reanchor_splits_the_ctx(monkeypatch):
                             "drainage_area_sqkm": 2.72, "huc8": "05060001",
                             "reach_geojson": hr_reach, "reach_length_ft": 954.0,
                             "_warnings": ["hr reach note"]})
-    res = asyncio.run(pipeline.delineate_only(40.0962, -83.0203, 1000.0))
+    res = asyncio.run(pipeline.delineate_only(40.0962, -83.0203, 1000.0,
+                                              watershed_engine=_LEGACY))
     ci = res["ctx_inputs"]
     assert ci["comid"] == 5215053                     # surrogate (StreamCat/NRSA)
     assert ci["watershed_geojson"] is None            # surrogate basin (fake None)

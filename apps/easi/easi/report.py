@@ -72,18 +72,46 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
     if anchor.get("anchorKind") == "hrSurrogate":
         clicked = anchor.get("clickedStream") or {}
         routing_info = anchor.get("routing") or {}
-        pairs[7:7] = [
-            ("Scored at surrogate reach", "yes"),
-            ("Clicked stream (NHDPlus HR)",
-             clicked.get("gnisName") or "(unnamed stream)"),
-            ("Clicked stream NHDPlusID", clicked.get("nhdplusId", "")),
-            ("Clicked stream drainage area (km2)",
-             shown(clicked.get("drainageAreaSqkm"))),
-            ("Routed distance (ft)", shown(routing_info.get("routedDistanceFt"))),
-            ("Drainage area ratio", shown(routing_info.get("daRatio"))),
-            ("Drainage area ratio limit", shown(routing_info.get("daRatioLimit"))),
-            ("Routing method", routing_info.get("method") or ""),
-        ]
+        source = d.get("watershed_source") or ""
+        eng = d.get("watershed_engine") or {}
+        if source in ("site-engine", "not-calculated"):
+            # The auto policy: the exact watershed answers the watershed
+            # metrics, the nearest covered reach answers COMID-keyed evidence.
+            comid_reach = ("unavailable past the substitution limit"
+                           if routing_info.get("declined")
+                           else f"COMID {d.get('comid')}")
+            engine_txt = (f"STAF site engine v{eng.get('engineVersion')}"
+                          if source == "site-engine" else
+                          f"unavailable ({eng.get('reason') or eng.get('status') or 'not calculated'})")
+            pairs[7:7] = [
+                ("Stream outside the StreamCat lookup network", "yes"),
+                ("Assessed stream (NHDPlus HR)",
+                 clicked.get("gnisName") or "(unnamed stream)"),
+                ("Assessed stream NHDPlusID", clicked.get("nhdplusId", "")),
+                ("Assessed stream drainage area (km2)",
+                 shown(clicked.get("drainageAreaSqkm"))),
+                ("Watershed engine", engine_txt),
+                ("Exact watershed area (km2)", shown(eng.get("areaSqkm"))),
+                ("Exact watershed reaches walked", shown(eng.get("nReaches"))),
+                ("COMID-keyed evidence reach", comid_reach),
+                ("Routed distance (ft)", shown(routing_info.get("routedDistanceFt"))),
+                ("Drainage area ratio", shown(routing_info.get("daRatio"))),
+                ("Drainage area ratio limit", shown(routing_info.get("daRatioLimit"))),
+                ("Routing method", routing_info.get("method") or ""),
+            ]
+        else:
+            pairs[7:7] = [
+                ("Scored at surrogate reach", "yes"),
+                ("Clicked stream (NHDPlus HR)",
+                 clicked.get("gnisName") or "(unnamed stream)"),
+                ("Clicked stream NHDPlusID", clicked.get("nhdplusId", "")),
+                ("Clicked stream drainage area (km2)",
+                 shown(clicked.get("drainageAreaSqkm"))),
+                ("Routed distance (ft)", shown(routing_info.get("routedDistanceFt"))),
+                ("Drainage area ratio", shown(routing_info.get("daRatio"))),
+                ("Drainage area ratio limit", shown(routing_info.get("daRatioLimit"))),
+                ("Routing method", routing_info.get("method") or ""),
+            ]
     return pairs + [(label, val)
                     for label, val in (rep.get("basin") or {}).get("rows", [])]
 
@@ -114,6 +142,7 @@ def build_csv(result: dict) -> bytes:
               "BiologicalCoverage", "ProvisionalCoverage"]
     if has_anchor:
         header.append("Anchor")
+        header.append("Engine")
     if has_notes:
         header.append("Notes")
     w.writerow(header)
@@ -145,6 +174,7 @@ def build_csv(result: dict) -> bytes:
                bool(rep.get("provisionalCoverage"))]
         if has_anchor:
             row.append(r.get("anchorLabel", ""))
+            row.append(r.get("engineLabel", ""))
         if has_notes:
             row.append(r.get("userNote", ""))
         w.writerow(row)
@@ -216,6 +246,7 @@ def build_geojson(result: dict) -> str:
              "retained_proxy": r.get("proxyResult")}
         if has_anchor:
             m["anchor"] = r.get("anchorLabel")
+            m["engine"] = r.get("engineLabel")
         if r.get("userNote"):
             m["note"] = r["userNote"]
         metrics[r["metricId"]] = m
@@ -344,12 +375,35 @@ def build_pdf(result: dict) -> bytes:
                     else "downstream")
         ratio = routing_info.get("daRatio")
         ratio_txt = f"{ratio}" if ratio is not None else "unknown"
-        story.append(Paragraph(
-            f"<b>Scored at a surrogate reach.</b> The clicked stream "
-            f"({clicked_name}, NHDPlus HR) is not on the scoring network. "
-            f"Results describe {d.get('gnis_name') or 'the nearest covered reach'} "
-            f"{dist_txt} on the covered network. Drainage area ratio {ratio_txt} "
-            f"(limit {routing_info.get('daRatioLimit')}).", styles["Normal"]))
+        source = d.get("watershed_source") or ""
+        eng = d.get("watershed_engine") or {}
+        if source in ("site-engine", "not-calculated"):
+            if source == "site-engine":
+                ws_txt = (f"Watershed metrics describe the exact watershed at the "
+                          f"clicked point ({eng.get('areaSqkm')} km2), computed by "
+                          f"the STAF site engine v{eng.get('engineVersion')}.")
+            else:
+                ws_txt = ("The exact watershed could not be calculated "
+                          f"({eng.get('reason') or 'not calculated'}), so the "
+                          "watershed metrics are unavailable.")
+            if routing_info.get("declined"):
+                comid_txt = ("Reach-keyed evidence is unavailable past the "
+                             "substitution limit.")
+            else:
+                comid_txt = (f"Reach-keyed evidence comes from the nearest covered "
+                             f"reach, {d.get('comid')}, {dist_txt}.")
+            story.append(Paragraph(
+                f"<b>Stream outside the StreamCat lookup network.</b> The clicked "
+                f"stream ({clicked_name}, NHDPlus HR) is assessed at the clicked "
+                f"point. {ws_txt} {comid_txt} Drainage area ratio {ratio_txt} "
+                f"(limit {routing_info.get('daRatioLimit')}).", styles["Normal"]))
+        else:
+            story.append(Paragraph(
+                f"<b>Scored at a surrogate reach.</b> The clicked stream "
+                f"({clicked_name}, NHDPlus HR) is not on the scoring network. "
+                f"Results describe {d.get('gnis_name') or 'the nearest covered reach'} "
+                f"{dist_txt} on the covered network. Drainage area ratio {ratio_txt} "
+                f"(limit {routing_info.get('daRatioLimit')}).", styles["Normal"]))
         story.append(Spacer(1, 6))
     if rep.get("provisionalCoverage"):
         story.append(Paragraph(

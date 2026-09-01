@@ -122,3 +122,111 @@ def test_capabilities_publish_the_policy():
     caps = api.capabilities()
     assert caps["defaults"]["da_ratio_max"] == routing.DA_RATIO_MAX
     assert caps["defaults"]["snap_tolerance_ft"] == routing.HR_SNAP_TOL_FT
+    assert caps["defaults"]["watershed_engine"] == "auto"
+    assert caps["watershed_engine_options"] == ["auto", "streamcat-legacy"]
+    assert caps["site_engine_version"] == "0.2.0"
+
+
+def test_batch_config_policy_round_trip():
+    assert C.BatchConfig.from_dict({}).watershed_engine == "auto"
+    legacy = C.BatchConfig(watershed_engine="streamcat-legacy")
+    assert C.BatchConfig.from_dict(legacy.to_dict()).watershed_engine == "streamcat-legacy"
+    import pytest
+    with pytest.raises(ValueError):
+        C.BatchConfig(watershed_engine="nope")
+    with pytest.raises(ValueError):
+        C.BatchConfig.from_dict({"watershed_engine": "nope"})
+
+
+def test_policy_reaches_delineate(monkeypatch):
+    seen: list = []
+
+    async def fake_delineate(lat, lon, reach_ft, comid=None, **kw):
+        seen.append(kw.get("watershed_engine"))
+        return {"status": "error", "code": "no_stream_found", "retryable": False,
+                "message": "none", "input": {}}
+    monkeypatch.setattr(api.pipeline, "delineate_only", fake_delineate)
+    monkeypatch.setattr("easi.batch.runner._RETRY_BACKOFF_S", 0.0)
+    api.run_batch_sync(C.BatchRequest(
+        sites=[C.SiteRequest("A", 40.1, -83.0)],
+        config=C.BatchConfig(watershed_engine="streamcat-legacy")))
+    api.run_batch_sync(C.BatchRequest(sites=[C.SiteRequest("B", 40.1, -83.0)]))
+    assert seen == ["streamcat-legacy", "auto"]
+
+
+def _stub_engine_pipeline(monkeypatch, *, declined: bool):
+    anchor = _hr_anchor(declined=declined)
+    anchor["routing"]["declineMessage"] = "past the limit"
+
+    async def fake_delineate(lat, lon, reach_ft, comid=None, **kw):
+        return {"status": "ok",
+                "input": {"lat": lat, "lon": lon, "reach_length_ft": reach_ft},
+                "siteAnchor": anchor,
+                "delineation": {"comid": 5215053, "gnis_name": "Little Trib",
+                                "huc8": "05060001", "huc12": None,
+                                "drainage_area_sqkm": 2.72, "snapped_lat": lat,
+                                "snapped_lon": lon, "watershed_area_sqkm": 2.61,
+                                "watershed_source": "site-engine",
+                                "watershed_engine": {
+                                    "engine": "site-engine", "engineVersion": "0.2.0",
+                                    "status": "ok", "reason": None, "nReaches": 7,
+                                    "nHops": 2, "areaSqkm": 2.61,
+                                    "vaaAreaSqkm": 2.72, "areaAgreement": 0.96},
+                                "reach_length_ft": reach_ft, "warnings": []},
+                "watershed_geojson": None, "reach_geojson": None,
+                "ctx_inputs": {"lat": lat, "lon": lon, "comid": 5215053}}
+
+    async def fake_assess(ctx_inputs, **k):
+        rep = _report()
+        rep["metricRows"] = [
+            {"metricId": "catchment-hydrology-impervious-surface-cover",
+             "name": "Impervious", "discipline": "Hydrology",
+             "functionId": "catchment-hydrology", "functionName": "Catchment hydrology",
+             "rating": "Good", "index": 0.85, "functionScore": 13, "status": "ok",
+             "engine": "site-engine", "anchorLabel": "exact watershed (STAF site engine)"},
+            {"metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
+             "name": "Low Flow", "discipline": "Hydraulics",
+             "functionId": "low-flow", "functionName": "Low flow",
+             "rating": None, "index": None, "functionScore": None,
+             "status": "unavailable", "note": "past the limit",
+             "engine": "unavailable",
+             "anchorLabel": "unavailable past the substitution limit"}]
+        return {"status": "ok", "report": rep, "huc12": "x"}
+    monkeypatch.setattr(api.pipeline, "delineate_only", fake_delineate)
+    monkeypatch.setattr(api.pipeline, "assess_only", fake_assess)
+    monkeypatch.setattr("easi.batch.runner._RETRY_BACKOFF_S", 0.0)
+
+
+def test_declined_under_auto_is_partial_not_failed(monkeypatch):
+    _stub_engine_pipeline(monkeypatch, declined=True)
+    res = api.run_batch_sync(C.BatchRequest(sites=[C.SiteRequest("A", 40.1, -83.0)]))
+    site = res.sites[0]
+    assert site.state == "partial"
+    assert not [i for i in site.issues if i.severity == "error"]
+    assert site.anchor["routing"]["declined"] is True
+    assert site.watershed_engine["status"] == "ok"
+    assert site.delineation.watershed_source == "site-engine"
+    back = C.BatchResult.from_dict(res.to_dict())
+    assert back.sites[0].watershed_engine == site.watershed_engine
+    assert back.sites[0].delineation.watershed_source == "site-engine"
+    engines = {m.metric_id: m.engine for m in back.sites[0].metrics}
+    assert engines["catchment-hydrology-impervious-surface-cover"] == "site-engine"
+
+
+def test_summary_csv_engine_columns(monkeypatch):
+    _stub_engine_pipeline(monkeypatch, declined=False)
+    res = api.run_batch_sync(C.BatchRequest(sites=[C.SiteRequest("HR", 40.1, -83.02)]))
+    rows = list(csv.reader(io.StringIO(exports._summary_csv(res))))
+    header = rows[0]
+    for col in ("watershed_engine", "engine_status", "engine_version",
+                "engine_reaches", "engine_hops", "engine_area_sqkm", "comid_evidence"):
+        assert col in header
+    data = dict(zip(header, rows[1]))
+    assert data["watershed_engine"] == "site-engine"
+    assert data["engine_status"] == "ok" and data["engine_version"] == "0.2.0"
+    assert data["engine_reaches"] == "7" and data["engine_area_sqkm"] == "2.61"
+    assert data["comid_evidence"] == "nearest covered reach"
+    metrics = list(csv.reader(io.StringIO(exports._metrics_csv(res))))
+    assert "engine" in metrics[0]
+    engine_col = metrics[0].index("engine")
+    assert {r[engine_col] for r in metrics[1:]} == {"site-engine", "unavailable"}

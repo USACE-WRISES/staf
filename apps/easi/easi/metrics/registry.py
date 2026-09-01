@@ -55,9 +55,11 @@ EXTERNAL_SERVICE = {
 # metrics derive from the HR reach's geometry/VAAs (3DEP cross-section set +
 # hyporheic); clickedPoint metrics query location services at the true clicked
 # point; surrogateComid metrics ride COMID-keyed evidence (NRSA, EPA modeled
-# indices); surrogateWatershed metrics ride the StreamCat watershed summaries.
-# One dynamic rule in assessment._annotate_anchors: a row that scored via a
-# StreamCat fallback anchors surrogateWatershed regardless of its entry here.
+# indices) on the nearest covered reach; watershed metrics ride the watershed
+# evidence layer (the STAF site engine's exact watershed under the auto policy,
+# the surrogate's StreamCat summaries under the legacy policy). One dynamic
+# rule in assessment._annotate_anchors: a row that scored via a StreamCat
+# integrity fallback anchors surrogateComid regardless of its entry here.
 METRIC_ANCHOR = {
     # clicked HR reach (geometry + VAAs of the true stream)
     hydraulics.HYPORHEIC_ID: "clickedReach",
@@ -74,16 +76,20 @@ METRIC_ANCHOR = {
     hydraulics.LOW_FLOW_ID: "surrogateComid",
     geomorphology.SUBSTRATE_ID: "surrogateComid",
     biology.BIOINTEGRITY_ID: "surrogateComid",
-    # surrogate watershed (StreamCat summaries)
-    hydrology.IMPERVIOUS_ID: "surrogateWatershed",
-    hydrology.WETLANDS_ID: "surrogateWatershed",
-    hydrology.FLOW_ALTERATION_ID: "surrogateWatershed",
-    hydrology.REACH_INFLOW_ID: "surrogateWatershed",
-    geomorphology.SEDIMENT_ID: "surrogateWatershed",
-    physicochemistry.CPOM_ID: "surrogateWatershed",
-    physicochemistry.TEMPERATURE_ID: "surrogateWatershed",
-    biology.HABITAT_ID: "surrogateWatershed",
+    # the watershed evidence layer (see easi.watershed)
+    hydrology.IMPERVIOUS_ID: "watershed",
+    hydrology.WETLANDS_ID: "watershed",
+    hydrology.FLOW_ALTERATION_ID: "watershed",
+    hydrology.REACH_INFLOW_ID: "watershed",
+    geomorphology.SEDIMENT_ID: "watershed",
+    physicochemistry.CPOM_ID: "watershed",
+    physicochemistry.TEMPERATURE_ID: "watershed",
+    biology.HABITAT_ID: "watershed",
 }
+
+# Evidence families that are StreamCat integrity components or models: a row
+# that scored through one of them is COMID-keyed whatever its metric.
+STREAMCAT_FALLBACK_FAMILIES = ("iwi_landscape", "streamcat_biological_model")
 
 # The eight watershed metrics: their inputs come from the watershed evidence
 # layer (easi.watershed), which is the StreamCat lookup engine on the covered
