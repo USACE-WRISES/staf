@@ -59,6 +59,30 @@ def test_chunk_query_failure_fails_the_call(monkeypatch):
     assert hr.catchments_by_ids([1, 2]) is None
 
 
+def test_post_chunking_sizes(monkeypatch):
+    # The walk is id-only in POST chunks of 250; geometry-bearing fetches use
+    # POST chunks of 100. Ids are counted from the IN clause.
+    calls: list[tuple] = []
+
+    def fake_chunk(url, params, timeout, escalated, **k):
+        calls.append((params["where"].count(",") + 1,
+                      params["returnGeometry"], k.get("post")))
+        return {"features": []}
+    monkeypatch.setattr(hr, "_chunk_query", fake_chunk)
+    assert hr.parents_by_dnhydroseq(list(range(1, 252))) == []
+    assert [c[0] for c in calls] == [250, 1]
+    assert all(c[1] == "false" and c[2] is True for c in calls)
+    calls.clear()
+    assert hr.flowlines_by_ids(list(range(1, 151))) == []
+    assert [c[0] for c in calls] == [100, 50]
+    assert all(c[1] == "true" for c in calls)
+    calls.clear()
+    assert hr.catchments_by_ids(list(range(1, 151))) == []
+    assert [c[0] for c in calls] == [100, 50]
+    monkeypatch.setattr(hr, "_chunk_query", lambda *a, **k: None)
+    assert hr.flowlines_by_ids([1, 2]) is None
+
+
 @pytest.mark.skipif(not _EASI.is_dir(), reason="EASI source not present")
 def test_parse_parity_with_easi():
     # The engine's record is a superset (it adds EROM qama); every field the
