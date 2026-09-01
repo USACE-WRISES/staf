@@ -64,6 +64,55 @@ def test_budget_refusal(monkeypatch):
     assert out["polygon"] is None
 
 
+def _bare(nid, hs, dn):
+    rec = _rec(nid, hs, dn)
+    rec["geometry"] = None          # a geometry-free walk record
+    return rec
+
+
+def _geometry_free_wiring(monkeypatch, lines_result):
+    parents = {(11,): [_bare(2, 12, 11), _bare(3, 13, 11)], (12, 13): []}
+    seen: list = []
+
+    def fake_parents(hs, **k):
+        seen.append(k.get("with_geometry", "missing"))
+        return parents.get(tuple(sorted(hs)), [])
+    monkeypatch.setattr(hr, "parents_by_dnhydroseq", fake_parents)
+    cats = [_sq(1, -83.00, 40.00), _sq(2, -83.01, 40.00), _sq(3, -83.00, 40.01)]
+    monkeypatch.setattr(hr, "catchments_by_ids", lambda ids, **k: cats)
+    fetched: list = []
+
+    def fake_lines(ids, **k):
+        fetched.append(list(ids))
+        return lines_result(ids)
+    monkeypatch.setattr(hr, "flowlines_by_ids", fake_lines)
+    return seen, fetched
+
+
+def test_walk_is_geometry_free_and_fetches_tree_once(monkeypatch):
+    seen, fetched = _geometry_free_wiring(
+        monkeypatch, lambda ids: [{"nhdplusid": i, "geometry": {
+            "type": "LineString",
+            "coordinates": [[-83.0, 40.0], [-83.0, 40.01]]}} for i in ids])
+    anchor = _rec(1, 11, 10)          # the anchor carries its own geometry
+    anchor["totdasqkm"] = 2.83
+    out = delineate.delineate_watershed(anchor)
+    assert out["status"] == "ok"
+    assert seen and all(v is False for v in seen)   # never asks for geometry
+    assert fetched == [[2, 3]]                       # one fetch, sorted ids
+    assert len(out["treeFlowlines"]) == 3
+
+
+def test_geometry_fetch_failure_only_warns(monkeypatch):
+    _geometry_free_wiring(monkeypatch, lambda ids: None)
+    anchor = _rec(1, 11, 10)
+    anchor["totdasqkm"] = 2.83
+    out = delineate.delineate_watershed(anchor)
+    assert out["status"] == "ok" and out["polygon"] is not None
+    assert any("riparian" in w for w in out["warnings"])
+    assert len(out["treeFlowlines"]) == 1            # the anchor only
+
+
 def test_tree_query_failure_is_failed_not_partial(monkeypatch):
     monkeypatch.setattr(hr, "parents_by_dnhydroseq", lambda hs, **k: None)
     out = delineate.delineate_watershed(_rec(1, 11, 10))

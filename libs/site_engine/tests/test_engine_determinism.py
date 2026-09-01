@@ -51,8 +51,14 @@ def _wire(monkeypatch):
     monkeypatch.setattr(dams, "post_query_features",
                         lambda url, geom, fields, **k: [])
     from site_engine.metrics import soils
-    monkeypatch.setattr(soils, "_query_kwfact",
-                        lambda wkt: [(0.37, 85.0), (0.43, 90.0)])
+    monkeypatch.setattr(soils, "_query_areas",
+                        lambda wkt: {"100": 900.0, "200": 100.0})
+    monkeypatch.setattr(soils, "_query_kwfact_by_mukey",
+                        lambda keys: {"100": [(0.37, 85.0)],
+                                      "200": [(0.43, 90.0)]})
+    # The walk carries geometry from these stubs, so the tree fetch never
+    # runs; the stub keeps a missing-geometry path off the network anyway.
+    monkeypatch.setattr(hr, "flowlines_by_ids", lambda ids, **k: [])
     # The cross-section family pulls live 3DEP rasters; replace it in the
     # registry (the registry holds the original function reference).
     import site_engine.metrics as metrics_pkg

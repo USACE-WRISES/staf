@@ -63,19 +63,50 @@ def test_roads_clip_and_density(monkeypatch):
 
 def test_dams_membership_and_storage(monkeypatch):
     feats = [
-        {"type": "Feature", "properties": {"NAME": "In", "NID_STORAGE": 120.0},
+        {"type": "Feature", "properties": {"NAME": "In", "NID_STORAGE": 120.0,
+                                           "NORMAL_STORAGE": 100.0},
          "geometry": {"type": "Point", "coordinates": [-83.05, 40.31]}},
-        {"type": "Feature", "properties": {"NAME": "Out", "NID_STORAGE": 999.0},
+        {"type": "Feature", "properties": {"NAME": "Out", "NID_STORAGE": 999.0,
+                                           "NORMAL_STORAGE": 999.0},
          "geometry": {"type": "Point", "coordinates": [-83.10, 40.31]}},
         {"type": "Feature", "properties": {"NAME": "NoStorage"},
          "geometry": {"type": "Point", "coordinates": [-83.055, 40.305]}},
     ]
-    monkeypatch.setattr(dams, "post_query_features",
-                        lambda url, geom, fields, **k: feats)
+    fields: list[str] = []
+
+    def fake(url, geom, out_fields, **k):
+        fields.append(out_fields)
+        return feats
+    monkeypatch.setattr(dams, "post_query_features", fake)
     out = dams.compute(_record(), _TREE)
+    assert "NORMAL_STORAGE" in fields[0]
     assert out["damCount"]["value"] == 2                    # "Out" excluded
-    assert out["damStorageAcreFt"]["value"] == 120.0
-    assert abs(out["damStoragePerSqkm"]["value"] - 120.0 / 3.78) < 0.01
+    # Normal storage is the StreamCat DamNrmStor analog; NID storage rides
+    # beside it under its own key.
+    assert out["damStorageAcreFt"]["value"] == 100.0
+    assert abs(out["damStoragePerSqkm"]["value"] - 100.0 / 3.78) < 0.01
+    assert out["damNidStorageAcreFt"]["value"] == 120.0
+    assert abs(out["damDensityPerSqkm"]["value"] - 2 / 3.78) < 0.001
+    assert any("without normal storage" in w
+               for w in out["damStorageAcreFt"]["warnings"])
+
+
+def test_landcover_baseline_2001(monkeypatch):
+    stats = {"imperviousPct": 5.0, "cropPct": 50.0, "hayPasturePct": 5.0,
+             "forestPct": 25.0, "shrubPct": 1.0, "grasslandPct": 2.0,
+             "woodyWetlandPct": 1.0, "herbWetlandPct": 0.5}
+    monkeypatch.setattr(landcover, "_stats_for", lambda geom: dict(stats))
+    monkeypatch.setattr(landcover, "_impervious_for",
+                        lambda geom, year: 2.5 if year == 2001 else None)
+    rec = _record()
+    rec["input"] = {"config": {"landcoverBaseline": True}}
+    out = landcover.compute(rec, _TREE)
+    assert out["imperviousPct2001Watershed"]["value"] == 2.5
+    assert out["imperviousPct2001Watershed"]["vintage"] == "2001"
+    assert out["imperviousPct2001Riparian"]["spatialSupport"] == "riparianBuffer"
+    # The default path emits no baseline keys at all.
+    out2 = landcover.compute(_record(), _TREE)
+    assert not any(k.startswith("imperviousPct2001") for k in out2)
 
 
 def test_service_failure_degrades_with_reason(monkeypatch):
