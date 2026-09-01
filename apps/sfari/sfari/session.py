@@ -4,6 +4,12 @@ Serializes a whole SFARI assessment (delineation + per-metric Likert/notes +
 per-function 0-15 scores + pulled evidence + cross-section) to a single JSON file
 so a field visit can be paused and resumed. Photos are not captured in v1 (a
 later addition), but all scores, notes, and evidence round-trip.
+
+The ``delineation`` block is the whole ``delineate_only`` result. Since
+2026-09 it may carry ``siteAnchor`` (the reach classification), ``siteEngine``
+(the geometry-stripped STAF site engine record) and ``watershedBasis``; files
+written before then lack them and every reader uses ``.get``, so the schema
+version stays 1.
 """
 from __future__ import annotations
 

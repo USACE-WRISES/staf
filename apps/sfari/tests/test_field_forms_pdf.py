@@ -231,3 +231,41 @@ def test_manifest_checksums_match_assets():
     for p in m["pages"]:
         raw = (config.DATA_DIR / "FieldForm" / p["filename"]).read_bytes()
         assert hashlib.sha256(raw).hexdigest() == p["sha256"], p["filename"]
+
+
+# --- the two watershed engines ------------------------------------------------
+DELIN_HR = {"delineation": dict(DELIN_COMID["delineation"], comid=5214461,
+                                nhdplus_id=750012345, network="nhdplus-hr"),
+            "watershedBasis": "site-engine",
+            "siteEngine": {"status": "ok", "engineVersion": "0.2.0"}}
+
+
+def test_hr_site_identity_and_filename():
+    pdf = report.build_field_forms_pdf(DELIN_HR, _mock_evidence())
+    texts, _ = _page_texts(pdf)
+    assert "NHDPlusID 750012345" in _norm(texts[0])
+    assert report.field_forms_filename(DELIN_HR) == "sfari-field-forms-nhdplusid-750012345.pdf"
+
+
+def test_engine_pending_and_labeled_entries_in_packet():
+    ev = _mock_evidence()
+    imp = "catchment-hydrology-impervious-surface-area"
+    ev[imp] = dict(_ev(imp, "Impervious 12.3% (exact watershed)",
+                       "12.3% impervious (exact watershed)",
+                       source="STAF site engine v0.2.0 (exact watershed)"),
+                   origin="engine", engine_version="0.2.0")
+    rd = "catchment-hydrology-road-density"
+    ev[rd] = dict(_ev(rd, status="pending", source="STAF site engine v0.2.0"), origin="engine")
+    wet = "surface-water-storage-wetland-coverage"
+    ev[wet] = dict(_ev(wet, "Wetland 4.1%", "4.1% wetland", source="EPA StreamCat pctwdwet+pcthbwet"),
+                   origin="streamcat",
+                   anchor_label="nearest covered reach, COMID 5214461, 1,240 ft downstream, DA ratio 1.8")
+    pdf = report.build_field_forms_pdf(DELIN_HR, ev)
+    texts, _ = _page_texts(pdf)
+    forms = _norm(" ".join(texts[:5]))
+    whole = _norm(" ".join(texts))
+    assert "Impervious 12.3% (exact watershed)" in forms
+    assert "Pending: STAF site engine running" in whole
+    assert "STAF site engine v0.2.0" in whole
+    assert "Describes: nearest covered reach, COMID 5214461" in whole
+    assert "Watershed basis" in whole and "exact watershed (STAF site engine v0.2.0)" in whole

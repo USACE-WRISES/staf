@@ -132,3 +132,23 @@ def test_load_drops_legacy_function_na():
     text = json.dumps({"function_scores": {"catchment-hydrology": {"score": 8, "na": True}}})
     st = session.load(text)
     assert st["function_scores"]["catchment-hydrology"] == {"score": 8}
+
+
+def test_delineation_engine_keys_roundtrip():
+    # Since 2026-09 the delineation block may carry the anchor, the geometry-stripped
+    # STAF site engine record, and the watershed basis. Same schema version.
+    d = dict(DELINEATION, siteAnchor={"anchorKind": "hrSurrogate"},
+             siteEngine={"status": "ok", "engineVersion": "0.2.0",
+                         "watershed": {"polygon": None, "areaSqkm": 4.19}},
+             watershedBasis="site-engine")
+    st = session.load(session.dump(d, {}, {}, {}, None))
+    assert st["delineation"]["siteEngine"]["engineVersion"] == "0.2.0"
+    assert st["delineation"]["watershedBasis"] == "site-engine"
+    assert st["delineation"]["siteAnchor"] == {"anchorKind": "hrSurrogate"}
+    assert json.loads(session.dump(d, {}, {}, {}, None))["schemaVersion"] == 1
+
+
+def test_legacy_delineation_has_no_engine_keys():
+    st = session.load(session.dump(DELINEATION, {}, {}, {}, None))
+    assert st["delineation"].get("siteEngine") is None
+    assert st["delineation"].get("watershedBasis") is None
