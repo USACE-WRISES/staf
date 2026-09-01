@@ -43,6 +43,19 @@ DA_RATIO_MAX = 10.0
 HR_SNAP_TOL_FT = 150.0
 ROUTING_METHOD = "nldi-hydrolocation-raindrop"
 
+# Watershed engine policy for streams outside the StreamCat lookup network.
+#   auto             the STAF site engine computes the exact watershed for the
+#                    eight watershed metrics; only COMID-keyed evidence rides
+#                    the labeled nearest covered reach, within the DA-ratio
+#                    bound, and the assessment completes either way.
+#   streamcat-legacy the pre-2026-09 behavior: every metric rides the nearest
+#                    covered reach and the site is refused past the bound.
+#                    StreamCurves pins its reference screen to this value so
+#                    published screening replays stay byte-identical.
+POLICY_AUTO = "auto"
+POLICY_STREAMCAT_LEGACY = "streamcat-legacy"
+WATERSHED_ENGINE_POLICIES = (POLICY_AUTO, POLICY_STREAMCAT_LEGACY)
+
 # Half-box (degrees) for the click-time HR probe around an off-network point;
 # mirrors the app's click-refetch box.
 HR_PROBE_HALF_DEG = 0.012

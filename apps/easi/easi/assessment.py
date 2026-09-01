@@ -12,16 +12,21 @@ from typing import Optional
 
 import anyio
 
-from . import basin, bieger, config, scoring, screening_methods
+from . import basin, bieger, config, scoring, screening_methods, watershed
 from .datasources import nlcd, nrsa, streamcat, threedep, wbd
 from .metrics import registry
 from .metrics.base import AnalysisContext, MetricResult, unavailable
 
 VALID = {"Good", "Fair", "Poor"}
+WATERSHED_METRIC_IDS = registry.WATERSHED_METRIC_IDS
 
 
 async def _to_thread(fn, *args):
     return await anyio.to_thread.run_sync(fn, *args)
+
+
+async def _empty() -> dict:
+    return {}
 
 
 async def assess(ctx: AnalysisContext, *,
@@ -57,9 +62,12 @@ async def assess(ctx: AnalysisContext, *,
     bf = bieger.bankfull_geometry(ctx.drainage_area_sqkm, ctx.lat, ctx.lon)
 
     # --- prefetch shared data concurrently (off the event loop) ---
+    # The NLCD outage fallback belongs to the StreamCat lookup engine; a run
+    # the STAF site engine answered (or failed to answer) never pulls it.
     sc, lc, huc12, geom, nrsa_record = await asyncio.gather(
         _to_thread(streamcat.metrics_by_comid, ctx.comid, registry.STREAMCAT_NAMES),
-        _to_thread(nlcd.watershed_landcover, ctx.watershed_geojson),
+        (_to_thread(nlcd.watershed_landcover, ctx.watershed_geojson)
+         if watershed.wants_nlcd_fallback(ctx) else _empty()),
         _to_thread(wbd.huc12_at_point, ctx.lat, ctx.lon),
         _to_thread(lambda: threedep.reach_geomorphology(
             ctx.reach_geojson, ctx.drainage_area_sqkm,
@@ -69,6 +77,9 @@ async def assess(ctx: AnalysisContext, *,
     )
     ctx.extras["streamcat"] = sc
     ctx.extras["landcover"] = lc
+    # The watershed evidence layer: which engine answers the eight watershed
+    # metrics, with its values and labels (see easi.watershed).
+    ctx.extras["watershed"] = watershed.build(ctx, sc)
     ctx.huc12 = huc12
     if isinstance(geom, dict):
         # Bieger fit-range flag rides the geometry block so the cross-section
@@ -112,93 +123,144 @@ async def assess(ctx: AnalysisContext, *,
     # --- build rows for all 20 metrics + collect ratings ---
     meta_by_id = config.metrics_by_id()
     reg = config.METRIC_REGISTRY
-    rows: list[dict] = []
-    for mid, meta in meta_by_id.items():
-        info = reg.get(mid, {})
-        catalog_method = screening_methods.method_for(mid)
-        res = by_id.get(mid)
-        if res is not None:
-            generated, source, value_text = res.rating, res.source, res.value_text
-            status, confidence, note = res.status, res.confidence, res.note
-            scoring_trace = res.scoring
-        elif mid in registry.REGISTRY and mid not in selected:
-            generated, source, value_text = None, "", "not included in this analysis"
-            status, confidence = "excluded", info.get("confidence", "L")
-            note = "excluded from this analysis"
-            scoring_trace = None
-        else:
-            generated, source, value_text = None, "", "not available"
-            status, confidence = "pending", info.get("confidence", "L")
-            note = "metric adapter not yet implemented"
-            scoring_trace = None
-
-        rating = generated
-        generated_value_text = value_text
-        effective_override = None
-        if mid in overrides and status != "excluded":  # user override wins
-            rating = overrides[mid]
-            status, source = "override", "user override"
-            value_text = f"user-provided: {rating}"
-            note = "overrides generated value"
-            effective_override = {
-                "rating": rating,
-                "generatedRating": generated,
-                "generatedValueText": generated_value_text,
-            }
-
-        idx = fscore = None
-        if rating in VALID:
-            idx = scoring.rating_to_index(rating, meta.get("indexMidpoints"))
-            fscore = scoring.function_score(idx)
-
-        # ``detail`` remains presentation-only. The scoring contract lives in the
-        # dedicated trace and is preserved even when a user overrides the result.
-        detail = res.detail if res else None
-        land_cover = detail if (detail and "governing" in detail) else None
-        rip_veg = detail if (detail and detail.get("kind") == "riparian_veg") else None
-        method = screening_methods.method_for_trace(mid, scoring_trace)
-        method_criteria = screening_methods.criteria_for(
-            method, (scoring_trace or {}).get("context") or {})
-        automated = method_criteria.get("automated") or []
-        bands = dict(automated[0].get("bands") or {}) if len(automated) == 1 else {}
-        rows.append({
-            # ``name`` stays the STAF metric name shared with SFARI/DEEP and the site's
-            # metric library; ``methodTitle`` carries the revised automated-method identity
-            # (e.g. "Thermal-regulation vulnerability") for the Scoring method panel.
-            "metricId": mid, "name": meta["name"], "discipline": meta["discipline"],
-            "methodTitle": catalog_method["title"],
-            "functionId": meta["functionId"], "functionName": meta["functionName"],
-            "scale": info.get("scale"), "confidence": confidence,
-            "rating": rating, "generatedRating": generated,
-            "generatedValueText": generated_value_text,
-            "index": round(idx, 3) if idx is not None else None,
-            "functionScore": fscore, "valueText": value_text,
-            "criteria": bands.get(rating, "") if rating in VALID else "",
-            "criteriaBands": bands,
-            "methodCriteria": method_criteria,
-            "methodKey": method["methodKey"],
-            "methodKind": method["operator"],
-            "basisClass": method["basisClass"],
-            "sourceTier": (scoring_trace or {}).get("sourceTier"),
-            "evidenceFamily": (scoring_trace or {}).get("evidenceFamily"),
-            "usedFallback": bool((scoring_trace or {}).get("usedFallback")),
-            "observedOverridesProxy": bool(
-                (scoring_trace or {}).get("observedOverridesProxy")),
-            "completeness": ((scoring_trace or {}).get("completeness")
-                             or ("not_assessed" if rating is None else "complete")),
-            "scoring": scoring_trace,
-            "effectiveOverride": effective_override,
-            "landCover": land_cover,
-            "ripVeg": rip_veg,
-            "source": source, "status": status, "note": note,
-            "overrideable": bool(info.get("overrideable")),
-        })
+    rows: list[dict] = [
+        _build_row(mid, meta, reg.get(mid, {}), by_id.get(mid),
+                   selected=selected, overrides=overrides)
+        for mid, meta in meta_by_id.items()
+    ]
 
     _annotate_anchors(rows, ctx.extras.get("siteAnchor"))
     result = _finalize(rows, len(meta_by_id), overrides)
     if cross_section:
         result["crossSection"] = cross_section
     result["basin"] = basin.basin_characteristics(ctx)
+    return result
+
+
+def _build_row(mid: str, meta: dict, info: dict, res: Optional[MetricResult], *,
+               selected: set, overrides: dict) -> dict:
+    """One report row from an adapter result (or its absence).
+
+    Pure code motion from the ``assess`` row loop so ``recompute_watershed_rows``
+    can rebuild single rows with identical shape.
+    """
+    catalog_method = screening_methods.method_for(mid)
+    if res is not None:
+        generated, source, value_text = res.rating, res.source, res.value_text
+        status, confidence, note = res.status, res.confidence, res.note
+        scoring_trace = res.scoring
+    elif mid in registry.REGISTRY and mid not in selected:
+        generated, source, value_text = None, "", "not included in this analysis"
+        status, confidence = "excluded", info.get("confidence", "L")
+        note = "excluded from this analysis"
+        scoring_trace = None
+    else:
+        generated, source, value_text = None, "", "not available"
+        status, confidence = "pending", info.get("confidence", "L")
+        note = "metric adapter not yet implemented"
+        scoring_trace = None
+
+    rating = generated
+    generated_value_text = value_text
+    effective_override = None
+    if mid in overrides and status != "excluded":  # user override wins
+        rating = overrides[mid]
+        status, source = "override", "user override"
+        value_text = f"user-provided: {rating}"
+        note = "overrides generated value"
+        effective_override = {
+            "rating": rating,
+            "generatedRating": generated,
+            "generatedValueText": generated_value_text,
+        }
+
+    idx = fscore = None
+    if rating in VALID:
+        idx = scoring.rating_to_index(rating, meta.get("indexMidpoints"))
+        fscore = scoring.function_score(idx)
+
+    # ``detail`` remains presentation-only. The scoring contract lives in the
+    # dedicated trace and is preserved even when a user overrides the result.
+    detail = res.detail if res else None
+    land_cover = detail if (detail and "governing" in detail) else None
+    rip_veg = detail if (detail and detail.get("kind") == "riparian_veg") else None
+    method = screening_methods.method_for_trace(mid, scoring_trace)
+    method_criteria = screening_methods.criteria_for(
+        method, (scoring_trace or {}).get("context") or {})
+    automated = method_criteria.get("automated") or []
+    bands = dict(automated[0].get("bands") or {}) if len(automated) == 1 else {}
+    return {
+        # ``name`` stays the STAF metric name shared with SFARI/DEEP and the site's
+        # metric library; ``methodTitle`` carries the revised automated-method identity
+        # (e.g. "Thermal-regulation vulnerability") for the Scoring method panel.
+        "metricId": mid, "name": meta["name"], "discipline": meta["discipline"],
+        "methodTitle": catalog_method["title"],
+        "functionId": meta["functionId"], "functionName": meta["functionName"],
+        "scale": info.get("scale"), "confidence": confidence,
+        "rating": rating, "generatedRating": generated,
+        "generatedValueText": generated_value_text,
+        "index": round(idx, 3) if idx is not None else None,
+        "functionScore": fscore, "valueText": value_text,
+        "criteria": bands.get(rating, "") if rating in VALID else "",
+        "criteriaBands": bands,
+        "methodCriteria": method_criteria,
+        "methodKey": method["methodKey"],
+        "methodKind": method["operator"],
+        "basisClass": method["basisClass"],
+        "sourceTier": (scoring_trace or {}).get("sourceTier"),
+        "evidenceFamily": (scoring_trace or {}).get("evidenceFamily"),
+        "usedFallback": bool((scoring_trace or {}).get("usedFallback")),
+        "observedOverridesProxy": bool(
+            (scoring_trace or {}).get("observedOverridesProxy")),
+        "completeness": ((scoring_trace or {}).get("completeness")
+                         or ("not_assessed" if rating is None else "complete")),
+        "scoring": scoring_trace,
+        "effectiveOverride": effective_override,
+        "landCover": land_cover,
+        "ripVeg": rip_veg,
+        "source": source, "status": status, "note": note,
+        "overrideable": bool(info.get("overrideable")),
+    }
+
+
+def recompute_watershed_rows(report: dict, ctx: AnalysisContext, *,
+                             metric_ids=None) -> dict:
+    """Re-run the watershed adapters on ``ctx`` and rebuild their rows.
+
+    Every other row is carried through unchanged, then the anchors and the
+    rollup are rebuilt. With the same ``ctx`` the result reproduces ``report``;
+    with an engine watershed layer on ``ctx.extras`` it answers the question
+    the score-level equivalence study asks (what changes when the STAF site
+    engine, not the StreamCat lookup engine, supplies the watershed inputs).
+    Synchronous: adapters run inline.
+    """
+    ids = set(metric_ids or WATERSHED_METRIC_IDS)
+    meta_by_id = config.metrics_by_id()
+    reg = config.METRIC_REGISTRY
+    by_row = {r["metricId"]: r for r in report.get("metricRows", [])}
+    overrides_applied = set(report.get("overridesApplied") or [])
+    rows: list[dict] = []
+    for mid, meta in meta_by_id.items():
+        base_row = by_row.get(mid)
+        if (mid in ids and mid in registry.REGISTRY and base_row is not None
+                and base_row.get("status") != "excluded"):
+            try:
+                res = registry.REGISTRY[mid](ctx)
+            except Exception as exc:  # noqa: BLE001 - mirror assess()
+                res = unavailable(mid, f"adapter error: {exc}",
+                                  reg.get(mid, {}).get("confidence", "L"))
+            overrides = ({mid: base_row.get("rating")}
+                         if mid in overrides_applied else {})
+            rows.append(_build_row(mid, meta, reg.get(mid, {}), res,
+                                   selected={mid}, overrides=overrides))
+        elif base_row is not None:
+            rows.append(dict(base_row))
+    _annotate_anchors(rows, ctx.extras.get("siteAnchor"))
+    result = _finalize(rows, report.get("totalCount", len(meta_by_id)),
+                       overrides_applied)
+    for key in ("crossSection", "basin"):
+        if report.get(key):
+            result[key] = report[key]
     return result
 
 
