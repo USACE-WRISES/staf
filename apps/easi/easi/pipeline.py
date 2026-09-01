@@ -33,7 +33,9 @@ async def delineate_only(lat: float, lon: float,
                          reach_length_ft: float = DEFAULT_REACH_FT,
                          comid: Optional[int] = None,
                          anchor: Optional[dict] = None,
-                         snap_tolerance_ft: float = routing.HR_SNAP_TOL_FT) -> dict:
+                         snap_tolerance_ft: float = routing.HR_SNAP_TOL_FT,
+                         *, watershed_engine: str = routing.POLICY_AUTO,
+                         progress: Optional[dict] = None) -> dict:
     """Snap -> upstream watershed + reach (no metrics).
 
     When ``comid`` is given (the user clicked an NHD flowline vector), delineation
@@ -47,8 +49,15 @@ async def delineate_only(lat: float, lon: float,
     ``{"status": "error", "code": "surrogate_da_ratio_exceeded" | ...}`` with the
     partial anchor attached. Returns a JSON-serializable dict with the
     delineation, map overlays, and the ``ctx_inputs`` needed to assess later; or
-    ``{"status": "error", ...}``.
+    ``{"status": "error", ...}``. ``watershed_engine`` is the policy for
+    streams outside the StreamCat lookup network (``routing.POLICY_AUTO`` or
+    ``routing.POLICY_STREAMCAT_LEGACY``); ``progress`` is an optional shared
+    dict the engine run updates for the UI.
     """
+    if watershed_engine not in routing.WATERSHED_ENGINE_POLICIES:
+        return _error(f"unknown watershed engine policy {watershed_engine!r}",
+                      lat, lon, reach_length_ft, code="invalid_request",
+                      retryable=False)
     site_anchor = anchor
     if comid is None and site_anchor is None:
         try:
@@ -143,6 +152,7 @@ async def delineate_only(lat: float, lon: float,
         "reach_geojson": d.reach_geojson, "drainage_area_sqkm": d.drainage_area_sqkm,
         "slope": d.slope, "fcode": d.fcode, "stream_order": d.stream_order,
         "sinuosity": d.sinuosity, "siteAnchor": site_anchor,
+        "watershedPolicy": watershed_engine,
     }
     out_reach = d.reach_geojson
     out_reach_len = d.reach_length_ft
@@ -186,6 +196,8 @@ def _ctx_from_inputs(ci: dict) -> AnalysisContext:
         sinuosity=ci.get("sinuosity"))
     if ci.get("siteAnchor"):
         ctx.extras["siteAnchor"] = ci["siteAnchor"]
+    if ci.get("watershedEngine"):
+        ctx.extras["watershedEngine"] = ci["watershedEngine"]
     return ctx
 
 

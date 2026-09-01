@@ -85,6 +85,16 @@ METRIC_ANCHOR = {
     biology.HABITAT_ID: "surrogateWatershed",
 }
 
+# The eight watershed metrics: their inputs come from the watershed evidence
+# layer (easi.watershed), which is the StreamCat lookup engine on the covered
+# network and the STAF site engine on streams outside it.
+WATERSHED_METRIC_IDS = (
+    hydrology.IMPERVIOUS_ID, hydrology.WETLANDS_ID,
+    hydrology.FLOW_ALTERATION_ID, hydrology.REACH_INFLOW_ID,
+    geomorphology.SEDIMENT_ID, physicochemistry.CPOM_ID,
+    physicochemistry.TEMPERATURE_ID, biology.HABITAT_ID,
+)
+
 # StreamCat base metric names needed by the registered adapters (one batched call
 # returns ws / cat / wsrp100 / catrp100 variants for each).
 STREAMCAT_NAMES = [
