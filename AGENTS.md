@@ -34,6 +34,7 @@ Primary working areas:
 6) Keep changes accessible (keyboard behavior, readable labels, semantic markup where practical).
 7) Run app tests per app from that app's own directory (never from the repo root — the four pytest suites collide). Use the shared root `.venv` (Python 3.12, `requirements-dev.txt`).
 8) Never delete or commit `.posit/publish/deployments/` records — they keep the public app URLs stable. App URL changes must be mirrored in `docs/_data/apps.yml` and each app's `STAF_LINKS` dict.
+9) Commit messages and PR descriptions carry no AI co-author or attribution trailers (no `Co-Authored-By` lines for Claude, Codex, or any other agent); GitHub credits co-authors as contributors.
 
 ## Data and Build Expectations
 1) Do not manually edit generated outputs when a script is the canonical producer; run the generator.
