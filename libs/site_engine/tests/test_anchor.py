@@ -188,8 +188,13 @@ def test_payload_parity_with_easi_routing(monkeypatch):
         monkeypatch.setattr(routing.delineation, "flowline_attrs",
                             lambda comid: dict(attrs))
         _stub(monkeypatch, hr_rec=hr_rec, snap=snap, attrs=attrs)
+        # EASI's auto policy returns the same payload; its legacy policy is the
+        # only one that still answers with the refusal dict.
         theirs = routing.route_from_hr(40.0, -83.0, _HR_HIT)
+        legacy = routing.route_from_hr(40.0, -83.0, _HR_HIT,
+                                       policy=routing.POLICY_STREAMCAT_LEGACY)
         ours = anchor.route_from_hr(40.0, -83.0, _HR_HIT)["anchor"]
         expected = theirs["anchor"]
         assert strip(ours) == strip(expected)
-        assert ours["routing"]["declined"] == bool(theirs.get("refused"))
+        assert ours["routing"]["declined"] == bool(legacy.get("refused"))
+        assert ours["routing"]["declined"] == bool(expected["routing"].get("declined"))
