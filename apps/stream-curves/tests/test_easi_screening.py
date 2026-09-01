@@ -184,7 +184,6 @@ def test_screen_sites_direct_async_runs_with_stubbed_engine(monkeypatch):
     def on_event(stage, site_id, info):
         if stage == "site_done":
             ticks["n"] += 1
-        calls["config"] = None
 
     async def spy_run_batch(request, *, on_event=None, cancel=None):
         calls["config"] = request.config
