@@ -1,15 +1,20 @@
 """NHDPlus HR service client for the site engine.
 
 Flowline attributes/geometry, upstream-tree parent queries (``dnhydroseq``),
-and catchment polygons, all against the NHDPlus_HR MapServer. Self-contained
-(the engine is vendored into apps that must not import ``libs/`` at runtime);
-``parse_feature`` keeps identical semantics to EASI's
-``easi/datasources/nhd_hr.py`` and a parity test guards that when the EASI
-source tree is present.
+tree flowline geometries by id, and catchment polygons, all against the
+NHDPlus_HR MapServer. Self-contained (the engine is vendored into apps that
+must not import ``libs/`` at runtime); ``parse_feature`` keeps identical
+semantics to EASI's ``easi/datasources/nhd_hr.py`` and a parity test guards
+that when the EASI source tree is present.
 
-Style contract shared with the STAF datasources: helpers never raise — they
+Style contract shared with the STAF datasources: helpers never raise; they
 return ``None`` (or empty lists) on failure, and callers degrade with recorded
 reasons. Results are cached in-process where re-use is likely.
+
+Query shapes (0.2.0): the upstream walk asks for ids and hydroseqs only, in
+POST chunks of ``_WALK_CHUNK`` ids; geometry-bearing fetches (tree flowlines,
+catchments) use POST chunks of ``_GEOM_CHUNK``. The 0.1.0 walk carried
+geometry in GET chunks of 40, which cost about five seconds per reach.
 """
 from __future__ import annotations
 
@@ -27,8 +32,11 @@ SLOPE_SENTINEL = -9998.0
 _ATTR_FIELDS = ("nhdplusid", "gnis_name", "reachcode", "lengthkm", "totdasqkm",
                 "slope", "fcode", "ftype", "streamorde", "hydroseq",
                 "uphydroseq", "dnhydroseq", "vpuid", "innetwork", "qama")
-# Batched IN-clause size: keeps the GET URL well under server limits.
+# Batched IN-clause sizes. GET chunks stay small (URL length); POST chunks are
+# bounded by the layer's 2000-record cap on the answer, not by the request.
 _CHUNK = 40
+_WALK_CHUNK = 250
+_GEOM_CHUNK = 100
 
 
 def _request(url: str, params: dict, timeout: float, retries: int = 1
@@ -36,6 +44,22 @@ def _request(url: str, params: dict, timeout: float, retries: int = 1
     for attempt in range(retries + 1):
         try:
             r = requests.get(url, params=params, timeout=timeout)
+            if r.status_code == 200:
+                data = r.json()
+                if isinstance(data, dict) and "error" not in data:
+                    return data
+        except Exception:  # noqa: BLE001 - resilience by design
+            pass
+        time.sleep(0.5 * (attempt + 1))
+    return None
+
+
+def _request_post(url: str, params: dict, timeout: float, retries: int = 1
+                  ) -> Optional[dict]:
+    """POST form of ``_request`` (long IN clauses never hit URL limits)."""
+    for attempt in range(retries + 1):
+        try:
+            r = requests.post(url, data=params, timeout=timeout)
             if r.status_code == 200:
                 data = r.json()
                 if isinstance(data, dict) and "error" not in data:
@@ -185,46 +209,74 @@ def _chunks(values: Iterable[int], size: int = _CHUNK):
 
 
 def _chunk_query(url: str, params: dict, timeout: float,
-                 escalated_timeout: float) -> Optional[dict]:
+                 escalated_timeout: float, *, post: bool = False
+                 ) -> Optional[dict]:
     """One batched chunk with a second, longer-timeout pass before giving up.
 
     The 2026-08-29 acceptance panel lost 5 of 14 sites to single chunk
     timeouts on multi-hop walks while every completed union agreed exactly
     with the published area, so failures here are worth real patience. A
-    chunk that exhausts both passes still fails the whole call — the caller's
+    chunk that exhausts both passes still fails the whole call: the caller's
     invariant is a complete tree or None, never a silently partial one.
     """
-    data = _request(url, params, timeout=timeout, retries=2)
+    fetch = _request_post if post else _request
+    data = fetch(url, params, timeout=timeout, retries=2)
     if data is None:
-        data = _request(url, params, timeout=escalated_timeout, retries=1)
+        data = fetch(url, params, timeout=escalated_timeout, retries=1)
     if data is None or _exceeded(data):
         return None
     return data
 
 
-def parents_by_dnhydroseq(hydroseqs: list[int], *, with_geometry: bool = True,
+def parents_by_dnhydroseq(hydroseqs: list[int], *, with_geometry: bool = False,
                           timeout: float = 60.0,
                           escalated_timeout: float = 120.0
                           ) -> Optional[list[dict]]:
     """All reaches whose downstream hydroseq is in ``hydroseqs`` (one BFS level).
 
     Includes tributaries and divergences, which is what the upstream TREE walk
-    needs. Returns None on any chunk failure (the caller must treat the tree
-    as incomplete, never silently partial).
+    needs. Geometry-free by default (the walk only needs ids and hydroseqs);
+    pass ``with_geometry=True`` for a geometry-bearing level. Returns None on
+    any chunk failure (the caller must treat the tree as incomplete, never
+    silently partial).
     """
     out: list[dict] = []
-    for chunk in _chunks(hydroseqs):
+    size = _GEOM_CHUNK if with_geometry else _WALK_CHUNK
+    for chunk in _chunks(hydroseqs, size):
         where = "dnhydroseq IN (" + ",".join(str(x) for x in chunk) + ")"
         data = _chunk_query(FLOWLINE_QUERY_URL, {
             "where": where, "outFields": ",".join(_ATTR_FIELDS),
             "returnGeometry": str(with_geometry).lower(), "outSR": "4326",
-            "f": "geojson"}, timeout, escalated_timeout)
+            "f": "geojson"}, timeout, escalated_timeout, post=True)
         if data is None:
             return None
         for f in data.get("features") or []:
             rec = parse_feature(f)
             if rec:
                 out.append(rec)
+    return out
+
+
+def flowlines_by_ids(nhdplusids: list[int], timeout: float = 60.0,
+                     escalated_timeout: float = 120.0
+                     ) -> Optional[list[dict]]:
+    """Flowline geometries for the given reach ids (one fetch for a whole
+    tree). Returns ``[{"nhdplusid", "geometry"}]`` for the features that
+    carry geometry, or None on any chunk failure."""
+    out: list[dict] = []
+    for chunk in _chunks(nhdplusids, _GEOM_CHUNK):
+        where = "nhdplusid IN (" + ",".join(str(x) for x in chunk) + ")"
+        data = _chunk_query(FLOWLINE_QUERY_URL, {
+            "where": where, "outFields": "nhdplusid",
+            "returnGeometry": "true", "outSR": "4326", "f": "geojson"},
+            timeout, escalated_timeout, post=True)
+        if data is None:
+            return None
+        for f in data.get("features") or []:
+            nid = _int_id((f.get("properties") or {}).get("nhdplusid"))
+            if nid is None or not f.get("geometry"):
+                continue
+            out.append({"nhdplusid": nid, "geometry": f["geometry"]})
     return out
 
 
@@ -238,12 +290,12 @@ def catchments_by_ids(nhdplusids: list[int], timeout: float = 90.0,
     reaches exist in the HR fabric).
     """
     out: list[dict] = []
-    for chunk in _chunks(nhdplusids):
+    for chunk in _chunks(nhdplusids, _GEOM_CHUNK):
         where = "nhdplusid IN (" + ",".join(str(x) for x in chunk) + ")"
         data = _chunk_query(CATCHMENT_QUERY_URL, {
             "where": where, "outFields": "nhdplusid,areasqkm",
             "returnGeometry": "true", "outSR": "4326", "f": "geojson"},
-            timeout, escalated_timeout)
+            timeout, escalated_timeout, post=True)
         if data is None:
             return None
         for f in data.get("features") or []:
