@@ -16,7 +16,7 @@ STAF (Stream Tiered Assessment Framework) is a monorepo with two kinds of delive
 | `apps/deep` | Detailed | Runs curve-based detailed assessments (predefined or uploaded `.deep.json` bundles) |
 | `apps/stream-curves` | Detailed (builder) | Builds reference/regional curves and exports `.deep.json` assessment bundles for DEEP |
 
-The site's Tools page is the app launch portal; app URLs live in `docs/_data/apps.yml` **and** in each app's `STAF_LINKS` dict — a URL change must be mirrored in both until a shared `staf-core` package exists (planned home: `libs/`).
+The site's Tools page is the app launch portal; app URLs live in `docs/_data/apps.yml` **and** in each app's `STAF_LINKS` dict — a URL change must be mirrored in both. Watershed metrics come from two engines, named once (`libs/README.md`, `docs/computation-engines.md`): the **StreamCat lookup engine** (token `streamcat`, EPA StreamCat by NHDPlus V2 COMID) and the **STAF site engine** (token `site-engine`, `libs/site_engine`, the exact point watershed on NHDPlus HR), vendored per app and never a user-facing method choice.
 
 3. **STAF Desktop** (`desktop/`): a C#/.NET 10 WinForms + WebView2 shell that runs the *same four apps* locally from a self-managed payload (relocatable python-build-standalone + the apps tree, downloaded from GitHub Releases). Velopack packages it as a per-user `Setup.exe` and a self-updating portable zip. The only app-code concession to desktop is the `STAF_LINKS_OVERRIDES` env merge after each `STAF_LINKS` dict. See `desktop/RELEASING.md` for the release model.
 
@@ -41,7 +41,7 @@ desktop/src/Staf.Desktop/          Thin WinForms host (launcher + per-app window
 desktop/launcher/                  Launcher page (vanilla HTML/CSS/JS, ships in the app)
 desktop/payload/                   env.lock + pbs.lock + prune.txt — inputs that define the env payload
 desktop/scripts/                   Payload build scripts (PowerShell/Python) — MUST stay pure ASCII
-libs/                              Reserved for the future staf-core shared package
+libs/                              Shared packages, vendored per app (libs/site_engine = the STAF site engine)
 scripts/                           TS build scripts (compileMetricLibraryFromCsv, buildMetricIndex, tests)
 src/lib/metricLibrary/             TS types, Zod schemas, data loaders
 notes/                             Internal dev notes — never published (outside docs/)
@@ -92,3 +92,5 @@ dotnet run --project desktop\src\Staf.Desktop    # or launch the built StafDeskt
 9. **`desktop/scripts/*.ps1` must stay pure ASCII** — PowerShell 5.1 reads BOM-less files as CP-1252, where UTF-8 em-dash bytes decode into smart quotes that PS honors as string delimiters, silently restructuring code
 10. **After changing any `apps/*/requirements.txt` pin, regenerate `desktop/payload/env.lock`** (command in `desktop/RELEASING.md`) — CI's consistency gate fails otherwise
 11. **After publishing an assessment library version, re-bake DEEP and commit both** — StreamCurves' Publish writes `apps/library/` and runs `apps/deep/scripts/bake_library_into_deep.py` (folding the latest into `apps/deep/data/deep-assessments.json`). Commit `apps/library/**` **and** `apps/deep/data/**`, then redeploy DEEP, so the cloud DEEP ships the new latest (it can't read `apps/library/` at runtime). Publishing is local/desktop only
+12. **Re-vendor after any engine or EASI source change, never hand-edit `_vendor/`** — `libs/site_engine` is copied into each app by that app's `scripts/vendor_site_engine.py` (order: libs, then easi, then sfari and deep, then stream-curves' site engine, then stream-curves' `vendor_easi_engine.py`, which carries EASI's nested engine copy); every app has a drift-gate test that goes red until the copy matches
+13. **Engine vocabulary: display names change, tokens never do** — user-visible text says "StreamCat lookup engine" and "STAF site engine" (from the vendored `naming` module); the tokens `streamcat` / `site-engine` / `streamcat-legacy` ride digests, bundles, manifests, the CLI, and YAML and are immutable

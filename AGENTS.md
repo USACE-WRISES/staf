@@ -16,7 +16,7 @@ Primary working areas:
 - `scripts/`: build/transform scripts (for example, metric-library generation)
 - `apps/easi`, `apps/sfari`, `apps/deep`, `apps/stream-curves`: the Shiny apps (each self-contained: own requirements.txt, www/, data/, tests/, `.posit/publish` deploy config)
 - `desktop/`: STAF Desktop shell (C#/.NET 10 + WebView2 + Velopack) that runs the same apps locally; release model in `desktop/RELEASING.md`. Payload/release rules: `desktop-payload-*` and `desktop-current` GitHub releases are ALWAYS prereleases; `desktop/scripts/*.ps1` stay pure ASCII; after changing an app requirements pin, regenerate `desktop/payload/env.lock`
-- `libs/`: reserved for the future `staf-core` shared package
+- `libs/`: shared packages vendored per app, never imported across folders at runtime. `libs/site_engine` is the STAF site engine (the exact point watershed on NHDPlus HR); the StreamCat lookup engine (EPA StreamCat by NHDPlus V2 COMID) is the other watershed engine. Both are defined in `libs/README.md` and `docs/computation-engines.md`
 
 ## Goals
 1) Keep the site stable, readable, and fast for end users.
@@ -35,6 +35,7 @@ Primary working areas:
 7) Run app tests per app from that app's own directory (never from the repo root — the four pytest suites collide). Use the shared root `.venv` (Python 3.12, `requirements-dev.txt`).
 8) Never delete or commit `.posit/publish/deployments/` records — they keep the public app URLs stable. App URL changes must be mirrored in `docs/_data/apps.yml` and each app's `STAF_LINKS` dict.
 9) Commit messages and PR descriptions carry no AI co-author or attribution trailers (no `Co-Authored-By` lines for Claude, Codex, or any other agent); GitHub credits co-authors as contributors.
+10) Re-vendor after any engine or EASI source change and never hand-edit a `_vendor/` tree (each app's `scripts/vendor_site_engine.py`, then StreamCurves' `vendor_easi_engine.py`; the drift-gate tests stay red until the copies match). Engine display names ("StreamCat lookup engine", "STAF site engine") come from the vendored `naming` module; the tokens `streamcat` / `site-engine` / `streamcat-legacy` in digests, bundles, manifests, the CLI, and YAML are immutable.
 
 ## Data and Build Expectations
 1) Do not manually edit generated outputs when a script is the canonical producer; run the generator.

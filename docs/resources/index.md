@@ -14,7 +14,7 @@ Curated downloads and links are listed below. Replace placeholders with real doc
 
 ## Screening Tier (Desktop Metrics)
 - Screening metrics list (placeholder)
-- GIS workflow scripts (placeholder)
+- [Computation Engines]({{ site.baseurl }}/computation-engines/): the StreamCat lookup engine and the STAF site engine, which tier uses which, and how to read the source labels
 
 ## Detailed Tier (Regional Models)
 - Regional model library (placeholder)

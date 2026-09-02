@@ -9,6 +9,8 @@ description: "Launch the STAF web applications."
 
 {% include apps_hub.html %}
 
+<p class="tools-engines-note">Every app computes watershed metrics with one of two engines, chosen by the framework rather than the user: the StreamCat lookup engine on the NHDPlus V2 network and the STAF site engine for the exact watershed at a point on any NHD stream. <a href="{{ site.baseurl }}/computation-engines/">Computation Engines</a> defines both, which tier uses which, and how to read the source labels in each report.</p>
+
 ## Downloads and resources
 
 <ul class="tools-resources">
