@@ -1,5 +1,7 @@
-"""Catchment-aggregation delineation: tree walk, union + validation, budgets,
-and honest failure paths. Fully offline (hr client mocked)."""
+"""Catchment-aggregation delineation: the node walk, union + validation,
+budgets, and honest failure paths. Fully offline (hr client mocked). The walk
+stub receives the frontier RECORDS (0.2.1: ``hr.parents_by_node``) and answers
+by the frontier's hydroseqs, so the wiring reads like the attribute walk."""
 from __future__ import annotations
 
 from site_engine import delineate, hr
@@ -22,11 +24,18 @@ def _sq(nid, x0, y0, d=0.01):
                 [x0, y0]]]}}
 
 
+def _by_hs(parents):
+    """A ``parents_by_node`` stub keyed by the frontier's hydroseqs."""
+    def fake(frontier, **k):
+        key = tuple(sorted(int(r["hydroseq"]) for r in frontier))
+        return parents.get(key, [])
+    return fake
+
+
 def test_union_and_validation(monkeypatch):
     # Anchor 1 has parents 2 and 3 (a confluence); no grandparents.
     parents = {(11,): [_rec(2, 12, 11), _rec(3, 13, 11)], (12, 13): []}
-    monkeypatch.setattr(hr, "parents_by_dnhydroseq",
-                        lambda hs, **k: parents.get(tuple(sorted(hs)), []))
+    monkeypatch.setattr(hr, "parents_by_node", _by_hs(parents))
     cats = [_sq(1, -83.00, 40.00), _sq(2, -83.01, 40.00), _sq(3, -83.00, 40.01)]
     monkeypatch.setattr(hr, "catchments_by_ids", lambda ids, **k: cats)
     anchor = _rec(1, 11, 10)
@@ -42,7 +51,7 @@ def test_union_and_validation(monkeypatch):
 
 
 def test_disagreement_warns(monkeypatch):
-    monkeypatch.setattr(hr, "parents_by_dnhydroseq", lambda hs, **k: [])
+    monkeypatch.setattr(hr, "parents_by_node", lambda frontier, **k: [])
     monkeypatch.setattr(hr, "catchments_by_ids",
                         lambda ids, **k: [_sq(1, -83.0, 40.0)])
     anchor = _rec(1, 11, 10)
@@ -54,10 +63,10 @@ def test_disagreement_warns(monkeypatch):
 
 def test_budget_refusal(monkeypatch):
     # An endless ladder of parents must hit the hop budget and refuse.
-    def endless(hs, **k):
-        base = max(hs) + 1
-        return [_rec(base, base, max(hs))]
-    monkeypatch.setattr(hr, "parents_by_dnhydroseq", endless)
+    def endless(frontier, **k):
+        top = max(int(r["hydroseq"]) for r in frontier)
+        return [_rec(top + 1, top + 1, top)]
+    monkeypatch.setattr(hr, "parents_by_node", endless)
     out = delineate.delineate_watershed(_rec(1, 11, 10), max_hops=5)
     assert out["status"] == "refused"
     assert "budget" in out["reason"]
@@ -66,18 +75,21 @@ def test_budget_refusal(monkeypatch):
 
 def _bare(nid, hs, dn):
     rec = _rec(nid, hs, dn)
-    rec["geometry"] = None          # a geometry-free walk record
+    rec["geometry"] = None          # a record that came back without geometry
     return rec
 
 
 def _geometry_free_wiring(monkeypatch, lines_result):
+    """Parents 2 and 3 come back without geometry (a service that dropped it),
+    so the walk stops at them and the end-of-walk fetch covers the gap."""
     parents = {(11,): [_bare(2, 12, 11), _bare(3, 13, 11)], (12, 13): []}
     seen: list = []
 
-    def fake_parents(hs, **k):
-        seen.append(k.get("with_geometry", "missing"))
-        return parents.get(tuple(sorted(hs)), [])
-    monkeypatch.setattr(hr, "parents_by_dnhydroseq", fake_parents)
+    def fake_parents(frontier, **k):
+        seen.append([int(r["nhdplusid"]) for r in frontier])
+        key = tuple(sorted(int(r["hydroseq"]) for r in frontier))
+        return parents.get(key, [])
+    monkeypatch.setattr(hr, "parents_by_node", fake_parents)
     cats = [_sq(1, -83.00, 40.00), _sq(2, -83.01, 40.00), _sq(3, -83.00, 40.01)]
     monkeypatch.setattr(hr, "catchments_by_ids", lambda ids, **k: cats)
     fetched: list = []
@@ -89,7 +101,7 @@ def _geometry_free_wiring(monkeypatch, lines_result):
     return seen, fetched
 
 
-def test_walk_is_geometry_free_and_fetches_tree_once(monkeypatch):
+def test_walk_carries_geometry_and_fetches_only_gaps(monkeypatch):
     seen, fetched = _geometry_free_wiring(
         monkeypatch, lambda ids: [{"nhdplusid": i, "geometry": {
             "type": "LineString",
@@ -98,9 +110,39 @@ def test_walk_is_geometry_free_and_fetches_tree_once(monkeypatch):
     anchor["totdasqkm"] = 2.83
     out = delineate.delineate_watershed(anchor)
     assert out["status"] == "ok"
-    assert seen and all(v is False for v in seen)   # never asks for geometry
-    assert fetched == [[2, 3]]                       # one fetch, sorted ids
+    assert seen == [[1]]                  # geometry-less parents end the walk
+    assert fetched == [[2, 3]]            # one fetch, sorted ids, gaps only
     assert len(out["treeFlowlines"]) == 3
+
+
+def test_walk_with_geometry_never_fetches(monkeypatch):
+    parents = {(11,): [_rec(2, 12, 11), _rec(3, 13, 11)], (12, 13): []}
+    monkeypatch.setattr(hr, "parents_by_node", _by_hs(parents))
+    cats = [_sq(1, -83.00, 40.00), _sq(2, -83.01, 40.00), _sq(3, -83.00, 40.01)]
+    monkeypatch.setattr(hr, "catchments_by_ids", lambda ids, **k: cats)
+
+    def boom(ids, **k):
+        raise AssertionError("no fetch expected")
+    monkeypatch.setattr(hr, "flowlines_by_ids", boom)
+    out = delineate.delineate_watershed(_rec(1, 11, 10))
+    assert out["status"] == "ok" and len(out["treeFlowlines"]) == 3
+
+
+def test_anchor_without_geometry_is_fetched_once(monkeypatch):
+    calls: list = []
+
+    def by_id(nid, **k):
+        calls.append(nid)
+        return _rec(1, 11, 10)
+    monkeypatch.setattr(hr, "flowline_by_id", by_id)
+    monkeypatch.setattr(hr, "parents_by_node", lambda frontier, **k: [])
+    monkeypatch.setattr(hr, "catchments_by_ids",
+                        lambda ids, **k: [_sq(1, -83.0, 40.0)])
+    out = delineate.delineate_watershed(_bare(1, 11, 10))
+    assert out["status"] == "ok" and calls == [1]
+    monkeypatch.setattr(hr, "flowline_by_id", lambda nid, **k: None)
+    out = delineate.delineate_watershed(_bare(1, 11, 10))
+    assert out["status"] == "failed" and "geometry" in out["reason"]
 
 
 def test_geometry_fetch_failure_only_warns(monkeypatch):
@@ -114,14 +156,14 @@ def test_geometry_fetch_failure_only_warns(monkeypatch):
 
 
 def test_tree_query_failure_is_failed_not_partial(monkeypatch):
-    monkeypatch.setattr(hr, "parents_by_dnhydroseq", lambda hs, **k: None)
+    monkeypatch.setattr(hr, "parents_by_node", lambda frontier, **k: None)
     out = delineate.delineate_watershed(_rec(1, 11, 10))
     assert out["status"] == "failed"
     assert "tree query failed" in out["reason"]
 
 
 def test_catchment_failure_is_failed(monkeypatch):
-    monkeypatch.setattr(hr, "parents_by_dnhydroseq", lambda hs, **k: [])
+    monkeypatch.setattr(hr, "parents_by_node", lambda frontier, **k: [])
     monkeypatch.setattr(hr, "catchments_by_ids", lambda ids, **k: None)
     out = delineate.delineate_watershed(_rec(1, 11, 10))
     assert out["status"] == "failed"

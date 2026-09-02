@@ -9,7 +9,7 @@ Resolution stream, it delineates the TRUE contributing watershed at that exact
 point and computes exact-watershed and reach-scale GIS metrics from source
 data, with per-metric provenance and pinned data vintages.
 
-- **Identity**: `ENGINE_ID = "site-engine"`, `ENGINE_VERSION` (0.2.0). Display
+- **Identity**: `ENGINE_ID = "site-engine"`, `ENGINE_VERSION` (0.2.1). Display
   names and label helpers live in `site_engine/naming.py`; every consuming app
   imports them from its vendored copy so the four apps share one vocabulary.
 - **Entry point**: `compute_site(lat, lon, config=None, *, progress=None)`.
@@ -68,6 +68,8 @@ data, with per-metric provenance and pinned data vintages.
 Minor bump when record keys, config keys, vintages, or metric definitions
 change (consumers record `engineVersion` in their provenance and DEEP bundles
 carry `site-engine vX`); patch bump when records stay byte-identical.
+
+0.2.1: node-based upstream walk (`hr.parents_by_node`, one spatial query per BFS level, about a second per hop; the `dnhydroseq` scan the service answers in about 36 seconds stays as the reference walk, `scripts/walk_equivalence.py` proves the trees equal) and the `INTERACTIVE_CONFIG` budget calibrated on it. Same record, config, and vintages, so a patch version.
 
 0.2.0: `naming` and `anchor` modules; `metricFamilies` and `landcoverBaseline`
 config; progress callback; geometry-free POST walk with `INTERACTIVE_CONFIG`;

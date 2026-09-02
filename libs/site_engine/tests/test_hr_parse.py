@@ -2,6 +2,8 @@
 EASI copy when the source tree is present."""
 from __future__ import annotations
 
+import json
+
 from pathlib import Path
 
 import pytest
@@ -96,3 +98,55 @@ def test_parse_parity_with_easi():
         ours = hr.parse_feature(f)
         theirs = easi_hr.parse_feature(f)
         assert {k: ours[k] for k in theirs} == theirs
+
+
+def _nfeat(nid, hs, dn, x=-83.0, y=40.0):
+    return {"type": "Feature", "properties": {
+        "nhdplusid": nid, "hydroseq": hs, "dnhydroseq": dn, "uphydroseq": None,
+        "totdasqkm": 1.0, "lengthkm": 0.5, "gnis_name": None, "reachcode": None,
+        "slope": 0.01, "fcode": 46003, "ftype": 460, "streamorde": 1,
+        "vpuid": "0506", "innetwork": 1, "qama": 0.1},
+        "geometry": {"type": "LineString", "coordinates": [[x, y], [x, y + 0.01]]}}
+
+
+def test_parents_by_node_filters_by_dnhydroseq_and_dedupes(monkeypatch):
+    calls: list = []
+
+    def fake_chunk(url, params, timeout, escalated, *, post=False):
+        calls.append((json.loads(params["geometry"]), params["geometryType"],
+                      params["distance"], post))
+        # the child itself (1), a true parent (2), a duplicate of it, the
+        # child's own child (0), and an unrelated line touching the node (9)
+        return {"features": [_nfeat(1, 11, 10), _nfeat(2, 12, 11), _nfeat(2, 12, 11),
+                             _nfeat(0, 10, 9), _nfeat(9, 99, 98)]}
+    monkeypatch.setattr(hr, "_chunk_query", fake_chunk)
+    frontier = [{"nhdplusid": 1, "hydroseq": 11,
+                 "geometry": {"type": "MultiLineString",
+                              "coordinates": [[[-83.0, 40.0], [-83.0, 40.01]],
+                                              [[-83.0, 40.01], [-83.0, 40.02]]]}}]
+    out = hr.parents_by_node(frontier)
+    assert [r["nhdplusid"] for r in out] == [2]
+    assert out[0]["geometry"]["type"] == "LineString"
+    geom, gtype, dist, post = calls[0]
+    assert gtype == "esriGeometryMultipoint" and post is True
+    assert len(geom["points"]) == 4 and dist == str(hr._NODE_DISTANCE_M)
+
+
+def test_parents_by_node_chunks_points_and_fails_whole(monkeypatch):
+    seen: list = []
+
+    def fake_chunk(url, params, timeout, escalated, *, post=False):
+        seen.append(len(json.loads(params["geometry"])["points"]))
+        return {"features": []}
+    monkeypatch.setattr(hr, "_chunk_query", fake_chunk)
+    frontier = [{"nhdplusid": i, "hydroseq": 100 + i,
+                 "geometry": {"type": "LineString",
+                              "coordinates": [[-83.0, 40.0], [-83.0, 40.01]]}}
+                for i in range(hr._NODE_CHUNK // 2 + 1)]
+    assert hr.parents_by_node(frontier) == []
+    assert seen == [hr._NODE_CHUNK, 2]
+    monkeypatch.setattr(hr, "_chunk_query", lambda *a, **k: None)
+    assert hr.parents_by_node(frontier) is None
+    # a frontier record without geometry cannot be walked from
+    assert hr.parents_by_node([{"nhdplusid": 1, "hydroseq": 11, "geometry": None}]) is None
+    assert hr.parents_by_node([]) == []

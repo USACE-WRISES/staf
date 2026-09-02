@@ -26,8 +26,9 @@ def _wire(monkeypatch):
                         lambda *a, **k: [anchor, upstream])
     monkeypatch.setattr(hr, "feature_by_hydroseq",
                         lambda hs, **k: upstream if hs == 12 else None)
-    monkeypatch.setattr(hr, "parents_by_dnhydroseq",
-                        lambda hs, **k: [upstream] if 11 in hs else [])
+    monkeypatch.setattr(hr, "parents_by_node",
+                        lambda frontier, **k: [upstream]
+                        if any(int(r["hydroseq"]) == 11 for r in frontier) else [])
     monkeypatch.setattr(hr, "catchments_by_ids", lambda ids, **k: [
         {"nhdplusid": 1, "areasqkm": None,
          "geometry": {"type": "Polygon", "coordinates": [[
