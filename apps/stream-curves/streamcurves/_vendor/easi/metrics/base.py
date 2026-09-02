@@ -51,6 +51,16 @@ def nrsa_evidence(ctx: "AnalysisContext") -> Optional[dict]:
     return value if isinstance(value, dict) else None
 
 
+def comid_evidence_note(ctx: "AnalysisContext", default: str) -> str:
+    """The unavailable-note for a COMID-keyed metric: the withholding reason
+    when a routed site's nearest covered reach lies past the substitution
+    limit, else the adapter's own note."""
+    withheld = ctx.extras.get("comidEvidence") or {}
+    if withheld.get("withheld"):
+        return str(withheld.get("reason") or default)
+    return default
+
+
 def _integrity_value(value: Any) -> Optional[float]:
     """A StreamCat integrity component, valid only on its documented 0-1 scale."""
     try:

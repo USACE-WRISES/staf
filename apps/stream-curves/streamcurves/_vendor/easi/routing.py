@@ -147,14 +147,19 @@ def v2_anchor(comid: int, clicked_lat: float, clicked_lon: float,
 # the policy
 # --------------------------------------------------------------------------- #
 def route_from_hr(clicked_lat: float, clicked_lon: float,
-                  hr_snap: tuple[float, float, float, Optional[int]]) -> dict:
+                  hr_snap: tuple[float, float, float, Optional[int]], *,
+                  policy: str = POLICY_AUTO) -> dict:
     """Route an HR-only stream click to the covered network.
 
     ``hr_snap`` is ``(snap_lat, snap_lon, dist_ft, nhdplusid)`` from
     ``nhd_hr.nearest_point_on_hr_lines``. Returns one of:
 
-      * ``{"anchor": payload}`` — routed; ready to delineate at the surrogate
-      * ``{"refused": True, "code", "message", "anchor"}`` — policy refusal
+      * ``{"anchor": payload}`` — routed; ready to delineate. Under the
+        ``auto`` policy this is the answer even past the DA-ratio bound: the
+        payload's ``routing`` then carries ``declined``, ``declineCode`` and
+        ``declineMessage`` and the assessment withholds COMID-keyed evidence.
+      * ``{"refused": True, "code", "message", "anchor"}`` — the
+        ``streamcat-legacy`` policy's refusal past the bound
       * ``{"error": "snap_service_error", "detail"}`` — retryable outage
       * ``{"error": "no_stream_found"}`` — the raindrop found no V2 reach
 
@@ -210,32 +215,53 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
     routing = {"method": ROUTING_METHOD, "routedDistanceFt": routed_ft,
                "daRatio": da_ratio, "daRatioLimit": DA_RATIO_MAX,
                "declined": False}
-    notes = ["Scored at the nearest downstream reach of the covered network."]
+    legacy = policy == POLICY_STREAMCAT_LEGACY
+    notes = ([("Scored at the nearest downstream reach of the covered network.")]
+             if legacy else
+             [("COMID-keyed evidence describes the nearest downstream reach of "
+               "the covered network.")])
     anchor = _payload("hrSurrogate", clicked_lat, clicked_lon,
                       clicked_stream=clicked_stream, scored_reach=scored,
                       routing=routing, notes=notes)
+    limit = int(DA_RATIO_MAX) if float(DA_RATIO_MAX).is_integer() else DA_RATIO_MAX
 
-    # Policy refusals: never guess. Missing drainage area on either side means
-    # the ratio bound cannot be checked, so the point is declined with the
-    # reason rather than silently scored.
+    # Never guess past the bound. Missing drainage area on either side means
+    # the ratio bound cannot be checked. Under the legacy policy the site is
+    # refused with the reason; under auto the routing is declined and only
+    # the COMID-keyed evidence is withheld (the exact watershed still comes
+    # from the site engine).
     if da_ratio is None:
         routing["declined"] = True
-        return {"refused": True, "code": "surrogate_da_unavailable",
-                "message": ("EASI can't check this stream against its "
-                            "substitution limit. Drainage area is unavailable "
-                            "for the clicked stream or the nearest covered "
-                            "reach. Choose a nearby larger stream."),
-                "anchor": anchor}
+        routing["declineCode"] = "surrogate_da_unavailable"
+        routing["declineMessage"] = (
+            "Drainage area is unavailable for the clicked stream or the "
+            "nearest covered reach, so the substitution limit cannot be "
+            "checked. Reach-keyed evidence (low flow, substrate, biological "
+            "integrity) is unavailable here.")
+        if legacy:
+            return {"refused": True, "code": "surrogate_da_unavailable",
+                    "message": ("EASI can't check this stream against its "
+                                "substitution limit. Drainage area is unavailable "
+                                "for the clicked stream or the nearest covered "
+                                "reach. Choose a nearby larger stream."),
+                    "anchor": anchor}
+        return {"anchor": anchor}
     if da_ratio > DA_RATIO_MAX:
         routing["declined"] = True
-        limit = int(DA_RATIO_MAX) if float(DA_RATIO_MAX).is_integer() else DA_RATIO_MAX
-        return {"refused": True, "code": "surrogate_da_ratio_exceeded",
-                "message": (f"EASI can't score this stream. The nearest stream "
-                            f"in the scoring network drains {da_ratio} times "
-                            f"the area of the stream you clicked (limit "
-                            f"{limit}). Choose a larger stream, or use SFARI "
-                            f"or DEEP for this site."),
-                "anchor": anchor}
+        routing["declineCode"] = "surrogate_da_ratio_exceeded"
+        routing["declineMessage"] = (
+            f"The nearest covered reach drains {da_ratio} times the area of "
+            f"the clicked stream (limit {limit}). Reach-keyed evidence (low "
+            "flow, substrate, biological integrity) is unavailable here.")
+        if legacy:
+            return {"refused": True, "code": "surrogate_da_ratio_exceeded",
+                    "message": (f"EASI can't score this stream. The nearest stream "
+                                f"in the scoring network drains {da_ratio} times "
+                                f"the area of the stream you clicked (limit "
+                                f"{limit}). Choose a larger stream, or use SFARI "
+                                f"or DEEP for this site."),
+                    "anchor": anchor}
+        return {"anchor": anchor}
     return {"anchor": anchor}
 
 
@@ -288,7 +314,8 @@ def reanchor_inputs(anchor: Optional[dict], reach_length_ft: float) -> dict:
 
 
 def resolve_anchor(lat: float, lon: float, *,
-                   snap_tol_ft: float = HR_SNAP_TOL_FT) -> dict:
+                   snap_tol_ft: float = HR_SNAP_TOL_FT,
+                   policy: str = POLICY_AUTO) -> dict:
     """The engine path for a bare coordinate (batch sites, typed coordinates).
 
     Fixed order, deterministic by construction:
@@ -330,7 +357,7 @@ def resolve_anchor(lat: float, lon: float, *,
         lon + HR_PROBE_HALF_DEG, lat + HR_PROBE_HALF_DEG)
     hr_snap = nhd_hr.nearest_point_on_hr_lines(hr_fc, lat, lon)
     if hr_snap is not None and hr_snap[2] <= snap_tol_ft:
-        return route_from_hr(lat, lon, hr_snap)
+        return route_from_hr(lat, lon, hr_snap, policy=policy)
     if comid is not None:
         anchor = v2_anchor(comid, lat, lon, snap.get("snap_lat"),
                            snap.get("snap_lon"), dist)

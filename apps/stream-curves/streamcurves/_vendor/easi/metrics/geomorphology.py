@@ -159,7 +159,9 @@ def substrate(ctx: AnalysisContext) -> MetricResult:
     if ev.rating is None:
         return unavailable(
             SUBSTRATE_ID,
-            "eligible NRSA embeddedness and both StreamCat SED components are unavailable",
+            base.comid_evidence_note(
+                ctx, "eligible NRSA embeddedness and both StreamCat SED components "
+                     "are unavailable"),
             "L", scoring=ev.trace)
     value = float(ev.combined_value)
     return MetricResult(
