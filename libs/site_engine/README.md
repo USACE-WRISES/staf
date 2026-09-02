@@ -48,9 +48,10 @@ data, with per-metric provenance and pinned data vintages.
 - **Consumers**: EASI (the exact watershed on streams outside NHDPlus V2),
   SFARI (field-form prefill), StreamCurves (selectable predictor source),
   DEEP (auto-pull and the exact watershed on HR-only sites). Scoring against
-  StreamCat-fitted curves follows the train/serve pairing rule until the
-  score-level equivalence study (`scripts/score_equivalence_study.py`) settles
-  it.
+  StreamCat-fitted curves follows the train/serve pairing rule; the
+  score-level equivalence study (`scripts/score_equivalence_study.py`)
+  reported Outcome B on 2026-09-02 (rating agreement 0.84 against a 0.90
+  bar), so the rule stays and engine-fitted curves are built instead.
 - **Vendoring**: each consuming app copies the package with its own
   `scripts/vendor_site_engine.py` into `<pkg>/_vendor/site_engine/` plus a
   drift-gate test. Apps never import `libs/` at runtime. After any change here,

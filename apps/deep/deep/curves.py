@@ -124,7 +124,9 @@ def active_points(metric_spec: dict, stratum: Optional[str] = None) -> list:
 # score_equivalence_study.py, 30 NRSA sites in the Northeastern Highlands and
 # the Eastern Corn Belt Plains) is the only thing that flips this: "label" on
 # Outcome A (rating agreement and ECI class agreement at or above 0.90 and a
-# median DEEP index shift under 0.05), "refuse" otherwise.
+# median DEEP index shift under 0.05), "refuse" otherwise. It reported
+# Outcome B on 2026-09-02 (rating agreement 0.84 pooled, 0.78 and 0.90 by
+# region; class agreement 0.97; median shift 0.013), so this stays "refuse".
 ENGINE_PAIRING_MODE = "refuse"
 _ENGINE_PAIRING_MODES = ("refuse", "label")
 

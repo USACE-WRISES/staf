@@ -191,8 +191,12 @@ so they come from the nearest covered reach downstream, labeled with the routed
 distance and the drainage-area ratio, and are unavailable when that reach
 drains more than ten times the clicked stream. Every rating in the report and
 the exports says which engine produced it. Whether the site engine should also
-answer covered streams is a question for the score-level equivalence study
-(StreamCat inputs against engine inputs at the same sites), not a setting.
+answer covered streams was a question for the score-level equivalence study
+(StreamCat inputs against engine inputs at the same sites), not a setting. It
+reported on 2026-09-02 that the engines are not interchangeable at the
+rating level (agreement 0.84 over 30 NRSA sites against a 0.90 bar, with the
+condition class agreeing at 0.97), so covered streams stay on the lookup
+engine and the approximation is stated here.
 
 Several fallback methods classify published 0 to 1 integrity or probability
 values into Good, Fair, and Poor at 0.70 and 0.40, and the modeled benthic
@@ -482,8 +486,9 @@ Rapid and Detailed tiers are the designed responses to each of them.
    minutes on a large basin) rather than seconds and can refuse a
   basin past its budget, and their reach-keyed metrics describe the nearest
   covered reach downstream. The verification sites all sit on the covered
-  network; the equivalence of the two engines on covered streams is the
-  subject of a separate study.
+  network; the two engines' equivalence on covered streams was the subject
+  of a separate 30-site study, which found the ratings agree at 0.84 and the
+  condition class at 0.97, so covered streams stay on the lookup engine.
 - **A Good band is not a no-effect finding.** Sensitive macroinvertebrate taxa
   decline well below the 10 percent impervious boundary, and naturally
   fine-bedded streams can rate Poor on substrate by nature. The per-metric
