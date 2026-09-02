@@ -237,6 +237,7 @@ def build_packet(result: dict, doc: dict, policy_result: dict, *, policy_meta: d
             {"function": g.get("function"), "candidates": g.get("candidate_metrics") or []}
             for g in (result.get("uncovered_functions") or [])],
         "source_reports": list(result.get("source_reports") or []),
+        "resourced_metrics": list(result.get("resourced_metrics") or []),
         "prior_version_diff": diff_against_prior(result, prior_bundle),
         "staged": staged,
         "gallery": gallery,
@@ -254,6 +255,34 @@ def _table(headers: list[str], rows: list[list[Any]]) -> list[str]:
         out.append("| " + " | ".join("" if v is None else str(v).replace("|", "/").replace("\n", " ")
                                      for v in r) + " |")
     return out
+
+
+def source_report_lines(rep: dict) -> list[str]:
+    """The markdown bullets for one ``source_reports`` entry. The site-engine
+    entry adds the per-site outcome (computed, cached, failed, incomplete) and
+    the scored metrics it recomputed, so the owner sees exactly which basin
+    refused and which curves changed source."""
+    rep = rep or {}
+    cache = rep.get("cache") or {}
+    lines = [f"- {rep.get('source')}: {rep.get('status')} "
+             f"({rep.get('n_columns', 0)} columns)"
+             + (f", {rep.get('reason')}" if rep.get("reason") else "")
+             + (", read from the run's cache" if cache.get("from_cache") else "")]
+    if rep.get("source") != "site_engine":
+        return lines
+    from . import engine_names
+
+    if rep.get("n_sites") is not None:
+        lines.append(f"  - {rep.get('n_ok', 0)} of {rep.get('n_sites')} sites computed, "
+                     f"{rep.get('n_cached', 0)} from the run's cache")
+    for f in rep.get("failed_sites") or []:
+        lines.append(f"  - {f.get('site_id')} {f.get('status')}: {f.get('reason')}")
+    for f in rep.get("incomplete_sites") or []:
+        lines.append(f"  - {f.get('site_id')} incomplete: {f.get('reason')}")
+    resourced = [str(c) for c in (rep.get("resourced_metrics") or [])]
+    lines.append(f"  - Scored metrics recomputed by the {engine_names.SITE_ENGINE}: "
+                 f"{', '.join(resourced) or 'none'}")
+    return lines
 
 
 def packet_markdown(p: dict) -> str:
@@ -373,11 +402,7 @@ def packet_markdown(p: dict) -> str:
 
     lines += ["## 8. Data sources", ""]
     for rep in p.get("source_reports") or []:
-        cache = rep.get("cache") or {}
-        lines.append(f"- {rep.get('source')}: {rep.get('status')} "
-                     f"({rep.get('n_columns', 0)} columns)"
-                     + (f", {rep.get('reason')}" if rep.get("reason") else "")
-                     + (", read from the run's cache" if cache.get("from_cache") else ""))
+        lines += source_report_lines(rep)
     lines.append("")
 
     lines += ["## 9. Promote", "",

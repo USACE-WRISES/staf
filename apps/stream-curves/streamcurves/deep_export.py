@@ -637,6 +637,15 @@ def build_deep_assessment_bundle(
             },
         }
 
+        # Train/serve provenance per curve (2026-09-02): a scored landscape
+        # column the STAF site engine recomputed carries value_source, and that
+        # engine stamp is what DEEP's pairing rule reads for this metric. A
+        # curve fitted on StreamCat values, and every NRSA field metric, carries
+        # no stamp and reads as streamcat by absence.
+        value_source = str(cfg.get("value_source") or "").strip()
+        if value_source and value_source != "streamcat":
+            base_entry["predictorSource"] = value_source
+
         # Per-metric annotations (2026-08-21, adversarial review): the reference
         # sample behind the curve, its disposition, whether the metric is a
         # response measurement or a landscape stressor surrogate, the caveats a
@@ -792,18 +801,16 @@ def build_deep_assessment_bundle(
             for m in block.get("metrics") or []:
                 m["referenceTier"] = tier
     # Predictor-source provenance (train/serve pairing): which source computed
-    # the predictors these curves were fitted against. Derived from the build,
-    # never user-chosen; absent means the StreamCat default (DEEP treats a
-    # missing field as "streamcat"). Follows the referenceTier pattern: the
-    # bundle-level declaration plus per-metric stamps inside metricsByFunction,
-    # so the field is part of the content digest — the same curve from a
-    # different predictor source is a different assessment.
+    # the predictors of this build. Derived from the build, never user-chosen;
+    # absent means the StreamCat default (DEEP treats a missing field as
+    # "streamcat"). Bundle-level only: the per-metric stamp is written above
+    # from each curve's own value_source, so only the curves the engine
+    # actually recomputed claim engine values (2026-09-02). Both ride inside
+    # the content digest, so the same curve from a different source is a
+    # different assessment.
     predictor_source = meta.get("predictorSource")
     if predictor_source and predictor_source != "streamcat":
         bundle["predictorSource"] = predictor_source
-        for block in bundle.get("metricsByFunction") or []:
-            for m in block.get("metrics") or []:
-                m["predictorSource"] = predictor_source
     return bundle
 
 

@@ -245,6 +245,9 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             n_boot=kw["n_boot"],
             enable_policies=kw["enable_policies"],
             dataset_id=kw["dataset_id"],
+            # recovered from the run's manifest by restage_args; without it a
+            # re-stage of an engine build silently reverted to StreamCat
+            predictor_source=kw.get("predictor_source"),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None)
         _launch(run_stage(argv, out_dir))

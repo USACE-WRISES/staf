@@ -36,7 +36,7 @@ the StreamCurves predictor source for assessment builders.
 | EASI | StreamCat lookup engine on covered NHDPlus V2 reaches. STAF site engine on any other NHD stream (batch policy `auto`, the default). The three COMID-keyed metrics on such a stream ride the labeled nearest covered reach within the 10x drainage-area bound and are unavailable beyond it. `streamcat-legacy` reproduces the pre-2026-09 surrogate routing with its refusal. Engine failure or refusal makes the watershed metrics unavailable with guidance, never a proxy. | None | Layer names, the snap card, the progress line, the basin card, the banner, per-row source labels, the Engine column of the exports |
 | SFARI | STAF site engine first for the exact watershed and its evidence, StreamCat lookup engine second (labeled with the reach it describes), direct services third. The assessor scores; the evidence is labeled. | None | Evidence badges, tooltips, the printed field packet, the appendix |
 | DEEP | The exact watershed on HR-only sites; auto-pulled values from the StreamCat lookup engine for StreamCat-built bundles and from the STAF site engine when the bundle's `predictorSource` records engine predictors (the train/serve pairing rule). | None, follows the bundle | The source row, the basis badge, the scoring advisory, the exports, the field packet |
-| StreamCurves | Predictor source: StreamCat lookup engine (default) or STAF site engine, selected in the region builder or with `--predictor-source`. The reference screen is pinned to `streamcat-legacy`. | Predictor source only | Manifest `inputs.predictor_source`, bundle `predictorSource`, the science support report |
+| StreamCurves | Predictor source: StreamCat lookup engine (default) or STAF site engine, selected in the region builder or with `--predictor-source`. An engine-sourced build also recomputes the six scored landscape metrics with an engine analog (impervious, crop, woody and herbaceous wetland, road density, dam density) at every retained site and stamps only those curves per metric. Base-flow index and road crossings stay StreamCat. The reference screen is pinned to `streamcat-legacy`. | Predictor source only | Manifest `inputs.predictor_source` (with `resourced_metrics`), bundle `predictorSource` (bundle-level, and per metric on the re-sourced curves), the science support report |
 
 The score-level equivalence study (`libs/site_engine/scripts/score_equivalence_study.py`)
 decides whether the two engines are interchangeable for scoring on covered
@@ -45,8 +45,9 @@ condition-class agreement of at least 0.90, and a median DEEP index shift under
 0.05. It reported Outcome B: 30 of 30 sites ran on 2026-09-02: watershed-metric rating agreement 0.84 pooled (Eastern Corn Belt Plains 0.78, Northeastern Highlands 0.90) against the 0.90 bar, condition-class agreement 0.97, median DEEP index shift 0.013. The engines are not interchangeable,
 so EASI keeps the StreamCat lookup engine on covered streams, DEEP keeps the
 pairing rule (`deep/curves.py`, `ENGINE_PAIRING_MODE = "refuse"`), and
-StreamCurves builds engine-predictor versions of the pilot assessments
-(`--predictor-source site-engine`). Summary: `notes/EASI_Report/analysis/
+StreamCurves builds engine-sourced versions of the pilot assessments
+(`--predictor-source site-engine`, which recomputes the predictors and the
+scored landscape metrics alike). Summary: `notes/EASI_Report/analysis/
 score_equivalence_study_2026-09.md`.
 
 ## Labels and tokens

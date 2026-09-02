@@ -278,6 +278,10 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "requestedFlag": result.get("predictor_source_flag"),
             "engine": (se_report or {}).get("engine"),
             "report": se_report,
+            # The scored landscape columns the engine recomputed (2026-09-02);
+            # joins the digest below because those curves change with it.
+            "resourced_metrics": sorted(
+                str(c) for c in (result.get("resourced_metrics") or [])),
         }
 
     manifest = {
@@ -419,6 +423,12 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
             "source": ps.get("source"),
             "engine": ps.get("engine"),
         }
+        # The scored landscape columns the engine recomputed change the curves
+        # themselves, so they join the digest; a predictors-only engine build
+        # (an empty list) adds no key.
+        resourced = sorted(str(c) for c in (ps.get("resourced_metrics") or []))
+        if resourced:
+            digest_payload["predictor_source"]["resourced_metrics"] = resourced
     return digest_payload
 
 

@@ -1575,7 +1575,10 @@ def tables_from_configs(
 #: the CURVE-05 expectation pair and the seed-geometry declarations the
 #: national registries carry. They ride as extra workbook columns.
 _CURATED_EXTRA_TEXT_FIELDS = ("expected_shape", "transformation", "low_tail",
-                              "direction_source", "direction_confidence")
+                              "direction_source", "direction_confidence",
+                              # which engine computed a scored landscape column's
+                              # values (site-engine vX on a re-sourced curve)
+                              "value_source")
 _CURATED_EXTRA_NUMBER_FIELDS = ("domain_min", "domain_max")
 
 _CURATED_METRIC_FIELDS = (
