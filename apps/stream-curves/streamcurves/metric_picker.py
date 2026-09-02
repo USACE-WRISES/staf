@@ -25,6 +25,7 @@ import re
 import pandas as pd
 
 from . import metric_names
+from . import engine_names
 from .metric_map import metric_map_entries, metric_map_functions_for
 from .nrsa import load_nrsa_catalog
 from .paths import DATA_DIR
@@ -36,12 +37,14 @@ PICKER_COLUMNS = [
 ]
 
 # lowercase crosswalk source -> display label / the wizard reactive it feeds.
+# The two watershed engines read their names from engine_names so the wizard's
+# source filter (import_map builds its choices from these values) never drifts.
 _SRC_DISPLAY = {
     "nrsa": "NRSA",
-    "streamcat": "StreamCat",
+    "streamcat": engine_names.STREAMCAT,
     "streamstats": "StreamStats",
     "mmw": "MMW",
-    "site_engine": "Site engine",
+    "site_engine": engine_names.SITE_ENGINE,
 }
 _STREAMCAT_CATALOG = DATA_DIR / "streamcat_metrics.csv"
 

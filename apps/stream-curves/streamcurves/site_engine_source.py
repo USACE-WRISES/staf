@@ -9,8 +9,8 @@ the NRSA sites and the resulting curve version's provenance (including
 
 Availability is import-provable (the ``easi_screening.engine_available``
 pattern): the vendored package plus the geospatial stack. Engine runs cost
-about a minute per site, so both compile paths label the cost and cache per
-site. Never raises; per-site failures leave NaN and are counted in the
+one to seven minutes per site, so both compile paths label the cost and cache
+per site. Never raises; per-site failures leave NaN and are counted in the
 honesty report.
 """
 from __future__ import annotations
@@ -207,7 +207,7 @@ def enrich_site_engine(rows: list[dict], *, enabled: bool = True,
         return {}, report
     if not site_engine_available():
         report.update(status="failed",
-                      reason="site engine unavailable: "
+                      reason="STAF site engine unavailable: "
                              + ", ".join(missing_engine_requirements()))
         return {}, report
     cache: dict = {}

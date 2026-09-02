@@ -29,6 +29,7 @@ import pandas as pd
 from shiny import module, reactive, render, ui
 
 from streamcurves import library as lib
+from streamcurves import engine_names
 from streamcurves import nrsa_dataset, region_build as rb
 from streamcurves import rules_view
 from streamcurves import session_io as sio
@@ -531,13 +532,14 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                 ui.column(2, ui.div(
                     ui.input_select(
                         ns("build_predictor_source"), "Predictor source",
-                        {"streamcat": "StreamCat (default)",
-                         "site-engine": "Site engine (exact watershed)"},
+                        {"streamcat": f"{engine_names.STREAMCAT} (default)",
+                         "site-engine": f"{engine_names.SITE_ENGINE} (exact watershed)"},
                         selected="streamcat", width="100%"),
-                    title="Which source computes the curve predictors. The "
-                          "site engine recomputes them at the training sites "
-                          "(about a minute per uncached site) and stamps the "
-                          "bundle predictorSource for the DEEP pairing rule.")),
+                    title="Which engine computes the curve predictors. The "
+                          f"{engine_names.SITE_ENGINE} recomputes them at the "
+                          f"training sites ({engine_names.SITE_ENGINE_COST}) and "
+                          "stamps the bundle predictorSource for the DEEP pairing "
+                          "rule.")),
             ),
             ui.p(rb.RESAMPLES_HINT, class_="text-muted small mb-2"),
             ui.output_ui(ns("policy_summary")),

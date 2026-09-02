@@ -13,6 +13,7 @@ Quarto cosmo theme is accepted.
 from __future__ import annotations
 
 import base64
+from . import engine_names
 import html
 
 import pandas as pd
@@ -181,11 +182,7 @@ def build_science_support_html(context: dict, metric_config=None) -> str:
         # Provenance: which source computed the curve predictors. The stamp is
         # derived from the configured predictor columns, never user-chosen.
         psrc = session_meta.get("predictor_source")
-        psrc_display = (
-            "EPA StreamCat"
-            if psrc == "streamcat"
-            else f"STAF site engine ({psrc}), exact-watershed values"
-        )
+        psrc_display = engine_names.predictor_source_display(psrc)
         body_parts.append(
             "<p><strong>Session snapshot:</strong></p><ul>"
             f"<li><strong>Generated:</strong> {_esc(session_meta.get('generated_at') or 'Unknown')}</li>"
