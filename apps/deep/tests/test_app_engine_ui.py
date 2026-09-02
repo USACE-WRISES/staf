@@ -44,6 +44,9 @@ def test_engine_scheduling_rule(monkeypatch):
     assert app._engine_wanted_for(None) is False
     assert app._engine_wanted_for(streamcat_bundle) is False     # never pays the minutes
     assert app._engine_wanted_for(engine_bundle) is True
+    mixed_bundle = types.SimpleNamespace(
+        raw={"predictorSource": "mixed (site-engine v0.2.2 + streamcat)"})
+    assert app._engine_wanted_for(mixed_bundle) is True      # any engine curve opens the gate
     monkeypatch.setattr(curves, "ENGINE_PAIRING_MODE", "label")
     assert app._engine_wanted_for(streamcat_bundle) is True
 
