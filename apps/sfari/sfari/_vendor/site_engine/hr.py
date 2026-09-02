@@ -11,14 +11,22 @@ Style contract shared with the STAF datasources: helpers never raise; they
 return ``None`` (or empty lists) on failure, and callers degrade with recorded
 reasons. Results are cached in-process where re-use is likely.
 
-Query shapes (0.2.0): the upstream walk asks for ids and hydroseqs only, in
-POST chunks of ``_WALK_CHUNK`` ids; geometry-bearing fetches (tree flowlines,
-catchments) use POST chunks of ``_GEOM_CHUNK``. The 0.1.0 walk carried
-geometry in GET chunks of 40, which cost about five seconds per reach.
+Query shapes (0.2.1): the upstream walk asks the spatial index for the
+flowlines touching the frontier's endpoints (``parents_by_node``, one POST per
+BFS level, about a second) and keeps those whose ``dnhydroseq`` is in the
+frontier, which is the same membership test the attribute walk makes.
+Attribute walks on ``dnhydroseq`` (``parents_by_dnhydroseq``, kept as the
+reference) cost 35 to 55 seconds per query regardless of size because the
+service scans that field (``nhdplusid`` answers in half a second), so the
+0.2.0 geometry-free POST walk was bounded at about 36 seconds per hop and the
+0.1.0 geometry-bearing GET walk at the same number spread over its reaches.
+Geometry-bearing fetches (tree flowlines, catchments) use POST chunks of
+``_GEOM_CHUNK``.
 """
 from __future__ import annotations
 
 import functools
+import json
 import time
 from typing import Any, Iterable, Optional
 
@@ -37,6 +45,10 @@ _ATTR_FIELDS = ("nhdplusid", "gnis_name", "reachcode", "lengthkm", "totdasqkm",
 _CHUNK = 40
 _WALK_CHUNK = 250
 _GEOM_CHUNK = 100
+# Node walk: endpoints per spatial query (two per frontier reach) and the
+# snapping distance, in meters, that joins coincident network nodes.
+_NODE_CHUNK = 400
+_NODE_DISTANCE_M = 5.0
 
 
 def _request(url: str, params: dict, timeout: float, retries: int = 1
@@ -254,6 +266,74 @@ def parents_by_dnhydroseq(hydroseqs: list[int], *, with_geometry: bool = False,
             rec = parse_feature(f)
             if rec:
                 out.append(rec)
+    return out
+
+
+def _endpoints(geometry: Optional[dict]) -> list[list[float]]:
+    """Both ends of every part of a (Multi)LineString, lon/lat pairs."""
+    if not geometry:
+        return []
+    coords = geometry.get("coordinates") or []
+    parts = coords if geometry.get("type") == "MultiLineString" else [coords]
+    pts: list[list[float]] = []
+    for part in parts:
+        if part:
+            pts.append([float(part[0][0]), float(part[0][1])])
+            pts.append([float(part[-1][0]), float(part[-1][1])])
+    return pts
+
+
+def parents_by_node(frontier: list[dict], *, timeout: float = 60.0,
+                    escalated_timeout: float = 120.0,
+                    distance_m: float = _NODE_DISTANCE_M
+                    ) -> Optional[list[dict]]:
+    """All reaches whose downstream hydroseq is one of the frontier's (one BFS
+    level), found through the spatial index instead of a ``dnhydroseq`` scan.
+
+    ``frontier`` is a list of parsed records carrying ``hydroseq`` and
+    ``geometry``. A parent's downstream end coincides with its child's
+    upstream end in the HR network, so the flowlines within ``distance_m`` of
+    the frontier's endpoints contain every parent; the ``dnhydroseq``
+    membership test then keeps exactly the parents (the child itself, its own
+    child, and unrelated lines that merely touch a node are dropped). Records
+    come back with geometry, which the next level and the riparian buffer
+    both use. A frontier record without geometry cannot be walked from, so
+    the call fails (None) rather than silently skipping it. Returns None on
+    any chunk failure: the tree is complete or the call fails.
+    """
+    wanted = {int(r["hydroseq"]) for r in frontier if r.get("hydroseq")}
+    if not wanted:
+        return []
+    points: list[list[float]] = []
+    for rec in frontier:
+        pts = _endpoints(rec.get("geometry"))
+        if not pts:
+            return None
+        points.extend(pts)
+    out: list[dict] = []
+    seen: set[int] = set()
+    for i in range(0, len(points), _NODE_CHUNK):
+        chunk = points[i:i + _NODE_CHUNK]
+        data = _chunk_query(FLOWLINE_QUERY_URL, {
+            "geometry": json.dumps({"points": chunk,
+                                    "spatialReference": {"wkid": 4326}}),
+            "geometryType": "esriGeometryMultipoint", "inSR": "4326",
+            "spatialRel": "esriSpatialRelIntersects",
+            "distance": str(distance_m), "units": "esriSRUnit_Meter",
+            "outFields": ",".join(_ATTR_FIELDS), "returnGeometry": "true",
+            "outSR": "4326", "f": "geojson"}, timeout, escalated_timeout,
+            post=True)
+        if data is None:
+            return None
+        for f in data.get("features") or []:
+            rec = parse_feature(f)
+            if not rec or rec.get("dnhydroseq") not in wanted:
+                continue
+            nid = rec.get("nhdplusid")
+            if nid is None or nid in seen:
+                continue
+            seen.add(nid)
+            out.append(rec)
     return out
 
 

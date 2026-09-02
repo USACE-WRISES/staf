@@ -1,17 +1,20 @@
 """True point-watershed delineation by NHDPlus HR catchment aggregation.
 
 The engine's primary method (spike-selected; see README): walk the upstream
-tree of the anchor reach with batched ``dnhydroseq`` parent queries, union the
-tree's ``NHDPlusCatchment`` polygons, and validate the union area against the
+tree of the anchor reach one BFS level at a time, union the tree's
+``NHDPlusCatchment`` polygons, and validate the union area against the
 published HR ``totdasqkm``. Network-consistent by construction: the catchment
 fabric matches the HR flowlines the engine anchors on, which is exactly what
 snapped MMW (V2 basins) and unsnapped MMW (grid-mismatch slivers) could not
 deliver.
 
-Runtime (0.2.0): the walk is geometry-free (ids and hydroseqs only, large POST
-chunks) and the tree flowline geometries the riparian buffer needs are fetched
-once at the end. The 0.1.0 walk carried geometry on every level at about five
-seconds per reach, which made a five-minute budget worth about 30 reaches.
+Runtime (0.2.1): each level is one spatial query on the frontier's endpoints
+(``hr.parents_by_node``, about a second) filtered by ``dnhydroseq``
+membership, so a hop costs a second or two and the tree geometries arrive
+with the walk. The 0.2.0 walk queried ``dnhydroseq`` directly, which the
+service scans in about 36 seconds per query, so a five-minute budget was
+worth about eight hops; ``hr.parents_by_dnhydroseq`` stays as the reference
+walk for ``scripts/walk_equivalence.py``.
 
 Budgets keep big basins from walking forever: past ``max_hops`` or
 ``max_reaches`` the delineation REFUSES with a reason rather than returning a
@@ -57,11 +60,16 @@ def delineate_watershed(anchor: dict, *, max_hops: int = 200,
         return out
 
     tree_ids = {int(nid)}
-    # Geometries the walk happens to carry (stubs, or a geometry-bearing
-    # caller) are kept; the rest are fetched once after the union.
-    geoms_by_id: dict[int, dict] = (
-        {int(nid): anchor["geometry"]} if anchor.get("geometry") else {})
-    frontier = [int(hs)]
+    # The node walk needs the frontier's geometry; an anchor without one is
+    # fetched once (a parsed record from flowlines_in_bbox always carries it).
+    if not anchor.get("geometry"):
+        fetched = hr.flowline_by_id(int(nid))
+        if not fetched or not fetched.get("geometry"):
+            out["reason"] = "anchor reach geometry unavailable"
+            return out
+        anchor = {**anchor, "geometry": fetched["geometry"]}
+    geoms_by_id: dict[int, dict] = {int(nid): anchor["geometry"]}
+    frontier = [anchor]
     hops = 0
     while frontier:
         if hops >= max_hops or len(tree_ids) >= max_reaches:
@@ -72,7 +80,7 @@ def delineate_watershed(anchor: dict, *, max_hops: int = 200,
                              f"{max_hops} hops)")
             out["nReaches"], out["nHops"] = len(tree_ids), hops
             return out
-        parents = hr.parents_by_dnhydroseq(frontier, with_geometry=False)
+        parents = hr.parents_by_node(frontier)
         if parents is None:
             out["reason"] = "upstream tree query failed"
             out["nReaches"], out["nHops"] = len(tree_ids), hops
@@ -80,14 +88,13 @@ def delineate_watershed(anchor: dict, *, max_hops: int = 200,
         frontier = []
         for rec in parents:
             rid = rec.get("nhdplusid")
-            rhs = rec.get("hydroseq")
             if rid is None or rid in tree_ids:
                 continue
             tree_ids.add(int(rid))
             if rec.get("geometry"):
                 geoms_by_id[int(rid)] = rec["geometry"]
-            if rhs:
-                frontier.append(int(rhs))
+            if rec.get("hydroseq") and rec.get("geometry"):
+                frontier.append(rec)
         hops += 1
         notify(progress, stage="walk", hops=hops, reaches=len(tree_ids))
     out["nReaches"], out["nHops"] = len(tree_ids), hops
@@ -129,9 +136,10 @@ def delineate_watershed(anchor: dict, *, max_hops: int = 200,
         out["warnings"].append(
             "published drainage area unavailable; union not validated")
 
-    # Tree flowline geometries for the riparian buffer: one fetch for the ids
-    # the walk did not carry. Best-effort: the polygon above is the
-    # load-bearing result and stays complete either way.
+    # Tree flowline geometries for the riparian buffer: the node walk carries
+    # them, so this fetch covers only ids that came back without geometry.
+    # Best-effort: the polygon above is the load-bearing result and stays
+    # complete either way.
     missing = sorted(i for i in tree_ids if i not in geoms_by_id)
     if missing:
         notify(progress, stage="geometry", hops=hops, reaches=len(tree_ids))
