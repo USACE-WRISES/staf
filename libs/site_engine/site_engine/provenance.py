@@ -50,10 +50,12 @@ DEFAULT_CONFIG = {
 # engine_runtime_profile.py, 33 completed sites across the acceptance boxes and
 # the covered panel): secs = 5.1 + 0.06 * reaches + 0.47 * hops, residual sd
 # 3.0 s, hops at most 3.47 * sqrt(reaches); the fitted p90 stays under 300 s up
-# to 3,190 reaches and 202 hops, rounded down here. The 1,124 km2 Ohio test
+# to 3,190 reaches and 202 hops; rounded down here to 3,000 reaches and, so
+# the interactive budget stays tighter than DEFAULT_CONFIG's 200 hops, 190 hops
+# (a 3,000-reach tree at the observed ratio needs 190). The 1,124 km2 Ohio test
 # basin (1,319 reaches, 123 hops) completed in 146 s. Under the 0.2.0 scan walk
 # the same envelope bought about eight hops.
-INTERACTIVE_CONFIG = {**DEFAULT_CONFIG, "maxReaches": 3000, "maxHops": 200}
+INTERACTIVE_CONFIG = {**DEFAULT_CONFIG, "maxReaches": 3000, "maxHops": 190}
 
 
 def resolve_config(config: Optional[dict]) -> dict:
