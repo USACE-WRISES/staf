@@ -29,6 +29,8 @@ in the coverage plan and asserted by ``tests/test_routing.py``.
 """
 from __future__ import annotations
 
+import time
+
 from typing import Any, Optional
 
 from . import delineation
@@ -64,23 +66,92 @@ HR_PROBE_HALF_DEG = 0.012
 # --------------------------------------------------------------------------- #
 # primitives
 # --------------------------------------------------------------------------- #
+# The NLDI flowtrace process runs the same raindrop algorithm as
+# linked-data/hydrolocation on a separate route; it is the fallback when the
+# hydrolocation route fails. The catchment lookup at comid/position is NOT a
+# fallback here: its answer can differ (see the module docstring).
+FLOWTRACE_URL = ("https://api.water.usgs.gov/nldi/pygeoapi/processes/"
+                 "nldi-flowtrace/execution")
+_HYDROLOCATION_RETRY_S = 1.5
+
+
+def _parse_flowtrace(data) -> dict:
+    """The ``_hydrolocation_snap`` shape from a flowtrace answer: the Point
+    feature that carries a COMID is the intersection with the network. No
+    features is a clean no-stream answer; features without such a point are
+    an unexpected shape, reported as an error rather than read as a stream."""
+    feats = (data or {}).get("features") if isinstance(data, dict) else None
+    if not feats:
+        return {}
+    for f in feats:
+        props = f.get("properties") or {}
+        geom = f.get("geometry") or {}
+        raw = props.get("comid", props.get("identifier"))
+        if geom.get("type") != "Point" or raw is None:
+            continue
+        try:
+            comid = int(raw)
+        except (TypeError, ValueError):
+            continue
+        out: dict[str, Any] = {"comid": comid}
+        coords = geom.get("coordinates") or []
+        if len(coords) >= 2:
+            try:
+                out["snap_lon"], out["snap_lat"] = float(coords[0]), float(coords[1])
+            except (TypeError, ValueError):
+                pass
+        return out
+    return {"error": "flowtrace: unexpected response shape"}
+
+
+def _flowtrace_snap(lat: float, lon: float, *, timeout: float = 60.0) -> dict:
+    """One flowtrace execution for a point; the ``_hydrolocation_snap`` shape."""
+    import requests  # noqa: PLC0415
+
+    body = {"inputs": [{"id": "lat", "value": f"{lat:.6f}", "type": "text/plain"},
+                       {"id": "lon", "value": f"{lon:.6f}", "type": "text/plain"},
+                       {"id": "direction", "value": "none", "type": "text/plain"}]}
+    try:
+        r = requests.post(FLOWTRACE_URL, params={"f": "json"}, json=body, timeout=timeout)
+        if r.status_code != 200:
+            return {"error": f"flowtrace: HTTP {r.status_code}"}
+        return _parse_flowtrace(r.json())
+    except Exception as exc:  # noqa: BLE001 - resilience by design
+        return {"error": f"flowtrace: {exc}"}
+
+
 def _hydrolocation_snap(lat: float, lon: float) -> dict:
     """NLDI hydrolocation raindrop for one point.
 
     Returns ``{"comid", "snap_lat", "snap_lon"}`` (snap coords may be absent),
     ``{}`` for a clean no-stream answer, or ``{"error": ...}`` when the service
-    failed. Raises only ImportError (a missing geospatial dependency is a
-    deployment fault the pipeline classifies separately, not an outage).
+    failed. The hydrolocation route gets one retry after a short pause, then
+    the flowtrace process (the same algorithm on a separate route) answers;
+    the error names every attempt. Raises only ImportError (a missing
+    geospatial dependency is a deployment fault the pipeline classifies
+    separately, not an outage).
     """
     from pynhd import NLDI  # noqa: PLC0415 - ImportError must propagate
 
     from .batch import diagnostics
 
-    try:
-        frame = NLDI().comid_byloc((lon, lat))
-    except Exception as exc:  # pragma: no cover - network guard
-        diagnostics.record_exception("nldi_snap[hydrolocation]", exc)
-        return {"error": str(exc)}
+    errors: list[str] = []
+    frame = None
+    for attempt in range(2):
+        try:
+            frame = NLDI().comid_byloc((lon, lat))
+            break
+        except Exception as exc:  # pragma: no cover - network guard
+            diagnostics.record_exception("nldi_snap[hydrolocation]", exc)
+            errors.append(f"hydrolocation: {exc}")
+            if attempt == 0:
+                time.sleep(_HYDROLOCATION_RETRY_S)
+    if frame is None:
+        fallback = _flowtrace_snap(lat, lon)
+        if "error" not in fallback:
+            return fallback
+        errors.append(fallback["error"])
+        return {"error": "; ".join(errors)}
     comid = delineation._comid_from_frame(frame)
     if comid is None:
         return {}

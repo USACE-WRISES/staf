@@ -12,7 +12,7 @@ Verified engine choices (see plan.md):
                  merged, reprojected to EPSG:5070, then trimmed to ~length_ft
                  *upstream of the snapped point* (anchored at the point's projection
                  along the line) with shapely substring.
-  * context:     WaterData('nhdflowline_network').byid -> totdasqkm, gnis_name.
+  * context:     the USGS fabric API flowline by COMID -> totdasqkm, gnis_name.
 
 All distance math happens in EPSG:5070 (Albers, metres); inputs/outputs are
 EPSG:4326. Heavy imports are local so the rest of the package stays importable
@@ -125,36 +125,27 @@ def geojson_bounds(*geojsons, pad: float = 0.06):
 def flowline_attrs(comid: int) -> dict:
     """NHDPlus attributes for a COMID (gnis_name, drainage area, huc8, slope,
     fcode, stream order, sinuosity). Best-effort; never raises."""
-    from pynhd import WaterData
+    from .datasources import fabric
 
     out: dict[str, Any] = {"gnis_name": None, "drainage_area_sqkm": None, "huc8": None,
                            "slope": None, "fcode": None, "stream_order": None,
                            "sinuosity": None}
     try:
-        fl = WaterData("nhdflowline_network").byid("comid", [str(comid)])
-        row = fl.iloc[0]
-        for c in ("gnis_name", "GNIS_NAME"):
-            if c in fl.columns and row.get(c):
-                out["gnis_name"] = str(row[c]).strip() or None; break
-        for c in ("totdasqkm", "TotDASqKM", "totdasqkm_1"):
-            if c in fl.columns and row.get(c) is not None:
-                out["drainage_area_sqkm"] = float(row[c]); break
-        for c in ("reachcode", "REACHCODE", "reachcode_1"):
-            if c in fl.columns and row.get(c):
-                out["huc8"] = str(row[c])[:8]; break
-        for c in ("slope", "SLOPE"):
-            if c in fl.columns and row.get(c) is not None:
-                s = float(row[c]); out["slope"] = s if s >= 0 else None; break
-        for c in ("fcode", "FCODE"):
-            if c in fl.columns and row.get(c) is not None:
-                out["fcode"] = int(row[c]); break
-        for c in ("streamorde", "StreamOrde", "streamorder"):
-            if c in fl.columns and row.get(c) is not None:
-                out["stream_order"] = int(row[c]); break
+        feat = fabric.feature_by_comid(comid)
+        if feat is None:
+            out["_flowline_error"] = "fabric: the NHDPlus V2 flowline service did not answer"
+            return out
+        if not feat:
+            return out
+        out.update(fabric.attrs_from_feature(feat))
+        from shapely.geometry import shape
+        geom = shape(feat["geometry"]) if feat.get("geometry") else None
         try:  # sinuosity = flowline length / straight-line endpoint distance
             import geopandas as gpd
             from shapely.geometry import Point
-            g = gpd.GeoSeries([fl.geometry.iloc[0]], crs=CRS_WGS84).to_crs(CRS_ALBERS).iloc[0]
+            if geom is None:
+                raise ValueError("no geometry")
+            g = gpd.GeoSeries([geom], crs=CRS_WGS84).to_crs(CRS_ALBERS).iloc[0]
             line = g.geoms[0] if g.geom_type == "MultiLineString" else g
             straight = Point(line.coords[0]).distance(Point(line.coords[-1]))
             if straight > 0:
@@ -309,7 +300,9 @@ def derive_reach(comid: int, lat: float, lon: float,
     import geopandas as gpd
     from shapely.geometry import Point
     from shapely.ops import linemerge
-    from pynhd import NLDI, WaterData
+    from pynhd import NLDI
+
+    from .datasources import fabric
 
     warnings: list[str] = []
     length_m = length_ft / FT_PER_M
@@ -320,8 +313,10 @@ def derive_reach(comid: int, lat: float, lon: float,
     own_geoms: list = []
     own_len_km = 0.0
     try:
-        own = WaterData("nhdflowline_network").byid("comid", [str(comid)])
-        own_geoms = [g for g in own.geometry if g is not None and not g.is_empty]
+        from shapely.geometry import shape
+        feat = fabric.feature_by_comid(comid)
+        own_geoms = [shape(feat["geometry"])] if feat and feat.get("geometry") else []
+        own_geoms = [g for g in own_geoms if g is not None and not g.is_empty]
         if own_geoms:
             own_len_km = float(gpd.GeoSeries(own_geoms, crs=CRS_WGS84)
                                .to_crs(CRS_ALBERS).length.sum()) / 1000.0

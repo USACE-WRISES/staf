@@ -1915,6 +1915,9 @@ def server(input, output, session):
             return "Unavailable"
         return "Pending"
 
+    # suspend_when_hidden=False: the output binds while the modal is still
+    # hidden (Bootstrap's fade), and a suspended output never resumes here.
+    @output(suspend_when_hidden=False)
     @render.ui
     def field_forms_body():
         ev_map = evidence()
