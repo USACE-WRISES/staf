@@ -18,7 +18,8 @@ source tree is present):
     policy this module never refuses a site: the consumer decides what a
     declined routing withholds.
 
-Routing deliberately uses ONLY the hydrolocation raindrop endpoint (never the
+Routing deliberately uses ONLY the hydrolocation raindrop algorithm, on its
+own route or the flowtrace process route (never the
 nearest-position service, which answers a different question), so an outage
 surfaces as a retryable error, never as a different answer. Pure ``requests``
 (no pynhd): the request is formatted exactly as pynhd formats it so both
@@ -43,8 +44,16 @@ DECLINE_DA_UNAVAILABLE = "surrogate_da_unavailable"
 DECLINE_DA_RATIO = "surrogate_da_ratio_exceeded"
 
 NLDI_HYDROLOCATION_URL = "https://api.water.usgs.gov/nldi/linked-data/hydrolocation"
-V2_WFS_URL = "https://api.water.usgs.gov/geoserver/wmadata/ows"
-V2_LAYER = "wmadata:nhdflowline_network"
+# The flowtrace process runs the same raindrop algorithm on a separate route:
+# the fallback when the hydrolocation route fails. The catchment position
+# lookup is never a fallback here (its answer can differ from the raindrop's).
+NLDI_FLOWTRACE_URL = ("https://api.water.usgs.gov/nldi/pygeoapi/processes/"
+                      "nldi-flowtrace/execution")
+_HYDROLOCATION_RETRY_S = 1.5
+# NHDPlus V2 attributes from the USGS fabric API (OGC API Features), the
+# successor of the WaterData WFS EASI's delineation also reads.
+V2_ITEMS_URL = ("https://api.water.usgs.gov/fabric/pygeoapi/collections/"
+                "nhdflowline_network/items")
 _V2_FIELDS = "comid,gnis_name,totdasqkm,reachcode,slope,fcode,streamorde"
 _OFF_LINE_NOTE = ("Coordinates were not within the snap tolerance of a mapped "
                   "stream line. The point was resolved to the reach it drains to.")
@@ -78,19 +87,79 @@ def _int(value: Any) -> Optional[int]:
         return None
 
 
+def _post_json(url: str, params: dict, body: dict, timeout: float
+               ) -> tuple[Optional[dict], Optional[str]]:
+    """``(payload, None)`` on a 200 JSON answer to a POST, else ``(None, reason)``."""
+    try:
+        r = requests.post(url, params=params, json=body, timeout=timeout)
+        if r.status_code != 200:
+            return None, f"HTTP {r.status_code}"
+        data = r.json()
+        return (data, None) if isinstance(data, dict) else (None, "not a JSON object")
+    except Exception as exc:  # noqa: BLE001 - resilience by design
+        return None, str(exc)
+
+
+def parse_flowtrace(data) -> dict:
+    """The ``hydrolocation_snap`` shape from a flowtrace answer: the Point
+    feature that carries a COMID is the intersection with the network. No
+    features is a clean no-stream answer; features without such a point are
+    an unexpected shape, reported as an error rather than read as a stream."""
+    feats = (data or {}).get("features") if isinstance(data, dict) else None
+    if not feats:
+        return {}
+    for f in feats:
+        props = f.get("properties") or {}
+        geom = f.get("geometry") or {}
+        raw = props.get("comid", props.get("identifier"))
+        if geom.get("type") != "Point" or raw is None:
+            continue
+        comid = _int(raw)
+        if comid is None:
+            continue
+        out: dict[str, Any] = {"comid": comid}
+        coords = geom.get("coordinates") or []
+        if len(coords) >= 2:
+            try:
+                out["snap_lon"], out["snap_lat"] = float(coords[0]), float(coords[1])
+            except (TypeError, ValueError):
+                pass
+        return out
+    return {"error": "flowtrace: unexpected response shape"}
+
+
+def flowtrace_snap(lat: float, lon: float, *, timeout: float = 60.0) -> dict:
+    """One flowtrace execution for a point; the ``hydrolocation_snap`` shape."""
+    body = {"inputs": [{"id": "lat", "value": f"{lat:.6f}", "type": "text/plain"},
+                       {"id": "lon", "value": f"{lon:.6f}", "type": "text/plain"},
+                       {"id": "direction", "value": "none", "type": "text/plain"}]}
+    data, err = _post_json(NLDI_FLOWTRACE_URL, {"f": "json"}, body, timeout)
+    if err:
+        return {"error": f"flowtrace: {err}"}
+    return parse_flowtrace(data)
+
+
 def hydrolocation_snap(lat: float, lon: float) -> dict:
     """NLDI hydrolocation raindrop for one point.
 
     Returns ``{"comid", "snap_lat", "snap_lon"}`` (snap coords may be absent),
     ``{}`` for a clean no-stream answer, or ``{"error": ...}`` when the
     service failed. Keeps only ``source == "indexed"`` features, as pynhd's
-    ``comid_byloc`` does.
+    ``comid_byloc`` does. The hydrolocation route gets one retry after a
+    short pause, then the flowtrace process answers; the error names every
+    attempt.
     """
-    data, err = _get_json(NLDI_HYDROLOCATION_URL,
-                          {"coords": f"POINT({lon:.6f} {lat:.6f})"},
-                          timeout=30.0, retries=1)
+    params = {"coords": f"POINT({lon:.6f} {lat:.6f})"}
+    data, err = _get_json(NLDI_HYDROLOCATION_URL, params, timeout=30.0, retries=1)
     if err:
-        return {"error": f"hydrolocation: {err}"}
+        time.sleep(_HYDROLOCATION_RETRY_S)
+        data, err2 = _get_json(NLDI_HYDROLOCATION_URL, params, timeout=30.0, retries=0)
+        if err2:
+            fallback = flowtrace_snap(lat, lon)
+            if "error" not in fallback:
+                return fallback
+            return {"error": f"hydrolocation: {err}; hydrolocation: {err2}; "
+                             f"{fallback['error']}"}
     feats = [f for f in (data or {}).get("features") or []
              if (f.get("properties") or {}).get("source") == "indexed"]
     if not feats:
@@ -113,17 +182,15 @@ def hydrolocation_snap(lat: float, lon: float) -> dict:
 
 
 def v2_flowline_attrs(comid: int) -> dict:
-    """NHDPlus V2 attributes for a COMID from the same WaterData layer EASI
-    reads (``wmadata:nhdflowline_network``). Returns the
+    """NHDPlus V2 attributes for a COMID from the same fabric API collection
+    EASI's delineation reads (``nhdflowline_network``). Returns the
     ``delineation.flowline_attrs`` keys, or ``{"error": ...}`` when the
     service failed (no alternate source: the ratio must come from the same
     numbers EASI uses). Never raises."""
-    params = {"service": "WFS", "version": "2.0.0", "request": "GetFeature",
-              "typeNames": V2_LAYER, "outputFormat": "application/json",
-              "CQL_FILTER": f"comid={int(comid)}", "propertyName": _V2_FIELDS}
-    data, err = _get_json(V2_WFS_URL, params, timeout=60.0, retries=2)
+    params = {"comid": int(comid), "limit": 1, "properties": _V2_FIELDS, "f": "json"}
+    data, err = _get_json(V2_ITEMS_URL, params, timeout=60.0, retries=2)
     if err:
-        data, err = _get_json(V2_WFS_URL, params, timeout=120.0, retries=1)
+        data, err = _get_json(V2_ITEMS_URL, params, timeout=120.0, retries=1)
     if err:
         return {"error": f"attrs: {err}"}
     out: dict[str, Any] = {"gnis_name": None, "drainage_area_sqkm": None,
