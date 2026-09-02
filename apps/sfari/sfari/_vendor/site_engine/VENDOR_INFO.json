@@ -4,15 +4,15 @@
   "_extracted/data/ecoregions_l3.geojson": "e91f411d4976ef44b4247e3668b09269bd0dbf8e56c5402318b91518d04e865e",
   "_extracted/data/physio_divisions.geojson": "41f147243333c1b37f448ea4cbade3c7411424794899bdaafc1017a4804b1ff7"
  },
- "engine_version": "0.2.1",
+ "engine_version": "0.2.2",
  "manifest": {
-  "__init__.py": "bef347c5586a5a14c6222ee38d7f3af9235644d22c90aa16001031387375a6bc",
+  "__init__.py": "f8fc14e50e86d72fd9258a7dbe8669297436bf0baf8ec6828766b22095621f48",
   "_extracted/__init__.py": "6012078cd7102fea6650e5d8b7fbb8b926a431b8e73ad071d0c50bd0774aff18",
   "_extracted/bieger.py": "abbc6c9640e19b5ce28c5dc4acedf9f84ee0483c44df099389309694ad38b10e",
   "_extracted/config.py": "6729cc5c4fc3fef1d851e1f20c9d7fb4ca234d1d3003bd3c08d89d36898fa0fc",
   "_extracted/geomorph.py": "10bb04df5a268280766601e9a9e36641d29cd7752ae66f94724ca46e7e9ee448",
   "_extracted/threedep.py": "5dc291f879e8f7d471e3725d1cddb39925610b8804d135db672ac316b4574118",
-  "anchor.py": "e5cb13bdb2c5c2f472e6f67cf4a4881148f8bfb036662d3e853bdaff126c4ea6",
+  "anchor.py": "4051559785317e0a1b11e7b8df5037b724e7de5662b32def1c2d212277f1fc38",
   "context.py": "e9e5b47b87ac201e4aa0a102eab902bd341c33b050c6c951c978b2e17e9d8e2e",
   "delineate.py": "78f76d2323164a44b29b8b84bbb7bcf16f6a3964a55afe537afa18eac8c1f9e4",
   "engine.py": "c59d34dd10ba338a94e0cb5bafe251c14e08b1c1907462127c7ba7a474d65ede",

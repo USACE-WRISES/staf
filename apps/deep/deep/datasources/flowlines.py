@@ -6,7 +6,8 @@ Two helpers for the StreamStats-style map:
 - ``nearest_point_on_lines`` snaps a click to the nearest flowline and returns the
   distance in feet, so the UI can snap-or-reject.
 
-Both never raise — they return ``None`` on any failure/no-data. Distance math is in
+Both never raise — they return ``None`` on any failure/no-data. The vectors
+come from the USGS fabric API (``fabric.py``), the successor of the WaterData WFS. Distance math is in
 EPSG:5070 (Albers metres), matching ``easi.delineation``. ipyleaflet gives
 coordinates as (lat, lon); NHD/shapely use (lon, lat) — the swap is handled here.
 """
@@ -27,28 +28,28 @@ def _round_bbox(west, south, east, north, ndigits=3):
 
 @functools.lru_cache(maxsize=64)
 def _fetch(west: float, south: float, east: float, north: float) -> Optional[dict]:
-    """Cached NHD flowline pull for a (rounded) bbox -> geometry-only GeoJSON."""
+    """Cached NHDPlus V2 flowline pull for a (rounded) bbox -> GeoJSON with
+    ``comid`` per feature (the USGS fabric API; see ``fabric.py``)."""
     try:
-        from pynhd import WaterData
-        gdf = WaterData("nhdflowline_network").bybox((west, south, east, north))
-    except Exception:  # noqa: BLE001 - no flowlines / network / version guard
+        from . import fabric
+        found = fabric.features_in_bbox(west, south, east, north)
+    except Exception:  # noqa: BLE001 - network / version guard
         return None
-    if gdf is None or gdf.empty:
+    if not found:
         return None
-    has_comid = "comid" in gdf.columns
     feats = []
-    for _, row in gdf.iterrows():
-        geom = row.geometry
-        if geom is None or geom.is_empty:
+    for f in found:
+        geom = f.get("geometry") or {}
+        if not geom.get("coordinates"):
             continue
         props = {}
-        if has_comid and row["comid"] is not None:
+        comid = (f.get("properties") or {}).get("comid")
+        if comid is not None:
             try:
-                props["comid"] = int(row["comid"])
+                props["comid"] = int(comid)
             except (TypeError, ValueError):
                 pass
-        feats.append({"type": "Feature", "properties": props,
-                      "geometry": geom.__geo_interface__})
+        feats.append({"type": "Feature", "properties": props, "geometry": geom})
     return {"type": "FeatureCollection", "features": feats} if feats else None
 
 

@@ -112,7 +112,7 @@ complete availability, not 20 independent field observations.
 
 | Source | Used for |
 |---|---|
-| **NHDPlus** via HyRiver (`pynhd`, NLDI / WaterData) | Stream vectors, point snap, watershed delineation, reach derivation, VAAs |
+| **NHDPlus V2** via the USGS fabric API (flowlines and attributes; the successor of the retiring WaterData WFS) and HyRiver `pynhd` (NLDI basins, navigation, point snap with a flowtrace fallback) | Stream vectors, point snap, watershed delineation, reach derivation, VAAs |
 | **NHDPlus HR** (hydro.nationalmap.gov MapServer) | Full-resolution stream display, the clicked reach's attributes, and the nearest-covered-reach routing for streams outside the V2 network (`easi/routing.py`, `easi/datasources/nhd_hr.py`) |
 | **STAF site engine** (vendored from `libs/site_engine`, `easi/watershed.py`) | The exact point watershed and its land cover, roads, dams, soil K and EROM runoff for streams outside the StreamCat lookup network. Never used on covered streams. Definitions of both engines: `libs/README.md` |
 | **USGS 3DEP** (`py3dep`) | DEM cross-sections → entrenchment, bank-height ratio, slope |

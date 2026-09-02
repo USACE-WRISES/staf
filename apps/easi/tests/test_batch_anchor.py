@@ -124,7 +124,8 @@ def test_capabilities_publish_the_policy():
     assert caps["defaults"]["snap_tolerance_ft"] == routing.HR_SNAP_TOL_FT
     assert caps["defaults"]["watershed_engine"] == "auto"
     assert caps["watershed_engine_options"] == ["auto", "streamcat-legacy"]
-    assert caps["site_engine_version"] == "0.2.0"
+    from easi._vendor.site_engine import ENGINE_VERSION
+    assert caps["site_engine_version"] == ENGINE_VERSION      # whatever is vendored
 
 
 def test_batch_config_policy_round_trip():

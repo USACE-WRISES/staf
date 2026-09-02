@@ -3,6 +3,7 @@ Imports the Shiny module without running a server."""
 from __future__ import annotations
 
 import importlib
+from pathlib import Path
 
 import pytest
 
@@ -67,3 +68,11 @@ def test_copy_has_no_em_dash_and_names_both_engines():
 def test_map_styles_exist():
     assert app.HR_FLOWLINE_STYLE["color"] != app.FLOWLINE_STYLE["color"]
     assert "dashArray" in app.ROUTE_STYLE
+
+
+def test_field_forms_output_stays_alive_while_the_modal_is_hidden():
+    # The modal's output binds while Bootstrap's fade still hides it; a
+    # suspended output never resumes, so the keep-alive decorator must stay.
+    src = Path(app.__file__).read_text(encoding="utf-8")
+    assert ("@output(suspend_when_hidden=False)\n    @render.ui\n    def field_forms_body"
+            in src)
