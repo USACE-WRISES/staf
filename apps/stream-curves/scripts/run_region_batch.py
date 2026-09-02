@@ -246,10 +246,14 @@ def cmd_stage(a) -> int:
         predictor_source=a.predictor_source,
         screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
         engine_config=_engine_config(a),
+        exclude_sites=_parse_kv(a.exclude_site, "--exclude-site") or None,
         on_event=ra.event_narrator())
     print(f"[batch] evidence: {evidence['n_retained']} / {evidence['n_candidates']} retained "
           f"(tier {evidence['tier']['reference_tier']}, pool {evidence['reference_pool_disposition']}), "
           f"{len(evidence['curve_rows'])} curves built")
+    for e in (evidence.get("owner_site_exclusions") or []):
+        print(f"[batch] owner exclusion: {e.get('site_id')} "
+              f"({'was retained' if e.get('was_retained') else 'not in the pool'}): {e.get('reason')}")
     for rep in (evidence.get("source_reports") or []):
         if (rep or {}).get("source") == "site_engine":
             print(f"[batch] site engine: {rep.get('n_ok', 0)}/{rep.get('n_sites', 0)} ok "
@@ -560,6 +564,7 @@ def cmd_stage_many(a) -> int:
                 screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
                 engine_snap_tolerance_ft=a.engine_snap_tolerance_ft,
                 engine_max_reaches=a.engine_max_reaches, engine_max_hops=a.engine_max_hops,
+                exclude_site=[],
                 predictor_source=a.predictor_source)
             try:
                 row["exit"] = int(cmd_stage(ns))
@@ -656,6 +661,11 @@ def main(argv=None) -> int:
     s.add_argument("--engine-max-hops", type=int, default=None,
                    help="STAF site engine only: the hop budget of one watershed walk "
                         "(the engine default is 200). Recorded like the snap tolerance")
+    s.add_argument("--exclude-site", action="append", default=[], metavar="SITE_ID=REASON",
+                   help="drop a retained site from the pool on the record (an owner "
+                        "decision, e.g. a basin the engine cannot value). Repeatable. "
+                        "Marked on the screening table, recorded in the manifest, the "
+                        "digest, and the packet")
     s.add_argument("--max-unresolved-share", type=float, default=0.10,
                    help="refuse to stage when more than this share of candidates is unresolved by the screen")
     s.add_argument("--allow-unresolved", action="store_true",

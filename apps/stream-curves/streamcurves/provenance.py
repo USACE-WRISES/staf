@@ -263,6 +263,9 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             # the digest: the pin reproduces the historical behavior.
             "watershed_engine": result.get("screening_watershed_engine"),
             "watershed_engine_echo": _screening_engine_echo(result),
+            # Sites the owner dropped from the retained pool, with reasons
+            # (--exclude-site); they change the pool, so they join the digest.
+            "owner_site_exclusions": list(result.get("owner_site_exclusions") or []),
         },
         "streamcat": (result.get("source_reports") or [None])[0],
     }
@@ -417,6 +420,10 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
     # Same additive rule for the predictor source: the StreamCat default adds
     # no key (every previously published digest reproduces byte for byte); an
     # engine-sourced build changes the predictors and therefore the digest.
+    excluded = sorted(str((e or {}).get("site_id"))
+                      for e in ((inputs.get("easi") or {}).get("owner_site_exclusions") or []))
+    if excluded:
+        digest_payload["owner_site_exclusions"] = excluded
     ps = inputs.get("predictor_source")
     if ps:
         digest_payload["predictor_source"] = {

@@ -238,6 +238,7 @@ def build_packet(result: dict, doc: dict, policy_result: dict, *, policy_meta: d
             for g in (result.get("uncovered_functions") or [])],
         "source_reports": list(result.get("source_reports") or []),
         "resourced_metrics": list(result.get("resourced_metrics") or []),
+        "owner_site_exclusions": list(result.get("owner_site_exclusions") or []),
         "prior_version_diff": diff_against_prior(result, prior_bundle),
         "staged": staged,
         "gallery": gallery,
@@ -254,6 +255,14 @@ def _table(headers: list[str], rows: list[list[Any]]) -> list[str]:
     for r in rows:
         out.append("| " + " | ".join("" if v is None else str(v).replace("|", "/").replace("\n", " ")
                                      for v in r) + " |")
+    return out
+
+
+def owner_exclusion_lines(p: dict) -> list[str]:
+    """One bullet per site the owner dropped from the retained pool."""
+    out: list[str] = []
+    for e in p.get("owner_site_exclusions") or []:
+        out += [f"- **Owner exclusion:** {e.get('site_id')} left the retained pool, {e.get('reason')}", ""]
     return out
 
 
@@ -304,6 +313,7 @@ def packet_markdown(p: dict) -> str:
         lines += [f"- **{n_unresolved} of {counts.get('n_screened')} candidates unresolved by the screen** "
                   "(a service outage or a failed assessment, not a criteria exclusion): the pool is "
                   "smaller than the region's data.", ""]
+    lines += owner_exclusion_lines(p)
     lines += [f"Standing-decision policy {p['policy']['version']} ({str(p['policy']['sha256'])[:19]}), "
               f"enabled beyond the defaults: {', '.join(p['policy']['enabled']) or 'none'}. "
               f"Applied entries: {', '.join(p['policy']['applied_ids']) or 'none'}. "
