@@ -24,7 +24,12 @@ def test_registry_covers_expected_metrics():
                 "catchment-hydrology-anthropogenic-land-cover",
                 "floodplain-connectivity-entrenchment-ratio-er",
                 "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
-                "channel-evolution-width-depth-ratio"):
+                "channel-evolution-width-depth-ratio",
+                # the regional bundles' landscape metrics
+                "spring-pctimp2019ws", "spring-pctcrop2019ws",
+                "spring-pctwdwet2019ws", "spring-pcthbwet2019ws",
+                "spring-rddensws", "spring-damdensws",
+                "spring-bfiws", "spring-rdcrsws"):
         assert mid in ids
 
 

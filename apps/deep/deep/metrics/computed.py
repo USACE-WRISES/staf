@@ -7,6 +7,10 @@ field-entered value. Adapters reuse EASI's datasource + geomorphology code:
 
 - watershed land cover / impervious  <- the STAF site engine (exact watershed)
   when the bundle allows it, else the StreamCat lookup engine (NLCD fallback)
+- regional landscape metrics (the ``spring-*ws`` ids: impervious, crops,
+  woody and herbaceous wetland, road and dam density)  <- the same two engines
+- base flow index and road-stream crossings  <- the StreamCat lookup engine
+  only (the site engine has no analog)
 - reach geomorphic ratios ER / BHR / W:D  <- 3DEP DEM cross-section + Bieger bankfull
 
 Every value carries a ``basis`` (``site-engine`` | ``streamcat`` | ``nlcd`` |
@@ -159,14 +163,20 @@ def _nlcd_source(ctx: AnalysisContext, what: str) -> str:
     return f"NLCD 2021 {what} (watershed)"
 
 
+# Every StreamCat column an adapter reads, fetched in ONE batched request per
+# site (the keys come back aoi-suffixed, e.g. ``pctimp2019ws``).
+_STREAMCAT_NAMES = ["pctimp2019", "pctcrop2019", "pcthay2019", "pctwdwet2019",
+                    "pcthbwet2019", "rddens", "damdens", "bfi", "rdcrs"]
+
+
 def _streamcat(ctx: AnalysisContext) -> dict:
     if "streamcat" not in ctx.extras:
         if _comid_withheld(ctx) or not ctx.comid:
             ctx.extras["streamcat"] = {}
         else:
             from ..datasources import streamcat
-            names = ["pctimp2019", "pctcrop2019", "pcthay2019"]
-            ctx.extras["streamcat"] = streamcat.metrics_by_comid(ctx.comid, names) or {}
+            ctx.extras["streamcat"] = streamcat.metrics_by_comid(
+                ctx.comid, list(_STREAMCAT_NAMES)) or {}
     return ctx.extras["streamcat"]
 
 
@@ -197,12 +207,55 @@ def _reach_geom(ctx: AnalysisContext) -> dict:
     return ctx.extras["reach_geomorph"]
 
 
+def _as_float(v) -> Optional[float]:
+    """``float(v)``, or ``None`` for a missing or non-numeric datum. Zero is a
+    real value at every layer, so only ``None`` means missing."""
+    if v is None:
+        return None
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _layered(ctx: AnalysisContext, *, engine_key: Optional[str], engine_what: str = "",
+             sc_col: str, sc_what: str, nlcd_key: Optional[str] = None,
+             nlcd_what: str = "", ndigits: int = 2, confidence: str = "H",
+             sc_note: str = "") -> Optional[ComputedValue]:
+    """The source order every watershed adapter follows: the STAF site engine
+    (exact watershed, only when ``engine_key`` names an engine metric and the
+    ``allow_engine`` gate in :func:`_engine_record` lets it run), then the
+    StreamCat lookup engine column ``sc_col``, then NLCD over the exact polygon
+    (``nlcd_key``, land cover only). ``sc_note`` rides after the StreamCat
+    label. Looks the layer helpers up at call time so tests can stand in for
+    them on the module."""
+    if engine_key:
+        ev = _as_float(_engine_metric(ctx, engine_key))
+        if ev is not None:
+            return ComputedValue(round(ev, ndigits),
+                                 f"{_engine_label(ctx)} {engine_what}",
+                                 confidence, engine=True, basis=BASIS_SITE_ENGINE)
+    v = _as_float(_streamcat(ctx).get(sc_col))
+    if v is not None:
+        src = _streamcat_source(ctx, sc_what)
+        if sc_note:
+            src = f"{src}, {sc_note}"
+        return ComputedValue(round(v, ndigits), src, confidence, basis=BASIS_STREAMCAT)
+    if nlcd_key:
+        v = _as_float(_landcover(ctx).get(nlcd_key))
+        if v is not None:
+            return ComputedValue(round(v, ndigits), _nlcd_source(ctx, nlcd_what),
+                                 confidence, basis=BASIS_NLCD)
+    return None
+
+
 # --------------------------------------------------------------------------- #
 # Adapters: watershed land cover (site engine, StreamCat, NLCD fallback)
 # --------------------------------------------------------------------------- #
 @adapter("catchment-hydrology-impervious-cover",
          "catchment-hydrology-percent-impervious-cover",
-         "catchment-hydrology-effective-impervious-cover")
+         "catchment-hydrology-effective-impervious-cover",
+         "spring-pctimp2019ws")
 def _impervious(ctx):
     ev = _engine_metric(ctx, "imperviousPctWatershed")
     if ev is not None:
@@ -243,6 +296,67 @@ def _anthropogenic(ctx):
                              _nlcd_source(ctx, "agriculture + developed"), "M",
                              basis=BASIS_NLCD)
     return None
+
+
+# --------------------------------------------------------------------------- #
+# Adapters: regional landscape metrics (the StreamCat-coded ``spring-*ws`` ids
+# the regional bundles score). Land cover and densities follow the site engine
+# -> StreamCat -> NLCD order above. Base flow index and road-stream crossings
+# have no site-engine analog and come from the StreamCat lookup engine only.
+# --------------------------------------------------------------------------- #
+@adapter("spring-pctcrop2019ws")
+def _crop(ctx):
+    return _layered(ctx, engine_key="cropPctWatershed",
+                    engine_what="cultivated crops (exact watershed, NLCD 2021)",
+                    sc_col="pctcrop2019ws", sc_what="pctcrop2019",
+                    nlcd_key="crop_pct", nlcd_what="cultivated crops")
+
+
+@adapter("spring-pctwdwet2019ws")
+def _woody_wetland(ctx):
+    return _layered(ctx, engine_key="woodyWetlandPctWatershed",
+                    engine_what="woody wetland (exact watershed, NLCD 2021)",
+                    sc_col="pctwdwet2019ws", sc_what="pctwdwet2019",
+                    nlcd_key="woody_wetland_pct", nlcd_what="woody wetland")
+
+
+@adapter("spring-pcthbwet2019ws")
+def _herb_wetland(ctx):
+    return _layered(ctx, engine_key="herbWetlandPctWatershed",
+                    engine_what="herbaceous wetland (exact watershed, NLCD 2021)",
+                    sc_col="pcthbwet2019ws", sc_what="pcthbwet2019",
+                    nlcd_key="herb_wetland_pct", nlcd_what="herbaceous wetland")
+
+
+# Densities keep four decimals: two would zero rdcrsws and most damdensws.
+@adapter("spring-rddensws")
+def _road_density(ctx):
+    return _layered(ctx, engine_key="roadDensity",
+                    engine_what="road density (exact watershed, TIGERweb roads)",
+                    sc_col="rddensws", sc_what="rddens", ndigits=4, confidence="M")
+
+
+@adapter("spring-damdensws")
+def _dam_density(ctx):
+    return _layered(ctx, engine_key="damDensityPerSqkm",
+                    engine_what="dam density (exact watershed, USACE NID)",
+                    sc_col="damdensws", sc_what="damdens", ndigits=4)
+
+
+@adapter("spring-bfiws")
+def _baseflow_index(ctx):
+    return _layered(ctx, engine_key=None, sc_col="bfiws", sc_what="bfi",
+                    confidence="M")
+
+
+_RDCRS_NOTE = ("API-served units, enter values as served, a crossings per km2 "
+               "value computed by hand lands about 100 times above this curve")
+
+
+@adapter("spring-rdcrsws")
+def _road_crossings(ctx):
+    return _layered(ctx, engine_key=None, sc_col="rdcrsws", sc_what="rdcrs",
+                    ndigits=4, confidence="M", sc_note=_RDCRS_NOTE)
 
 
 # --------------------------------------------------------------------------- #

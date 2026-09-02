@@ -1412,7 +1412,11 @@ def server(input, output, session_):  # noqa: C901
                 "3. **Assessment** — enter each metric's measured value; the reference curve converts "
                 "it to an index and the function/outcome scores update live. Desktop-derivable "
                 "metrics prefill with a badge naming the engine or layer that produced them "
-                "(exact watershed, StreamCat, NLCD, 3DEP) and stay editable. A value computed "
+                "(exact watershed, StreamCat, NLCD, 3DEP) and stay editable. On a regional "
+                "assessment the landscape metrics (impervious, crops, wetlands, road and dam "
+                "density, base flow index, road-stream crossings) prefill the same way, from "
+                "the STAF site engine when the curves were fitted on it and from the StreamCat "
+                "lookup engine otherwise. A value computed "
                 "from a different predictor source than the one the curves were fitted on is "
                 "shown as reference evidence and is not scored.\n"
                 "4. **Report** — review and export the detailed assessment."),

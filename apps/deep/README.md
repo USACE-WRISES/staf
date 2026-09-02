@@ -117,6 +117,16 @@ adversarial review):**
   so the rule could only fire in tests. It now keeps the flag for desktop
   values, and the exports read their indices through the same scoring layer,
   so a withheld value prints as reference only everywhere.
+- The regional bundles' landscape metrics auto-pull too (2026-09):
+  `spring-pctimp2019ws`, `spring-pctcrop2019ws`, `spring-pctwdwet2019ws`,
+  `spring-pcthbwet2019ws`, `spring-rddensws`, `spring-damdensws`,
+  `spring-bfiws`, `spring-rdcrsws`. On a bundle fitted on engine predictors
+  the STAF site engine answers the first six from the exact watershed. On a
+  bundle fitted on StreamCat predictors the StreamCat lookup engine answers
+  all eight, and it always answers base flow index and road-stream crossings
+  because the engine has no analog. When routing to a covered reach is
+  declined, NLCD over the exact polygon stands in for the land-cover ids. The
+  crossings value carries the StreamCat API units caution in its source label.
 
 **Two watershed engines (2026-09):**
 

@@ -1,9 +1,10 @@
 """NLCD land cover over a watershed polygon (pygeohydro / MRLC).
 
-Fallback source for impervious / forest / wetland / agriculture percentages when
-StreamCat is unavailable. Computes class statistics via cover_statistics and the
-mean of the impervious-percent raster over the basin. Never raises — returns {}
-on failure so adapters degrade gracefully.
+Fallback source for impervious / forest / wetland / agriculture percentages (and
+the crop and wetland-type splits the regional bundles score) when StreamCat is
+unavailable. Computes class statistics via cover_statistics and the mean of the
+impervious-percent raster over the basin. Never raises — returns {} on failure
+so adapters degrade gracefully.
 
 Note: 30 m zonal stats over very large basins can be slow; StreamCat is the
 preferred (fast, pre-computed) source when available.
@@ -12,9 +13,22 @@ from __future__ import annotations
 
 YEAR = 2021
 
+# NLCD class-name keywords (pygeohydro cover_statistics naming). The three
+# split classes are kept equal to the STAF site engine's landcover keyword
+# table (``_vendor/site_engine/metrics/landcover.py``) so the fallback and the
+# engine count the same classes.
+CROP_KEYWORDS = ("Crop",)
+WOODY_WETLAND_KEYWORDS = ("Woody Wetland",)
+HERB_WETLAND_KEYWORDS = ("Herbaceous Wetland", "Emergent Herbaceous")
+
 
 def watershed_landcover(watershed_geojson: dict | None) -> dict:
-    """Return {impervious_pct, forest_pct, wetland_pct, ag_pct} or {}."""
+    """Return the NLCD percentages over the polygon, or {} on failure.
+
+    Keys: ``impervious_pct``, ``forest_pct``, ``wetland_pct`` (every wetland
+    class), ``ag_pct`` (crop + hay/pasture), and the splits the regional
+    bundles score, ``crop_pct``, ``woody_wetland_pct``, ``herb_wetland_pct``.
+    """
     if not watershed_geojson:
         return {}
     try:
@@ -43,6 +57,9 @@ def watershed_landcover(watershed_geojson: dict | None) -> dict:
             "forest_pct": _sum("Forest"),
             "wetland_pct": _sum("Wetland"),
             "ag_pct": _sum("Crop", "Hay", "Pasture"),
+            "crop_pct": _sum(*CROP_KEYWORDS),
+            "woody_wetland_pct": _sum(*WOODY_WETLAND_KEYWORDS),
+            "herb_wetland_pct": _sum(*HERB_WETLAND_KEYWORDS),
         }
     except Exception:  # noqa: BLE001 - resilience by design
         return {}
