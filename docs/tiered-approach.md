@@ -416,7 +416,7 @@ This example shows how:
 
 **Typical workflow**
 1. Define reaches and watershed context.
-2. Compute a small set of national, repeatable desktop metrics for each function.
+2. Compute a small set of national, repeatable desktop metrics for each function (the two watershed engines that compute them are defined on the [Computation Engines]({{ site.baseurl }}/computation-engines/) page).
 3. Convert metric values to standardized scores using published thresholds or relative scoring (e.g., percentiles within a region/stratum).
 4. Roll up to outcomes and an optional condition score.
 5. Identify ï¿½high potential / low constraintï¿½ candidate reaches for Rapid tier.

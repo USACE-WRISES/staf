@@ -18,7 +18,7 @@ STAF Desktop shell that runs those same apps locally.
 - `apps/` — the four Shiny for Python apps. Each folder is self-contained (own `requirements.txt`, `www/`, `data/`, tests, and Posit Publisher config) and deploys to its own Posit Connect Cloud content item.
 - `apps/library/` — the shared, version-controlled **STAF assessment library**: completed detailed assessments that StreamCurves publishes and DEEP runs (latest version only). See `apps/library/README.md` and "The assessment library" below.
 - `desktop/` — STAF Desktop: a C#/.NET 10 WebView2 shell that supervises the same four apps as local processes on a self-managed Python runtime (downloaded on first run, auto-updated from this repo's GitHub Releases). `dotnet test desktop\Staf.Desktop.slnx` runs its suite; launching a dev build from a checkout runs the apps from the repo `.venv`. Release model: `desktop/RELEASING.md`.
-- `libs/` — shared packages consumed by the apps via per-app vendored copies (never imported across app folders at runtime). `libs/site_engine` is the STAF site computation engine: true point-watershed delineation on the full-resolution NHD plus exact-watershed metrics, vendored into SFARI (field-form evidence prefill), StreamCurves (selectable predictor source), and DEEP (metric auto-pull with the train/serve pairing rule). EASI does not use it; its scoring stays on published EPA StreamCat. See `libs/site_engine/README.md`.
+- `libs/` — shared packages consumed by the apps via per-app vendored copies (never imported across app folders at runtime). `libs/site_engine` is the **STAF site engine**: true point-watershed delineation on the full-resolution NHD plus exact-watershed metrics. The other watershed engine is the **StreamCat lookup engine** (EPA StreamCat by NHDPlus V2 COMID). EASI uses the lookup engine on covered streams and the site engine on any other NHD stream; SFARI and DEEP use the site engine first with the lookup engine as a labeled fallback; StreamCurves offers the site engine as its one selectable predictor source. Definitions, per-app policy, and the vendoring rule: `libs/README.md` and the site's Computation Engines page.
 - `scripts/`, `src/` — TypeScript build pipeline for the metric library (see below).
 - `notes/` — internal working notes; anything outside `docs/` is not published.
 
@@ -56,7 +56,7 @@ Each app deploys **separately** with the Posit Publisher extension (VS Code / Po
 - The untracked `.posit/publish/deployments/*.toml` records bind redeploys to the **existing** Connect Cloud content item — they are what keep the public app URLs stable. Never delete or commit them; back them up if you move machines.
 - Before deploying, confirm Publisher targets the existing deployment rather than creating a new one.
 
-App URLs are listed in `docs/_data/apps.yml` (used by the site) and in each app's `STAF_LINKS` dict (used for the STAF link in each app's header, StreamCurves' DEEP deep links, and the desktop overrides). Until a shared `staf-core` package exists, a URL change must be mirrored in both places.
+App URLs are listed in `docs/_data/apps.yml` (used by the site) and in each app's `STAF_LINKS` dict (used for the STAF link in each app's header, StreamCurves' DEEP deep links, and the desktop overrides). A URL change must be mirrored in both places.
 
 ## The assessment library
 
