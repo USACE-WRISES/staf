@@ -478,7 +478,8 @@ Rapid and Detailed tiers are the designed responses to each of them.
   the stream.
 - **Streams outside the StreamCat network are assessed differently.** Their
   watershed metrics come from the STAF site engine's exact watershed rather
-  than from StreamCat, which takes minutes rather than seconds and can refuse a
+  than from StreamCat, which usually takes well under a minute (up to about five
+   minutes on a large basin) rather than seconds and can refuse a
   basin past its budget, and their reach-keyed metrics describe the nearest
   covered reach downstream. The verification sites all sit on the covered
   network; the equivalence of the two engines on covered streams is the

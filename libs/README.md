@@ -17,11 +17,11 @@ this vocabulary.
 | | StreamCat lookup engine | STAF site engine |
 |---|---|---|
 | Token | `streamcat` (DEEP bundle `predictorSource`, StreamCurves digests and CLI, EASI batch policy `streamcat-legacy`) | `site-engine` (`site_engine.ENGINE_ID`; `site-engine vX` in bundles); YAML source key `site_engine` |
-| Version | The StreamCat vintage of each variable (for example NLCD 2019 land cover) | `site_engine.ENGINE_VERSION` (0.2.0), recorded by every consumer |
+| Version | The StreamCat vintage of each variable (for example NLCD 2019 land cover) | `site_engine.ENGINE_VERSION` (0.2.1), recorded by every consumer |
 | Watershed | The NLDI basin of the NHDPlus V2 COMID, which is the watershed StreamCat summarized | The exact point watershed on NHDPlus HR by catchment aggregation, area validated against the published HR drainage area |
 | Values | EPA StreamCat precomputed catchment and watershed summaries, plus the EPA modeled integrity indices | Computed from source data: NLCD 2021 on the watershed and the 100 m riparian buffer (2001 impervious optional), TIGERweb roads (primary, secondary, local), NID dams in the polygon (normal storage, NID storage, density), SSURGO K area-weighted by SDA polygon intersection, EROM mean-annual flow and the derived runoff depth, the 3DEP cross-section |
 | Coverage | The NHDPlus V2 network (about 1:100k) | Any NHD HR stream in CONUS, within the reach budget |
-| Runtime | Seconds (one REST call per COMID, cached) | About one to five minutes on a typical site with the interactive budget; every consumer caches per site |
+| Runtime | Seconds (one REST call per COMID, cached) | Usually well under a minute, up to about five minutes on a large basin within the interactive budget (3,000 reaches, 190 hops); every consumer caches per site |
 | Reproducibility | A published dataset, citable by vintage | Deterministic for engine version plus pinned vintages, against live services |
 | Cannot produce | Anything off the V2 network | The EPA modeled indices (HYD, SED, CHEM, CONN, TEMP, HABT, prG_BMMI; `provenance.PERMANENT_EXCLUSIONS`), NRSA field observations, the base-flow index, precipitation and temperature normals, the catchment-scale AOI, road-stream crossings |
 | Produces differently | | Runoff is EROM-derived and labeled not equivalent to StreamCat `runoffws` (`metrics/runoff.py`); the riparian buffer is built from the HR flowline tree, not the V2 `rp100` buffer |

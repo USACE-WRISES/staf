@@ -1067,7 +1067,7 @@ def server(input, output, session):
                 "(or type coordinates / search an address). Blue lines are the NHDPlus V2 "
                 "network. Light blue lines are all other NHD streams: for those, SFARI "
                 "computes the exact watershed with the STAF site engine, which takes about "
-                "2 to 5 minutes. Set the reach length and click **Delineate**.\n"
+                "a minute or less, up to about five minutes on a large basin. Set the reach length and click **Delineate**.\n"
                 "2. **Basin** — review the watershed and reach. On a V2 stream the site "
                 "engine keeps running in the background and upgrades the watershed "
                 "evidence when it finishes.\n"
@@ -1138,7 +1138,7 @@ def server(input, output, session):
             lines = [ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away). This stream is outside "
                           "the NHDPlus V2 network.", class_="easi-snap-note ok"),
                      ui.p("SFARI will compute its exact watershed with the STAF site engine. "
-                          "This typically takes 2 to 5 minutes.", class_="easi-snap-note")]
+                          "This usually takes well under a minute, and up to about five minutes on a large basin.", class_="easi-snap-note")]
             if hr_site.declined(anchor):
                 lines.append(ui.p("The nearest covered reach drains more than 10 times this "
                                   "stream, so StreamCat evidence keyed to it will be withheld.",

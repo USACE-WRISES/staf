@@ -197,7 +197,7 @@ screens each site once even where the bundled NRSA table repeats an id.
 `--predictor-source` (default `streamcat`, or `site-engine`) selects which engine
 computes the curve predictors: `streamcat` is the StreamCat lookup engine and
 `site-engine` is the STAF site engine, which recomputes them at the training sites
-(1 to 7 minutes per uncached site) and stamps the bundle's `predictorSource`; a
+(usually under a minute per uncached site, up to about five on a large basin) and stamps the bundle's `predictorSource`; a
 replay recovers the choice from the run's own manifest. The EASI screening inside
 a stage is pinned to the StreamCat lookup engine (`SCREENING_WATERSHED_ENGINE` in
 `streamcurves/easi_screening.py`, recorded in the manifest outside the digest), so

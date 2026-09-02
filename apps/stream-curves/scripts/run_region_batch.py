@@ -610,7 +610,7 @@ def main(argv=None) -> int:
                    help="which engine computes the curve predictors: streamcat is "
                         "the StreamCat lookup engine (default); site-engine is the "
                         "STAF site engine, which recomputes them at the training "
-                        "sites (1 to 7 minutes per uncached site) and stamps the "
+                        "sites (usually under a minute per uncached site, up to about five on a large basin) and stamps the "
                         "bundle predictorSource")
     s.add_argument("--max-unresolved-share", type=float, default=0.10,
                    help="refuse to stage when more than this share of candidates is unresolved by the screen")

@@ -9,8 +9,8 @@ the NRSA sites and the resulting curve version's provenance (including
 
 Availability is import-provable (the ``easi_screening.engine_available``
 pattern): the vendored package plus the geospatial stack. Engine runs cost
-one to seven minutes per site, so both compile paths label the cost and cache
-per site. Never raises; per-site failures leave NaN and are counted in the
+usually under a minute per site (up to about five on a large basin), so both
+compile paths label the cost and cache per site. Never raises; per-site failures leave NaN and are counted in the
 honesty report.
 """
 from __future__ import annotations

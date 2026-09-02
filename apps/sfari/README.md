@@ -58,7 +58,7 @@ The map draws the NHDPlus V2 network (blue, clickable, StreamCat data
 available) over the full high-resolution NHD (light blue) from the engine's HR
 client. A V2 click delineates the NLDI basin at once and starts the site
 engine in the background; StreamCat values show immediately and upgrade in
-place when the engine finishes (typically 2 to 5 minutes, refused past the
+place when the engine finishes (usually well under a minute, up to about five minutes on a large basin, refused past the
 interactive reach budget). An HR-only click is anchored to the nearest covered
 reach downstream (`sfari/hr_site.py`, the engine's shared classification),
 Delineate computes the exact watershed and reach with the engine, and the

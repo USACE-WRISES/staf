@@ -32,7 +32,7 @@ stepper: **Identify → Basin → Assessment → Report**.
    nearest stream line** (or tells you if you missed). On a bold line the
    StreamCat lookup engine answers the watershed metrics in seconds. On a thin
    line the STAF site engine calculates the exact watershed at the clicked
-   point (about one to five minutes, with a progress line); the three
+   point (usually well under a minute, up to about five minutes on a large basin, with a progress line); the three
    reach-keyed metrics (low flow, substrate, biological integrity) come from
    the nearest covered reach downstream, labeled with the routed distance and
    drainage-area ratio, and are unavailable past a 10x ratio. The policy is

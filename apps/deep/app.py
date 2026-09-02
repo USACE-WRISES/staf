@@ -1402,7 +1402,7 @@ def server(input, output, session_):  # noqa: C901
                 "1. **Identify** — zoom in until stream lines appear and click a stream (or type "
                 "coordinates / search an address). Blue lines are the NHDPlus V2 network. Light "
                 "blue lines are all other NHD streams: for those, DEEP computes the exact "
-                "watershed with the STAF site engine, which takes about 2 to 5 minutes. Set the "
+                "watershed with the STAF site engine, which usually takes well under a minute and up to about five minutes on a large basin. Set the "
                 "reach length and click **Delineate**.\n"
                 "2. **Basin** — review the watershed and reach. The published assessment "
                 "whose area of applicability covers your site is resolved here (certified "
@@ -1473,7 +1473,7 @@ def server(input, output, session_):  # noqa: C901
             lines = [ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away). This stream is outside "
                           "the NHDPlus V2 network.", class_="easi-snap-note ok"),
                      ui.p("DEEP will compute its exact watershed with the STAF site engine. "
-                          "This typically takes 2 to 5 minutes.", class_="easi-snap-note")]
+                          "This usually takes well under a minute, and up to about five minutes on a large basin.", class_="easi-snap-note")]
             if hr_site.declined(anchor):
                 lines.append(ui.p("The nearest covered reach drains more than 10 times this "
                                   "stream, so StreamCat values keyed to it will be withheld.",
