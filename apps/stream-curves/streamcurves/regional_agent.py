@@ -1372,7 +1372,7 @@ def run_evidence(l3_code: str, name: str, *,
         if on_event:
             on_event("enrich_site_engine",
                      {"n_sites": len(rows),
-                      "note": "about a minute per uncached site"})
+                      "note": "1 to 7 minutes per uncached site"})
         se_values, se_report = ses.enrich_site_engine(
             rows,
             cache_path=(str(Path(cache_dir) / "site_engine_cache.json")

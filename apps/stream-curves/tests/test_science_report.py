@@ -115,7 +115,7 @@ def test_science_report_states_the_predictor_source():
     ctx["session_meta"]["predictor_source"] = "streamcat"
     html = build_science_support_html(ctx)
     assert "Predictor source:" in html
-    assert "EPA StreamCat" in html
+    assert "StreamCat lookup engine" in html
     # An engine-built session names the engine and its version stamp.
     ctx = _mock_context()
     ctx["session_meta"]["predictor_source"] = "site-engine v0.1.0"

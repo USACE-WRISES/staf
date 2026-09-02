@@ -87,7 +87,7 @@ def test_build_col_provenance_tags_by_source():
     assert src["elev_3dep_m"] == "USGS 3DEP"
     assert src["ss_DRNAREA"] == "USGS StreamStats"
     assert src["mmw_forest"] == "Model My Watershed"
-    assert src["PctUrbMd2019Ws"] == "EPA StreamCAT"
+    assert src["PctUrbMd2019Ws"] == "StreamCat lookup engine"
     assert src["my_upload_col"] == "Uploaded (user)"
     assert src["unknownish"] == "Other"
 

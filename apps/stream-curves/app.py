@@ -115,11 +115,13 @@ def app_help_content():
         ),
         ui.tags.p(
             ui.tags.strong("Data sources"),
-            ": NRSA field and lab data, EPA StreamCat, USGS StreamStats, "
-            "Model My Watershed, USGS 3DEP/NLDI, and the STAF site engine, "
-            "an optional predictor source that computes exact-watershed values "
-            "at the training sites. The default predictor source stays "
-            "StreamCat, and every build records which source it used.",
+            ": NRSA field and lab data, USGS StreamStats, Model My Watershed, "
+            "USGS 3DEP/NLDI, and two watershed engines. The StreamCat lookup "
+            "engine (EPA StreamCat by NHDPlus V2 reach) is the default predictor "
+            "source. The STAF site engine computes exact-watershed values at the "
+            "training sites and is the one selectable alternative, chosen in the "
+            "region builder. Every build records which engine it used, and the "
+            "EASI screening is pinned to the StreamCat lookup engine.",
             class_="mb-0",
         ),
     )

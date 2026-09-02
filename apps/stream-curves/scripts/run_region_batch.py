@@ -607,10 +607,11 @@ def main(argv=None) -> int:
                    help="repeatable; limit a pooled run to these survey cycles")
     s.add_argument("--predictor-source", default="streamcat",
                    choices=("streamcat", "site-engine"),
-                   help="which source computes the curve predictors; site-engine "
-                        "recomputes them at the training sites with the vendored "
-                        "site computation engine (about a minute per uncached "
-                        "site) and stamps the bundle predictorSource")
+                   help="which engine computes the curve predictors: streamcat is "
+                        "the StreamCat lookup engine (default); site-engine is the "
+                        "STAF site engine, which recomputes them at the training "
+                        "sites (1 to 7 minutes per uncached site) and stamps the "
+                        "bundle predictorSource")
     s.add_argument("--max-unresolved-share", type=float, default=0.10,
                    help="refuse to stage when more than this share of candidates is unresolved by the screen")
     s.add_argument("--allow-unresolved", action="store_true",
@@ -642,7 +643,7 @@ def main(argv=None) -> int:
                    help="repeatable; limit a pooled run to these survey cycles")
     m.add_argument("--predictor-source", default="streamcat",
                    choices=("streamcat", "site-engine"),
-                   help="which source computes the curve predictors (see stage)")
+                   help="which engine computes the curve predictors (see stage)")
     m.add_argument("--max-unresolved-share", type=float, default=0.10)
     m.add_argument("--allow-unresolved", action="store_true")
     m.set_defaults(fn=cmd_stage_many)

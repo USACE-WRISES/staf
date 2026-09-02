@@ -36,6 +36,8 @@ from shiny.types import SilentException
 from pathlib import Path  # noqa: E402
 
 from streamcurves import easi_screening  # noqa: E402
+from streamcurves import engine_names
+from streamcurves.metric_picker import _SRC_DISPLAY
 from streamcurves import run_state as rs  # noqa: E402
 
 try:
@@ -490,7 +492,7 @@ def build_col_provenance(compiled, streamcat_wide, nrsa_cols, upload_cols) -> di
     tag(["state", "ag_eco9", "huc8"], "NRSA (site info)")
     tag(["comid"], "USGS NLDI")
     if streamcat_wide is not None and streamcat_wide.shape[1] > 1:
-        tag([c for c in streamcat_wide.columns if c != "COMID"], "EPA StreamCAT")
+        tag([c for c in streamcat_wide.columns if c != "COMID"], engine_names.STREAMCAT)
     for m in [c for c in (nrsa_cols or []) if c in nm]:
         src[m] = nrsa_source_for(m)
     tag(["DA_mi2"], "USGS NLDI basin")
@@ -498,7 +500,7 @@ def build_col_provenance(compiled, streamcat_wide, nrsa_cols, upload_cols) -> di
     tag(["elev_3dep_m"], "USGS 3DEP")
     tag([c for c in nm if c.startswith("ss_")], "USGS StreamStats")
     tag([c for c in nm if c.startswith("mmw_")], "Model My Watershed")
-    tag([c for c in nm if c.startswith("se_")], "STAF site engine")
+    tag([c for c in nm if c.startswith("se_")], engine_names.SITE_ENGINE)
     for c in [c for c in (upload_cols or []) if c in nm]:
         if not src.get(c):
             src[c] = "Uploaded (user)"
@@ -1521,7 +1523,7 @@ def import_map_server(
 
             sc = None
             if metric_names:
-                await announce(f"StreamCAT ({len(metric_names)} metrics)")
+                await announce(f"{engine_names.STREAMCAT} ({len(metric_names)} metrics)")
                 sc = await pull(
                     "streamcat",
                     lambda: streamcat_metrics(comids, metric_names, area="watershed"),
@@ -1592,7 +1594,7 @@ def import_map_server(
                     sdf[cc] = np.nan
                 se_fail = 0
                 for i in range(n):
-                    await announce("Site engine (exact watershed)",
+                    await announce(f"{engine_names.SITE_ENGINE} (exact watershed)",
                                    site=i + 1, n_sites=n)
                     try:
                         vals = await asyncio.to_thread(
@@ -1970,9 +1972,13 @@ def import_map_server(
         )
 
     def _body_step4():
-        src_choices = {"": "All sources", "NRSA": "NRSA", "StreamCat": "StreamCat",
+        # keys equal the metric picker's source labels: the filter compares
+        # view["source"] == src, so a renamed engine must rename both sides.
+        src_choices = {"": "All sources", "NRSA": "NRSA",
+                       _SRC_DISPLAY["streamcat"]: engine_names.STREAMCAT,
                        "StreamStats": "StreamStats", "MMW": "Model My Watershed",
-                       "Site engine": "Site engine (exact watershed)"}
+                       _SRC_DISPLAY["site_engine"]:
+                           f"{engine_names.SITE_ENGINE} (exact watershed)"}
         disc_choices = {"": "All disciplines"}
         for d in _DISCIPLINE_ORDER:
             disc_choices[d] = d
@@ -2724,7 +2730,7 @@ def import_map_server(
                 class_="text-muted small mb-1"))
         if not ses.site_engine_available():
             notes.append(ui.div(
-                bi("info-circle"), " Site engine metrics need the vendored "
+                bi("info-circle"), f" {engine_names.SITE_ENGINE} metrics need the vendored "
                 "engine and geospatial stack and are omitted.",
                 class_="text-muted small mb-1"))
         view = _filtered_named()
@@ -2854,7 +2860,7 @@ def import_map_server(
         n_ss, n_mmw = len(ss_sel() or []), len(mmw_sel() or [])
         return ui.div(
             f"Ready to compile {_compile_site_count()} sites with "
-            f"{len(metric_sel() or [])} StreamCAT + {len(nrsa_sel() or [])} NRSA"
+            f"{len(metric_sel() or [])} {engine_names.STREAMCAT} + {len(nrsa_sel() or [])} NRSA"
             + (f" + {n_ss} StreamStats" if n_ss else "")
             + (f" + {n_mmw} MMW" if n_mmw else "")
             + " metric(s)"

@@ -194,19 +194,26 @@ more than a share of the candidates unresolved (a service outage, `--max-unresol
 default 10 percent; `--allow-unresolved` stages anyway on the record), reads its own
 `streamcat_cache.json` on a re-stage so the evidence pass reproduces offline, and
 screens each site once even where the bundled NRSA table repeats an id.
-`--predictor-source` (default `streamcat`, or `site-engine`) selects which source
-computes the curve predictors: `site-engine` recomputes them at the training sites
-with the vendored site computation engine (about a minute per uncached site) and
-stamps the bundle's `predictorSource`; a replay recovers the choice from the run's
-own manifest.
+`--predictor-source` (default `streamcat`, or `site-engine`) selects which engine
+computes the curve predictors: `streamcat` is the StreamCat lookup engine and
+`site-engine` is the STAF site engine, which recomputes them at the training sites
+(1 to 7 minutes per uncached site) and stamps the bundle's `predictorSource`; a
+replay recovers the choice from the run's own manifest. The EASI screening inside
+a stage is pinned to the StreamCat lookup engine (`SCREENING_WATERSHED_ENGINE` in
+`streamcurves/easi_screening.py`, recorded in the manifest outside the digest), so
+a stream outside NHDPlus V2 screens exactly as it did before the site engine
+existed and every published digest still reproduces.
 
 The import wizard and cross-sections tab pull from public REST services (USGS
-NLDI/3DEP, EPA StreamCAT, USGS StreamStats, and Model My Watershed); each source
-fails to NA rather than aborting. The STAF site engine (vendored) is an optional
-predictor source beside StreamCat — the wizard and the region builder offer a
-Predictor source select, exact-watershed values arrive labeled in column
-provenance, and the default stays StreamCat. Model My Watershed needs an API key:
-set `MMW_API_KEY`, or put the key in the gitignored `scripts/.mmw_api_key`.
+NLDI/3DEP, the StreamCat lookup engine, USGS StreamStats, and Model My Watershed);
+each source fails to NA rather than aborting. The STAF site engine (vendored) is
+the one selectable alternative predictor source: the region builder's Predictor
+source select chooses it, the wizard's source filter lists its seven `se_` rows
+(any `se_` column in the chosen predictors derives the predictor source; the
+wizard has no select of its own), exact-watershed values arrive labeled in column
+provenance, and the default stays the StreamCat lookup engine. Model My Watershed
+needs an API key: set `MMW_API_KEY`, or put the key in the gitignored
+`scripts/.mmw_api_key`.
 
 ## Deploy (Posit Connect Cloud)
 
