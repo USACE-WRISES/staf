@@ -59,4 +59,4 @@ def test_measure_compute_metrics_only_merge_shape(monkeypatch):
     out = measure.compute_metrics_only({"comid": 1}, ["m1", "m2"])
     assert out == {"m1": {"value": 7.0, "na": False, "note": "",
                           "origin": "desktop", "source": "StreamCat",
-                          "engine": False}}
+                          "engine": False, "basis": ""}}

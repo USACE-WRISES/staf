@@ -106,12 +106,49 @@ adversarial review):**
   registry: exact-watershed values (impervious, anthropogenic cover, and the
   engine reach for geomorphic ratios) computed at the assessed point on the
   full-resolution NHD. Engine adapters run only when the loaded bundle's
-  `predictorSource` records engine predictors.
+  `predictorSource` records engine predictors (or the pairing mode is `label`).
 - `MeasuredValue.engine` marks engine-origin values; a user edit clears it.
 - The pairing rule is enforced at the scoring layer, not just at pull time:
   `deep/curves.py:metric_index` withholds the index whenever an engine value
   meets a StreamCat-fitted curve, and `metric_warning` explains why. Engine
   values score only against curves whose provenance records engine predictors.
+  Until 2026-09 the running app never reached this rule: `measure.py`
+  dropped the `engine` flag when it rebuilt values from the worksheet state,
+  so the rule could only fire in tests. It now keeps the flag for desktop
+  values, and the exports read their indices through the same scoring layer,
+  so a withheld value prints as reference only everywhere.
+
+**Two watershed engines (2026-09):**
+
+- **STAF site engine** (`deep/engine_prefill.py` over the vendored copy): the
+  exact watershed at the clicked point on the full-resolution NHD. It is the
+  watershed itself for any stream outside the NHDPlus V2 network, and the
+  desktop value source for bundles fitted on engine predictors.
+- **StreamCat lookup engine**: EPA StreamCat by NHDPlus V2 COMID, the desktop
+  value source for bundles fitted on StreamCat predictors. On a stream outside
+  V2 its values are labeled with the nearest covered reach they describe
+  (`, describes the nearest covered reach, COMID x, ...`) and withheld past a
+  10x drainage-area ratio, in which case NLCD runs over the exact polygon.
+- Every desktop value carries a `basis` (`site-engine` | `streamcat` | `nlcd` |
+  `3dep`), shown as a badge beside the Source row, printed in the CSV, the
+  PDF, the GeoJSON (`predictor_source`, `watershed_basis`,
+  `engine_values_withheld`), and the field-form packet (desktop values in the
+  Value cell, `DESKTOP: <source>` in Notes, `reference only` when withheld).
+- **Any NHD stream**: the map draws the V2 network (blue, clickable) over the
+  full high-resolution NHD (light blue). An HR-only click is anchored to the
+  nearest covered reach (`deep/hr_site.py`, the engine's shared
+  classification) and Delineate computes the exact watershed and reach with
+  the engine (2 to 5 minutes, refused past the interactive reach budget); if
+  the engine fails, the covered reach's V2 basin is offered behind a confirm,
+  labeled as describing that reach. A covered site runs the engine in the
+  background only when its values can enter scoring (an engine-built bundle,
+  or `label` mode), so StreamCat bundles never pay the engine's minutes.
+- `deep/curves.py:ENGINE_PAIRING_MODE` (`refuse` today) is the switch the
+  score-level equivalence study flips to `label`: engine values then score
+  against StreamCat-fitted curves with an approximation advisory.
+- Sessions carry `siteAnchor`, `siteEngine` (geometry stripped), and
+  `watershedBasis` inside the delineation block; the schema version is
+  unchanged.
 
 ## Run the app (dev)
 

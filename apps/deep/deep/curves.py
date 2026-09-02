@@ -117,6 +117,26 @@ def active_points(metric_spec: dict, stratum: Optional[str] = None) -> list:
     return (metric_spec.get("curve") or {}).get("points") or []
 
 
+# The train/serve pairing rule's mode. "refuse": an engine-computed value never
+# scores against a curve fitted on StreamCat predictors (it displays as
+# reference evidence). "label": it scores, with an approximation advisory.
+# The score-level equivalence study (libs/site_engine/scripts/
+# score_equivalence_study.py, 30 NRSA sites in the Northeastern Highlands and
+# the Eastern Corn Belt Plains) is the only thing that flips this: "label" on
+# Outcome A (rating agreement and ECI class agreement at or above 0.90 and a
+# median DEEP index shift under 0.05), "refuse" otherwise.
+ENGINE_PAIRING_MODE = "refuse"
+_ENGINE_PAIRING_MODES = ("refuse", "label")
+
+
+def _mismatched_pairing(measured: Optional[MeasuredValue], metric_spec: dict) -> bool:
+    """An engine-computed value meeting a curve fitted on StreamCat predictors."""
+    if measured is None or not getattr(measured, "engine", False):
+        return False
+    spec_ps = str((metric_spec or {}).get("predictorSource") or "streamcat")
+    return spec_ps == "streamcat"
+
+
 def engine_pairing_advisory(measured: Optional[MeasuredValue],
                             metric_spec: dict) -> Optional[str]:
     """The train/serve pairing rule, stated: an engine-computed value must not
@@ -126,16 +146,30 @@ def engine_pairing_advisory(measured: Optional[MeasuredValue],
     records engine predictors (the per-metric ``predictorSource`` stamp, or the
     absent-means-streamcat default). Returns the advisory text when the pairing
     is blocked, else ``None``. The value still displays as labeled reference
-    evidence; it just never enters the function mean.
+    evidence; it just never enters the function mean. In ``label`` mode
+    (:data:`ENGINE_PAIRING_MODE`) nothing is blocked and this returns ``None``;
+    :func:`engine_approximation_advisory` carries the caveat instead.
     """
-    if measured is None or not getattr(measured, "engine", False):
+    if ENGINE_PAIRING_MODE == "label":
         return None
-    spec_ps = str((metric_spec or {}).get("predictorSource") or "streamcat")
-    if spec_ps != "streamcat":
+    if not _mismatched_pairing(measured, metric_spec):
         return None
     return ("engine-computed value shown as reference only: this curve was "
             "fitted on StreamCat predictors, so scoring it against an "
             "exact-watershed value would mix training and serving sources")
+
+
+def engine_approximation_advisory(measured: Optional[MeasuredValue],
+                                  metric_spec: dict) -> Optional[str]:
+    """In ``label`` mode, the caveat that rides beside a scored engine value on a
+    StreamCat-fitted curve. ``None`` in ``refuse`` mode or when the pairing
+    matches."""
+    if ENGINE_PAIRING_MODE != "label":
+        return None
+    if not _mismatched_pairing(measured, metric_spec):
+        return None
+    return ("engine-computed value scored against a StreamCat-fitted curve, "
+            "accepted as an approximation by the score-level equivalence study")
 
 
 def metric_index(measured: Optional[MeasuredValue], metric_spec: dict) -> Optional[float]:
@@ -214,7 +248,8 @@ def metric_warning(measured: Optional[MeasuredValue], metric_spec: dict) -> Opti
         # The value is excluded from scoring; the advisory is the whole story.
         return pairing
     points = active_points(metric_spec, getattr(measured, "stratum", None))
-    parts = [domain_warning(points, float(measured.value)),
+    parts = [engine_approximation_advisory(measured, metric_spec),
+             domain_warning(points, float(measured.value)),
              reference_range_advisory(metric_spec, float(measured.value)),
              sample_advisory(metric_spec)]
     parts = [p for p in parts if p]

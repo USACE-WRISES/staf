@@ -112,7 +112,8 @@ def test_adapters_prefer_engine_only_when_allowed(monkeypatch):
     allowed.extras["allow_engine"] = True
     cv = computed._impervious(allowed)
     assert cv.value == 12.3 and cv.engine is True
-    assert "Site engine v0.1.0" in cv.source
+    assert "STAF site engine v0.1.0" in cv.source
+    assert cv.basis == "site-engine"
 
 
 def test_compute_metrics_only_threads_the_assessment(monkeypatch):
@@ -144,7 +145,7 @@ def test_pipeline_wrapper_threads_the_assessment(monkeypatch):
 
     seen: dict = {}
 
-    def fake(ctx_inputs, metric_ids, *, assessment=None):
+    def fake(ctx_inputs, metric_ids, *, assessment=None, engine_record=None):
         seen.update(ctx_inputs=ctx_inputs, metric_ids=metric_ids,
                     assessment=assessment)
         return {"m": {"value": 1.0}}
@@ -217,3 +218,124 @@ def test_bake_preserves_the_predictor_source(tmp_path, monkeypatch):
     assert m["predictorSource"] == "site-engine v0.1.0"
     # and the loader reads the stamp back for the pairing rule
     assert assessments.predictor_source_of(baked) == "site-engine v0.1.0"
+
+
+# --------------------------------------------------------------------------- #
+# the rule reaches the running app: measured_from_state keeps the flag
+# --------------------------------------------------------------------------- #
+def test_measured_from_state_keeps_the_engine_flag_for_desktop_values():
+    state = {"eng": {"value": 0.5, "origin": "desktop", "engine": True},
+             "edited": {"value": 0.5, "origin": "field", "engine": True},
+             "plain": {"value": 0.5, "origin": "desktop"}}
+    mvs = measure.measured_from_state(state)
+    assert mvs["eng"].engine is True
+    assert mvs["edited"].engine is False          # a user edit clears it
+    assert mvs["plain"].engine is False
+
+
+def _curves_score(bundle, state):
+    from deep import curves
+    return curves.score_site(bundle, measure.measured_from_state(state))
+
+
+def test_score_site_from_raw_state_withholds_engine_values():
+    bundle = {"metricsByFunction": [
+        {"functionId": "f1", "functionName": "F1", "discipline": "Hydrology",
+         "metrics": [{"metricId": "m", "metricName": "M", "curve": {"points": ASC}}]}]}
+    state = {"m": {"value": 0.5, "origin": "desktop", "engine": True}}
+    _sc, fres = _curves_score(bundle, state)
+    assert fres["f1"].metric_indices["m"] is None
+    assert "reference only" in fres["f1"].metric_warnings["m"]
+    assert fres["f1"].na is True
+
+
+def test_report_rows_and_csv_carry_the_advisory():
+    from deep import report
+    bundle = {"assessmentId": "t", "assessmentName": "T", "metricsByFunction": [
+        {"functionId": "f1", "functionName": "F1", "discipline": "Hydrology",
+         "metrics": [{"metricId": "m", "metricName": "Impervious",
+                      "curve": {"points": ASC, "layerName": "seed"}}]}]}
+    state = {"m": {"value": 0.5, "origin": "desktop", "engine": True, "basis": "site-engine",
+                   "source": "STAF site engine v0.2.0 impervious (exact watershed, NLCD 2021)"}}
+    rows = list(report._rows(bundle, state))
+    assert len(rows) == 1
+    _fn, m, val, idx, meta = rows[0]
+    assert val == 0.5 and idx is None
+    assert meta["reference_only"] is True and meta["engine"] is True
+    assert meta["basis"] == "site-engine" and meta["predictor_source"] == "streamcat"
+    assert "reference only" in meta["advisory"]
+    sc, _ = _curves_score(bundle, state)
+    csv = report.build_csv({}, bundle, state, sc)
+    assert "Predictor source,streamcat" in csv
+    assert "reference only" in csv and "site-engine" in csv
+    assert "Origin,Basis,Source,Engine value,Predictor source,Scoring advisory" in csv
+
+
+def test_label_mode_scores_with_the_approximation_advisory(monkeypatch):
+    from deep import curves
+    mv = MeasuredValue("m", value=0.5, origin="desktop", engine=True)
+    monkeypatch.setattr(curves, "ENGINE_PAIRING_MODE", "label")
+    assert curves.engine_pairing_advisory(mv, _SC_SPEC) is None
+    assert curves.metric_index(mv, _SC_SPEC) == 0.5
+    assert "approximation" in curves.metric_warning(mv, _SC_SPEC)
+    assert curves.engine_approximation_advisory(mv, _ENGINE_SPEC) is None
+    monkeypatch.setattr(curves, "ENGINE_PAIRING_MODE", "refuse")
+    assert curves.metric_index(mv, _SC_SPEC) is None
+    assert curves.engine_approximation_advisory(mv, _SC_SPEC) is None
+
+
+def test_label_mode_opens_the_auto_pull_gate(monkeypatch):
+    from deep import curves
+    _fake_engine(monkeypatch, _engine_record())
+    monkeypatch.setitem(computed.__dict__, "_streamcat", lambda ctx: {"pctimp2019ws": 7.0})
+    ids = ["catchment-hydrology-impervious-cover"]
+    monkeypatch.setattr(curves, "ENGINE_PAIRING_MODE", "label")
+    out = measure.compute_metrics_only({"lat": 40.0, "lon": -83.0}, ids, assessment={})
+    assert out["catchment-hydrology-impervious-cover"]["engine"] is True
+
+
+# --------------------------------------------------------------------------- #
+# the app's engine record is reused, and the anchor labels the StreamCat value
+# --------------------------------------------------------------------------- #
+def test_prefetched_record_is_reused_without_a_second_run(monkeypatch):
+    calls = _fake_engine(monkeypatch, {"status": "failed"})
+    ids = ["catchment-hydrology-impervious-cover"]
+    out = measure.compute_metrics_only(
+        {"lat": 40.0, "lon": -83.0}, ids,
+        assessment={"predictorSource": "site-engine v0.2.0"},
+        engine_record={**_engine_record(), "engineVersion": "0.2.0"})
+    entry = out["catchment-hydrology-impervious-cover"]
+    assert entry["value"] == 12.3 and entry["engine"] is True
+    assert "STAF site engine v0.2.0" in entry["source"]
+    assert calls["n"] == 0                              # never ran again
+
+
+def test_streamcat_values_are_labeled_or_withheld_by_the_anchor(monkeypatch):
+    monkeypatch.setattr(computed, "site_engine_available", lambda: False)
+
+    def fake_sc(comid, names, aoi="watershed", timeout=25.0):
+        return {"pctimp2019ws": 7.0}
+    monkeypatch.setitem(sys.modules, "deep.datasources.streamcat",
+                        types.SimpleNamespace(metrics_by_comid=fake_sc))
+    hr_only = {"anchorKind": "hrSurrogate", "scoredReach": {"comid": 5214461},
+               "routing": {"routedDistanceFt": 1240.0, "daRatio": 1.8, "declined": False}}
+    out = measure.compute_metrics_only(
+        {"lat": 40.0, "lon": -83.0, "comid": 5214461, "siteAnchor": hr_only,
+         "watershedBasis": "site-engine"},
+        ["catchment-hydrology-impervious-cover"], assessment={})
+    entry = out["catchment-hydrology-impervious-cover"]
+    assert entry["basis"] == "streamcat" and entry["value"] == 7.0
+    assert entry["source"].startswith(
+        "StreamCat lookup engine pctimp2019 (watershed), describes the "
+        "nearest covered reach, COMID 5214461")
+
+    declined = {**hr_only, "routing": {"declined": True, "daRatio": 14.0}}
+    monkeypatch.setitem(sys.modules, "deep.datasources.nlcd",
+                        types.SimpleNamespace(watershed_landcover=lambda gj: {"impervious_pct": 3.3}))
+    out = measure.compute_metrics_only(
+        {"lat": 40.0, "lon": -83.0, "comid": 5214461, "siteAnchor": declined,
+         "watershedBasis": "site-engine", "watershed_geojson": {"type": "FeatureCollection"}},
+        ["catchment-hydrology-impervious-cover"], assessment={})
+    entry = out["catchment-hydrology-impervious-cover"]
+    assert entry["basis"] == "nlcd" and entry["value"] == 3.3
+    assert "exact watershed polygon, STAF site engine" in entry["source"]
