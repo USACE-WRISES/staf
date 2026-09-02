@@ -142,7 +142,9 @@ def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
     if ev.rating is None:
         return unavailable(
             LOW_FLOW_ID,
-            "eligible NRSA wetted-channel evidence and both StreamCat HYD components are unavailable",
+            base.comid_evidence_note(
+                ctx, "eligible NRSA wetted-channel evidence and both StreamCat HYD "
+                     "components are unavailable"),
             "L", scoring=ev.trace,
             value_text=f"low-flow evidence unavailable ({regime})")
     value = float(ev.combined_value)

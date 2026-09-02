@@ -51,7 +51,13 @@ def _summary_csv(batch: BatchResult) -> str:
                 # numbers behind the substitution or refusal.
                 "anchor_kind", "clicked_stream", "clicked_nhdplusid",
                 "clicked_da_sqkm", "routed_distance_ft", "da_ratio",
-                "da_ratio_limit"])
+                "da_ratio_limit",
+                # Watershed engine provenance (empty for covered-network sites):
+                # which engine answered the watershed metrics, how the STAF site
+                # engine run went, and whether COMID-keyed evidence was withheld.
+                "watershed_engine", "engine_status", "engine_version",
+                "engine_reaches", "engine_hops", "engine_area_sqkm",
+                "comid_evidence"])
     for s in batch.sites:
         d, sub = s.delineation, s.sub_indices
         coverage = s.coverage or {}
@@ -61,6 +67,15 @@ def _summary_csv(batch: BatchResult) -> str:
         clicked = anchor.get("clickedStream") or {}
         routing_info = anchor.get("routing") or {}
         surrogate = anchor.get("anchorKind") == "hrSurrogate"
+        eng = s.watershed_engine or {}
+        if surrogate:
+            engine_name = ("site-engine" if d.watershed_source == "site-engine"
+                           else ("unavailable" if d.watershed_source == "not-calculated"
+                                 else "streamcat"))
+            comid_evidence = ("withheld" if routing_info.get("declined")
+                              else "nearest covered reach")
+        else:
+            engine_name, comid_evidence = "", ""
         w.writerow([s.site_id, s.state, d.comid, d.gnis_name, d.drainage_area_sqkm,
                     s.eci, sub.get("physical"), sub.get("chemical"),
                     sub.get("biological"), s.completeness.computed,
@@ -80,7 +95,14 @@ def _summary_csv(batch: BatchResult) -> str:
                     clicked.get("drainageAreaSqkm", "") if surrogate else "",
                     routing_info.get("routedDistanceFt", "") if surrogate else "",
                     routing_info.get("daRatio", "") if surrogate else "",
-                    routing_info.get("daRatioLimit", "") if surrogate else ""])
+                    routing_info.get("daRatioLimit", "") if surrogate else "",
+                    engine_name,
+                    eng.get("status", "") if surrogate else "",
+                    eng.get("engineVersion", "") if surrogate else "",
+                    eng.get("nReaches", "") if surrogate else "",
+                    eng.get("nHops", "") if surrogate else "",
+                    eng.get("areaSqkm", "") if surrogate else "",
+                    comid_evidence])
     return buf.getvalue()
 
 
@@ -94,7 +116,7 @@ def _metrics_csv(batch: BatchResult) -> str:
                 "input_trace", "combined_value", "governing_input",
                 "generated_index", "scoring_completeness", "source_tier",
                 "evidence_family", "used_fallback", "observed_overrides_proxy",
-                "anchor"])
+                "anchor", "engine"])
     for s in batch.sites:
         for m in s.metrics:
             w.writerow([s.site_id, m.metric_id, m.discipline, m.function_name,
@@ -105,7 +127,8 @@ def _metrics_csv(batch: BatchResult) -> str:
                         json.dumps(m.input_trace, separators=(",", ":"), default=str),
                         m.combined_value, m.governing_input, m.generated_index,
                         m.scoring_completeness, m.source_tier, m.evidence_family,
-                        m.used_fallback, m.observed_overrides_proxy, m.anchor])
+                        m.used_fallback, m.observed_overrides_proxy, m.anchor,
+                        m.engine])
     return buf.getvalue()
 
 
