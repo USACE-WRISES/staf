@@ -1423,6 +1423,40 @@ def _dataset_values(dataset_id: str, panel: pd.DataFrame):
     return values_for
 
 
+def apply_owner_site_exclusions(screening: dict, retained_ids: set,
+                                exclude_sites: Optional[dict]) -> list[dict]:
+    """Drop owner-excluded sites from the retained pool, on the record.
+
+    ``exclude_sites`` maps site id -> reason (the ``--exclude-site`` input).
+    The site's screening row is marked excluded by the owner with the reason,
+    so the published screening table and the exclusion accounting say who
+    decided; the id leaves ``retained_ids`` in place; the screening's
+    ``retained_ids`` and ``counts`` are recomputed. Returns the exclusion
+    records for the manifest, the digest, and the packet. A site that was not
+    retained is still recorded (``was_retained`` False), never an error.
+    """
+    out: list[dict] = []
+    if not exclude_sites:
+        return out
+    rows = ((screening or {}).get("tables") or {}).get("easi_screening_sites") or []
+    by_id = {str(r.get("site_id")): r for r in rows if isinstance(r, dict)}
+    for sid, reason in sorted((exclude_sites or {}).items()):
+        sid = str(sid)
+        was_retained = sid in retained_ids
+        retained_ids.discard(sid)
+        row = by_id.get(sid)
+        if row is not None:
+            row["final_decision"] = "excluded"
+            row["reviewer"] = "owner"
+            row["reason"] = str(reason)
+        out.append({"site_id": sid, "reason": str(reason), "source": "owner",
+                    "was_retained": was_retained})
+    if rows and isinstance(screening, dict):
+        screening["retained_ids"] = easi_screening.retained_site_ids(screening.get("tables") or {})
+        screening["counts"] = easi_screening.summarize_screening_rows(rows)
+    return out
+
+
 def run_evidence(l3_code: str, name: str, *,
                  screen_preset: str = "functional",
                  on_event: Optional[Callable] = None,
@@ -1436,7 +1470,8 @@ def run_evidence(l3_code: str, name: str, *,
                  predictor_source: str = "streamcat",
                  screen_retries: int = 0,
                  screen_retry_wait: float = 60.0,
-                 engine_config: Optional[dict] = None) -> dict:
+                 engine_config: Optional[dict] = None,
+                 exclude_sites: Optional[dict] = None) -> dict:
     """The expensive, decision-free half of a regional run.
 
     Screening, data assembly, the registries, redundancy, the stratifier
@@ -1484,6 +1519,15 @@ def run_evidence(l3_code: str, name: str, *,
         counts = {"n_screened": n_candidates, "n_retained": len(retained_ids)}
         method = "unscreened_test"
         screening = tier["screening"]
+
+    # Owner exclusions (a site the engine cannot value, a known bad point):
+    # recorded on the screening row, in the manifest and the digest, and in
+    # the packet, never a silent drop (2026-09-02).
+    owner_site_exclusions = apply_owner_site_exclusions(screening, retained_ids, exclude_sites)
+    if owner_site_exclusions:
+        counts = dict((screening or {}).get("counts") or counts)
+        counts["n_retained"] = len(retained_ids)
+        counts["n_owner_excluded"] = sum(1 for e in owner_site_exclusions if e["was_retained"])
 
     retained = candidates[candidates["site_id"].isin(retained_ids)].reset_index(drop=True)
 
@@ -1666,6 +1710,7 @@ def run_evidence(l3_code: str, name: str, *,
         # The scored landscape columns the engine recomputed (empty under the
         # StreamCat default); rides the manifest, the digest, and the packet.
         "resourced_metrics": list(resourced),
+        "owner_site_exclusions": owner_site_exclusions,
         "data": data,
         "curve_rows": curve_rows,
         "curve_review": curve_review,
@@ -1879,6 +1924,7 @@ def assemble(evidence: dict, *,
         "predictor_source_flag": evidence.get("predictor_source_flag"),
         "predictor_source": evidence.get("predictor_source"),
         "resourced_metrics": list(evidence.get("resourced_metrics") or []),
+        "owner_site_exclusions": list(evidence.get("owner_site_exclusions") or []),
         "reference_tier": tier["reference_tier"],
         "ref02_triggered": tier.get("ref02_triggered", False),
         "review_flags": tier.get("review_flags", []),
