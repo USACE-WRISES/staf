@@ -68,7 +68,15 @@ every value says which engine produced it.
 ## Equivalence study
 
 Whether exact delineation changes screening scores enough to make the site
-engine the standard on covered streams is being tested, not assumed. The
-study runs EASI at NRSA sites in two pilot regions with StreamCat inputs and
-with site-engine inputs and compares the watershed-metric ratings, the
-condition class, and the DEEP curve indices. Status: running (2026-09).
+engine the standard on covered streams was tested, not assumed. The study
+ran EASI at 30 NRSA sites in two pilot regions with StreamCat inputs and
+with site-engine inputs and compared the watershed-metric ratings, the
+condition class, and the DEEP curve indices against a rule fixed before the
+run. Outcome (2026-09-02): the engines are not interchangeable. 30 of 30 sites ran on 2026-09-02: watershed-metric rating agreement 0.84 pooled (Eastern Corn Belt Plains 0.78, Northeastern Highlands 0.90) against the 0.90 bar, condition-class agreement 0.97, median DEEP index shift 0.013.
+The class and the index agree well; the rating disagreements come mostly
+from watershed extent, because a point partway up a reach or on a tributary
+drains far less than the reach's whole basin. So EASI keeps the StreamCat
+lookup engine on covered streams and documents the approximation, DEEP
+keeps refusing engine values against StreamCat-fitted curves, and
+StreamCurves builds engine-predictor versions of the pilot assessments so
+DEEP can score engine values against curves fitted the same way.

@@ -144,8 +144,11 @@ guidance rather than a proxy. The batch engine exposes the policy as
 `streamcat-legacy` (the pre-2026-09 behavior: every metric on the nearest
 covered reach, refused past the 10x ratio), which StreamCurves pins its
 reference screen to. Whether the site engine should also answer covered
-streams is decided by the score-level equivalence study in
-`libs/site_engine/scripts/score_equivalence_study.py`, not by a setting.
+streams was decided by the score-level equivalence study in
+`libs/site_engine/scripts/score_equivalence_study.py`, not by a setting: it
+reported Outcome B on 2026-09-02 (rating agreement 0.84 against a 0.90 bar,
+with the class and the index agreeing), so covered streams stay on the
+lookup engine and the approximation is documented.
 
 ## Tech stack
 

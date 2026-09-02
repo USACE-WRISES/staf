@@ -143,9 +143,13 @@ adversarial review):**
   labeled as describing that reach. A covered site runs the engine in the
   background only when its values can enter scoring (an engine-built bundle,
   or `label` mode), so StreamCat bundles never pay the engine's minutes.
-- `deep/curves.py:ENGINE_PAIRING_MODE` (`refuse` today) is the switch the
-  score-level equivalence study flips to `label`: engine values then score
-  against StreamCat-fitted curves with an approximation advisory.
+- `deep/curves.py:ENGINE_PAIRING_MODE` is the switch the score-level
+  equivalence study governs. It reported Outcome B on 2026-09-02 (rating
+  agreement 0.84 pooled against a 0.90 bar, class agreement 0.97, median
+  index shift 0.013), so the mode stays `refuse`: engine values never score
+  against StreamCat-fitted curves, and engine-predictor versions of the
+  pilot assessments are built in StreamCurves for them instead. `label`
+  remains available should a later study pass the rule.
 - Sessions carry `siteAnchor`, `siteEngine` (geometry stripped), and
   `watershedBasis` inside the delineation block; the schema version is
   unchanged.

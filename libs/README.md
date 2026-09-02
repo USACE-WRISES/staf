@@ -42,8 +42,12 @@ The score-level equivalence study (`libs/site_engine/scripts/score_equivalence_s
 decides whether the two engines are interchangeable for scoring on covered
 streams: rating agreement of at least 0.90 over the eight watershed metrics,
 condition-class agreement of at least 0.90, and a median DEEP index shift under
-0.05. Until it reports, EASI keeps the StreamCat lookup engine on covered
-streams and DEEP keeps the pairing rule (`deep/curves.py`).
+0.05. It reported Outcome B: 30 of 30 sites ran on 2026-09-02: watershed-metric rating agreement 0.84 pooled (Eastern Corn Belt Plains 0.78, Northeastern Highlands 0.90) against the 0.90 bar, condition-class agreement 0.97, median DEEP index shift 0.013. The engines are not interchangeable,
+so EASI keeps the StreamCat lookup engine on covered streams, DEEP keeps the
+pairing rule (`deep/curves.py`, `ENGINE_PAIRING_MODE = "refuse"`), and
+StreamCurves builds engine-predictor versions of the pilot assessments
+(`--predictor-source site-engine`). Summary: `notes/EASI_Report/analysis/
+score_equivalence_study_2026-09.md`.
 
 ## Labels and tokens
 
