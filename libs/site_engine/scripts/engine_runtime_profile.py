@@ -19,6 +19,7 @@ import argparse
 import csv
 import importlib.util
 import json
+import math
 import statistics
 import sys
 import time
@@ -70,8 +71,11 @@ def _sites(per_box: int, limit: int | None) -> list[tuple[str, float, float]]:
 def profile_site(label: str, lat: float, lon: float) -> dict:
     events: list[tuple[float, dict]] = []
     t0 = time.time()
+    # Covered-panel points are V2 snap points, often a few hundred feet
+    # from the nearest HR line; a wider tolerance keeps them in the profile.
     rec = compute_site(lat, lon, {"includeGeometry": False,
-                                  "metricFamilies": FAMILIES},
+                                  "metricFamilies": FAMILIES,
+                                  "snapTolFt": 1500.0},
                        progress=lambda e: events.append((time.time(), e)))
     total = round(time.time() - t0, 1)
     ws = rec.get("watershed") or {}
@@ -109,20 +113,27 @@ def fit(rows: list[dict]) -> dict:
     except Exception:  # noqa: BLE001 - numpy absent: per-reach ratio only
         b = statistics.median(t / r for t, r in zip(y, reaches))
         a, c, sd = 0.0, 0.0, 0.0
-    hops_per_reach = statistics.median(h / r for h, r in zip(hops, reaches))
+    # Hops grow roughly with the square root of the reach count (a tree's
+    # depth), so the budget uses h(n) = k * sqrt(n) with k the largest ratio
+    # observed on a multi-reach tree: conservative, and free of the
+    # single-reach sites that would otherwise pin hops to reaches.
+    ratios = [h / math.sqrt(r) for h, r in zip(hops, reaches) if r >= 4 and h > 0]
+    k = max(ratios) if ratios else 1.0
     n = 0
     while True:
-        p90 = a + b * (n + 5) + c * hops_per_reach * (n + 5) + 1.28 * sd
-        if p90 > ENVELOPE_S or n + 5 > 5000:
+        m = n + 5
+        p90 = a + b * m + c * k * math.sqrt(m) + 1.28 * sd
+        if p90 > ENVELOPE_S or m > 5000:
             break
-        n += 5
+        n = m
+    max_hops = int(math.ceil(k * math.sqrt(max(n, 1)))) + 5
     return {"n_fit": len(ok), "intercept_s": round(a, 1),
             "secs_per_reach": round(b, 2), "secs_per_hop": round(c, 2),
             "residual_sd_s": round(sd, 1),
-            "hops_per_reach_median": round(hops_per_reach, 3),
+            "hops_per_sqrt_reaches_max": round(k, 3),
             "envelope_s": ENVELOPE_S,
             "recommended_max_reaches": n,
-            "recommended_max_hops": int(round(n * hops_per_reach)) + 5,
+            "recommended_max_hops": max_hops,
             "current_interactive": {
                 "maxReaches": provenance.INTERACTIVE_CONFIG["maxReaches"],
                 "maxHops": provenance.INTERACTIVE_CONFIG["maxHops"]}}
