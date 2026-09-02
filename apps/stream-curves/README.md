@@ -215,6 +215,15 @@ existed and every published digest still reproduces. `--screen-retries` (default
 `--screen-retry-wait` seconds apart) re-screens only the candidates a transient
 failure left unresolved, such as a snap service outage, and merges each pass into
 the screening cache, so a flapping service cannot poison a re-stage.
+`--engine-snap-tolerance-ft`, `--engine-max-reaches`, and `--engine-max-hops` override
+the site engine's defaults (150 ft, 5,000 reaches, 200 hops) for a stage and are
+recorded in the site-engine report, the manifest, and the packet. `--exclude-site
+SITE_ID=REASON` (repeatable) drops a retained site from the pool as an owner decision:
+the screening row is marked excluded by the owner with the reason, and the exclusion
+rides the manifest, the digest, and the packet. The engine cannot value every NRSA
+basin: NLCD land cover came back empty for an 8,096 km2 basin, the road query was
+truncated on a large Corn Belt basin, and two Indiana basins exceed 40,000 reaches,
+so the first engine-sourced drafts exclude those sites on the record.
 
 The import wizard and cross-sections tab pull from public REST services (USGS
 NLDI/3DEP, the StreamCat lookup engine, USGS StreamStats, and Model My Watershed);
