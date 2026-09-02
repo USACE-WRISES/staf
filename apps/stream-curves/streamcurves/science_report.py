@@ -183,6 +183,8 @@ def build_science_support_html(context: dict, metric_config=None) -> str:
         # derived from the configured predictor columns, never user-chosen.
         psrc = session_meta.get("predictor_source")
         psrc_display = engine_names.predictor_source_display(psrc)
+        # The scored landscape metrics an engine-sourced build recomputed.
+        resourced = [str(c) for c in (session_meta.get("resourced_metrics") or [])]
         body_parts.append(
             "<p><strong>Session snapshot:</strong></p><ul>"
             f"<li><strong>Generated:</strong> {_esc(session_meta.get('generated_at') or 'Unknown')}</li>"
@@ -190,6 +192,8 @@ def build_science_support_html(context: dict, metric_config=None) -> str:
             f"<li><strong>Curves ready:</strong> {_esc(session_meta.get('complete_metrics') or 0)}</li>"
             f"<li><strong>Needs review:</strong> {_esc(session_meta.get('review_metrics') or 0)}</li>"
             + (f"<li><strong>Predictor source:</strong> {_esc(psrc_display)}</li>" if psrc else "")
+            + (f"<li><strong>Recomputed by the {_esc(engine_names.SITE_ENGINE)}:</strong> "
+               f"{_esc(', '.join(resourced))}</li>" if resourced else "")
             + "</ul>"
         )
 

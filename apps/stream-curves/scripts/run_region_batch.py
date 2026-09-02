@@ -192,6 +192,20 @@ def promote_command(out_dir: Path, maintainer: str) -> str:
 # --------------------------------------------------------------------------- #
 # stage
 # --------------------------------------------------------------------------- #
+def _engine_config(a) -> Optional[dict]:
+    """Engine overrides from the CLI (None when nothing was asked), recorded by
+    the site-engine report so the manifest and the packet say what the values
+    were computed under."""
+    cfg = {}
+    if getattr(a, "engine_snap_tolerance_ft", None) is not None:
+        cfg["snapTolFt"] = float(a.engine_snap_tolerance_ft)
+    if getattr(a, "engine_max_reaches", None) is not None:
+        cfg["maxReaches"] = int(a.engine_max_reaches)
+    if getattr(a, "engine_max_hops", None) is not None:
+        cfg["maxHops"] = int(a.engine_max_hops)
+    return cfg or None
+
+
 def cmd_stage(a) -> int:
     out_dir = Path(a.out).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -230,10 +244,17 @@ def cmd_stage(a) -> int:
         nrsa_dataset_id=a.nrsa_dataset,
         nrsa_cycles=a.nrsa_cycles,
         predictor_source=a.predictor_source,
-        on_event=lambda ev: print(f"[screen] {ev}") if isinstance(ev, str) else None)
+        screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
+        engine_config=_engine_config(a),
+        on_event=ra.event_narrator())
     print(f"[batch] evidence: {evidence['n_retained']} / {evidence['n_candidates']} retained "
           f"(tier {evidence['tier']['reference_tier']}, pool {evidence['reference_pool_disposition']}), "
           f"{len(evidence['curve_rows'])} curves built")
+    for rep in (evidence.get("source_reports") or []):
+        if (rep or {}).get("source") == "site_engine":
+            print(f"[batch] site engine: {rep.get('n_ok', 0)}/{rep.get('n_sites', 0)} ok "
+                  f"({rep.get('n_cached', 0)} from cache), recomputed "
+                  f"{', '.join(rep.get('resourced_metrics') or []) or 'none'}")
     level, msg = unresolved_check(evidence.get("screening_counts") or {},
                                   max_share=a.max_unresolved_share, allow=a.allow_unresolved)
     if level == "refuse":
@@ -246,6 +267,10 @@ def cmd_stage(a) -> int:
     if bad_sources:
         for rep in bad_sources:
             print(f"[batch] FAILED source {rep.get('source')}: {rep.get('reason')}")
+            for f in (rep.get("failed_sites") or []):
+                print(f"[batch]   {f.get('site_id')} {f.get('status')}: {f.get('reason')}")
+            for f in (rep.get("incomplete_sites") or []):
+                print(f"[batch]   {f.get('site_id')} incomplete: {f.get('reason')}")
         print("[batch] a landscape source did not join, so its functions are uncovered. "
               "Re-run when the service is up; a batch run never accepts that gap.")
         return 2
@@ -532,6 +557,9 @@ def cmd_stage_many(a) -> int:
                 approve_portfolio=[], reviewer_decisions=None, finalize_metric=[], remove_metric=[],
                 max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved,
                 nrsa_dataset=a.nrsa_dataset, nrsa_cycles=a.nrsa_cycles,
+                screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
+                engine_snap_tolerance_ft=a.engine_snap_tolerance_ft,
+                engine_max_reaches=a.engine_max_reaches, engine_max_hops=a.engine_max_hops,
                 predictor_source=a.predictor_source)
             try:
                 row["exit"] = int(cmd_stage(ns))
@@ -612,6 +640,22 @@ def main(argv=None) -> int:
                         "STAF site engine, which recomputes them at the training "
                         "sites (usually under a minute per uncached site, up to about five on a large basin) and stamps the "
                         "bundle predictorSource")
+    s.add_argument("--screen-retries", type=int, default=2,
+                   help="re-screen the candidates a transient failure left unresolved "
+                        "(a snap service outage) up to this many passes, merging each "
+                        "pass into the screening cache. Zero is a single pass")
+    s.add_argument("--screen-retry-wait", type=float, default=60.0,
+                   help="seconds to wait before each retry pass")
+    s.add_argument("--engine-snap-tolerance-ft", type=float, default=None,
+                   help="STAF site engine only: how far (ft) a training point may sit "
+                        "from the nearest NHDPlus HR flowline (the engine default is 150). "
+                        "Recorded in the manifest and the packet")
+    s.add_argument("--engine-max-reaches", type=int, default=None,
+                   help="STAF site engine only: the reach budget of one watershed walk "
+                        "(the engine default is 5000). Recorded like the snap tolerance")
+    s.add_argument("--engine-max-hops", type=int, default=None,
+                   help="STAF site engine only: the hop budget of one watershed walk "
+                        "(the engine default is 200). Recorded like the snap tolerance")
     s.add_argument("--max-unresolved-share", type=float, default=0.10,
                    help="refuse to stage when more than this share of candidates is unresolved by the screen")
     s.add_argument("--allow-unresolved", action="store_true",
@@ -644,6 +688,11 @@ def main(argv=None) -> int:
     m.add_argument("--predictor-source", default="streamcat",
                    choices=("streamcat", "site-engine"),
                    help="which engine computes the curve predictors (see stage)")
+    m.add_argument("--screen-retries", type=int, default=2)
+    m.add_argument("--screen-retry-wait", type=float, default=60.0)
+    m.add_argument("--engine-snap-tolerance-ft", type=float, default=None)
+    m.add_argument("--engine-max-reaches", type=int, default=None)
+    m.add_argument("--engine-max-hops", type=int, default=None)
     m.add_argument("--max-unresolved-share", type=float, default=0.10)
     m.add_argument("--allow-unresolved", action="store_true")
     m.set_defaults(fn=cmd_stage_many)

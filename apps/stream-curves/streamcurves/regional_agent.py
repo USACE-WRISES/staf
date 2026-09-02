@@ -27,6 +27,7 @@ import json
 import logging
 import math
 import re
+import time
 import zlib
 from functools import lru_cache
 from pathlib import Path
@@ -40,7 +41,7 @@ from . import run_state, session_io
 from . import staf_library
 from . import confidence as conf
 from . import curve_stability
-from . import easi_screening, overlap, sites, workbook
+from . import easi_screening, engine_names, overlap, sites, workbook
 # `screening` is already a local name inside run() (the EASI screen); alias the
 # stratification-screening module so the two never look like the same thing.
 from . import screening as strat_screening
@@ -763,9 +764,125 @@ def _screen_live(candidate_rows: list[dict], preset: str,
     return merged or {"sites": []}
 
 
+def _safe_emit(on_event: Optional[Callable], *args) -> None:
+    """Call ``on_event(*args)`` and swallow whatever it raises. Callers hand in
+    one-argument lambdas, three-argument EASI handlers, and the narrator, and a
+    two-hour stage must never die on a progress line (2026-09-02)."""
+    if on_event is None:
+        return
+    try:
+        on_event(*args)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _narrate(args: tuple, write: Callable[[str], None]) -> None:
+    if not args:
+        return
+    head = args[0]
+    if len(args) == 1 and isinstance(head, str):
+        write(f"[screen] {head}")
+        return
+    if len(args) == 1 and isinstance(head, dict):
+        ev = str(head.get("event") or "")
+        if ev == "streamcat_start":
+            write(f"[streamcat] start {head.get('n_codes')} codes")
+        elif ev == "streamcat_done":
+            write(f"[streamcat] done {head.get('n_columns')} columns")
+        elif ev == "streamcat_partial":
+            write(f"[streamcat] partial {head.get('n_columns')} columns, "
+                  f"failed chunks {head.get('failed_chunks')}")
+        return
+    if not isinstance(head, str):
+        return
+    info = args[-1] if isinstance(args[-1], dict) else {}
+    if head == "enrich_site_engine":
+        write(f"[engine] computing exact-watershed values at {info.get('n_sites')} "
+              f"retained site(s), {info.get('note') or engine_names.SITE_ENGINE_COST}")
+    elif head == "site_engine_site":
+        prefix = f"[engine] {info.get('i')}/{info.get('n')} {info.get('site_id')}"
+        secs = round(float(info.get("seconds") or 0.0))
+        if info.get("cached"):
+            write(f"{prefix} cached")
+        elif info.get("status") == "ok":
+            write(f"{prefix} ok {secs} s")
+        else:
+            write(f"{prefix} {info.get('status')} {secs} s: {info.get('reason')}")
+    elif head == "screening_retry":
+        write(f"[screen] retry pass {info.get('pass')}: {info.get('n')} site(s), "
+              f"{info.get('recovered')} recovered")
+    elif head == "screening_cache_stale":
+        write(f"[screen] screening cache stale ({info.get('cached_n')} cached, "
+              f"{info.get('candidate_n')} candidates), refetching")
+    elif head == "site_done" and len(args) >= 2:
+        write(f"[screen] site_done {args[1]} {info.get('state') or ''}".rstrip())
+
+
+def event_narrator(write: Optional[Callable[[str], None]] = None) -> Callable[..., None]:
+    """The batch runners' ``on_event``: one callback for every shape the run
+    emits (a string, a StreamCat dict, the site-engine tuples, the screening
+    retry, and the vendored EASI runner's ``(stage, site_id, info)`` triples,
+    of which only ``site_done`` prints). Never raises. ``write`` defaults to a
+    flushed print so a piped log shows progress as it happens."""
+    def _write(line: str) -> None:
+        if write is not None:
+            write(line)
+        else:
+            print(line, flush=True)
+
+    def narrate(*args) -> None:
+        try:
+            _narrate(args, _write)
+        except Exception:  # noqa: BLE001
+            pass
+    return narrate
+
+
+def _retryable_failure_ids(batch: dict) -> list[str]:
+    """Sites the screen could not assess for a transient reason: a failure
+    whose blocking issue is flagged retryable (a snap service outage), or a
+    cancelled site. A data gap (``metric_unavailable``) is not transient."""
+    ids: list[str] = []
+    for s in (batch or {}).get("sites") or []:
+        if not isinstance(s, dict):
+            continue
+        state = s.get("state")
+        sid = str(s.get("site_id") or "")
+        if state == "cancelled":
+            ids.append(sid)
+        elif state == "failed" and bool(easi_screening._blocking_issue(s).get("retryable")):
+            ids.append(sid)
+    return ids
+
+
+def _merge_retry(batch: dict, part: dict) -> dict:
+    """``batch`` with the re-screened sites of ``part`` swapped in by site id
+    (order kept; an unknown site is appended)."""
+    out = dict(batch or {})
+    sites = list(out.get("sites") or [])
+    index = {str(s.get("site_id") or ""): i for i, s in enumerate(sites) if isinstance(s, dict)}
+    for s in (part or {}).get("sites") or []:
+        sid = str(s.get("site_id") or "")
+        if sid in index:
+            sites[index[sid]] = s
+        else:
+            sites.append(s)
+    out["sites"] = sites
+    return out
+
+
+def _write_screen_cache(cache_path: Optional[Path], batch: dict) -> None:
+    if cache_path is None:
+        return
+    Path(cache_path).parent.mkdir(parents=True, exist_ok=True)
+    Path(cache_path).write_text(json.dumps(batch, default=str), encoding="utf-8")
+
+
 def screen_pool(candidate_rows: list[dict], preset: str,
                 on_event: Optional[Callable] = None,
-                cache_path: Optional[Path] = None) -> dict:
+                cache_path: Optional[Path] = None, *,
+                screen_retries: int = 0,
+                screen_retry_wait: float = 0.0) -> dict:
     """Run one real EASI screen at ``preset`` and return honest results.
 
     Returns {tables, sites (rows), retained_ids, counts, preset, from_cache}. Never
@@ -774,9 +891,13 @@ def screen_pool(candidate_rows: list[dict], preset: str,
     ONLY when it covers exactly this candidate panel: the cache file carries no key, so
     the panel is recovered from its own site rows and compared. A stale cache (a reused
     out dir after the candidate panel changed, e.g. a different --nrsa-dataset) is
-    refetched and overwritten, never silently screened.
+    refetched and overwritten, never silently screened. ``screen_retries``
+    re-screens the transient failures (:func:`_retryable_failure_ids`) up to
+    that many passes, ``screen_retry_wait`` seconds apart, merging each pass
+    back by site id and rewriting the cache, so a flapping service cannot
+    poison the cache; a reused cache goes through the same pass and heals
+    (2026-09-02). Zero passes is the plain single screen.
     """
-    import json
     want = {str(r.get("site_id") or "") for r in candidate_rows}
     from_cache = False
     cache_stale = False
@@ -800,9 +921,29 @@ def screen_pool(candidate_rows: list[dict], preset: str,
                     pass                      # a caller with another signature
     if batch is None:
         batch = _screen_live(candidate_rows, preset, on_event)
-        if cache_path is not None:
-            Path(cache_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(cache_path).write_text(json.dumps(batch, default=str), encoding="utf-8")
+        _write_screen_cache(cache_path, batch)
+    passes = 0
+    recovered = 0
+    by_id = {str(r.get("site_id") or ""): r for r in candidate_rows}
+    for k in range(1, int(screen_retries or 0) + 1):
+        ids = [i for i in _retryable_failure_ids(batch) if i in by_id]
+        if not ids:
+            break
+        if screen_retry_wait and float(screen_retry_wait) > 0:
+            time.sleep(float(screen_retry_wait))
+        part = _screen_live([by_id[i] for i in ids], preset, on_event)
+        batch = _merge_retry(batch, part)
+        still = set(_retryable_failure_ids(batch))
+        got = sum(1 for i in ids if i not in still)
+        passes, recovered = k, recovered + got
+        diag = batch.get("diagnostics")
+        if not isinstance(diag, dict):
+            diag = {}
+            batch["diagnostics"] = diag
+        diag["screen_retry_passes"] = passes
+        diag["n_recovered"] = recovered
+        _safe_emit(on_event, "screening_retry", {"pass": k, "n": len(ids), "recovered": got})
+        _write_screen_cache(cache_path, batch)
     tables = easi_screening.to_screening_tables(batch)
     rows = tables.get("easi_screening_sites", [])
     return {
@@ -813,12 +954,16 @@ def screen_pool(candidate_rows: list[dict], preset: str,
         "preset": preset,
         "from_cache": from_cache,
         "cache_stale_refetched": cache_stale,
+        "screen_retry_passes": passes,
+        "n_recovered": recovered,
     }
 
 
 def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
                           on_event: Optional[Callable] = None,
-                          cache_dir: Optional[Path] = None) -> dict:
+                          cache_dir: Optional[Path] = None, *,
+                          screen_retries: int = 0,
+                          screen_retry_wait: float = 0.0) -> dict:
     """Apply REF-01/02/03. Screen at the primary tier (functional by default). If the
     least-disturbed pool is too small to fit curves, fall back to best-available
     (at_risk_or_better), flag it, and stamp the tier. Never silently relaxes; never
@@ -835,8 +980,10 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
     def _cache(preset):
         return (Path(cache_dir) / f"screening_cache_{preset}.json") if cache_dir else None
 
+    retry_kw = ({"screen_retries": int(screen_retries),
+                 "screen_retry_wait": float(screen_retry_wait)} if screen_retries else {})
     primary = screen_pool(candidate_rows, primary_preset, on_event=on_event,
-                          cache_path=_cache(primary_preset))
+                          cache_path=_cache(primary_preset), **retry_kw)
     n_primary = len(primary["retained_ids"])
     result = {
         "reference_tier": ladder[primary_preset],
@@ -852,7 +999,7 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
         # exploratory. Fall back explicitly. (A pool of 10 to 19 does NOT land
         # here: it stays least-disturbed at DATA-05 exploratory status.)
         fallback = screen_pool(candidate_rows, fallback_preset, on_event=on_event,
-                               cache_path=_cache(fallback_preset))
+                               cache_path=_cache(fallback_preset), **retry_kw)
         result.update({
             "reference_tier": TIER_BEST_AVAILABLE,
             "fallback": fallback,
@@ -1286,7 +1433,10 @@ def run_evidence(l3_code: str, name: str, *,
                  diagnostics_enabled: bool = True,
                  nrsa_dataset_id: str = nrsa_dataset.DEFAULT_DATASET_ID,
                  nrsa_cycles=None,
-                 predictor_source: str = "streamcat") -> dict:
+                 predictor_source: str = "streamcat",
+                 screen_retries: int = 0,
+                 screen_retry_wait: float = 60.0,
+                 engine_config: Optional[dict] = None) -> dict:
     """The expensive, decision-free half of a regional run.
 
     Screening, data assembly, the registries, redundancy, the stratifier
@@ -1312,7 +1462,9 @@ def run_evidence(l3_code: str, name: str, *,
     # --- Reference screening + tier ladder (REF) ---
     if do_screen:
         tier = choose_reference_tier(candidate_rows, screen_preset, on_event=on_event,
-                                     cache_dir=cache_dir)
+                                     cache_dir=cache_dir,
+                                     screen_retries=screen_retries,
+                                     screen_retry_wait=screen_retry_wait)
         screening = tier["screening"]
         retained_ids = set(screening["retained_ids"])
         counts = screening["counts"]
@@ -1358,28 +1510,41 @@ def run_evidence(l3_code: str, name: str, *,
         list(data.columns), landscape_directions)
     predictor_config = build_predictor_config(list(data.columns), landscape_directions)
 
-    # Engine-sourced predictor recomputation (the recalibration mechanism):
-    # exact-watershed columns are computed at every retained site, joined by
-    # site_id, and swapped in for their StreamCat predictor analogs. The
-    # honesty report rides source_reports (the batch runner refuses a stage
-    # whose sources are not ok/skipped). StreamCat stays on for the SCORED
-    # landscape metrics; only the predictor role re-sources.
+    # Engine-sourced recomputation (the recalibration mechanism, 2026-09-02):
+    # exact-watershed values are computed at every retained site and joined by
+    # site_id. The se_ predictor columns swap in for their StreamCat predictor
+    # analogs, and the SCORED landscape columns with an engine analog take the
+    # engine's values under their own names, so the curves are fitted on the
+    # source DEEP will score with. A site the engine cannot value keeps NaN,
+    # never a StreamCat fallback. The honesty report rides source_reports (the
+    # batch runner refuses a stage whose sources are not ok/skipped).
     se_reports: list[dict] = []
+    resourced: list[str] = []
     if predictor_source == "site-engine":
         from . import site_engine_source as ses
         rows = [{"site_id": r["site_id"], "lat": r["lat"], "lon": r["lon"]}
                 for _, r in data.iterrows()]
-        if on_event:
-            on_event("enrich_site_engine",
-                     {"n_sites": len(rows),
-                      "note": "usually under a minute per uncached site, up to about five on a large basin"})
+        _safe_emit(on_event, "enrich_site_engine",
+                   {"n_sites": len(rows), "note": engine_names.SITE_ENGINE_COST})
+
+        def _engine_progress(i, n, info):
+            _safe_emit(on_event, "site_engine_site", {"i": i, "n": n, **(info or {})})
+
+        # ``engine_config`` overrides the engine defaults (a wider snap
+        # tolerance for a training point the HR geometry sits off by more
+        # than 150 ft, a larger reach budget); the report records the budget
+        # it ran under, so the override reaches the manifest and the packet.
         se_values, se_report = ses.enrich_site_engine(
             rows,
             cache_path=(str(Path(cache_dir) / "site_engine_cache.json")
-                        if cache_dir else None))
+                        if cache_dir else None),
+            progress=_engine_progress, config=engine_config)
         data = ses.attach_engine_columns(data, se_values)
+        data, resourced = ses.resource_metric_columns(data, se_values)
+        landscape_config = ses.annotate_resourced_metric_config(landscape_config, resourced)
         predictor_config = ses.replace_predictors(predictor_config,
                                                   list(data.columns))
+        se_report["resourced_metrics"] = list(resourced)
         se_reports.append(se_report)
     metric_config.update(landscape_config)
     metric_cols = list(metric_config.keys())
@@ -1498,6 +1663,9 @@ def run_evidence(l3_code: str, name: str, *,
         # actually configured (the derived value stamps the bundle).
         "predictor_source_flag": predictor_source,
         "predictor_source": _derived_predictor_source(predictor_config),
+        # The scored landscape columns the engine recomputed (empty under the
+        # StreamCat default); rides the manifest, the digest, and the packet.
+        "resourced_metrics": list(resourced),
         "data": data,
         "curve_rows": curve_rows,
         "curve_review": curve_review,
@@ -1702,6 +1870,15 @@ def assemble(evidence: dict, *,
         "n_candidates": n_candidates,
         "screening_method": method,
         "screening_counts": evidence["screening_counts"],
+        # Provenance inputs the manifest builder reads off the result: the
+        # screening tables (for the watershed-engine echo), the pin, and the
+        # predictor source with the re-sourced columns. Dropped here before
+        # 2026-09-02, so no published manifest had recorded them.
+        "screening": screening,
+        "screening_watershed_engine": evidence.get("screening_watershed_engine"),
+        "predictor_source_flag": evidence.get("predictor_source_flag"),
+        "predictor_source": evidence.get("predictor_source"),
+        "resourced_metrics": list(evidence.get("resourced_metrics") or []),
         "reference_tier": tier["reference_tier"],
         "ref02_triggered": tier.get("ref02_triggered", False),
         "review_flags": tier.get("review_flags", []),
@@ -1755,6 +1932,8 @@ def assemble(evidence: dict, *,
 def run(l3_code: str, name: str, *,
         screen_preset: str = "functional",
         source_citation: str = "",
+        screen_retries: int = 0,
+        screen_retry_wait: float = 60.0,
         assessment_id: Optional[str] = None,
         assessment_name: Optional[str] = None,
         author: str = "StreamCurves Regional Analysis Agent",
@@ -1796,7 +1975,8 @@ def run(l3_code: str, name: str, *,
         l3_code, name, screen_preset=screen_preset, on_event=on_event,
         do_screen=do_screen, use_streamcat=use_streamcat, cache_dir=cache_dir,
         diagnostics_n_boot=diagnostics_n_boot, diagnostics_enabled=diagnostics_enabled,
-        nrsa_dataset_id=nrsa_dataset_id, nrsa_cycles=nrsa_cycles)
+        nrsa_dataset_id=nrsa_dataset_id, nrsa_cycles=nrsa_cycles,
+        screen_retries=screen_retries, screen_retry_wait=screen_retry_wait)
     return assemble(
         evidence, source_citation=source_citation, assessment_id=assessment_id,
         assessment_name=assessment_name, author=author,

@@ -198,11 +198,23 @@ screens each site once even where the bundled NRSA table repeats an id.
 computes the curve predictors: `streamcat` is the StreamCat lookup engine and
 `site-engine` is the STAF site engine, which recomputes them at the training sites
 (usually under a minute per uncached site, up to about five on a large basin) and stamps the bundle's `predictorSource`; a
-replay recovers the choice from the run's own manifest. The EASI screening inside
+replay recovers the choice from the run's own manifest. An engine-sourced build
+also recomputes the six scored landscape metrics that have an engine analog
+(impervious, crop, woody and herbaceous wetland, road density, dam density) over
+the exact watershed at every retained site, under their StreamCat column names.
+Base-flow index and road-stream crossings stay StreamCat. The recomputed list rides
+the manifest (`inputs.predictor_source.resourced_metrics`) and the digest, and the
+bundle stamps `predictorSource` per metric only on those curves, which is what
+DEEP's pairing rule reads. A retained site the engine cannot value keeps NaN, the
+per-site cache never stores a failure, and the stage refuses a partial engine run
+and names the sites. The EASI screening inside
 a stage is pinned to the StreamCat lookup engine (`SCREENING_WATERSHED_ENGINE` in
 `streamcurves/easi_screening.py`, recorded in the manifest outside the digest), so
 a stream outside NHDPlus V2 screens exactly as it did before the site engine
-existed and every published digest still reproduces.
+existed and every published digest still reproduces. `--screen-retries` (default 2,
+`--screen-retry-wait` seconds apart) re-screens only the candidates a transient
+failure left unresolved, such as a snap service outage, and merges each pass into
+the screening cache, so a flapping service cannot poison a re-stage.
 
 The import wizard and cross-sections tab pull from public REST services (USGS
 NLDI/3DEP, the StreamCat lookup engine, USGS StreamStats, and Model My Watershed);

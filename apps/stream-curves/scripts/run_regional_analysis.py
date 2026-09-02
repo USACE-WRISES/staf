@@ -588,6 +588,12 @@ def main(argv=None) -> int:
                     help="which NRSA data to read; the default is the pooled multi-cycle "
                          "archive when this checkout has built it; pass legacy-1819 to "
                          "reproduce the published assessments' inputs")
+    ap.add_argument("--screen-retries", type=int, default=2,
+                    help="re-screen the candidates a transient failure left unresolved "
+                         "(a snap service outage) up to this many passes, merging each "
+                         "pass into the screening cache. Zero is a single pass")
+    ap.add_argument("--screen-retry-wait", type=float, default=60.0,
+                    help="seconds to wait before each retry pass")
     ap.add_argument("--nrsa-cycle", action="append", dest="nrsa_cycles",
                     choices=list(nrsa_dataset.CYCLES_NEWEST_FIRST),
                     help="repeatable; limit a pooled run to these survey cycles")
@@ -646,7 +652,8 @@ def main(argv=None) -> int:
                     finalize_actor=args.maintainer,
                     remove_metrics=remove_metrics or None,
                     reviewer_decisions=decisions,
-                    on_event=lambda ev: print(f"[screen] {ev}") if isinstance(ev, str) else None)
+                    screen_retries=args.screen_retries, screen_retry_wait=args.screen_retry_wait,
+                    on_event=ra.event_narrator())
     print(f"[agent] retained {len(result['retained_site_ids'])} / {result['n_candidates']} "
           f"(tier {result['reference_tier']}, pool {result['reference_pool_disposition']}); "
           f"curves in scope {len(result['intended_metrics'])}, flagged {len(result['flagged_metrics'])}, "

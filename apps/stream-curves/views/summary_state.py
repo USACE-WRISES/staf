@@ -2440,6 +2440,11 @@ def build_summary_export_context(
     session_meta = {
         "generated_at": None,  # stamped by the caller (Date.now() unavailable here)
         "predictor_source": _ses.predictor_source_of(list(predictor_config)),
+        # The scored landscape metrics an engine-sourced build recomputed
+        # (metric_config value_source, stamped by the agent; empty otherwise).
+        "resourced_metrics": sorted(
+            mk for mk, cfg in (metric_config or {}).items()
+            if str((cfg or {}).get("value_source") or "").startswith("site-engine")),
         "metric_count": len(metrics),
         "complete_metrics": int((metric_status["status_label"] != "Incomplete").sum())
         if len(metric_status)

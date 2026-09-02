@@ -148,10 +148,19 @@ def _one_metric_case():
 
 
 def test_bundle_stamps_engine_predictor_source():
+    """Bundle-level from the build's derived source; per-metric only where the
+    curve's own value_source says the engine computed its values (2026-09-02),
+    so DEEP's pairing rule never refuses StreamCat values on a StreamCat-fitted
+    curve inside an engine-sourced build."""
     rows, mapping = _one_metric_case()
     b = build_deep_assessment_bundle(
         rows, mapping, {}, {"predictorSource": "site-engine v0.1.0"})
     assert b["predictorSource"] == "site-engine v0.1.0"
+    m = b["metricsByFunction"][0]["metrics"][0]
+    assert "predictorSource" not in m
+    b = build_deep_assessment_bundle(
+        rows, mapping, {"m": {"value_source": "site-engine v0.1.0"}},
+        {"predictorSource": "site-engine v0.1.0"})
     m = b["metricsByFunction"][0]["metrics"][0]
     assert m["predictorSource"] == "site-engine v0.1.0"
 
