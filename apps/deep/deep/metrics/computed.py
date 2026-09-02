@@ -1,15 +1,22 @@
-"""Desktop auto-compute registry for DEEP (Phase 3).
+"""Desktop auto-compute registry for DEEP.
 
 Maps the desktop-derivable detailed metricIds (as used in the predefined
-state-SQT assessments) to adapters that compute the RAW measured value — the
+state-SQT assessments) to adapters that compute the RAW measured value, the
 value DEEP then runs through the metric's reference curve, exactly like a
 field-entered value. Adapters reuse EASI's datasource + geomorphology code:
 
-- watershed land cover / impervious  ← EPA StreamCat (NLCD fallback)
-- reach geomorphic ratios ER / BHR / W:D  ← 3DEP DEM cross-section + Bieger bankfull
+- watershed land cover / impervious  <- the STAF site engine (exact watershed)
+  when the bundle allows it, else the StreamCat lookup engine (NLCD fallback)
+- reach geomorphic ratios ER / BHR / W:D  <- 3DEP DEM cross-section + Bieger bankfull
+
+Every value carries a ``basis`` (``site-engine`` | ``streamcat`` | ``nlcd`` |
+``3dep``) and a source label naming the engine. On a stream outside NHDPlus V2
+the StreamCat label says which covered reach the value describes, and a
+declined routing (past the drainage-area bound) yields no StreamCat value at
+all, so the NLCD fallback runs over the exact watershed polygon instead.
 
 Only a curated, reliably-computable subset is registered; every other metric
-stays field entry. Adapters never raise — a failure or missing datum yields
+stays field entry. Adapters never raise: a failure or missing datum yields
 ``None`` and the metric is left blank/manual. Heavy datasource imports are lazy
 so this module (and the framework tests) load without the geospatial stack.
 """
@@ -20,6 +27,11 @@ from typing import Callable, Optional
 
 from .base import AnalysisContext
 
+BASIS_SITE_ENGINE = "site-engine"
+BASIS_STREAMCAT = "streamcat"
+BASIS_NLCD = "nlcd"
+BASIS_3DEP = "3dep"
+
 
 @dataclass
 class ComputedValue:
@@ -29,8 +41,10 @@ class ComputedValue:
     # True when the value came from the vendored site engine (exact watershed).
     # Rides into the measured-value state so the scoring layer can enforce the
     # train/serve pairing rule (engine values never score against curves
-    # fitted on StreamCat predictors).
+    # fitted on StreamCat predictors while the pairing mode is "refuse").
     engine: bool = False
+    # Which engine or layer produced the value (the worksheet badge).
+    basis: str = ""
 
 
 _ADAPTERS: dict[str, Callable[[AnalysisContext], Optional[ComputedValue]]] = {}
@@ -65,19 +79,26 @@ def _engine_record(ctx: AnalysisContext) -> dict:
     """One exact-watershed engine computation per site, cached on ctx.
 
     Runs ONLY when the caller allowed it (``ctx.extras["allow_engine"]``,
-    set from the bundle's predictorSource): against StreamCat-fitted curves
-    the engine must not supply scoring inputs, so the adapters fall back to
-    the StreamCat/NLCD paths those curves were trained on. Never raises.
+    set from the bundle's predictorSource and the pairing mode): against
+    StreamCat-fitted curves in ``refuse`` mode the engine must not supply
+    scoring inputs, so the adapters fall back to the StreamCat/NLCD paths
+    those curves were trained on. A record the app already computed for the
+    site (``ctx.extras["site_engine_prefetched"]``) is reused instead of a
+    second run. Never raises.
     """
     if "site_engine_record" not in ctx.extras:
         rec: dict = {}
         try:
-            if ctx.extras.get("allow_engine") and site_engine_available():
-                from deep._vendor.site_engine import compute_site
-                rec = compute_site(ctx.lat, ctx.lon,
-                                   {"includeGeometry": False}) or {}
-                if rec.get("status") != "ok":
-                    rec = {}
+            if ctx.extras.get("allow_engine"):
+                pre = ctx.extras.get("site_engine_prefetched")
+                if isinstance(pre, dict) and pre.get("status") == "ok":
+                    rec = pre
+                elif site_engine_available():
+                    from deep._vendor.site_engine import compute_site
+                    rec = compute_site(ctx.lat, ctx.lon,
+                                       {"includeGeometry": False}) or {}
+                    if rec.get("status") != "ok":
+                        rec = {}
         except Exception:  # noqa: BLE001
             rec = {}
         ctx.extras["site_engine_record"] = rec
@@ -93,12 +114,59 @@ def _engine_version(ctx: AnalysisContext) -> str:
     return str(_engine_record(ctx).get("engineVersion") or "")
 
 
+def _engine_label(ctx: AnalysisContext) -> str:
+    """``STAF site engine v0.2.0`` from the vendored vocabulary when present."""
+    ver = _engine_version(ctx)
+    try:
+        from deep._vendor.site_engine import naming
+        return naming.engine_label(ver or None)
+    except Exception:  # noqa: BLE001 - vocabulary fallback
+        return f"STAF site engine v{ver or 'unknown'}"
+
+
+def _anchor(ctx: AnalysisContext) -> dict:
+    return ctx.extras.get("site_anchor") or {}
+
+
+def _comid_withheld(ctx: AnalysisContext) -> bool:
+    """The routing to the nearest covered reach was declined: no COMID-keyed
+    value describes this stream."""
+    return bool((_anchor(ctx).get("routing") or {}).get("declined"))
+
+
+def _describes(ctx: AnalysisContext) -> str:
+    """``, describes the nearest covered reach, COMID x, ...`` on a stream
+    outside NHDPlus V2; empty on a covered site."""
+    a = _anchor(ctx)
+    if a.get("anchorKind") != "hrSurrogate":
+        return ""
+    try:
+        from deep._vendor.site_engine import naming
+        label = naming.anchor_label(a)
+    except Exception:  # noqa: BLE001
+        comid = (a.get("scoredReach") or {}).get("comid")
+        label = f"nearest covered reach, COMID {comid}" if comid else ""
+    return f", describes the {label}" if label else ""
+
+
+def _streamcat_source(ctx: AnalysisContext, what: str) -> str:
+    return f"StreamCat lookup engine {what} (watershed){_describes(ctx)}"
+
+
+def _nlcd_source(ctx: AnalysisContext, what: str) -> str:
+    if ctx.extras.get("watershed_basis") == BASIS_SITE_ENGINE:
+        return f"NLCD 2021 {what} (exact watershed polygon, STAF site engine)"
+    return f"NLCD 2021 {what} (watershed)"
+
+
 def _streamcat(ctx: AnalysisContext) -> dict:
     if "streamcat" not in ctx.extras:
-        from ..datasources import streamcat
-        names = ["pctimp2019", "pctcrop2019", "pcthay2019"]
-        ctx.extras["streamcat"] = (streamcat.metrics_by_comid(ctx.comid, names)
-                                   if ctx.comid else {}) or {}
+        if _comid_withheld(ctx) or not ctx.comid:
+            ctx.extras["streamcat"] = {}
+        else:
+            from ..datasources import streamcat
+            names = ["pctimp2019", "pctcrop2019", "pcthay2019"]
+            ctx.extras["streamcat"] = streamcat.metrics_by_comid(ctx.comid, names) or {}
     return ctx.extras["streamcat"]
 
 
@@ -130,7 +198,7 @@ def _reach_geom(ctx: AnalysisContext) -> dict:
 
 
 # --------------------------------------------------------------------------- #
-# Adapters — watershed land cover (StreamCat, NLCD fallback)
+# Adapters: watershed land cover (site engine, StreamCat, NLCD fallback)
 # --------------------------------------------------------------------------- #
 @adapter("catchment-hydrology-impervious-cover",
          "catchment-hydrology-percent-impervious-cover",
@@ -139,14 +207,15 @@ def _impervious(ctx):
     ev = _engine_metric(ctx, "imperviousPctWatershed")
     if ev is not None:
         return ComputedValue(round(float(ev), 2),
-                             f"Site engine v{_engine_version(ctx)} impervious "
-                             "(exact watershed, NLCD 2021)", "H", engine=True)
+                             f"{_engine_label(ctx)} impervious (exact watershed, NLCD 2021)",
+                             "H", engine=True, basis=BASIS_SITE_ENGINE)
     v = _streamcat(ctx).get("pctimp2019ws")
-    src = "EPA StreamCat pctimp2019 (watershed)"
+    src, basis = _streamcat_source(ctx, "pctimp2019"), BASIS_STREAMCAT
     if v is None:
         v = _landcover(ctx).get("impervious_pct")
-        src = "NLCD 2021 impervious (watershed)"
-    return ComputedValue(round(float(v), 2), src, "H") if v is not None else None
+        src, basis = _nlcd_source(ctx, "impervious"), BASIS_NLCD
+    return (ComputedValue(round(float(v), 2), src, "H", basis=basis)
+            if v is not None else None)
 
 
 @adapter("catchment-hydrology-anthropogenic-land-cover")
@@ -158,36 +227,41 @@ def _anthropogenic(ctx):
         total = (e_imp or 0.0) + (e_crop or 0.0) + (e_hay or 0.0)
         return ComputedValue(
             round(float(total), 2),
-            f"Site engine v{_engine_version(ctx)} crop+hay+impervious "
-            "(exact watershed, NLCD 2021)", "M", engine=True)
+            f"{_engine_label(ctx)} crop+hay+impervious (exact watershed, NLCD 2021)",
+            "M", engine=True, basis=BASIS_SITE_ENGINE)
     sc = _streamcat(ctx)
     crop, hay, imp = sc.get("pctcrop2019ws"), sc.get("pcthay2019ws"), sc.get("pctimp2019ws")
     if crop is not None or hay is not None or imp is not None:
         total = (crop or 0.0) + (hay or 0.0) + (imp or 0.0)
         return ComputedValue(round(float(total), 2),
-                             "EPA StreamCat crop+hay+impervious (watershed)", "M")
+                             _streamcat_source(ctx, "crop+hay+impervious"), "M",
+                             basis=BASIS_STREAMCAT)
     lc = _landcover(ctx)
     ag, imp = lc.get("ag_pct"), lc.get("impervious_pct")
     if ag is not None or imp is not None:
         return ComputedValue(round(float((ag or 0.0) + (imp or 0.0)), 2),
-                             "NLCD 2021 agriculture + developed (watershed)", "M")
+                             _nlcd_source(ctx, "agriculture + developed"), "M",
+                             basis=BASIS_NLCD)
     return None
 
 
 # --------------------------------------------------------------------------- #
-# Adapters — reach geomorphic ratios (3DEP DEM cross-section)
+# Adapters: reach geomorphic ratios (3DEP DEM cross-section)
 # --------------------------------------------------------------------------- #
 @adapter("floodplain-connectivity-entrenchment-ratio-er")
 def _entrenchment(ctx):
     er = _reach_geom(ctx).get("entrenchment_ratio")
-    return (ComputedValue(round(float(er), 2), "3DEP DEM cross-section — Rosgen ER (modeled)", "M")
+    return (ComputedValue(round(float(er), 2), "3DEP DEM cross-section, Rosgen ER (modeled)",
+                          "M", basis=BASIS_3DEP)
             if er is not None else None)
 
 
 @adapter("channel-and-floodplain-dynamics-bank-height-ratio-bhr")
 def _bank_height(ctx):
     bhr = _reach_geom(ctx).get("bank_height_ratio")
-    return (ComputedValue(round(float(bhr), 2), "3DEP DEM cross-section — bank-height ratio (modeled)", "M")
+    return (ComputedValue(round(float(bhr), 2),
+                          "3DEP DEM cross-section, bank-height ratio (modeled)", "M",
+                          basis=BASIS_3DEP)
             if bhr is not None else None)
 
 
@@ -197,7 +271,8 @@ def _width_depth(ctx):
     w, d = g.get("bankfull_width_m"), g.get("bankfull_depth_m")
     if w and d and d > 0:
         return ComputedValue(round(float(w) / float(d), 1),
-                             "3DEP DEM cross-section — width/depth (modeled)", "M")
+                             "3DEP DEM cross-section, width/depth (modeled)", "M",
+                             basis=BASIS_3DEP)
     return None
 
 

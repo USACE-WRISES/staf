@@ -1,11 +1,15 @@
-"""DEEP report exports — CSV, GeoJSON, and PDF.
+"""DEEP report exports: CSV, GeoJSON, PDF, and the field-form packet.
 
 Matplotlib-free (PDF uses reportlab Platypus) like SFARI/EASI, so it is safe on
 Posit Connect. Each function takes the delineation, the loaded assessment
 (``metricsByFunction`` with inlined curves), the per-metric measured-value state,
 and the scored rollup dict from ``curves.score_site`` /
-``scoring.score_assessment``. Per-metric indices are recomputed from the curves
-so the report is decoupled from the app's live state objects.
+``scoring.score_assessment``. Per-metric indices are recomputed through the
+scoring layer (:func:`curves.metric_index`, so the train/serve pairing rule
+applies to exports exactly as it does in the app) and every row carries its
+provenance: origin, basis (which engine or layer produced a desktop value),
+source label, the engine flag, the curve's predictor source, and the scoring
+advisory.
 """
 from __future__ import annotations
 
@@ -14,7 +18,7 @@ import csv
 import io
 import json
 
-from . import assessments, curves, scoring, session
+from . import assessments, curves, measure, scoring, session
 
 
 def _mbf(assessment) -> list[dict]:
@@ -76,17 +80,70 @@ def _attr(assessment, obj_attr, dict_key, default=""):
     return default
 
 
+# --------------------------------------------------------------------------- #
+# The two watershed engines in the exports
+# --------------------------------------------------------------------------- #
+def watershed_basis_label(delin) -> str:
+    """Plain words for ``watershedBasis``: which engine's watershed the desktop
+    values describe."""
+    basis = (delin or {}).get("watershedBasis") or ""
+    eng = (delin or {}).get("siteEngine") or {}
+    ver = eng.get("engineVersion")
+    if basis == "site-engine":
+        return f"exact watershed (STAF site engine v{ver})" if ver else \
+            "exact watershed (STAF site engine)"
+    if basis == "nhdplus-v2-basin-of-surrogate":
+        return "NHDPlus V2 basin of the nearest covered reach (StreamCat lookup engine)"
+    if eng.get("status") == "ok":
+        tail = f"STAF site engine v{ver}" if ver else "STAF site engine"
+        return f"NHDPlus V2 basin drawn, exact watershed computed ({tail})"
+    return "NHDPlus V2 basin (StreamCat lookup engine)"
+
+
+def _metric_predictor_source(m: dict, assessment) -> str:
+    """The per-metric ``predictorSource`` stamp, else the bundle's, else streamcat."""
+    own = (m or {}).get("predictorSource")
+    if own:
+        return str(own)
+    return assessments.predictor_source_of(assessment)
+
+
 def _rows(assessment, measured):
-    """Yield ``(fn, metric, value, index)`` for every metric in the assessment."""
+    """Yield ``(fn, metric, value, index, meta)`` for every metric in the assessment.
+
+    The index comes from :func:`curves.metric_index`, so an engine-computed value
+    against a StreamCat-fitted curve yields ``None`` here exactly as it does in the
+    app (the train/serve pairing rule). ``meta`` carries ``origin``, ``basis``,
+    ``source``, ``engine``, ``predictor_source``, ``advisory`` (the scoring
+    advisory text or None) and ``reference_only`` (True when the pairing rule
+    withheld the index).
+    """
+    measured = measured or {}
+    mv_objs = measure.measured_from_state(measured)
     for fn in _mbf(assessment):
         for m in fn.get("metrics", []):
-            mv = measured.get(m["metricId"]) or {}
-            val = None if mv.get("na") else mv.get("value")
+            mid = m["metricId"]
+            raw = measured.get(mid) or {}
+            mv = mv_objs.get(mid)
+            val = None if raw.get("na") else raw.get("value")
             idx = None
-            if val is not None and val != "":
-                pts = curves.active_points(m, mv.get("stratum"))
-                idx = curves.interp_curve(pts, float(val))
-            yield fn, m, val, idx
+            advisory = None
+            reference_only = False
+            if val is not None and val != "" and mv is not None:
+                idx = curves.metric_index(mv, m)
+                advisory = curves.metric_warning(mv, m)
+                reference_only = (idx is None
+                                  and curves.engine_pairing_advisory(mv, m) is not None)
+            meta = {
+                "origin": raw.get("origin", "field") if raw else "",
+                "basis": raw.get("basis", "") or "",
+                "source": raw.get("source", "") or "",
+                "engine": bool(mv.engine) if mv is not None else False,
+                "predictor_source": _metric_predictor_source(m, assessment),
+                "advisory": advisory,
+                "reference_only": reference_only,
+            }
+            yield fn, m, val, idx, meta
 
 
 def _header_pairs(delin, assessment, sc, region=None):
@@ -99,6 +156,7 @@ def _header_pairs(delin, assessment, sc, region=None):
         ("Lifecycle status", session.status_label(status)),
         ("Scoring method version", _method_version(assessment)),
         ("Source", _attr(assessment, "source_citation", "sourceCitation")),
+        ("Predictor source", assessments.predictor_source_of(assessment)),
         ("State (region match)", _state_label(st)),
         ("Level III ecoregion", _l3_label(l3)),
         ("Content digest", digest),
@@ -107,6 +165,7 @@ def _header_pairs(delin, assessment, sc, region=None):
         ("COMID", dl.get("comid")), ("HUC8", dl.get("huc8")),
         ("Drainage area (km2)", dl.get("drainage_area_sqkm")),
         ("Reach length (ft)", dl.get("reach_length_ft")),
+        ("Watershed basis", watershed_basis_label(delin)),
         ("Ecosystem Condition Index", sc.get("ecosystemConditionIndex")),
         # An export outlives the session, so the index's denominator travels with it:
         # scoring correctly excludes uncovered functions from both numerator and
@@ -153,13 +212,17 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
         w.writerow([k, v])
     w.writerow([])
     w.writerow(["Function", "Discipline", "Metric", "Measured value", "Curve (source)",
-                "Metric index (0-1)", "Note"])
-    for fn, m, val, idx in _rows(assessment, measured):
+                "Metric index (0-1)", "Note", "Origin", "Basis", "Source", "Engine value",
+                "Predictor source", "Scoring advisory"])
+    for fn, m, val, idx, meta in _rows(assessment, measured):
         note = (measured.get(m["metricId"]) or {}).get("note", "")
         w.writerow([fn.get("functionName", ""), fn.get("discipline", ""),
                     m.get("metricName", m["metricId"]),
                     "" if val is None else val, (m.get("curve") or {}).get("layerName", ""),
-                    "" if idx is None else round(idx, 3), note])
+                    "" if idx is None else round(idx, 3), note,
+                    meta["origin"], meta["basis"], meta["source"],
+                    "yes" if meta["engine"] else "", meta["predictor_source"],
+                    meta["advisory"] or ""])
     w.writerow([])
     w.writerow(["Function", "Function score (0-15)", "Condition"])
     for name, s, cond in _function_rows(assessment, sc):
@@ -173,16 +236,21 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
     return out.getvalue()
 
 
-def build_geojson(delin, assessment, sc, region=None) -> str:
+def build_geojson(delin, assessment, sc, region=None, measured=None) -> str:
     dl = (delin or {}).get("delineation", {})
     version, status, digest, l3, st = _provenance(assessment, region)
+    withheld = sum(1 for _fn, _m, _v, _i, meta in _rows(assessment, measured or {})
+                   if meta["reference_only"])
     props = {"assessment": _attr(assessment, "assessment_name", "assessmentName"),
              "assessment_version": version, "lifecycle_status": status,
              "source": _attr(assessment, "source_citation", "sourceCitation"),
+             "predictor_source": assessments.predictor_source_of(assessment),
              "region_state": _state_label(st), "region_level3": _l3_label(l3),
              "content_digest": digest,
              "stream": dl.get("gnis_name"), "comid": dl.get("comid"), "huc8": dl.get("huc8"),
              "drainage_area_sqkm": dl.get("drainage_area_sqkm"),
+             "watershed_basis": (delin or {}).get("watershedBasis") or "nhdplus-v2-basin",
+             "engine_values_withheld": withheld,
              "ecosystem_condition_index": sc.get("ecosystemConditionIndex"),
              "staf_function_coverage": _coverage_label(assessment)}
     for k, v in sc.get("subIndices", {}).items():
@@ -206,6 +274,16 @@ def build_geojson(delin, assessment, sc, region=None) -> str:
                                    "coordinates": [dl.get("snapped_lon"), dl.get("snapped_lat")]},
                       "properties": pt_props})
     return json.dumps({"type": "FeatureCollection", "features": feats}, indent=2)
+
+
+def _source_cell_text(meta: dict) -> str:
+    """``origin`` plus the source label, and the reference-only flag."""
+    origin = meta.get("origin") or ""
+    src = meta.get("source") or ""
+    txt = f"{origin}: {src}" if (origin and src) else (src or origin)
+    if meta.get("reference_only"):
+        txt += " (reference only)"
+    return txt
 
 
 def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
@@ -247,11 +325,13 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
     ver_txt = "unversioned" if version is None else f"v{version}"
     hdr = [["Source", _attr(assessment, "source_citation", "sourceCitation")],
            ["Version / status", f"{ver_txt}  ·  {status.title()}"],
+           ["Predictor source", assessments.predictor_source_of(assessment)],
            ["Region match", _region_combined(st, l3)],
            ["Coordinates", f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}"],
            ["COMID / HUC8", f"{dl.get('comid')} / {dl.get('huc8')}"],
            ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
            ["Reach length", f"{dl.get('reach_length_ft')} ft"],
+           ["Watershed basis", watershed_basis_label(delin)],
            ["Content digest", digest or "(none)"],
            ["Ecosystem Condition Index", f"{sc.get('ecosystemConditionIndex')}"],
            ["STAF function coverage", _coverage_label(assessment)]]
@@ -280,25 +360,35 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
                              ("BACKGROUND", (0, 0), (-1, 0), head_bg)]))
     story += [sit, Spacer(1, 10), Paragraph("Metric measurements & curve indices", styles["Heading3"])]
 
-    mdata = [["Function", "Metric", "Value", "Index", "Curve (source)"]]
-    for fn, m, val, idx in _rows(assessment, measured):
+    mdata = [["Function", "Metric", "Value", "Index", "Source", "Curve (source)"]]
+    advisories = []
+    for fn, m, val, idx, meta in _rows(assessment, measured):
+        idx_txt = "ref. only" if meta["reference_only"] else ("" if idx is None else f"{idx:.2f}")
         mdata.append([Paragraph(fn.get("functionName", ""), small),
                       Paragraph(m.get("metricName", m["metricId"]), small),
                       "" if val is None else Paragraph(str(val), small),
-                      "" if idx is None else f"{idx:.2f}",
+                      idx_txt,
+                      Paragraph(_source_cell_text(meta), small),
                       Paragraph((m.get("curve") or {}).get("layerName", ""), small)])
-    mt = Table(mdata, colWidths=[1.5 * inch, 2.1 * inch, 0.8 * inch, 0.5 * inch, 1.8 * inch],
+        if meta["advisory"]:
+            advisories.append(f"<b>{m.get('metricName', m['metricId'])}</b>: {meta['advisory']}")
+    mt = Table(mdata, colWidths=[1.3 * inch, 1.7 * inch, 0.7 * inch, 0.55 * inch,
+                                 1.6 * inch, 1.2 * inch],
                repeatRows=1)
     mt.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 7),
                             ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e5e8ee")),
                             ("BACKGROUND", (0, 0), (-1, 0), head_bg), ("VALIGN", (0, 0), (-1, -1), "TOP")]))
-    story += [mt, Spacer(1, 8),
-              Paragraph("Scores are computed automatically from the assessment's reference curves. "
+    story += [mt, Spacer(1, 8)]
+    if advisories:
+        story += [Paragraph("Scoring advisories", styles["Heading4"])]
+        story += [Paragraph(a, small) for a in advisories]
+        story += [Spacer(1, 6)]
+    story += [Paragraph("Scores are computed automatically from the assessment's reference curves. "
                         "Confirm state/region applicability of the curve source.", styles["Italic"])]
 
-    # site-photo gallery — per-metric photos attached during measurement
+    # site-photo gallery: per-metric photos attached during measurement
     gallery = []
-    for fn, m, _val, _idx in _rows(assessment, measured):
+    for fn, m, _val, _idx, _meta in _rows(assessment, measured):
         ph = (measured.get(m["metricId"]) or {}).get("photos") or []
         imgs = [im for im in (_img(p.get("uri"), 1.3 * inch, 1.3 * inch) for p in ph) if im]
         if imgs:
@@ -322,11 +412,31 @@ def field_forms_filename(assessment) -> str:
     return f"deep-field-forms-{aid}.pdf"
 
 
-def build_field_forms_pdf(assessment, ref: str = "") -> bytes:
-    """Print-ready field packet: every metric in the assessment with a blank write-in
-    Value / Notes cell, grouped by function.
+def _desktop_entries(assessment, measured) -> dict:
+    """``{metricId: (value_text, notes_text)}`` for every desktop-computed value:
+    the value for the packet's Value cell and ``DESKTOP: <source>`` (plus
+    ``reference only`` when the pairing rule withholds its index) for Notes."""
+    out = {}
+    if not measured:
+        return out
+    for _fn, m, val, _idx, meta in _rows(assessment, measured):
+        if meta.get("origin") != "desktop" or val in (None, ""):
+            continue
+        note = f"DESKTOP: {meta.get('source') or meta.get('basis') or 'desktop'}"
+        if meta.get("reference_only"):
+            note += " (reference only)"
+        out[m["metricId"]] = (str(val), note)
+    return out
 
-    PLACEHOLDER — generated locally from the bundle's metric list so field crews have
+
+def build_field_forms_pdf(assessment, ref: str = "", *, measured=None,
+                          delineation=None) -> bytes:
+    """Print-ready field packet: every metric in the assessment with a write-in
+    Value / Notes cell, grouped by function. Desktop-computed values (``measured``)
+    are printed in the Value cell with their source in Notes so the crew sees
+    what the desk already answered; a site line names the delineated reach.
+
+    PLACEHOLDER: generated locally from the bundle's metric list so field crews have
     something to carry today. Replace with the StreamCurves-authored field-form PDF
     shipped inside the published bundle (a future bundle key) once that exists.
     """
@@ -341,6 +451,7 @@ def build_field_forms_pdf(assessment, ref: str = "") -> bytes:
                             leftMargin=0.6 * inch, rightMargin=0.6 * inch, title="DEEP Field Forms")
     styles = getSampleStyleSheet()
     small = ParagraphStyle("small", parent=styles["BodyText"], fontSize=8, leading=10)
+    tiny = ParagraphStyle("tiny", parent=styles["BodyText"], fontSize=7, leading=8.5)
     grid = colors.HexColor("#c3ccda")
     head_bg = colors.HexColor("#eef2f8")
 
@@ -351,9 +462,20 @@ def build_field_forms_pdf(assessment, ref: str = "") -> bytes:
              Paragraph(name, styles["Heading2"])]
     if sub:
         story.append(Paragraph(sub, styles["Italic"]))
+    dl = (delineation or {}).get("delineation") or {}
+    if dl:
+        reach_id = (f"NHDPlusID {dl.get('nhdplus_id')}" if dl.get("network") == "nhdplus-hr"
+                    and dl.get("nhdplus_id") else f"COMID {dl.get('comid')}")
+        site_line = (f"Site: {dl.get('gnis_name') or '(unnamed reach)'}  ·  {reach_id}  ·  "
+                     f"{dl.get('snapped_lat')}, {dl.get('snapped_lon')}  ·  "
+                     f"{dl.get('drainage_area_sqkm')} km2  ·  "
+                     f"{watershed_basis_label(delineation)}")
+        story.append(Paragraph(site_line, small))
     story += [Paragraph("Record each metric's measured value in the field, then enter the values in "
-                        "DEEP to compute the reference-curve scores.", small), Spacer(1, 8)]
+                        "DEEP to compute the reference-curve scores. Values already answered from "
+                        "the desk are printed with their source.", small), Spacer(1, 8)]
 
+    desktop = _desktop_entries(assessment, measured)
     any_fn = False
     for fn in _mbf(assessment):
         any_fn = True
@@ -364,8 +486,11 @@ def build_field_forms_pdf(assessment, ref: str = "") -> bytes:
         story.append(Paragraph(head, styles["Heading3"]))
         data = [["Metric", "Units / measure", "Value", "Notes"]]
         for m in fn.get("metrics", []):
+            val_txt, note_txt = desktop.get(m.get("metricId"), ("", ""))
             data.append([Paragraph(m.get("metricName", m.get("metricId", "")), small),
-                         Paragraph(m.get("xLabel", ""), small), "", ""])
+                         Paragraph(m.get("xLabel", ""), small),
+                         Paragraph(val_txt, small) if val_txt else "",
+                         Paragraph(note_txt, tiny) if note_txt else ""])
         t = Table(data, colWidths=[2.3 * inch, 1.9 * inch, 1.0 * inch, 2.1 * inch],
                   rowHeights=[0.28 * inch] + [0.4 * inch] * (len(data) - 1), repeatRows=1)
         t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 8),

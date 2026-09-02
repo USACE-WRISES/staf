@@ -12,6 +12,11 @@ and a content digest over the inlined bundle. v1 files (or files with no
 ``schemaVersion``) still load, via a migration that reconstructs provenance from the
 embedded bundle and marks what the legacy file cannot supply as absent.
 
+Since 2026-09 the ``delineation`` block may carry ``siteAnchor`` (the reach
+classification), ``siteEngine`` (the geometry-stripped STAF site engine record)
+and ``watershedBasis``; earlier files lack them and every reader uses ``.get``,
+so the schema version stays 2.
+
 This module owns the provenance primitives (:func:`lifecycle_status`,
 :func:`content_digest`, :func:`bundle_digest`) so the session file and the reports stamp
 the same values. It imports only the standard library so it stays a leaf dependency.

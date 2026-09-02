@@ -29,6 +29,7 @@ from shiny import App, reactive, render, ui  # noqa: E402
 
 from deep import (assessments, config, curves, delineation, measure,  # noqa: E402
                   pipeline, report, scoring, session)
+from deep import engine_prefill, hr_site  # noqa: E402
 from deep.datasources import flowlines  # noqa: E402
 from deep.datasources.geocode import geocode_address  # noqa: E402
 from deep.metrics import computed as _computed  # noqa: E402
@@ -45,6 +46,10 @@ except Exception:  # pragma: no cover
 WATERSHED_STYLE = {"color": "#caa700", "weight": 1, "fillColor": "#fdf24a", "fillOpacity": 0.40}
 REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 2, "opacity": 0.9}
+HR_FLOWLINE_STYLE = {"color": "#7fb3f7", "weight": 1.2, "opacity": 0.75}
+ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
+_MISS_TEXT = ("You didn't click on a stream line. Zoom in and click a stream: blue lines are "
+              "the NHDPlus V2 network and light blue lines are all other NHD streams.")
 
 USGS_TOPO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 USGS_IMAGERY_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
@@ -388,6 +393,65 @@ def _metric_tip_html(m) -> str:
     return "".join(parts)
 
 
+_BASIS_TAG = {"site-engine": ("exact watershed", "deep-basis-tag engine"),
+              "streamcat": ("StreamCat", "deep-basis-tag streamcat"),
+              "nlcd": ("NLCD", "deep-basis-tag nlcd"),
+              "3dep": ("3DEP", "deep-basis-tag threedep")}
+
+
+def _basis_tag(rc):
+    """``(label, css class)`` of the basis badge for a desktop value, or None."""
+    if not rc or rc.get("origin") != "desktop":
+        return None
+    basis = rc.get("basis") or ("site-engine" if rc.get("engine") else "")
+    return _BASIS_TAG.get(basis)
+
+
+_ENGINE_STAGE_TEXT = {"site": "locating the stream", "walk": "walking upstream",
+                      "catchments": "collecting catchments", "union": "building the polygon",
+                      "geometry": "fetching the stream network",
+                      "reach": "building the assessment reach",
+                      "metrics": "computing watershed metrics", "done": "finishing"}
+
+
+def _engine_progress_text(prog: dict) -> str:
+    st = prog.get("stage")
+    detail = _ENGINE_STAGE_TEXT.get(st, "starting")
+    if st in ("walk", "catchments", "union", "geometry") and prog.get("reaches") is not None:
+        detail += f", {prog['reaches']} reaches, {prog.get('hops') or 0} hops"
+    if st == "metrics" and prog.get("family"):
+        detail += f" ({prog['family']})"
+    return f"Calculating the exact watershed: {detail}…"
+
+
+def _engine_line_ui(es: dict, running: bool, prog: dict):
+    """The one-line engine status shown in the basin card and the worksheet."""
+    st = (es or {}).get("status")
+    if running or st == "running":
+        return ui.div(_engine_progress_text(prog), class_="deep-engine-line")
+    if st == "ok":
+        rec = es.get("record") or {}
+        ws = rec.get("watershed") or {}
+        return ui.div(f"{engine_prefill.engine_label(rec.get('engineVersion'))}: exact watershed "
+                      f"{ws.get('areaSqkm')} km2 over {ws.get('nReaches')} reaches.",
+                      class_="deep-engine-line")
+    if st in ("failed", "refused", "unavailable"):
+        return ui.div(f"STAF site engine {st}: {es.get('reason') or 'no detail'}. Desktop values "
+                      "come from the StreamCat lookup engine, labeled with the reach they "
+                      "describe.", class_="deep-engine-line warn")
+    return None
+
+
+def _engine_wanted_for(la) -> bool:
+    """A covered site runs the engine in the background only when its values can
+    enter scoring: an engine-built bundle, or the pairing mode that labels rather
+    than refuses. StreamCat bundles at covered sites never pay the engine's minutes."""
+    if la is None:
+        return False
+    return (assessments.predictor_source_of(la) != "streamcat"
+            or curves.ENGINE_PAIRING_MODE == "label")
+
+
 def _source_line(m, rc):
     """One-line data-source attribution from the metric's library fields + runtime
     provenance: humanized inputType, sourceCitation, curve layer, and (for a
@@ -508,8 +572,8 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=11"),
-                    ui.tags.link(rel="stylesheet", href="deep.css?v=7"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=12"),
+                    ui.tags.link(rel="stylesheet", href="deep.css?v=8"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
@@ -624,6 +688,12 @@ def server(input, output, session_):  # noqa: C901
     current_fn = reactive.value(0)
     compute_nonce = reactive.value(0)          # bumped when desktop-compute merges values
     computed_for = reactive.value(None)        # (assessmentId, version, site) already desktop-computed
+    hr_geojson = reactive.value(None)          # HR-only flowlines in the viewport | None
+    pending_anchor = reactive.value(None)      # hrSurrogate siteAnchor of an HR-only click | None
+    engine_state = reactive.value({"status": "idle"})   # the STAF site engine on this site
+    engine_site = reactive.value(None)         # the site key the background engine ran for
+    _engine_prog = {"stage": None, "reaches": None, "hops": None, "family": None}
+    _surrogate_offer: dict = {}                # the fallback offered after an engine failure
 
     # One-shot deep-link ingest from the URL query string:
     #   ?assessment=<assessmentId>            -> load that library/predefined assessment (latest)
@@ -694,7 +764,8 @@ def server(input, output, session_):  # noqa: C901
             })
         await session_.send_custom_message("deep_coverage", {"features": payload})
 
-    _layers: dict = {"flow": None, "marker": None, "ws": None, "reach": None}
+    _layers: dict = {"flow": None, "hrflow": None, "route": None, "marker": None,
+                     "ws": None, "reach": None}
 
     def _remove_layer(key):
         lyr = _layers.get(key)
@@ -771,6 +842,7 @@ def server(input, output, session_):  # noqa: C901
             if bbox is None:
                 with reactive.isolate():
                     _remove_layer("flow"); flow_geojson.set(None); fetched_bbox.set(None)
+                    _remove_layer("hrflow"); hr_geojson.set(None)
                 return
             elapsed = time.monotonic() - changed
             if elapsed < 0.5:
@@ -781,6 +853,8 @@ def server(input, output, session_):  # noqa: C901
                     return
                 fetched_bbox.set(bbox)
             flow_task(bbox)
+            if hr_site.hr_available():
+                hr_flow_task(bbox)
 
         @reactive.effect
         def _apply_flowlines():
@@ -794,6 +868,28 @@ def server(input, output, session_):  # noqa: C901
                     flow_geojson.set(fc)
                 else:
                     _remove_layer("flow"); flow_geojson.set(None)
+
+        @reactive.extended_task
+        async def hr_flow_task(bbox: tuple) -> "dict | None":
+            return await anyio.to_thread.run_sync(lambda: hr_site.hr_flowlines_fc(*bbox))
+
+        @reactive.effect
+        def _apply_hr_flowlines():
+            try:
+                fc = hr_flow_task.result()
+            except Exception:
+                return
+            with reactive.isolate():
+                if fc and fc.get("features"):
+                    _add_layer("hrflow", GeoJSON(data=fc, style=HR_FLOWLINE_STYLE,
+                                                 name="All NHD streams (NHDPlus HR)"))
+                    hr_geojson.set(fc)
+                    v2 = flow_geojson()
+                    if v2 and v2.get("features"):   # keep the clickable V2 lines on top
+                        _add_layer("flow", GeoJSON(data=v2, style=FLOWLINE_STYLE,
+                                                   name="Stream lines"))
+                else:
+                    _remove_layer("hrflow"); hr_geojson.set(None)
 
         @reactive.effect
         @reactive.event(clicked)
@@ -810,18 +906,61 @@ def server(input, output, session_):  # noqa: C901
 
         def _apply_snap(hit):
             slat, slon, dist, comid = hit
+            _remove_layer("route")
+            pending_anchor.set(None)
             _add_layer("marker", Marker(location=(slat, slon), draggable=False,
                                         title="Selected point", name="Selected point"))
             snapped_point.set((slat, slon, dist, comid))
             ui.update_numeric("lat", value=round(slat, 5))
             ui.update_numeric("lon", value=round(slon, 5))
 
+        def _apply_hr_anchor(anchor) -> bool:
+            """An HR-only click: mark the HR snap point and draw the route to the
+            nearest covered reach. The exact watershed comes at Delineate."""
+            clicked_reach = hr_site.clicked_reach(anchor)
+            slat, slon = clicked_reach.get("snapLat"), clicked_reach.get("snapLon")
+            if slat is None or slon is None:
+                return False
+            _add_layer("marker", Marker(location=(slat, slon), draggable=False,
+                                        title="Selected point", name="Selected point"))
+            scored_reach = anchor.get("scoredReach") or {}
+            if not hr_site.declined(anchor) and scored_reach.get("snapLat") is not None:
+                seg = {"type": "FeatureCollection", "features": [{
+                    "type": "Feature", "properties": {},
+                    "geometry": {"type": "LineString",
+                                 "coordinates": [[slon, slat],
+                                                 [scored_reach["snapLon"], scored_reach["snapLat"]]]}}]}
+                _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
+                                            name="Nearest covered reach"))
+            else:
+                _remove_layer("route")
+            pending_anchor.set(anchor)
+            snapped_point.set((slat, slon, float(clicked_reach.get("snapDistFt") or 0.0), None))
+            ui.update_numeric("lat", value=round(slat, 5))
+            ui.update_numeric("lon", value=round(slon, 5))
+            return True
+
+        def _apply_snap_result(res, *, from_coords=False):
+            hit = res.get("hit")
+            if hit and hit[2] <= SNAP_TOL_FT:
+                _apply_snap(hit)
+                return
+            hr_hit = res.get("hrHit")
+            if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                stage.set("Locating the nearest covered reach…")
+                anchor_task(res["lat"], res["lon"], tuple(hr_hit))
+                return
+            if from_coords:
+                _remove_layer("marker"); snapped_point.set(None)
+                ui.notification_show("No stream within 150 ft of those coordinates. Adjust them, or "
+                                     "zoom in and click a stream line.", type="warning", duration=6)
+            else:
+                ui.notification_show(_MISS_TEXT, type="warning", duration=6)
+
         @reactive.extended_task
         async def click_snap_task(lat: float, lon: float) -> dict:
-            d = 0.012
-            return {"hit": await anyio.to_thread.run_sync(
-                lambda: flowlines.nearest_point_on_lines(
-                    flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d), lat, lon))}
+            return await anyio.to_thread.run_sync(
+                lambda: hr_site.snap_both(lat, lon, snap_tol_ft=SNAP_TOL_FT))
 
         @reactive.effect
         def _apply_click_snap():
@@ -829,19 +968,12 @@ def server(input, output, session_):  # noqa: C901
                 res = click_snap_task.result()
             except Exception:
                 return
-            hit = res.get("hit")
-            if hit and hit[2] <= SNAP_TOL_FT:
-                _apply_snap(hit)
-            else:
-                ui.notification_show("You didn't click on a stream line — zoom in and click a blue "
-                                     "stream line.", type="warning", duration=5)
+            _apply_snap_result(res)
 
         @reactive.extended_task
         async def coord_snap_task(lat: float, lon: float) -> dict:
-            d = 0.012
-            return {"hit": await anyio.to_thread.run_sync(
-                lambda: flowlines.nearest_point_on_lines(
-                    flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d), lat, lon))}
+            return await anyio.to_thread.run_sync(
+                lambda: hr_site.snap_both(lat, lon, snap_tol_ft=SNAP_TOL_FT))
 
         @reactive.effect
         def _apply_coord_snap():
@@ -849,13 +981,37 @@ def server(input, output, session_):  # noqa: C901
                 res = coord_snap_task.result()
             except Exception:
                 return
-            hit = res.get("hit")
-            if hit and hit[2] <= SNAP_TOL_FT:
-                _apply_snap(hit)
-            else:
-                _remove_layer("marker"); snapped_point.set(None)
-                ui.notification_show("No stream within 150 ft of those coordinates. Adjust them, or "
-                                     "zoom in and click a blue stream line.", type="warning", duration=6)
+            _apply_snap_result(res, from_coords=True)
+
+        @reactive.extended_task
+        async def anchor_task(lat: float, lon: float, hr_hit: tuple) -> dict:
+            return await anyio.to_thread.run_sync(
+                lambda: hr_site.route_from_hr(lat, lon, hr_hit))
+
+        @reactive.effect
+        def _anchor_done():
+            st = anchor_task.status()
+            if st in ("initial", "running"):
+                return
+            stage.set("")
+            try:
+                res = anchor_task.result()
+            except Exception as exc:  # noqa: BLE001
+                res = {"error": "snap_service_error", "detail": str(exc)}
+            anchor = res.get("anchor")
+            if not anchor or not _apply_hr_anchor(anchor):
+                _remove_layer("marker"); _remove_layer("route")
+                snapped_point.set(None); pending_anchor.set(None)
+                ui.notification_show(
+                    "Could not locate this stream on the covered network: "
+                    f"{res.get('detail') or res.get('error') or 'no detail'}. "
+                    "Try again in a moment.", type="warning", duration=7)
+                return
+            if hr_site.declined(anchor):
+                ui.notification_show(
+                    "This stream is outside the NHDPlus V2 network and the nearest covered "
+                    "reach drains more than 10 times its area. StreamCat values will be "
+                    "withheld here.", type="message", duration=7)
 
         @reactive.effect
         @reactive.event(input.coords_entered)
@@ -884,7 +1040,7 @@ def server(input, output, session_):  # noqa: C901
         hit = geocode_address(input.address())
         if hit and _HAS_MAP:
             _MAP.center = (hit[0], hit[1]); _MAP.zoom = 15
-            ui.notification_show(f"Centered on {hit[0]:.4f}, {hit[1]:.4f}. Click a blue stream.",
+            ui.notification_show(f"Centered on {hit[0]:.4f}, {hit[1]:.4f}. Click a stream line.",
                                  duration=4)
         elif not hit:
             ui.notification_show("Place not found — try a city, address, or stream name.",
@@ -901,16 +1057,79 @@ def server(input, output, session_):  # noqa: C901
             return
         _MAP.center = (float(lat), float(lon)); _MAP.zoom = 15
         where = pick.get("label") or f"{float(lat):.4f}, {float(lon):.4f}"
-        ui.notification_show(f"Centered on {where}. Click a blue stream.", duration=4)
+        ui.notification_show(f"Centered on {where}. Click a stream line.", duration=4)
 
     @reactive.effect
     def _toggle_delineate():
-        ui.update_action_button("delineate", disabled=(snapped_point() is None))
+        hr_only = pending_anchor() is not None
+        ui.update_action_button(
+            "delineate", disabled=(snapped_point() is None),
+            label="Compute exact watershed and reach" if hr_only else "Delineate Basin and Reach")
 
     @reactive.extended_task
     async def delineate_task(lat: float, lon: float, reach_ft: float,
-                             comid: "int | None" = None) -> dict:
-        return await pipeline.delineate_only(lat, lon, reach_ft, comid=comid)
+                             comid: "int | None" = None,
+                             anchor: "dict | None" = None) -> dict:
+        return await pipeline.delineate_only(lat, lon, reach_ft, comid=comid, anchor=anchor)
+
+    # ---- the STAF site engine (the exact watershed) ----
+    @reactive.extended_task
+    async def engine_task(lat: float, lon: float, reach_ft: float,
+                          anchor: "dict | None") -> dict:
+        def _cb(event):
+            for k in ("stage", "reaches", "hops", "family"):
+                if k in event:
+                    _engine_prog[k] = event[k]
+        rec = await anyio.to_thread.run_sync(
+            lambda: engine_prefill.run_engine(lat, lon, progress=_cb))
+        return {"record": rec, "anchor": anchor, "lat": lat, "lon": lon, "reach_ft": reach_ft}
+
+    def _launch_engine(lat, lon, reach_ft, anchor):
+        if not engine_prefill.site_engine_available():
+            engine_state.set({"status": "unavailable",
+                              "reason": "the STAF site engine is not available in this deployment"})
+            return
+        for k in _engine_prog:
+            _engine_prog[k] = None
+        engine_state.set({"status": "running"})
+        if anchor is not None:
+            stage.set("Calculating the exact watershed…")
+        ui.notification_show("Calculating the exact watershed…", id="engine",
+                             type="message", duration=None)
+        engine_task(lat, lon, reach_ft, anchor)
+
+    @reactive.effect
+    def _engine_poll():
+        if engine_task.status() != "running":
+            return
+        reactive.invalidate_later(1.0)
+        txt = _engine_progress_text(_engine_prog)
+        ui.notification_show(txt, id="engine", type="message", duration=None)
+        with reactive.isolate():
+            if pending_anchor() is not None:
+                stage.set(txt)
+
+    def _draw_delineation(res) -> bool:
+        try:
+            _remove_layer("ws"); _remove_layer("reach")
+            if res.get("watershed_geojson"):
+                _add_layer("ws", GeoJSON(data=delineation.display_simplify(res["watershed_geojson"]),
+                                         style=WATERSHED_STYLE, name="Watershed"))
+            if res.get("reach_geojson"):
+                _add_layer("reach", GeoJSON(data=res["reach_geojson"], style=REACH_STYLE,
+                                            name="Assessment reach"))
+            d = res.get("delineation") or {}
+            if _HAS_MAP:
+                bounds = delineation.geojson_bounds(res.get("watershed_geojson"),
+                                                    res.get("reach_geojson"))
+                if bounds:
+                    _MAP.fit_bounds(bounds)
+                elif d.get("snapped_lat") is not None:
+                    _MAP.center = (d["snapped_lat"], d["snapped_lon"])
+        except Exception as exc:  # noqa: BLE001
+            ui.notification_show(f"Could not draw the basin on the map: {exc}", type="error", duration=8)
+            return False
+        return True
 
     @reactive.effect
     @reactive.event(input.delineate)
@@ -922,11 +1141,18 @@ def server(input, output, session_):  # noqa: C901
         except Exception:
             ui.notification_show("Set a point first.", type="warning", duration=3)
             return
+        reach_ft = float(input.reach_ft())
+        anchor = pending_anchor()
+        if anchor is not None:
+            # A stream outside NHDPlus V2: the STAF site engine computes the
+            # watershed and the reach. There is no basin to look up.
+            _launch_engine(lat, lon, reach_ft, anchor)
+            return
         comid = pt[3] if pt else None
         stage.set("Delineating basin & reach…")
         ui.notification_show("Delineating basin & reach… please wait", id="stage",
                              type="message", duration=None)
-        delineate_task(lat, lon, float(input.reach_ft()), comid)
+        delineate_task(lat, lon, reach_ft, comid, None)
 
     @reactive.effect
     def _delineate_done():
@@ -946,26 +1172,115 @@ def server(input, output, session_):  # noqa: C901
         if res.get("status") != "ok":
             ui.notification_show(res.get("message", "Delineation error"), type="error", duration=8)
             return
-        try:
-            if res.get("watershed_geojson"):
-                _add_layer("ws", GeoJSON(data=delineation.display_simplify(res["watershed_geojson"]),
-                                         style=WATERSHED_STYLE, name="Watershed"))
-            if res.get("reach_geojson"):
-                _add_layer("reach", GeoJSON(data=res["reach_geojson"], style=REACH_STYLE,
-                                            name="Assessment reach"))
-            d = res.get("delineation") or {}
-            if _HAS_MAP:
-                bounds = delineation.geojson_bounds(res.get("watershed_geojson"),
-                                                    res.get("reach_geojson"))
-                if bounds:
-                    _MAP.fit_bounds(bounds)
-                elif d.get("snapped_lat") is not None:
-                    _MAP.center = (d["snapped_lat"], d["snapped_lon"])
-        except Exception as exc:  # noqa: BLE001
-            ui.notification_show(f"Could not draw the basin on the map: {exc}", type="error", duration=8)
+        if not _draw_delineation(res):
             return
+        engine_state.set({"status": "idle"}); engine_site.set(None)
         delin.set(res)
         current_step.set(STEP_BASIN)
+
+    @reactive.effect
+    def _maybe_launch_engine():
+        """A covered site runs the engine in the background once the assessment is
+        known, and only when its values can enter scoring (an engine-built bundle,
+        or the label pairing mode)."""
+        d = delin(); la = loaded_assessment()
+        if d is None or la is None:
+            return
+        if (d.get("siteAnchor") or {}).get("anchorKind") == "hrSurrogate":
+            return          # the engine already ran (or failed) at Delineate
+        if not _engine_wanted_for(la):
+            return
+        key = _auto_measure_key(la, d)[2:]
+        with reactive.isolate():
+            if engine_site() == key or engine_state().get("status") == "running":
+                return
+            inp = d.get("input") or {}
+        engine_site.set(key)
+        _launch_engine(inp.get("lat"), inp.get("lon"),
+                       inp.get("reach_length_ft") or DEFAULT_REACH_FT, None)
+
+    def _offer_fallback(anchor, state, res):
+        """After the engine failed or refused on a stream outside NHDPlus V2."""
+        reason = state.get("reason") or "no detail"
+        if hr_site.declined(anchor) or not (anchor.get("scoredReach") or {}).get("comid"):
+            ui.notification_show(
+                "The STAF site engine could not compute the exact watershed for this stream "
+                f"({reason}), and the nearest covered reach drains more than 10 times its "
+                "area, so no labeled fallback applies. Try a point farther downstream, or "
+                "assess this reach in the field.", type="warning", duration=12)
+            return
+        _surrogate_offer.clear()
+        _surrogate_offer.update({"anchor": anchor, "lat": res["lat"], "lon": res["lon"],
+                                 "reach_ft": res["reach_ft"]})
+        ui.modal_show(ui.modal(
+            ui.markdown(
+                "The STAF site engine could not compute the exact watershed for this stream "
+                f"({reason}).\n\n"
+                "You can continue with the NHDPlus V2 basin of the "
+                f"{hr_site.anchor_label(anchor)}. Its desktop values describe that "
+                "covered reach, not the clicked stream, and every such value is labeled."),
+            title="Exact watershed not available",
+            footer=ui.TagList(ui.modal_button("Cancel"),
+                              ui.input_action_button("use_surrogate",
+                                                     "Use the covered reach basin",
+                                                     class_="btn-primary")),
+            easy_close=True))
+
+    @reactive.effect
+    @reactive.event(input.use_surrogate)
+    def _use_surrogate():
+        offer = dict(_surrogate_offer)
+        ui.modal_remove()
+        if not offer:
+            return
+        comid = (offer["anchor"].get("scoredReach") or {}).get("comid")
+        stage.set("Delineating the covered reach basin…")
+        ui.notification_show("Delineating the covered reach basin… please wait", id="stage",
+                             type="message", duration=None)
+        delineate_task(offer["lat"], offer["lon"], offer["reach_ft"], comid, offer["anchor"])
+
+    @reactive.effect
+    def _engine_done():
+        st = engine_task.status()
+        if st in ("initial", "running"):
+            return
+        ui.notification_remove("engine")
+        try:
+            res = engine_task.result()
+        except Exception as exc:  # noqa: BLE001
+            res = {"record": {"status": "failed", "reason": str(exc)}, "anchor": None}
+        rec = res.get("record") or {}
+        anchor = res.get("anchor")
+        status = rec.get("status") or "failed"
+        state = {"status": status, "reason": rec.get("reason"),
+                 "record": engine_prefill.strip_geometry(rec) if status == "ok" else None}
+        if anchor is not None:
+            # a stream outside NHDPlus V2: the engine run IS the delineation
+            stage.set("")
+            engine_state.set(state)
+            if status == "ok":
+                out = pipeline.delineate_from_engine(rec, anchor, res["lat"], res["lon"],
+                                                     res["reach_ft"])
+                if not _draw_delineation(out):
+                    return
+                delin.set(out)
+                current_step.set(STEP_BASIN)
+                return
+            _offer_fallback(anchor, state, res)
+            return
+        # a covered site: the background run whose values the desktop compute reuses
+        engine_state.set(state)
+        with reactive.isolate():
+            d = delin()
+        if d is not None and status == "ok":
+            d2 = dict(d); d2["siteEngine"] = state["record"]
+            delin.set(d2)
+            ui.notification_show("Exact watershed ready. Desktop values now come from the "
+                                 "STAF site engine.", type="message", duration=6)
+        elif status != "ok":
+            ui.notification_show(f"STAF site engine {status}: {rec.get('reason') or 'no detail'}. "
+                                 "Desktop values stay on the StreamCat lookup engine, labeled.",
+                                 type="warning", duration=9)
 
     # ---- step navigation ----
     @reactive.effect
@@ -1012,9 +1327,10 @@ def server(input, output, session_):  # noqa: C901
             ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
 
     def _do_reset():
-        for k in ("ws", "reach", "marker"):
+        for k in ("ws", "reach", "marker", "route"):
             _remove_layer(k)
-        snapped_point.set(None); delin.set(None); stage.set("")
+        snapped_point.set(None); pending_anchor.set(None); delin.set(None); stage.set("")
+        engine_state.set({"status": "idle"}); engine_site.set(None); _surrogate_offer.clear()
         loaded_assessment.set(None); measured_values.set({}); current_fn.set(0)
         # Basin adopts only when nothing is chosen, so a stale ref here would stop the
         # next delineation from ever resolving one.
@@ -1068,7 +1384,14 @@ def server(input, output, session_):  # noqa: C901
                 "metric values into function scores that roll up to Physical / Chemical / Biological "
                 "outcome sub-indices and an Ecosystem Condition Index. Assessments are built in the "
                 "companion StreamCurves builder and are preliminary until the scientific team "
-                "certifies them."),
+                "certifies them.\n\n"
+                "Two watershed engines answer the desktop metrics. The STAF site engine computes "
+                "the exact watershed at the clicked point on the full-resolution NHD, and is the "
+                "watershed itself for any stream outside the NHDPlus V2 network. The StreamCat "
+                "lookup engine (EPA StreamCat by NHDPlus V2 reach) answers covered sites for "
+                "curves fitted on StreamCat predictors. Every value names its engine, and an "
+                "engine value never scores against a StreamCat-fitted curve while the pairing "
+                "mode refuses it."),
             title="About DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
     @reactive.effect
@@ -1076,16 +1399,22 @@ def server(input, output, session_):  # noqa: C901
     def _help():
         ui.modal_show(ui.modal(
             ui.markdown(
-                "1. **Identify** — zoom in until blue stream lines appear and click a stream (or type "
-                "coordinates / search an address). Set the reach length and click **Delineate**.\n"
+                "1. **Identify** — zoom in until stream lines appear and click a stream (or type "
+                "coordinates / search an address). Blue lines are the NHDPlus V2 network. Light "
+                "blue lines are all other NHD streams: for those, DEEP computes the exact "
+                "watershed with the STAF site engine, which takes about 2 to 5 minutes. Set the "
+                "reach length and click **Delineate**.\n"
                 "2. **Basin** — review the watershed and reach. The published assessment "
                 "whose area of applicability covers your site is resolved here (certified "
-                "before preliminary); use **Change** when more than one applies.\n"
+                "before preliminary); use **Change** when more than one applies. On a V2 stream "
+                "the site engine runs in the background only when the assessment's curves can "
+                "use its values.\n"
                 "3. **Assessment** — enter each metric's measured value; the reference curve converts "
                 "it to an index and the function/outcome scores update live. Desktop-derivable "
-                "metrics prefill with a source badge and stay editable. A value computed from a "
-                "different predictor source than the one the curves were fitted on is shown as "
-                "reference evidence and is not scored.\n"
+                "metrics prefill with a badge naming the engine or layer that produced them "
+                "(exact watershed, StreamCat, NLCD, 3DEP) and stay editable. A value computed "
+                "from a different predictor source than the one the curves were fitted on is "
+                "shown as reference evidence and is not scored.\n"
                 "4. **Report** — review and export the detailed assessment."),
             title="How to use DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
@@ -1097,7 +1426,7 @@ def server(input, output, session_):  # noqa: C901
             with reactive.isolate():
                 picked = snapped_point() is not None
             body = ui.TagList(
-                ui.div("Zoom in until blue stream lines appear and click a stream to place a point. "
+                ui.div("Zoom in until stream lines appear and click a stream to place a point. "
                        "Or enter coordinates below, or search an address.", class_="easi-instr"),
                 ui.input_text("address", "Address, place, or stream",
                               placeholder="e.g. Asheville, NC  ·  Mud Creek"),
@@ -1136,30 +1465,72 @@ def server(input, output, session_):  # noqa: C901
         pt = snapped_point()
         if not pt:
             return ui.p("No point yet — enter coordinates, search an address, or zoom in and click a "
-                        "blue stream line.", class_="easi-snap-note")
+                        "stream line.", class_="easi-snap-note")
+        anchor = pending_anchor()
+        if anchor is not None:
+            clicked_reach = hr_site.clicked_reach(anchor)
+            name = clicked_reach.get("gnisName") or "an unnamed stream"
+            lines = [ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away). This stream is outside "
+                          "the NHDPlus V2 network.", class_="easi-snap-note ok"),
+                     ui.p("DEEP will compute its exact watershed with the STAF site engine. "
+                          "This typically takes 2 to 5 minutes.", class_="easi-snap-note")]
+            if hr_site.declined(anchor):
+                lines.append(ui.p("The nearest covered reach drains more than 10 times this "
+                                  "stream, so StreamCat values keyed to it will be withheld.",
+                                  class_="easi-snap-note warn"))
+            else:
+                lines.append(ui.p("StreamCat values will describe the "
+                                  f"{hr_site.anchor_label(anchor)}.", class_="easi-snap-note"))
+            return ui.TagList(*lines)
         return ui.p(f"✓ Snapped to stream ({pt[2]:.0f} ft away). Click “Delineate”.",
                     class_="easi-snap-note ok")
 
     @render.ui
     def basin_card():
-        d = (delin() or {}).get("delineation") or {}
+        d_all = delin() or {}
+        d = d_all.get("delineation") or {}
         if not d:
             return None
 
         def row(label, val):
             return ui.div(ui.span(label), ui.tags.b(str(val)), class_="b-row")
+        rows = [row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
+                row("Reach length", f'{d.get("reach_length_ft")} ft'),
+                row("Stream order", d.get("stream_order"))]
+        if d.get("network") == "nhdplus-hr":
+            rows.append(row("NHDPlusID", d.get("nhdplus_id")))
+            rows.append(row("Covered reach", f'COMID {d["comid"]}' if d.get("comid")
+                            else "none within the substitution limit"))
+        else:
+            rows.append(row("COMID", d.get("comid")))
+        rows.append(row("Watershed basis", report.watershed_basis_label(d_all)))
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
-            row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
-            row("Reach length", f'{d.get("reach_length_ft")} ft'),
-            row("Stream order", d.get("stream_order")),
-            row("COMID", d.get("comid")),
+            *rows,
+            ui.output_ui("engine_line"),
             class_="easi-basin-card")
+
+    @render.ui
+    def engine_line():
+        running = engine_task.status() == "running"
+        if running:
+            reactive.invalidate_later(1.0)
+        return _engine_line_ui(engine_state(), running, _engine_prog)
+
+    @render.ui
+    def engine_line_ws():
+        if current_step() not in (STEP_MEASURE, STEP_REPORT):
+            return None
+        running = engine_task.status() == "running"
+        if running:
+            reactive.invalidate_later(1.0)
+        return _engine_line_ui(engine_state(), running, _engine_prog)
 
     @render.text
     def busy_text():
         s = stage()
-        running = (delineate_task.status() == "running")
+        running = (delineate_task.status() == "running" or engine_task.status() == "running"
+                   or (_HAS_MAP and anchor_task.status() == "running"))
         return s if (s and running) else ""
 
     @render.ui
@@ -1441,9 +1812,10 @@ def server(input, output, session_):  # noqa: C901
     # ---- desktop auto-compute (Phase 3): prefill the computable metrics ----
     @reactive.extended_task
     async def compute_task(ctx_inputs: dict, metric_ids: list,
-                           assessment=None) -> dict:
+                           assessment=None, engine_record=None) -> dict:
         return await pipeline.compute_metrics_only(ctx_inputs, metric_ids,
-                                                   assessment=assessment)
+                                                   assessment=assessment,
+                                                   engine_record=engine_record)
 
     @reactive.effect
     def _maybe_compute():
@@ -1455,6 +1827,11 @@ def server(input, output, session_):  # noqa: C901
         ci = d.get("ctx_inputs")
         if not ci:
             return
+        # An engine-built bundle waits for the background engine run so the
+        # adapters read the exact watershed instead of falling to StreamCat.
+        es = engine_state()
+        if es.get("status") == "running" and _engine_wanted_for(la):
+            return
         key = _auto_measure_key(la, d)
         with reactive.isolate():
             if computed_for() == key:
@@ -1465,10 +1842,11 @@ def server(input, output, session_):  # noqa: C901
             return
         computed_for.set(key)
         # The loaded assessment rides along so the site-engine adapters can be
-        # gated on its predictorSource (the train/serve pairing rule).
-        compute_task(ci, ids, la)
-        ui.notification_show("Computing desktop metrics (StreamCat / 3DEP)…", id="deep_compute",
-                             type="message", duration=None)
+        # gated on its predictorSource (the train/serve pairing rule); the engine
+        # record the app already computed rides along so it never runs twice.
+        compute_task(ci, ids, la, es.get("record") if es.get("status") == "ok" else None)
+        ui.notification_show("Computing desktop metrics (STAF site engine / StreamCat lookup / 3DEP)…",
+                             id="deep_compute", type="message", duration=None)
 
     @reactive.effect
     def _compute_done():
@@ -1493,6 +1871,12 @@ def server(input, output, session_):  # noqa: C901
             compute_nonce.set(compute_nonce() + 1)
             ui.notification_show(f"Auto-filled {n} desktop metric(s) — edit any value to override.",
                                  type="message", duration=5)
+        with reactive.isolate():
+            anchor = (delin() or {}).get("siteAnchor") or {}
+        if hr_site.declined(anchor):
+            ui.notification_show("StreamCat values were withheld: the nearest covered reach drains "
+                                 "more than 10 times this stream. Land-cover metrics use NLCD over "
+                                 "the exact watershed polygon instead.", type="message", duration=8)
 
     @render.ui
     def worksheet():
@@ -1506,6 +1890,7 @@ def server(input, output, session_):  # noqa: C901
                 ui.download_button("dl_field_forms", "Get Field Forms",
                                    class_="sfari-btn sfari-nav-desktop",
                                    title="Print-ready field packet listing every metric to measure"),
+                ui.output_ui("engine_line_ws"),
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),
             ui.div(ui.output_ui("fn_panel"), class_="sfari-fnpanel"),
@@ -1562,12 +1947,14 @@ def server(input, output, session_):  # noqa: C901
             idx_col = scoring.index_band_color(midx) if midx is not None else "#eef1f6"
             plot_val = None if (na or val in (None, "")) else float(val)
             src_line = _source_line(m, rc)
+            basis_tag = _basis_tag(rc)
             metric_blocks.append(ui.div(
                 ui.div(m.get("metricName", mid),
                        ui.span(m.get("discipline", ""), class_="sfari-metric-scale"),
                        _info(html_tip=_metric_tip_html(m)),
                        class_="sfari-metric-name"),
                 (ui.div(ui.span("Source", class_="deep-source-key"),
+                        (ui.span(basis_tag[0], class_=basis_tag[1]) if basis_tag else None),
                         ui.span(src_line, class_="deep-source-val"),
                         class_="deep-source-row")
                  if src_line else None),
@@ -1746,6 +2133,9 @@ def server(input, output, session_):  # noqa: C901
                        style="font-size:12px;color:#667;margin-top:1px;"),
                 ui.div(f"Drainage {dl.get('drainage_area_sqkm')} km²  ·  Reach {dl.get('reach_length_ft')} ft",
                        style="font-size:12px;color:#667;margin-top:1px;"),
+                ui.div(f"Watershed basis: {report.watershed_basis_label(d)}  ·  Predictor source: "
+                       f"{assessments.predictor_source_of(la) if la else 'streamcat'}",
+                       style="font-size:12px;color:#667;margin-top:1px;"),
                 style="flex:1;"),
             (ui.HTML(minimap) if minimap else None),
             style="display:flex;gap:16px;align-items:flex-start;margin-bottom:12px;")
@@ -1790,21 +2180,27 @@ def server(input, output, session_):  # noqa: C901
 
         mvs = measured_values()
         rows = []
-        for fn, m, val, idx in report._rows(la, mvs):
+        for fn, m, val, idx, meta in report._rows(la, mvs):
             ph = (mvs.get(m["metricId"]) or {}).get("photos") or []
+            idx_txt = "ref. only" if meta["reference_only"] else ("—" if idx is None else f"{idx:.2f}")
+            src_txt = report._source_cell_text(meta)
             rows.append(ui.tags.tr(
                 ui.tags.td(fn.get("functionName", ""), style="color:#8a93a3;font-size:11px;"),
                 ui.tags.td(m.get("metricName", m["metricId"]),
                            (ui.div(*[ui.tags.img({"src": p.get("uri", "")}) for p in ph],
-                                   class_="sfari-report-photos") if ph else None)),
+                                   class_="sfari-report-photos") if ph else None),
+                           (ui.div(meta["advisory"], class_="deep-report-advisory")
+                            if meta["advisory"] else None)),
                 ui.tags.td("—" if val in (None, "") else str(val)),
-                ui.tags.td("—" if idx is None else f"{idx:.2f}",
+                ui.tags.td(idx_txt,
                            style=f"background:{scoring.index_band_color(idx) if idx is not None else '#fff'};"),
+                ui.tags.td(src_txt, style="font-size:11px;color:#45506a;"),
                 ui.tags.td((m.get("curve") or {}).get("layerName", ""),
                            style="font-size:11px;color:#45506a;")))
         table = ui.tags.table(
             ui.tags.thead(ui.tags.tr(ui.tags.th("Function"), ui.tags.th("Metric"),
-                                     ui.tags.th("Value"), ui.tags.th("Index"), ui.tags.th("Curve source"))),
+                                     ui.tags.th("Value"), ui.tags.th("Index"), ui.tags.th("Source"),
+                                     ui.tags.th("Curve source"))),
             ui.tags.tbody(*rows), class_="easi-tbl")
 
         body = ui.div(
@@ -1852,7 +2248,8 @@ def server(input, output, session_):  # noqa: C901
     @render.download(filename="deep-report.geojson")
     def dl_geojson():
         sc, _fr = scored()
-        yield report.build_geojson(delin() or {}, loaded_assessment(), sc, region=_site_region())
+        yield report.build_geojson(delin() or {}, loaded_assessment(), sc, region=_site_region(),
+                                   measured=measured_values())
 
     @render.download(filename="deep-report.pdf")
     def dl_pdf():
@@ -1862,7 +2259,8 @@ def server(input, output, session_):  # noqa: C901
 
     @render.download(filename=lambda: report.field_forms_filename(loaded_assessment()))
     def dl_field_forms():
-        yield report.build_field_forms_pdf(loaded_assessment(), ref=selected_ref() or "")
+        yield report.build_field_forms_pdf(loaded_assessment(), ref=selected_ref() or "",
+                                           measured=measured_values(), delineation=delin() or {})
 
     @reactive.effect
     @reactive.event(input.load_session)
@@ -1880,6 +2278,11 @@ def server(input, output, session_):  # noqa: C901
         delin.set(d)
         measured_values.set(st.get("measured_values") or {})
         computed_for.set(None)  # restored site/version must recompute desktop metrics
+        pending_anchor.set(None)
+        se = d.get("siteEngine") if isinstance(d, dict) else None
+        engine_state.set({"status": "ok", "record": se, "reason": None} if se
+                         else {"status": "idle"})
+        engine_site.set(None)
         raw = st.get("assessment") or {}
         if raw:
             try:
@@ -1891,7 +2294,7 @@ def server(input, output, session_):  # noqa: C901
                 # whatever covers the point, and wipe the values just restored.
                 selected_ref.set(_session_ref(st, raw))
         if _HAS_MAP and d:
-            for k in ("ws", "reach", "marker"):
+            for k in ("ws", "reach", "marker", "route"):
                 _remove_layer(k)
             try:
                 if d.get("watershed_geojson"):
