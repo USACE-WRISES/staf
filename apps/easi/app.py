@@ -1726,7 +1726,7 @@ def server(input, output, session):
                 "lines have StreamCat data: the StreamCat lookup engine answers "
                 "their watershed metrics in seconds. Thin lines are the rest of "
                 "the NHD: the STAF site engine calculates the exact watershed at "
-                "the clicked point, which takes about one to five minutes. On "
+                "the clicked point, which usually takes well under a minute and up to about five minutes on a large basin. On "
                 "those streams the three reach-keyed metrics (low flow, "
                 "substrate, biological integrity) come from the nearest covered "
                 "reach downstream, labeled, and are unavailable when that reach "
@@ -2133,7 +2133,7 @@ def server(input, output, session):
             return ui.div(
                 ui.p("This stream is not in the StreamCat lookup network. EASI "
                      "will calculate the exact watershed for this stream with "
-                     "the STAF site engine. This takes about one to five minutes.",
+                     "the STAF site engine. This usually takes well under a minute, and up to about five minutes on a large basin.",
                      class_="easi-snap-note", style="color:#8a5a00;"),
                 ui.p(ui.span("Clicked stream: "),
                      ui.tags.b(clicked_s.get("gnisName") or "(unnamed stream)"),

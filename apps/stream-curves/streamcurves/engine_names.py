@@ -16,8 +16,8 @@ except Exception:  # noqa: BLE001 - the vendored copy is absent only in stripped
 SITE_ENGINE = _naming.DISPLAY_NAMES[_naming.SITE_ENGINE_TOKEN] if _naming else "STAF site engine"
 STREAMCAT = _naming.DISPLAY_NAMES[_naming.STREAMCAT_TOKEN] if _naming else "StreamCat lookup engine"
 SITE_ENGINE_DETAIL = "exact watershed"
-# What one uncached training site costs with the 0.2.0 walk.
-SITE_ENGINE_COST = "1 to 7 minutes per uncached site"
+# What one uncached training site costs with the 0.2.1 node walk.
+SITE_ENGINE_COST = "usually under a minute per uncached site, up to about five on a large basin"
 
 
 def site_engine_label(version: Optional[str] = None) -> str:

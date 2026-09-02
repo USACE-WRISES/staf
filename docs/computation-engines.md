@@ -27,7 +27,7 @@ exact point by aggregating NHDPlus HR catchments, checks the area against the
 published drainage area, and computes the watershed metrics from source data:
 NLCD land cover on the watershed and a 100 m riparian buffer, TIGERweb roads,
 National Inventory of Dams records inside the polygon, SSURGO soil erodibility,
-and EROM flow. It takes about one to five minutes on a typical site and
+and EROM flow. It usually takes well under a minute, up to about five minutes on a large basin, and
 refuses, with a reason, when a basin exceeds its budget. Every value it
 produces carries its source, vintage and the engine version.
 
@@ -35,7 +35,7 @@ produces carries its source, vintage and the engine version.
 |---|---|---|
 | Works on | NHDPlus V2 reaches only | Any NHD stream in the conterminous United States |
 | Watershed | The reach's published basin | The exact watershed at the clicked point |
-| Speed | Seconds | About one to five minutes |
+| Speed | Seconds | Usually under a minute, up to about five on a large basin |
 | Cannot produce | Anything off the V2 network | The EPA modeled integrity indices, NRSA field observations, base-flow index, precipitation and temperature normals |
 | Produces differently | | Runoff (EROM-derived rather than the StreamCat water-balance grid) and the riparian buffer (built on the high-resolution stream network) |
 

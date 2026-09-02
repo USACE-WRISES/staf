@@ -138,7 +138,7 @@ adversarial review):**
   full high-resolution NHD (light blue). An HR-only click is anchored to the
   nearest covered reach (`deep/hr_site.py`, the engine's shared
   classification) and Delineate computes the exact watershed and reach with
-  the engine (2 to 5 minutes, refused past the interactive reach budget); if
+  the engine (usually well under a minute, up to about five minutes on a large basin, refused past the interactive reach budget); if
   the engine fails, the covered reach's V2 basin is offered behind a confirm,
   labeled as describing that reach. A covered site runs the engine in the
   background only when its values can enter scoring (an engine-built bundle,
