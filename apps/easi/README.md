@@ -28,8 +28,8 @@ stepper: **Identify → Basin → Assessment → Report**.
 1. **Identify** — Pan/zoom a USGS National Map basemap (Topo or Imagery) with an
    NHD hydrography overlay. At zoom ≥ 14, two stream layers load for the view:
    **dark blue lines** have StreamCat data (the NHDPlus V2 network) and **cyan
-   lines** are the rest of the high-resolution NHD; both thicken under the
-   pointer. **Clicking snaps to the nearest stream line** (or tells you if you
+   lines** are the rest of the high-resolution NHD. **Clicking snaps to the
+   nearest stream line** (or tells you if you
    missed). On a dark blue line the StreamCat lookup engine answers the
    watershed metrics in seconds. On a cyan line the STAF site engine
    calculates the exact watershed at the clicked
