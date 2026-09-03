@@ -54,10 +54,15 @@ except Exception:  # pragma: no cover
 
 WATERSHED_STYLE = {"color": "#caa700", "weight": 1, "fillColor": "#fdf24a", "fillOpacity": 0.40}
 REACH_STYLE = {"color": "#d6453d", "weight": 4}
-FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 2, "opacity": 0.9}
+FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
 # The full NHDPlus HR network drawn under the V2 scoring network: lighter and
 # thinner so covered (clickable-to-score) streams stay visually primary.
-HR_FLOWLINE_STYLE = {"color": "#7fb3f7", "weight": 1.2, "opacity": 0.75}
+HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 2, "opacity": 0.9}
+# Hover: the line thickens under the pointer (ipyleaflet applies hover_style on
+# mouseover and resets it on mouseout), which together with Leaflet's pointer
+# cursor on interactive paths says "this line is clickable" (2026-09-02).
+FLOWLINE_HOVER_STYLE = {"weight": 5, "opacity": 1.0}
+HR_FLOWLINE_HOVER_STYLE = {"weight": 4, "opacity": 1.0}
 # Dashed connector from a clicked HR-only stream to its covered surrogate reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
 # === TEMP: MMW comparison overlay (remove later) ===
@@ -1127,6 +1132,7 @@ def server(input, output, session):
             with reactive.isolate():
                 if fc and fc.get("features"):
                     _add_layer("flow", GeoJSON(data=fc, style=FLOWLINE_STYLE,
+                                               hover_style=FLOWLINE_HOVER_STYLE,
                                                name="StreamCat data available (NHDPlus V2)"))
                     flow_geojson.set(fc)
                 else:
@@ -1141,6 +1147,7 @@ def server(input, output, session):
             with reactive.isolate():
                 if fc and fc.get("features"):
                     _add_layer("hrflow", GeoJSON(data=fc, style=HR_FLOWLINE_STYLE,
+                                                 hover_style=HR_FLOWLINE_HOVER_STYLE,
                                                  name="Watershed calculation required (NHDPlus HR)"))
                     hr_geojson.set(fc)
                     # Keep the V2 scoring network drawn on top of the HR layer:
@@ -1223,8 +1230,8 @@ def server(input, output, session):
                 route_task(res["lat"], res["lon"], tuple(hr_hit))
                 return
             ui.notification_show("You didn't click on a stream line. Zoom in and click "
-                                 "a stream line: bold blue lines have StreamCat data, "
-                                 "thin lines get a calculated watershed.",
+                                 "a stream line: dark blue lines have StreamCat data, "
+                                 "cyan lines get a calculated watershed.",
                                  type="warning", duration=5)
 
         # ---- HR-only stream -> deterministic surrogate routing ----
@@ -1747,10 +1754,10 @@ def server(input, output, session):
                 "using national, public GIS and hydrology data. It is a desktop "
                 "screening estimate, not a field-validated assessment.\n\n"
                 "**How to use**\n\n"
-                "1. **Zoom in** until blue stream lines appear. **Click a stream** to "
-                "place a point, or enter coordinates, or search an address. Bold "
-                "lines have StreamCat data: the StreamCat lookup engine answers "
-                "their watershed metrics in seconds. Thin lines are the rest of "
+                "1. **Zoom in** until stream lines appear. **Click a stream** to "
+                "place a point, or enter coordinates, or search an address. Dark "
+                "blue lines have StreamCat data: the StreamCat lookup engine answers "
+                "their watershed metrics in seconds. Cyan lines are the rest of "
                 "the NHD: the STAF site engine calculates the exact watershed at "
                 "the clicked point, which usually takes well under a minute and up to about five minutes on a large basin. On "
                 "those streams the three reach-keyed metrics (low flow, "

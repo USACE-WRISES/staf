@@ -144,8 +144,8 @@ adversarial review):**
   PDF, the GeoJSON (`predictor_source`, `watershed_basis`,
   `engine_values_withheld`), and the field-form packet (desktop values in the
   Value cell, `DESKTOP: <source>` in Notes, `reference only` when withheld).
-- **Any NHD stream**: the map draws the V2 network (blue, clickable) over the
-  full high-resolution NHD (light blue). An HR-only click is anchored to the
+- **Any NHD stream**: the map draws the V2 network (dark blue, clickable) over
+  the full high-resolution NHD (cyan). An HR-only click is anchored to the
   nearest covered reach (`deep/hr_site.py`, the engine's shared
   classification) and Delineate computes the exact watershed and reach with
   the engine (usually well under a minute, up to about five minutes on a large basin, refused past the interactive reach budget); if

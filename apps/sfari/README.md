@@ -54,8 +54,8 @@ site's Computation Engines page):
 
 ### Any NHD stream
 
-The map draws the NHDPlus V2 network (blue, clickable, StreamCat data
-available) over the full high-resolution NHD (light blue) from the engine's HR
+The map draws the NHDPlus V2 network (dark blue, clickable, StreamCat data
+available) over the full high-resolution NHD (cyan) from the engine's HR
 client. A V2 click delineates the NLDI basin at once and starts the site
 engine in the background; StreamCat values show immediately and upgrade in
 place when the engine finishes (usually well under a minute, up to about five minutes on a large basin, refused past the

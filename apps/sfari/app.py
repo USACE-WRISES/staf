@@ -44,11 +44,16 @@ except Exception:  # pragma: no cover
 
 WATERSHED_STYLE = {"color": "#caa700", "weight": 1, "fillColor": "#fdf24a", "fillOpacity": 0.40}
 REACH_STYLE = {"color": "#d6453d", "weight": 4}
-FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 2, "opacity": 0.9}
-HR_FLOWLINE_STYLE = {"color": "#7fb3f7", "weight": 1.2, "opacity": 0.75}
+FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
+HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 2, "opacity": 0.9}
+# Hover: the line thickens under the pointer (ipyleaflet applies hover_style on
+# mouseover and resets it on mouseout), which together with Leaflet's pointer
+# cursor on interactive paths says "this line is clickable" (2026-09-02).
+FLOWLINE_HOVER_STYLE = {"weight": 5, "opacity": 1.0}
+HR_FLOWLINE_HOVER_STYLE = {"weight": 4, "opacity": 1.0}
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
-_MISS_TEXT = ("You didn't click on a stream line. Zoom in and click a stream: blue lines are "
-              "the NHDPlus V2 network and light blue lines are all other NHD streams.")
+_MISS_TEXT = ("You didn't click on a stream line. Zoom in and click a stream: dark blue lines "
+              "are the NHDPlus V2 network and cyan lines are all other NHD streams.")
 
 USGS_TOPO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 USGS_IMAGERY_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
@@ -553,7 +558,8 @@ def server(input, output, session):
                 return
             with reactive.isolate():
                 if fc and fc.get("features"):
-                    _add_layer("flow", GeoJSON(data=fc, style=FLOWLINE_STYLE, name="Stream lines"))
+                    _add_layer("flow", GeoJSON(data=fc, style=FLOWLINE_STYLE,
+                                               hover_style=FLOWLINE_HOVER_STYLE, name="Stream lines"))
                     flow_geojson.set(fc)
                 else:
                     _remove_layer("flow"); flow_geojson.set(None)
@@ -571,11 +577,13 @@ def server(input, output, session):
             with reactive.isolate():
                 if fc and fc.get("features"):
                     _add_layer("hrflow", GeoJSON(data=fc, style=HR_FLOWLINE_STYLE,
+                                                 hover_style=HR_FLOWLINE_HOVER_STYLE,
                                                  name="All NHD streams (NHDPlus HR)"))
                     hr_geojson.set(fc)
                     v2 = flow_geojson()
                     if v2 and v2.get("features"):   # keep the clickable V2 lines on top
                         _add_layer("flow", GeoJSON(data=v2, style=FLOWLINE_STYLE,
+                                                   hover_style=FLOWLINE_HOVER_STYLE,
                                                    name="Stream lines"))
                 else:
                     _remove_layer("hrflow"); hr_geojson.set(None)
@@ -1064,8 +1072,8 @@ def server(input, output, session):
         ui.modal_show(ui.modal(
             ui.markdown(
                 "1. **Identify** — zoom in until stream lines appear and click a stream "
-                "(or type coordinates / search an address). Blue lines are the NHDPlus V2 "
-                "network. Light blue lines are all other NHD streams: for those, SFARI "
+                "(or type coordinates / search an address). Dark blue lines are the NHDPlus V2 "
+                "network. Cyan lines are all other NHD streams: for those, SFARI "
                 "computes the exact watershed with the STAF site engine, which takes about "
                 "a minute or less, up to about five minutes on a large basin. Set the reach length and click **Delineate**.\n"
                 "2. **Basin** — review the watershed and reach. On a V2 stream the site "

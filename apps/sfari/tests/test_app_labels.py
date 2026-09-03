@@ -68,6 +68,13 @@ def test_copy_has_no_em_dash_and_names_both_engines():
 def test_map_styles_exist():
     assert app.HR_FLOWLINE_STYLE["color"] != app.FLOWLINE_STYLE["color"]
     assert "dashArray" in app.ROUTE_STYLE
+    # 2026-09-02: both networks legible and hover-highlighted; the route line
+    # stays the only dashed one
+    assert app.FLOWLINE_STYLE["weight"] >= 3 and app.HR_FLOWLINE_STYLE["weight"] >= 2
+    assert app.FLOWLINE_HOVER_STYLE["weight"] > app.FLOWLINE_STYLE["weight"]
+    assert app.HR_FLOWLINE_HOVER_STYLE["weight"] > app.HR_FLOWLINE_STYLE["weight"]
+    assert "dashArray" not in app.FLOWLINE_STYLE and "dashArray" not in app.HR_FLOWLINE_STYLE
+    assert "cyan" in app._MISS_TEXT and "dark blue" in app._MISS_TEXT
 
 
 def test_field_forms_output_stays_alive_while_the_modal_is_hidden():

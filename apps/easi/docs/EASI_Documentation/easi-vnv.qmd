@@ -182,7 +182,7 @@ The eight watershed metrics come from one of two engines, and the framework,
 not the user, decides which. On the NHDPlus V2 network the StreamCat lookup
 engine supplies them: precomputed EPA StreamCat summaries keyed by the reach
 COMID, fast and citable by vintage. On any other NHD stream, which the map
-draws as a thin line, the STAF site engine delineates the exact watershed at
+draws as a cyan line, the STAF site engine delineates the exact watershed at
 the clicked point on the high-resolution NHD and computes the same quantities
 from NLCD, TIGERweb roads, the National Inventory of Dams, SSURGO soils and
 EROM flow. On those streams the three reach-keyed metrics, low flow, substrate

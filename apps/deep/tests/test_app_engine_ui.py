@@ -51,6 +51,15 @@ def test_engine_scheduling_rule(monkeypatch):
     assert app._engine_wanted_for(streamcat_bundle) is True
 
 
+def test_map_styles_legible_and_hover_highlighted():
+    assert app.HR_FLOWLINE_STYLE["color"] != app.FLOWLINE_STYLE["color"]
+    assert app.FLOWLINE_STYLE["weight"] >= 3 and app.HR_FLOWLINE_STYLE["weight"] >= 2
+    assert app.FLOWLINE_HOVER_STYLE["weight"] > app.FLOWLINE_STYLE["weight"]
+    assert app.HR_FLOWLINE_HOVER_STYLE["weight"] > app.HR_FLOWLINE_STYLE["weight"]
+    assert "dashArray" in app.ROUTE_STYLE and "dashArray" not in app.HR_FLOWLINE_STYLE
+    assert "cyan" in app._MISS_TEXT
+
+
 def test_copy_and_cache_bust():
     assert "—" not in app._MISS_TEXT and "NHDPlus V2" in app._MISS_TEXT
     src = Path(app.__file__).read_text(encoding="utf-8")
