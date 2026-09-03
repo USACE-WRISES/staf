@@ -70,7 +70,8 @@ def test_map_styles_exist():
     assert "dashArray" in app.ROUTE_STYLE
     # 2026-09-02: both networks legible and hover-highlighted; the route line
     # stays the only dashed one
-    assert app.FLOWLINE_STYLE["weight"] >= 3 and app.HR_FLOWLINE_STYLE["weight"] >= 2
+    assert app.FLOWLINE_STYLE["weight"] >= 3
+    assert app.HR_FLOWLINE_STYLE["weight"] == app.FLOWLINE_STYLE["weight"]
     assert not hasattr(app, "FLOWLINE_HOVER_STYLE")    # a hover restyle flashed the layer
     assert "dashArray" not in app.FLOWLINE_STYLE and "dashArray" not in app.HR_FLOWLINE_STYLE
     assert "cyan" in app._MISS_TEXT and "dark blue" in app._MISS_TEXT

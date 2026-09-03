@@ -46,7 +46,7 @@ except Exception:  # pragma: no cover
 WATERSHED_STYLE = {"color": "#caa700", "weight": 1, "fillColor": "#fdf24a", "fillOpacity": 0.40}
 REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
-HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 2, "opacity": 0.9}
+HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
 _MISS_TEXT = ("You didn't click on a stream line. Zoom in and click a stream: dark blue lines "
               "are the NHDPlus V2 network and cyan lines are all other NHD streams.")

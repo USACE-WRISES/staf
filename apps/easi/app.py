@@ -58,7 +58,7 @@ REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
 # The full NHDPlus HR network drawn under the V2 scoring network: lighter and
 # thinner so covered (clickable-to-score) streams stay visually primary.
-HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 2, "opacity": 0.9}
+HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
 # Dashed connector from a clicked HR-only stream to its covered surrogate reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
 # === TEMP: MMW comparison overlay (remove later) ===
