@@ -87,7 +87,8 @@ def test_flowlines_fetch_builds_the_layer_from_fabric(monkeypatch):
                                                                 "coordinates": []}}])
     fc = flowlines.flowlines_in_bbox(-83.06, 40.30, -83.05, 40.32)
     assert fc["type"] == "FeatureCollection" and len(fc["features"]) == 1
-    assert fc["features"][0]["properties"] == {"comid": 5214461}
+    # the name rides along for the map legend's scored-reach row (2026-09-03)
+    assert fc["features"][0]["properties"] == {"comid": 5214461, "gnis_name": "Sugar Run"}
     assert fc["features"][0]["geometry"]["type"] == "MultiLineString"
     hit = flowlines.nearest_point_on_lines(fc, 40.3112, -83.0561)
     assert hit is not None and hit[3] == 5214461

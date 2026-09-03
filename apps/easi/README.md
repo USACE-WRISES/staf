@@ -26,24 +26,27 @@ A StreamStats-style, full-screen map with a left workflow pane and a four-step
 stepper: **Identify → Basin → Assessment → Report**.
 
 1. **Identify** — Pan/zoom a USGS National Map basemap (Topo or Imagery) with an
-   NHD hydrography overlay. At zoom ≥ 14, two stream layers load for the view:
-   **dark blue lines** have StreamCat data (the NHDPlus V2 network) and **cyan
-   lines** are the rest of the high-resolution NHD. **Clicking snaps to the
-   nearest stream line** (or tells you if you
-   missed). On a dark blue line the StreamCat lookup engine answers the
-   watershed metrics in seconds. On a cyan line the STAF site engine
-   calculates the exact watershed at the clicked
-   point (usually well under a minute, up to about five minutes on a large basin, with a progress line); the three
-   reach-keyed metrics (low flow, substrate, biological integrity) come from
-   the nearest covered reach downstream, labeled with the routed distance and
-   drainage-area ratio, and are unavailable past a 10x ratio. The policy is
-   fixed by the framework: nothing asks the user to pick a method, and every
-   value says which engine produced it.
-   A type-ahead **address/place search** (Photon + Nominatim) recenters the map.
+   NHD hydrography overlay. At zoom ≥ 14 the map draws one stream network, the
+   high-resolution NHD, colored by the engine that answers a click there:
+   **dark blue** stretches are scored by the StreamCat lookup engine (a click
+   within 150 ft of an NHDPlus V2 reach) and **cyan** stretches by the STAF
+   site engine. A legend under the layers button names the colors. **Clicking
+   snaps to the nearest stream line** (or tells you if you missed) and
+   highlights the scored StreamCat reach. On a dark blue stretch the StreamCat
+   lookup engine answers the watershed metrics in seconds. On a cyan stretch
+   the STAF site engine calculates the exact watershed at the clicked point
+   (usually well under a minute, up to about five minutes on a large basin,
+   with a progress line); the three reach-keyed metrics (low flow, substrate,
+   biological integrity) come from the nearest covered reach downstream,
+   labeled with the routed distance and drainage-area ratio, and are
+   unavailable past a 10x ratio. The policy is fixed by the framework: nothing
+   asks the user to pick a method, and every value says which engine produced
+   it. A type-ahead **address/place search** (Photon + Nominatim) recenters
+   the map.
 2. **Basin** — Delineate the contributing **watershed** and an **upstream reach**
    (default ~1,000 ft, adjustable) with staged progress feedback. Shows COMID,
-   HUC12, drainage area, watershed area, and reach length. On a cyan-line
-   stream the card names the watershed engine, the exact watershed area and the
+   HUC12, drainage area, watershed area, and reach length. On a stream drawn
+   cyan the card names the watershed engine, the exact watershed area and the
    reaches walked, and says where reach-keyed evidence comes from.
 3. **Assessment** — All 20 metrics compute automatically, then a worksheet walks
    the functions by discipline. Each card shows the metric, its scoring method
