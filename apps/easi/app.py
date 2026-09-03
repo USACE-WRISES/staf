@@ -34,6 +34,7 @@ from easi.datasources import flowlines, nhd_hr  # noqa: E402
 from easi.metrics import geomorphology, hydraulics  # noqa: E402  (cross-section metric ids)
 from easi.datasources.geocode import geocode_address  # noqa: E402
 from easi.pipeline import DEFAULT_REACH_FT  # noqa: E402
+from easi.snapcard import hr_snap_card  # noqa: E402
 
 FT_PER_M = 3.28083989501312
 
@@ -66,6 +67,10 @@ SHOW_MMW_OVERLAY = False  # hides the Basin-page comparison checkbox; the server
 # === END TEMP ===
 RATING_COLOR = {"Good": "#c8d9f2", "Fair": "#f5e7a6", "Poor": "#f5b5b5"}
 _DISC_ORDER = ["Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology"]
+
+
+_FINDING_TEXT = "Finding the stream…"
+_LOCATING_TEXT = "Locating the nearest covered reach…"
 
 
 def _fmt_ratio_limit(value):
@@ -1164,7 +1169,16 @@ def server(input, output, session):
             hit = flowlines.nearest_point_on_lines(fc, lat, lon) if fc else None
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit)                 # covered by the viewport vectors
+                return
+            # The viewport's HR vectors, when loaded, settle an HR-only click
+            # without re-fetching a box around it (2026-09-02).
+            hr_fc = hr_geojson()
+            hr_hit = nhd_hr.nearest_point_on_hr_lines(hr_fc, lat, lon) if hr_fc else None
+            if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                stage.set(_LOCATING_TEXT)
+                route_task(lat, lon, tuple(hr_hit))
             else:
+                stage.set(_FINDING_TEXT)
                 click_snap_task(lat, lon)        # fetch flowlines around the click + snap
 
         def _apply_snap(hit):
@@ -1198,12 +1212,14 @@ def server(input, output, session):
                 res = click_snap_task.result()
             except Exception:
                 return
+            stage.set("")
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit)
                 return
             hr_hit = res.get("hrHit")
             if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                stage.set(_LOCATING_TEXT)
                 route_task(res["lat"], res["lon"], tuple(hr_hit))
                 return
             ui.notification_show("You didn't click on a stream line. Zoom in and click "
@@ -1224,6 +1240,7 @@ def server(input, output, session):
             except Exception:
                 return
             with reactive.isolate():
+                stage.set("")
                 _clear_route_state()
                 if res.get("error") == "snap_service_error":
                     ui.notification_show("Could not reach the stream routing service. "
@@ -1244,15 +1261,13 @@ def server(input, output, session):
                 clicked_s = anchor.get("clickedStream") or {}
                 scored = anchor.get("scoredReach") or {}
                 routing_block = anchor.get("routing") or {}
-                if routing_block.get("declined"):
-                    # Not a refusal under the auto policy: the exact watershed
-                    # still comes from the site engine; only reach-keyed
-                    # evidence is withheld, and the card says so.
-                    ui.notification_show(routing_block.get("declineMessage") or
-                                         "Reach-keyed evidence is unavailable here.",
-                                         type="warning", duration=9)
+                # A declined routing is not a refusal under the auto policy:
+                # the exact watershed still comes from the site engine, only
+                # reach-keyed evidence is withheld, and the card's third line
+                # says so (no toast: it repeated the card in warning colors).
                 if (clicked_s.get("snapLat") is not None
-                        and scored.get("snapLat") is not None):
+                        and scored.get("snapLat") is not None
+                        and not routing_block.get("declined")):
                     seg = {"type": "FeatureCollection", "features": [{
                         "type": "Feature", "properties": {},
                         "geometry": {"type": "LineString", "coordinates": [
@@ -1260,10 +1275,14 @@ def server(input, output, session):
                             [scored["snapLon"], scored["snapLat"]]]}}]}
                     _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
                                                 name="Nearest covered reach"))
-                s_lat = scored.get("snapLat")
-                s_lon = scored.get("snapLon")
+                # The pin and the coordinate inputs mark the clicked stream, the
+                # one the exact watershed is computed for (the pipeline reads the
+                # covered reach's own snap from the anchor); before 2026-09-02 the
+                # pin jumped to the covered reach, thousands of feet away.
+                s_lat = clicked_s.get("snapLat")
+                s_lon = clicked_s.get("snapLon")
                 if s_lat is None:
-                    s_lat, s_lon = clicked_s.get("snapLat"), clicked_s.get("snapLon")
+                    s_lat, s_lon = scored.get("snapLat"), scored.get("snapLon")
                 pending_anchor.set(anchor)
                 _apply_snap((s_lat, s_lon, clicked_s.get("snapDistFt") or 0.0,
                              scored.get("comid")))
@@ -1279,12 +1298,14 @@ def server(input, output, session):
                 res = coord_snap_task.result()
             except Exception:
                 return
+            stage.set("")
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit)
                 return
             hr_hit = res.get("hrHit")
             if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                stage.set(_LOCATING_TEXT)
                 route_task(res["lat"], res["lon"], tuple(hr_hit))
                 return
             # No stream near the typed point: place nothing and clear any stale point
@@ -1317,6 +1338,7 @@ def server(input, output, session):
                 _clear_route_state()
             _MAP.center = (lat, lon)   # bring the typed point into view so it is visible
             _MAP.zoom = 15
+            stage.set(_FINDING_TEXT)
             coord_snap_task(lat, lon)
 
     # ---- address geocode -> recenter the map so streams appear ----
@@ -1352,7 +1374,11 @@ def server(input, output, session):
     # ---- enable "Delineate" only once a point is picked on the map ----
     @reactive.effect
     def _toggle_delineate():
-        ui.update_action_button("delineate", disabled=(snapped_point() is None))
+        routed = pending_anchor() is not None
+        ui.update_action_button(
+            "delineate", disabled=(snapped_point() is None),
+            label=("Compute exact watershed and reach" if routed
+                   else "Delineate Basin and Reach"))
 
     # ---- staged analysis tasks ----
     @reactive.extended_task
@@ -2105,49 +2131,25 @@ def server(input, output, session):
 
     @render.ui
     def snap_status():
+        cue = stage()
+        if cue in (_FINDING_TEXT, _LOCATING_TEXT):
+            return ui.p(cue, class_="easi-snap-note")
         err = anchor_error()
         if err:
             return ui.p(f"⚠ {err}", class_="easi-snap-note",
                         style="color:#8a5a00;")
         anchor = pending_anchor()
         if anchor:
-            clicked_s = anchor.get("clickedStream") or {}
-            scored = anchor.get("scoredReach") or {}
-            r = anchor.get("routing") or {}
-            dist = r.get("routedDistanceFt")
-            dist_txt = f"{dist:,.0f} ft" if dist is not None else "downstream"
-            ratio = r.get("daRatio")
-            if r.get("declined"):
-                reach_line = ui.p(
-                    "Reach-keyed evidence (low flow, substrate, biological "
-                    "integrity) will be unavailable: the nearest covered reach "
-                    f"drains more than {_fmt_ratio_limit(r.get('daRatioLimit'))} "
-                    "times this stream, or its drainage area is unknown.",
-                    class_="easi-snap-note", style="color:#8a5a00;")
-            else:
-                reach_line = ui.p(
-                    ui.span("Reach-keyed evidence from: "),
-                    ui.tags.b(f'{scored.get("gnisName") or "(unnamed reach)"} '
-                              f'(COMID {scored.get("comid")}), {dist_txt} downstream'),
-                    class_="easi-snap-note")
-            return ui.div(
-                ui.p("This stream is not in the StreamCat lookup network. EASI "
-                     "will calculate the exact watershed for this stream with "
-                     "the STAF site engine. This usually takes well under a minute, and up to about five minutes on a large basin.",
-                     class_="easi-snap-note", style="color:#8a5a00;"),
-                ui.p(ui.span("Clicked stream: "),
-                     ui.tags.b(clicked_s.get("gnisName") or "(unnamed stream)"),
-                     class_="easi-snap-note"),
-                reach_line,
-                ui.p(ui.span("Drainage area ratio: "),
-                     ui.tags.b(f"{ratio if ratio is not None else 'unknown'} (limit "
-                               f"{_fmt_ratio_limit(r.get('daRatioLimit'))})"),
-                     class_="easi-snap-note"),
-                ui.p("Click “Delineate Basin and Reach” to calculate the "
-                     "watershed, or click a different stream.",
-                     class_="easi-snap-note ok"),
-                style=("background:#fff7e0;border:1px solid #e6c96b;"
-                       "border-radius:6px;padding:.4rem .55rem;"))
+            # Three short lines; the ratio, the COMID, and the reasoning sit
+            # behind the info icon (easi.snapcard, 2026-09-02).
+            card = hr_snap_card(anchor)
+            lines = []
+            for i, (cls, text) in enumerate(card["lines"]):
+                kids = [text]
+                if i == 2:
+                    kids += [" ", _info(html_tip=card["tip_html"])]
+                lines.append(ui.p(*kids, class_=f"easi-snap-note {cls}".strip()))
+            return ui.div(*lines)
         pt = snapped_point()
         if not pt:
             return ui.p("No point yet. Enter coordinates, search an address, or zoom in "
@@ -2239,6 +2241,9 @@ def server(input, output, session):
     def busy_text():
         s = stage()
         running = (delineate_task.status() == "running") or (assess_task.status() == "running")
+        if _HAS_MAP:
+            running = running or any(t.status() == "running"
+                                     for t in (click_snap_task, coord_snap_task, route_task))
         # A text output updates its textContent in place, so the row never reflows
         # as "3/20" ticks; the spinner is a CSS ::before on the persistent #busy_text
         # element (spins continuously). Empty string -> row collapses (no idle gap).
