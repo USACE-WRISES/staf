@@ -29,6 +29,8 @@ in the coverage plan and asserted by ``tests/test_routing.py``.
 """
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+
 import time
 
 from typing import Any, Optional
@@ -241,7 +243,14 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
     if nhdplusid is None:
         return {"error": "no_stream_found"}
 
-    rec = nhd_hr.hr_flowline_by_id(nhdplusid)
+    # The HR reach attributes and the NLDI raindrop do not depend on each
+    # other, so they run side by side (one round trip instead of two on the
+    # click path); the fabric attributes need the raindrop's COMID and follow.
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        rec_future = pool.submit(nhd_hr.hr_flowline_by_id, nhdplusid)
+        snap_future = pool.submit(_hydrolocation_snap, hr_lat, hr_lon)
+        rec = rec_future.result()
+        snap = snap_future.result()
     clicked_stream: dict[str, Any] = {
         "network": "nhdplus-hr", "nhdplusId": int(nhdplusid),
         "gnisName": None, "reachcode": None, "drainageAreaSqkm": None,
@@ -257,7 +266,6 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
             "vpuid": rec["vpuid"],
         })
 
-    snap = _hydrolocation_snap(hr_lat, hr_lon)
     if snap.get("error"):
         return {"error": "snap_service_error", "detail": snap["error"]}
     comid = snap.get("comid")

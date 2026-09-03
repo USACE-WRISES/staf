@@ -264,3 +264,28 @@ def test_no_position_fallback_in_routing():
     # to it would make the routed reach depend on which service was up. The
     # docstring may explain the exclusion; a call is what must never appear.
     assert ".feature_byloc(" not in inspect.getsource(routing)
+
+
+def test_the_two_lookups_overlap_and_the_payload_is_unchanged(monkeypatch):
+    """The HR attributes and the NLDI raindrop run side by side (2026-09-02):
+    two 0.2 s lookups finish in well under 0.4 s and the payload equals the
+    sequential one."""
+    import time
+
+    def slow_rec(nid, **k):
+        time.sleep(0.2)
+        return _hr_rec()
+
+    def slow_snap(lat, lon):
+        time.sleep(0.2)
+        return dict(_SNAP_OK)
+
+    monkeypatch.setattr(routing.nhd_hr, "hr_flowline_by_id", slow_rec)
+    monkeypatch.setattr(routing, "_hydrolocation_snap", slow_snap)
+    monkeypatch.setattr(routing.delineation, "flowline_attrs", lambda comid: dict(_ATTRS_OK))
+    t0 = time.monotonic()
+    res = routing.route_from_hr(40.0, -83.0, _HR_SNAP)
+    elapsed = time.monotonic() - t0
+    assert elapsed < 0.36, elapsed
+    _stub(monkeypatch, snap=_SNAP_OK, attrs=_ATTRS_OK)
+    assert res == routing.route_from_hr(40.0, -83.0, _HR_SNAP)
