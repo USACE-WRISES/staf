@@ -15,7 +15,9 @@ app = pytest.importorskip("app")
 def test_the_two_networks_are_legible_and_distinct():
     assert app.HR_FLOWLINE_STYLE["color"] != app.FLOWLINE_STYLE["color"]
     assert app.FLOWLINE_STYLE["weight"] >= 3
-    assert app.HR_FLOWLINE_STYLE["weight"] >= 2
+    # the same weight as the covered lines: at 2 px the cyan lines were still
+    # hard to click consistently (2026-09-02)
+    assert app.HR_FLOWLINE_STYLE["weight"] == app.FLOWLINE_STYLE["weight"]
     assert app.HR_FLOWLINE_STYLE["opacity"] >= 0.85
 
 
