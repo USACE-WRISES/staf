@@ -54,8 +54,7 @@ def test_engine_scheduling_rule(monkeypatch):
 def test_map_styles_legible_and_hover_highlighted():
     assert app.HR_FLOWLINE_STYLE["color"] != app.FLOWLINE_STYLE["color"]
     assert app.FLOWLINE_STYLE["weight"] >= 3 and app.HR_FLOWLINE_STYLE["weight"] >= 2
-    assert app.FLOWLINE_HOVER_STYLE["weight"] > app.FLOWLINE_STYLE["weight"]
-    assert app.HR_FLOWLINE_HOVER_STYLE["weight"] > app.HR_FLOWLINE_STYLE["weight"]
+    assert not hasattr(app, "FLOWLINE_HOVER_STYLE")    # a hover restyle flashed the layer
     assert "dashArray" in app.ROUTE_STYLE and "dashArray" not in app.HR_FLOWLINE_STYLE
     assert "cyan" in app._MISS_TEXT
 

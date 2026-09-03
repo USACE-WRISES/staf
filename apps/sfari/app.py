@@ -27,6 +27,7 @@ import anyio  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
 
 from sfari import bieger, config, delineation, pipeline, report, scoring, session as session_io, xscalc  # noqa: E402
+from sfari import viewport  # noqa: E402
 from sfari import engine_prefill, hr_site  # noqa: E402
 from sfari.datasources import flowlines  # noqa: E402
 from sfari.datasources.geocode import geocode_address  # noqa: E402
@@ -46,11 +47,6 @@ WATERSHED_STYLE = {"color": "#caa700", "weight": 1, "fillColor": "#fdf24a", "fil
 REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
 HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 2, "opacity": 0.9}
-# Hover: the line thickens under the pointer (ipyleaflet applies hover_style on
-# mouseover and resets it on mouseout), which together with Leaflet's pointer
-# cursor on interactive paths says "this line is clickable" (2026-09-02).
-FLOWLINE_HOVER_STYLE = {"weight": 5, "opacity": 1.0}
-HR_FLOWLINE_HOVER_STYLE = {"weight": 4, "opacity": 1.0}
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
 _MISS_TEXT = ("You didn't click on a stream line. Zoom in and click a stream: dark blue lines "
               "are the NHDPlus V2 network and cyan lines are all other NHD streams.")
@@ -446,6 +442,7 @@ def server(input, output, session):
     view_bbox = reactive.value(None)       # rounded bbox at zoom >= FLOW_ZOOM | None
     last_view_change = reactive.value(0.0)
     fetched_bbox = reactive.value(None)
+    view_bounds = reactive.value(None)     # (south, west, north, east) of the viewport | None
 
     # ---- field-review scoring state (Phase 2) ----
     metric_scores = reactive.value({})     # {metricId: {"likert": str|None, "note": str}}
@@ -508,6 +505,21 @@ def server(input, output, session):
         def map():  # noqa: A001
             return _MAP
 
+        _EMPTY_FC = {"type": "FeatureCollection", "features": []}
+
+        def _set_layer_data(key, fc, style, name):
+            """Update a stream layer in place, creating it only the first time.
+
+            The widget re-renders on a data change without tearing the layer
+            down, so the map does not flash and the draw order is kept.
+            Returns True when the layer was created (2026-09-02)."""
+            lyr = _layers.get(key)
+            if lyr is not None:
+                lyr.data = fc
+                return False
+            _add_layer(key, GeoJSON(data=fc, style=style, name=name))
+            return True
+
         @reactive.calc
         def _view():
             return reactive_read(_MAP, "zoom"), reactive_read(_MAP, "center")
@@ -516,12 +528,15 @@ def server(input, output, session):
         def _track_view():
             import time
             z, c = _view()
+            bounds = reactive_read(_MAP, "bounds")
             val = None
             if c and z is not None and z >= FLOW_ZOOM:
-                lat, lon = float(c[0]), float(c[1])
-                delta = min(0.08, 0.03 * (2 ** (15 - z)))
-                val = flowlines._round_bbox(lon - delta, lat - delta, lon + delta, lat + delta)
+                # The padded fetch box around the center (viewport.fetch_box):
+                # wider than tall from zoom 15, so a pan of a few hundred
+                # pixels stays inside it and needs no fetch (2026-09-02).
+                val = viewport.fetch_box(float(c[0]), float(c[1]), float(z))
             view_bbox.set(val)
+            view_bounds.set(viewport.view_from_bounds(bounds))
             last_view_change.set(time.monotonic())
 
         @reactive.extended_task
@@ -543,7 +558,9 @@ def server(input, output, session):
                 reactive.invalidate_later(0.5 - elapsed + 0.02)
                 return
             with reactive.isolate():
-                if fetched_bbox() == bbox:
+                # Fetch only when the viewport left the box last fetched: a pan
+                # inside the margin or a zoom in keeps the lines it already has.
+                if not viewport.needs_fetch(view_bounds(), fetched_bbox()):
                     return
                 fetched_bbox.set(bbox)
             flow_task(bbox)
@@ -557,12 +574,9 @@ def server(input, output, session):
             except Exception:
                 return
             with reactive.isolate():
-                if fc and fc.get("features"):
-                    _add_layer("flow", GeoJSON(data=fc, style=FLOWLINE_STYLE,
-                                               hover_style=FLOWLINE_HOVER_STYLE, name="Stream lines"))
-                    flow_geojson.set(fc)
-                else:
-                    _remove_layer("flow"); flow_geojson.set(None)
+                has = bool(fc and fc.get("features"))
+                _set_layer_data("flow", fc if has else _EMPTY_FC, FLOWLINE_STYLE, "Stream lines")
+                flow_geojson.set(fc if has else None)
 
         @reactive.extended_task
         async def hr_flow_task(bbox: tuple) -> "dict | None":
@@ -575,18 +589,15 @@ def server(input, output, session):
             except Exception:
                 return
             with reactive.isolate():
-                if fc and fc.get("features"):
-                    _add_layer("hrflow", GeoJSON(data=fc, style=HR_FLOWLINE_STYLE,
-                                                 hover_style=HR_FLOWLINE_HOVER_STYLE,
-                                                 name="All NHD streams (NHDPlus HR)"))
-                    hr_geojson.set(fc)
-                    v2 = flow_geojson()
-                    if v2 and v2.get("features"):   # keep the clickable V2 lines on top
-                        _add_layer("flow", GeoJSON(data=v2, style=FLOWLINE_STYLE,
-                                                   hover_style=FLOWLINE_HOVER_STYLE,
-                                                   name="Stream lines"))
-                else:
-                    _remove_layer("hrflow"); hr_geojson.set(None)
+                has = bool(fc and fc.get("features"))
+                created = _set_layer_data("hrflow", fc if has else _EMPTY_FC, HR_FLOWLINE_STYLE,
+                                          "All NHD streams (NHDPlus HR)")
+                hr_geojson.set(fc if has else None)
+                # The clickable V2 lines draw on top. Only a freshly created HR
+                # layer can land above an existing V2 layer, so the one-time
+                # re-add happens then; later fetches update the data in place.
+                if created and _layers.get("flow") is not None:
+                    _add_layer("flow", _layers["flow"])
 
         # ---- click -> snap or reject (only during the identify step) ----
         @reactive.effect
@@ -1224,7 +1235,9 @@ def server(input, output, session):
         if not _HAS_MAP or current_step() != STEP_IDENTIFY:
             return None
         z, _c = _view()
-        if z is None or z < FLOW_ZOOM or flow_task.status() != "running":
+        fetching = (flow_task.status() == "running"
+                    or hr_flow_task.status() == "running")
+        if z is None or z < FLOW_ZOOM or not fetching:
             return None
         return ui.div(ui.div(class_="easi-spinner"), ui.span("Loading streams…"),
                       class_="easi-flow-loading")

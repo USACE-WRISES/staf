@@ -19,9 +19,11 @@ def test_the_two_networks_are_legible_and_distinct():
     assert app.HR_FLOWLINE_STYLE["opacity"] >= 0.85
 
 
-def test_hover_thickens_each_network():
-    assert app.FLOWLINE_HOVER_STYLE["weight"] > app.FLOWLINE_STYLE["weight"]
-    assert app.HR_FLOWLINE_HOVER_STYLE["weight"] > app.HR_FLOWLINE_STYLE["weight"]
+def test_no_hover_style_on_the_stream_layers():
+    # A hover restyle made every fetch's layer rebuild visible as a flash
+    # (2026-09-02); the pointer cursor alone marks a clickable line.
+    assert not hasattr(app, "FLOWLINE_HOVER_STYLE")
+    assert not hasattr(app, "HR_FLOWLINE_HOVER_STYLE")
 
 
 def test_only_the_route_line_is_dashed():

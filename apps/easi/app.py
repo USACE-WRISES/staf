@@ -27,6 +27,7 @@ from shiny import App, reactive, render, ui  # noqa: E402
 from easi import (assessment, batch_ui, bieger, config, delineation,  # noqa: E402
                   geomorph, method_plot, methods as easi_methods, pipeline, report,
                   routing, scoring)
+from easi import viewport  # noqa: E402
 from easi.batch import api as batch_api  # noqa: E402
 from easi.batch import contracts as batch_contracts  # noqa: E402
 from easi.batch import exports as batch_exports  # noqa: E402
@@ -58,11 +59,6 @@ FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
 # The full NHDPlus HR network drawn under the V2 scoring network: lighter and
 # thinner so covered (clickable-to-score) streams stay visually primary.
 HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 2, "opacity": 0.9}
-# Hover: the line thickens under the pointer (ipyleaflet applies hover_style on
-# mouseover and resets it on mouseout), which together with Leaflet's pointer
-# cursor on interactive paths says "this line is clickable" (2026-09-02).
-FLOWLINE_HOVER_STYLE = {"weight": 5, "opacity": 1.0}
-HR_FLOWLINE_HOVER_STYLE = {"weight": 4, "opacity": 1.0}
 # Dashed connector from a clicked HR-only stream to its covered surrogate reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
 # === TEMP: MMW comparison overlay (remove later) ===
@@ -1018,6 +1014,7 @@ def server(input, output, session):
     view_bbox = reactive.value(None)       # rounded bbox at zoom >= FLOW_ZOOM | None
     last_view_change = reactive.value(0.0)
     fetched_bbox = reactive.value(None)
+    view_bounds = reactive.value(None)     # (south, west, north, east) of the viewport | None
     hr_geojson = reactive.value(None)      # current viewport NHDPlus HR flowlines | None
     pending_anchor = reactive.value(None)  # routed siteAnchor awaiting Delineate | None
     anchor_error = reactive.value(None)    # routing refusal text (DA ratio) | None
@@ -1074,6 +1071,21 @@ def server(input, output, session):
         def map():  # noqa: A001
             return _MAP  # same object every time -> pan/zoom persists
 
+        _EMPTY_FC = {"type": "FeatureCollection", "features": []}
+
+        def _set_layer_data(key, fc, style, name):
+            """Update a stream layer in place, creating it only the first time.
+
+            The widget re-renders on a data change without tearing the layer
+            down, so the map does not flash and the draw order is kept.
+            Returns True when the layer was created (2026-09-02)."""
+            lyr = _layers.get(key)
+            if lyr is not None:
+                lyr.data = fc
+                return False
+            _add_layer(key, GeoJSON(data=fc, style=style, name=name))
+            return True
+
         @reactive.calc
         def _view():
             # Derive the fetch box from the map CENTER (always valid) + a zoom-scaled
@@ -1086,12 +1098,15 @@ def server(input, output, session):
         def _track_view():
             import time
             z, c = _view()
+            bounds = reactive_read(_MAP, "bounds")
             val = None
             if c and z is not None and z >= FLOW_ZOOM:
-                lat, lon = float(c[0]), float(c[1])
-                delta = min(0.08, 0.03 * (2 ** (15 - z)))  # half-box in degrees
-                val = flowlines._round_bbox(lon - delta, lat - delta, lon + delta, lat + delta)
+                # The padded fetch box around the center (viewport.fetch_box):
+                # wider than tall from zoom 15, so a pan of a few hundred
+                # pixels stays inside it and needs no fetch (2026-09-02).
+                val = viewport.fetch_box(float(c[0]), float(c[1]), float(z))
             view_bbox.set(val)
+            view_bounds.set(viewport.view_from_bounds(bounds))
             last_view_change.set(time.monotonic())
 
         @reactive.extended_task
@@ -1117,7 +1132,9 @@ def server(input, output, session):
                 reactive.invalidate_later(0.5 - elapsed + 0.02)
                 return
             with reactive.isolate():
-                if fetched_bbox() == bbox:
+                # Fetch only when the viewport left the box last fetched: a pan
+                # inside the margin or a zoom in keeps the lines it already has.
+                if not viewport.needs_fetch(view_bounds(), fetched_bbox()):
                     return
                 fetched_bbox.set(bbox)
             flow_task(bbox)
@@ -1130,13 +1147,10 @@ def server(input, output, session):
             except Exception:
                 return
             with reactive.isolate():
-                if fc and fc.get("features"):
-                    _add_layer("flow", GeoJSON(data=fc, style=FLOWLINE_STYLE,
-                                               hover_style=FLOWLINE_HOVER_STYLE,
-                                               name="StreamCat data available (NHDPlus V2)"))
-                    flow_geojson.set(fc)
-                else:
-                    _remove_layer("flow"); flow_geojson.set(None)
+                has = bool(fc and fc.get("features"))
+                _set_layer_data("flow", fc if has else _EMPTY_FC, FLOWLINE_STYLE,
+                                "StreamCat data available (NHDPlus V2)")
+                flow_geojson.set(fc if has else None)
 
         @reactive.effect
         def _apply_hr_flowlines():
@@ -1145,17 +1159,15 @@ def server(input, output, session):
             except Exception:
                 return
             with reactive.isolate():
-                if fc and fc.get("features"):
-                    _add_layer("hrflow", GeoJSON(data=fc, style=HR_FLOWLINE_STYLE,
-                                                 hover_style=HR_FLOWLINE_HOVER_STYLE,
-                                                 name="Watershed calculation required (NHDPlus HR)"))
-                    hr_geojson.set(fc)
-                    # Keep the V2 scoring network drawn on top of the HR layer:
-                    # whichever fetch settles last would otherwise sit above.
-                    if _layers.get("flow") is not None:
-                        _add_layer("flow", _layers["flow"])
-                else:
-                    _remove_layer("hrflow"); hr_geojson.set(None)
+                has = bool(fc and fc.get("features"))
+                created = _set_layer_data("hrflow", fc if has else _EMPTY_FC, HR_FLOWLINE_STYLE,
+                                          "Watershed calculation required (NHDPlus HR)")
+                hr_geojson.set(fc if has else None)
+                # The V2 scoring network draws on top. Only a freshly created HR
+                # layer can land above an existing V2 layer, so the one-time
+                # re-add happens then; later fetches update the data in place.
+                if created and _layers.get("flow") is not None:
+                    _add_layer("flow", _layers["flow"])
 
         def _clear_route_state():
             # A new pick invalidates any routed-substitution state from the last one.
@@ -2274,7 +2286,9 @@ def server(input, output, session):
         if not _HAS_MAP or current_step() != STEP_IDENTIFY:
             return None
         z, _c = _view()
-        if z is None or z < FLOW_ZOOM or flow_task.status() != "running":
+        fetching = (flow_task.status() == "running"
+                    or hr_flow_task.status() == "running")
+        if z is None or z < FLOW_ZOOM or not fetching:
             return None
         return ui.div(ui.div(class_="easi-spinner"), ui.span("Loading streams…"),
                       class_="easi-flow-loading")
