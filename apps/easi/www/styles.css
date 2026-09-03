@@ -519,6 +519,40 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
   padding: 4px 9px; font-size: 11px; color: #33415c; font-variant-numeric: tabular-nums;
 }
 
+/* Stream legend (www/legend-dock.js docks #easi-legend-panel under the top-right
+   layers button; the absolute position is the fallback when docking fails). The
+   card look lives on the rendered .easi-legend, so an empty output shows nothing. */
+.easi-legend-panel { position: absolute; top: 62px; right: 12px; z-index: 1100; }
+.easi-legend-panel.leaflet-control {
+  position: relative; top: auto; right: auto; z-index: auto; margin: 10px 10px 0 0;
+}
+/* The top-right corner as a column, so the legend keeps its place below the
+   layers button even after ipyleaflet re-appends that control on a layer change
+   (floats are ignored on flex items; the margins still space the controls). */
+.easi-map-wrap .leaflet-top.leaflet-right {
+  display: flex; flex-direction: column; align-items: flex-end;
+}
+.easi-map-wrap .leaflet-top.leaflet-right .leaflet-control { float: none; }
+.easi-map-wrap .leaflet-top.leaflet-right .leaflet-control-layers { order: 1; }
+.easi-map-wrap .leaflet-top.leaflet-right .easi-legend-panel { order: 2; }
+#stream_legend.recalculating { min-height: 0 !important; opacity: 1 !important; }
+#stream_legend.recalculating::after { display: none !important; }
+.easi-legend {
+  display: flex; flex-direction: column; gap: 4px; max-width: 250px;
+  background: rgba(255, 255, 255, .94); border: 1px solid var(--card-border);
+  border-radius: 6px; padding: 6px 9px 7px; font-size: 11px; color: #33415c;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .15);
+}
+.easi-legend-title { font-weight: 700; font-size: 11px; color: var(--easi-accent);
+  text-transform: uppercase; letter-spacing: .03em; }
+.easi-legend-row { display: flex; align-items: center; gap: 7px; line-height: 1.25; }
+.easi-legend-sw { width: 18px; height: 3px; border-radius: 2px; flex: none; }
+.easi-legend-sw-glow { height: 9px; opacity: .3; }
+.easi-legend-sw-fill { width: 12px; height: 12px; border-radius: 2px; opacity: .6;
+  border: 1px solid #caa700; }
+.easi-legend-label { font-weight: 600; }
+.easi-legend-sub, .easi-legend-note { color: #6b7480; }
+
 /* "Loading streams…" cue while NHD vectors fetch (bottom-center, identify step) */
 .easi-flow-loading {
   position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 1100;

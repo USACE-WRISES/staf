@@ -27,7 +27,7 @@ from shiny import App, reactive, render, ui  # noqa: E402
 from easi import (assessment, batch_ui, bieger, config, delineation,  # noqa: E402
                   geomorph, method_plot, methods as easi_methods, pipeline, report,
                   routing, scoring)
-from easi import viewport  # noqa: E402
+from easi import network_display, viewport  # noqa: E402
 from easi.batch import api as batch_api  # noqa: E402
 from easi.batch import contracts as batch_contracts  # noqa: E402
 from easi.batch import exports as batch_exports  # noqa: E402
@@ -55,12 +55,25 @@ except Exception:  # pragma: no cover
 
 WATERSHED_STYLE = {"color": "#caa700", "weight": 1, "fillColor": "#fdf24a", "fillOpacity": 0.40}
 REACH_STYLE = {"color": "#d6453d", "weight": 4}
+# One stream network, colored by the engine that answers a click there
+# (2026-09-03): the NHDPlus HR geometry is drawn once, dark blue where a
+# click lands on the StreamCat lookup engine (within SNAP_TOL_FT of a V2
+# reach) and cyan where the STAF site engine answers. The split is
+# easi/network_display.py; the click rule itself is unchanged.
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
-# The full NHDPlus HR network drawn under the V2 scoring network: lighter and
-# thinner so covered (clickable-to-score) streams stay visually primary.
 HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
+# Translucent glow under the scored StreamCat reach after a click, so the
+# snap from the clicked line to the V2 reach is visible.
+SCORED_REACH_STYLE = {"color": "#1f6feb", "weight": 11, "opacity": 0.3}
 # Dashed connector from a clicked HR-only stream to its covered surrogate reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
+# LayersControl labels; the legend uses the same engine names.
+LAYER_COVERED = "Streams: StreamCat lookup engine"
+LAYER_UNCOVERED = "Streams: STAF site engine"
+LAYER_SCORED = "Scored reach"
+_MISS_TEXT = ("You didn't click on a stream line. Zoom in and click a stream line: "
+              "dark blue lines are scored by the StreamCat lookup engine, cyan lines "
+              "get an exact watershed from the STAF site engine.")
 # === TEMP: MMW comparison overlay (remove later) ===
 MMW_STYLE = {"color": "#7b2cbf", "weight": 2, "dashArray": "5,4",
              "fillColor": "#b388eb", "fillOpacity": 0.18}  # distinct from yellow WATERSHED_STYLE
@@ -238,6 +251,51 @@ if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on w
     STAF_LINKS.update(json.loads(_staf_links_overrides))
 
 
+def _legend_ui(step, zoomed, mode, scored, routed):
+    """The map legend card (docked under the layers button by legend-dock.js):
+    which color means which engine, the state of the stream fetch, and the
+    highlighted reach. Pure, so its states are tested offline. None outside
+    the Identify and Basin steps. Every string is a plain sentence."""
+    if step not in (STEP_IDENTIFY, STEP_BASIN):
+        return None
+
+    def row(color, label, sub=None, glow=False, fill=False):
+        cls = "easi-legend-sw"
+        if glow:
+            cls += " easi-legend-sw-glow"
+        if fill:
+            cls += " easi-legend-sw-fill"
+        return ui.div(ui.span(class_=cls, style=f"background:{color};"),
+                      ui.div(ui.div(label, class_="easi-legend-label"),
+                             ui.div(sub, class_="easi-legend-sub") if sub else None),
+                      class_="easi-legend-row")
+
+    rows = [ui.div("Streams", class_="easi-legend-title"),
+            row(FLOWLINE_STYLE["color"], "StreamCat lookup engine", "scores the reach in seconds"),
+            row(HR_FLOWLINE_STYLE["color"], "STAF site engine", "calculates the exact watershed")]
+    note = None
+    if not zoomed:
+        note = "Zoom in to see streams"
+    elif mode == "v2-only":
+        note = "Fine streams unavailable here. Zoom in."
+    elif mode == "hr-only":
+        note = "No StreamCat reach in view."
+    elif mode == "empty":
+        note = "No streams in view."
+    if note:
+        rows.append(ui.div(note, class_="easi-legend-note"))
+    if scored:
+        name = scored.get("name") or "unnamed stream"
+        comid = scored.get("comid")
+        what = "Reach evidence" if routed else "Scored reach"
+        label = f"{what}: {name}" + (f" (COMID {comid})" if comid is not None else "")
+        rows.append(row(SCORED_REACH_STYLE["color"], label, glow=True))
+    if step == STEP_BASIN:
+        rows.append(row(WATERSHED_STYLE["fillColor"], "Watershed", fill=True))
+        rows.append(row(REACH_STYLE["color"], "Assessment reach"))
+    return ui.div(*rows, class_="easi-legend")
+
+
 def staf_topnav():
     return ui.div(
         ui.tags.a("STAF", href=STAF_LINKS["home"], class_="staf-topnav-link",
@@ -247,8 +305,9 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=40"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=42"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
+                    ui.tags.script(src="legend-dock.js?v=1", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="report-controls.js", defer=""),
                     ui.tags.script(src="report-edit.js", defer=""),
@@ -283,6 +342,11 @@ app_ui = ui.page_fillable(
         ui.div(ui.output_ui("leftpane"), class_="easi-leftpane"),
         ui.output_ui("worksheet"),
         ui.output_ui("batch_workspace"),
+        # Stream legend: legend-dock.js moves this wrapper into the map's
+        # top-right control stack under the layers button. The card look lives
+        # on the rendered content, so an empty output shows nothing.
+        ui.div(ui.output_ui("stream_legend"), id="easi-legend-panel",
+               class_="easi-legend-panel"),
         ui.output_ui("readout"),
         ui.output_ui("flow_loading"),
         ui.output_ui("cursor_style"),
@@ -1016,10 +1080,13 @@ def server(input, output, session):
     fetched_bbox = reactive.value(None)
     view_bounds = reactive.value(None)     # (south, west, north, east) of the viewport | None
     hr_geojson = reactive.value(None)      # current viewport NHDPlus HR flowlines | None
+    streams_mode = reactive.value(None)    # network_display mode of the drawn layers | None
+    scored_reach = reactive.value(None)    # {"comid", "name"} of the highlighted V2 reach | None
+    zoomed_in = reactive.value(False)      # zoom >= FLOW_ZOOM (the legend reads this, not the view)
     pending_anchor = reactive.value(None)  # routed siteAnchor awaiting Delineate | None
     anchor_error = reactive.value(None)    # routing refusal text (DA ratio) | None
 
-    _layers: dict = {"flow": None, "hrflow": None, "route": None,
+    _layers: dict = {"flow": None, "hrflow": None, "route": None, "scored": None,
                      "marker": None, "ws": None, "reach": None}
 
     def _remove_layer(key):
@@ -1106,16 +1173,16 @@ def server(input, output, session):
                 # pixels stays inside it and needs no fetch (2026-09-02).
                 val = viewport.fetch_box(float(c[0]), float(c[1]), float(z))
             view_bbox.set(val)
+            zoomed_in.set(val is not None)     # a bool: repeated sets never invalidate
             view_bounds.set(viewport.view_from_bounds(bounds))
             last_view_change.set(time.monotonic())
 
         @reactive.extended_task
-        async def flow_task(bbox: tuple) -> dict | None:
-            return await anyio.to_thread.run_sync(lambda: flowlines.flowlines_in_bbox(*bbox))
-
-        @reactive.extended_task
-        async def hr_flow_task(bbox: tuple) -> dict | None:
-            return await anyio.to_thread.run_sync(lambda: nhd_hr.hr_flowlines_in_bbox(*bbox))
+        async def streams_task(bbox: tuple) -> dict:
+            # Both networks fetched side by side, then split by the click rule
+            # (easi.network_display), all on the worker thread.
+            return await anyio.to_thread.run_sync(
+                lambda: network_display.fetch_streams(bbox, tol_ft=SNAP_TOL_FT))
 
         @reactive.effect
         def _settle_and_fetch():
@@ -1126,6 +1193,7 @@ def server(input, output, session):
                 with reactive.isolate():
                     _remove_layer("flow"); flow_geojson.set(None); fetched_bbox.set(None)
                     _remove_layer("hrflow"); hr_geojson.set(None)
+                    streams_mode.set(None)
                 return
             elapsed = time.monotonic() - changed
             if elapsed < 0.5:                       # wait for panning to settle
@@ -1137,41 +1205,39 @@ def server(input, output, session):
                 if not viewport.needs_fetch(view_bounds(), fetched_bbox()):
                     return
                 fetched_bbox.set(bbox)
-            flow_task(bbox)
-            hr_flow_task(bbox)
+            streams_task(bbox)
 
         @reactive.effect
-        def _apply_flowlines():
+        def _apply_streams():
             try:
-                fc = flow_task.result()
+                res = streams_task.result()
             except Exception:
                 return
             with reactive.isolate():
-                has = bool(fc and fc.get("features"))
-                _set_layer_data("flow", fc if has else _EMPTY_FC, FLOWLINE_STYLE,
-                                "StreamCat data available (NHDPlus V2)")
-                flow_geojson.set(fc if has else None)
-
-        @reactive.effect
-        def _apply_hr_flowlines():
-            try:
-                fc = hr_flow_task.result()
-            except Exception:
-                return
-            with reactive.isolate():
-                has = bool(fc and fc.get("features"))
-                created = _set_layer_data("hrflow", fc if has else _EMPTY_FC, HR_FLOWLINE_STYLE,
-                                          "Watershed calculation required (NHDPlus HR)")
-                hr_geojson.set(fc if has else None)
-                # The V2 scoring network draws on top. Only a freshly created HR
-                # layer can land above an existing V2 layer, so the one-time
-                # re-add happens then; later fetches update the data in place.
-                if created and _layers.get("flow") is not None:
-                    _add_layer("flow", _layers["flow"])
+                fetched = fetched_bbox()
+                if fetched is None or tuple(res.get("bbox") or ()) != tuple(fetched):
+                    return                          # torn down or a stale box
+                flow_geojson.set(res.get("v2"))     # raw networks: the click rule's input
+                hr_geojson.set(res.get("hr"))
+                # Cyan first, then dark blue on top; after the first fetch both
+                # update in place (no flash, draw order kept).
+                _set_layer_data("hrflow", res["uncovered"], HR_FLOWLINE_STYLE, LAYER_UNCOVERED)
+                created = _set_layer_data("flow", res["covered"], FLOWLINE_STYLE, LAYER_COVERED)
+                if created:
+                    # Freshly created stream layers land above the pick chrome
+                    # (a zoom out tears the streams down, a zoom in recreates
+                    # them), so the chrome goes back on top.
+                    for key in ("scored", "route", "marker"):
+                        if _layers.get(key) is not None:
+                            _add_layer(key, _layers[key])
+                if streams_mode() != res.get("mode"):
+                    streams_mode.set(res.get("mode"))
 
         def _clear_route_state():
             # A new pick invalidates any routed-substitution state from the last one.
             _remove_layer("route")
+            _remove_layer("scored")
+            scored_reach.set(None)
             pending_anchor.set(None)
             anchor_error.set(None)
 
@@ -1187,7 +1253,8 @@ def server(input, output, session):
             fc = flow_geojson()
             hit = flowlines.nearest_point_on_lines(fc, lat, lon) if fc else None
             if hit and hit[2] <= SNAP_TOL_FT:
-                _apply_snap(hit)                 # covered by the viewport vectors
+                # covered by the viewport vectors: the scored reach glows
+                _apply_snap(hit, network_display.feature_by_id(fc, "comid", hit[3]))
                 return
             # The viewport's HR vectors, when loaded, settle an HR-only click
             # without re-fetching a box around it (2026-09-02).
@@ -1200,8 +1267,22 @@ def server(input, output, session):
                 stage.set(_FINDING_TEXT)
                 click_snap_task(lat, lon)        # fetch flowlines around the click + snap
 
-        def _apply_snap(hit):
+        def _apply_snap(hit, scored_feature=None):
+            """Pin the snap point. ``scored_feature`` is the NHDPlus V2 reach
+            the StreamCat lookup engine scores (the clicked reach on a covered
+            click, the surrogate on a routed one): it draws as a glow under
+            the pin so the snap to the V2 line is visible (2026-09-03)."""
             slat, slon, dist, comid = hit
+            if scored_feature and scored_feature.get("geometry"):
+                props = scored_feature.get("properties") or {}
+                _add_layer("scored", GeoJSON(
+                    data={"type": "FeatureCollection", "features": [scored_feature]},
+                    style=SCORED_REACH_STYLE, name=LAYER_SCORED))
+                scored_reach.set({"comid": props.get("comid", comid),
+                                  "name": props.get("gnis_name")})
+            else:
+                _remove_layer("scored")
+                scored_reach.set(None)
             _add_layer("marker", Marker(location=(slat, slon), draggable=False,
                                         title="Selected point", name="Selected point"))
             snapped_point.set((slat, slon, dist, comid))
@@ -1213,10 +1294,11 @@ def server(input, output, session):
             network so the point can be routed to a covered surrogate. Worker-thread
             sync helper shared by the click and typed-coordinate paths."""
             d = 0.012  # ~0.8 mi half-box around the click, so the snap uses the
-            hit = flowlines.nearest_point_on_lines(  # line you actually clicked
-                flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d), lat, lon)
+            v2_fc = flowlines.flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d)
+            hit = flowlines.nearest_point_on_lines(v2_fc, lat, lon)  # line you actually clicked
             if hit and hit[2] <= SNAP_TOL_FT:
-                return {"hit": hit}
+                return {"hit": hit,
+                        "hitFeature": network_display.feature_by_id(v2_fc, "comid", hit[3])}
             hr_hit = nhd_hr.nearest_point_on_hr_lines(
                 nhd_hr.hr_flowlines_in_bbox(lon - d, lat - d, lon + d, lat + d), lat, lon)
             return {"hit": hit, "hrHit": hr_hit, "lat": lat, "lon": lon}
@@ -1234,23 +1316,40 @@ def server(input, output, session):
             stage.set("")
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
-                _apply_snap(hit)
+                _apply_snap(hit, _scored_feature_for(res, hit))
                 return
             hr_hit = res.get("hrHit")
             if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
                 stage.set(_LOCATING_TEXT)
                 route_task(res["lat"], res["lon"], tuple(hr_hit))
                 return
-            ui.notification_show("You didn't click on a stream line. Zoom in and click "
-                                 "a stream line: dark blue lines have StreamCat data, "
-                                 "cyan lines get a calculated watershed.",
-                                 type="warning", duration=5)
+            ui.notification_show(_MISS_TEXT, type="warning", duration=5)
+
+        def _scored_feature_for(res: dict, hit) -> dict | None:
+            """The snapped V2 reach's feature from the snap result, else from
+            the viewport's raw V2 lines (isolated: never a dependency)."""
+            feat = res.get("hitFeature")
+            if feat is None:
+                with reactive.isolate():
+                    feat = network_display.feature_by_id(flow_geojson(), "comid", hit[3])
+            return feat
 
         # ---- HR-only stream -> deterministic surrogate routing ----
+        def _route_with_reach(lat: float, lon: float, hr_hit: tuple) -> dict:
+            """route_from_hr plus the covered reach's V2 geometry for the
+            scored-reach glow (that reach is usually outside the viewport's
+            V2 box). Worker-thread sync helper."""
+            res = routing.route_from_hr(lat, lon, hr_hit)
+            anchor = res.get("anchor") or {}
+            comid = (anchor.get("scoredReach") or {}).get("comid")
+            if comid is not None and not (anchor.get("routing") or {}).get("declined"):
+                res["scoredFeature"] = network_display.v2_reach_feature(int(comid))
+            return res
+
         @reactive.extended_task
         async def route_task(lat: float, lon: float, hr_hit: tuple) -> dict:
             return await anyio.to_thread.run_sync(
-                lambda: routing.route_from_hr(lat, lon, hr_hit))
+                lambda: _route_with_reach(lat, lon, hr_hit))
 
         @reactive.effect
         def _route_done():
@@ -1304,7 +1403,8 @@ def server(input, output, session):
                     s_lat, s_lon = scored.get("snapLat"), scored.get("snapLon")
                 pending_anchor.set(anchor)
                 _apply_snap((s_lat, s_lon, clicked_s.get("snapDistFt") or 0.0,
-                             scored.get("comid")))
+                             scored.get("comid")),
+                            None if routing_block.get("declined") else res.get("scoredFeature"))
 
         # ---- typed lat/long -> recenter the map + snap (same path as a click) ----
         @reactive.extended_task
@@ -1320,7 +1420,7 @@ def server(input, output, session):
             stage.set("")
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
-                _apply_snap(hit)
+                _apply_snap(hit, _scored_feature_for(res, hit))
                 return
             hr_hit = res.get("hrHit")
             if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
@@ -1332,8 +1432,8 @@ def server(input, output, session):
             _remove_layer("marker")
             snapped_point.set(None)
             ui.notification_show(
-                "No stream within 150 ft of those coordinates. Adjust them, or zoom in "
-                "and click a blue stream line.", type="warning", duration=6)
+                f"No stream within {int(SNAP_TOL_FT)} ft of those coordinates. Adjust "
+                "them, or zoom in and click a stream line.", type="warning", duration=6)
 
         @reactive.effect
         @reactive.event(input.coords_entered)
@@ -1368,7 +1468,7 @@ def server(input, output, session):
         if hit and _HAS_MAP:
             _MAP.center = (hit[0], hit[1])
             _MAP.zoom = 15
-            ui.notification_show(f"Centered on {hit[0]:.4f}, {hit[1]:.4f}. Click a blue stream.",
+            ui.notification_show(f"Centered on {hit[0]:.4f}, {hit[1]:.4f}. Click a stream line.",
                                  duration=4)
         elif not hit:
             ui.notification_show("Place not found. Try a city, address, or stream name.",
@@ -1388,7 +1488,7 @@ def server(input, output, session):
         _MAP.center = (float(lat), float(lon))
         _MAP.zoom = 15
         where = pick.get("label") or f"{float(lat):.4f}, {float(lon):.4f}"
-        ui.notification_show(f"Centered on {where}. Click a blue stream.", duration=4)
+        ui.notification_show(f"Centered on {where}. Click a stream line.", duration=4)
 
     # ---- enable "Delineate" only once a point is picked on the map ----
     @reactive.effect
@@ -1739,9 +1839,9 @@ def server(input, output, session):
     @reactive.effect
     @reactive.event(input.nav_new, input.clear_basin)
     def _reset():
-        for k in ("ws", "reach", "marker", "route"):
+        for k in ("ws", "reach", "marker", "route", "scored"):
             _remove_layer(k)
-        pending_anchor.set(None); anchor_error.set(None)
+        pending_anchor.set(None); anchor_error.set(None); scored_reach.set(None)
         snapped_point.set(None); delin.set(None); base_result.set(None)
         _overrides.set({}); _notes.set({})
         _geom_owned.set(set()); _geom_text.set({}); _geom_scoring.set({}); current_fn.set(0)
@@ -1767,12 +1867,15 @@ def server(input, output, session):
                 "screening estimate, not a field-validated assessment.\n\n"
                 "**How to use**\n\n"
                 "1. **Zoom in** until stream lines appear. **Click a stream** to "
-                "place a point, or enter coordinates, or search an address. Dark "
-                "blue lines have StreamCat data: the StreamCat lookup engine answers "
-                "their watershed metrics in seconds. Cyan lines are the rest of "
-                "the NHD: the STAF site engine calculates the exact watershed at "
-                "the clicked point, which usually takes well under a minute and up to about five minutes on a large basin. On "
-                "those streams the three reach-keyed metrics (low flow, "
+                "place a point, or enter coordinates, or search an address. The "
+                "map draws one stream network, colored by the engine that answers "
+                "a click there. Dark blue stretches are scored by the StreamCat "
+                "lookup engine, which answers the watershed metrics in seconds. "
+                "Cyan stretches are answered by the STAF site engine, which "
+                "calculates the exact watershed at the clicked point, usually "
+                "well under a minute and up to about five minutes on a large "
+                "basin. After a click the scored reach is highlighted on the map. "
+                "On cyan streams the three reach-keyed metrics (low flow, "
                 "substrate, biological integrity) come from the nearest covered "
                 "reach downstream, labeled, and are unavailable when that reach "
                 f"drains more than {int(routing.DA_RATIO_MAX)} times the clicked "
@@ -1788,8 +1891,9 @@ def server(input, output, session):
                 "CSV, or GeoJSON.\n\n"
                 f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "
                 "packages the reports as a ZIP.\n\n"
-                "Switch basemaps and toggle the stream overlay with the layers "
-                "control at the top right."),
+                "Switch basemaps and turn either stream color on or off with the "
+                "layers control at the top right. The legend below it names the "
+                "colors."),
             title="Help", easy_close=True))
 
     @reactive.calc
@@ -2097,8 +2201,10 @@ def server(input, output, session):
             with reactive.isolate():
                 picked = snapped_point() is not None
             body = ui.TagList(
-                ui.div("Zoom in until blue stream lines appear and click a stream to place "
-                       "a point. Or enter coordinates below, or search an address.",
+                ui.div("Zoom in until stream lines appear and click a stream to place a "
+                       "point. Dark blue stretches are scored by the StreamCat lookup "
+                       "engine and cyan stretches by the STAF site engine. Or enter "
+                       "coordinates below, or search an address.",
                        class_="easi-instr"),
                 ui.input_text("address", "Address, place, or stream",
                               placeholder="e.g. Atlanta, GA  ·  Utoy Creek"),
@@ -2172,9 +2278,10 @@ def server(input, output, session):
         pt = snapped_point()
         if not pt:
             return ui.p("No point yet. Enter coordinates, search an address, or zoom in "
-                        "and click a blue stream line.", class_="easi-snap-note")
-        return ui.p(f"✓ Snapped to stream ({pt[2]:.0f} ft away). "
-                    f"Click “Delineate Basin and Reach”.",
+                        "and click a stream line.", class_="easi-snap-note")
+        name = (scored_reach() or {}).get("name") or "the stream"
+        return ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away). The StreamCat lookup "
+                    f"engine scores this reach. Click “Delineate Basin and Reach”.",
                     class_="easi-snap-note ok")
 
     @render.ui
@@ -2269,6 +2376,15 @@ def server(input, output, session):
         return s if (s and running) else ""
 
     @render.ui
+    def stream_legend():
+        # Reads the zoom flag, the fetch mode, and the pick, never the view
+        # itself, so a pan does not re-render it.
+        if not _HAS_MAP or app_mode() == "batch":
+            return None
+        return _legend_ui(current_step(), zoomed_in(), streams_mode(), scored_reach(),
+                          pending_anchor() is not None)
+
+    @render.ui
     def readout():
         if not _HAS_MAP:
             return None
@@ -2280,14 +2396,13 @@ def server(input, output, session):
 
     @render.ui
     def flow_loading():
-        # Cue the user that the clickable blue stream vectors are being fetched —
-        # only while in the identify step, zoomed in enough for them to appear, and
-        # a fetch is actually in flight.
+        # Cue the user that the stream lines are being fetched: only while in
+        # the identify step, zoomed in enough for them to appear, and a fetch
+        # is actually in flight.
         if not _HAS_MAP or current_step() != STEP_IDENTIFY:
             return None
         z, _c = _view()
-        fetching = (flow_task.status() == "running"
-                    or hr_flow_task.status() == "running")
+        fetching = streams_task.status() == "running"
         if z is None or z < FLOW_ZOOM or not fetching:
             return None
         return ui.div(ui.div(class_="easi-spinner"), ui.span("Loading streams…"),

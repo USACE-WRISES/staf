@@ -2,7 +2,7 @@
 
 Two helpers for the StreamStats-style map:
 - ``flowlines_in_bbox`` pulls NHD flowline vectors for the visible bounding box
-  (only at high zoom; size-guarded + cached) so the map can draw crisp blue lines.
+  (only at high zoom; size-guarded + cached) so the map can draw the stream lines.
 - ``nearest_point_on_lines`` snaps a click to the nearest flowline and returns the
   distance in feet, so the UI can snap-or-reject.
 
@@ -43,12 +43,15 @@ def _fetch(west: float, south: float, east: float, north: float) -> Optional[dic
         if not geom.get("coordinates"):
             continue
         props = {}
-        comid = (f.get("properties") or {}).get("comid")
+        fprops = f.get("properties") or {}
+        comid = fprops.get("comid")
         if comid is not None:
             try:
                 props["comid"] = int(comid)
             except (TypeError, ValueError):
                 pass
+        if fprops.get("gnis_name"):       # names the scored reach on the map legend
+            props["gnis_name"] = str(fprops["gnis_name"])
         feats.append({"type": "Feature", "properties": props, "geometry": geom})
     return {"type": "FeatureCollection", "features": feats} if feats else None
 

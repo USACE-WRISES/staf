@@ -46,15 +46,15 @@ every value says which engine produced it.
 
 | Tier | App | Policy |
 |---|---|---|
-| Screening | EASI | Bold stream lines have StreamCat data: the lookup engine answers in seconds. Thin lines are the rest of the NHD: the site engine calculates the exact watershed. On those streams the three reach-keyed metrics (low flow, substrate, biological integrity) describe the nearest covered reach downstream, labeled with the routed distance and the drainage-area ratio, and are unavailable when that reach drains more than ten times the clicked stream. If the engine cannot compute the watershed, the watershed metrics are unavailable with guidance, never a stand-in. |
+| Screening | EASI | The map draws one stream network, colored by the engine that answers a click there: dark blue where the StreamCat lookup engine scores the reach in seconds, cyan where the STAF site engine calculates the exact watershed. After a click the scored reach is highlighted. On cyan streams the three reach-keyed metrics (low flow, substrate, biological integrity) describe the nearest covered reach downstream, labeled with the routed distance and the drainage-area ratio, and are unavailable when that reach drains more than ten times the clicked stream. If the engine cannot compute the watershed, the watershed metrics are unavailable with guidance, never a stand-in. |
 | Rapid | SFARI | The site engine supplies the exact watershed and its evidence first. StreamCat values remain as labeled fallbacks that name the reach they describe. The assessor keeps every score. |
 | Detailed | DEEP | The exact watershed on streams outside the V2 network. Auto-pulled values follow the assessment bundle: curves fitted on StreamCat predictors take lookup-engine values, curves fitted on engine predictors take site-engine values. A value from the other engine is shown as reference and not scored. |
 | Detailed (builder) | StreamCurves | The predictor source is the one choice in the program: the StreamCat lookup engine by default, or the site engine, recorded in every build's provenance. An engine-sourced build also recomputes the scored landscape metrics that have an engine analog (impervious, crop, wetlands, road density, dam density) over the exact watershed at every training site, and stamps only those curves as engine-fitted. Base-flow index and road crossings stay on the lookup engine. The reference screen always runs on the lookup engine. |
 
 ## Reading the labels
 
-- EASI reports name the engine on every watershed row and, on a thin-line
-  stream, add a banner: the assessed stream, the watershed engine and its
+- EASI reports name the engine on every watershed row and, on a stream drawn
+  cyan, add a banner: the assessed stream, the watershed engine and its
   area, and the reach that supplied the reach-keyed evidence. The CSV and
   GeoJSON exports carry an Engine column on those sites.
 - SFARI evidence rows carry a badge: exact watershed (site engine), StreamCat,
