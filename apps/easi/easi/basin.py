@@ -7,6 +7,24 @@ only the rows that have data, so missing optional fields never blank the section
 from __future__ import annotations
 
 
+def fmt_km2(value) -> str:
+    """``12.35 km²`` from a number, ``unknown`` from None or junk. Two
+    decimals: the HR drainage area arrives with eight (0.98719999) and the
+    engine area with four, and neither belongs on a card as served."""
+    try:
+        return f"{float(value):,.2f} km²"
+    except (TypeError, ValueError):
+        return "unknown"
+
+
+def fmt_ft(value) -> str:
+    """``1,000 ft`` from a number, ``unknown`` from None or junk."""
+    try:
+        return f"{float(value):,.0f} ft"
+    except (TypeError, ValueError):
+        return "unknown"
+
+
 def basin_characteristics(ctx) -> dict:
     """Ordered ``{"rows": [[label, value], ...]}`` from existing ``ctx`` data.
 
@@ -28,7 +46,7 @@ def basin_characteristics(ctx) -> dict:
             meta = layer.get("meta") or {}
             rows.append(["Watershed engine", str(layer.get("label") or "STAF site engine")])
             if meta.get("areaSqkm") is not None:
-                rows.append(["Exact watershed area", f"{round(float(meta['areaSqkm']), 2)} km²"])
+                rows.append(["Exact watershed area", fmt_km2(meta["areaSqkm"])])
         elif provider is None:
             rows.append(["Watershed engine",
                          f"unavailable ({layer.get('unavailableReason') or 'not calculated'})"])
@@ -38,7 +56,7 @@ def basin_characteristics(ctx) -> dict:
 
     da = getattr(ctx, "drainage_area_sqkm", None)
     if da is not None:
-        rows.append(["Drainage area", f"{round(da, 2)} km²"])
+        rows.append(["Drainage area", fmt_km2(da)])
     slope = getattr(ctx, "slope", None)
     if slope is not None:
         rows.append(["Channel slope", f"{slope:.4f} m/m ({slope * 100:.2f}%)"])

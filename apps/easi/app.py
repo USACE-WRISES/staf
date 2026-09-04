@@ -24,7 +24,7 @@ os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
 import anyio  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
 
-from easi import (assessment, batch_ui, bieger, config, delineation,  # noqa: E402
+from easi import (assessment, basin, batch_ui, bieger, config, delineation,  # noqa: E402
                   geomorph, method_plot, methods as easi_methods, pipeline, report,
                   routing, scoring)
 from easi import network_display, viewport  # noqa: E402
@@ -2296,15 +2296,13 @@ def server(input, output, session):
         anchor_rows = []
         comid_label = "COMID"
         if anchor.get("anchorKind") == "hrSurrogate":
-            clicked_s = anchor.get("clickedStream") or {}
             r = anchor.get("routing") or {}
-            dist = r.get("routedDistanceFt")
             source = d.get("watershed_source") or ""
             eng = d.get("watershed_engine") or {}
             if source == "site-engine":
                 anchor_rows = [
                     row("Watershed engine", f"STAF site engine v{eng.get('engineVersion')}"),
-                    row("Exact watershed area", f"{eng.get('areaSqkm')} km²"),
+                    row("Exact watershed area", basin.fmt_km2(eng.get("areaSqkm"))),
                     row("Reaches walked", eng.get("nReaches")),
                 ]
             elif source == "not-calculated":
@@ -2314,23 +2312,21 @@ def server(input, output, session):
                 ]
             else:
                 anchor_rows = [row("Scored at", "surrogate reach")]
-            anchor_rows += [
-                row("Reach-keyed evidence",
-                    "unavailable past the substitution limit" if r.get("declined")
-                    else (f"nearest covered reach, "
-                          f"{dist:,.0f} ft downstream" if dist is not None
-                          else "nearest covered reach")),
+            # Where the reach-keyed evidence comes from is the snap card's and
+            # the ribbon's story (2026-09-03); the card keeps the ratio and the
+            # COMID, labeled for what that reach is here.
+            anchor_rows.append(
                 row("Drainage area ratio",
                     f"{r.get('daRatio') if r.get('daRatio') is not None else 'unknown'} "
-                    f"(limit {_fmt_ratio_limit(r.get('daRatioLimit'))})"),
-            ]
+                    f"(limit {_fmt_ratio_limit(r.get('daRatioLimit'))})"))
             if source in ("site-engine", "not-calculated"):
-                comid_label = "Evidence reach COMID"
+                comid_label = ("Nearest covered reach COMID" if r.get("declined")
+                               else "Evidence reach COMID")
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
             *anchor_rows,
-            row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
-            row("Reach length", f'{d.get("reach_length_ft")} ft'),
+            row("Drainage area", basin.fmt_km2(d.get("drainage_area_sqkm"))),
+            row("Reach length", basin.fmt_ft(d.get("reach_length_ft"))),
             row(comid_label, d.get("comid")),
             class_="easi-basin-card",
         )
