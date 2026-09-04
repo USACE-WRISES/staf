@@ -40,3 +40,26 @@ def test_basin_characteristics_empty_when_no_data(monkeypatch):
     monkeypatch.setattr(geo, "level3_at", lambda lat, lon: None)
     ctx = AnalysisContext(lat=40, lon=-83, comid=1)
     assert basin.basin_characteristics(ctx)["rows"] == []
+
+
+def test_area_and_length_formatters_round_what_the_services_serve():
+    # the HR drainage area arrives with eight decimals (0.98719999 read as
+    # 0.9871999900000001), the engine area with four (2026-09-03)
+    assert basin.fmt_km2(0.9871999900000001) == "0.99 km²"
+    assert basin.fmt_km2(0.9872) == "0.99 km²"
+    assert basin.fmt_km2(1234.5678) == "1,234.57 km²"
+    assert basin.fmt_km2("12.3") == "12.30 km²"
+    assert basin.fmt_km2(None) == "unknown"
+    assert basin.fmt_ft(1000.0) == "1,000 ft"
+    assert basin.fmt_ft(987.26) == "987 ft"
+    assert basin.fmt_ft(None) == "unknown"
+
+
+def test_basin_rows_use_the_two_decimal_formatter():
+    ctx = AnalysisContext(lat=40, lon=-83, comid=1, drainage_area_sqkm=0.9871999900000001)
+    ctx.extras["siteAnchor"] = {"anchorKind": "hrSurrogate"}
+    ctx.extras["watershed"] = {"provider": "site-engine", "label": "STAF site engine v0.2.2",
+                               "meta": {"areaSqkm": 0.9872}}
+    rows = dict((r[0], r[1]) for r in basin.basin_characteristics(ctx)["rows"])
+    assert rows["Exact watershed area"] == "0.99 km²"
+    assert rows["Drainage area"] == "0.99 km²"
