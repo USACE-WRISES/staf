@@ -2294,40 +2294,33 @@ def server(input, output, session):
             return ui.div(ui.span(label), ui.tags.b(str(val)), class_="b-row")
         anchor = res.get("siteAnchor") or {}
         anchor_rows = []
-        comid_label = "COMID"
+        comid_row = row("COMID", d.get("comid"))
         if anchor.get("anchorKind") == "hrSurrogate":
             r = anchor.get("routing") or {}
             source = d.get("watershed_source") or ""
             eng = d.get("watershed_engine") or {}
+            # A lean pane (2026-09-04): the engine that answers, the drainage
+            # area once, and the covered reach only when it supplies evidence.
+            # The walk count, the polygon area, the ratio, and a declined
+            # site's surrogate stay in the snap card's tooltip, the ribbon,
+            # and the report.
             if source == "site-engine":
-                anchor_rows = [
-                    row("Watershed engine", f"STAF site engine v{eng.get('engineVersion')}"),
-                    row("Exact watershed area", basin.fmt_km2(eng.get("areaSqkm"))),
-                    row("Reaches walked", eng.get("nReaches")),
-                ]
+                anchor_rows = [row("Watershed engine",
+                                   f"STAF site engine v{eng.get('engineVersion')}")]
             elif source == "not-calculated":
-                anchor_rows = [
-                    row("Watershed engine",
-                        f"unavailable ({eng.get('reason') or 'not calculated'})"),
-                ]
+                anchor_rows = [row("Watershed engine",
+                                   f"unavailable ({eng.get('reason') or 'not calculated'})")]
             else:
                 anchor_rows = [row("Scored at", "surrogate reach")]
-            # Where the reach-keyed evidence comes from is the snap card's and
-            # the ribbon's story (2026-09-03); the card keeps the ratio and the
-            # COMID, labeled for what that reach is here.
-            anchor_rows.append(
-                row("Drainage area ratio",
-                    f"{r.get('daRatio') if r.get('daRatio') is not None else 'unknown'} "
-                    f"(limit {_fmt_ratio_limit(r.get('daRatioLimit'))})"))
             if source in ("site-engine", "not-calculated"):
-                comid_label = ("Nearest covered reach COMID" if r.get("declined")
-                               else "Evidence reach COMID")
+                comid_row = (None if r.get("declined")
+                             else row("Evidence reach COMID", d.get("comid")))
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
             *anchor_rows,
             row("Drainage area", basin.fmt_km2(d.get("drainage_area_sqkm"))),
             row("Reach length", basin.fmt_ft(d.get("reach_length_ft"))),
-            row(comid_label, d.get("comid")),
+            comid_row,
             class_="easi-basin-card",
         )
 
