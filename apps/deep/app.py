@@ -1,4 +1,4 @@
-"""DEEP — Detailed Evaluation of Ecosystem Processes (Shiny for Python, Core).
+"""DEEP: Detailed Evaluation of Ecosystem Processes (Shiny for Python, Core).
 
 The detailed-tier STAF assessment tool, sibling to EASI (screening) and SFARI
 (rapid). Workflow: zoom in until NHD stream vectors appear, click a stream to
@@ -49,8 +49,6 @@ REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
 HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
-_MISS_TEXT = ("You didn't click on a stream line. Zoom in and click a stream: dark blue lines "
-              "are the NHDPlus V2 network and cyan lines are all other NHD streams.")
 
 USGS_TOPO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 USGS_IMAGERY_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
@@ -58,6 +56,25 @@ USGS_HYDRO_URL = "https://hydro.nationalmap.gov/arcgis/rest/services/USGSHydroCa
 USGS_ATTR = "USGS The National Map"
 FLOW_ZOOM = 14
 SNAP_TOL_FT = 150.0
+_MISS_TEXT = (f"No stream line within {int(SNAP_TOL_FT)} ft of the click. "
+              "Zoom in and click a line.")
+_LOCATING_TEXT = "Locating the nearest covered reach…"
+
+
+def _fmt_km2(value) -> str:
+    """``12.35 km²`` from a number, ``unknown`` from None or junk (the HR
+    drainage area arrives with eight decimals)."""
+    try:
+        return f"{float(value):,.2f} km²"
+    except (TypeError, ValueError):
+        return "unknown"
+
+
+def _fmt_ft(value) -> str:
+    try:
+        return f"{float(value):,.0f} ft"
+    except (TypeError, ValueError):
+        return "unknown"
 
 # Four steps, the same shape EASI and SFARI use. Nothing sits between delineating and
 # measuring: the assessment follows from the point, so Basin resolves it and reports it
@@ -573,7 +590,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=12"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=13"),
                     ui.tags.link(rel="stylesheet", href="deep.css?v=8"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -619,7 +636,7 @@ app_ui = ui.page_fillable(
         ui.output_ui("cursor_style"),
         class_="easi-shell",
     ),
-    title="DEEP — Detailed Stream Assessment",
+    title="DEEP · Detailed Stream Assessment",
     padding=0,
     fillable=True,
 )
@@ -920,18 +937,38 @@ def server(input, output, session_):  # noqa: C901
             hit = flowlines.nearest_point_on_lines(fc, lat, lon) if fc else None
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit)
+                return
+            # The viewport's HR vectors, when loaded, settle an HR-only click
+            # without a box fetch around it (the EASI flow, 2026-09-04).
+            hr_fc = hr_geojson()
+            hr_hit = (flowlines.nearest_point_on_lines(hr_fc, lat, lon, id_prop="nhdplusid")
+                      if hr_fc else None)
+            if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                _place_pin(hr_hit[0], hr_hit[1])
+                stage.set(_LOCATING_TEXT)
+                anchor_task(lat, lon, tuple(hr_hit))
             else:
                 click_snap_task(lat, lon)
+
+        def _place_pin(slat: float, slon: float):
+            """The pin and the coordinate inputs on the snapped point, at once.
+            An HR click used to wait for the routing before anything moved on
+            the map (2026-09-04). An existing marker moves in place."""
+            marker = _layers.get("marker")
+            if marker is not None and marker in _MAP.layers:
+                marker.location = (slat, slon)
+            else:
+                _add_layer("marker", Marker(location=(slat, slon), draggable=False,
+                                            title="Selected point", name="Selected point"))
+            ui.update_numeric("lat", value=round(slat, 5))
+            ui.update_numeric("lon", value=round(slon, 5))
 
         def _apply_snap(hit):
             slat, slon, dist, comid = hit
             _remove_layer("route")
             pending_anchor.set(None)
-            _add_layer("marker", Marker(location=(slat, slon), draggable=False,
-                                        title="Selected point", name="Selected point"))
+            _place_pin(slat, slon)
             snapped_point.set((slat, slon, dist, comid))
-            ui.update_numeric("lat", value=round(slat, 5))
-            ui.update_numeric("lon", value=round(slon, 5))
 
         def _apply_hr_anchor(anchor) -> bool:
             """An HR-only click: mark the HR snap point and draw the route to the
@@ -940,8 +977,7 @@ def server(input, output, session_):  # noqa: C901
             slat, slon = clicked_reach.get("snapLat"), clicked_reach.get("snapLon")
             if slat is None or slon is None:
                 return False
-            _add_layer("marker", Marker(location=(slat, slon), draggable=False,
-                                        title="Selected point", name="Selected point"))
+            _place_pin(slat, slon)
             scored_reach = anchor.get("scoredReach") or {}
             if not hr_site.declined(anchor) and scored_reach.get("snapLat") is not None:
                 seg = {"type": "FeatureCollection", "features": [{
@@ -955,8 +991,6 @@ def server(input, output, session_):  # noqa: C901
                 _remove_layer("route")
             pending_anchor.set(anchor)
             snapped_point.set((slat, slon, float(clicked_reach.get("snapDistFt") or 0.0), None))
-            ui.update_numeric("lat", value=round(slat, 5))
-            ui.update_numeric("lon", value=round(slon, 5))
             return True
 
         def _apply_snap_result(res, *, from_coords=False):
@@ -966,7 +1000,8 @@ def server(input, output, session_):  # noqa: C901
                 return
             hr_hit = res.get("hrHit")
             if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
-                stage.set("Locating the nearest covered reach…")
+                _place_pin(hr_hit[0], hr_hit[1])
+                stage.set(_LOCATING_TEXT)
                 anchor_task(res["lat"], res["lon"], tuple(hr_hit))
                 return
             if from_coords:
@@ -1026,11 +1061,6 @@ def server(input, output, session_):  # noqa: C901
                     f"{res.get('detail') or res.get('error') or 'no detail'}. "
                     "Try again in a moment.", type="warning", duration=7)
                 return
-            if hr_site.declined(anchor):
-                ui.notification_show(
-                    "This stream is outside the NHDPlus V2 network and the nearest covered "
-                    "reach drains more than 10 times its area. StreamCat values will be "
-                    "withheld here.", type="message", duration=7)
 
         @reactive.effect
         @reactive.event(input.coords_entered)
@@ -1062,7 +1092,7 @@ def server(input, output, session_):  # noqa: C901
             ui.notification_show(f"Centered on {hit[0]:.4f}, {hit[1]:.4f}. Click a stream line.",
                                  duration=4)
         elif not hit:
-            ui.notification_show("Place not found — try a city, address, or stream name.",
+            ui.notification_show("Place not found. Try a city, address, or stream name.",
                                  type="warning", duration=4)
 
     @reactive.effect
@@ -1180,7 +1210,7 @@ def server(input, output, session_):  # noqa: C901
             return
         ui.notification_remove("stage"); stage.set("")
         if status == "error":
-            ui.notification_show("Delineation failed — try another point or zoom in further.",
+            ui.notification_show("Delineation failed. Try another point or zoom in further.",
                                  type="error", duration=8)
             return
         try:
@@ -1395,7 +1425,7 @@ def server(input, output, session_):  # noqa: C901
     def _about():
         ui.modal_show(ui.modal(
             ui.markdown(
-                "**DEEP** — Detailed Evaluation of Ecosystem Processes.\n\n"
+                "**DEEP**, Detailed Evaluation of Ecosystem Processes.\n\n"
                 "The detailed tier of the Stream Tiered Assessment Framework. From a clicked point "
                 "DEEP delineates the upstream watershed and an assessment reach, loads a detailed "
                 "assessment definition (a selection of metrics per function, each with a published "
@@ -1418,17 +1448,17 @@ def server(input, output, session_):  # noqa: C901
     def _help():
         ui.modal_show(ui.modal(
             ui.markdown(
-                "1. **Identify** — zoom in until stream lines appear and click a stream (or type "
+                "1. **Identify**: zoom in until stream lines appear and click a stream (or type "
                 "coordinates / search an address). Dark blue lines are the NHDPlus V2 network. "
                 "Cyan lines are all other NHD streams: for those, DEEP computes the exact "
                 "watershed with the STAF site engine, which usually takes well under a minute and up to about five minutes on a large basin. Set the "
                 "reach length and click **Delineate**.\n"
-                "2. **Basin** — review the watershed and reach. The published assessment "
+                "2. **Basin**: review the watershed and reach. The published assessment "
                 "whose area of applicability covers your site is resolved here (certified "
                 "before preliminary); use **Change** when more than one applies. On a V2 stream "
                 "the site engine runs in the background only when the assessment's curves can "
                 "use its values.\n"
-                "3. **Assessment** — enter each metric's measured value; the reference curve converts "
+                "3. **Assessment**: enter each metric's measured value; the reference curve converts "
                 "it to an index and the function/outcome scores update live. Desktop-derivable "
                 "metrics prefill with a badge naming the engine or layer that produced them "
                 "(exact watershed, StreamCat, NLCD, 3DEP) and stay editable. On a regional "
@@ -1438,7 +1468,8 @@ def server(input, output, session_):  # noqa: C901
                 "lookup engine otherwise. A value computed "
                 "from a different predictor source than the one the curves were fitted on is "
                 "shown as reference evidence and is not scored.\n"
-                "4. **Report** — review and export the detailed assessment."),
+                "4. **Report**: review and export the detailed assessment.\n\n"
+                "Address search uses OpenStreetMap data (Photon and Nominatim)."),
             title="How to use DEEP", easy_close=True, footer=ui.modal_button("Close")))
 
     # ---- left pane ----
@@ -1449,14 +1480,12 @@ def server(input, output, session_):  # noqa: C901
             with reactive.isolate():
                 picked = snapped_point() is not None
             body = ui.TagList(
-                ui.div("Zoom in until stream lines appear and click a stream to place a point. "
-                       "Or enter coordinates below, or search an address.", class_="easi-instr"),
+                ui.div("Zoom in and click a stream, search a place, or enter coordinates.",
+                       class_="easi-instr"),
                 ui.input_text("address", "Address, place, or stream",
                               placeholder="e.g. Asheville, NC  ·  Mud Creek"),
                 ui.input_action_button("find_address", "Find on map",
                                        class_="btn-outline-secondary btn-sm"),
-                ui.div("Type to search — suggestions from OpenStreetMap / Photon.",
-                       class_="easi-ac-credit"),
                 ui.hr(),
                 ui.input_numeric("lat", "Latitude", value=None, min=24.0, max=50.0, step=0.0001),
                 ui.input_numeric("lon", "Longitude", value=None, min=-125.0, max=-66.0, step=0.0001),
@@ -1479,34 +1508,34 @@ def server(input, output, session_):  # noqa: C901
             return None
         head_label = dict(STEP_LABELS).get(step, "DEEP")
         return ui.TagList(
-            ui.div(f"DEEP — {head_label}", class_="easi-pane-head"),
+            ui.div(f"DEEP · {head_label}", class_="easi-pane-head"),
             ui.div(_stepper(step), body, class_="easi-pane-body"),
         )
 
     @render.ui
     def snap_status():
+        if stage() == _LOCATING_TEXT:
+            return None      # the busy row shows the cue, and the last point's line is stale
         pt = snapped_point()
         if not pt:
-            return ui.p("No point yet — enter coordinates, search an address, or zoom in and click a "
-                        "stream line.", class_="easi-snap-note")
+            return ui.p("No point yet.", class_="easi-snap-note")
         anchor = pending_anchor()
         if anchor is not None:
             clicked_reach = hr_site.clicked_reach(anchor)
             name = clicked_reach.get("gnisName") or "an unnamed stream"
-            lines = [ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away). This stream is outside "
-                          "the NHDPlus V2 network.", class_="easi-snap-note ok"),
-                     ui.p("DEEP will compute its exact watershed with the STAF site engine. "
-                          "This usually takes well under a minute, and up to about five minutes on a large basin.", class_="easi-snap-note")]
+            lines = [ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away).",
+                          class_="easi-snap-note ok"),
+                     ui.p("The STAF site engine calculates the exact watershed, usually in "
+                          "under a minute.", class_="easi-snap-note")]
             if hr_site.declined(anchor):
-                lines.append(ui.p("The nearest covered reach drains more than 10 times this "
-                                  "stream, so StreamCat values keyed to it will be withheld.",
+                lines.append(ui.p("StreamCat values withheld here: the nearest covered reach "
+                                  "drains more than 10 times this stream.",
                                   class_="easi-snap-note warn"))
             else:
-                lines.append(ui.p("StreamCat values will describe the "
-                                  f"{hr_site.anchor_label(anchor)}.", class_="easi-snap-note"))
+                lines.append(ui.p(f"StreamCat values describe the {hr_site.anchor_label(anchor)}.",
+                                  class_="easi-snap-note"))
             return ui.TagList(*lines)
-        return ui.p(f"✓ Snapped to stream ({pt[2]:.0f} ft away). Click “Delineate”.",
-                    class_="easi-snap-note ok")
+        return ui.p(f"✓ Snapped to a stream ({pt[2]:.0f} ft away).", class_="easi-snap-note ok")
 
     @render.ui
     def basin_card():
@@ -1517,8 +1546,8 @@ def server(input, output, session_):  # noqa: C901
 
         def row(label, val):
             return ui.div(ui.span(label), ui.tags.b(str(val)), class_="b-row")
-        rows = [row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
-                row("Reach length", f'{d.get("reach_length_ft")} ft'),
+        rows = [row("Drainage area", _fmt_km2(d.get("drainage_area_sqkm"))),
+                row("Reach length", _fmt_ft(d.get("reach_length_ft"))),
                 row("Stream order", d.get("stream_order"))]
         if d.get("network") == "nhdplus-hr":
             rows.append(row("NHDPlusID", d.get("nhdplus_id")))
@@ -1894,7 +1923,7 @@ def server(input, output, session_):  # noqa: C901
         if n:
             measured_values.set(mvs)
             compute_nonce.set(compute_nonce() + 1)
-            ui.notification_show(f"Auto-filled {n} desktop metric(s) — edit any value to override.",
+            ui.notification_show(f"Auto-filled {n} desktop metrics. Edit any value to override.",
                                  type="message", duration=5)
         with reactive.isolate():
             anchor = (delin() or {}).get("siteAnchor") or {}
@@ -1910,7 +1939,7 @@ def server(input, output, session_):  # noqa: C901
             return None
         return ui.div(
             ui.div(
-                ui.div("DEEP — Assessment", class_="easi-pane-head"),
+                ui.div("DEEP · Assessment", class_="easi-pane-head"),
                 ui.div(_stepper(step), class_="sfari-nav-steps"),
                 ui.download_button("dl_field_forms", "Get Field Forms",
                                    class_="sfari-btn sfari-nav-desktop",
@@ -2156,7 +2185,7 @@ def server(input, output, session_):  # noqa: C901
                        style="font-size:12px;color:#667;margin-top:3px;"),
                 ui.div(f"Lat/Lon {coord}  ·  COMID {dl.get('comid')}  ·  HUC8 {dl.get('huc8')}",
                        style="font-size:12px;color:#667;margin-top:1px;"),
-                ui.div(f"Drainage {dl.get('drainage_area_sqkm')} km²  ·  Reach {dl.get('reach_length_ft')} ft",
+                ui.div(f"Drainage {_fmt_km2(dl.get('drainage_area_sqkm'))}  ·  Reach {_fmt_ft(dl.get('reach_length_ft'))}",
                        style="font-size:12px;color:#667;margin-top:1px;"),
                 ui.div(f"Watershed basis: {report.watershed_basis_label(d)}  ·  Predictor source: "
                        f"{assessments.predictor_source_of(la) if la else 'streamcat'}",

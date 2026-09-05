@@ -1,4 +1,4 @@
-"""SFARI — Stream Functional Assessment Rapid Index (Shiny for Python, Core).
+"""SFARI: Stream Functional Assessment Rapid Index (Shiny for Python, Core).
 
 A StreamStats-style workflow that mirrors EASI: zoom in until NHD stream vectors
 appear, click a stream to snap a point, delineate the watershed + upstream reach,
@@ -48,8 +48,6 @@ REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
 HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
-_MISS_TEXT = ("You didn't click on a stream line. Zoom in and click a stream: dark blue lines "
-              "are the NHDPlus V2 network and cyan lines are all other NHD streams.")
 
 USGS_TOPO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 USGS_IMAGERY_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
@@ -57,6 +55,25 @@ USGS_HYDRO_URL = "https://hydro.nationalmap.gov/arcgis/rest/services/USGSHydroCa
 USGS_ATTR = "USGS The National Map"
 FLOW_ZOOM = 14          # NHD vectors appear at/above this zoom
 SNAP_TOL_FT = 150.0     # click must land within this distance of a flowline
+_MISS_TEXT = (f"No stream line within {int(SNAP_TOL_FT)} ft of the click. "
+              "Zoom in and click a line.")
+_LOCATING_TEXT = "Locating the nearest covered reach…"
+
+
+def _fmt_km2(value) -> str:
+    """``12.35 km²`` from a number, ``unknown`` from None or junk (the HR
+    drainage area arrives with eight decimals)."""
+    try:
+        return f"{float(value):,.2f} km²"
+    except (TypeError, ValueError):
+        return "unknown"
+
+
+def _fmt_ft(value) -> str:
+    try:
+        return f"{float(value):,.0f} ft"
+    except (TypeError, ValueError):
+        return "unknown"
 
 STEP_IDENTIFY, STEP_BASIN, STEP_REVIEW, STEP_REPORT = "identify", "basin", "review", "report"
 STEP_LABELS = [(STEP_IDENTIFY, "Identify"), (STEP_BASIN, "Basin"),
@@ -151,7 +168,7 @@ def _xs_svg(points, stage, lb, rb):
     bed = " ".join(f"{sx(x):.1f},{sy(z):.1f}" for x, z in points)
     parts.append(f'<polyline points="{bed}" fill="none" stroke="#5b4636" stroke-width="2"/>')
     parts.append(f'<text x="{W/2:.0f}" y="{H-6}" font-size="11" text-anchor="middle" '
-                 f'fill="#667">Station (ft) — vertical = elevation (ft)</text>')
+                 f'fill="#667">Station (ft) · Elevation (ft)</text>')
     parts.append("</svg>")
     return "".join(parts)
 
@@ -375,7 +392,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=17"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=18"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
@@ -409,7 +426,7 @@ app_ui = ui.page_fillable(
         ui.output_ui("cursor_style"),
         class_="easi-shell",
     ),
-    title="SFARI — Rapid Stream Assessment",
+    title="SFARI · Rapid Stream Assessment",
     padding=0,
     fillable=True,
 )
@@ -610,18 +627,38 @@ def server(input, output, session):
             hit = flowlines.nearest_point_on_lines(fc, lat, lon) if fc else None
             if hit and hit[2] <= SNAP_TOL_FT:
                 _apply_snap(hit)
+                return
+            # The viewport's HR vectors, when loaded, settle an HR-only click
+            # without a box fetch around it (the EASI flow, 2026-09-04).
+            hr_fc = hr_geojson()
+            hr_hit = (flowlines.nearest_point_on_lines(hr_fc, lat, lon, id_prop="nhdplusid")
+                      if hr_fc else None)
+            if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                _place_pin(hr_hit[0], hr_hit[1])
+                stage.set(_LOCATING_TEXT)
+                anchor_task(lat, lon, tuple(hr_hit))
             else:
                 click_snap_task(lat, lon)
+
+        def _place_pin(slat: float, slon: float):
+            """The pin and the coordinate inputs on the snapped point, at once.
+            An HR click used to wait for the routing before anything moved on
+            the map (2026-09-04). An existing marker moves in place."""
+            marker = _layers.get("marker")
+            if marker is not None and marker in _MAP.layers:
+                marker.location = (slat, slon)
+            else:
+                _add_layer("marker", Marker(location=(slat, slon), draggable=False,
+                                            title="Selected point", name="Selected point"))
+            ui.update_numeric("lat", value=round(slat, 5))
+            ui.update_numeric("lon", value=round(slon, 5))
 
         def _apply_snap(hit):
             slat, slon, dist, comid = hit
             _remove_layer("route")
             pending_anchor.set(None)
-            _add_layer("marker", Marker(location=(slat, slon), draggable=False,
-                                        title="Selected point", name="Selected point"))
+            _place_pin(slat, slon)
             snapped_point.set((slat, slon, dist, comid))
-            ui.update_numeric("lat", value=round(slat, 5))
-            ui.update_numeric("lon", value=round(slon, 5))
 
         def _apply_hr_anchor(anchor) -> bool:
             """An HR-only click: mark the HR snap point and draw the route to the
@@ -630,8 +667,7 @@ def server(input, output, session):
             slat, slon = clicked_reach.get("snapLat"), clicked_reach.get("snapLon")
             if slat is None or slon is None:
                 return False
-            _add_layer("marker", Marker(location=(slat, slon), draggable=False,
-                                        title="Selected point", name="Selected point"))
+            _place_pin(slat, slon)
             scored = anchor.get("scoredReach") or {}
             if not hr_site.declined(anchor) and scored.get("snapLat") is not None:
                 seg = {"type": "FeatureCollection", "features": [{
@@ -645,8 +681,6 @@ def server(input, output, session):
                 _remove_layer("route")
             pending_anchor.set(anchor)
             snapped_point.set((slat, slon, float(clicked_reach.get("snapDistFt") or 0.0), None))
-            ui.update_numeric("lat", value=round(slat, 5))
-            ui.update_numeric("lon", value=round(slon, 5))
             return True
 
         def _apply_snap_result(res, *, from_coords=False):
@@ -656,7 +690,8 @@ def server(input, output, session):
                 return
             hr_hit = res.get("hrHit")
             if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
-                stage.set("Locating the nearest covered reach…")
+                _place_pin(hr_hit[0], hr_hit[1])
+                stage.set(_LOCATING_TEXT)
                 anchor_task(res["lat"], res["lon"], tuple(hr_hit))
                 return
             if from_coords:
@@ -718,11 +753,6 @@ def server(input, output, session):
                     f"{res.get('detail') or res.get('error') or 'no detail'}. "
                     "Try again in a moment.", type="warning", duration=7)
                 return
-            if hr_site.declined(anchor):
-                ui.notification_show(
-                    "This stream is outside the NHDPlus V2 network and the nearest covered "
-                    "reach drains more than 10 times its area. StreamCat evidence will be "
-                    "withheld here.", type="message", duration=7)
 
         @reactive.effect
         @reactive.event(input.coords_entered)
@@ -756,7 +786,7 @@ def server(input, output, session):
             ui.notification_show(f"Centered on {hit[0]:.4f}, {hit[1]:.4f}. Click a stream line.",
                                  duration=4)
         elif not hit:
-            ui.notification_show("Place not found — try a city, address, or stream name.",
+            ui.notification_show("Place not found. Try a city, address, or stream name.",
                                  type="warning", duration=4)
 
     @reactive.effect
@@ -878,7 +908,7 @@ def server(input, output, session):
             return
         ui.notification_remove("stage"); stage.set("")
         if status == "error":
-            ui.notification_show("Delineation failed — try another point or zoom in further.",
+            ui.notification_show("Delineation failed. Try another point or zoom in further.",
                                  type="error", duration=8)
             return
         try:
@@ -1047,7 +1077,7 @@ def server(input, output, session):
             return
         ui.modal_show(ui.modal(
             ui.markdown("Clear all scores, notes, photos, and the delineation and start a new "
-                        "assessment? This can't be undone — use **Save** first if you want to keep it."),
+                        "assessment? This can't be undone. Use **Save** first if you want to keep it."),
             title="Start a new assessment?",
             footer=ui.TagList(ui.modal_button("Cancel"),
                               ui.input_action_button("confirm_new", "Clear & start new",
@@ -1064,7 +1094,7 @@ def server(input, output, session):
     def _about():
         ui.modal_show(ui.modal(
             ui.markdown(
-                "**SFARI** — Stream Functional Assessment Rapid Index.\n\n"
+                "**SFARI**, the Stream Functional Assessment Rapid Index.\n\n"
                 "A rapid, field-based stream assessment. From a clicked point this app "
                 "delineates the upstream watershed and an assessment reach, pulls national "
                 "desktop GIS evidence to *support* your scoring, and walks you function by "
@@ -1082,21 +1112,22 @@ def server(input, output, session):
     def _help():
         ui.modal_show(ui.modal(
             ui.markdown(
-                "1. **Identify** — zoom in until stream lines appear and click a stream "
+                "1. **Identify**: zoom in until stream lines appear and click a stream "
                 "(or type coordinates / search an address). Dark blue lines are the NHDPlus V2 "
                 "network. Cyan lines are all other NHD streams: for those, SFARI "
                 "computes the exact watershed with the STAF site engine, which takes about "
                 "a minute or less, up to about five minutes on a large basin. Set the reach length and click **Delineate**.\n"
-                "2. **Basin** — review the watershed and reach. On a V2 stream the site "
+                "2. **Basin**: review the watershed and reach. On a V2 stream the site "
                 "engine keeps running in the background and upgrades the watershed "
                 "evidence when it finishes.\n"
-                "3. **Assessment** — for each function, review the pulled evidence, "
+                "3. **Assessment**: for each function, review the pulled evidence, "
                 "Likert-score each metric, and assign the 0–15 function score. "
                 "Each value carries a badge: exact watershed (STAF site engine), StreamCat "
                 "(the StreamCat lookup engine, labeled with the reach it describes), or "
                 "desktop (direct services). Some values carry a suggested rating. Every "
                 "score stays yours to set.\n"
-                "4. **Report** — review the screening report and export."),
+                "4. **Report**: review the screening report and export.\n\n"
+                "Address search uses OpenStreetMap data (Photon and Nominatim)."),
             title="How to use SFARI", easy_close=True, footer=ui.modal_button("Close")))
 
     # ---- left pane (per-step form) ----
@@ -1107,15 +1138,12 @@ def server(input, output, session):
             with reactive.isolate():
                 picked = snapped_point() is not None
             body = ui.TagList(
-                ui.div("Zoom in until stream lines appear and click a stream to place "
-                       "a point. Or enter coordinates below, or search an address.",
+                ui.div("Zoom in and click a stream, search a place, or enter coordinates.",
                        class_="easi-instr"),
                 ui.input_text("address", "Address, place, or stream",
                               placeholder="e.g. Atlanta, GA  ·  Utoy Creek"),
                 ui.input_action_button("find_address", "Find on map",
                                        class_="btn-outline-secondary btn-sm"),
-                ui.div("Type to search — suggestions from OpenStreetMap / Photon.",
-                       class_="easi-ac-credit"),
                 ui.hr(),
                 ui.input_numeric("lat", "Latitude", value=None, min=24.0, max=50.0, step=0.0001),
                 ui.input_numeric("lon", "Longitude", value=None, min=-125.0, max=-66.0, step=0.0001),
@@ -1140,34 +1168,34 @@ def server(input, output, session):
         active = current_step()
         head_label = dict(STEP_LABELS).get(active, "SFARI")
         return ui.TagList(
-            ui.div(f"SFARI — {head_label}", class_="easi-pane-head"),
+            ui.div(f"SFARI · {head_label}", class_="easi-pane-head"),
             ui.div(_stepper(active), body, class_="easi-pane-body"),
         )
 
     @render.ui
     def snap_status():
+        if stage() == _LOCATING_TEXT:
+            return None      # the busy row shows the cue, and the last point's line is stale
         pt = snapped_point()
         if not pt:
-            return ui.p("No point yet — enter coordinates, search an address, or zoom in "
-                        "and click a stream line.", class_="easi-snap-note")
+            return ui.p("No point yet.", class_="easi-snap-note")
         anchor = pending_anchor()
         if anchor is not None:
             clicked_reach = hr_site.clicked_reach(anchor)
             name = clicked_reach.get("gnisName") or "an unnamed stream"
-            lines = [ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away). This stream is outside "
-                          "the NHDPlus V2 network.", class_="easi-snap-note ok"),
-                     ui.p("SFARI will compute its exact watershed with the STAF site engine. "
-                          "This usually takes well under a minute, and up to about five minutes on a large basin.", class_="easi-snap-note")]
+            lines = [ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away).",
+                          class_="easi-snap-note ok"),
+                     ui.p("The STAF site engine calculates the exact watershed, usually in "
+                          "under a minute.", class_="easi-snap-note")]
             if hr_site.declined(anchor):
-                lines.append(ui.p("The nearest covered reach drains more than 10 times this "
-                                  "stream, so StreamCat evidence keyed to it will be withheld.",
+                lines.append(ui.p("StreamCat evidence withheld here: the nearest covered reach "
+                                  "drains more than 10 times this stream.",
                                   class_="easi-snap-note warn"))
             else:
-                lines.append(ui.p("StreamCat evidence will describe the "
-                                  f"{hr_site.anchor_label(anchor)}.", class_="easi-snap-note"))
+                lines.append(ui.p(f"StreamCat evidence describes the {hr_site.anchor_label(anchor)}.",
+                                  class_="easi-snap-note"))
             return ui.TagList(*lines)
-        return ui.p(f"✓ Snapped to stream ({pt[2]:.0f} ft away). Click “Delineate”.",
-                    class_="easi-snap-note ok")
+        return ui.p(f"✓ Snapped to a stream ({pt[2]:.0f} ft away).", class_="easi-snap-note ok")
 
     @render.ui
     def basin_card():
@@ -1179,8 +1207,8 @@ def server(input, output, session):
         def row(label, val):
             return ui.div(ui.span(label), ui.tags.b(str(val)), class_="b-row")
         rows = [
-            row("Drainage area", f'{d.get("drainage_area_sqkm")} km²'),
-            row("Reach length", f'{d.get("reach_length_ft")} ft'),
+            row("Drainage area", _fmt_km2(d.get("drainage_area_sqkm"))),
+            row("Reach length", _fmt_ft(d.get("reach_length_ft"))),
             row("Stream order", d.get("stream_order")),
         ]
         if d.get("network") == "nhdplus-hr":
@@ -1425,7 +1453,7 @@ def server(input, output, session):
             return None
         return ui.div(
             ui.div(
-                ui.div("SFARI — Assessment", class_="easi-pane-head"),
+                ui.div("SFARI · Assessment", class_="easi-pane-head"),
                 ui.div(_stepper(current_step()), class_="sfari-nav-steps"),
                 ui.tags.button("Get Field Forms",
                                {"data-desktop-metrics": "1", "type": "button",
@@ -1754,7 +1782,7 @@ def server(input, output, session):
 
         # -- basin characteristics (EASI report format) --
         basin_rows = [("COMID", dl.get("comid")), ("HUC8", dl.get("huc8")),
-                      ("Drainage area", f'{dl.get("drainage_area_sqkm")} km²'),
+                      ("Drainage area", _fmt_km2(dl.get("drainage_area_sqkm"))),
                       ("Stream order", dl.get("stream_order")),
                       ("Watershed basis", report.watershed_basis_label(d))]
         anchor = d.get("siteAnchor") or {}
