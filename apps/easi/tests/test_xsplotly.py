@@ -175,3 +175,25 @@ def test_figure_source_caption():
     # no source -> no caption (and the bottom margin stays tight)
     fw2 = xsplotly.figure(s, e, thalweg=0.0, bankfull_stage=2.0)
     assert "USGS 3DEP 1 m DEM" not in {a.text for a in fw2.layout.annotations}
+
+
+def test_sync_payload_carries_every_trace_value_even_when_unchanged():
+    # a candidate switch with the same point count: the constant terrain baseline
+    # (trace 0) must still travel, or plotly.js deletes its y (2026-09-04)
+    import json
+
+    s, e = _v_profile()
+    a = xsplotly.figure(s, e, thalweg=0.0, bankfull_stage=2.0, floodplain_stage=3.0)
+    b = xsplotly.figure([x + 7 for x in s], e, thalweg=0.0, bankfull_stage=2.0,
+                        floodplain_stage=3.0)
+    restyle, relayout = xsplotly.sync_payload(b)
+    assert len(restyle["y"]) == 5 == len(restyle["x"])
+    assert all(len(y) == len(x) > 0 for x, y in zip(restyle["x"], restyle["y"]))
+    assert restyle["y"][0] == list(a.data[0].y)          # unchanged, sent anyway
+    assert "null" not in json.dumps(restyle["y"])
+    assert relayout["xaxis.autorange"] is False and len(relayout["shapes"]) == 4
+    fw = a      # plotly_update is a BaseFigure method, the same call the widget takes
+    fw.plotly_update(restyle_data=restyle, relayout_data=relayout, trace_indexes=list(range(5)))
+    assert list(fw.data[0].y) == restyle["y"][0]
+    assert list(fw.data[1].x) == restyle["x"][1]
+    assert list(fw.layout.xaxis.range) == relayout["xaxis.range"]

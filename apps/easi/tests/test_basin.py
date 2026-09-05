@@ -61,5 +61,6 @@ def test_basin_rows_use_the_two_decimal_formatter():
     ctx.extras["watershed"] = {"provider": "site-engine", "label": "STAF site engine v0.2.2",
                                "meta": {"areaSqkm": 0.9872}}
     rows = dict((r[0], r[1]) for r in basin.basin_characteristics(ctx)["rows"])
-    assert rows["Exact watershed area"] == "0.99 km²"
     assert rows["Drainage area"] == "0.99 km²"
+    # one area row only (2026-09-04): the engine polygon area reads as a duplicate
+    assert "Exact watershed area" not in rows and rows["Watershed engine"].startswith("STAF")

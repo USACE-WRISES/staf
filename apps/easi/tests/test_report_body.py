@@ -99,3 +99,44 @@ def test_xs_readonly_block():
     assert "easi-xs-panel" in html and "easi-xsection-wrap" in html
     assert "Cross-section geometry" in html
     assert "data:image/png;base64,abc123" in html
+
+
+def test_metric_table_has_a_scored_at_column_in_the_advanced_group():
+    rows = _rows()
+    rows[0]["anchorLabel"] = "exact watershed (STAF site engine)"
+    html = str(app._metric_table(rows, {}))
+    assert ">Scored at<" in html
+    assert "exact watershed (STAF site engine)" in html
+    # the aligned rollup keeps its placeholders in step with the new column
+    html2 = str(app._metric_table(rows, {}, outcomes=_outcomes(), eci=0.61))
+    foot = html2.split("easi-rollup-foot", 1)[1].split("</tfoot>", 1)[0]
+    first_row = foot.split("</tr>", 1)[0]
+    assert first_row.count("easi-col-adv") == 2
+
+
+def test_xs_readonly_block_lists_the_reach_sections():
+    cands = [{"label": "125 ft", "entrenchment_ratio": 1.4, "bank_height_ratio": 1.0},
+             {"label": "250 ft", "entrenchment_ratio": 1.8, "bank_height_ratio": 1.3},
+             {"label": "375 ft", "entrenchment_ratio": 3.1, "bank_height_ratio": 2.0}]
+    html = str(app._xs_readonly_block({"crossSection": {
+        "png_b64": "abc123", "geom": {"division": "Interior Plains"},
+        "candidates": cands, "selected": 1}}))
+    assert "Reach cross-sections" in html and "easi-xs-reach" in html
+    assert "125 ft" in html and "375 ft" in html and "median" in html
+    assert html.count("font-weight:600") == 3           # the shown section's column
+
+
+def test_anchor_banner_is_the_short_warning():
+    anchor = {"anchorKind": "hrSurrogate", "clickedStream": {"gnisName": None},
+              "scoredReach": {"gnisName": "Mink Brook", "comid": 9327042},
+              "routing": {"routedDistanceFt": 1687.6, "daRatio": 32.02, "daRatioLimit": 10.0,
+                          "declined": True, "declineCode": "surrogate_da_ratio_exceeded"},
+              "metricAnchors": {"m1": {"anchor": "watershed", "label": "exact watershed",
+                                       "name": "Stream Temperature"}}}
+    d = {"watershed_source": "site-engine",
+         "watershed_engine": {"engineVersion": "0.2.2", "areaSqkm": 1.0005}}
+    html = str(app._anchor_banner(anchor, d))
+    assert "\u26a0 Warning" in html
+    assert "Three metrics could not be scored" in html
+    assert "Stream Temperature" not in html and "v0.2.2" not in html
+    assert app._anchor_banner({"anchorKind": "v2Direct"}, d) is None

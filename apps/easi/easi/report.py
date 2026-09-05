@@ -7,11 +7,13 @@ possibly replaced by a re-scored report from ``assessment.rescore``):
 """
 from __future__ import annotations
 
+from statistics import median
+
 import csv
 import io
 import json
 
-from . import config
+from . import config, notices
 from .scoring import function_score_band_color, index_band_color, index_band_label
 
 RATING_COLOR = {"Good": "#c8d9f2", "Fair": "#f5e7a6", "Poor": "#f5b5b5"}
@@ -366,44 +368,9 @@ def build_pdf(result: dict) -> bytes:
     story.append(Paragraph(meta, styles["Normal"]))
     story.append(Spacer(1, 8))
     anchor = result.get("siteAnchor") or {}
-    if anchor.get("anchorKind") == "hrSurrogate":
-        clicked = anchor.get("clickedStream") or {}
-        routing_info = anchor.get("routing") or {}
-        clicked_name = clicked.get("gnisName") or "an unnamed stream"
-        dist = routing_info.get("routedDistanceFt")
-        dist_txt = (f"{dist:,.0f} ft downstream" if dist is not None
-                    else "downstream")
-        ratio = routing_info.get("daRatio")
-        ratio_txt = f"{ratio}" if ratio is not None else "unknown"
-        source = d.get("watershed_source") or ""
-        eng = d.get("watershed_engine") or {}
-        if source in ("site-engine", "not-calculated"):
-            if source == "site-engine":
-                ws_txt = (f"Watershed metrics describe the exact watershed at the "
-                          f"clicked point ({eng.get('areaSqkm')} km2), computed by "
-                          f"the STAF site engine v{eng.get('engineVersion')}.")
-            else:
-                ws_txt = ("The exact watershed could not be calculated "
-                          f"({eng.get('reason') or 'not calculated'}), so the "
-                          "watershed metrics are unavailable.")
-            if routing_info.get("declined"):
-                comid_txt = ("Reach-keyed evidence is unavailable past the "
-                             "substitution limit.")
-            else:
-                comid_txt = (f"Reach-keyed evidence comes from the nearest covered "
-                             f"reach, {d.get('comid')}, {dist_txt}.")
-            story.append(Paragraph(
-                f"<b>Stream outside the StreamCat lookup network.</b> The clicked "
-                f"stream ({clicked_name}, NHDPlus HR) is assessed at the clicked "
-                f"point. {ws_txt} {comid_txt} Drainage area ratio {ratio_txt} "
-                f"(limit {routing_info.get('daRatioLimit')}).", styles["Normal"]))
-        else:
-            story.append(Paragraph(
-                f"<b>Scored at a surrogate reach.</b> The clicked stream "
-                f"({clicked_name}, NHDPlus HR) is not on the scoring network. "
-                f"Results describe {d.get('gnis_name') or 'the nearest covered reach'} "
-                f"{dist_txt} on the covered network. Drainage area ratio {ratio_txt} "
-                f"(limit {routing_info.get('daRatioLimit')}).", styles["Normal"]))
+    w = notices.routed_warning(anchor, d)
+    if w:
+        story.append(Paragraph("<b>Warning.</b> " + " ".join(w["lines"]), styles["Normal"]))
         story.append(Spacer(1, 6))
     if rep.get("provisionalCoverage"):
         story.append(Paragraph(
@@ -487,6 +454,25 @@ def build_pdf(result: dict) -> bytes:
                     f"Bankfull height: {_h(geom.get('bankfull_stage'))} &middot; "
                     f"Low bank height: {_h(geom.get('floodplain_stage'))}")
         story.append(Paragraph(summary, styles["Normal"]))
+        cands = xs.get("candidates") or []
+        if len(cands) >= 2:
+            # the sampled sections along the reach, so the reader sees the spread
+            # the median default was chosen from (2026-09-04)
+            ers = [c["entrenchment_ratio"] for c in cands
+                   if c.get("entrenchment_ratio") is not None]
+            bhrs = [c["bank_height_ratio"] for c in cands
+                    if c.get("bank_height_ratio") is not None]
+            sel = cands[min(max(int(xs.get("selected", 0) or 0), 0), len(cands) - 1)]
+            parts = [f"{len(cands)} sections along the reach"]
+            if ers:
+                parts.append(f"entrenchment ratio {min(ers):.2f} to {max(ers):.2f} "
+                             f"(median {median(ers):.2f})")
+            if bhrs:
+                parts.append(f"bank-height ratio {min(bhrs):.2f} to {max(bhrs):.2f} "
+                             f"(median {median(bhrs):.2f})")
+            story.append(Paragraph(
+                ", ".join(parts) + f". The section at {sel.get('label') or 'the reach median'} "
+                "is shown.", styles["Normal"]))
         story.append(Spacer(1, 8))
 
     metric_rows = _ordered_rows(rep)

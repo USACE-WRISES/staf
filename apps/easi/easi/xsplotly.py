@@ -202,3 +202,35 @@ def figure(stations, elevs, *, thalweg: Optional[float] = None,
                           xanchor="right", yanchor="top", yshift=-46, showarrow=False,
                           font=dict(size=9, color="#9aa4b2"))
     return fw
+
+
+def sync_payload(src) -> tuple[dict, dict]:
+    """``(restyle_data, relayout_data)`` that replays ``src`` (a figure from
+    :func:`figure`) onto the live widget with one explicit value per trace for
+    every restyled property.
+
+    Assigning trace attributes inside ``batch_update`` lets plotly.py fill the
+    batched restyle's slots for traces whose value did not change with its
+    ``Undefined`` sentinel, which reaches plotly.js as null, and a null restyle
+    deletes the attribute. The terrain baseline (trace 0) is the constant
+    ``min(h) - 0.5`` for every profile, so a candidate switch with the same
+    point count silently dropped its ``y`` and the ground fill closed on itself
+    above the terrain (2026-09-04). Feed this to ``plotly_update`` instead.
+    """
+    traces = list(src.data)
+    restyle = {
+        "x": [list(t.x) for t in traces],
+        "y": [list(t.y) for t in traces],
+        "fillcolor": [t.fillcolor for t in traces],
+        "hovertemplate": [t.hovertemplate for t in traces],
+    }
+    lay = src.layout
+    relayout = {
+        "shapes": [s.to_plotly_json() for s in lay.shapes],
+        "annotations": [a.to_plotly_json() for a in lay.annotations],
+        "xaxis.autorange": False, "yaxis.autorange": False,
+        "xaxis.range": list(lay.xaxis.range), "yaxis.range": list(lay.yaxis.range),
+        "xaxis.title.text": lay.xaxis.title.text,
+        "yaxis.title.text": lay.yaxis.title.text,
+    }
+    return restyle, relayout
