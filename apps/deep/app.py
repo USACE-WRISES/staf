@@ -94,10 +94,15 @@ def _watershed_engine_text(d_all: dict, es: dict, running: bool) -> str:
     d_all = d_all or {}
     rec = d_all.get("siteEngine") or es.get("record") or {}
     ver = rec.get("engineVersion")
-    if d_all.get("watershedBasis") == "site-engine" or es.get("status") == "ok":
+    if d_all.get("watershedBasis") == "site-engine":
         return f"STAF site engine v{ver}" if ver else "STAF site engine"
+    # a covered site: the drawn basin is the V2 basin; the engine's exact
+    # watershed is computed beside it (its values score only on engine-fitted
+    # assessments, the pairing rule)
     if running or es.get("status") == "running":
-        return "STAF site engine (calculating)"
+        return "StreamCat lookup engine (NHDPlus V2 basin), exact watershed calculating"
+    if es.get("status") == "ok":
+        return "StreamCat lookup engine (NHDPlus V2 basin), exact watershed computed"
     if d_all.get("watershedBasis") == "nhdplus-v2-basin-of-surrogate":
         return "StreamCat lookup engine (nearest covered reach basin)"
     return "StreamCat lookup engine (NHDPlus V2 basin)"
@@ -1345,8 +1350,17 @@ def server(input, output, session_):  # noqa: C901
         if d is not None and status == "ok":
             d2 = dict(d); d2["siteEngine"] = state["record"]
             delin.set(d2)
-            ui.notification_show("Exact watershed ready. Desktop values now come from the "
-                                 "STAF site engine.", type="message", duration=6)
+            with reactive.isolate():
+                la = loaded_assessment()
+            if la is not None and assessments.predictor_source_of(la) != "streamcat":
+                ui.notification_show("Exact watershed ready. Desktop values now come from the "
+                                     "STAF site engine.", type="message", duration=6)
+            else:
+                # the pairing rule: engine values stay reference evidence on a
+                # StreamCat-fitted assessment (2026-09-05)
+                ui.notification_show("Exact watershed ready. Its values show as reference "
+                                     "beside the StreamCat values this assessment's curves "
+                                     "were fitted on.", type="message", duration=8)
         elif status != "ok":
             ui.notification_show(f"STAF site engine {status}: {rec.get('reason') or 'no detail'}. "
                                  "Desktop values stay on the StreamCat lookup engine, labeled.",
