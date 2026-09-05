@@ -37,8 +37,9 @@ def test_none_runs_every_family(monkeypatch):
     rec = engine.compute_site(40.3112, -83.0561)
     assert rec["input"]["config"]["metricFamilies"] is None
     assert "entrenchmentRatio" in rec["metrics"]
-    assert set(metrics_pkg.families()) >= {"dams", "landcover", "roads",
+    assert set(metrics_pkg.families()) >= {"baseflow", "dams", "landcover", "roads",
                                            "runoff", "soils", "xsection"}
+    assert "baseflowIndexPct" in rec["metrics"]
 
 
 def test_interactive_config_is_a_tighter_budget():

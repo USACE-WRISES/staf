@@ -15,7 +15,7 @@ on first use.
 from __future__ import annotations
 
 ENGINE_ID = "site-engine"
-ENGINE_VERSION = "0.2.2"
+ENGINE_VERSION = "0.3.0"
 
 from . import naming  # noqa: E402,F401  (pure vocabulary module, cheap import)
 

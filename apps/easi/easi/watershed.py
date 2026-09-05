@@ -28,7 +28,7 @@ from typing import Any, Callable, Optional
 STREAMCAT = "streamcat"
 SITE_ENGINE = "site-engine"
 ACRE_FT_PER_KM2_TO_M3_PER_KM2 = 1233.48184
-ENGINE_FAMILIES = ["dams", "landcover", "roads", "runoff", "soils"]
+ENGINE_FAMILIES = ["baseflow", "dams", "landcover", "roads", "runoff", "soils"]
 
 VALUE_KEYS = (
     "imperviousPct", "cropPct", "hayPct", "woodyWetlandPct", "herbWetlandPct",

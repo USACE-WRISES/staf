@@ -23,7 +23,7 @@ this vocabulary.
 | Coverage | The NHDPlus V2 network (about 1:100k) | Any NHD HR stream in CONUS, within the reach budget |
 | Runtime | Seconds (one REST call per COMID, cached) | Usually well under a minute, up to about five minutes on a large basin within the interactive budget (3,000 reaches, 190 hops); every consumer caches per site |
 | Reproducibility | A published dataset, citable by vintage | Deterministic for engine version plus pinned vintages, against live services |
-| Cannot produce | Anything off the V2 network | The EPA modeled indices (HYD, SED, CHEM, CONN, TEMP, HABT, prG_BMMI; `provenance.PERMANENT_EXCLUSIONS`), NRSA field observations, the base-flow index, precipitation and temperature normals, the catchment-scale AOI, road-stream crossings |
+| Cannot produce | Anything off the V2 network | The EPA modeled indices (HYD, SED, CHEM, CONN, TEMP, HABT, prG_BMMI; `provenance.PERMANENT_EXCLUSIONS`), NRSA field observations, precipitation and temperature normals, the catchment-scale AOI |
 | Produces differently | | Runoff is EROM-derived and labeled not equivalent to StreamCat `runoffws` (`metrics/runoff.py`); the riparian buffer is built from the HR flowline tree, not the V2 `rp100` buffer |
 
 ## Which engine each app uses

@@ -20,6 +20,7 @@ VINTAGES = {
     "nlcdBaseline": "2001",
     "tigerRoads": "current TIGERweb service",
     "nid": "current NID service",
+    "bfiGrid": "USGS base-flow index grid, Wolock 2003 (1 km)",
 }
 
 # Sources that exist only as per-COMID EPA model outputs and can never be

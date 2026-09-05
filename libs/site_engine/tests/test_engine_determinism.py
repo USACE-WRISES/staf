@@ -83,6 +83,8 @@ def test_two_runs_are_byte_identical(monkeypatch):
     assert a["reach"]["lengthFt"] is not None
     assert "imperviousPctWatershed" in a["metrics"]
     assert a["metrics"]["roadLengthKm"]["value"] == 0.0
+    assert a["metrics"]["roadCrossings"]["value"] == 0
+    assert 0 <= a["metrics"]["baseflowIndexPct"]["value"] <= 100   # the shipped grid
     assert a["metrics"]["damCount"]["value"] == 0
     assert a["metrics"]["meanAnnualFlowCfs"]["value"] == 0.8
     assert a["metrics"]["runoffDepthMm"]["value"] > 0
