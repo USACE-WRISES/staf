@@ -50,11 +50,13 @@ def test_layer_labels_name_the_engines():
     assert app.LAYER_SCORED == "Scored reach"
 
 
-def test_the_miss_copy_names_the_colors_and_the_engines():
+def test_the_miss_copy_is_one_short_instruction():
+    # the legend names the colors and the engines; the toast only says what
+    # to do (2026-09-04)
     from pathlib import Path
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "dark blue lines are scored by the StreamCat lookup engine" in app._MISS_TEXT
-    assert "cyan lines get an exact watershed from the STAF site engine" in app._MISS_TEXT
+    assert app._MISS_TEXT == ("No stream line within 150 ft of the click. "
+                              "Zoom in and click a line.")
     assert "—" not in app._MISS_TEXT and ";" not in app._MISS_TEXT
     assert "thin lines get a calculated watershed" not in src
     assert "blue stream line" not in src and "Click a blue stream" not in src

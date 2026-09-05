@@ -61,6 +61,7 @@ def test_features_in_bbox_and_by_comid_request_shapes(monkeypatch):
     feat = fabric.feature_by_comid(5214461)
     assert feat["properties"]["comid"] == 5214461 and seen[1]["limit"] == 1
     assert fabric.feature_by_comid(999) == {}          # unknown comid, service answered
+    fabric.clear_feature_memo()
     monkeypatch.setattr(fabric, "_get", lambda *a, **k: None)
     assert fabric.feature_by_comid(5214461) is None   # service failed
     assert fabric.features_in_bbox(0, 0, 1, 1) is None
@@ -111,3 +112,27 @@ def test_flowline_attrs_reads_fabric(monkeypatch):
     monkeypatch.setattr(fabric, "feature_by_comid", lambda comid, **k: {})
     out = delineation.flowline_attrs(5214461)
     assert out["gnis_name"] is None and "_flowline_error" not in out
+
+
+def test_feature_memo_answers_the_second_ask_without_a_request(monkeypatch):
+    # a routed click needs the covered reach twice (attributes, then the glow's
+    # geometry); the second ask is free, while {} and None are asked again
+    seen: list = []
+
+    def fake(params, *, timeout, retries=2):
+        seen.append(params.get("comid"))
+        if params.get("comid") == 5214461:
+            return _fc(_feat())
+        if params.get("comid") == 7:
+            return None
+        return _fc()
+    monkeypatch.setattr(fabric, "_get", fake)
+    a = fabric.feature_by_comid(5214461)
+    b = fabric.feature_by_comid(5214461)
+    assert a is b and seen == [5214461]
+    assert fabric.feature_by_comid(999) == {} and fabric.feature_by_comid(999) == {}
+    assert fabric.feature_by_comid(7) is None and fabric.feature_by_comid(7) is None
+    assert seen == [5214461, 999, 999, 7, 7]
+    fabric.clear_feature_memo()
+    fabric.feature_by_comid(5214461)
+    assert seen[-1] == 5214461

@@ -396,6 +396,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
   font-family: var(--font-head); font-weight: 600; border-radius: 8px 8px 0 0;
 }
 .easi-pane-body { padding: 12px 14px 16px; }
+.easi-pane-body hr { margin: 8px 0; }   /* the search-to-coordinates divider */
 .easi-instr {
   background: #f5f8fb; border-left: 3px solid var(--easi-accent); padding: 8px 10px;
   font-size: 12.5px; color: #33415c; margin-bottom: 10px; border-radius: 0 4px 4px 0;
@@ -495,7 +496,6 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .easi-fn-block .easi-cfg-row { padding-left: 10px; margin-left: 2px; border-left: 2px solid #e7ebf2; }
 
 /* place/stream search type-ahead dropdown (Photon) */
-.easi-ac-credit { font-size: 10px; color: #97a0b0; margin: 2px 0 0; }
 .easi-ac-menu {
   position: absolute; z-index: 1300; background: #fff;
   border: 1px solid var(--card-border); border-radius: 6px;
