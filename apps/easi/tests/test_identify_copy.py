@@ -50,6 +50,15 @@ def test_the_cue_is_not_printed_twice():
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=43"' in SRC
+    assert 'href="styles.css?v=44"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
+
+
+def test_modules_used_at_effect_level_are_imported_at_module_level():
+    # _sync_xsection_plot calls xsplotly.sync_payload without a local import; the
+    # first candidate switch raised NameError live (2026-09-04)
+    import re
+    head = SRC.split("from easi import (", 1)[1].split(")", 1)[0]
+    for name in ("notices", "xsplotly", "basin"):
+        assert re.search(rf"\b{name}\b", head), name

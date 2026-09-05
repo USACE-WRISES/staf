@@ -24,7 +24,7 @@ os.environ.setdefault("HYRIVER_CACHE_EXPIRE", str(7 * 24 * 3600))
 import anyio  # noqa: E402
 from shiny import App, reactive, render, ui  # noqa: E402
 
-from easi import (assessment, basin, batch_ui, bieger, config, delineation,  # noqa: E402
+from easi import (assessment, basin, batch_ui, notices, xsplotly, bieger, config, delineation,  # noqa: E402
                   geomorph, method_plot, methods as easi_methods, pipeline, report,
                   routing, scoring)
 from easi import network_display, viewport  # noqa: E402
@@ -304,7 +304,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=43"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=44"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=1", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -693,8 +693,9 @@ def _metric_table(rows, notes=None, *, outcomes=None, eci=None):
         ui.tags.th("Chem", {"title": "Chemical"}, class_="easi-col-map"),
         ui.tags.th("Bio", {"title": "Biological"}, class_="easi-col-map"),
         ui.tags.th("Index", class_="easi-col-adv"),
+        ui.tags.th("Scored at", class_="easi-col-adv"),
         ui.tags.th("Note", class_="easi-note-cell"))
-    n_cols = 10
+    n_cols = 11
     body = []
     order = {d: i for i, d in enumerate(_DISC_ORDER)}
     rows = sorted(rows, key=lambda r: (order.get(r["discipline"], 99), r["functionName"]))
@@ -727,6 +728,7 @@ def _metric_table(rows, notes=None, *, outcomes=None, eci=None):
             _fnscore_cell(r, meta),
             *map_cells,
             idx_cell,
+            ui.tags.td(r.get("anchorLabel") or "", class_="easi-col-adv"),
             ui.tags.td(note, class_="easi-note-cell easi-rep-note"),
             {"data-mid": mid},
             class_=("easi-row-ovr" if is_ovr else ""),
@@ -767,7 +769,7 @@ def _rollup_rows(outcomes, eci, *, aligned):
     values with no blank column between. After the values come a placeholder for the Index
     column (``easi-col-adv``, positioned *after* the mapping columns so it collapses with them
     when "Show advanced" is off without ever gapping the label from the values) and a note
-    cell — 10 columns total. ``aligned=False`` builds the full-width standalone table (label +
+    cell — 11 columns total. ``aligned=False`` builds the full-width standalone table (label +
     three values, no placeholders). Direct/Indirect/Weighted/Max carry ``easi-rollup-row``
     (revealed by "Show roll-up at bottom"); Outcome Sub-index and Ecosystem Condition Index
     always show, tinted by their condition band."""
@@ -788,6 +790,7 @@ def _rollup_rows(outcomes, eci, *, aligned):
     # after-the-values) Index column; the empty note cell keeps the row at 10 columns.
     def trail():
         return [ui.tags.td("", class_="easi-col-adv"),
+                ui.tags.td("", class_="easi-col-adv"),      # the Scored at column
                 ui.tags.td("", class_="easi-note-cell")] if aligned else []
 
     def row(label_th, cells, cls):
@@ -844,6 +847,35 @@ def _basin_block(d, rep):
     )
 
 
+def _xs_reach_table_ui(cands, selected, default):
+    """The reach's sampled sections side by side (one column each): station from
+    the upstream end, entrenchment ratio, bank-height ratio at the default
+    stages. The shown section is bold, the default carries a median tag."""
+    if not cands or len(cands) < 2:
+        return None
+
+    def cell(i, text, tag=False):
+        kids = [text] + ([ui.tags.small(" median", class_="easi-xs-median")] if tag else [])
+        return ui.tags.td(*kids, style=("font-weight:600;" if i == selected else ""))
+
+    def rt(v):
+        return f"{v:.2f}" if v is not None else "n/a"
+
+    head = ui.tags.tr(ui.tags.th("Section"),
+                      *[cell(i, c.get("label") or str(i + 1), i == default)
+                        for i, c in enumerate(cands)])
+    er = ui.tags.tr(ui.tags.th("Entrenchment ratio"),
+                    *[cell(i, rt(c.get("entrenchment_ratio"))) for i, c in enumerate(cands)])
+    bhr = ui.tags.tr(ui.tags.th("Bank-height ratio"),
+                     *[cell(i, rt(c.get("bank_height_ratio"))) for i, c in enumerate(cands)])
+    return ui.div(
+        ui.div("Reach cross-sections", class_="easi-xs-panel-title"),
+        ui.tags.table(ui.tags.tbody(head, er, bhr), class_="easi-tbl easi-xs-tbl easi-xs-reach"),
+        ui.p("Stations from the upstream end of the reach. The default is the section "
+             "whose ratios sit at the reach median.", class_="easi-xs-foot"),
+        class_="easi-xs-reach-wrap")
+
+
 def _xs_readonly_block(rep):
     """Read-only cross-section for the report modal: the geometry summary panel (left)
     beside the static plot image (right), in the report's usual 300px|1fr grid. No inputs,
@@ -872,7 +904,10 @@ def _xs_readonly_block(rep):
                    table, class_="easi-xs-panel")
     plot = ui.div(ui.tags.img(src=f"data:image/png;base64,{xs['png_b64']}"),
                   class_="easi-xsection")
-    return ui.div(panel, plot, class_="easi-xsection-wrap")
+    cands = xs.get("candidates") or []
+    sel = min(max(int(xs.get("selected", 0) or 0), 0), max(len(cands) - 1, 0))
+    return ui.TagList(ui.div(panel, plot, class_="easi-xsection-wrap"),
+                      _xs_reach_table_ui(cands, sel, sel))
 
 
 def _dl_buttons():
@@ -911,70 +946,16 @@ def _metric_toolbar():
     return ui.div(*items, class_="easi-metric-toolbar")
 
 
-_ANCHOR_GROUP_ORDER = {"watershed": 0, "clickedReach": 1, "clickedPoint": 2,
-                       "surrogateComid": 3, "surrogateWatershed": 4}
-
-
-def _routed_summary(anchor, d) -> tuple[str, str]:
-    """(bold lead, sentence) for a routed site, by the watershed policy that
-    ran: the exact watershed (auto) or the legacy surrogate."""
-    clicked = anchor.get("clickedStream") or {}
-    r = anchor.get("routing") or {}
-    dist = r.get("routedDistanceFt")
-    dist_txt = f"{dist:,.0f} ft downstream" if dist is not None else "downstream"
-    name = clicked.get("gnisName") or "unnamed stream"
-    ratio_txt = (f"Drainage area ratio {r.get('daRatio')} "
-                 f"(limit {_fmt_ratio_limit(r.get('daRatioLimit'))}).")
-    source = (d or {}).get("watershed_source") or ""
-    eng = (d or {}).get("watershed_engine") or {}
-    if source == "site-engine":
-        lead = "Stream outside the StreamCat lookup network. "
-        text = (f"{name} (NHDPlus HR) is assessed at the clicked point. Watershed "
-                f"metrics describe its exact watershed ({eng.get('areaSqkm')} km², "
-                f"STAF site engine v{eng.get('engineVersion')}). ")
-    elif source == "not-calculated":
-        lead = "Exact watershed not calculated. "
-        text = (f"{name} (NHDPlus HR) is outside the StreamCat lookup network and the "
-                f"STAF site engine could not compute its watershed "
-                f"({eng.get('reason') or 'not calculated'}). Watershed metrics are "
-                "unavailable. Use SFARI or DEEP for this site, or enter rating "
-                "overrides. ")
-    else:
-        lead = "Scored at a surrogate reach. "
-        text = (f"The clicked stream ({name}, NHDPlus HR) is not in the scoring "
-                f"network. Results describe "
-                f"{(d or {}).get('gnis_name') or 'the nearest covered reach'} "
-                f"{dist_txt}. ")
-        return lead, text + ratio_txt
-    if r.get("declined"):
-        text += ("Reach-keyed evidence (low flow, substrate, biological integrity) "
-                 "is unavailable past the substitution limit. ")
-    else:
-        text += (f"Reach-keyed evidence comes from the nearest covered reach "
-                 f"(COMID {(d or {}).get('comid')}, {dist_txt}). ")
-    return lead, text + ratio_txt
-
-
 def _anchor_banner(anchor, d):
-    """Banner for routed sites; None on the covered network.
-
-    With per-metric anchoring present, the banner carries the source table
-    (grouped by anchor) so a reader sees exactly which rows describe the exact
-    watershed, the clicked stream, and the nearest covered reach."""
-    if not anchor or anchor.get("anchorKind") != "hrSurrogate":
+    """The routed-site warning (easi.notices), None on the covered network. The
+    per-source metric lists that used to follow it live in the metric table's
+    "Scored at" column (advanced columns) since 2026-09-04."""
+    w = notices.routed_warning(anchor, d)
+    if not w:
         return None
-    lead, text = _routed_summary(anchor, d)
-    groups: dict[tuple, list[str]] = {}
-    for entry in (anchor.get("metricAnchors") or {}).values():
-        key = (_ANCHOR_GROUP_ORDER.get(entry.get("anchor"), 9), entry.get("label"))
-        groups.setdefault(key, []).append(entry.get("name") or "")
-    group_lines = [
-        ui.div(ui.tags.b(f"{label[:1].upper()}{label[1:]}: "), ", ".join(sorted(names)),
-               style="margin-top:.25rem;")
-        for (_o, label), names in sorted(groups.items())]
     return ui.div(
-        ui.div(ui.tags.b(lead), text),
-        *group_lines,
+        ui.div(ui.tags.b(f"\u26a0 {w['title']}")),
+        *[ui.div(line, style="margin-top:.25rem;") for line in w["lines"]],
         style=("background:#fff7e0;border:1px solid #e6c96b;border-radius:6px;"
                "padding:.5rem .7rem;margin:0 0 .6rem;font-size:13px;"))
 
@@ -2344,25 +2325,12 @@ def server(input, output, session):
         anchor = (delin() or {}).get("siteAnchor") or {}
         if anchor.get("anchorKind") != "hrSurrogate":
             return None
-        clicked_s = anchor.get("clickedStream") or {}
         d = (delin() or {}).get("delineation") or {}
-        source = d.get("watershed_source") or ""
-        r = anchor.get("routing") or {}
-        if source == "site-engine":
-            text = ("Exact watershed: watershed metrics come from the STAF site "
-                    "engine. Reach-keyed metrics "
-                    + ("are unavailable past the substitution limit."
-                       if r.get("declined") else
-                       "describe the nearest covered reach downstream."))
-        elif source == "not-calculated":
-            text = ("Exact watershed not calculated: watershed metrics are "
-                    "unavailable for this stream.")
-        else:
-            text = (f"Surrogate reach: results describe "
-                    f"{d.get('gnis_name') or 'the nearest covered reach'}, not the "
-                    f"clicked stream ({clicked_s.get('gnisName') or 'unnamed'}).")
+        w = notices.routed_warning(anchor, d)
+        if not w:
+            return None
         return ui.div(
-            "⚠ " + text,
+            ui.tags.b(f"\u26a0 {w['title']}: "), " ".join(w["lines"]),
             style=("background:#fff7e0;border:1px solid #e6c96b;border-radius:6px;"
                    "padding:.3rem .5rem;margin:.3rem 0;font-size:12px;"))
 
@@ -2492,7 +2460,8 @@ def server(input, output, session):
         plot = (ui.div(output_widget("xsection_plot", height="100%"), class_="easi-xsection")
                 if _HAS_PLOTLY else ui.output_ui("xsection"))
         right = ui.div(head, plot, class_="easi-xs-right")
-        return ui.div(panel, right, class_="easi-xsection-wrap easi-xs-in-card")
+        return ui.TagList(ui.div(panel, right, class_="easi-xsection-wrap easi-xs-in-card"),
+                          ui.output_ui("xs_reach_table"))
 
     @render.ui
     def worksheet():
@@ -2835,19 +2804,18 @@ def server(input, output, session):
             block, src = _xs_src_figure()
             if w is None or not block:
                 return
-            with w.batch_update():        # one atomic client update -> no flash
-                for wt, st in zip(w.data, src.data):
-                    wt.x, wt.y = st.x, st.y
-                    wt.fillcolor = st.fillcolor        # blue water vs. transparent (no bankfull)
-                    wt.hovertemplate = st.hovertemplate  # carries the unit in the bed-line hover
-                w.layout.shapes = tuple(s.to_plotly_json() for s in src.layout.shapes)
-                w.layout.annotations = tuple(a.to_plotly_json() for a in src.layout.annotations)
-                w.layout.xaxis.autorange = False
-                w.layout.yaxis.autorange = False
-                w.layout.xaxis.range = src.layout.xaxis.range
-                w.layout.yaxis.range = src.layout.yaxis.range
-                w.layout.xaxis.title.text = src.layout.xaxis.title.text
-                w.layout.yaxis.title.text = src.layout.yaxis.title.text
+            # One explicit update (restyle + relayout in a single message). Never
+            # per-attribute assignment inside batch_update: an unchanged trace value
+            # (the constant terrain baseline) became an Undefined slot, reached the
+            # browser as null, and deleted that trace's y, so the ground fill drew
+            # above the terrain after a candidate switch (2026-09-04).
+            restyle, relayout = xsplotly.sync_payload(src)
+            w.plotly_update(restyle_data=restyle, relayout_data=relayout,
+                            trace_indexes=list(range(len(w.data))))
+
+    @render.ui
+    def xs_reach_table():
+        return _xs_reach_table_ui(_xs_candidates(), _xs_sel_idx(), _xs_default_sel())
 
     @render.ui
     def xs_selector():
@@ -2856,7 +2824,8 @@ def server(input, output, session):
             return None
         i = _xs_sel_idx()
         label = cands[i].get("label") or str(i + 1)
-        return ui.span(f"{label} ({i + 1} of {len(cands)})", class_="easi-xs-switch-lbl")
+        tag = " \u00b7 median" if i == _xs_default_sel() else ""
+        return ui.span(f"{label}{tag} ({i + 1} of {len(cands)})", class_="easi-xs-switch-lbl")
 
     @render.ui
     def xs_summary():

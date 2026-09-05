@@ -249,6 +249,11 @@ h1, h2, h3, h4, h5, h6, .card-header { font-family: var(--font-head); }
 .easi-xs-tbl { margin-bottom: 8px; }
 .easi-xs-tbl th { background: transparent; font-weight: 600; white-space: nowrap; }
 .easi-xs-tbl td { text-align: right; }
+.easi-xs-reach-wrap { margin: 8px 0 0; overflow-x: auto; }
+.easi-xs-reach { font-size: 12px; }
+.easi-xs-reach td { text-align: center; white-space: nowrap; }
+.easi-xs-reach th { white-space: nowrap; }
+.easi-xs-median { color: #1f6fc0; font-weight: 600; }
 .easi-xs-foot { font-size: 10.5px; color: #993366; margin: 0 0 8px; }
 .easi-xs-fields { display: flex; gap: 10px; }
 .easi-xs-fields .shiny-input-container { flex: 1; margin-bottom: 6px; }

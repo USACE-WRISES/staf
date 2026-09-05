@@ -43,10 +43,10 @@ def basin_characteristics(ctx) -> dict:
     if routed:
         provider = layer.get("provider")
         if provider == "site-engine":
-            meta = layer.get("meta") or {}
+            # one area row only: the engine's polygon area and the HR drainage
+            # area agree at two decimals and read as a duplicate (2026-09-04);
+            # the CSV keeps "Exact watershed area (km2)" as the record
             rows.append(["Watershed engine", str(layer.get("label") or "STAF site engine")])
-            if meta.get("areaSqkm") is not None:
-                rows.append(["Exact watershed area", fmt_km2(meta["areaSqkm"])])
         elif provider is None:
             rows.append(["Watershed engine",
                          f"unavailable ({layer.get('unavailableReason') or 'not calculated'})"])
