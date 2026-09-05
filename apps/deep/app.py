@@ -37,7 +37,8 @@ from deep.metrics import computed as _computed  # noqa: E402
 from deep.pipeline import DEFAULT_REACH_FT  # noqa: E402
 
 try:
-    from ipyleaflet import GeoJSON, LayersControl, Map, Marker, ScaleControl, TileLayer
+    from ipyleaflet import (CircleMarker, GeoJSON, LayersControl, Map, Marker,  # noqa: F401
+                        ScaleControl, TileLayer)
     from ipywidgets import Layout
     from shinywidgets import output_widget, reactive_read, render_widget
     _HAS_MAP = True
@@ -75,6 +76,31 @@ def _fmt_ft(value) -> str:
         return f"{float(value):,.0f} ft"
     except (TypeError, ValueError):
         return "unknown"
+
+
+POINT_STYLE = {"radius": 7, "color": "#1f3b73", "fill_color": "#4c8ef5",
+               "fill_opacity": 0.95, "weight": 2}
+
+
+def _point_marker(lat: float, lon: float):
+    """The selected point as a small circle, so the reach's downstream end
+    stays visible under it (the tall pin and its shadow covered it, 2026-09-04)."""
+    return CircleMarker(location=(lat, lon), name="Selected point", **POINT_STYLE)
+
+
+def _watershed_engine_text(d_all: dict, es: dict, running: bool) -> str:
+    """The Basin pane's engine row: whose watershed the values describe."""
+    es = es or {}
+    d_all = d_all or {}
+    rec = d_all.get("siteEngine") or es.get("record") or {}
+    ver = rec.get("engineVersion")
+    if d_all.get("watershedBasis") == "site-engine" or es.get("status") == "ok":
+        return f"STAF site engine v{ver}" if ver else "STAF site engine"
+    if running or es.get("status") == "running":
+        return "STAF site engine (calculating)"
+    if d_all.get("watershedBasis") == "nhdplus-v2-basin-of-surrogate":
+        return "StreamCat lookup engine (nearest covered reach basin)"
+    return "StreamCat lookup engine (NHDPlus V2 basin)"
 
 # Four steps, the same shape EASI and SFARI use. Nothing sits between delineating and
 # measuring: the assessment follows from the point, so Basin resolves it and reports it
@@ -448,11 +474,7 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
     if running or st == "running":
         return ui.div(_engine_progress_text(prog), class_="deep-engine-line")
     if st == "ok":
-        rec = es.get("record") or {}
-        ws = rec.get("watershed") or {}
-        return ui.div(f"{engine_prefill.engine_label(rec.get('engineVersion'))}: exact watershed "
-                      f"{ws.get('areaSqkm')} km2 over {ws.get('nReaches')} reaches.",
-                      class_="deep-engine-line")
+        return None      # the Watershed engine row says it (2026-09-04)
     if st in ("failed", "refused", "unavailable"):
         return ui.div(f"STAF site engine {st}: {es.get('reason') or 'no detail'}. Desktop values "
                       "come from the StreamCat lookup engine, labeled with the reach they "
@@ -461,13 +483,11 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
 
 
 def _engine_wanted_for(la) -> bool:
-    """A covered site runs the engine in the background only when its values can
-    enter scoring: an engine-built bundle, or the pairing mode that labels rather
-    than refuses. StreamCat bundles at covered sites never pay the engine's minutes."""
-    if la is None:
-        return False
-    return (assessments.predictor_source_of(la) != "streamcat"
-            or curves.ENGINE_PAIRING_MODE == "label")
+    """Every covered site runs the engine in the background once an assessment
+    is loaded (2026-09-04): the exact watershed and its labeled values at every
+    site. On a StreamCat-fitted assessment those values stay reference evidence
+    under the pairing rule; the polygon and the labels are what the minute buys."""
+    return la is not None
 
 
 def _source_line(m, rc):
@@ -590,7 +610,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=13"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=14"),
                     ui.tags.link(rel="stylesheet", href="deep.css?v=8"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -958,8 +978,7 @@ def server(input, output, session_):  # noqa: C901
             if marker is not None and marker in _MAP.layers:
                 marker.location = (slat, slon)
             else:
-                _add_layer("marker", Marker(location=(slat, slon), draggable=False,
-                                            title="Selected point", name="Selected point"))
+                _add_layer("marker", _point_marker(slat, slon))
             ui.update_numeric("lat", value=round(slat, 5))
             ui.update_numeric("lon", value=round(slon, 5))
 
@@ -1167,6 +1186,8 @@ def server(input, output, session_):  # noqa: C901
             if res.get("reach_geojson"):
                 _add_layer("reach", GeoJSON(data=res["reach_geojson"], style=REACH_STYLE,
                                             name="Assessment reach"))
+            if _layers.get("marker") is not None:
+                _add_layer("marker", _layers["marker"])      # the point stays on top
             d = res.get("delineation") or {}
             if _HAS_MAP:
                 bounds = delineation.geojson_bounds(res.get("watershed_geojson"),
@@ -1546,21 +1567,24 @@ def server(input, output, session_):  # noqa: C901
 
         def row(label, val):
             return ui.div(ui.span(label), ui.tags.b(str(val)), class_="b-row")
-        rows = [row("Drainage area", _fmt_km2(d.get("drainage_area_sqkm"))),
-                row("Reach length", _fmt_ft(d.get("reach_length_ft"))),
-                row("Stream order", d.get("stream_order"))]
+        # The EASI pane's rows (2026-09-04): the engine, the drainage area once,
+        # the reach length, the ids that matter. The rest stays in the report.
+        rows = [row("Watershed engine", _watershed_engine_text(
+                    d_all, engine_state(), engine_task.status() == "running")),
+                row("Drainage area", _fmt_km2(d.get("drainage_area_sqkm"))),
+                row("Reach length", _fmt_ft(d.get("reach_length_ft")))]
         if d.get("network") == "nhdplus-hr":
             rows.append(row("NHDPlusID", d.get("nhdplus_id")))
-            rows.append(row("Covered reach", f'COMID {d["comid"]}' if d.get("comid")
-                            else "none within the substitution limit"))
+            if d.get("comid"):
+                rows.append(row("Evidence reach COMID", d.get("comid")))
         else:
             rows.append(row("COMID", d.get("comid")))
-        rows.append(row("Watershed basis", report.watershed_basis_label(d_all)))
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
             *rows,
             ui.output_ui("engine_line"),
-            class_="easi-basin-card")
+            class_="easi-basin-card",
+        )
 
     @render.ui
     def engine_line():
@@ -2359,9 +2383,7 @@ def server(input, output, session_):  # noqa: C901
                                                 name="Assessment reach"))
                 dd = d.get("delineation") or {}
                 if dd.get("snapped_lat") is not None:
-                    _add_layer("marker", Marker(location=(dd["snapped_lat"], dd["snapped_lon"]),
-                                                draggable=False, title="Selected point",
-                                                name="Selected point"))
+                    _add_layer("marker", _point_marker(dd["snapped_lat"], dd["snapped_lon"]))
                     b = delineation.geojson_bounds(d.get("watershed_geojson"), d.get("reach_geojson"))
                     if b:
                         _MAP.fit_bounds(b)

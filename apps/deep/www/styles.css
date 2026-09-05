@@ -372,7 +372,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .easi-leftpane {
   position: absolute; top: 62px; left: 12px; width: 352px; max-height: calc(100vh - 86px);
   z-index: 1100; background: #fff; border: 1px solid var(--card-border); border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, .18); overflow-y: auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .18); overflow-y: auto; overflow-x: hidden;
 }
 .easi-pane-head {
   background: var(--easi-accent); color: #fff; padding: 9px 14px;

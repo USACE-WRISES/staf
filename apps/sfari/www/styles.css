@@ -372,7 +372,7 @@ html, body { height: 100%; margin: 0; overflow: hidden; }
 .easi-leftpane {
   position: absolute; top: 62px; left: 12px; width: 352px; max-height: calc(100vh - 86px);
   z-index: 1100; background: #fff; border: 1px solid var(--card-border); border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, .18); overflow-y: auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, .18); overflow-y: auto; overflow-x: hidden;
 }
 .easi-pane-head {
   background: var(--easi-accent); color: #fff; padding: 9px 14px;
@@ -549,7 +549,7 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 @keyframes easi-spin { to { transform: rotate(360deg); } }
 
 /* row of pane action buttons */
-.easi-pane-actions { display: flex; gap: 8px; margin-top: 12px; }
+.easi-pane-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 /* keep labels on one line so a narrow button (e.g. "Compute & report") does not
    wrap to two lines and stretch the whole row taller via align-items: stretch;
    trim the vertical padding so the single-line buttons stay compact */

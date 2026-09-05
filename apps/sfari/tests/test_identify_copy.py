@@ -51,7 +51,7 @@ def test_numbers_are_formatted():
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=18"' in SRC
+    assert 'href="styles.css?v=19"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
 
@@ -64,3 +64,34 @@ def test_snap_helper_reads_the_hr_id():
     hit = flowlines.nearest_point_on_lines(fc, 40.3101, -83.055, id_prop="nhdplusid")
     assert hit is not None and hit[3] == 10000600001216 and hit[2] < 100
     assert flowlines.nearest_point_on_lines(fc, 40.3101, -83.055)[3] is None   # no comid property
+
+
+def test_the_selected_point_is_a_small_circle():
+    assert "def _point_marker(" in SRC and "CircleMarker(location=(lat, lon)" in SRC
+    assert 'Marker(location=' not in SRC.replace("CircleMarker(location=", "")
+    assert app.POINT_STYLE["radius"] <= 8
+    # the point is re-added above the watershed and reach after a draw
+    assert '_add_layer("marker", _layers["marker"])' in SRC
+
+
+def test_the_pane_clips_horizontal_overflow():
+    assert "overflow-y: auto; overflow-x: hidden;" in CSS
+
+
+def test_basin_pane_matches_easi_plus_the_nhdplusid():
+    card = SRC.split("def basin_card():", 1)[1].split("def engine_line():", 1)[0]
+    for gone in ('"Stream order"', '"Watershed basis"', '"Covered reach"',
+                 "none within the substitution limit"):
+        assert gone not in card, gone
+    for kept in ('row("Watershed engine"', 'row("Drainage area"', 'row("Reach length"',
+                 'row("NHDPlusID"', 'row("Evidence reach COMID"'):
+        assert kept in card, kept
+    assert app._watershed_engine_text({"watershedBasis": "site-engine",
+                                       "siteEngine": {"engineVersion": "0.2.2"}}, {}, False) \
+        == "STAF site engine v0.2.2"
+    assert app._watershed_engine_text({}, {"status": "running"}, True) == "STAF site engine (calculating)"
+    assert app._watershed_engine_text({}, {}, False) == "StreamCat lookup engine (NHDPlus V2 basin)"
+    assert app._watershed_engine_text({"watershedBasis": "nhdplus-v2-basin-of-surrogate"}, {}, False) \
+        == "StreamCat lookup engine (nearest covered reach basin)"
+    # the engine summary line is silent once the engine answered
+    assert app._engine_line_ui({"status": "ok", "record": {"engineVersion": "0.2.2"}}, False, {}) is None

@@ -40,7 +40,8 @@ from easi.snapcard import hr_snap_card  # noqa: E402
 FT_PER_M = 3.28083989501312
 
 try:
-    from ipyleaflet import GeoJSON, LayersControl, Map, Marker, ScaleControl, TileLayer
+    from ipyleaflet import (CircleMarker, GeoJSON, LayersControl, Map, Marker,  # noqa: F401
+                        ScaleControl, TileLayer)
     from ipywidgets import Layout
     from shinywidgets import output_widget, reactive_read, render_widget
     _HAS_MAP = True
@@ -100,6 +101,16 @@ FLOW_ZOOM = 14          # NHD vectors appear at/above this zoom
 SNAP_TOL_FT = 150.0     # click must land within this distance of a flowline
 _MISS_TEXT = (f"No stream line within {int(SNAP_TOL_FT)} ft of the click. "
               "Zoom in and click a line.")
+
+
+POINT_STYLE = {"radius": 7, "color": "#1f3b73", "fill_color": "#4c8ef5",
+               "fill_opacity": 0.95, "weight": 2}
+
+
+def _point_marker(lat: float, lon: float):
+    """The selected point as a small circle, so the reach's downstream end
+    stays visible under it (the tall pin and its shadow covered it, 2026-09-04)."""
+    return CircleMarker(location=(lat, lon), name="Selected point", **POINT_STYLE)
 BATCH_UI_MAX_SITES = 10  # per-batch cap in this UI; the engine accepts batch_api.MAX_SITES (150)
 
 STEP_IDENTIFY, STEP_BASIN, STEP_ASSESS, STEP_REPORT = "identify", "basin", "assess", "report"
@@ -304,7 +315,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=44"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=45"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=1", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -1258,8 +1269,7 @@ def server(input, output, session):
             if marker is not None and marker in _MAP.layers:
                 marker.location = (slat, slon)
             else:
-                _add_layer("marker", Marker(location=(slat, slon), draggable=False,
-                                            title="Selected point", name="Selected point"))
+                _add_layer("marker", _point_marker(slat, slon))
             ui.update_numeric("lat", value=round(slat, 5))
             ui.update_numeric("lon", value=round(slon, 5))
 
@@ -1699,6 +1709,8 @@ def server(input, output, session):
             if res.get("reach_geojson"):
                 _add_layer("reach", GeoJSON(data=res["reach_geojson"], style=REACH_STYLE,
                                             name="Assessment reach"))
+            if _layers.get("marker") is not None:
+                _add_layer("marker", _layers["marker"])      # the point stays on top
             d = res.get("delineation") or {}
             if _HAS_MAP:
                 bounds = delineation.geojson_bounds(res.get("watershed_geojson"),
