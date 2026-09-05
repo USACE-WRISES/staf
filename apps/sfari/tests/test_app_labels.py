@@ -66,16 +66,12 @@ def test_copy_has_no_em_dash_and_names_both_engines():
 
 
 def test_map_styles_exist():
-    assert app.HR_FLOWLINE_STYLE["color"] != app.FLOWLINE_STYLE["color"]
-    assert "dashArray" in app.ROUTE_STYLE
-    # 2026-09-02: both networks legible and hover-highlighted; the route line
-    # stays the only dashed one
-    assert app.FLOWLINE_STYLE["weight"] >= 3
-    assert app.HR_FLOWLINE_STYLE["weight"] == app.FLOWLINE_STYLE["weight"]
-    assert not hasattr(app, "FLOWLINE_HOVER_STYLE")    # a hover restyle flashed the layer
-    assert "dashArray" not in app.FLOWLINE_STYLE and "dashArray" not in app.HR_FLOWLINE_STYLE
-    assert "—" not in app._MISS_TEXT      # the legend names the colors now
-
+    # one network (2026-09-05): every NHD stream in the dark blue, no second
+    # style, no route line, no hover restyle
+    assert app.FLOWLINE_STYLE["weight"] >= 3 and "dashArray" not in app.FLOWLINE_STYLE
+    for gone in ("HR_FLOWLINE_STYLE", "ROUTE_STYLE", "FLOWLINE_HOVER_STYLE"):
+        assert not hasattr(app, gone), gone
+    assert "—" not in app._MISS_TEXT
 
 def test_field_forms_output_stays_alive_while_the_modal_is_hidden():
     # The modal's output binds while Bootstrap's fade still hides it; a

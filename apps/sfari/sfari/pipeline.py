@@ -1,30 +1,28 @@
 """Staged analysis orchestration (SFARI).
 
-Mirrors EASI's two-stage workflow so the UI can show staged feedback:
+Two stages so the UI can show staged feedback:
 
-  1. ``delineate_only(lat, lon, reach_ft)`` — snap -> upstream watershed + reach
-     (copied verbatim from EASI; the delineation engine is method-agnostic).
-     ``delineate_from_engine`` builds the same result shape from a STAF site
-     engine record for a stream outside NHDPlus V2 (the exact watershed).
-  2. ``pull_evidence_only(ctx_inputs, ...)`` — pull desktop GIS evidence for the
-     supportable metrics (added in Phase 3).
+  1. ``delineate_from_engine(record, lat, lon, reach_ft)`` builds the
+     delineation result from a STAF site engine record: the exact watershed,
+     the engine's assessment reach, and the site attributes. Every site goes
+     this way (2026-09-05); there is no NHDPlus V2 basin lookup.
+  2. ``pull_evidence_only(ctx_inputs, ...)`` pulls desktop evidence for the
+     supportable metrics.
 
-All are pure async contracts invoked from a worker thread (no reactive access).
+Pure contracts invoked from a worker thread (no reactive access).
 """
 from __future__ import annotations
 
 from typing import Optional
 
-import anyio
-
 from . import delineation, engine_prefill
 
 DEFAULT_REACH_FT = delineation.DEFAULT_REACH_FT
 
-# ``delineation["watershedBasis"]`` vocabulary.
-BASIS_V2_BASIN = "nhdplus-v2-basin"              # the NLDI basin of the V2 reach
+# ``delineation["watershedBasis"]`` vocabulary: one value since 2026-09-05.
+# Sessions saved earlier may carry "nhdplus-v2-basin" or
+# "nhdplus-v2-basin-of-surrogate"; the report still labels those.
 BASIS_SITE_ENGINE = "site-engine"                # the exact watershed (STAF site engine)
-BASIS_SURROGATE_BASIN = "nhdplus-v2-basin-of-surrogate"   # the labeled fallback
 
 # The cross-section (Manning) producer in app.py writes evidence entries stamped with
 # this exact source string; it is the ONLY thing that distinguishes an attached
@@ -49,104 +47,23 @@ def merge_pulled_evidence(existing: dict, pulled: dict) -> dict:
     return merged
 
 
-def _error(msg: str, lat: float, lon: float, reach_ft: float) -> dict:
-    return {"status": "error", "message": msg,
-            "input": {"lat": lat, "lon": lon, "reach_length_ft": reach_ft}}
-
-
-async def delineate_only(lat: float, lon: float,
-                         reach_length_ft: float = DEFAULT_REACH_FT,
-                         comid: Optional[int] = None,
-                         anchor: Optional[dict] = None) -> dict:
-    """Snap -> upstream watershed + reach (no evidence).
-
-    When ``comid`` is given (the user clicked an NHD flowline vector), delineation
-    uses it directly; otherwise the point is snapped server-side. ``anchor`` is
-    a siteAnchor payload from ``hr_site`` (a covered click's ``v2Direct`` anchor
-    or, for the labeled fallback on an HR-only site, its ``hrSurrogate`` anchor);
-    absent, a covered anchor is synthesized. Returns a JSON-serializable dict
-    with the delineation, map overlays, and the ``ctx_inputs`` needed for the
-    later evidence pull; or ``{"status": "error", ...}``.
-    """
-    try:
-        d = await anyio.to_thread.run_sync(
-            lambda: delineation.run_delineation(
-                lat, lon, reach_length_ft,
-                comid=comid, snapped_lat=lat, snapped_lon=lon))
-    except Exception as exc:  # pragma: no cover - network guard
-        return _error(f"delineation failed: {exc}", lat, lon, reach_length_ft)
-
-    if d.comid is None:
-        return _error("No NHD stream found near this point. Click on or near a "
-                      "mapped stream (CONUS only).", lat, lon, reach_length_ft)
-
-    if anchor is None:
-        from . import hr_site
-        anchor = hr_site.v2_anchor(d.comid, lat, lon, d.snapped_lat, d.snapped_lon)
-    scored = anchor.setdefault("scoredReach", {})
-    if scored.get("gnisName") is None:
-        scored["gnisName"] = d.gnis_name
-    if scored.get("drainageAreaSqkm") is None:
-        scored["drainageAreaSqkm"] = d.drainage_area_sqkm
-    basis = (BASIS_SURROGATE_BASIN if anchor.get("anchorKind") == "hrSurrogate"
-             else BASIS_V2_BASIN)
-
-    ctx_inputs = {
-        "lat": d.snapped_lat or lat, "lon": d.snapped_lon or lon, "comid": d.comid,
-        "huc8": d.huc8, "watershed_geojson": d.watershed_geojson,
-        "reach_geojson": d.reach_geojson, "drainage_area_sqkm": d.drainage_area_sqkm,
-        "slope": d.slope, "fcode": d.fcode, "stream_order": d.stream_order,
-        "sinuosity": d.sinuosity, "siteAnchor": anchor, "watershedBasis": basis,
-    }
-    return {
-        "status": "ok",
-        "siteAnchor": anchor,
-        "watershedBasis": basis,
-        "input": {"lat": lat, "lon": lon, "reach_length_ft": reach_length_ft},
-        "delineation": {
-            "comid": d.comid,
-            "gnis_name": d.gnis_name or "(unnamed reach)",
-            "network": "nhdplus-v2",
-            "huc8": d.huc8,
-            "huc12": None,
-            "drainage_area_sqkm": d.drainage_area_sqkm,
-            "slope": d.slope,
-            "stream_order": d.stream_order,
-            "sinuosity": d.sinuosity,
-            "fcode": d.fcode,
-            "snapped_lat": d.snapped_lat,
-            "snapped_lon": d.snapped_lon,
-            "watershed_area_sqkm": round(d.watershed_area_sqkm, 2)
-            if d.watershed_area_sqkm else None,
-            "reach_length_ft": d.reach_length_ft,
-            "warnings": d.warnings,
-        },
-        "watershed_geojson": d.watershed_geojson,
-        "reach_geojson": d.reach_geojson,
-        "ctx_inputs": ctx_inputs,
-    }
-
-
-def delineate_from_engine(record: dict, anchor: dict, lat: float, lon: float,
+def delineate_from_engine(record: dict, lat: float, lon: float,
                           reach_length_ft: float = DEFAULT_REACH_FT) -> dict:
-    """The ``delineate_only`` result shape from a STAF site engine record.
+    """The delineation result from a STAF site engine record.
 
-    For a stream outside NHDPlus V2: the exact watershed is THE watershed, the
-    engine reach is the assessment reach, and the COMID is the nearest covered
-    reach from the anchor (None when the routing was declined), which keys the
-    labeled StreamCat and NRSA evidence. Pure (no I/O); the record must be
+    The exact watershed is THE watershed, the engine reach is the assessment
+    reach, and the site is identified by its NHDPlusID (a COMID rides along
+    only when the engine reports one). Pure (no I/O); the record must be
     ``status == "ok"``.
     """
     site = record.get("site") or {}
     ws = record.get("watershed") or {}
     reach = record.get("reach") or {}
-    from . import hr_site
-    comid = None if hr_site.declined(anchor) else (anchor.get("scoredReach") or {}).get("comid")
     reachcode = site.get("reachcode") or ""
     warnings = list(ws.get("warnings") or []) + list(reach.get("warnings") or [])
     stripped = engine_prefill.strip_geometry(record)
     delin = {
-        "comid": comid,
+        "comid": site.get("comid"),
         "nhdplus_id": site.get("nhdplusId"),
         "gnis_name": site.get("gnisName") or "(unnamed stream)",
         "network": "nhdplus-hr",
@@ -167,16 +84,15 @@ def delineate_from_engine(record: dict, anchor: dict, lat: float, lon: float,
     ctx_inputs = {
         "lat": site.get("snapLat") if site.get("snapLat") is not None else lat,
         "lon": site.get("snapLon") if site.get("snapLon") is not None else lon,
-        "comid": comid, "huc8": delin["huc8"],
+        "comid": site.get("comid"), "huc8": delin["huc8"],
         "watershed_geojson": ws.get("polygon"), "reach_geojson": reach.get("geometry"),
         "drainage_area_sqkm": delin["drainage_area_sqkm"], "slope": site.get("slope"),
         "fcode": site.get("fcode"), "stream_order": site.get("streamOrder"),
-        "sinuosity": site.get("sinuosity"), "siteAnchor": anchor,
+        "sinuosity": site.get("sinuosity"),
         "watershedBasis": BASIS_SITE_ENGINE, "site_engine": stripped,
     }
     return {
         "status": "ok",
-        "siteAnchor": anchor,
         "watershedBasis": BASIS_SITE_ENGINE,
         "siteEngine": stripped,
         "input": {"lat": lat, "lon": lon, "reach_length_ft": reach_length_ft},
@@ -193,7 +109,7 @@ async def pull_evidence_only(ctx_inputs: dict, *, progress: Optional[dict] = Non
 
     ``engine`` is the app's site-engine state (``{"status", "record", "reason"}``);
     None runs the engine inline. Returns ``{"status": "ok", "evidence":
-    {metricId: EvidenceResult-dict}}``. Never raises — individual sources degrade
+    {metricId: EvidenceResult-dict}}``. Never raises; individual sources degrade
     to ``status='unavailable'``.
     """
     from . import evidence

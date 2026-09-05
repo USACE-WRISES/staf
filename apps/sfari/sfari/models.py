@@ -30,21 +30,19 @@ class EvidenceResult:
     note: str = ""
     # Provenance of the entry itself: which engine or service produced it.
     #   "engine"    the STAF site engine (exact watershed)
-    #   "streamcat" the StreamCat lookup engine (COMID-keyed StreamCat values)
+    #   "streamcat" the StreamCat lookup engine (sessions saved before 2026-09-05;
+    #               SFARI no longer produces these)
     #   "pull"      other direct services (NWIS, WQP, NWI, NID, TIGER, NHD VAAs)
     # Cross-section attach entries keep their source-string convention.
     # Additive with safe defaults so saved sessions round-trip unchanged.
     origin: str = "pull"
     engine_version: Optional[str] = None
-    # The reach a COMID-keyed value describes on a site outside NHDPlus V2
-    # ("nearest covered reach, COMID x, N ft downstream, DA ratio r"); empty
-    # on covered sites and for values that are not COMID-keyed.
+    # Legacy provenance from sessions saved before 2026-09-05 (kept so those
+    # files still open): the reach a StreamCat value described, the reason it
+    # stood in for the engine, and the flag that it was about to be replaced.
+    # New entries never set them.
     anchor_label: str = ""
-    # Set when a StreamCat value stands in because the site engine failed or
-    # refused: the plain reason, shown beside the value.
     fallback_reason: str = ""
-    # True while the site engine is still running on a covered site and this
-    # StreamCat value will be replaced by the exact-watershed value.
     upgrade_pending: bool = False
 
     def to_dict(self) -> dict:

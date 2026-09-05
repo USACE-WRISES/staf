@@ -1,5 +1,5 @@
 """The STAF site engine bridge: availability, one ``compute_site`` with the
-interactive budget and SFARI's five families, never raising, the flattened
+interactive budget and SFARI's six families, never raising, the flattened
 metric values, the labels, and geometry stripping. Fully offline."""
 from __future__ import annotations
 
@@ -79,19 +79,14 @@ def test_engine_metrics_flatten_only_ok_records():
     assert engine_prefill.engine_metrics(None) == {}
 
 
-def test_labels_name_the_engine_and_the_reach():
+def test_labels_name_the_engine():
     rec = _rec()
     assert engine_prefill.engine_source(rec) == "STAF site engine v0.2.0 (exact watershed)"
     assert engine_prefill.engine_label("0.2.0") == "STAF site engine v0.2.0"
     note = engine_prefill.engine_note(rec)
     assert "12.5 km2" in note and "area agreement 1.0" in note
-    hr = {"anchorKind": "hrSurrogate", "scoredReach": {"comid": 5214461},
-          "routing": {"routedDistanceFt": 1240.0, "daRatio": 1.8, "declined": False}}
-    label = engine_prefill.anchor_label(hr)
-    assert label.startswith("nearest covered reach, COMID 5214461")
-    assert engine_prefill.anchor_label({"anchorKind": "v2Direct"}) == ""
-    assert engine_prefill.anchor_label(None) == ""
-    for text in (engine_prefill.engine_source(rec), note, label):
+    assert not hasattr(engine_prefill, "anchor_label")     # one engine, no reach labels
+    for text in (engine_prefill.engine_source(rec), note):
         assert "—" not in text and ";" not in text
 
 
