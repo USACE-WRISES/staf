@@ -14,14 +14,16 @@ SRC = Path(app.__file__).read_text(encoding="utf-8")
 CSS = (Path(app.__file__).parent / "www" / "styles.css").read_text(encoding="utf-8")
 
 
-def test_the_pin_lands_before_the_routing_on_every_hr_branch():
-    # the viewport hit and the click-box or typed-coordinate hit
-    assert SRC.count("_place_pin(hr_hit[0], hr_hit[1])") == 2
-    for branch in SRC.split("_place_pin(hr_hit[0], hr_hit[1])")[1:]:
-        assert branch.lstrip().startswith("stage.set(_LOCATING_TEXT)")
+def test_every_click_snaps_to_the_nhd_and_pins_at_once():
+    # one network, one engine (2026-09-05): the viewport hit or the engine's
+    # HR snap, the pin at once, nothing routed to a covered reach
     assert "def _place_pin(" in SRC
-    assert 'nearest_point_on_lines(hr_fc, lat, lon, id_prop="nhdplusid")' in SRC
-
+    assert 'nearest_point_on_lines(fc, lat, lon, id_prop="nhdplusid")' in SRC
+    assert "hr_site.snap_point(lat, lon)" in SRC
+    for gone in ("anchor_task", "snap_both", "route_from_hr", "pending_anchor",
+                 "_surrogate_offer", "delineate_task", "HR_FLOWLINE_STYLE", "ROUTE_STYLE",
+                 "async def flow_task(", "substitution limit"):
+        assert gone not in SRC, gone
 
 def test_the_pane_copy_is_short_and_plain():
     assert "Zoom in and click a stream, search a place, or enter coordinates." in SRC
@@ -34,14 +36,14 @@ def test_the_pane_copy_is_short_and_plain():
     # the module docstring may keep its dash; no string literal does
     assert '"SFARI — ' not in SRC and 'f"SFARI — ' not in SRC
     assert app._MISS_TEXT == "No stream line within 150 ft of the click. Zoom in and click a line."
-    for notice in ("Place not found. Try a city", "Delineation failed. Try another point"):
+    for notice in ("Place not found. Try a city",):
         assert notice in SRC
 
 
-def test_the_cue_is_not_printed_twice():
+def test_the_snap_line_says_what_happens_next():
     body = SRC.split("def snap_status():", 1)[1].split("@render.ui", 1)[0]
-    assert "if stage() == _LOCATING_TEXT:" in body and "return None" in body
-
+    assert "The STAF site engine calculates the exact watershed" in body
+    assert "anchor" not in body
 
 def test_numbers_are_formatted():
     assert app._fmt_km2(0.9871999900000001) == "0.99 km²"
@@ -63,7 +65,7 @@ def test_snap_helper_reads_the_hr_id():
          "geometry": {"type": "LineString", "coordinates": [[-83.06, 40.31], [-83.05, 40.31]]}}]}
     hit = flowlines.nearest_point_on_lines(fc, 40.3101, -83.055, id_prop="nhdplusid")
     assert hit is not None and hit[3] == 10000600001216 and hit[2] < 100
-    assert flowlines.nearest_point_on_lines(fc, 40.3101, -83.055)[3] is None   # no comid property
+    assert flowlines.nearest_point_on_lines(fc, 40.3101, -83.055, id_prop="comid")[3] is None
 
 
 def test_the_selected_point_is_a_small_circle():
@@ -84,7 +86,7 @@ def test_basin_pane_matches_easi_plus_the_nhdplusid():
                  "none within the substitution limit"):
         assert gone not in card, gone
     for kept in ('row("Watershed engine"', 'row("Drainage area"', 'row("Reach length"',
-                 'row("NHDPlusID"', 'row("Evidence reach COMID"'):
+                 'row("NHDPlusID"'):
         assert kept in card, kept
     assert app._watershed_engine_text({"watershedBasis": "site-engine",
                                        "siteEngine": {"engineVersion": "0.2.2"}}, {}, False) \

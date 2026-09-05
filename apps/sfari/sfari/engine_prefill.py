@@ -1,15 +1,15 @@
 """The STAF site engine bridge for SFARI.
 
 Everything SFARI asks of the vendored engine goes through here: availability,
-one ``compute_site`` per site with the five watershed families (the
-cross-section family is skipped, SFARI has its own Manning tool), the
-flattened metric values the evidence adapters read, the labels, and a
-geometry-stripped record for the session file. The adapters in
-``evidence.py`` map the values onto SFARI's metrics themselves, so the engine
-is the FIRST source for every metric it covers and the StreamCat lookup
-engine is a labeled fallback.
+one ``compute_site`` per site with the six watershed families (base flow,
+dams, land cover, roads, runoff, soils; the cross-section family is skipped,
+SFARI has its own Manning tool), the flattened metric values the evidence
+adapters read, the labels, and a geometry-stripped record for the session
+file. The adapters in ``evidence.py`` map the values onto SFARI's metrics; the
+engine is the only watershed source (2026-09-05).
 
-Never raises; an unavailable engine simply means no exact-watershed evidence.
+Never raises; an unavailable engine means the watershed evidence is
+unavailable, never substituted from another reach.
 """
 from __future__ import annotations
 
@@ -56,18 +56,6 @@ def engine_label(version: Optional[str] = None) -> str:
         return naming.engine_label(version)
     except Exception:  # noqa: BLE001 - vocabulary fallback
         return f"STAF site engine v{version or engine_version() or 'unknown'}"
-
-
-def anchor_label(anchor: Optional[dict]) -> str:
-    """The reach a COMID-keyed value describes (empty on covered sites)."""
-    try:
-        from sfari._vendor.site_engine import naming
-        return naming.anchor_label(anchor)
-    except Exception:  # noqa: BLE001
-        if not anchor or anchor.get("anchorKind") != "hrSurrogate":
-            return ""
-        comid = (anchor.get("scoredReach") or {}).get("comid")
-        return f"nearest covered reach, COMID {comid}" if comid else "nearest covered reach"
 
 
 def run_engine(lat: float, lon: float, *, families: Optional[list[str]] = None,
