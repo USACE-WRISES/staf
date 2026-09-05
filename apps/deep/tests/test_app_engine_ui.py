@@ -26,9 +26,8 @@ def test_basis_tag_follows_the_basis():
 
 def test_engine_line_states():
     assert app._engine_line_ui({"status": "idle"}, False, {}) is None
-    ok = str(app._engine_line_ui({"status": "ok", "record": {
-        "engineVersion": "0.2.0", "watershed": {"areaSqkm": 4.19, "nReaches": 3}}}, False, {}))
-    assert "STAF site engine v0.2.0" in ok and "4.19 km2 over 3 reaches" in ok
+    assert app._engine_line_ui({"status": "ok", "record": {
+        "engineVersion": "0.2.0", "watershed": {"areaSqkm": 4.19, "nReaches": 3}}}, False, {}) is None
     warn = str(app._engine_line_ui({"status": "refused", "reason": "over budget"}, False, {}))
     assert "refused: over budget" in warn and "warn" in warn
     assert "walking upstream, 43 reaches, 7 hops" in app._engine_progress_text(
@@ -42,7 +41,7 @@ def test_engine_scheduling_rule(monkeypatch):
     streamcat_bundle = types.SimpleNamespace(raw={})
     engine_bundle = types.SimpleNamespace(raw={"predictorSource": "site-engine v0.2.0"})
     assert app._engine_wanted_for(None) is False
-    assert app._engine_wanted_for(streamcat_bundle) is False     # never pays the minutes
+    assert app._engine_wanted_for(streamcat_bundle) is True      # every site (2026-09-04)
     assert app._engine_wanted_for(engine_bundle) is True
     mixed_bundle = types.SimpleNamespace(
         raw={"predictorSource": "mixed (site-engine v0.2.2 + streamcat)"})
@@ -63,6 +62,6 @@ def test_copy_and_cache_bust():
     assert app._MISS_TEXT == ("No stream line within 150 ft of the click. "
                               "Zoom in and click a line.")
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "deep.css?v=8" in src and "styles.css?v=13" in src
+    assert "deep.css?v=8" in src and "styles.css?v=14" in src
     css = (Path(app.__file__).parent / "www" / "deep.css").read_text(encoding="utf-8")
     assert ".deep-basis-tag.engine" in css and ".deep-engine-line" in css

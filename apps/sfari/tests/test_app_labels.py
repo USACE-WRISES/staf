@@ -45,9 +45,8 @@ def test_engine_progress_text():
 
 def test_engine_line_states():
     assert app._engine_line_ui({"status": "idle"}, False, {}) is None
-    ok = str(app._engine_line_ui({"status": "ok", "record": {
-        "engineVersion": "0.2.0", "watershed": {"areaSqkm": 4.19, "nReaches": 3}}}, False, {}))
-    assert "STAF site engine v0.2.0" in ok and "4.19 km2 over 3 reaches" in ok
+    assert app._engine_line_ui({"status": "ok", "record": {
+        "engineVersion": "0.2.0", "watershed": {"areaSqkm": 4.19, "nReaches": 3}}}, False, {}) is None
     warn = str(app._engine_line_ui({"status": "refused", "reason": "over budget"}, False, {}))
     assert "refused: over budget" in warn and "warn" in warn
     running = str(app._engine_line_ui({"status": "running"}, True, {"stage": "site"}))
@@ -63,7 +62,7 @@ def test_copy_has_no_em_dash_and_names_both_engines():
     # head content renders as a dependency, not in str(app_ui): read the source
     from pathlib import Path
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert 'styles.css?v=18' in src and 'styles.css?v=17' not in src
+    assert 'styles.css?v=19' in src and 'styles.css?v=18' not in src
 
 
 def test_map_styles_exist():

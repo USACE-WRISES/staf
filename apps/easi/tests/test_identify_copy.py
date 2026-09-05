@@ -50,7 +50,7 @@ def test_the_cue_is_not_printed_twice():
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=44"' in SRC
+    assert 'href="styles.css?v=45"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
 
@@ -62,3 +62,15 @@ def test_modules_used_at_effect_level_are_imported_at_module_level():
     head = SRC.split("from easi import (", 1)[1].split(")", 1)[0]
     for name in ("notices", "xsplotly", "basin"):
         assert re.search(rf"\b{name}\b", head), name
+
+
+def test_the_selected_point_is_a_small_circle():
+    assert "def _point_marker(" in SRC and "CircleMarker(location=(lat, lon)" in SRC
+    assert 'Marker(location=' not in SRC.replace("CircleMarker(location=", "")
+    assert app.POINT_STYLE["radius"] <= 8
+    # the point is re-added above the watershed and reach after a draw
+    assert '_add_layer("marker", _layers["marker"])' in SRC
+
+
+def test_the_pane_clips_horizontal_overflow():
+    assert "overflow-y: auto; overflow-x: hidden;" in CSS
