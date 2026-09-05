@@ -32,13 +32,15 @@ def test_declined_card_is_three_short_lines_with_the_numbers_in_the_tip():
     lines = _lines(card)
     assert card["declined"] is True
     assert classes == ["ok", "", "warn"]
-    assert lines[0] == "✓ Snapped to an unnamed stream (3 ft away). Not in the StreamCat lookup network."
-    assert lines[1].startswith("EASI will compute the exact watershed with the STAF site engine")
+    assert lines[0] == "✓ Snapped to an unnamed stream (3 ft away)."
+    assert lines[1] == ("The STAF site engine calculates the exact watershed, usually in "
+                        "under a minute.")
     assert lines[2] == "Three reach metrics are unavailable here."
     for line in lines:
-        assert "31.59" not in line and "COMID" not in line
-        assert len(line) < 140
+        assert "31.59" not in line and "COMID" not in line and "StreamCat" not in line
+        assert len(line) < 90
     tip = card["tip_html"]
+    assert "This stream is not on the StreamCat network." in tip
     assert "low flow, substrate, and biological integrity" in tip
     assert "drains 31.59 times this stream" in tip and "The limit is 10" in tip
     assert "Mink Brook (COMID 5214461)" in tip
@@ -50,7 +52,8 @@ def test_within_bound_card_names_the_reach_and_distance():
     lines = _lines(card)
     assert card["declined"] is False
     assert [cls for cls, _ in card["lines"]] == ["ok", "", ""]
-    assert lines[2] == "Reach evidence from Mink Brook (COMID 5214461), 1,688 ft downstream."
+    assert lines[2] == "Three reach metrics come from Mink Brook, 1,688 ft downstream."
+    assert "Mink Brook (COMID 5214461)" in card["tip_html"]
     assert "drains 2.69 times this stream (limit 10)" in card["tip_html"]
 
 

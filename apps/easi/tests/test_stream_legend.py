@@ -62,7 +62,7 @@ def test_copy_is_plain():
 
 def test_dock_script_and_cache_bust_are_wired():
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "legend-dock.js" in src and "styles.css?v=42" in src
+    assert "legend-dock.js" in src and "styles.css?v=43" in src
     assert 'id="easi-legend-panel"' in src.replace("'", '"')
     js = (Path(app.__file__).parent / "www" / "legend-dock.js").read_text(encoding="utf-8")
     assert "leaflet-control-layers" in js and "disableClickPropagation" in js

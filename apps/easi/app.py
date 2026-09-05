@@ -71,9 +71,6 @@ ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0
 LAYER_COVERED = "Streams: StreamCat lookup engine"
 LAYER_UNCOVERED = "Streams: STAF site engine"
 LAYER_SCORED = "Scored reach"
-_MISS_TEXT = ("You didn't click on a stream line. Zoom in and click a stream line: "
-              "dark blue lines are scored by the StreamCat lookup engine, cyan lines "
-              "get an exact watershed from the STAF site engine.")
 # === TEMP: MMW comparison overlay (remove later) ===
 MMW_STYLE = {"color": "#7b2cbf", "weight": 2, "dashArray": "5,4",
              "fillColor": "#b388eb", "fillOpacity": 0.18}  # distinct from yellow WATERSHED_STYLE
@@ -101,6 +98,8 @@ USGS_HYDRO_URL = "https://hydro.nationalmap.gov/arcgis/rest/services/USGSHydroCa
 USGS_ATTR = "USGS The National Map"
 FLOW_ZOOM = 14          # NHD vectors appear at/above this zoom
 SNAP_TOL_FT = 150.0     # click must land within this distance of a flowline
+_MISS_TEXT = (f"No stream line within {int(SNAP_TOL_FT)} ft of the click. "
+              "Zoom in and click a line.")
 BATCH_UI_MAX_SITES = 10  # per-batch cap in this UI; the engine accepts batch_api.MAX_SITES (150)
 
 STEP_IDENTIFY, STEP_BASIN, STEP_ASSESS, STEP_REPORT = "identify", "basin", "assess", "report"
@@ -305,7 +304,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=42"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=43"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=1", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -1249,6 +1248,7 @@ def server(input, output, session):
                 return
             with reactive.isolate():
                 _clear_route_state()
+                snapped_point.set(None)     # a new pick invalidates the last point
             lat, lon = clicked()
             fc = flow_geojson()
             hit = flowlines.nearest_point_on_lines(fc, lat, lon) if fc else None
@@ -1261,11 +1261,26 @@ def server(input, output, session):
             hr_fc = hr_geojson()
             hr_hit = nhd_hr.nearest_point_on_hr_lines(hr_fc, lat, lon) if hr_fc else None
             if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                _place_pin(hr_hit[0], hr_hit[1])
                 stage.set(_LOCATING_TEXT)
                 route_task(lat, lon, tuple(hr_hit))
             else:
                 stage.set(_FINDING_TEXT)
                 click_snap_task(lat, lon)        # fetch flowlines around the click + snap
+
+        def _place_pin(slat: float, slon: float):
+            """The pin and the coordinate inputs on the snapped point, at once.
+            An HR click used to wait for the routing (three round trips) before
+            anything moved on the map (2026-09-04). An existing marker moves in
+            place, so a later call for the same point changes nothing."""
+            marker = _layers.get("marker")
+            if marker is not None and marker in _MAP.layers:
+                marker.location = (slat, slon)
+            else:
+                _add_layer("marker", Marker(location=(slat, slon), draggable=False,
+                                            title="Selected point", name="Selected point"))
+            ui.update_numeric("lat", value=round(slat, 5))
+            ui.update_numeric("lon", value=round(slon, 5))
 
         def _apply_snap(hit, scored_feature=None):
             """Pin the snap point. ``scored_feature`` is the NHDPlus V2 reach
@@ -1283,11 +1298,8 @@ def server(input, output, session):
             else:
                 _remove_layer("scored")
                 scored_reach.set(None)
-            _add_layer("marker", Marker(location=(slat, slon), draggable=False,
-                                        title="Selected point", name="Selected point"))
+            _place_pin(slat, slon)
             snapped_point.set((slat, slon, dist, comid))
-            ui.update_numeric("lat", value=round(slat, 5))
-            ui.update_numeric("lon", value=round(slon, 5))
 
         def _snap_both(lat: float, lon: float) -> dict:
             """V2 snap first; if the click misses the scoring network, try the HR
@@ -1320,9 +1332,11 @@ def server(input, output, session):
                 return
             hr_hit = res.get("hrHit")
             if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                _place_pin(hr_hit[0], hr_hit[1])
                 stage.set(_LOCATING_TEXT)
                 route_task(res["lat"], res["lon"], tuple(hr_hit))
                 return
+            _remove_layer("marker")       # the last point is gone, see above
             ui.notification_show(_MISS_TEXT, type="warning", duration=5)
 
         def _scored_feature_for(res: dict, hit) -> dict | None:
@@ -1360,14 +1374,18 @@ def server(input, output, session):
             with reactive.isolate():
                 stage.set("")
                 _clear_route_state()
-                if res.get("error") == "snap_service_error":
-                    ui.notification_show("Could not reach the stream routing service. "
-                                         "Try the click again.", type="warning", duration=6)
-                    return
                 if res.get("error"):
-                    ui.notification_show("No stream in the scoring network could be "
-                                         "reached from this point.", type="warning",
-                                         duration=6)
+                    # the pin landed on the click; without an anchor it is no point
+                    _remove_layer("marker")
+                    snapped_point.set(None)
+                    if res.get("error") == "snap_service_error":
+                        ui.notification_show("Could not reach the stream routing service. "
+                                             "Try the click again.", type="warning",
+                                             duration=6)
+                    else:
+                        ui.notification_show("No stream in the scoring network could be "
+                                             "reached from this point.", type="warning",
+                                             duration=6)
                     return
                 if res.get("refused"):
                     _remove_layer("marker")
@@ -1424,6 +1442,7 @@ def server(input, output, session):
                 return
             hr_hit = res.get("hrHit")
             if hr_hit and hr_hit[2] <= SNAP_TOL_FT:
+                _place_pin(hr_hit[0], hr_hit[1])
                 stage.set(_LOCATING_TEXT)
                 route_task(res["lat"], res["lon"], tuple(hr_hit))
                 return
@@ -1455,6 +1474,7 @@ def server(input, output, session):
                 return
             with reactive.isolate():
                 _clear_route_state()
+                snapped_point.set(None)     # a new pick invalidates the last point
             _MAP.center = (lat, lon)   # bring the typed point into view so it is visible
             _MAP.zoom = 15
             stage.set(_FINDING_TEXT)
@@ -1893,7 +1913,8 @@ def server(input, output, session):
                 "packages the reports as a ZIP.\n\n"
                 "Switch basemaps and turn either stream color on or off with the "
                 "layers control at the top right. The legend below it names the "
-                "colors."),
+                "colors.\n\n"
+                "Address search uses OpenStreetMap data (Photon and Nominatim)."),
             title="Help", easy_close=True))
 
     @reactive.calc
@@ -2201,17 +2222,12 @@ def server(input, output, session):
             with reactive.isolate():
                 picked = snapped_point() is not None
             body = ui.TagList(
-                ui.div("Zoom in until stream lines appear and click a stream to place a "
-                       "point. Dark blue stretches are scored by the StreamCat lookup "
-                       "engine and cyan stretches by the STAF site engine. Or enter "
-                       "coordinates below, or search an address.",
+                ui.div("Zoom in and click a stream, search a place, or enter coordinates.",
                        class_="easi-instr"),
                 ui.input_text("address", "Address, place, or stream",
                               placeholder="e.g. Atlanta, GA  ·  Utoy Creek"),
                 ui.input_action_button("find_address", "Find on map",
                                        class_="btn-outline-secondary btn-sm"),
-                ui.div("Type to search. Suggestions from OpenStreetMap / Photon.",
-                       class_="easi-ac-credit"),
                 ui.hr(),
                 ui.input_numeric("lat", "Latitude", value=None, min=24.0, max=50.0, step=0.0001),
                 ui.input_numeric("lon", "Longitude", value=None, min=-125.0, max=-66.0, step=0.0001),
@@ -2258,7 +2274,7 @@ def server(input, output, session):
     def snap_status():
         cue = stage()
         if cue in (_FINDING_TEXT, _LOCATING_TEXT):
-            return ui.p(cue, class_="easi-snap-note")
+            return None      # the busy row shows the cue, and the last point's line is stale
         err = anchor_error()
         if err:
             return ui.p(f"⚠ {err}", class_="easi-snap-note",
@@ -2277,12 +2293,10 @@ def server(input, output, session):
             return ui.div(*lines)
         pt = snapped_point()
         if not pt:
-            return ui.p("No point yet. Enter coordinates, search an address, or zoom in "
-                        "and click a stream line.", class_="easi-snap-note")
+            return ui.p("No point yet.", class_="easi-snap-note")
         name = (scored_reach() or {}).get("name") or "the stream"
-        return ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away). The StreamCat lookup "
-                    f"engine scores this reach. Click “Delineate Basin and Reach”.",
-                    class_="easi-snap-note ok")
+        return ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away). Scored by the "
+                    "StreamCat lookup engine.", class_="easi-snap-note ok")
 
     @render.ui
     def basin_card():
