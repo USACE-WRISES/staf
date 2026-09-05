@@ -22,7 +22,7 @@ _GEO_REQUIREMENTS = ("requests", "shapely", "geopandas")
 
 # The engine has no page of its own; the STAF site documents both engines.
 ENGINE_URL = "https://usace-wrises.github.io/staf/computation-engines/"
-SFARI_FAMILIES = ["dams", "landcover", "roads", "runoff", "soils"]
+SFARI_FAMILIES = ["baseflow", "dams", "landcover", "roads", "runoff", "soils"]
 
 
 @lru_cache(maxsize=1)

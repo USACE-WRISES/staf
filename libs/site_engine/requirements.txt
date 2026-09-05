@@ -6,4 +6,5 @@ shapely
 geopandas
 # Layer B (metric computation) additionally uses:
 pygeohydro   # NLCD zonal statistics
+rasterio     # the shipped base-flow index grid (data/bfi48grd.tif)
 py3dep       # cross-section terrain (via the _extracted transect machinery)

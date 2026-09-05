@@ -52,7 +52,7 @@ def test_run_engine_uses_interactive_budget_and_sfari_families(monkeypatch):
     cfg = calls[0]["config"]
     assert cfg["maxReaches"] == 60 and cfg["maxHops"] == 40
     assert cfg["includeGeometry"] is True
-    assert cfg["metricFamilies"] == ["dams", "landcover", "roads", "runoff", "soils"]
+    assert cfg["metricFamilies"] == ["baseflow", "dams", "landcover", "roads", "runoff", "soils"]
     assert "xsection" not in cfg["metricFamilies"]      # SFARI has its own Manning tool
     assert events == [{"stage": "walk", "reaches": 3, "hops": 1}]
 

@@ -1,0 +1,25 @@
+{
+  "source": "https://water.usgs.gov/GIS/dsdl/bfi48grd.zip",
+  "citation": "Wolock, D.M., 2003, Base-flow index grid for the conterminous United States: U.S. Geological Survey Open-File Report 03-263, https://doi.org/10.3133/ofr03263",
+  "downloaded": "2026-09-05",
+  "zipSha256": "1dd8a300128cde6d0a17727cf1ff512dd58df4707d89fb887d1dd3f39aa874ca",
+  "geotiffSha256": "b7f483bd0de8a4487969cc579f5367953434f06919d5001de04880e2e4dfae87",
+  "crs": "EPSG:5070",
+  "resolutionM": [
+    1000.0,
+    1000.0
+  ],
+  "shape": [
+    2905,
+    4614
+  ],
+  "dtype": "uint8",
+  "nodata": 255,
+  "units": "percent of streamflow that is base flow",
+  "valueRange": [
+    0,
+    91
+  ],
+  "validCells": 7789361,
+  "meanOfValidCells": 42.69
+}

@@ -492,6 +492,99 @@ def bank_height_ratio(stations: list[float], elevs: list[float],
     return round((top_of_bank - min(elevs)) / d_bf, 2)
 
 
+#: Cross-sections sampled along the assessment reach, evenly spaced and clear of
+#: both ends (1/8 to 7/8 of the reach): 125 ft apart on a 1,000 ft reach, about
+#: three bankfull widths on a 40 ft channel. One DEM fetch covers them all.
+XS_COUNT = 7
+FT_PER_M = 3.28083989501312
+
+
+def _nearest_middle(cands: list[dict], idx: list[int]) -> int:
+    """Of ``idx``, the candidate nearest the reach middle (by ``position_frac``
+    when present, else by index), lowest index on a tie."""
+    n = len(cands)
+
+    def dist(i: int) -> float:
+        pos = cands[i].get("position_frac")
+        return abs(float(pos) - 0.5) if pos is not None else abs(i - (n - 1) / 2.0)
+
+    return min(idx, key=lambda i: (dist(i), i))
+
+
+def _avg_ranks(idx: list[int], values: dict[int, float]) -> dict[int, float]:
+    """Ascending ranks (0-based) with ties sharing the average rank."""
+    order = sorted(idx, key=lambda i: values[i])
+    ranks: dict[int, float] = {}
+    j = 0
+    while j < len(order):
+        k = j
+        while k + 1 < len(order) and values[order[k + 1]] == values[order[j]]:
+            k += 1
+        for m in range(j, k + 1):
+            ranks[order[m]] = (j + k) / 2.0
+        j = k + 1
+    return ranks
+
+
+def median_candidate(cands: list[dict]) -> int:
+    """Index of the reach's median cross-section: among candidates with both
+    ratios, the one whose entrenchment ratio and bank-height ratio are jointly
+    closest to the reach medians by rank (sum of absolute rank distances from
+    the median rank), ties to the section nearest the reach middle. Fewer than
+    three with both ratios: median entrenchment ratio alone, then the middle
+    section. Central for both ratios at once, rather than the median of one and
+    an outlier of the other (2026-09-04)."""
+    n = len(cands)
+    if n == 0:
+        return 0
+    both = [i for i, c in enumerate(cands)
+            if c.get("entrenchment_ratio") is not None and c.get("bank_height_ratio") is not None]
+    if len(both) >= 3:
+        er = {i: float(cands[i]["entrenchment_ratio"]) for i in both}
+        bhr = {i: float(cands[i]["bank_height_ratio"]) for i in both}
+        rer, rbhr = _avg_ranks(both, er), _avg_ranks(both, bhr)
+        mid = (len(both) - 1) / 2.0
+        score = {i: abs(rer[i] - mid) + abs(rbhr[i] - mid) for i in both}
+        best = min(score.values())
+        return _nearest_middle(cands, [i for i in both if score[i] == best])
+    ers = [i for i, c in enumerate(cands) if c.get("entrenchment_ratio") is not None]
+    if ers:
+        med = median(float(cands[i]["entrenchment_ratio"]) for i in ers)
+        dist = {i: abs(float(cands[i]["entrenchment_ratio"]) - med) for i in ers}
+        best = min(dist.values())
+        return _nearest_middle(cands, [i for i in ers if dist[i] == best])
+    return _nearest_middle(cands, list(range(n)))
+
+
+def candidates_from_transects(usable, reach_len_m: float, da_sqkm: float, *,
+                              bankfull: Optional[tuple[float, float]] = None,
+                              bankfull_area_m2: Optional[float] = None,
+                              division: Optional[str] = None) -> dict:
+    """Every usable transect as a selectable cross-section, the reach median as
+    the default. ``usable`` is ``[(position_frac, stations, elevs), ...]`` with
+    the fraction measured from the upstream end of the reach line. Each
+    candidate is :func:`summarize_profile` plus ``position_frac``, ``station_ft``
+    and a ``label`` ("125 ft"); the result's top level is the selected candidate
+    (what the geometry metrics read) with ``candidates``, ``selected`` and
+    ``n_transects`` beside it. Pure, so it is tested offline."""
+    cands: list[dict] = []
+    for frac, st, el in sorted(usable, key=lambda u: float(u[0])):
+        c = summarize_profile(list(st), list(el), da_sqkm or 1.0, bankfull=bankfull,
+                              bankfull_area_m2=bankfull_area_m2, division=division)
+        c["position_frac"] = round(float(frac), 4)
+        c["station_ft"] = int(round(float(frac) * float(reach_len_m) * FT_PER_M))
+        c["label"] = f"{c['station_ft']:,} ft"
+        cands.append(c)
+    if not cands:
+        return {}
+    selected = median_candidate(cands)
+    out = dict(cands[selected])
+    out["candidates"] = cands
+    out["selected"] = selected
+    out["n_transects"] = len(cands)
+    return out
+
+
 def _representative(per: list[dict], ers: list[float]) -> Optional[dict]:
     """Pick the transect whose ER is closest to the reach median ER.
 

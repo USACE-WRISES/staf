@@ -7,7 +7,8 @@ source is feasibility-excluded), never an exception. ``families`` selects a
 subset of the registry (``config["metricFamilies"]``); the run order is the
 sorted family name, so records stay deterministic whatever the caller lists.
 
-Families: landcover, roads, dams, soils, runoff, xsection (see ``families()``).
+Families: baseflow, dams, landcover, roads, runoff, soils, xsection (see
+``families()``).
 """
 from __future__ import annotations
 
@@ -60,6 +61,7 @@ def compute_all(record: dict, *, tree_geoms: list,
 
 
 # Import metric modules for their registration side effects.
+from . import baseflow   # noqa: E402,F401
 from . import landcover  # noqa: E402,F401
 from . import roads      # noqa: E402,F401
 from . import dams       # noqa: E402,F401
