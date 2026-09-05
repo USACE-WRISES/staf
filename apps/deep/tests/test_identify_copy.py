@@ -89,7 +89,8 @@ def test_basin_pane_matches_easi_plus_the_nhdplusid():
     assert app._watershed_engine_text({"watershedBasis": "site-engine",
                                        "siteEngine": {"engineVersion": "0.2.2"}}, {}, False) \
         == "STAF site engine v0.2.2"
-    assert app._watershed_engine_text({}, {"status": "running"}, True) == "STAF site engine (calculating)"
+    assert app._watershed_engine_text({}, {"status": "running"}, True)         == "StreamCat lookup engine (NHDPlus V2 basin), exact watershed calculating"
+    assert app._watershed_engine_text({}, {"status": "ok", "record": {"engineVersion": "0.3.0"}}, False)         == "StreamCat lookup engine (NHDPlus V2 basin), exact watershed computed"
     assert app._watershed_engine_text({}, {}, False) == "StreamCat lookup engine (NHDPlus V2 basin)"
     assert app._watershed_engine_text({"watershedBasis": "nhdplus-v2-basin-of-surrogate"}, {}, False) \
         == "StreamCat lookup engine (nearest covered reach basin)"
