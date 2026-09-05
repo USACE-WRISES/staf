@@ -341,7 +341,7 @@ def ev_wetland(ctx):
                             value_text=f"{v:.1f}% wetland (watershed; woody+herbaceous)",
                             field_value_text=f"Wetland {v:.1f}%",
                             source="EPA StreamCat pctwdwet+pcthbwet",
-                            note="Watershed wetland % — national-default proxy for the doc's "
+                            note="Watershed wetland %, a national-default proxy for the doc's "
                                  "floodplain-area criterion (calibrate regionally).",
                             suggested_likert=likert.suggest(mid, v))
 
@@ -364,7 +364,7 @@ def _riparian(ctx, mid, extra=""):
                             value_text=f"{fp:.0f}% riparian forest (100 m buffer){extra}",
                             field_value_text=f"Riparian forest {fp:.0f}%",
                             source="EPA StreamCat *wsrp100 forest",
-                            note="Riparian forest % — proxy for canopy/corridor (EnviroAtlas in Phase 4).",
+                            note="Riparian forest %, a proxy for canopy/corridor (EnviroAtlas in Phase 4).",
                             suggested_likert=likert.suggest(mid, fp))
 
 
@@ -471,7 +471,7 @@ def ev_np(ctx):
         parts.append(f"TP {tp} mg/L")
     short = " / ".join(s for s in [f"TN {tn}" if tn is not None else "",
                                    f"TP {tp}" if tp is not None else ""] if s)
-    return EvidenceResult(mid, value_text="observed median — " + "; ".join(parts),
+    return EvidenceResult(mid, value_text="observed median: " + ", ".join(parts),
                           field_value_text=f"{short} mg/L",
                           confidence="M", source="EPA/USGS Water Quality Portal",
                           source_url="https://www.waterqualitydata.us/",
@@ -499,7 +499,7 @@ def ev_dewatered(ctx):
     return EvidenceResult(mid, value=fc, value_text=f"NHD flow permanence: {lab}",
                           field_value_text=f"Flow class {lab}",
                           confidence="M", source="NHDPlus FCODE",
-                          note="Natural intermittency is not artificial dewatering — check NWIS "
+                          note="Natural intermittency is not artificial dewatering. Check NWIS "
                                "zero-flow days and imagery.")
 
 

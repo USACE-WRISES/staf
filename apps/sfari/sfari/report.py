@@ -220,7 +220,7 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
                             ("BACKGROUND", (0, 0), (-1, 0), head_bg), ("VALIGN", (0, 0), (-1, -1), "TOP")]))
     story += [mt, Spacer(1, 8),
               Paragraph("Desktop evidence supports scoring; the assessor assigns the Likert and "
-                        "0-15 function scores. Likert thresholds are national defaults — calibrate "
+                        "0-15 function scores. Likert thresholds are national defaults. Calibrate "
                         "regionally.", styles["Italic"])]
 
     # site-photo gallery
@@ -229,7 +229,7 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
         ph = (metric_scores.get(m["metricId"]) or {}).get("photos") or []
         imgs = [im for im in (_img(p.get("uri"), 1.3 * inch, 1.3 * inch) for p in ph) if im]
         if imgs:
-            gallery.append(Paragraph(f"<b>{f['name']}</b> — {m['name']}", small))
+            gallery.append(Paragraph(f"<b>{f['name']}</b>: {m['name']}", small))
             gt = Table([imgs], colWidths=[1.42 * inch] * len(imgs), hAlign="LEFT")
             gt.setStyle(TableStyle([("LEFTPADDING", (0, 0), (-1, -1), 0),
                                     ("TOPPADDING", (0, 0), (-1, -1), 1),

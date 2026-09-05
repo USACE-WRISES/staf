@@ -57,12 +57,12 @@ def test_map_styles_legible_and_hover_highlighted():
     assert app.HR_FLOWLINE_STYLE["weight"] == app.FLOWLINE_STYLE["weight"]
     assert not hasattr(app, "FLOWLINE_HOVER_STYLE")    # a hover restyle flashed the layer
     assert "dashArray" in app.ROUTE_STYLE and "dashArray" not in app.HR_FLOWLINE_STYLE
-    assert "cyan" in app._MISS_TEXT
 
 
 def test_copy_and_cache_bust():
-    assert "—" not in app._MISS_TEXT and "NHDPlus V2" in app._MISS_TEXT
+    assert app._MISS_TEXT == ("No stream line within 150 ft of the click. "
+                              "Zoom in and click a line.")
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "deep.css?v=8" in src and "styles.css?v=12" in src
+    assert "deep.css?v=8" in src and "styles.css?v=13" in src
     css = (Path(app.__file__).parent / "www" / "deep.css").read_text(encoding="utf-8")
     assert ".deep-basis-tag.engine" in css and ".deep-engine-line" in css

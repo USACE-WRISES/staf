@@ -58,11 +58,12 @@ def test_copy_has_no_em_dash_and_names_both_engines():
     for text in (app._MISS_TEXT, app._engine_progress_text({}),
                  app._ev_tip({"source": "x", "fallback_reason": "y"})):
         assert "—" not in text
-    assert "NHDPlus V2" in app._MISS_TEXT and "NHD streams" in app._MISS_TEXT
+    assert app._MISS_TEXT == ("No stream line within 150 ft of the click. "
+                              "Zoom in and click a line.")
     # head content renders as a dependency, not in str(app_ui): read the source
     from pathlib import Path
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert 'styles.css?v=17' in src and 'styles.css?v=16' not in src
+    assert 'styles.css?v=18' in src and 'styles.css?v=17' not in src
 
 
 def test_map_styles_exist():
@@ -74,7 +75,7 @@ def test_map_styles_exist():
     assert app.HR_FLOWLINE_STYLE["weight"] == app.FLOWLINE_STYLE["weight"]
     assert not hasattr(app, "FLOWLINE_HOVER_STYLE")    # a hover restyle flashed the layer
     assert "dashArray" not in app.FLOWLINE_STYLE and "dashArray" not in app.HR_FLOWLINE_STYLE
-    assert "cyan" in app._MISS_TEXT and "dark blue" in app._MISS_TEXT
+    assert "—" not in app._MISS_TEXT      # the legend names the colors now
 
 
 def test_field_forms_output_stays_alive_while_the_modal_is_hidden():

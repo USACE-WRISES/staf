@@ -54,15 +54,37 @@ def features_in_bbox(west: float, south: float, east: float, north: float, *,
     return [f for f in data.get("features") or [] if isinstance(f, dict)]
 
 
+# A routed click asks for the covered reach's feature twice within a second
+# (the anchor's attributes, then the geometry for the scored-reach glow), so
+# answered features are memoized per process (2026-09-04). Only a feature with
+# geometry is kept: an unknown COMID ({}) and an unanswered request (None) are
+# asked again.
+_MEMO_MAX = 512
+_feature_memo: dict[int, dict] = {}
+
+
+def clear_feature_memo() -> None:
+    _feature_memo.clear()
+
+
 def feature_by_comid(comid: int, *, timeout: float = 60.0) -> Optional[dict]:
     """The COMID's feature (attributes + geometry), ``{}`` when the COMID is
     unknown, or None when the service did not answer."""
-    data = _get({"comid": int(comid), "limit": 1, "properties": ATTR_PROPERTIES},
+    key = int(comid)
+    hit = _feature_memo.get(key)
+    if hit is not None:
+        return hit
+    data = _get({"comid": key, "limit": 1, "properties": ATTR_PROPERTIES},
                 timeout=timeout)
     if data is None:
         return None
     feats = data.get("features") or []
-    return feats[0] if feats and isinstance(feats[0], dict) else {}
+    feat = feats[0] if feats and isinstance(feats[0], dict) else {}
+    if feat and feat.get("geometry"):
+        if len(_feature_memo) >= _MEMO_MAX:
+            _feature_memo.pop(next(iter(_feature_memo)))
+        _feature_memo[key] = feat
+    return feat
 
 
 def _float(v) -> Optional[float]:
