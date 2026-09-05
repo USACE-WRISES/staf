@@ -1,6 +1,6 @@
 """Engine-sourced builds (D9, 2026-09-02).
 
-Under ``--predictor-source site-engine`` the STAF site engine recomputes the six
+Under ``--predictor-source site-engine`` the STAF site engine recomputes the eight
 scored landscape metrics with an engine analog at every retained site, the
 per-site cache never stores a failure, the honesty report names each failed
 or incomplete site, the re-sourced list rides the manifest and the digest,
@@ -20,8 +20,8 @@ from streamcurves import regional_agent as ra
 from streamcurves import site_engine_source as ses
 from streamcurves.deep_export import build_deep_assessment_bundle
 
-SIX = ["damdensws", "pctcrop2019ws", "pcthbwet2019ws", "pctimp2019ws",
-       "pctwdwet2019ws", "rddensws"]
+EIGHT = ["bfiws", "damdensws", "pctcrop2019ws", "pcthbwet2019ws", "pctimp2019ws",
+         "pctwdwet2019ws", "rdcrsws", "rddensws"]
 
 
 def _rec(status="ok", reason=None, **over):
@@ -29,7 +29,8 @@ def _rec(status="ok", reason=None, **over):
          "hayPasturePctWatershed": 5.0, "woodyWetlandPctWatershed": 1.5,
          "herbWetlandPctWatershed": 0.25, "roadDensity": 1.2345,
          "damDensityPerSqkm": 0.0213, "soilKFactor": 0.28,
-         "damStoragePerSqkm": 10.0, "runoffDepthMm": 400.0}
+         "damStoragePerSqkm": 10.0, "runoffDepthMm": 400.0,
+         "baseflowIndexPct": 48.0, "roadCrossingDensity": 0.9844}
     m.update(over)
     return {"status": status, "reason": reason, "watershed": {"areaSqkm": 12.5},
             "metrics": {k: {"value": v} for k, v in m.items()}}
@@ -46,6 +47,7 @@ def test_se_site_record_extracts_both_groups_from_an_ok_record():
     assert v["pctimp2019ws"] == 12.3 and v["pctcrop2019ws"] == 40.0
     assert v["pctwdwet2019ws"] == 1.5 and v["pcthbwet2019ws"] == 0.25
     assert v["rddensws"] == 1.2345 and v["damdensws"] == 0.0213
+    assert v["bfiws"] == 48.0 and v["rdcrsws"] == 0.9844
     assert v["se_wsareasqkm"] == 12.5
     assert rec["missing"] == [] and rec["seconds"] >= 0.0
 
@@ -174,8 +176,8 @@ def test_enrich_ignores_a_cache_from_another_engine_version_or_schema(tmp_path):
 def test_enrich_report_names_the_config_and_the_requested_columns(tmp_path):
     compute, _ = _compute_by_site({41.0: _rec(), 42.0: _rec()})
     _, report = ses.enrich_site_engine(ROWS, cache_path=str(tmp_path / "c.json"), compute=compute)
-    assert report["requested_metrics"] == SIX
-    assert set(SIX) <= set(report["requested"]) and set(ses.se_codes()) <= set(report["requested"])
+    assert report["requested_metrics"] == EIGHT
+    assert set(EIGHT) <= set(report["requested"]) and set(ses.se_codes()) <= set(report["requested"])
     assert report["config"]["maxReaches"] and report["config"]["maxHops"]
     assert report["resourced_metrics"] == []            # filled by run_evidence
 
@@ -195,20 +197,21 @@ def _frame():
 
 def test_resource_metric_columns_swaps_only_the_analog_columns_and_keeps_nan_on_failure():
     values = {"A": {"pctimp2019ws": 12.3, "pctcrop2019ws": 40.0, "pctwdwet2019ws": 1.5,
-                    "pcthbwet2019ws": 0.25, "rddensws": 1.2345, "damdensws": 0.0213},
+                    "pcthbwet2019ws": 0.25, "rddensws": 1.2345, "damdensws": 0.0213,
+                    "bfiws": 48.0, "rdcrsws": 0.9844},
               "B": {}}
     out, resourced = ses.resource_metric_columns(_frame(), values)
-    assert resourced == SIX
+    assert resourced == EIGHT
     assert out.loc[0, "pctimp2019ws"] == 12.3 and out.loc[0, "damdensws"] == 0.0213
     assert math.isnan(out.loc[1, "pctimp2019ws"]) and math.isnan(out.loc[2, "rddensws"])
-    assert out["bfiws"].tolist() == [40.0, 50.0, 60.0]        # no analog, untouched
-    assert out["rdcrsws"].tolist() == [0.01, 0.02, 0.03]
+    assert out.loc[0, "bfiws"] == 48.0 and out.loc[0, "rdcrsws"] == 0.9844   # engine analogs
+    assert math.isnan(out.loc[1, "bfiws"]) and math.isnan(out.loc[2, "rdcrsws"])
 
 
 def test_resource_metric_columns_never_creates_a_column_streamcat_did_not_return():
     frame = _frame().drop(columns=["damdensws"])
     out, resourced = ses.resource_metric_columns(frame, {"A": {"damdensws": 0.1, "pctimp2019ws": 5.0}})
-    assert "damdensws" not in out.columns and resourced == [c for c in SIX if c != "damdensws"]
+    assert "damdensws" not in out.columns and resourced == [c for c in EIGHT if c != "damdensws"]
     assert out.loc[0, "pctimp2019ws"] == 5.0
 
 
@@ -260,19 +263,19 @@ def engine_evidence():
 
 def test_run_evidence_resources_the_scored_landscape_columns(engine_evidence):
     ev = engine_evidence
-    assert ev["resourced_metrics"] == SIX
+    assert ev["resourced_metrics"] == EIGHT
     data = ev["data"]
     assert np.allclose(data["pctimp2019ws"].astype(float),
                        100.0 + data["lat"].astype(float), atol=1e-3)
     assert (data["rddensws"] == 1.2345).all() and (data["damdensws"] == 0.0213).all()
     assert data["bfiws"].tolist() != [1.2345] * len(data)     # untouched StreamCat column
-    for col in SIX:
+    for col in EIGHT:
         assert ev["metric_config"][col]["value_source"].startswith("site-engine v")
-    assert "value_source" not in ev["metric_config"]["bfiws"]
+    assert ev["metric_config"]["bfiws"]["value_source"].startswith("site-engine v")
     assert ev["predictor_source"].startswith("mixed (site-engine v")
     rep = ev["source_reports"][1]
     assert rep["source"] == "site_engine" and rep["status"] == "ok"
-    assert rep["resourced_metrics"] == SIX
+    assert rep["resourced_metrics"] == EIGHT
 
 
 def test_assemble_carries_the_provenance_inputs_and_the_manifest_records_them(engine_evidence):
@@ -281,16 +284,16 @@ def test_assemble_carries_the_provenance_inputs_and_the_manifest_records_them(en
     result = ra.assemble(engine_evidence)
     assert result["predictor_source"] == engine_evidence["predictor_source"]
     assert result["predictor_source_flag"] == "site-engine"
-    assert result["resourced_metrics"] == SIX
+    assert result["resourced_metrics"] == EIGHT
     assert result["screening"] is engine_evidence["screening"]
     assert result["screening_watershed_engine"] == engine_evidence["screening_watershed_engine"]
     manifest = pv.build_run_manifest(result, argv=[])
     ps = manifest["inputs"]["predictor_source"]
     assert ps["source"].startswith("mixed (site-engine v")
-    assert ps["resourced_metrics"] == SIX
+    assert ps["resourced_metrics"] == EIGHT
     assert ps["report"]["status"] == "ok"
     payload = pv.digest_payload_from_manifest(manifest)
-    assert payload["predictor_source"]["resourced_metrics"] == SIX
+    assert payload["predictor_source"]["resourced_metrics"] == EIGHT
 
 
 def test_the_digest_changes_with_the_resourced_list():
@@ -302,7 +305,7 @@ def test_the_digest_changes_with_the_resourced_list():
                                                  "vendorSha": "abc"}}],
             "predictor_source": "site-engine v0.2.2", "predictor_source_flag": "site-engine"}
     predictors_only = pv.build_run_manifest(dict(base), argv=[])
-    resourced = pv.build_run_manifest({**base, "resourced_metrics": SIX}, argv=[])
+    resourced = pv.build_run_manifest({**base, "resourced_metrics": EIGHT}, argv=[])
     assert predictors_only["inputsDigest"] != resourced["inputsDigest"]
     assert "resourced_metrics" not in pv.digest_payload_from_manifest(predictors_only)["predictor_source"]
     streamcat = pv.build_run_manifest({"region": base["region"], "screening_method": "functional",
@@ -371,12 +374,12 @@ def test_review_packet_lists_engine_failures_and_recomputed_metrics():
     from streamcurves import review_packet as rp
     ok = {"source": "site_engine", "status": "ok", "n_columns": 13, "reason": None,
           "n_ok": 33, "n_sites": 33, "n_cached": 12, "failed_sites": [], "incomplete_sites": [],
-          "resourced_metrics": SIX}
+          "resourced_metrics": EIGHT}
     lines = rp.source_report_lines(ok)
     text = "\n".join(lines)
     assert "site_engine: ok (13 columns)" in text
     assert "33 of 33 sites computed, 12 from the run's cache" in text
-    assert "Scored metrics recomputed by the STAF site engine: " + ", ".join(SIX) in text
+    assert "Scored metrics recomputed by the STAF site engine: " + ", ".join(EIGHT) in text
     bad = {"source": "site_engine", "status": "partial", "n_columns": 13, "reason": "2 site(s) failed",
            "n_ok": 31, "n_sites": 33, "n_cached": 0,
            "failed_sites": [{"site_id": "NRS18_NH_10016", "status": "refused", "reason": "too big"}],

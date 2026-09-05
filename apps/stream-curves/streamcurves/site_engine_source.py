@@ -6,14 +6,15 @@ Two roles, both for engine-sourced builds (``--predictor-source site-engine``):
   training-site coordinates with the vendored engine, the true point watershed
   on the full-resolution NHD instead of StreamCat's per-COMID V2 summaries.
   They replace their StreamCat analogs in the predictor configuration.
-- **Scored landscape metrics** (2026-09-02): the six StreamCat landscape
-  columns with an engine analog (:data:`SE_METRIC_ANALOGS`) keep their column
-  names, and therefore their bundle metric ids and curated directions, but
-  their VALUES at every retained site become the engine's exact-watershed
-  values, so the curves are fitted on the same source DEEP will score with.
-  Base-flow index and road-stream crossings have no engine analog and stay
-  StreamCat. A retained site the engine cannot value keeps NaN, never a
-  StreamCat fallback, and the batch refuses a partial engine run.
+- **Scored landscape metrics** (2026-09-02, all eight since 2026-09-05): the
+  StreamCat landscape columns with an engine analog (:data:`SE_METRIC_ANALOGS`)
+  keep their column names, and therefore their bundle metric ids and curated
+  directions, but their VALUES at every retained site become the engine's
+  exact-watershed values, so the curves are fitted on the same source DEEP
+  will score with. Base-flow index (the USGS grid) and road-stream crossings
+  (TIGERweb roads on the NHDPlus HR network) joined with engine 0.3.0. A
+  retained site the engine cannot value keeps NaN, never a StreamCat
+  fallback, and the batch refuses a partial engine run.
 
 This is the recalibration-study mechanism: selecting the engine recomputes the
 predictors and the scored landscape metrics at the NRSA sites, and the resulting
@@ -76,6 +77,17 @@ SE_METRIC_ANALOGS: dict[str, tuple[str, Callable]] = {
     "pcthbwet2019ws": ("herbWetlandPctWatershed", lambda v: v),
     "rddensws": ("roadDensity", lambda v: v),
     "damdensws": ("damDensityPerSqkm", lambda v: v),
+    "bfiws": ("baseflowIndexPct", lambda v: v),
+    "rdcrsws": ("roadCrossingDensity", lambda v: v),
+}
+
+#: Column-specific sentences appended to the re-sourcing note.
+_COLUMN_NOTES = {
+    "bfiws": ("Base-flow index is the mean of the USGS base-flow index grid "
+              "(Wolock 2003, 1 km) over the exact watershed."),
+    "rdcrsws": ("Road-stream crossings are counted where TIGERweb roads meet the "
+                "NHDPlus HR network, per km2 of watershed, so this curve's scale is "
+                "the engine's and not StreamCat's served rdcrs."),
 }
 
 #: The per-site cache layout. Version 2 stores the engine identity, both value
@@ -267,15 +279,16 @@ def annotate_resourced_metric_config(metric_config: dict, columns) -> dict:
     label = engine_source_label()
     ver = engine_identity().get("version") or "unknown"
     note = (f"Values recomputed by the {engine_names.SITE_ENGINE} v{ver} over the "
-            "exact watershed (NLCD 2021, TIGERweb roads, NID dams). The StreamCat "
-            "column name is kept for the metric id.")
+            "exact watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow "
+            "index grid). The StreamCat column name is kept for the metric id.")
     for col in columns or []:
         entry = out.get(col)
         if entry is None:
             continue
         entry["value_source"] = label
         prev = str(entry.get("notes") or "").strip()
-        entry["notes"] = (prev.rstrip(".") + ". " + note) if prev else note
+        full = note + (" " + _COLUMN_NOTES[col] if col in _COLUMN_NOTES else "")
+        entry["notes"] = (prev.rstrip(".") + ". " + full) if prev else full
     return out
 
 
