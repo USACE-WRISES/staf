@@ -199,10 +199,10 @@ computes the curve predictors: `streamcat` is the StreamCat lookup engine and
 `site-engine` is the STAF site engine, which recomputes them at the training sites
 (usually under a minute per uncached site, up to about five on a large basin) and stamps the bundle's `predictorSource`; a
 replay recovers the choice from the run's own manifest. An engine-sourced build
-also recomputes the six scored landscape metrics that have an engine analog
-(impervious, crop, woody and herbaceous wetland, road density, dam density) over
-the exact watershed at every retained site, under their StreamCat column names.
-Base-flow index and road-stream crossings stay StreamCat. The recomputed list rides
+also recomputes the eight scored landscape metrics (impervious, crop, woody and
+herbaceous wetland, road density, dam density, base-flow index from the USGS
+grid, road-stream crossings on the NHDPlus HR network) over the exact watershed
+at every retained site, under their StreamCat column names. The recomputed list rides
 the manifest (`inputs.predictor_source.resourced_metrics`) and the digest, and the
 bundle stamps `predictorSource` per metric only on those curves, which is what
 DEEP's pairing rule reads. A retained site the engine cannot value keeps NaN, the

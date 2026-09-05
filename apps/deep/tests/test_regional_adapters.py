@@ -2,10 +2,10 @@
 score.
 
 One batched StreamCat request per site, the site engine -> StreamCat -> NLCD
-layering under the auto-pull gate, the two StreamCat-only ids (base flow index
-and road-stream crossings have no engine analog), the anchor label on a routed
-site, the end-to-end ``compute_metrics_only`` shape, and the pairing rule on a
-mixed bundle. Fully offline."""
+layering under the auto-pull gate (all eight ids from the engine since 0.3.0
+brought base flow index and road-stream crossings), the anchor label on a
+routed site, the end-to-end ``compute_metrics_only`` shape, and the pairing
+rule on a mixed bundle. Fully offline."""
 from __future__ import annotations
 
 import json
@@ -36,7 +36,8 @@ SC_VALUES = {"spring-pctimp2019ws": 2.91, "spring-pctcrop2019ws": 75.32,
              "spring-bfiws": 21.45, "spring-rdcrsws": 0.0058}
 ENGINE_VALUES = {"spring-pctimp2019ws": 12.3, "spring-pctcrop2019ws": 40.0,
                  "spring-pctwdwet2019ws": 1.5, "spring-pcthbwet2019ws": 0.0,
-                 "spring-rddensws": 1.2345, "spring-damdensws": 0.0}
+                 "spring-rddensws": 1.2345, "spring-damdensws": 0.0,
+                 "spring-bfiws": 48.0, "spring-rdcrsws": 0.9844}
 ASC = [{"x": 0, "y": 0}, {"x": 1, "y": 1}]
 ENGINE_STAMP = "site-engine v0.2.2"
 MIXED_STAMP = "mixed (site-engine v0.2.2 + streamcat)"
@@ -63,7 +64,9 @@ def _engine_record(**extra):
                "woodyWetlandPctWatershed": {"value": 1.5},
                "herbWetlandPctWatershed": {"value": 0.0},
                "roadDensity": {"value": 1.2345},
-               "damDensityPerSqkm": {"value": 0.0}}
+               "damDensityPerSqkm": {"value": 0.0},
+               "baseflowIndexPct": {"value": 48.0},
+               "roadCrossingDensity": {"value": 0.9844}}
     metrics.update(extra)
     return {"status": "ok", "engineVersion": "0.2.2", "metrics": metrics}
 
@@ -126,36 +129,39 @@ def test_streamcat_answers_all_eight_when_the_gate_is_closed(monkeypatch):
     assert calls["n"] == 0                              # engine never invoked
 
 
-def test_engine_answers_six_when_the_gate_is_open(monkeypatch):
+def test_engine_answers_all_eight_when_the_gate_is_open(monkeypatch):
     calls = _fake_engine(monkeypatch, _engine_record())
     _sc_patch(monkeypatch)
     out = computed.compute_for(EIGHT, _ctx(allow_engine=True))
-    assert set(out) == set(EIGHT)
+    assert set(out) == set(EIGHT) == set(ENGINE_VALUES)
     for mid, want in ENGINE_VALUES.items():
         cv = out[mid]
         assert cv.value == want, mid                    # engine zeros preserved
         assert cv.engine is True and cv.basis == "site-engine", mid
         assert "STAF site engine v" in cv.source, mid
-    for mid in STREAMCAT_ONLY:
-        cv = out[mid]
-        assert cv.value == SC_VALUES[mid] and cv.engine is False, mid
-        assert cv.basis == "streamcat", mid
+    assert "base-flow index grid" in out["spring-bfiws"].source
+    assert "NHDPlus HR" in out["spring-rdcrsws"].source
+    assert "100 times" not in out["spring-rdcrsws"].source   # the engine's own scale
     assert calls["n"] == 1                              # one run, cached on ctx
 
 
 # --------------------------------------------------------------------------- #
 # (c) (d) the StreamCat-only ids
 # --------------------------------------------------------------------------- #
-def test_bfi_and_crossings_never_come_from_the_engine(monkeypatch):
-    bogus = _engine_record(bfiws={"value": 99.0}, rdcrsws={"value": 99.0},
-                           baseFlowIndex={"value": 99.0},
-                           roadCrossings={"value": 99.0})
-    _fake_engine(monkeypatch, bogus)
+def test_bfi_and_crossings_fall_to_streamcat_only_when_the_engine_lacks_them(monkeypatch):
+    # an older engine record without the two keys: StreamCat answers, labeled
+    older = _engine_record()
+    older["metrics"].pop("baseflowIndexPct"); older["metrics"].pop("roadCrossingDensity")
+    _fake_engine(monkeypatch, older)
     _sc_patch(monkeypatch)
     out = computed.compute_for(STREAMCAT_ONLY, _ctx(allow_engine=True))
     assert out["spring-bfiws"].value == 21.45
     assert out["spring-rdcrsws"].value == 0.0058
     assert all(cv.engine is False and cv.basis == "streamcat" for cv in out.values())
+    # the gate closed: StreamCat even when the engine has them
+    _fake_engine(monkeypatch, _engine_record())
+    closed = computed.compute_for(STREAMCAT_ONLY, _ctx())
+    assert closed["spring-bfiws"].value == 21.45 and closed["spring-bfiws"].engine is False
 
 
 def test_crossings_keep_the_served_units_and_carry_the_caution(monkeypatch):
@@ -232,18 +238,16 @@ def test_compute_metrics_only_end_to_end_with_a_prefetched_record(monkeypatch):
     assert set(out) == set(EIGHT)
     assert all(set(e) == shape for e in out.values())
     assert all(e["origin"] == "desktop" and e["na"] is False for e in out.values())
-    assert {mid for mid, e in out.items() if e["engine"]} == set(ENGINE_SIX)
-    assert {out[mid]["basis"] for mid in ENGINE_SIX} == {"site-engine"}
-    assert {out[mid]["basis"] for mid in STREAMCAT_ONLY} == {"streamcat"}
-    assert all("STAF site engine v0.2.2" in out[mid]["source"] for mid in ENGINE_SIX)
-    assert all(out[mid]["value"] == ENGINE_VALUES[mid] for mid in ENGINE_SIX)
-    assert all(out[mid]["value"] == SC_VALUES[mid] for mid in STREAMCAT_ONLY)
+    assert {mid for mid, e in out.items() if e["engine"]} == set(EIGHT)   # all eight since 0.3.0
+    assert {out[mid]["basis"] for mid in EIGHT} == {"site-engine"}      # all eight since 0.3.0
+    assert all("STAF site engine v0.2.2" in out[mid]["source"] for mid in EIGHT)
+    assert all(out[mid]["value"] == ENGINE_VALUES[mid] for mid in EIGHT)
     assert calls["n"] == 0                              # prefetched record reused
 
     out = measure.compute_metrics_only(
         ci, EIGHT, assessment={"predictorSource": MIXED_STAMP},
         engine_record=_engine_record())
-    assert {mid for mid, e in out.items() if e["engine"]} == set(ENGINE_SIX)
+    assert {mid for mid, e in out.items() if e["engine"]} == set(EIGHT)   # all eight since 0.3.0
 
     out = measure.compute_metrics_only(ci, EIGHT, assessment={},
                                        engine_record=_engine_record())

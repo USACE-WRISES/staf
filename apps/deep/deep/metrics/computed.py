@@ -345,8 +345,9 @@ def _dam_density(ctx):
 
 @adapter("spring-bfiws")
 def _baseflow_index(ctx):
-    return _layered(ctx, engine_key=None, sc_col="bfiws", sc_what="bfi",
-                    confidence="M")
+    return _layered(ctx, engine_key="baseflowIndexPct",
+                    engine_what="base flow index (exact watershed, USGS base-flow index grid)",
+                    sc_col="bfiws", sc_what="bfi", confidence="M")
 
 
 _RDCRS_NOTE = ("API-served units, enter values as served, a crossings per km2 "
@@ -355,8 +356,13 @@ _RDCRS_NOTE = ("API-served units, enter values as served, a crossings per km2 "
 
 @adapter("spring-rdcrsws")
 def _road_crossings(ctx):
-    return _layered(ctx, engine_key=None, sc_col="rdcrsws", sc_what="rdcrs",
-                    ndigits=4, confidence="M", sc_note=_RDCRS_NOTE)
+    # The engine counts crossings on the NHDPlus HR network per km2 (its own
+    # scale, 2026-09-05); the StreamCat path keeps the served-units caution.
+    return _layered(ctx, engine_key="roadCrossingDensity",
+                    engine_what="road-stream crossings per km2 (exact watershed, TIGERweb "
+                                "roads on the NHDPlus HR network)",
+                    sc_col="rdcrsws", sc_what="rdcrs", ndigits=4, confidence="M",
+                    sc_note=_RDCRS_NOTE)
 
 
 # --------------------------------------------------------------------------- #

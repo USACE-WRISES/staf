@@ -121,12 +121,13 @@ adversarial review):**
   `spring-pctimp2019ws`, `spring-pctcrop2019ws`, `spring-pctwdwet2019ws`,
   `spring-pcthbwet2019ws`, `spring-rddensws`, `spring-damdensws`,
   `spring-bfiws`, `spring-rdcrsws`. On a bundle fitted on engine predictors
-  the STAF site engine answers the first six from the exact watershed. On a
-  bundle fitted on StreamCat predictors the StreamCat lookup engine answers
-  all eight, and it always answers base flow index and road-stream crossings
-  because the engine has no analog. When routing to a covered reach is
-  declined, NLCD over the exact polygon stands in for the land-cover ids. The
-  crossings value carries the StreamCat API units caution in its source label.
+  the STAF site engine answers all eight from the exact watershed (base flow
+  index from the USGS base-flow index grid, crossings counted on the NHDPlus
+  HR network, both since engine 0.3.0). On a bundle fitted on StreamCat
+  predictors the StreamCat lookup engine answers all eight. When routing to a
+  covered reach is declined, NLCD over the exact polygon stands in for the
+  land-cover ids. A StreamCat crossings value carries the API units caution
+  in its source label.
 
 **Two watershed engines (2026-09):**
 
