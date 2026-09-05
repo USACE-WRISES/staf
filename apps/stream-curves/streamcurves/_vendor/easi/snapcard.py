@@ -2,8 +2,8 @@
 
 Pure copy, no Shiny: the app renders the lines and puts the tip behind its
 info icon. Three short lines say what happened, what EASI will do, and the
-one caveat; the numbers (drainage-area ratio, COMID, distance) live in the
-tip so the card never reads as an error. The routing payload is the
+one caveat; the network, the numbers (drainage-area ratio, COMID, distance),
+and the reasoning live in the tip so the card never reads as an error. The routing payload is the
 ``siteAnchor`` from ``easi.routing.route_from_hr``.
 """
 from __future__ import annotations
@@ -44,9 +44,9 @@ def hr_snap_card(anchor: dict) -> dict:
     name = clicked.get("gnisName") or "an unnamed stream"
     snap_ft = _ft(clicked.get("snapDistFt"))
     where = f"Snapped to {name} ({snap_ft} away)." if snap_ft else f"Snapped to {name}."
-    line1 = ("ok", f"✓ {where} Not in the StreamCat lookup network.")
-    line2 = ("", "EASI will compute the exact watershed with the STAF site engine "
-                 "(usually under a minute, up to about five on a large basin).")
+    line1 = ("ok", f"✓ {where}")
+    line2 = ("", "The STAF site engine calculates the exact watershed, usually in "
+                 "under a minute.")
 
     reach_name = scored.get("gnisName") or "an unnamed reach"
     comid = scored.get("comid")
@@ -68,7 +68,7 @@ def hr_snap_card(anchor: dict) -> dict:
                    "stream.")
     else:
         tail = f", {routed} downstream." if routed else " downstream."
-        line3 = ("", f"Reach evidence from {reach_id}{tail}")
+        line3 = ("", f"Three reach metrics come from {reach_name}{tail}")
         ratio_txt = (f" It drains {ratio} times this stream (limit {limit})."
                      if ratio is not None else "")
         why = (f"They describe {reach_id}"
@@ -77,8 +77,8 @@ def hr_snap_card(anchor: dict) -> dict:
 
     tip_html = (
         '<div class="easi-tip-title">Reach-keyed evidence</div>'
-        f'<div class="easi-tip-sec">Three metrics come from a reach on the StreamCat '
-        f'network, not from the clicked stream: {escape(REACH_METRICS)}.</div>'
+        '<div class="easi-tip-sec">This stream is not on the StreamCat network. Three '
+        f'metrics need a reach that is: {escape(REACH_METRICS)}.</div>'
         f'<div class="easi-tip-sec">{escape(why)}</div>'
         '<div class="easi-tip-sec">Everything else scores here: the eight watershed '
         'metrics from the exact watershed, the reach metrics on the clicked stream, '
