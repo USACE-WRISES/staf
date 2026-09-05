@@ -28,9 +28,8 @@ mapping, and report — with scoring authority moved from the system to the user
 
 Evidence is pulled per metric from national services and shown with a source
 label, a provenance badge, and a suggested Likert; the assessor always scores.
-Two watershed engines answer the watershed metrics, in a fixed order that is
-never a user choice (the definitions live in `libs/README.md` and on the STAF
-site's Computation Engines page):
+One watershed engine answers the watershed metrics (the definitions live in
+`libs/README.md` and on the STAF site's Computation Engines page):
 
 1. **STAF site engine** (`sfari/engine_prefill.py` over the vendored
    `sfari/_vendor/site_engine/`): the exact watershed at the clicked point on
@@ -39,32 +38,28 @@ site's Computation Engines page):
    impoundments (NID normal storage), soil erodibility (area-weighted K), the
    2001 to 2021 impervious change, and dam storage per km2. Entries carry
    `origin="engine"`, the engine version, and a value text ending in
-   "(exact watershed)". On a stream outside the NHDPlus V2 network the engine
-   also supplies the watershed and the reach themselves.
-2. **StreamCat lookup engine**: EPA StreamCat by NHDPlus V2 COMID, including
-   `rddensws` (road density) and `damnrmstorws` (normal dam storage). The
-   labeled fallback: `origin="streamcat"`, `fallback_reason` when the site
-   engine failed or refused, `upgrade_pending` while it still runs on a
-   covered site, and `anchor_label` naming the nearest covered reach the value
-   describes on a stream outside V2 (withheld past a 10x drainage-area ratio).
-3. **Direct services** (`origin="pull"`): NWIS gages, WQP nutrients, NWI
-   wetlands, NID dams near the reach, TIGERweb road counts (the primary,
-   secondary, and local layers, a failed layer yields no count, never a
-   partial sum), and NHDPlus attributes.
+   "(exact watershed)". The engine also supplies the watershed and the
+   assessment reach themselves, at every site. While it runs a mapped row is
+   `pending`; when it fails or refuses the row is unavailable and says why.
+   Nothing is substituted from a neighboring NHDPlus V2 reach (2026-09-05).
+2. **Direct services** (`origin="pull"`): NWIS gages, WQP nutrients, NWI
+   wetlands, NID dams near the reach, and the NHDPlus HR attributes the
+   engine reports (slope, flow permanence, sinuosity).
+
+Sessions saved before 2026-09-05 may carry `origin="streamcat"` entries with
+`anchor_label`, `fallback_reason`, or `upgrade_pending`; they still open and
+display, and a new pull never produces them.
 
 ### Any NHD stream
 
-The map draws the NHDPlus V2 network (dark blue, clickable, StreamCat data
-available) over the full high-resolution NHD (cyan) from the engine's HR
-client. A V2 click delineates the NLDI basin at once and starts the site
-engine in the background; StreamCat values show immediately and upgrade in
-place when the engine finishes (usually well under a minute, up to about five minutes on a large basin, refused past the
-interactive reach budget). An HR-only click is anchored to the nearest covered
-reach downstream (`sfari/hr_site.py`, the engine's shared classification),
-Delineate computes the exact watershed and reach with the engine, and the
-mapped rows stay `pending` until it finishes. If the engine fails there, the
-app offers the covered reach's V2 basin behind a confirm, labeled as describing
-that reach. Sessions carry `siteAnchor`, `siteEngine` (geometry stripped), and
+The map draws the full high-resolution NHD from the engine's HR client, in one
+color. Every click, and every typed point, snaps to it (`sfari/hr_site.py`, a
+thin adapter over the vendored engine), the point lands at once, and
+Delineate runs the STAF site engine for the exact watershed and the reach
+(usually under a minute, up to about five minutes on a large basin, refused
+past the interactive reach budget). If the engine fails the site stays on
+Identify with the reason, so Delineate can retry; there is no covered-reach
+basin to fall back on. Sessions carry `siteEngine` (geometry stripped) and
 `watershedBasis` inside the delineation block; the schema version is unchanged.
 
 ## Layout
@@ -106,8 +101,8 @@ can be deployed to **Posit Connect Cloud** straight from VS Code:
 The bundle is `app.py`, `requirements.txt`, and the `sfari/`, `data/`, and `www/`
 folders (the vendored site engine rides inside `sfari/`). The site engine needs
 `requests`, `shapely`, and `geopandas` importable at runtime; if that stack is
-absent the HR layer is not drawn, every engine-backed row falls to the labeled
-StreamCat value, and the other evidence tiers still run.
+absent the map draws no streams and the watershed evidence is unavailable; the
+direct-service tiers still run.
 No API keys are required at runtime; a free USGS NWIS key is optional
 (higher rate limit on the shared egress IP), set as a Connect Cloud environment
 variable. The HyRiver cache is directed to `/tmp` (ephemeral filesystem). Exports
