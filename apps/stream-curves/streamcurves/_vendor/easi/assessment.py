@@ -425,9 +425,9 @@ def _xsection_geom_block(geom: dict, slope, fcode=None) -> Optional[dict]:
 
 
 def _build_cross_section(geom: dict, slope=None, fcode=None, unit: str = "ft") -> Optional[dict]:
-    """Stash an editable geometry block for every candidate transect (upstream /
-    middle / downstream) and render the selected one's PNG (others render on demand
-    when switched in the report)."""
+    """Stash an editable geometry block for every candidate transect (the sampled
+    sections along the reach) and render the selected one's PNG (others render on
+    demand when switched in the report)."""
     cand_geoms = geom.get("candidates") or [geom]
     res = geom.get("dem_resolution_m")
     src = f"USGS 3DEP {res} m DEM" if res else "USGS 3DEP DEM"
@@ -436,6 +436,8 @@ def _build_cross_section(geom: dict, slope=None, fcode=None, unit: str = "ft") -
         b = _xsection_geom_block(c, slope, fcode)
         if b is not None:
             b["label"] = c.get("label")
+            b["station_ft"] = c.get("station_ft")
+            b["position_frac"] = c.get("position_frac")
             b["dem_resolution_m"] = res     # 1 or 10; drives the plot's source caption
             b["dem_source"] = src
             blocks.append(b)

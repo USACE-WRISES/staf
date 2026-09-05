@@ -52,7 +52,7 @@ def _best_available_dem(buf4326):
 
 
 def reach_geomorphology(reach_geojson: dict | None, da_sqkm: float,
-                        spacing: float = 10.0, n_transects: int = 9,
+                        spacing: float = 10.0, n_transects: int = geomorph.XS_COUNT,
                         bankfull: tuple[float, float] | None = None,
                         bankfull_area_m2: float | None = None,
                         division: str | None = None) -> dict:
@@ -60,7 +60,9 @@ def reach_geomorphology(reach_geojson: dict | None, da_sqkm: float,
     (Bieger) for the analysis location; falls back to the national curve.
     ``bankfull_area_m2`` = the Bieger regional bankfull cross-sectional area, solved
     for a stage on each sampled profile to set the bankfull line (see
-    ``geomorph.summarize_profile``)."""
+    ``geomorph.summarize_profile``). ``n_transects`` evenly spaced sections
+    (1/8 to 7/8 of the reach by default) are all selectable; the default is the
+    reach median (``geomorph.median_candidate``, 2026-09-04)."""
     if not reach_geojson:
         return {}
     try:
@@ -89,7 +91,7 @@ def reach_geomorphology(reach_geojson: dict | None, da_sqkm: float,
         step = min(spacing, float(dem_res))
         n_pts = min(int(2 * wide / step) + 1, 2001)
         usable: list[tuple[float, list[float], list[float]]] = []  # (pos_frac, stations, elevs)
-        for frac in np.linspace(0.15, 0.85, n_transects):
+        for frac in np.linspace(0.0, 1.0, n_transects + 2)[1:-1]:
             s = line.length * float(frac)
             p = line.interpolate(s)
             p2 = line.interpolate(min(s + 5.0, line.length))
@@ -111,26 +113,11 @@ def reach_geomorphology(reach_geojson: dict | None, da_sqkm: float,
         if not usable:
             return {}
 
-        # Three selectable cross-sections: the highest-relief (most channel-like)
-        # transect within the upstream, middle, and downstream third of the reach.
-        labels = ("Upstream", "Middle", "Downstream")
-        candidates = []
-        for i, label in enumerate(labels):
-            lo, hi = 0.15 + i * (0.70 / 3.0), 0.15 + (i + 1) * (0.70 / 3.0)
-            third = [u for u in usable if lo <= u[0] <= hi] or usable
-            best = max(third, key=lambda u: max(u[2]) - min(u[2]))  # greatest relief
-            c = geomorph.summarize_profile(best[1], best[2], da_sqkm or 1.0,
-                                           bankfull=bankfull,
-                                           bankfull_area_m2=bankfull_area_m2,
-                                           division=division)
-            c["label"] = label
-            candidates.append(c)
-
-        selected = 1 if len(candidates) >= 2 else 0  # default = middle
-        out = dict(candidates[selected])  # top-level = the selected (middle) candidate
-        out["candidates"] = candidates
-        out["selected"] = selected
-        out["n_transects"] = len(usable)
+        out = geomorph.candidates_from_transects(
+            usable, float(line.length), da_sqkm or 1.0, bankfull=bankfull,
+            bankfull_area_m2=bankfull_area_m2, division=division)
+        if not out:
+            return {}
         out["dem_resolution_m"] = dem_res
         return out
     except Exception:  # noqa: BLE001 - resilience by design
