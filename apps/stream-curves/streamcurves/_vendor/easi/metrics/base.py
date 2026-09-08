@@ -51,14 +51,32 @@ def nrsa_evidence(ctx: "AnalysisContext") -> Optional[dict]:
     return value if isinstance(value, dict) else None
 
 
-def comid_evidence_note(ctx: "AnalysisContext", default: str) -> str:
-    """The unavailable-note for a COMID-keyed metric: the withholding reason
-    when a routed site's nearest covered reach lies past the substitution
-    limit, else the adapter's own note."""
-    withheld = ctx.extras.get("comidEvidence") or {}
-    if withheld.get("withheld"):
-        return str(withheld.get("reason") or default)
-    return default
+# The cross-section metrics (ER, BHR) score on the reach medians of the sampled
+# sections since 2026-09-06; a geometry without reach statistics (a legacy
+# single-section geom, a flat test stub) keeps the single-section wording.
+XS_SOURCE_LEGACY = "USGS 3DEP representative cross section"
+XS_REACH_NOTE = ("Scored on the reach median; the plotted section is the one nearest "
+                 "the medians.")
+
+
+def xs_cap_note(bhr_stats: Optional[dict]) -> str:
+    """The sentence for a reach whose default low bank hit the floodprone cap on
+    some sections, or ``""``."""
+    s = bhr_stats or {}
+    capped, n = int(s.get("capped") or 0), int(s.get("n") or 0)
+    if not capped:
+        return ""
+    return (f"No bank was found below the floodprone stage on {capped} of {n} sections. "
+            "Those read 2.00, the cap at twice the bankfull depth.")
+
+
+def xs_source(geom: Optional[dict]) -> str:
+    """The source label of a cross-section metric: the reach cross-sections
+    (median of N) when the geometry carries reach statistics, else the single
+    representative section of a legacy geometry."""
+    n = int(((geom or {}).get("reach") or {}).get("n") or 0)
+    return (f"USGS 3DEP reach cross-sections (median of {n})" if n >= 2
+            else XS_SOURCE_LEGACY)
 
 
 def _integrity_value(value: Any) -> Optional[float]:

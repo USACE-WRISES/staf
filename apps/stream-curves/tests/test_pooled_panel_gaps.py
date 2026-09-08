@@ -38,21 +38,31 @@ def test_the_legacy_panel_still_has_no_comid_column():
     assert "comid" not in panel.columns
 
 
-def test_attach_comids_prefers_the_screen_then_the_panel_then_the_evidence_file():
+def test_attach_comids_prefers_the_panel_then_the_screen_then_the_evidence_file():
+    """The panel's COMID is the reach the NRSA crew sampled, so it wins (2026-09-07).
+
+    The screen used to win, which meant a site routed to a reach downstream
+    silently replaced the sampled reach as the StreamCat key for curve fitting.
+    The screen's answer is still recorded per site, in the screening table's
+    routed_comid / comid_differs columns.
+    """
     base = pd.DataFrame({"site_id": ["A", "B", "C"], "comid": [111, None, 333]})
-    screen = {"easi_screening_sites": [{"site_id": "A", "comid": 999}]}
+    screen = {"easi_screening_sites": [{"site_id": "A", "comid": 999},
+                                       {"site_id": "B", "comid": 222}]}
     out = ra.attach_comids(base, screen)
-    assert out["comid"].iloc[0] == 999      # the screen's snapped reach wins
+    assert out["comid"].iloc[0] == 111      # the sampled reach survives the screen
+    assert out["comid"].iloc[1] == 222      # the panel had none, so the screen fills it
     assert out["comid"].iloc[2] == 333      # the panel's value survives
-    assert pd.isna(out["comid"].iloc[1])    # nothing known stays unknown
 
 
 def test_attach_comids_fills_a_frame_that_already_has_the_column():
-    """It used to return early on an existing column, which would have thrown away
-    the screen's better answer for every pooled row."""
-    base = pd.DataFrame({"site_id": ["A"], "comid": [111]})
-    out = ra.attach_comids(base, {"easi_screening_sites": [{"site_id": "A", "comid": 999}]})
-    assert out["comid"].iloc[0] == 999
+    """A frame with the column is filled, not returned early: the panel's own value
+    stays, and a blank or the archive's zero sentinel takes the screen's."""
+    base = pd.DataFrame({"site_id": ["A", "B"], "comid": [111, 0]})
+    out = ra.attach_comids(base, {"easi_screening_sites": [
+        {"site_id": "A", "comid": 999}, {"site_id": "B", "comid": 999}]})
+    assert out["comid"].iloc[0] == 111
+    assert out["comid"].iloc[1] == 999      # 0 means EPA published none
 
 
 def test_attach_comids_accepts_a_screening_table_in_either_shape():

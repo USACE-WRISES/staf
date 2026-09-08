@@ -33,6 +33,11 @@ metrics:
   pctcrop2019:  {higher_is_better: false, metric_family: proportion, domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing."}
 
   # --- Hydrology: Surface water storage ---
+  # One curve for wetland storage since 2026-09-07 (review item ECO-15): the
+  # two NLCD classes are one function, and split they produced bands in
+  # hundredths of a percent and a degenerate herbaceous curve. EASI scores the
+  # same sum. The split codes stay pickable for an assessment that wants them.
+  pctwet2019:   {higher_is_better: true,  metric_family: proportion, caveat: "Wetland cover follows terrain: a steep watershed that never held wetland reads low on this curve without being degraded.", domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed wetland (%), woody plus herbaceous, both classes required; wetlands store surface water and attenuate flow peaks. EASI scores Surface water storage on the same sum (method watershed-wetland-extent)."}
   pctwdwet2019: {higher_is_better: true,  metric_family: proportion, caveat: "Wetland cover follows terrain: a steep watershed that never held wetland reads low on this curve without being degraded.", domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed woody wetland (%); wetlands store surface water and attenuate flow peaks."}
   pcthbwet2019: {higher_is_better: true,  metric_family: proportion, caveat: "Reference bands of hundredths of a percent sit below the land-cover product's wetland-class accuracy, and a steep watershed that never held herbaceous wetland reads low without being degraded.", domain_min: 0, domain_max: 100, source: expert, confidence: high,     note: "Watershed herbaceous wetland (%); wetlands store surface water and attenuate flow peaks."}
 

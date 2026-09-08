@@ -363,7 +363,10 @@ def transect_entrenchment(stations: list[float], elevs: list[float],
     flood-prone stage = thalweg + 2*bankfull_depth; ER = flood-prone width /
     bankfull width (regional-curve width as the denominator avoids the
     floodplain-inclusion error of measuring bankfull width on a flat DEM).
-    Returns None if the transect is unusable.
+    Returns None if the transect is unusable. Not on the live path since
+    2026-09-06 (that is :func:`candidates_from_transects` through
+    :func:`summarize_profile`); kept for the EASI and StreamCurves
+    cross-check tests.
     """
     if len(stations) < 5 or w_bf <= 0 or d_bf <= 0:
         return None
@@ -409,19 +412,34 @@ def top_of_bank_elev(stations: list[float], elevs: list[float]) -> Optional[floa
 # Slope-break bank detection (drives the default low-bank height): walking outward
 # from the thalweg, the bank is the first *definitive* break in slope onto a flat
 # depositional surface (floodplain or bench). Tunable policy:
-BANK_ARM_RISE_M = 0.3      # must climb at least this above the thalweg ...
+BANK_ARM_RISE_M = 0.3      # must climb at least this above the thalweg (10 m DEMs) ...
+BANK_ARM_RISE_FINE_M = 0.10  # ... or this on 1 m lidar (its vertical noise, QL2 RMSE about
+#                              0.1 m; the 0.3 m floor hid every bank on channels under
+#                              0.15 m deep and pinned their ratio at the cap, 2026-09-07) ...
 BANK_ARM_RISE_FRAC = 0.25  # ... and this fraction of bankfull depth, before a flat counts
+BHR_CAP = 2.0              # the default low bank never sits above the floodprone stage
 BANK_FLAT_GRADE = 0.05     # |forward avg slope| under 5% reads as flat ...
 BANK_FLAT_REL = 0.25       # ... and it must be under 25% of the steepest climb so far
 BANK_FLAT_LEN_M = 3.0      # the flat must persist this long horizontally
 
 
+def bank_rise_floor(dem_res_m: Optional[float]) -> float:
+    """The climb a bank must make above the bed before a flat counts: the lidar
+    floor on 1 m models, the 10 m convention otherwise or when unknown."""
+    try:
+        fine = dem_res_m is not None and float(dem_res_m) <= 1.5
+    except (TypeError, ValueError):
+        fine = False
+    return BANK_ARM_RISE_FINE_M if fine else BANK_ARM_RISE_M
+
+
 def bank_break_elev(stations: list[float], elevs: list[float], *, d_bf: float,
-                    thalweg_index: Optional[int] = None) -> Optional[float]:
+                    thalweg_index: Optional[int] = None,
+                    min_rise_m: float = BANK_ARM_RISE_M) -> Optional[float]:
     """Lower first-bank elevation: the first definitive slope break onto a flat.
 
     Walks outward from the thalweg computing point-to-point slopes. Once the
-    profile has climbed ``max(BANK_ARM_RISE_M, BANK_ARM_RISE_FRAC * d_bf)`` above
+    profile has climbed ``max(min_rise_m, BANK_ARM_RISE_FRAC * d_bf)`` above
     the thalweg (the implicit floor on the result), the first point whose forward
     ``BANK_FLAT_LEN_M`` window is flat — |average slope| under ``BANK_FLAT_GRADE``
     absolute AND under ``BANK_FLAT_REL`` of the steepest climbing segment walked so
@@ -436,7 +454,7 @@ def bank_break_elev(stations: list[float], elevs: list[float], *, d_bf: float,
     if n < 5 or d_bf is None or d_bf <= 0:
         return None
     ti = thalweg_index if thalweg_index is not None else min(range(n), key=lambda i: elevs[i])
-    arm = elevs[ti] + max(BANK_ARM_RISE_M, BANK_ARM_RISE_FRAC * float(d_bf))
+    arm = elevs[ti] + max(float(min_rise_m), BANK_ARM_RISE_FRAC * float(d_bf))
 
     def z_ahead(i: int, direction: int) -> Optional[float]:
         # elevation BANK_FLAT_LEN_M outward of point i (linear interpolation), or
@@ -493,9 +511,11 @@ def bank_height_ratio(stations: list[float], elevs: list[float],
 
 
 #: Cross-sections sampled along the assessment reach, evenly spaced and clear of
-#: both ends (1/8 to 7/8 of the reach): 125 ft apart on a 1,000 ft reach, about
-#: three bankfull widths on a 40 ft channel. One DEM fetch covers them all.
-XS_COUNT = 7
+#: both ends (1/10 to 9/10 of the reach): 100 ft apart on a 1,000 ft reach, two
+#: to three bankfull widths on a 40 ft channel. One DEM fetch covers them all,
+#: and the geometry metrics score on the reach medians of their ratios
+#: (:func:`reach_stats`, 2026-09-06).
+XS_COUNT = 9
 FT_PER_M = 3.28083989501312
 
 
@@ -527,13 +547,14 @@ def _avg_ranks(idx: list[int], values: dict[int, float]) -> dict[int, float]:
 
 
 def median_candidate(cands: list[dict]) -> int:
-    """Index of the reach's median cross-section: among candidates with both
-    ratios, the one whose entrenchment ratio and bank-height ratio are jointly
-    closest to the reach medians by rank (sum of absolute rank distances from
-    the median rank), ties to the section nearest the reach middle. Fewer than
-    three with both ratios: median entrenchment ratio alone, then the middle
-    section. Central for both ratios at once, rather than the median of one and
-    an outlier of the other (2026-09-04)."""
+    """Index of the plot's default section, the one nearest both reach medians:
+    among candidates with both ratios, the one whose entrenchment ratio and
+    bank-height ratio are jointly closest to the reach medians by rank (sum of
+    absolute rank distances from the median rank), ties to the section nearest
+    the reach middle. Fewer than three with both ratios: median entrenchment
+    ratio alone, then the middle section. This picks what is DRAWN; the
+    metrics score on the reach medians themselves (:func:`reach_stats`,
+    2026-09-06), which one section cannot hold for both ratios at once."""
     n = len(cands)
     if n == 0:
         return 0
@@ -556,21 +577,94 @@ def median_candidate(cands: list[dict]) -> int:
     return _nearest_middle(cands, list(range(n)))
 
 
+def _ratio_values(cands: list[dict], key: str) -> list[float]:
+    return [float(c[key]) for c in cands if c.get(key) is not None]
+
+
+def reach_stats(cands: list[dict]) -> dict:
+    """The reach's per-ratio statistics over the sampled sections: ``{"n": N,
+    "entrenchment_ratio": {"median", "min", "max", "n"}, "bank_height_ratio":
+    {...}}``. A ratio key is absent when no section has that ratio. The median
+    skips sections without the ratio; an even count averages the middle two
+    (``statistics.median``). These are the values the geometry metrics score
+    on (2026-09-06)."""
+    out: dict = {"n": len(cands)}
+    for key in ("entrenchment_ratio", "bank_height_ratio"):
+        vals = _ratio_values(cands, key)
+        if vals:
+            out[key] = {"median": round(median(vals), 2), "min": round(min(vals), 2),
+                        "max": round(max(vals), 2), "n": len(vals)}
+    bhr = out.get("bank_height_ratio")
+    if bhr:
+        # a section whose default low bank hit the floodprone cap reads exactly
+        # BHR_CAP, so a median or maximum at the cap with any capped section
+        # means "at least" that value
+        capped = sum(1 for c in cands
+                     if c.get("bank_height_ratio") is not None and c.get("low_bank_capped"))
+        bhr["capped"] = capped
+        bhr["median_capped"] = bool(capped and bhr["median"] >= BHR_CAP - 1e-9)
+        bhr["max_capped"] = bool(capped and bhr["max"] >= BHR_CAP - 1e-9)
+    return out
+
+
+def fmt_bhr(value, capped: bool = False, *, words: bool = False) -> str:
+    """A bank-height ratio for display: ``≥2.00`` (or ``at least 2.00`` with
+    ``words``, for prose and the PDF) when ``capped`` and the value sits at the
+    floodprone cap, else two decimals, ``n/a`` for None."""
+    if value is None:
+        return "n/a"
+    v = float(value)
+    if capped and v >= BHR_CAP - 1e-9:
+        return f"at least {v:.2f}" if words else f"≥{v:.2f}"
+    return f"{v:.2f}"
+
+
+def median_edge_limited(cands: list[dict]) -> bool:
+    """True when a section holding the reach-median entrenchment ratio (the
+    middle one, or either of the middle two on an even count) is edge-limited,
+    so the median ER may be underestimated the way that section's is."""
+    with_er = sorted((c for c in cands if c.get("entrenchment_ratio") is not None),
+                     key=lambda c: float(c["entrenchment_ratio"]))
+    n = len(with_er)
+    if n == 0:
+        return False
+    mid = [with_er[n // 2]] if n % 2 else [with_er[n // 2 - 1], with_er[n // 2]]
+    return any(bool(c.get("edge_limited")) for c in mid)
+
+
+def describe_reach(stats: Optional[dict], key: str) -> str:
+    """``reach median of 9 sections (1.26 to 2.24)`` for the metric texts, or
+    ``""`` when the geometry carries no reach statistics for ``key`` or only
+    one section (a median of one says nothing)."""
+    s = (stats or {}).get(key) or {}
+    n = int(s.get("n") or 0)
+    if s.get("median") is None or n < 2:
+        return ""
+    hi = (fmt_bhr(s["max"], True, words=True)
+          if key == "bank_height_ratio" and s.get("max_capped") else f"{s['max']:.2f}")
+    return f"reach median of {n} sections ({s['min']:.2f} to {hi})"
+
+
 def candidates_from_transects(usable, reach_len_m: float, da_sqkm: float, *,
                               bankfull: Optional[tuple[float, float]] = None,
                               bankfull_area_m2: Optional[float] = None,
-                              division: Optional[str] = None) -> dict:
-    """Every usable transect as a selectable cross-section, the reach median as
-    the default. ``usable`` is ``[(position_frac, stations, elevs), ...]`` with
-    the fraction measured from the upstream end of the reach line. Each
-    candidate is :func:`summarize_profile` plus ``position_frac``, ``station_ft``
-    and a ``label`` ("125 ft"); the result's top level is the selected candidate
-    (what the geometry metrics read) with ``candidates``, ``selected`` and
-    ``n_transects`` beside it. Pure, so it is tested offline."""
+                              division: Optional[str] = None,
+                              dem_res_m: Optional[float] = None) -> dict:
+    """Every usable transect as a selectable cross-section. ``usable`` is
+    ``[(position_frac, stations, elevs), ...]`` with the fraction measured from
+    the upstream end of the reach line. Each candidate is
+    :func:`summarize_profile` plus ``position_frac``, ``station_ft`` and a
+    ``label`` ("100 ft"). The result's top level is the drawn default section
+    (:func:`median_candidate`, the one nearest both medians) except that
+    ``entrenchment_ratio``, ``bank_height_ratio`` and ``edge_limited`` are the
+    reach medians the geometry metrics score on (:func:`reach_stats`, also
+    stored as ``reach``), with ``candidates``, ``selected`` and ``n_transects``
+    beside them. Pure, so it is tested offline."""
     cands: list[dict] = []
     for frac, st, el in sorted(usable, key=lambda u: float(u[0])):
         c = summarize_profile(list(st), list(el), da_sqkm or 1.0, bankfull=bankfull,
-                              bankfull_area_m2=bankfull_area_m2, division=division)
+                              bankfull_area_m2=bankfull_area_m2, division=division,
+                              dem_res_m=dem_res_m)
         c["position_frac"] = round(float(frac), 4)
         c["station_ft"] = int(round(float(frac) * float(reach_len_m) * FT_PER_M))
         c["label"] = f"{c['station_ft']:,} ft"
@@ -578,27 +672,18 @@ def candidates_from_transects(usable, reach_len_m: float, da_sqkm: float, *,
     if not cands:
         return {}
     selected = median_candidate(cands)
+    stats = reach_stats(cands)
     out = dict(cands[selected])
+    # The metrics read the top level: the reach medians, not the drawn
+    # section's own ratios (those stay on ``candidates[selected]``).
+    out["entrenchment_ratio"] = (stats.get("entrenchment_ratio") or {}).get("median")
+    out["bank_height_ratio"] = (stats.get("bank_height_ratio") or {}).get("median")
+    out["edge_limited"] = median_edge_limited(cands)
+    out["reach"] = stats
     out["candidates"] = cands
     out["selected"] = selected
     out["n_transects"] = len(cands)
     return out
-
-
-def _representative(per: list[dict], ers: list[float]) -> Optional[dict]:
-    """Pick the transect whose ER is closest to the reach median ER.
-
-    Falls back to the transect with the greatest relief (most channel-like) so a
-    profile is retained even when no transect yields a usable entrenchment ratio.
-    """
-    usable = [p for p in per if p["er"] is not None]
-    if usable and ers:
-        med = median(ers)
-        return min(usable, key=lambda p: abs(p["er"] - med))
-    candidates = [p for p in per if len(p["stations"]) >= 5]
-    if not candidates:
-        return None
-    return max(candidates, key=lambda p: (max(p["elevs"]) - min(p["elevs"])))
 
 
 def derive_from_stages(stations: list[float], elevs: list[float], *,
@@ -647,8 +732,16 @@ def derive_from_stages(stations: list[float], elevs: list[float], *,
 def summarize_profile(stations: list[float], elevs: list[float], da_sqkm: float, *,
                       bankfull: Optional[tuple[float, float]] = None,
                       bankfull_area_m2: Optional[float] = None,
-                      division: Optional[str] = None) -> dict:
+                      division: Optional[str] = None,
+                      dem_res_m: Optional[float] = None) -> dict:
     """Rosgen summary for one station-elevation profile at its default stages.
+
+    ``dem_res_m`` picks the bank detector's climb floor (:func:`bank_rise_floor`).
+    The result carries ``bankfull_stage_m``, the exact stage the ratios were
+    measured at (``bankfull_depth_m`` is rounded for display and must not be
+    used to rebuild the stage), and ``low_bank_capped``, true when the default
+    low bank hit the floodprone cap so the bank-height ratio reads as at least
+    ``BHR_CAP``.
 
     Bankfull stage is the depth at which the channel cross-sectional area equals the
     Bieger regional bankfull area (``bankfull_area_m2``, solved on this profile via
@@ -682,7 +775,8 @@ def summarize_profile(stations: list[float], elevs: list[float], da_sqkm: float,
     # Rosgen) stays the ceiling for the *default*. Where no break exists (valley
     # walls, flat/short profiles) fall back to the crest scan with the legacy
     # [bankfull, floodprone] clamp. The user can still edit the height freely.
-    brk = bank_break_elev(stations, elevs, d_bf=d_bf, thalweg_index=ti)
+    brk = bank_break_elev(stations, elevs, d_bf=d_bf, thalweg_index=ti,
+                          min_rise_m=bank_rise_floor(dem_res_m))
     if brk is not None:
         low_bank_stage = min(brk, thalweg + 2.0 * d_bf)
     else:
@@ -692,7 +786,11 @@ def summarize_profile(stations: list[float], elevs: list[float], da_sqkm: float,
                            bankfull_stage=bankfull_stage, floodplain_stage=low_bank_stage)
     out: dict = {"profile": {"stations": list(stations), "elevs": list(elevs)},
                  "thalweg": thalweg, "fp_stage_m": thalweg + 2.0 * d_bf,
+                 "bankfull_stage_m": bankfull_stage,
                  "low_bank_stage_m": low_bank_stage,
+                 # the default low bank hit the floodprone cap: the first bank sat
+                 # above twice the bankfull depth, or no side broke onto a flat
+                 "low_bank_capped": bool(low_bank_stage >= thalweg + BHR_CAP * d_bf - 1e-9),
                  "bankfull_width_m": d.get("bankfull_width_m") or round(w_bf, 1),
                  "bankfull_depth_m": round(d_bf, 2),
                  "flood_prone_width_m": d.get("flood_prone_width_m"),
@@ -706,31 +804,4 @@ def summarize_profile(stations: list[float], elevs: list[float], da_sqkm: float,
         out["top_of_bank_m"] = tob
     if division:
         out["bankfull_division"] = division
-    return out
-
-
-def reach_summary(transects: list[tuple[list[float], list[float]]],
-                  da_sqkm: float, *,
-                  bankfull: Optional[tuple[float, float]] = None,
-                  division: Optional[str] = None) -> dict:
-    """Per-reach summary on the *representative* transect (median entrenchment ratio).
-
-    ``bankfull`` is an optional precomputed ``(width_m, depth_m)`` — the caller injects
-    the regional (Bieger) estimate; when None the national curve is used. ER/BHR/widths
-    and the retained profile come from :func:`summarize_profile` on the representative
-    transect, so the editable cross-section and the metrics share the same values.
-    """
-    w_bf, d_bf = bankfull if bankfull is not None else bankfull_geometry(da_sqkm)
-    per = [{"stations": s, "elevs": e,
-            "er": (te["er"] if (te := transect_entrenchment(s, e, d_bf, w_bf)) else None)}
-           for s, e in transects]
-    ers = [p["er"] for p in per if p["er"] is not None]
-    out: dict = {"bankfull_width_m": round(w_bf, 1), "bankfull_depth_m": round(d_bf, 2),
-                 "n_transects": len(transects)}
-    if division:
-        out["bankfull_division"] = division
-    rep = _representative(per, ers)
-    if rep is not None:
-        out.update(summarize_profile(rep["stations"], rep["elevs"], da_sqkm,
-                                     bankfull=bankfull, division=division))
     return out

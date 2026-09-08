@@ -119,10 +119,10 @@ def test_anchor_column_only_for_routed_sites():
     assert pt["properties"]["metrics"][mid]["engine"] == "StreamCat lookup engine"
 
 
-def _site_engine_result(*, declined=False) -> dict:
+def _site_engine_result(*, ratio=5.48) -> dict:
     res = _result()
     res["siteAnchor"] = _hr_anchor()
-    res["siteAnchor"]["routing"]["declined"] = declined
+    res["siteAnchor"]["routing"]["daRatio"] = ratio
     res["delineation"].update({
         "gnis_name": "(unnamed stream)", "drainage_area_sqkm": 2.72,
         "watershed_area_sqkm": 2.61, "watershed_source": "site-engine",
@@ -131,7 +131,7 @@ def _site_engine_result(*, declined=False) -> dict:
                              "nHops": 2, "areaSqkm": 2.61, "vaaAreaSqkm": 2.72,
                              "areaAgreement": 0.96}})
     row = res["report"]["metricRows"][0]
-    row.update(anchor="watershed", anchorLabel="exact watershed (STAF site engine)",
+    row.update(anchor="watershed", anchorLabel="HR reach watershed (STAF site engine)",
                engine="site-engine", engineLabel="STAF site engine")
     return res
 
@@ -143,15 +143,19 @@ def test_site_engine_rows_in_csv_and_pdf():
     assert b"Assessed stream (NHDPlus HR)" in b
     assert b"STAF site engine v0.2.0" in b
     assert b"COMID-keyed evidence reach,COMID 5215053" in b
-    assert b"Exact watershed area (km2),2.61" in b
+    assert b"HR reach watershed area (km2),2.61" in b
     assert b"Scored at surrogate reach" not in b
-    assert b"exact watershed (STAF site engine),STAF site engine" in b
+    assert b"HR reach watershed (STAF site engine),STAF site engine" in b
     pdf = report.build_pdf(res)
     assert pdf[:4] == b"%PDF"
 
-    declined = _site_engine_result(declined=True)
-    b2 = report.build_csv(declined)
-    assert b"COMID-keyed evidence reach,unavailable past the substitution limit" in b2
+    # the ratio is provenance, never a gate: no limit row, the reach always named
+    assert b"Drainage area ratio,5.48" in b
+    assert b"Drainage area ratio limit" not in b
+    past = _site_engine_result(ratio=37.2)
+    b2 = report.build_csv(past)
+    assert b"COMID-keyed evidence reach,COMID 5215053" in b2
+    assert b"Drainage area ratio,37.2" in b2
 
 
 def test_not_calculated_rows_in_csv():

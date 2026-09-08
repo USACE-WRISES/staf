@@ -20,15 +20,15 @@ V2_DELIN = {"delineation": {"comid": 9311402, "network": "nhdplus-v2", "gnis_nam
 
 
 def test_watershed_basis_label():
-    assert report.watershed_basis_label(HR_DELIN) == "exact watershed (STAF site engine v0.2.0)"
+    assert report.watershed_basis_label(HR_DELIN) == "HR reach watershed (STAF site engine v0.2.0)"
     assert report.watershed_basis_label(V2_DELIN) == "NHDPlus V2 basin (StreamCat lookup engine)"
     assert report.watershed_basis_label({}) == "NHDPlus V2 basin (StreamCat lookup engine)"
     upgraded = {**V2_DELIN, "siteEngine": {"status": "ok", "engineVersion": "0.2.0"}}
     assert report.watershed_basis_label(upgraded) == (
-        "NHDPlus V2 basin drawn, watershed metrics from the exact watershed "
+        "NHDPlus V2 basin drawn, watershed metrics from the HR reach watershed "
         "(STAF site engine v0.2.0)")
     surrogate = {**V2_DELIN, "watershedBasis": "nhdplus-v2-basin-of-surrogate"}
-    assert "nearest covered reach" in report.watershed_basis_label(surrogate)
+    assert "nearest StreamCat reach" in report.watershed_basis_label(surrogate)
     for d in (HR_DELIN, V2_DELIN, upgraded, surrogate):
         assert "—" not in report.watershed_basis_label(d)
 
@@ -36,8 +36,11 @@ def test_watershed_basis_label():
 def test_reach_id_uses_the_nhdplusid_on_hr_sites():
     assert report._reach_id_str(HR_DELIN["delineation"]) == "NHDPlusID 750012345"
     assert report._reach_id_str(V2_DELIN["delineation"]) == "COMID 9311402"
-    assert report.field_forms_filename(HR_DELIN) == "sfari-field-forms-nhdplusid-750012345.pdf"
-    assert report.field_forms_filename(V2_DELIN) == "sfari-field-forms-comid-9311402.pdf"
+    # the field forms are the blank worksheet, so their filename never names a site;
+    # the desktop metrics PDF does
+    assert report.field_forms_filename(HR_DELIN) == "sfari-field-forms.pdf"
+    assert report.desktop_metrics_filename(HR_DELIN) == "sfari-desktop-metrics-nhdplusid-750012345.pdf"
+    assert report.desktop_metrics_filename(V2_DELIN) == "sfari-desktop-metrics-comid-9311402.pdf"
 
 
 def test_pending_status_text():
@@ -50,12 +53,21 @@ def test_csv_carries_origin_and_describes():
         "metric_id": "catchment-hydrology-road-density", "value": 0.9,
         "value_text": "0.90 km/km2 road density (watershed)", "source": "EPA StreamCat rddens",
         "status": "ok", "origin": "streamcat",
-        "anchor_label": "nearest covered reach, COMID 5214461, 1,240 ft downstream, DA ratio 1.8"}}
+        "anchor_label": "nearest StreamCat reach, COMID 5214461, 1,240 ft downstream, DA ratio 1.8"}}
     csv = report.build_csv(HR_DELIN, {}, {}, evidence, scoring.score_assessment({}))
     lines = csv.splitlines()
     header = next(ln for ln in lines if ln.startswith("Category,"))
     assert header.endswith("Source,Origin,Describes,Note")
     row = next(ln for ln in lines if "Road density" in ln or "road-density" in ln
                or "0.90 km/km2" in ln)
-    assert ",streamcat," in row and "nearest covered reach" in row
-    assert "Watershed basis" in csv and "exact watershed (STAF site engine v0.2.0)" in csv
+    assert ",streamcat," in row and "nearest StreamCat reach" in row
+    assert "Watershed basis" in csv and "HR reach watershed (STAF site engine v0.2.0)" in csv
+
+
+def test_csv_header_carries_the_watershed_area_only_when_there_is_one():
+    # the no-watershed continuation has no polygon: no area row (the PDF header
+    # already skipped it); an engine delineation prints it
+    sc = scoring.score_assessment({})
+    assert "HR reach watershed area" not in report.build_csv(V2_DELIN, {}, {}, {}, sc)
+    with_area = {**HR_DELIN, "delineation": {**HR_DELIN["delineation"], "watershed_area_sqkm": 4.21}}
+    assert "HR reach watershed area (km2),4.21" in report.build_csv(with_area, {}, {}, {}, sc)

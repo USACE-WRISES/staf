@@ -84,7 +84,7 @@ def test_packet_names_owner_exclusions():
 def test_the_flag_reaches_run_evidence():
     text = (_SCRIPTS / "run_region_batch.py").read_text(encoding="utf-8")
     assert 'add_argument("--exclude-site"' in text
-    start = text.index("ra.run_evidence(")
-    assert "exclude_sites=_parse_kv(a.exclude_site" in text[start:start + 1100]
-    ns = text.index("argparse.Namespace(")
-    assert "exclude_site=[]" in text[ns:ns + 1000]
+    # the whole call, not a fixed window: it grows a keyword every few rounds
+    from tests.test_screen_retry import _call_text
+    assert "exclude_sites=_parse_kv(a.exclude_site" in _call_text(text, "ra.run_evidence(")
+    assert "exclude_site=[]" in _call_text(text, "argparse.Namespace(")

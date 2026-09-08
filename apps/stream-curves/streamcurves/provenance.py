@@ -219,6 +219,16 @@ def _nrsa_dataset_record(result: dict, app_root: Path) -> dict:
     panel = result.get("nrsa_panel_summary")
     if panel:
         record["panel"] = panel
+    # The reference frame (2026-09-07): wadeable means NHDPlus V2 stream order
+    # 1 to 5, with the NRSA sampling protocol deciding only where a station's
+    # order cannot be resolved. Absent means every stream, which is what every
+    # published version ran, so it adds no digest key.
+    record["maxStreamOrder"] = result.get("nrsa_max_stream_order")
+    record["protocols"] = list(result.get("nrsa_protocols") or []) or None
+    # How many stations the frame kept out, and every one the owner readmitted
+    # with a reason. The overrides change the pool, so they join the digest.
+    record["nOutOfFrame"] = result.get("nrsa_n_out_of_frame")
+    record["frameOverrides"] = list(result.get("nrsa_frame_overrides") or []) or None
     return record
 
 
@@ -258,11 +268,25 @@ def build_run_manifest(result: dict, *, argv=None, started_at=None, finished_at=
             "n_screened": (result.get("screening_counts") or {}).get("n_screened"),
             "n_retained": (result.get("screening_counts") or {}).get("n_retained"),
             "method_version": run_state.SCREENING_METHOD_VERSION,
-            # The watershed-engine policy the screen was pinned to, and the
-            # vendored engine's own echo of it from the batch config. Outside
-            # the digest: the pin reproduces the historical behavior.
+            # The watershed-engine policy the screen was pinned to, the vendored
+            # engine's own echo of it from the batch config, and what the screen
+            # keyed on. The pin and the COMID mode JOIN the digest below (under
+            # absence semantics): neither reproduces anything published, since
+            # surrogate routing reached EASI on 2026-08-29 and the pin on
+            # 2026-09-01, after every published version was screened.
             "watershed_engine": result.get("screening_watershed_engine"),
             "watershed_engine_echo": _screening_engine_echo(result),
+            "comid_mode": result.get("screening_comid_mode"),
+            "comid_sources": ((result.get("screening_comids") or {}).get("counts")
+                              if result.get("screening_comids") else None),
+            "routed_sites": ((result.get("screening_comids") or {}).get("routed_sites")
+                             if result.get("screening_comids") else None),
+            "refused_sites": ((result.get("screening_comids") or {}).get("refused_sites")
+                              if result.get("screening_comids") else None),
+            "differing_sites": ((result.get("screening_comids") or {}).get("differing_sites")
+                                if result.get("screening_comids") else None),
+            "vendor_sha": (result.get("easi_vendor") or {}).get("vendorSha"),
+            "cache": result.get("screening_cache"),
             # Sites the owner dropped from the retained pool, with reasons
             # (--exclude-site); they change the pool, so they join the digest.
             "owner_site_exclusions": list(result.get("owner_site_exclusions") or []),
@@ -386,9 +410,9 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
     Pure, so a published version's digest can be re-derived from its stored
     manifest (``tests/test_screening_engine_pin.py`` does exactly that). The
     additive-key rules live here: the StreamCat default predictor source, the
-    legacy NRSA dataset, the default bootstrap depth and the pinned screening
-    policy add NO key, so every digest published before each of them existed
-    still reproduces byte for byte.
+    legacy NRSA dataset, the default bootstrap depth and an unrecorded
+    screening policy add NO key, so every digest published before each of them
+    existed still reproduces byte for byte.
     """
     inputs = manifest.get("inputs") or {}
     dataset = inputs.get("nrsa_dataset") or {}
@@ -410,6 +434,19 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
             "cycles": dataset.get("cycles"),
             "policy": dataset.get("policy"),
         }
+    # Same additive rule for the reference frame: a run that keeps every stream
+    # (each published version) adds no key; a wadeable-only panel is a different
+    # reference population and must change the digest.
+    if dataset.get("maxStreamOrder") is not None:
+        digest_payload["nrsa_max_stream_order"] = int(dataset["maxStreamOrder"])
+    if dataset.get("protocols"):
+        digest_payload["nrsa_protocols"] = sorted(str(p) for p in dataset["protocols"])
+    # An owner readmission changes the reference population exactly as an owner
+    # exclusion does, so it joins the digest the same way.
+    overrides = sorted(str((o or {}).get("station_key"))
+                       for o in (dataset.get("frameOverrides") or []))
+    if overrides:
+        digest_payload["nrsa_frame_overrides"] = overrides
     # Same additive rule for the bootstrap depth: every published version ran at
     # the batch default (1000), which adds no key, so their digests stay stable.
     # Any other depth changes the resampling evidence (CURVE-06, RED-06,
@@ -424,6 +461,15 @@ def digest_payload_from_manifest(manifest: dict) -> dict:
                       for e in ((inputs.get("easi") or {}).get("owner_site_exclusions") or []))
     if excluded:
         digest_payload["owner_site_exclusions"] = excluded
+    # Same additive rule for the screening policy (2026-09-07): a run that
+    # records no watershed engine or COMID mode (every version published before
+    # either existed) adds no key, so its digest still reproduces; a run that
+    # records one must change the digest, because both decide pool membership.
+    easi = inputs.get("easi") or {}
+    if easi.get("watershed_engine"):
+        digest_payload["easi_watershed_engine"] = str(easi["watershed_engine"])
+    if easi.get("comid_mode"):
+        digest_payload["easi_comid_mode"] = str(easi["comid_mode"])
     ps = inputs.get("predictor_source")
     if ps:
         digest_payload["predictor_source"] = {

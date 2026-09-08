@@ -25,19 +25,29 @@ HR_DELIN = {"delineation": {"comid": 5214461, "nhdplus_id": 750012345, "network"
             "watershedBasis": "site-engine",
             "siteEngine": {"status": "ok", "engineVersion": "0.2.0"}}
 STATE = {"imp": {"value": 0.4, "origin": "desktop", "engine": True, "basis": "site-engine",
-                 "source": "STAF site engine v0.2.0 impervious (exact watershed, NLCD 2021)"},
+                 "source": "STAF site engine v0.2.0 impervious (HR reach watershed, NLCD 2021)"},
          "field": {"value": 0.2, "origin": "field"}}
 
 
 def test_watershed_basis_label():
-    assert report.watershed_basis_label(HR_DELIN) == "exact watershed (STAF site engine v0.2.0)"
+    assert report.watershed_basis_label(HR_DELIN) == "HR reach watershed (STAF site engine v0.2.0)"
     assert report.watershed_basis_label({}) == "NHDPlus V2 basin (StreamCat lookup engine)"
     upgraded = {"watershedBasis": "nhdplus-v2-basin",
                 "siteEngine": {"status": "ok", "engineVersion": "0.2.0"}}
     assert report.watershed_basis_label(upgraded) == (
-        "NHDPlus V2 basin drawn, exact watershed computed (STAF site engine v0.2.0)")
-    assert "nearest covered reach" in report.watershed_basis_label(
+        "NHDPlus V2 basin drawn, HR reach watershed computed (STAF site engine v0.2.0)")
+    assert "nearest StreamCat reach" in report.watershed_basis_label(
         {"watershedBasis": "nhdplus-v2-basin-of-surrogate"})
+
+
+def test_streamcat_reach_label():
+    routed = {**HR_DELIN, "siteAnchor": {
+        "anchorKind": "hrSurrogate",
+        "scoredReach": {"comid": 5214461, "gnisName": "Sugar Run"},
+        "routing": {"routedDistanceFt": 1240.0, "daRatio": 1.8, "declined": False}}}
+    assert report.streamcat_reach_label(routed) == "Sugar Run (COMID 5214461), 1,240 ft downstream"
+    assert report.streamcat_reach_label(HR_DELIN) == "COMID 5214461 (this reach)"   # a bare COMID
+    assert report.streamcat_reach_label({"delineation": {}}) == "none found"
 
 
 def test_rows_score_engine_values_against_engine_curves():
@@ -65,10 +75,26 @@ def test_geojson_carries_predictor_source_and_basis():
 def test_csv_header_has_the_basis_and_predictor_source():
     sc, _ = curves.score_site(BUNDLE, measure.measured_from_state(STATE))
     csv = report.build_csv(HR_DELIN, BUNDLE, STATE, sc)
-    assert "Watershed basis,exact watershed (STAF site engine v0.2.0)" in csv
+    assert "Watershed basis,HR reach watershed (STAF site engine v0.2.0)" in csv
+    assert "StreamCat reach,COMID 5214461 (this reach)" in csv
     assert "Predictor source,site-engine v0.2.0" in csv
     # the source label carries a comma, so the csv module quotes that cell
     assert ',desktop,site-engine,"STAF site engine v0.2.0 impervious' in csv
+    # the watershed row names the delineation, this one names the values
+    assert "Desktop values,STAF site engine (HR reach watershed) 1" in csv
+
+
+def test_desktop_basis_label_counts_what_the_values_describe():
+    assert report.desktop_basis_label(STATE) == "STAF site engine (HR reach watershed) 1"
+    assert report.desktop_basis_label({}) == "none"
+    assert report.desktop_basis_label({"a": {"origin": "field", "value": 1}}) == "none"
+    mixed = {"a": {"origin": "desktop", "basis": "streamcat"},
+             "b": {"origin": "desktop", "basis": "streamcat"},
+             "c": {"origin": "desktop", "basis": "3dep"}}
+    assert report.desktop_basis_label(mixed) == \
+        "StreamCat lookup engine (NHDPlus V2 basin) 2, 3DEP 1"
+    sc_csv = report.build_csv(HR_DELIN, BUNDLE, mixed, {"subIndices": {}})
+    assert "Desktop values,\"StreamCat lookup engine (NHDPlus V2 basin) 2, 3DEP 1\"" in sc_csv
 
 
 def test_field_forms_print_desktop_values_and_the_site():
@@ -78,7 +104,7 @@ def test_field_forms_print_desktop_values_and_the_site():
     text = " ".join((pg.extract_text() or "") for pg in pypdf.PdfReader(__import__("io").BytesIO(pdf)).pages)
     text = " ".join(text.split())
     assert "NHDPlusID 750012345" in text and "Sugar Run" in text
-    assert "exact watershed (STAF site engine v0.2.0)" in text
+    assert "HR reach watershed (STAF site engine v0.2.0)" in text
     assert "DESKTOP: STAF site engine v0.2.0 impervious" in text
     assert "0.4" in text
     # the legacy call shape still builds

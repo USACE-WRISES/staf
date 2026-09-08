@@ -47,7 +47,7 @@ def cross_section_png(stations, elevs, *, bankfull_stage: Optional[float] = None
                       bankfull_depth_m: Optional[float] = None,
                       division: Optional[str] = None,
                       unit: str = "ft",
-                      title: str = "Representative cross-section",
+                      title: str = "Reach cross-section",
                       source: Optional[str] = None) -> bytes:
     """Render the cross-section as PNG bytes (placeholder PNG on any failure).
 

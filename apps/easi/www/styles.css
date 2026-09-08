@@ -254,6 +254,7 @@ h1, h2, h3, h4, h5, h6, .card-header { font-family: var(--font-head); }
 .easi-xs-reach td { text-align: center; white-space: nowrap; }
 .easi-xs-reach th { white-space: nowrap; }
 .easi-xs-median { color: #1f6fc0; font-weight: 600; }
+.easi-xs-reach-med { border-left: 2px solid #c6d4e3; }
 .easi-xs-foot { font-size: 10.5px; color: #993366; margin: 0 0 8px; }
 .easi-xs-fields { display: flex; gap: 10px; }
 .easi-xs-fields .shiny-input-container { flex: 1; margin-bottom: 6px; }

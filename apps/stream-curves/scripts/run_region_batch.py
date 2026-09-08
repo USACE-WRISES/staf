@@ -192,6 +192,37 @@ def promote_command(out_dir: Path, maintainer: str) -> str:
 # --------------------------------------------------------------------------- #
 # stage
 # --------------------------------------------------------------------------- #
+def _frame_max_order(choice: str):
+    """The largest stream order the reference panel accepts. ``all`` keeps every
+    stream (and adds no digest key); ``wadeable`` reads the governed value, so
+    the frame lives in methodology_config, not in the CLI."""
+    if str(choice or "").lower() == "all":
+        return None
+    try:
+        from streamcurves import methodology
+        got = methodology.threshold("reference_panel.max_stream_order")
+        if got:
+            return int(got)
+    except Exception:  # noqa: BLE001 - the governed value is the source, this is the floor
+        pass
+    return 5
+
+
+def _frame_protocols(choice: str):
+    """The NRSA sampling protocols that stand in when a station's stream order
+    cannot be resolved."""
+    if str(choice or "").lower() == "all":
+        return None
+    try:
+        from streamcurves import methodology
+        got = methodology.threshold("reference_panel.protocol_fallback")
+        if got:
+            return tuple(str(p) for p in got)
+    except Exception:  # noqa: BLE001
+        pass
+    return ("WADEABLE",)
+
+
 def _engine_config(a) -> Optional[dict]:
     """Engine overrides from the CLI (None when nothing was asked), recorded by
     the site-engine report so the manifest and the packet say what the values
@@ -243,6 +274,10 @@ def cmd_stage(a) -> int:
         # run legacy data. A missing attribute must fail loudly.
         nrsa_dataset_id=a.nrsa_dataset,
         nrsa_cycles=a.nrsa_cycles,
+        nrsa_max_stream_order=_frame_max_order(getattr(a, "reference_frame", "wadeable")),
+        nrsa_protocols=_frame_protocols(getattr(a, "reference_frame", "wadeable")),
+        nrsa_keep_sites=_parse_kv(getattr(a, "include_site", None) or [],
+                                  "--include-site") or None,
         predictor_source=a.predictor_source,
         screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
         engine_config=_engine_config(a),
@@ -251,6 +286,24 @@ def cmd_stage(a) -> int:
     print(f"[batch] evidence: {evidence['n_retained']} / {evidence['n_candidates']} retained "
           f"(tier {evidence['tier']['reference_tier']}, pool {evidence['reference_pool_disposition']}), "
           f"{len(evidence['curve_rows'])} curves built")
+    if evidence.get("nrsa_max_stream_order") is not None:
+        summary = evidence.get("nrsa_panel_summary") or {}
+        by_order = summary.get("byStreamOrder") or {}
+        print(f"[batch] panel: {evidence['n_candidates']} candidates in frame "
+              f"(stream order 1 to {evidence['nrsa_max_stream_order']}), "
+              f"{evidence.get('nrsa_n_out_of_frame') or 0} out of frame"
+              + (f"; by order " + ", ".join(f"{k}:{v}" for k, v in sorted(by_order.items()))
+                 if by_order else ""))
+        for o in (evidence.get("nrsa_frame_overrides") or []):
+            print(f"[batch] frame override: {o.get('station_key')} "
+                  f"({o.get('out_of_frame_reason')}): {o.get('reason')}")
+    if evidence.get("screening_comid_mode"):
+        counts = ((evidence.get("screening_comids") or {}).get("counts") or {})
+        cache = evidence.get("screening_cache") or {}
+        print(f"[batch] screen: comid mode {evidence['screening_comid_mode']}, "
+              + ", ".join(f"{k} {v}" for k, v in sorted(counts.items()))
+              + (f"; cache ignored: {cache['ignored']}" if cache.get("ignored")
+                 else "; cache reused" if cache.get("from_cache") else ""))
     for e in (evidence.get("owner_site_exclusions") or []):
         print(f"[batch] owner exclusion: {e.get('site_id')} "
               f"({'was retained' if e.get('was_retained') else 'not in the pool'}): {e.get('reason')}")
@@ -561,6 +614,7 @@ def cmd_stage_many(a) -> int:
                 approve_portfolio=[], reviewer_decisions=None, finalize_metric=[], remove_metric=[],
                 max_unresolved_share=a.max_unresolved_share, allow_unresolved=a.allow_unresolved,
                 nrsa_dataset=a.nrsa_dataset, nrsa_cycles=a.nrsa_cycles,
+                reference_frame=a.reference_frame, include_site=[],
                 screen_retries=a.screen_retries, screen_retry_wait=a.screen_retry_wait,
                 engine_snap_tolerance_ft=a.engine_snap_tolerance_ft,
                 engine_max_reaches=a.engine_max_reaches, engine_max_hops=a.engine_max_hops,
@@ -638,6 +692,18 @@ def main(argv=None) -> int:
     s.add_argument("--nrsa-cycle", action="append", dest="nrsa_cycles",
                    choices=list(nrsa_dataset.CYCLES_NEWEST_FIRST),
                    help="repeatable; limit a pooled run to these survey cycles")
+    s.add_argument("--include-site", action="append", default=[], metavar="SITE_ID=REASON",
+                   help="repeatable; readmit one station the reference frame would "
+                        "exclude (a large river the owner wants in the pool). The "
+                        "reason is recorded on the run, joins the inputs digest like "
+                        "an --exclude-site does, and appears in the review packet")
+    s.add_argument("--reference-frame", default="wadeable", choices=("wadeable", "all"),
+                   help="the reference frame the candidate panel draws from. "
+                        "wadeable (the default) is NHDPlus V2 stream order 1 to 5, "
+                        "the governed reference_panel.max_stream_order, with the NRSA "
+                        "sampling protocol deciding only where a station's order "
+                        "cannot be resolved. all keeps every stream, which is what "
+                        "the versions published before methodology 0.10 ran")
     s.add_argument("--predictor-source", default="streamcat",
                    choices=("streamcat", "site-engine"),
                    help="which engine computes the curve predictors: streamcat is "
@@ -695,6 +761,13 @@ def main(argv=None) -> int:
     m.add_argument("--nrsa-cycle", action="append", dest="nrsa_cycles",
                    choices=list(nrsa_dataset.CYCLES_NEWEST_FIRST),
                    help="repeatable; limit a pooled run to these survey cycles")
+    m.add_argument("--reference-frame", default="wadeable", choices=("wadeable", "all"),
+                   help="the reference frame the candidate panel draws from. "
+                        "wadeable (the default) is NHDPlus V2 stream order 1 to 5, "
+                        "the governed reference_panel.max_stream_order, with the NRSA "
+                        "sampling protocol deciding only where a station's order "
+                        "cannot be resolved. all keeps every stream, which is what "
+                        "the versions published before methodology 0.10 ran")
     m.add_argument("--predictor-source", default="streamcat",
                    choices=("streamcat", "site-engine"),
                    help="which engine computes the curve predictors (see stage)")

@@ -34,19 +34,19 @@ stepper: **Identify → Basin → Assessment → Report**.
    snaps to the nearest stream line** (or tells you if you missed) and
    highlights the scored StreamCat reach. On a dark blue stretch the StreamCat
    lookup engine answers the watershed metrics in seconds. On a cyan stretch
-   the STAF site engine calculates the exact watershed at the clicked point
+   the STAF site engine calculates the HR reach watershed of the clicked stream
    (usually well under a minute, up to about five minutes on a large basin,
    with a progress line); the three reach-keyed metrics (low flow, substrate,
-   biological integrity) come from the nearest covered reach downstream,
-   labeled with the routed distance and drainage-area ratio, and are
-   unavailable past a 10x ratio. The policy is fixed by the framework: nothing
+   biological integrity) come from the nearest StreamCat reach downstream,
+   and each says so with the routed distance and the drainage-area ratio,
+   whatever that ratio is. The policy is fixed by the framework: nothing
    asks the user to pick a method, and every value says which engine produced
    it. A type-ahead **address/place search** (Photon + Nominatim) recenters
    the map.
 2. **Basin** — Delineate the contributing **watershed** and an **upstream reach**
    (default ~1,000 ft, adjustable) with staged progress feedback. Shows COMID,
    HUC12, drainage area, watershed area, and reach length. On a stream drawn
-   cyan the card names the watershed engine, the exact watershed area and the
+   cyan the card names the watershed engine, the HR reach watershed area and the
    reaches walked, and says where reach-keyed evidence comes from.
 3. **Assessment** — All 20 metrics compute automatically, then a worksheet walks
    the functions by discipline. Each card shows the metric, its scoring method
@@ -100,8 +100,12 @@ complete availability, not 20 independent field observations.
 
 ## Cross-section & overrides
 
-- A **representative 3DEP cross-section** is sampled along the reach, re-datumed to
-  the channel bottom, with a feet/metres toggle.
+- **Nine 3DEP cross-sections** are sampled at even stations along the reach from one
+  DEM fetch, re-datumed to the channel bottom, with a feet/metres toggle. The four
+  geometry metrics score on the reach medians of the entrenchment and bank-height
+  ratios; the section nearest both medians is drawn by default, the reach table lists
+  every section beside the medians and ranges, and the arrows step through the others
+  (a scrolled section re-rates the metrics from itself, labeled as that section).
 - **Edit the bankfull and floodplain heights** to recompute the entrenchment ratio
   (lateral) and the bank-height ratio (vertical); the plot redraws and all four
   geometry-driven metrics re-rate live — floodplain access (ER), floodplain engagement
@@ -118,7 +122,7 @@ complete availability, not 20 independent field observations.
 |---|---|
 | **NHDPlus V2** via the USGS fabric API (flowlines and attributes; the successor of the retiring WaterData WFS) and HyRiver `pynhd` (NLDI basins, navigation, point snap with a flowtrace fallback) | Stream vectors, point snap, watershed delineation, reach derivation, VAAs |
 | **NHDPlus HR** (hydro.nationalmap.gov MapServer) | Full-resolution stream display, the clicked reach's attributes, and the nearest-covered-reach routing for streams outside the V2 network (`easi/routing.py`, `easi/datasources/nhd_hr.py`) |
-| **STAF site engine** (vendored from `libs/site_engine`, `easi/watershed.py`) | The exact point watershed and its land cover, roads, dams, soil K and EROM runoff for streams outside the StreamCat lookup network. Never used on covered streams. Definitions of both engines: `libs/README.md` |
+| **STAF site engine** (vendored from `libs/site_engine`, `easi/watershed.py`) | The HR reach watershed (the drainage area of the high-resolution reach the click snaps to) and its land cover, roads, dams, soil K and EROM runoff for streams outside the StreamCat lookup network. Never used on covered streams. Definitions of both engines: `libs/README.md` |
 | **USGS 3DEP** (`py3dep`) | DEM cross-sections → entrenchment, bank-height ratio, slope |
 | **EPA StreamCat** (the StreamCat lookup engine) | Watershed landscape metrics on the V2 network (impervious, wetlands, roads, dam storage, runoff, riparian, erodibility) plus the published HYD/SED/CHEM/CONN/TEMP/HABT integrity components and prG_BMMI, which exist only per V2 COMID |
 | **EPA NRSA 2018–19** (bundled extract) | Connected field evidence: wetted channel, embeddedness, benthic/fish condition |
@@ -140,7 +144,9 @@ always visible which tier produced a rating.
 their inputs from a watershed evidence layer (`easi/watershed.py`) with two
 providers. On the NHDPlus V2 network the StreamCat lookup engine supplies them
 (precomputed EPA StreamCat summaries keyed by COMID). On any other NHD stream
-the STAF site engine delineates the exact watershed at the clicked point and
+the STAF site engine delineates the HR reach watershed (the drainage area of the
+high-resolution reach the click snaps to, built from NHDPlus HR catchments and
+checked against the reach's published drainage area) and
 computes them from NLCD, TIGERweb, NID, SSURGO and EROM. If the engine fails or
 refuses (a basin past its budget), the watershed metrics are unavailable with
 guidance rather than a proxy. The batch engine exposes the policy as

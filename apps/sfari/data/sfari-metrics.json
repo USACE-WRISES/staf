@@ -90,10 +90,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydrology.impervious",
-        "client": "streamcat",
-        "field": "pctimp2019ws",
-        "label": "NLCD 2019 Impervious (MRLC) via Model My Watershed",
-        "url": "https://modelmywatershed.org/"
+        "client": "engine+streamcat",
+        "field": "imperviousPctWatershed",
+        "label": "Impervious and agricultural cover, NLCD 2021 over the HR reach watershed (STAF site engine); StreamCat by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -135,10 +135,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydrology.road_density",
-        "client": "streamcat",
-        "field": "rddens",
-        "label": "Road density — StreamCat rddens / TIGER roads",
-        "url": "https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+        "client": "engine+streamcat",
+        "field": "roadDensity",
+        "label": "Road density, TIGERweb roads over the HR reach watershed (STAF site engine); StreamCat rddens by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -180,10 +180,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydrology.land_use_change",
-        "client": "landcover_change",
-        "field": "pct_converted",
-        "label": "NLCD land cover change (2001 vs 2019)",
-        "url": "https://www.mrlc.gov/viewer/"
+        "client": "engine+streamcat",
+        "field": "imperviousPct2001Watershed",
+        "label": "Impervious cover change, NLCD 2001 to 2021 over the HR reach watershed (STAF site engine); StreamCat 2001 to 2019 by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -225,10 +225,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydrology.impoundments",
-        "client": "nid_barriers",
-        "field": "dam_count",
-        "label": "USACE NID + USGS NABD (upstream dams)",
-        "url": "https://nid.sec.usace.army.mil/"
+        "client": "engine+streamcat",
+        "field": "damCount",
+        "label": "NID dams and their normal storage in the HR reach watershed (STAF site engine); StreamCat dam density by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -270,10 +270,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydrology.wetland_coverage",
-        "client": "streamcat",
-        "field": "pctwdwet2019ws+pcthbwet2019ws",
-        "label": "USFWS NWI over FEMA NFHL; StreamCat wetlands",
-        "url": "https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper"
+        "client": "engine+streamcat",
+        "field": "woodyWetlandPctWatershed+herbWetlandPctWatershed",
+        "label": "Woody and herbaceous wetland, NLCD 2021 over the HR reach watershed (STAF site engine); StreamCat by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -426,9 +426,9 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydrology.concentrated_inputs",
-        "client": "manual",
-        "field": "",
-        "label": "Municipal MS4 outfall GIS layers (local)",
+        "client": "engine+streamcat",
+        "field": "roadCrossingDensity",
+        "label": "Road-stream crossings on the NHDPlus HR network in the HR reach watershed (STAF site engine); StreamCat rdcrs by COMID when the engine has no value. Outfalls and ditches need local MS4 layers",
         "url": "https://www.epa.gov/npdes/stormwater-discharges-municipal-sources"
       },
       "autoSuggest": null
@@ -510,7 +510,7 @@
         "adapter": "desktop_hydrology.diversions",
         "client": "manual",
         "field": "",
-        "label": "State water-rights / diversions GIS",
+        "label": "State water-rights and diversions GIS (local review)",
         "url": "https://waterdata.usgs.gov/"
       },
       "autoSuggest": null
@@ -592,7 +592,7 @@
         "adapter": "desktop_hydrology.flow_permanence",
         "client": "nwis",
         "field": "zero_flow_days",
-        "label": "USGS NWIS daily flow (zero-flow days) + NHDPlus HR FCODE",
+        "label": "USGS NWIS zero-flow days at the nearest comparable gage; StreamCat HYD integrity by COMID when no gage qualifies",
         "url": "https://waterdata.usgs.gov/nwis"
       },
       "autoSuggest": null
@@ -637,7 +637,7 @@
         "adapter": "desktop_hydrology.flow_statistics",
         "client": "nwis",
         "field": "flow_duration",
-        "label": "USGS NWIS daily flow (flow-duration / IHA)",
+        "label": "USGS NWIS daily flow, flow-duration percentiles at the nearest comparable gage",
         "url": "https://waterdata.usgs.gov/nwis"
       },
       "autoSuggest": null
@@ -680,10 +680,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydrology.natural_flow_regime",
-        "client": "nwis",
-        "field": "flow_alteration",
-        "label": "TNC IHA on NWIS; else StreamCat dam regulation",
-        "url": "https://www.conservationgateway.org/"
+        "client": "engine+streamcat",
+        "field": "damStoragePerSqkm",
+        "label": "Upstream NID normal storage over the HR reach watershed (STAF site engine) with the gage base-flow ratio; StreamCat dam storage by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -725,9 +725,9 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydrology.artificial_structures",
-        "client": "aquatic_barriers",
+        "client": "nid",
         "field": "structures",
-        "label": "USACE National Levee Database + NID",
+        "label": "USACE NID dams within about a mile; levees from the National Levee Database by hand",
         "url": "https://levees.sec.usace.army.mil/"
       },
       "autoSuggest": null
@@ -772,7 +772,7 @@
         "adapter": "desktop_hydraulics.low_flow_velocity",
         "client": "xscalc",
         "field": "velocity",
-        "label": "Manning (native XS calc): low-flow Q, slope, roughness",
+        "label": "Manning solver in the cross-section tool at the low-flow discharge",
         "url": ""
       },
       "autoSuggest": null
@@ -817,7 +817,7 @@
         "adapter": "desktop_hydraulics.low_flow_depth",
         "client": "xscalc",
         "field": "depth",
-        "label": "3DEP cross-section + Manning (native XS calc) at low-flow Q",
+        "label": "3DEP cross-section and the Manning solver in the cross-section tool at the low-flow discharge",
         "url": ""
       },
       "autoSuggest": null
@@ -934,10 +934,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydraulics.overbank_frequency",
-        "client": "bieger",
-        "field": "recurrence",
-        "label": "USGS PeakFQ / regional bankfull-Q regression",
-        "url": "https://streamstats.usgs.gov/"
+        "client": "engine",
+        "field": "bankHeightRatio",
+        "label": "Bank height ratio, reach median of nine 3DEP cross-sections on the assessment reach (STAF site engine)",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -979,10 +979,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydraulics.peak_capacity",
-        "client": "bieger",
-        "field": "bankfull_geom",
-        "label": "Regional bankfull-geometry regressions + 3DEP",
-        "url": "https://streamstats.usgs.gov/"
+        "client": "engine",
+        "field": "entrenchmentRatio",
+        "label": "Bankfull width from the regional regression and the entrenchment ratio, reach median of nine 3DEP cross-sections (STAF site engine)",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -1100,7 +1100,7 @@
         "adapter": "desktop_hydraulics.bed_mobilization",
         "client": "xscalc",
         "field": "shear",
-        "label": "Shields (D50 + peak Q) via native XS calc shear",
+        "label": "Shields comparison of bed shear and critical shear in the cross-section tool (enter D50)",
         "url": ""
       },
       "autoSuggest": null
@@ -1254,10 +1254,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_hydraulics.lateral_inundation",
-        "client": "threedep",
+        "client": "nwi",
         "field": "inundation",
-        "label": "NWI + NAIP + 3DEP DEM/hillshade",
-        "url": "https://apps.nationalmap.gov/downloader/"
+        "label": "USFWS NWI wetland features near the reach, with the entrenchment ratio from the 3DEP reach cross-sections (STAF site engine)",
+        "url": "https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper"
       },
       "autoSuggest": null
     },
@@ -1634,7 +1634,7 @@
         "adapter": "desktop_geomorph.bank_migration",
         "client": "manual",
         "field": "",
-        "label": "Multi-date NAIP/Google Earth; USGS DSAS / RivMAP; EarthExplorer",
+        "label": "Multi-date NAIP or Google Earth imagery; USGS DSAS or RivMAP; EarthExplorer (local review)",
         "url": "https://earthexplorer.usgs.gov/"
       },
       "autoSuggest": null
@@ -1714,9 +1714,9 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_geomorph.channel_pattern",
-        "client": "delineation",
+        "client": "engine",
         "field": "sinuosity",
-        "label": "Historic USGS topo (TopoView) + NAIP + 3DEP LiDAR; sinuosity",
+        "label": "Sinuosity of the assessment reach on the NHDPlus HR network (STAF site engine); compare the planform on TopoView and multi-date imagery",
         "url": "https://ngmdb.usgs.gov/topoview/"
       },
       "autoSuggest": null
@@ -1870,10 +1870,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_geomorph.transport_capacity",
-        "client": "threedep",
-        "field": "stream_power",
-        "label": "StreamStats flow + NHDPlus HR slope/length (stream power)",
-        "url": "https://streamstats.usgs.gov/"
+        "client": "engine+streamcat",
+        "field": "soilKFactor",
+        "label": "Channel slope (NHDPlus HR) with agricultural cover and SSURGO soil K over the HR reach watershed (STAF site engine); StreamCat by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -2063,10 +2063,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_physicochem.riparian_canopy",
-        "client": "enviroatlas",
-        "field": "canopy_pct",
-        "label": "NLCD Tree Canopy Cover + EPA EnviroAtlas riparian",
-        "url": "https://enviroatlas.epa.gov/enviroatlas/interactivemap/"
+        "client": "engine+streamcat",
+        "field": "forestPctRiparian",
+        "label": "Forest in the 100 m riparian buffer, NLCD 2021 (STAF site engine); StreamCat riparian forest by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -2293,10 +2293,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_physicochem.riparian_corridor",
-        "client": "enviroatlas",
-        "field": "corridor",
-        "label": "EPA EnviroAtlas riparian (15-50 m) + NLCD",
-        "url": "https://enviroatlas.epa.gov/enviroatlas/interactivemap/"
+        "client": "engine+streamcat",
+        "field": "riparianNaturalPct",
+        "label": "Natural vegetation in the 100 m riparian buffer, NLCD forest, shrub, grassland and wetland (STAF site engine); StreamCat by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -2449,10 +2449,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_physicochem.riparian_width",
-        "client": "enviroatlas",
-        "field": "width",
-        "label": "EPA EnviroAtlas riparian",
-        "url": "https://enviroatlas.epa.gov/enviroatlas/interactivemap/"
+        "client": "engine+streamcat",
+        "field": "riparianNaturalPct",
+        "label": "Natural vegetation in the 100 m riparian buffer, NLCD forest, shrub, grassland and wetland (STAF site engine); StreamCat by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -3086,10 +3086,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_biology.riparian_communities",
-        "client": "enviroatlas",
-        "field": "veg",
-        "label": "EPA EnviroAtlas riparian; StreamCat; NLCD",
-        "url": "https://enviroatlas.epa.gov/enviroatlas/interactivemap/"
+        "client": "engine+streamcat",
+        "field": "riparianNaturalPct",
+        "label": "Natural vegetation in the 100 m riparian buffer, NLCD forest, shrub, grassland and wetland (STAF site engine); StreamCat by COMID when the engine has no value",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     },
@@ -3168,9 +3168,9 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_biology.barriers",
-        "client": "aquatic_barriers",
+        "client": "nid",
         "field": "barrier_count",
-        "label": "National Aquatic Barrier Inventory (USFWS/TNC) + USACE NID",
+        "label": "USACE NID dams within about a mile, with StreamCat CONN integrity by COMID; the National Aquatic Barrier Inventory by hand",
         "url": "https://connectivity.sarpdata.com/"
       },
       "autoSuggest": null
@@ -3287,10 +3287,10 @@
       "desktopSupportable": true,
       "desktopSource": {
         "adapter": "desktop_biology.dewatered_segments",
-        "client": "nwis",
-        "field": "zero_flow_days",
-        "label": "USGS NWIS zero-flow days + NHD FCODE + imagery",
-        "url": "https://waterdata.usgs.gov/nwis"
+        "client": "engine+streamcat",
+        "field": "fcode",
+        "label": "NHDPlus HR flow permanence code with StreamCat HYD integrity by COMID and the base-flow index over the HR reach watershed (STAF site engine)",
+        "url": "https://usace-wrises.github.io/staf/computation-engines/"
       },
       "autoSuggest": null
     }

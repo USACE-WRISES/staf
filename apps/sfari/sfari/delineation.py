@@ -1,6 +1,6 @@
 """Map geometry helpers for the delineation overlays.
 
-The delineation itself is the STAF site engine's (the exact watershed and
+The delineation itself is the STAF site engine's (the HR reach watershed and
 the assessment reach, see ``pipeline.delineate_from_engine``); this module
 keeps the display-only helpers the map needs: a vertex-capped simplification
 for very large polygons and combined bounds for ``fit_bounds``. Heavy imports

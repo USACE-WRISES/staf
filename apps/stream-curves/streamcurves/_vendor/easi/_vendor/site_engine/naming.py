@@ -37,7 +37,7 @@ def engine_label(version: Optional[str] = None) -> str:
 
 def source_label(token: str, *, version: Optional[str] = None,
                  detail: Optional[str] = None) -> str:
-    """One plain source label, e.g. ``STAF site engine v0.2.0, exact watershed``
+    """One plain source label, e.g. ``STAF site engine v0.2.0, HR reach watershed``
     or ``StreamCat lookup engine, NHDPlus V2 COMID 5215053``."""
     base = engine_label(version) if token == SITE_ENGINE_TOKEN else display_name(token)
     return f"{base}, {detail}" if detail else base

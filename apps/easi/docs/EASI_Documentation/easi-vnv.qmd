@@ -57,9 +57,10 @@ functions for wadeable streams across the conterminous United States, drawing
 entirely on public national data services. EASI scores on the NHDPlus Version 2
 stream network, the network the national landscape datasets describe. The map
 shows the full National Hydrography Dataset, and a stream mapped only at high
-resolution is handled by a fixed substitution rule: EASI scores the nearest
-covered reach downstream, labels the substitution in the report, and declines
-to score when that reach drains more than ten times the selected stream's area.
+resolution is handled by a fixed rule: the STAF site engine computes its HR reach
+watershed, and the three reach-keyed metrics come from the nearest covered reach
+downstream, each labeled with that reach and the drainage-area ratio between the
+two streams.
 EASI is semi-quantitative, so it is
 useful for screening many sites, evaluating alternatives, and tracking change
 over time. Existing screening tools often cover only some stream functions or
@@ -182,14 +183,14 @@ The eight watershed metrics come from one of two engines, and the framework,
 not the user, decides which. On the NHDPlus V2 network the StreamCat lookup
 engine supplies them: precomputed EPA StreamCat summaries keyed by the reach
 COMID, fast and citable by vintage. On any other NHD stream, which the map
-draws cyan, the STAF site engine delineates the exact watershed at
-the clicked point on the high-resolution NHD and computes the same quantities
+draws cyan, the STAF site engine delineates the HR reach watershed, the
+drainage area of the high-resolution reach the click snaps to, and computes the same quantities
 from NLCD, TIGERweb roads, the National Inventory of Dams, SSURGO soils and
 EROM flow. On those streams the three reach-keyed metrics, low flow, substrate
 and biological integrity, depend on EPA evidence that exists only per V2 reach,
-so they come from the nearest covered reach downstream, labeled with the routed
-distance and the drainage-area ratio, and are unavailable when that reach
-drains more than ten times the clicked stream. Every rating in the report and
+so they come from the nearest covered reach downstream, and each of them is
+labeled with that reach, the routed distance, and the drainage-area ratio,
+whatever that ratio is. Every rating in the report and
 the exports says which engine produced it. Whether the site engine should also
 answer covered streams was a question for the score-level equivalence study
 (StreamCat inputs against engine inputs at the same sites), not a setting. It
@@ -214,17 +215,22 @@ condition through the bank-height ratio, floodplain access through the
 entrenchment ratio, and channel evolution through the worse of the two. The
 cross section comes from the best available 3DEP elevation model (1 m where
 published, otherwise the 10 m seamless layer). EASI cuts nine transects
-perpendicular to the reach between 15 and 85 percent of its length, samples
-each at 10 m spacing, and selects a representative transect for scoring.
-Bankfull width and depth come from the regional curves noted above.
+perpendicular to the reach at one-tenth intervals from one-tenth to nine-tenths
+of its length, samples each at the elevation model's native spacing, and scores
+each ratio on the reach median of the nine sections. The section nearest both
+medians is drawn, and the application can step through the others. Bankfull
+width and depth come from the regional curves noted above.
 
 The low-bank elevation that sets the bank-height ratio is found by a slope-break
 rule. Walking outward from the deepest point, a candidate bank must first climb
-at least 0.3 m and at least 25 percent of the bankfull depth. The bank is then
+at least 0.3 m on the 10 m model, 0.1 m on 1 m lidar, and at least 25 percent
+of the bankfull depth. The bank is then
 the first point whose next 3 m of profile is flat, meaning the average grade
 ahead is below 5 percent and below 25 percent of the steepest climb crossed so
 far. The lower of the two sides governs, and a side that never breaks (a valley
-wall) contributes nothing. These constants are screening conventions. A computed
+wall) contributes nothing. When the lower bank sits above twice the bankfull
+depth, or no side breaks, the low bank is capped at the floodprone stage and the
+ratio is reported as at least 2.0. These constants are screening conventions. A computed
 bank-height ratio below 1.0 triggers a geometry check in the scoring trace, and
 the cross section is editable in the report, which recomputes all four geometry
 metrics from the edited stages.
@@ -467,9 +473,10 @@ Rapid and Detailed tiers are the designed responses to each of them.
   connected NRSA observation, but qualifying evidence supplied only about three
   ratings across all 17 verification sites. In practice most ratings come from
   StreamCat, the elevation model, WQP, ATTAINS, NAS, and NID.
-- **One cross section drives four physical functions.** The bank-height and
-  entrenchment ratios come from a single representative DEM transect, usually
-  at 10 m resolution. Dropping those four ratings shifts the mean index by
+- **One reach of cross sections drives four physical functions.** The bank-height
+  and entrenchment ratios are reach medians of nine DEM transects at the
+  elevation model's native resolution (1 m where published, otherwise 10 m).
+  Dropping those four ratings shifts the mean index by
   about 0.04 and changes 3 of 17 site classes, so verifying or editing the
   cross section is the highest-value check an assessor can make.
 - **Three-bin ratings compress the index.** Every metric scores 0.85, 0.545,
@@ -481,7 +488,7 @@ Rapid and Detailed tiers are the designed responses to each of them.
   built on fallback components can shift between runs without any change in
   the stream.
 - **Streams outside the StreamCat network are assessed differently.** Their
-  watershed metrics come from the STAF site engine's exact watershed rather
+  watershed metrics come from the STAF site engine's HR reach watershed rather
   than from StreamCat, which usually takes well under a minute (up to about five
    minutes on a large basin) rather than seconds and can refuse a
   basin past its budget, and their reach-keyed metrics describe the nearest

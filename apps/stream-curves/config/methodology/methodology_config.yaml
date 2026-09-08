@@ -20,9 +20,9 @@
 #   4. Re-run the pilot regression fixtures before promoting any status.
 
 meta:
-  methodology_version: "0.9-provisional"
+  methodology_version: "0.10-provisional"
   threshold_status: "provisional"        # global default; rules may override
-  date: "2026-08-27"
+  date: "2026-09-07"
   calibration_note: >
     v0.3 recalibrated the DATA sample-size floors against the two pilots' REAL
     EASI-screened reference sizes (NH-58 = 33 Functioning sites; ECBP-55 = 0 Functioning,
@@ -80,12 +80,32 @@ meta:
     exactly. The digest itself now carries the dataset id, its cycles and the policy,
     because two runs over one ecoregion on different data must not share a digest. No
     threshold value or status changed.
+    v0.10 (2026-09-07) is the reference-frame and screening-provenance release. Three
+    changes, all owner decisions. (1) The reference panel is framed on stream order
+    (reference_panel.max_stream_order, new rule DATA-10): wadeable means NHDPlus V2
+    Strahler order 1 to 5, read from the order cached for every station COMID, with
+    the NRSA sampling protocol deciding only where an order cannot be resolved.
+    Framing on the protocol instead was measured and rejected: it drops 57 of 301
+    in-frame stations across the three pilots, because a stream of order 1 to 5 is
+    often sampled under the boatable protocol. The frame joins the inputs digest
+    under absence semantics, so every version published before it reproduces. (2) The EASI reference screen keys on each NRSA site's own archive
+    COMID, the reach the crew sampled, instead of re-snapping the coordinate; a
+    candidate without one still routes under the streamcat-legacy pin. The pin and the
+    COMID mode now join the digest under absence semantics, because neither reproduces
+    anything published (surrogate routing reached the vendored engine after every
+    published version was screened) and both decide pool membership. The screening cache
+    is keyed on the screening method version, the pin and the COMID mode, and
+    screening_method_version moves to easi-batch-2. (3) Surface water storage is scored
+    on one combined wetland metric (pctwet2019 = woody + herbaceous, both classes
+    required), the sum EASI has always scored, closing review item ECO-15; the two class
+    metrics stay pickable and keep their DEEP adapters. No threshold value moved and no
+    rule's threshold_status changed.
   authority: "STAF scientific team (human sign-off required for status promotion)"
   spec_source: "notes/StreamCurves_AI_Methodology_Development_Prompt_v2.md (Draft 2.0)"
   taxonomy_source: "apps/stream-curves/config/staf_functions.json (20 functions, 5 disciplines)"
   curve_engine: "apps/stream-curves/streamcurves/curves.py::build_reference_curve"
   curve_method_version: "iqr-seed-2"     # matches run_state.CURVE_METHOD_VERSION (mirror-checked)
-  screening_method_version: "easi-batch-1"
+  screening_method_version: "easi-batch-2"   # matches run_state.SCREENING_METHOD_VERSION (mirror-checked)
 
 # --------------------------------------------------------------------------- #
 # Data adequacy (rule family DATA). Sample-size floors scale with the number of
@@ -250,6 +270,36 @@ reference_tiers:
   stamp_reference_tier_per_curve: true   # provenance on every curve + published bundle
   never_relax_silently: true
   never_relax_to_hit_count_when_adequate: true
+
+# --------------------------------------------------------------------------- #
+# The reference panel itself: which NRSA stations may enter a candidate pool at
+# all, before any screening. v0.10 (2026-09-07, owner decision).
+# --------------------------------------------------------------------------- #
+reference_panel:
+  # Wadeable means Strahler order 1 to 5 (the owner's definition). Order is the
+  # NHDPlus V2 streamorde of the station's reach, cached offline in
+  # data/nrsa/stream_order.csv. A station on a larger reach leaves the panel
+  # here, with the reason in the ledger, rather than through a list of per-site
+  # exclusions. Absent keeps every stream (what every version published before
+  # v0.10 ran); the setting joins the inputs digest only when it is set.
+  max_stream_order: 5
+  # The fallback, and only that: the NRSA sampling protocol decides for a
+  # station whose order cannot be resolved (no published COMID, or the network
+  # has no order for that reach). Protocol is NOT the frame. It is the field
+  # crew's call about whether they could wade the reach that day, which is a
+  # narrower population than the frame: across the three pilot ecoregions every
+  # WADEABLE station is order 1 to 5, but 57 of 301 stations of order 1 to 5
+  # were sampled as BOATABLE (measured 2026-09-07), and filtering on the
+  # protocol alone dropped all 57 out of the reference population.
+  protocol_fallback: ["WADEABLE"]
+  frame_rationale: >-
+    Reference curves describe wadeable streams, Strahler order 1 to 5. Order is
+    read from NHDPlus V2, not from the NRSA sampling protocol, because the
+    protocol records how the crew worked the reach on the day rather than the
+    population the curves describe. The four habitat metrics measured only on
+    wadeable-protocol reaches (embeddedness, bank angle, canopy density,
+    sinuosity) are simply missing at an in-frame station sampled as boatable,
+    which the DATA-01 to DATA-03 missingness rules handle and report.
 
 # --------------------------------------------------------------------------- #
 # Confidence scoring (0-100), a reviewer-priority heuristic. Implemented v0.4

@@ -24,7 +24,7 @@ DEFAULT_REACH_FT = delineation.DEFAULT_REACH_FT
 
 # ``delineation["watershed_source"]`` vocabulary.
 WATERSHED_V2_BASIN = "nhdplus-v2-basin"      # the StreamCat lookup engine's basin
-WATERSHED_SITE_ENGINE = "site-engine"        # the exact watershed (STAF site engine)
+WATERSHED_SITE_ENGINE = "site-engine"        # the HR reach watershed (STAF site engine)
 WATERSHED_NOT_CALCULATED = "not-calculated"  # engine failed or refused: no polygon
 
 
@@ -68,10 +68,11 @@ async def delineate_only(lat: float, lon: float,
     uses it directly; otherwise the point runs through ``routing.resolve_anchor``,
     which either lands on the covered V2 network (identical to the historical
     server-side snap) or routes an HR-only stream to its covered downstream
-    surrogate — or refuses when the substitution exceeds the published
-    drainage-area-ratio bound. ``anchor`` is a pre-resolved siteAnchor payload
-    (the UI resolves at click time so the banner can render before delineation).
-    Every successful result carries ``siteAnchor``; a routing refusal returns
+    surrogate — or, under the ``streamcat-legacy`` policy only, refuses when the
+    substitution exceeds the published drainage-area-ratio bound. ``anchor`` is
+    a pre-resolved siteAnchor payload (the UI resolves at click time so the
+    banner can render before delineation). Every successful result carries
+    ``siteAnchor``; a legacy routing refusal returns
     ``{"status": "error", "code": "surrogate_da_ratio_exceeded" | ...}`` with the
     partial anchor attached. Returns a JSON-serializable dict with the
     delineation, map overlays, and the ``ctx_inputs`` needed to assess later; or
@@ -99,6 +100,10 @@ async def delineate_only(lat: float, lon: float,
             return _error("Could not reach the NHD snap service: "
                           f"{resolved.get('detail')}", lat, lon, reach_length_ft,
                           code="snap_service_error", retryable=True)
+        if resolved.get("error") == "attrs_service_error":
+            return _error("Could not read the NHDPlus V2 flowline attributes: "
+                          f"{resolved.get('detail')}", lat, lon, reach_length_ft,
+                          code="attrs_service_error", retryable=True)
         if resolved.get("error") == "no_stream_found":
             return _error("No NHD stream found near this point. Click on or "
                           "near a mapped stream (CONUS only).", lat, lon,
@@ -174,14 +179,14 @@ async def delineate_only(lat: float, lon: float,
             lambda: routing.reanchor_inputs(site_anchor, reach_length_ft))
         d.warnings.extend(reanchor.pop("_warnings", []) or [])
 
-    # The exact watershed (STAF site engine) for a routed site under the auto
+    # The HR reach watershed (STAF site engine) for a routed site under the auto
     # policy. The legacy policy never runs the engine: every metric rides the
     # surrogate's NLDI basin, exactly as before.
     engine_block: Optional[dict] = None
     if routed and watershed_engine == routing.POLICY_AUTO:
         cb = _engine_progress(progress)
         engine_block = await anyio.to_thread.run_sync(
-            lambda: watershed.compute_exact_watershed(site_anchor, progress=cb))
+            lambda: watershed.compute_reach_watershed(site_anchor, progress=cb))
 
     ctx_inputs = {
         "lat": d.snapped_lat or lat, "lon": d.snapped_lon or lon, "comid": d.comid,

@@ -18,8 +18,8 @@ def test_display_names_and_labels():
     assert naming.engine_label() == f"STAF site engine v{ENGINE_VERSION}"
     assert naming.engine_label("0.9.9") == "STAF site engine v0.9.9"
     assert (naming.source_label("site-engine", version="0.2.0",
-                                detail="exact watershed")
-            == "STAF site engine v0.2.0, exact watershed")
+                                detail="HR reach watershed")
+            == "STAF site engine v0.2.0, HR reach watershed")
     assert (naming.source_label("streamcat", detail="NHDPlus V2 COMID 5215053")
             == "StreamCat lookup engine, NHDPlus V2 COMID 5215053")
     assert naming.is_engine("site-engine") and naming.is_engine("site-engine v0.2.0")

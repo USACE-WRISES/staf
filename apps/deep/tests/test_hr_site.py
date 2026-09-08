@@ -1,20 +1,10 @@
-"""Any NHD stream: the HR display adapter, click classification, anchoring
-helpers, and the delineation shape built from a STAF site engine record.
-Offline: every client is monkeypatched."""
+"""Any NHD stream: the HR display adapter, the HR snap every click uses, and
+the delineation shapes built from a STAF site engine record or, after the
+engine failed, from the StreamCat reach. Offline: every client is
+monkeypatched."""
 from __future__ import annotations
 
 from deep import hr_site, pipeline
-from deep.datasources import flowlines
-
-HR_ONLY = {"anchorKind": "hrSurrogate",
-           "clickedStream": {"network": "nhdplus-hr", "nhdplusId": 750012345,
-                             "gnisName": "Sugar Run", "drainageAreaSqkm": 4.2,
-                             "snapLat": 40.31125, "snapLon": -83.05615, "snapDistFt": 12.0},
-           "scoredReach": {"network": "nhdplus-v2", "comid": 5214461, "gnisName": "Sugar Run",
-                           "drainageAreaSqkm": 7.6, "snapLat": 40.3101, "snapLon": -83.0563},
-           "routing": {"routedDistanceFt": 1240.0, "daRatio": 1.8, "declined": False}}
-DECLINED = {**HR_ONLY, "routing": {"routedDistanceFt": 9000.0, "daRatio": 14.0,
-                                    "declined": True, "declineCode": "da-ratio"}}
 
 RECORD = {"status": "ok", "engineVersion": "0.2.0",
           "site": {"nhdplusId": 750012345, "gnisName": "Sugar Run", "reachcode": "05060001001234",
@@ -45,56 +35,35 @@ def test_hr_layer_is_absent_without_the_engine(monkeypatch):
     assert hr_site.snap_hr(40.3, -83.0) is None
 
 
-def test_snap_both_prefers_the_covered_network(monkeypatch):
-    monkeypatch.setattr(flowlines, "flowlines_in_bbox", lambda *a, **k: {"features": []})
-    monkeypatch.setattr(flowlines, "nearest_point_on_lines",
-                        lambda fc, lat, lon: (lat, lon, 40.0, 5214461))
+def test_every_click_snaps_to_the_hr_line(monkeypatch):
     monkeypatch.setattr(hr_site, "snap_hr", lambda lat, lon: (lat, lon, 3.0, 750012345))
-    res = hr_site.snap_both(40.31, -83.05)
-    assert res["hit"][3] == 5214461 and "hrHit" not in res
+    res = hr_site.snap_point(40.31, -83.05)
+    assert res == {"hit": (40.31, -83.05, 3.0, 750012345), "lat": 40.31, "lon": -83.05}
+    # the V2 network is never consulted for the pick; the StreamCat reach is
+    # comid_anchor's job, in the background (2026-09-07)
+    for gone in ("snap_both", "route_from_hr", "v2_anchor", "anchor_label", "declined",
+                 "clicked_reach"):
+        assert not hasattr(hr_site, gone), gone
 
 
-def test_snap_both_falls_to_the_hr_network(monkeypatch):
-    monkeypatch.setattr(flowlines, "flowlines_in_bbox", lambda *a, **k: {"features": []})
-    monkeypatch.setattr(flowlines, "nearest_point_on_lines",
-                        lambda fc, lat, lon: (lat, lon, 900.0, 5214461))
-    monkeypatch.setattr(hr_site, "snap_hr", lambda lat, lon: (lat, lon, 3.0, 750012345))
-    res = hr_site.snap_both(40.31, -83.05)
-    assert res["hit"][2] == 900.0 and res["hrHit"][3] == 750012345
-    assert res["lat"] == 40.31 and res["lon"] == -83.05
+def test_snap_never_raises(monkeypatch):
+    monkeypatch.setattr(hr_site, "hr_available", lambda: True)
 
-
-def test_anchor_helpers():
-    assert hr_site.declined(HR_ONLY) is False and hr_site.declined(DECLINED) is True
-    assert hr_site.declined(None) is False
-    assert hr_site.clicked_reach(HR_ONLY)["nhdplusId"] == 750012345
-    assert hr_site.clicked_reach({"anchorKind": "v2Direct"}) == {}
-    assert hr_site.anchor_label(HR_ONLY).startswith("nearest covered reach, COMID 5214461")
-    assert hr_site.anchor_label({"anchorKind": "v2Direct"}) == ""
-
-
-def test_v2_anchor_shape():
-    a = hr_site.v2_anchor(5214461, 40.31, -83.05, 40.3101, -83.0563, 12.0)
-    assert a["anchorKind"] == "v2Direct"
-    assert a["scoredReach"]["comid"] == 5214461 and a["scoredReach"]["network"] == "nhdplus-v2"
-    assert a["scoredReach"]["snapLat"] == 40.3101
-
-
-def test_route_from_hr_never_raises(monkeypatch):
     def boom():
         raise RuntimeError("service down")
     monkeypatch.setattr(hr_site, "_engine", boom)
-    res = hr_site.route_from_hr(40.31, -83.05, (40.31, -83.05, 3.0, 750012345))
-    assert res["error"] == "snap_service_error" and "service down" in res["detail"]
+    assert hr_site.snap_hr(40.31, -83.05) is None
+    assert hr_site.hr_flowlines_fc(-83.1, 40.3, -83.0, 40.4) is None
 
 
 def test_delineate_from_engine_shape():
-    out = pipeline.delineate_from_engine(RECORD, HR_ONLY, 40.31, -83.05, 500.0)
+    out = pipeline.delineate_from_engine(RECORD, 40.31, -83.05, 500.0)
     assert out["status"] == "ok" and out["watershedBasis"] == "site-engine"
+    assert "siteAnchor" not in out                     # the app attaches the StreamCat reach
     d = out["delineation"]
     assert d["network"] == "nhdplus-hr" and d["nhdplus_id"] == 750012345
-    assert d["comid"] == 5214461                       # keys the labeled evidence
-    assert d["huc8"] == "05060001" and d["drainage_area_sqkm"] == 4.19
+    assert d["comid"] is None                          # the engine reported none
+    assert d["huc8"] == "05060001" and d["drainage_area_sqkm"] == 4.2
     assert d["watershed_area_sqkm"] == 4.19 and d["reach_length_ft"] == 500.0
     assert d["gnis_name"] == "Sugar Run" and d["stream_order"] == 1
     assert d["warnings"] == ["tree flowline geometries unavailable"]
@@ -103,18 +72,71 @@ def test_delineate_from_engine_shape():
     assert out["siteEngine"]["watershed"]["polygon"] is None     # stripped for the session
     assert out["siteEngine"]["reach"]["geometry"] is None
     ci = out["ctx_inputs"]
-    assert ci["comid"] == 5214461 and ci["siteAnchor"] is HR_ONLY
+    assert ci["comid"] is None and "siteAnchor" not in ci
     assert ci["watershedBasis"] == "site-engine" and ci["lat"] == 40.31125
+    assert ci["site_engine"]["watershed"]["polygon"] is None
+    assert out["input"]["reach_length_ft"] == 500.0
+    assert pipeline.delineate_from_engine(RECORD, 40.31, -83.05)["input"]["reach_length_ft"] \
+        == pipeline.DEFAULT_REACH_FT
 
 
-def test_delineate_from_engine_withholds_the_comid_when_declined():
-    out = pipeline.delineate_from_engine(RECORD, DECLINED, 40.31, -83.05)
-    assert out["delineation"]["comid"] is None
-    assert out["ctx_inputs"]["comid"] is None
-    assert out["input"]["reach_length_ft"] == pipeline.DEFAULT_REACH_FT
-
-
-def test_basis_vocabulary():
-    assert pipeline.BASIS_V2_BASIN == "nhdplus-v2-basin"
+def test_basis_vocabulary_and_the_no_watershed_continuation():
+    # the engine's watershed is the normal basis; the two V2 values name the
+    # StreamCat basin the values describe after the engine failed (2026-09-07)
     assert pipeline.BASIS_SITE_ENGINE == "site-engine"
+    assert pipeline.BASIS_V2_BASIN == "nhdplus-v2-basin"
     assert pipeline.BASIS_SURROGATE_BASIN == "nhdplus-v2-basin-of-surrogate"
+    assert not hasattr(pipeline, "delineate_only")
+    routed = {"anchorKind": "hrSurrogate",
+              "clickedStream": {"nhdplusId": 750012345, "gnisName": "Sugar Run",
+                                "reachcode": "05060001001234", "drainageAreaSqkm": 4.2,
+                                "slope": 0.004, "fcode": 46006, "streamOrder": 1,
+                                "snapLat": 40.31125, "snapLon": -83.05615},
+              "scoredReach": {"comid": 5214461, "gnisName": "Big Run", "drainageAreaSqkm": 40.0,
+                              "snapLat": 40.30, "snapLon": -83.04},
+              "routing": {"routedDistanceFt": 1240.0, "daRatio": 9.5, "declined": False}}
+    failed = {"status": "refused", "reason": "over budget"}
+    out = pipeline.delineate_without_watershed(routed, 40.31, -83.05,
+                                               (40.31125, -83.05615, 12.0, 750012345), 500.0, failed)
+    assert out["status"] == "ok" and out["watershedBasis"] == "nhdplus-v2-basin-of-surrogate"
+    assert out["watershed_geojson"] is None and out["reach_geojson"] is None
+    assert out["siteAnchor"] is routed and out["siteEngine"] == failed
+    d = out["delineation"]
+    assert d["comid"] == 5214461 and d["nhdplus_id"] == 750012345 and d["network"] == "nhdplus-hr"
+    assert d["gnis_name"] == "Sugar Run" and d["drainage_area_sqkm"] == 4.2   # the clicked stream's
+    assert d["huc8"] == "05060001" and d["watershed_area_sqkm"] is None
+    assert d["reach_length_ft"] == 500.0 and "StreamCat reach" in d["warnings"][0]
+    ci = out["ctx_inputs"]
+    assert ci["comid"] == 5214461 and ci["siteAnchor"] is routed
+    assert ci["watershedBasis"] == "nhdplus-v2-basin-of-surrogate" and ci["lat"] == 40.31125
+    assert ci["watershed_geojson"] is None and ci["reach_geojson"] is None
+    # a covered stream: the anchor is the shape comid_anchor.resolve produces
+    # after it fills the engine's bare v2Direct payload from the fabric API
+    # (2026-09-07); the continuation keeps every site attribute the pull needs
+    covered = {"anchorKind": "v2Direct", "anchorSchemaVersion": 1,
+               "clickedPoint": {"lat": 43.68, "lon": -72.23},
+               "scoredReach": {"network": "nhdplus-v2", "comid": 7, "gnisName": "Mink Brook",
+                               "drainageAreaSqkm": 32.6, "reachcode": "01080106000123",
+                               "slope": 0.0123, "fcode": 46006, "streamOrder": 2,
+                               "snapLat": 43.68582, "snapLon": -72.23667, "snapDistFt": 12.0},
+               "notes": []}
+    hr_hit = (43.68582, -72.23667, 12.0, 24000800011817)
+    v2 = pipeline.delineate_without_watershed(covered, 43.68, -72.23, hr_hit, 1000.0, failed)
+    assert v2["watershedBasis"] == "nhdplus-v2-basin" and v2["delineation"]["comid"] == 7
+    d2 = v2["delineation"]
+    assert d2["gnis_name"] == "Mink Brook" and d2["drainage_area_sqkm"] == 32.6
+    assert d2["slope"] == 0.0123 and d2["fcode"] == 46006 and d2["stream_order"] == 2
+    assert d2["huc8"] == "01080106"
+    assert d2["nhdplus_id"] == 24000800011817 and d2["network"] == "nhdplus-hr"
+    assert d2["snapped_lat"] == 43.68582
+    ci2 = v2["ctx_inputs"]
+    assert ci2["drainage_area_sqkm"] == 32.6 and ci2["slope"] == 0.0123
+    assert ci2["fcode"] == 46006 and ci2["stream_order"] == 2 and ci2["huc8"] == "01080106"
+    # the engine's bare payload (nothing filled, no HR hit) still continues, blank
+    bare = {"anchorKind": "v2Direct", "scoredReach": {"network": "nhdplus-v2", "comid": 7,
+                                                      "gnisName": None, "drainageAreaSqkm": None}}
+    v3 = pipeline.delineate_without_watershed(bare, 43.68, -72.23, None, 1000.0, failed)
+    assert v3["delineation"]["network"] == "nhdplus-v2" and v3["delineation"]["snapped_lat"] == 43.68
+    assert v3["delineation"]["gnis_name"] == "(unnamed stream)"
+    for key in ("drainage_area_sqkm", "slope", "fcode", "stream_order", "huc8", "nhdplus_id"):
+        assert v3["delineation"][key] is None, key

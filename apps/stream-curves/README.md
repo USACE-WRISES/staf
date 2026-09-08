@@ -199,19 +199,32 @@ computes the curve predictors: `streamcat` is the StreamCat lookup engine and
 `site-engine` is the STAF site engine, which recomputes them at the training sites
 (usually under a minute per uncached site, up to about five on a large basin) and stamps the bundle's `predictorSource`; a
 replay recovers the choice from the run's own manifest. An engine-sourced build
-also recomputes the eight scored landscape metrics (impervious, crop, woody and
-herbaceous wetland, road density, dam density, base-flow index from the USGS
-grid, road-stream crossings on the NHDPlus HR network) over the exact watershed
-at every retained site, under their StreamCat column names. The recomputed list rides
+also recomputes the scored landscape metrics with an engine analog (impervious, crop, wetland (woody plus herbaceous, one column since 2026-09-07; the two classes stay pickable and are re-sourced when a run selects them), road density, dam density, base-flow index from the USGS grid, road-stream crossings on the NHDPlus HR network) over the HR reach watershed at every retained site, under their StreamCat
+column names. The recomputed list rides
 the manifest (`inputs.predictor_source.resourced_metrics`) and the digest, and the
 bundle stamps `predictorSource` per metric only on those curves, which is what
 DEEP's pairing rule reads. A retained site the engine cannot value keeps NaN, the
 per-site cache never stores a failure, and the stage refuses a partial engine run
-and names the sites. The EASI screening inside
-a stage is pinned to the StreamCat lookup engine (`SCREENING_WATERSHED_ENGINE` in
-`streamcurves/easi_screening.py`, recorded in the manifest outside the digest), so
-a stream outside NHDPlus V2 screens exactly as it did before the site engine
-existed and every published digest still reproduces. `--screen-retries` (default 2,
+and names the sites. The EASI screening inside a stage runs on the StreamCat lookup engine, and
+since 2026-09-07 it keys on each NRSA site's own archive COMID, the reach the
+crew sampled, instead of re-snapping its coordinate: the sample frame is
+NHDPlus V2, so the reach is known, and re-snapping had been routing sites to
+reaches downstream whose basin then keyed the curve values. A candidate with no
+published COMID still routes from its point under the `streamcat-legacy` pin
+(`SCREENING_WATERSHED_ENGINE` in `streamcurves/easi_screening.py`). Both the pin
+and the COMID mode ride the manifest and join the inputs digest under absence
+semantics, so every published digest still reproduces while a future change of
+either is visible. Every screening row records which reach it scored
+(`comid_source`, `routed_comid`, `da_ratio`, `comid_differs`) and the review
+packet lists the routed and disagreeing sites. Pool membership is decided on
+that reach's NHDPlus V2 basin; an engine-sourced build then fits the curves on
+HR reach watershed values at the same sites. The screening cache is keyed on the
+screening method version, the pin and the COMID mode, so a cache from an older
+screen is re-run rather than reused. The candidate panel is wadeable-only by
+default (`--reference-frame`, governed by `reference_panel.max_stream_order`):
+wadeable means NHDPlus V2 stream order 1 to 5, read from the order cached in
+`data/nrsa/stream_order.csv`, with the NRSA sampling protocol deciding only
+where a station's order cannot be resolved. `--screen-retries` (default 2,
 `--screen-retry-wait` seconds apart) re-screens only the candidates a transient
 failure left unresolved, such as a snap service outage, and merges each pass into
 the screening cache, so a flapping service cannot poison a re-stage.
@@ -231,7 +244,7 @@ each source fails to NA rather than aborting. The STAF site engine (vendored) is
 the one selectable alternative predictor source: the region builder's Predictor
 source select chooses it, the wizard's source filter lists its seven `se_` rows
 (any `se_` column in the chosen predictors derives the predictor source; the
-wizard has no select of its own), exact-watershed values arrive labeled in column
+wizard has no select of its own), HR reach watershed values arrive labeled in column
 provenance, and the default stays the StreamCat lookup engine. Model My Watershed
 needs an API key: set `MMW_API_KEY`, or put the key in the gitignored
 `scripts/.mmw_api_key`.

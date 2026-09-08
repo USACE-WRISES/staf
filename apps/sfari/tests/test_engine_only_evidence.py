@@ -1,10 +1,10 @@
-"""Engine-only evidence (2026-09-05).
+"""Engine-first evidence (2026-09-05, the StreamCat stand-in added 2026-09-07).
 
-Every watershed metric reads the STAF site engine's exact-watershed value
+Every watershed metric reads the STAF site engine's HR reach watershed value
 (``origin="engine"``). While the engine runs the entry is pending; when it
-failed or refused the entry is unavailable and says why; nothing is ever
-substituted from a neighboring NHDPlus V2 reach. Injects ``ctx.extras``; no
-network.
+failed or refused and no StreamCat reach is known the entry is unavailable
+and says why. The labeled StreamCat stand-in is covered in
+test_evidence_engines.py. Injects ``ctx.extras``; no network.
 """
 from __future__ import annotations
 
@@ -64,7 +64,7 @@ def test_engine_value_is_the_value(mid, fn, value):
     r = fn(_ctx(engine=OK))
     assert r.metric_id == mid and r.status == "ok" and r.origin == "engine"
     assert r.value == value
-    assert r.source == "STAF site engine v0.3.0 (exact watershed)"
+    assert r.source == "STAF site engine v0.3.0 (HR reach watershed)"
     assert r.engine_version == "0.3.0"
     assert "12.5 km2" in r.note
     assert r.anchor_label == "" and r.fallback_reason == "" and not r.upgrade_pending
@@ -83,12 +83,12 @@ def test_unavailable_with_the_reason_when_the_engine_did_not_answer(state, reaso
     for _mid, fn, _v in ENGINE_FIRST:
         r = fn(_ctx(engine=state))
         assert r.status == "unavailable" and r.origin == "engine"
-        assert reason in r.note and "StreamCat" not in r.note
+        assert reason in r.note and "No StreamCat reach is known" in r.note
     idle = evidence.ev_impervious(_ctx())
     assert idle.status == "unavailable" and "has not run" in idle.note
 
 
-def test_a_metric_the_engine_left_out_is_unavailable_not_borrowed():
+def test_a_metric_the_engine_left_out_is_unavailable_without_a_streamcat_reach():
     partial = {"status": "ok", "record": _rec(imperviousPctWatershed=3.0), "reason": None}
     assert evidence.ev_impervious(_ctx(engine=partial)).value == 3.0
     r = evidence.ev_road_density(_ctx(engine=partial))
@@ -98,7 +98,7 @@ def test_a_metric_the_engine_left_out_is_unavailable_not_borrowed():
 def test_engine_impervious_keeps_the_more_limiting_indicator():
     r = evidence.ev_impervious(_ctx(engine=OK))
     assert r.confidence == "H"
-    assert "12.3% impervious, 25.0% agricultural land (exact watershed)" == r.value_text
+    assert "12.3% impervious, 25.0% agricultural land (HR reach watershed)" == r.value_text
     assert r.suggested_likert == "Disagree"        # impervious 12.3% drives
     assert "agricultural 25.0%" in r.note and ";" not in r.note
     ag = {"status": "ok", "record": _rec(imperviousPctWatershed=2.0, cropPctWatershed=55.0,
@@ -133,7 +133,7 @@ def test_transport_capacity_reads_engine_k_and_agriculture():
 def test_natural_flow_regime_converts_normal_storage_to_m3_per_km2():
     r = evidence.ev_natural_flow_regime(_ctx(engine=OK))
     assert r.origin == "engine" and r.value == round(3.2 * 1233.48184, 0)
-    assert "m3/km2 (exact watershed)" in r.value_text
+    assert "m3/km2 (HR reach watershed)" in r.value_text
     gage = {"baseflow_ratio": 0.42, "site": "03219500"}
     both = evidence.ev_natural_flow_regime(_ctx(engine=OK, flow=gage))
     assert "Q90/Q50 = 0.42" in both.value_text and "m3/km2" in both.value_text
@@ -156,11 +156,15 @@ def test_riparian_canopy_is_forest_only_and_corridor_is_natural_vegetation():
     assert "aerial basemap" in corridor.note
 
 
-def test_pull_uses_only_the_engine_and_the_direct_services(monkeypatch):
+def test_pull_with_the_engine_and_no_streamcat_reach(monkeypatch):
     monkeypatch.setattr(evidence.nid_barriers, "barriers_near", lambda *a, **k: [])
     monkeypatch.setattr(evidence.wqp, "median_value", lambda *a, **k: None)
     monkeypatch.setattr(evidence.nwis, "flow_stats", lambda *a, **k: None)
     monkeypatch.setattr(evidence.nwi, "wetlands_near", lambda *a, **k: None)
+
+    def no_call(*a, **k):
+        raise AssertionError("StreamCat must not be asked without a COMID")
+    monkeypatch.setattr(evidence.streamcat, "metrics_by_comid", no_call)
     ci = {"lat": 40.0, "lon": -83.0, "comid": None, "slope": 0.002, "fcode": 46006,
           "sinuosity": 1.2, "drainage_area_sqkm": 12.5}
     out = asyncio.run(evidence.pull(ci, engine=OK))
@@ -169,7 +173,6 @@ def test_pull_uses_only_the_engine_and_the_direct_services(monkeypatch):
         assert out[mid]["origin"] == "engine" and out[mid]["status"] == "ok"
     assert all(e.get("origin") in ("engine", "pull") for e in out.values())
     assert all(not e.get("anchor_label") for e in out.values())
-    assert not hasattr(evidence, "streamcat") and not hasattr(evidence, "STREAMCAT_WS")
     running = asyncio.run(evidence.pull(ci, engine=RUNNING))
     assert all(running[mid]["status"] == "pending" for mid in evidence.ENGINE_METRICS)
     assert running["watershed-connectivity-dewatered-or-intermittent-segments"]["status"] == "ok"

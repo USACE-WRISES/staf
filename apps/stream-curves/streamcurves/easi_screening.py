@@ -17,10 +17,12 @@ turns into the stable ``easi_screening_sites`` / ``easi_screening_metrics`` /
 from __future__ import annotations
 
 import functools
+import hashlib
 import importlib.util
 import io
 import json
 import zipfile
+from pathlib import Path
 from typing import Any, Optional
 
 _VENDOR_ROOT = "streamcurves._vendor.easi"
@@ -42,12 +44,68 @@ SCREENING_PRESET_CHOICES: dict[str, str] = {
 DEFAULT_SCREENING_PRESET = "functional"
 
 # The reference screen runs on the StreamCat lookup engine only. This is a
-# fixed policy, not a setting: "streamcat-legacy" keeps uncovered NRSA sites
-# on the surrogate-within-10x routing and the refusal beyond it that every
-# published version was screened under, so screening caches, retained sets
-# and inputsDigest values stay byte-identical. EASI's own default is "auto"
-# (the STAF site engine computes the exact watershed for HR-only streams).
+# fixed policy, not a setting. Two parts:
+#
+#   * An NRSA site is screened BY ITS ARCHIVE COMID (2026-09-07): the NRSA
+#     sample frame is NHDPlus V2, so the sampled reach is known and the screen
+#     reads StreamCat on that reach with no routing at all. Before this the
+#     batch path passed lat/lon only and re-snapped every site, which routed
+#     27 of 186 NEH candidates to a downstream reach (12 of them retained,
+#     drainage-area ratios to 7.5) and silently replaced 9 archive COMIDs with
+#     the routed one, which then keyed the curve values.
+#   * A candidate with no usable COMID (the legacy-1819 panel, the handful of
+#     sentinel zeros) still routes from its coordinate, and "streamcat-legacy"
+#     keeps that routing on the surrogate-within-10x rule with the refusal
+#     beyond it. EASI's own default is "auto" (the STAF site engine computes
+#     the HR reach watershed for HR-only streams).
+#
+# Neither the pin nor the COMID mode reproduces anything published: surrogate
+# routing landed in EASI on 2026-08-29 and the pin on 2026-09-01, while every
+# published version was screened by 2026-08-28 (their manifests record
+# `watershed_engine: null` and their caches carry no anchors). Both therefore
+# JOIN the inputs digest under absence semantics, so published digests still
+# reproduce and a future change of either is visible.
 SCREENING_WATERSHED_ENGINE = "streamcat-legacy"
+
+COMID_MODE_ARCHIVE_FIRST = "archive-first"
+COMID_MODE_COORDINATE = "coordinate"
+
+
+def candidate_comid(row: dict) -> Optional[int]:
+    """The archive COMID to screen this candidate on, or None.
+
+    ``0`` is the archive's sentinel for "EPA published none", so it is missing,
+    not a reach.
+    """
+    try:
+        c = int((row or {}).get("comid"))
+    except (TypeError, ValueError):
+        return None
+    return c if c > 0 else None
+
+
+def comid_mode_of(rows) -> str:
+    """``archive-first`` when any candidate carries a usable COMID, else
+    ``coordinate`` (a legacy panel: every site routes from its point)."""
+    return (COMID_MODE_ARCHIVE_FIRST
+            if any(candidate_comid(r) is not None for r in rows or [])
+            else COMID_MODE_COORDINATE)
+
+
+@functools.lru_cache(maxsize=1)
+def easi_vendor_identity() -> dict:
+    """``{"vendorSha", "engineApiVersion"}`` of the vendored EASI copy that
+    screens (``site_engine_source.engine_identity``'s pattern). Recorded in the
+    cache, the run result and the manifest so a screen can be traced to the
+    engine build that produced it."""
+    try:
+        path = Path(__file__).resolve().parent / "_vendor" / "easi" / "VENDOR_INFO.json"
+        raw = path.read_bytes()
+        info = json.loads(raw.decode("utf-8"))
+        return {"vendorSha": hashlib.sha256(raw).hexdigest(),
+                "engineApiVersion": info.get("engine_api_version")}
+    except Exception:  # noqa: BLE001 - identity is provenance, never a gate
+        return {"vendorSha": None, "engineApiVersion": None}
 
 
 def _batch_config():
@@ -165,6 +223,83 @@ def _blocking_issue(site: dict) -> dict:
     return {}
 
 
+_ROUTED_ISSUE_PREFIX = "surrogate_"
+
+
+def _comid_provenance(site: dict, delin: dict, inp: dict, issue: dict) -> dict:
+    """Which reach the screen actually scored, and how it got there.
+
+    ``archive`` means the NRSA sample frame's own COMID was passed and the
+    vendored engine skipped routing entirely (``pipeline.delineate_only``
+    short-circuits on a supplied COMID); the other values describe a site that
+    had none. Before 2026-09-07 none of this reached StreamCurves, so a
+    surrogate basin could become the curve-fitting key unrecorded.
+    """
+    anchor = site.get("anchor") or {}
+    routing = anchor.get("routing") or {}
+    scored = anchor.get("scoredReach") or {}
+    clicked = anchor.get("clickedStream") or {}
+    kind = anchor.get("anchorKind") or ""
+    try:
+        given = int(inp.get("comid")) if inp.get("comid") is not None else None
+    except (TypeError, ValueError):
+        given = None
+    scored_comid = scored.get("comid") if scored.get("comid") is not None else delin.get("comid")
+    code = str(issue.get("code") or "")
+    if given is not None:
+        source = "archive"
+    elif code.startswith(_ROUTED_ISSUE_PREFIX):
+        source = "refused"
+    elif kind == "hrSurrogate":
+        source = "routed"
+    elif kind == "v2Direct" or delin.get("comid") is not None:
+        source = "snapped"
+    else:
+        source = "unresolved"
+    differs = (given is not None and scored_comid is not None
+               and int(given) != int(scored_comid))
+    return {
+        "comid_input": given,
+        "archive_comid_source": (inp.get("metadata") or {}).get("comid_source"),
+        "comid_source": source,
+        "anchor_kind": kind,
+        "routed_comid": scored_comid if kind == "hrSurrogate" else None,
+        "clicked_nhdplusid": clicked.get("nhdplusId"),
+        "routed_distance_ft": routing.get("routedDistanceFt"),
+        "da_ratio": routing.get("daRatio"),
+        "da_ratio_limit": routing.get("daRatioLimit"),
+        "routing_declined": bool(routing.get("declined")),
+        "decline_code": routing.get("declineCode") or "",
+        "watershed_engine_status": (site.get("watershed_engine") or {}).get("status") or "",
+        "comid_differs": bool(differs),
+    }
+
+
+def screening_comid_summary(rows) -> dict:
+    """What the screen keyed on, for the manifest and the review packet."""
+    counts: dict[str, int] = {}
+    routed, refused, differing = [], [], []
+    for r in rows or []:
+        src = str(r.get("comid_source") or "unresolved")
+        counts[src] = counts.get(src, 0) + 1
+        if src == "routed":
+            routed.append({"site_id": r.get("site_id"), "routed_comid": r.get("routed_comid"),
+                           "routed_distance_ft": r.get("routed_distance_ft"),
+                           "da_ratio": r.get("da_ratio"),
+                           "final_decision": r.get("final_decision")})
+        elif src == "refused":
+            refused.append({"site_id": r.get("site_id"), "da_ratio": r.get("da_ratio"),
+                            "issue_code": r.get("issue_code")})
+        if r.get("comid_differs"):
+            differing.append({"site_id": r.get("site_id"), "archive_comid": r.get("comid_input"),
+                              "scored_comid": r.get("comid") or r.get("routed_comid"),
+                              "routed_distance_ft": r.get("routed_distance_ft"),
+                              "da_ratio": r.get("da_ratio"),
+                              "final_decision": r.get("final_decision")})
+    return {"counts": counts, "routed_sites": routed, "refused_sites": refused,
+            "differing_sites": differing}
+
+
 def to_screening_tables(batch_results: dict) -> dict:
     """Map a BatchResult dict to the three stable StreamCurves screening tables."""
     sites_rows: list[dict] = []
@@ -214,6 +349,7 @@ def to_screening_tables(batch_results: dict) -> dict:
             # predicate text would just say "skip (no data)". Show what broke.
             "reason": (issue.get("message") or reasons
                        if s.get("state") in ("failed", "cancelled") else reasons),
+            **_comid_provenance(s, d, inp, issue),
         })
         for m in s.get("metrics", []):
             metric_rows.append({
@@ -235,6 +371,11 @@ def to_screening_tables(batch_results: dict) -> dict:
         # retries / timeouts / throttled / server_errors / elapsed_s: the only
         # evidence of *why* a run went badly, so keep it reachable by the UI.
         "diagnostics": batch_results.get("diagnostics"),
+        # what the screen keyed on, and which vendored EASI produced it
+        "comid_mode": batch_results.get("comid_mode")
+        or comid_mode_of([{"comid": r.get("comid_input")} for r in sites_rows]),
+        "easi_vendor_sha": (batch_results.get("easi_vendor_sha")
+                            or easi_vendor_identity().get("vendorSha")),
     }
     return {
         "easi_screening_sites": sites_rows,

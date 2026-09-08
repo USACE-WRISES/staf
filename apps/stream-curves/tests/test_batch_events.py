@@ -31,7 +31,9 @@ def test_event_narrator_accepts_every_emitted_shape():
     n("site_engine_site", {"i": 14, "n": 33, "site_id": "NRS18_NH_10018",
                            "status": "ok", "seconds": 0.0, "cached": True})
     n("screening_retry", {"pass": 1, "n": 23, "recovered": 21})
-    n("screening_cache_stale", "", {"cache_path": "x", "cached_n": 3, "candidate_n": 4})
+    n("screening_cache_stale", "", {"cache_path": "x", "cached_n": 3, "candidate_n": 4,
+                                    "reason": "cache comid mode coordinate is not archive-first"})
+    n("screening_comid_mode", {"mode": "archive-first", "n_archive": 5, "n_candidates": 6})
     n("site_done", "NRS18_NH_10016", {"state": "succeeded"})
     n("delineation", "NRS18_NH_10016", {})          # silent EASI stage
     n(object(), 1, 2, 3)                              # garbage never raises
@@ -39,12 +41,13 @@ def test_event_narrator_accepts_every_emitted_shape():
     assert "[screen] screening 71 sites" in text
     assert "[streamcat] start 11" in text and "[streamcat] done 11" in text
     assert "[streamcat] partial" in text
-    assert "[engine] computing exact-watershed values at 33 retained site" in text
+    assert "[engine] computing HR reach watershed values at 33 retained site" in text
     assert "[engine] 12/33 NRS18_NH_10016 ok 41 s" in text
     assert "[engine] 13/33 NRS18_NH_10017 refused 130 s: watershed exceeds the budget" in text
     assert "[engine] 14/33 NRS18_NH_10018 cached" in text
     assert "[screen] retry pass 1: 23 site(s), 21 recovered" in text
-    assert "screening cache stale" in text
+    assert "screening cache ignored: cache comid mode coordinate" in text
+    assert "[screen] comid mode archive-first: 5 of 6 candidates" in text
     assert "[screen] site_done NRS18_NH_10016 succeeded" in text
     assert "delineation" not in text
     for line in lines:

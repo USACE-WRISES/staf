@@ -2,7 +2,7 @@
 
 At NRSA sites on the covered NHDPlus V2 network, run EASI once with the
 StreamCat lookup engine's watershed inputs (report A) and once with the STAF
-site engine's exact-watershed inputs substituted through
+site engine's HR reach watershed inputs substituted through
 ``assessment.recompute_watershed_rows`` (report B), then compare the eight
 watershed-metric ratings and the condition class. For DEEP, score the same
 StreamCat and engine values against the published regional curves with

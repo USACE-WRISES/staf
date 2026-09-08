@@ -103,10 +103,10 @@ def test_xs_readonly_block():
 
 def test_metric_table_has_a_scored_at_column_in_the_advanced_group():
     rows = _rows()
-    rows[0]["anchorLabel"] = "exact watershed (STAF site engine)"
+    rows[0]["anchorLabel"] = "HR reach watershed (STAF site engine)"
     html = str(app._metric_table(rows, {}))
     assert ">Scored at<" in html
-    assert "exact watershed (STAF site engine)" in html
+    assert "HR reach watershed (STAF site engine)" in html
     # the aligned rollup keeps its placeholders in step with the new column
     html2 = str(app._metric_table(rows, {}, outcomes=_outcomes(), eci=0.61))
     foot = html2.split("easi-rollup-foot", 1)[1].split("</tfoot>", 1)[0]
@@ -114,29 +114,64 @@ def test_metric_table_has_a_scored_at_column_in_the_advanced_group():
     assert first_row.count("easi-col-adv") == 2
 
 
-def test_xs_readonly_block_lists_the_reach_sections():
-    cands = [{"label": "125 ft", "entrenchment_ratio": 1.4, "bank_height_ratio": 1.0},
-             {"label": "250 ft", "entrenchment_ratio": 1.8, "bank_height_ratio": 1.3},
-             {"label": "375 ft", "entrenchment_ratio": 3.1, "bank_height_ratio": 2.0}]
+def test_xs_readonly_block_has_the_medians_but_no_section_table():
+    cands = [{"label": "100 ft", "entrenchment_ratio": 1.4, "bank_height_ratio": 1.0},
+             {"label": "200 ft", "entrenchment_ratio": 1.8, "bank_height_ratio": 1.3},
+             {"label": "300 ft", "entrenchment_ratio": 3.1, "bank_height_ratio": 2.0}]
+    reach = {"n": 3, "entrenchment_ratio": {"median": 1.8, "min": 1.4, "max": 3.1, "n": 3},
+             "bank_height_ratio": {"median": 1.3, "min": 1.0, "max": 2.0, "n": 3}}
     html = str(app._xs_readonly_block({"crossSection": {
-        "png_b64": "abc123", "geom": {"division": "Interior Plains"},
-        "candidates": cands, "selected": 1}}))
-    assert "Reach cross-sections" in html and "easi-xs-reach" in html
-    assert "125 ft" in html and "375 ft" in html and "median" in html
-    assert html.count("font-weight:600") == 3           # the shown section's column
+        "png_b64": "abc123",
+        "geom": {"division": "Interior Plains", "entrenchment_ratio": 1.8,
+                 "bank_height_ratio": 1.3},
+        "candidates": cands, "selected": 1, "default": 1, "reach": reach}}))
+    # the per-section table is worksheet-only (2026-09-07)
+    assert "easi-xs-reach" not in html and "Reach cross-sections" not in html
+    assert "Section ER" in html and "Reach median ER" in html
+    assert "1.80 (1.40 to 3.10, 3 sections)" in html
+    # no reach statistics: no median rows
+    plain = str(app._xs_readonly_block({"crossSection": {
+        "png_b64": "abc123", "geom": {}, "candidates": cands, "selected": 1}}))
+    assert "Reach median" not in plain
 
 
-def test_anchor_banner_is_the_short_warning():
+def test_xs_reach_table_lists_every_section_and_labels_the_cap():
+    cands = [{"label": "100 ft", "entrenchment_ratio": 1.4, "bank_height_ratio": 1.0},
+             {"label": "200 ft", "entrenchment_ratio": 1.8, "bank_height_ratio": 1.3},
+             {"label": "300 ft", "entrenchment_ratio": 3.1, "bank_height_ratio": 2.0}]
+    reach = {"n": 3, "entrenchment_ratio": {"median": 1.8, "min": 1.4, "max": 3.1, "n": 3},
+             "bank_height_ratio": {"median": 1.3, "min": 1.0, "max": 2.0, "n": 3}}
+    tbl = str(app._xs_reach_table_ui(cands, 1, 1, reach))
+    assert "100 ft" in tbl and "300 ft" in tbl and "> default<" in tbl
+    assert "Reach median" in tbl and "1.40 to 3.10" in tbl
+    assert tbl.count("font-weight:600") == 3          # only the shown section's column
+    assert "≥" not in tbl and "no bank found" not in tbl
+    # capped sections read as at least 2.0, with the footnote
+    capped = [dict(c, low_bank_capped=(c["bank_height_ratio"] == 2.0)) for c in cands]
+    reach_c = {"n": 3, "entrenchment_ratio": reach["entrenchment_ratio"],
+               "bank_height_ratio": {"median": 1.3, "min": 1.0, "max": 2.0, "n": 3,
+                                     "capped": 1, "median_capped": False, "max_capped": True}}
+    tbl2 = str(app._xs_reach_table_ui(capped, 1, 1, reach_c))
+    assert "≥2.00" in tbl2 and "no bank found below the floodprone stage" in tbl2
+    assert "1.30" in tbl2 and "(1.00 to ≥2.00)" in tbl2
+    assert app._xs_reach_table_ui(cands[:1], 0, 0, reach) is None
+
+
+def test_anchor_banner_is_the_short_note():
     anchor = {"anchorKind": "hrSurrogate", "clickedStream": {"gnisName": None},
               "scoredReach": {"gnisName": "Mink Brook", "comid": 9327042},
               "routing": {"routedDistanceFt": 1687.6, "daRatio": 32.02, "daRatioLimit": 10.0,
-                          "declined": True, "declineCode": "surrogate_da_ratio_exceeded"},
-              "metricAnchors": {"m1": {"anchor": "watershed", "label": "exact watershed",
+                          "declined": False},
+              "metricAnchors": {"m1": {"anchor": "watershed", "label": "HR reach watershed",
                                        "name": "Stream Temperature"}}}
     d = {"watershed_source": "site-engine",
          "watershed_engine": {"engineVersion": "0.2.2", "areaSqkm": 1.0005}}
     html = str(app._anchor_banner(anchor, d))
-    assert "\u26a0 Warning" in html
-    assert "Three metrics could not be scored" in html
+    assert "<b>Note</b>" in html and "\u26a0" not in html and "Warning" not in html
+    assert ("Low flow, substrate, and biological integrity come from the nearest "
+            "StreamCat reach, 1,688 ft downstream.") in html
+    assert "32 times" not in html and "limit" not in html   # the ratio stays off the banner
+    assert app.NOTE_BOX_STYLE.split(";")[0] in html          # neutral box, not amber
+    assert "#fff7e0" not in html
     assert "Stream Temperature" not in html and "v0.2.2" not in html
     assert app._anchor_banner({"anchorKind": "v2Direct"}, d) is None

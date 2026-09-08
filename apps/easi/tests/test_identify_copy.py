@@ -12,6 +12,34 @@ SRC = Path(app.__file__).read_text(encoding="utf-8")
 CSS = (Path(app.__file__).parent / "www" / "styles.css").read_text(encoding="utf-8")
 
 
+def test_the_assessment_worksheet_carries_no_routed_site_note():
+    # SFARI's worksheet has no such note (2026-09-07): the Basin card names the
+    # StreamCat reach and each borrowed metric says so itself; the report banner
+    # (_anchor_banner) is the one place the sentences still print on screen
+    assert "anchor_ribbon" not in SRC
+    assert "def _anchor_banner(" in SRC
+
+
+def test_engine_progress_text_reads_as_steps():
+    # the busy row and the toast while a cyan stream's watershed computes
+    # (2026-09-07, the same lines as SFARI and DEEP): plain steps, the reach
+    # count while the trace and the union run, never "hops"
+    assert app._engine_progress_text({}) == "Delineating watershed · starting"
+    assert app._engine_progress_text({"stage": "walk", "reaches": 43, "hops": 7}) \
+        == "Delineating watershed · step 2 of 5 · tracing upstream, 43 reaches"
+    assert app._engine_progress_text({"stage": "union", "reaches": 1180, "hops": 40}) \
+        == "Delineating watershed · step 3 of 5 · joining catchments, 1,180 reaches"
+    # EASI's callback nulls the count on the later stages
+    assert app._engine_progress_text({"stage": "reach", "reaches": None, "hops": None}) \
+        == "Delineating watershed · step 4 of 5 · marking the assessment reach"
+    assert app._engine_progress_text({"stage": "metrics", "family": "landcover", "reaches": None}) \
+        == "Delineating watershed · step 5 of 5 · computing metrics, land cover (2 of 5)"
+    assert app._engine_progress_text({"stage": "done"}) == "Delineating watershed · finishing"
+    assert "hops" not in " ".join(text for _n, text in app._ENGINE_STEPS.values())
+    assert "_engine_progress_text(_delin_prog)" in SRC
+    assert "Calculating the HR reach watershed" not in SRC and "_ENGINE_STAGE_TEXT" not in SRC
+
+
 def test_the_pin_lands_before_the_routing_on_every_hr_branch():
     # the viewport hit, the click-box hit, and the typed-coordinate hit
     assert SRC.count("_place_pin(hr_hit[0], hr_hit[1])") == 3
@@ -50,7 +78,7 @@ def test_the_cue_is_not_printed_twice():
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=45"' in SRC
+    assert 'href="styles.css?v=46"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
 

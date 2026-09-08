@@ -107,3 +107,18 @@ def test_tooltip_riparian_vegetation_block():
     assert "Forest 2.0%" in inner and "Shrub 10.0%" in inner and "Grassland 55.0%" in inner
     assert "Natural vegetation 67.0%" in inner
     assert "aerial basemap" in inner            # the aerial-verify note renders in the Source sub-line
+
+
+def test_tooltip_shows_the_borrowing_note_ahead_of_the_adapter_note():
+    from easi.metrics import hydraulics
+    row = _row(hydraulics.LOW_FLOW_ID,
+               source="EPA StreamCat HYD catchment + watershed components",
+               note="Landscape-integrity fallback, not observed wetted-channel condition.",
+               anchorNote=("Scored from the nearest StreamCat reach, Big Run (COMID 5214461), "
+                           "1,240 ft downstream, which drains 32 times this stream."))
+    inner = _tip_html(row)
+    assert "Scored from the nearest StreamCat reach" in inner
+    assert inner.index("32 times this stream") < inner.index("Landscape-integrity fallback")
+    # a covered row has no anchorNote and shows the adapter note alone
+    plain = _tip_html(_row(hydraulics.LOW_FLOW_ID, note="Landscape-integrity fallback."))
+    assert "Scored from" not in plain and "Landscape-integrity fallback." in plain

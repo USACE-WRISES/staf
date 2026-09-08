@@ -194,6 +194,17 @@ def mirror_drift() -> list[str]:
     except Exception as exc:  # noqa: BLE001
         problems.append(f"could not compare the curve method version: {exc}")
 
+    # 4b. The screening method version mirrors run_state.
+    try:
+        from . import run_state as _rs
+        declared = str(threshold("meta.screening_method_version"))
+        if declared != _rs.SCREENING_METHOD_VERSION:
+            problems.append(
+                f"meta.screening_method_version ({declared!r}) differs from the "
+                f"engine's {_rs.SCREENING_METHOD_VERSION!r}.")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"could not compare the screening method version: {exc}")
+
     # 5. The DEEP scoring contract mirrors deep_export.
     try:
         from . import deep_export as _dx

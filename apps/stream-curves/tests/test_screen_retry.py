@@ -125,27 +125,43 @@ def test_retry_wait_is_honored_between_passes(tmp_path, monkeypatch):
     assert slept == [7.5]
 
 
+def _call_text(source: str, opener: str) -> str:
+    """The whole of one call, opener to its matching close paren.
+
+    A fixed-size window broke twice as the call grew a keyword (2026-09-07), and
+    a window that is merely bigger only postpones it.
+    """
+    start = source.index(opener)
+    depth = 0
+    for i in range(start + len(opener) - 1, len(source)):
+        if source[i] == "(":
+            depth += 1
+        elif source[i] == ")":
+            depth -= 1
+            if depth == 0:
+                return source[start:i + 1]
+    return source[start:]
+
+
 def test_the_retry_flags_reach_run_evidence_from_both_scripts():
     batch = (_SCRIPTS / "run_region_batch.py").read_text(encoding="utf-8")
     assert 'add_argument("--screen-retries"' in batch
     assert 'add_argument("--screen-retry-wait"' in batch
-    start = batch.index("ra.run_evidence(")
-    window = batch[start:start + 900]
-    assert "screen_retries=a.screen_retries" in window
-    assert "screen_retry_wait=a.screen_retry_wait" in window
-    ns = batch.index("argparse.Namespace(")
-    assert "screen_retries=a.screen_retries" in batch[ns:ns + 900]
+    call = _call_text(batch, "ra.run_evidence(")
+    assert "screen_retries=a.screen_retries" in call
+    assert "screen_retry_wait=a.screen_retry_wait" in call
+    ns = _call_text(batch, "argparse.Namespace(")
+    assert "screen_retries=a.screen_retries" in ns
     analysis = (_SCRIPTS / "run_regional_analysis.py").read_text(encoding="utf-8")
     assert 'add_argument("--screen-retries"' in analysis
-    start = analysis.index("ra.run(")
-    assert "screen_retries=args.screen_retries" in analysis[start:start + 900]
+    assert "screen_retries=args.screen_retries" in _call_text(analysis, "ra.run(")
 
 
 def test_choose_reference_tier_passes_the_retry_settings(monkeypatch):
     seen = []
 
     def fake(rows, preset, on_event=None, cache_path=None, *, screen_retries=0,
-             screen_retry_wait=0.0):
+             screen_retry_wait=0.0, comid_mode=None):
         seen.append((preset, screen_retries, screen_retry_wait))
         return {"retained_ids": [f"s{i}" for i in range(25)], "counts": {},
                 "tables": {}, "sites": [], "preset": preset, "from_cache": False}

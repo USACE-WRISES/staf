@@ -57,13 +57,19 @@ def _ordered_metrics():
 def _header_pairs(delin, sc):
     dl = (delin or {}).get("delineation", {})
     si = sc.get("subIndices", {})
+    # the HR reach watershed area row only when there is one (the no-watershed
+    # continuation has none; the PDF header already did this)
+    area = ([("HR reach watershed area (km2)", dl.get("watershed_area_sqkm"))]
+            if dl.get("watershed_area_sqkm") is not None else [])
     return [
         ("Stream", dl.get("gnis_name") or "(unnamed reach)"),
         ("Latitude", dl.get("snapped_lat")), ("Longitude", dl.get("snapped_lon")),
         ("COMID", dl.get("comid")), ("HUC8", dl.get("huc8")),
         ("Drainage area (km2)", dl.get("drainage_area_sqkm")),
+        *area,
         ("Reach length (ft)", dl.get("reach_length_ft")),
         ("Watershed basis", watershed_basis_label(delin)),
+        ("StreamCat reach", streamcat_reach_label(delin)),
         ("Ecosystem Condition Index", sc.get("ecosystemConditionIndex")),
         ("Physical sub-index", si.get("physical")),
         ("Chemical sub-index", si.get("chemical")),
@@ -172,6 +178,8 @@ def build_pdf(delin, metric_scores, function_scores, evidence, sc) -> bytes:
            ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
            ["Reach length", f"{dl.get('reach_length_ft')} ft"],
            ["Ecosystem Condition Index", f"{sc.get('ecosystemConditionIndex')}"]]
+    if dl.get("watershed_area_sqkm") is not None:
+        hdr.insert(3, ["HR reach watershed area", f"{dl.get('watershed_area_sqkm')} km2"])
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
     t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9), ("GRID", (0, 0), (-1, -1), 0.3, grid),
                            ("BACKGROUND", (0, 0), (0, -1), head_bg)]))
@@ -276,8 +284,6 @@ def _value_or_status(ev, ds):
         return "Local review required", True
     if client == "xscalc":
         return "Run cross-section tool", True
-    if client == "bieger":
-        return "Additional hydraulic estimate required", True
     if ev.get("status") == "unavailable":
         return "Unavailable", True
     return "Review in the field", True
@@ -340,7 +346,10 @@ def _site_header_table(delin):
            ["COMID / HUC8", f"{dl.get('comid')} / {dl.get('huc8')}"],
            ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
            ["Reach length", f"{dl.get('reach_length_ft')} ft"],
-           ["Watershed basis", watershed_basis_label(delin)]]
+           ["Watershed basis", watershed_basis_label(delin)],
+           ["StreamCat reach", streamcat_reach_label(delin)]]
+    if dl.get("watershed_area_sqkm") is not None:
+        hdr.insert(3, ["HR reach watershed area", f"{dl.get('watershed_area_sqkm')} km2"])
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
     t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9),
                            ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#d5deea")),
@@ -349,12 +358,10 @@ def _site_header_table(delin):
 
 
 def build_desktop_metrics_pdf(delin, evidence) -> bytes:
-    """Field-prep list of the desktop-supportable metrics: what to look up, the pulled
-    value when the app already has one, and a link to the data source.
-
-    Retained as the standalone/compatibility export; the same summary table now also
-    forms the appendix of :func:`build_field_forms_pdf`.
-    """
+    """The desktop metrics PDF: the site, the 26 desktop-supportable metrics with
+    the pulled value or an explicit status, the source of each, and the status
+    legend. The second download of the Field Forms dialog (2026-09-07); the
+    field packet itself carries only the compact values."""
     from reportlab.lib.pagesizes import letter
     from reportlab.lib.units import inch
     from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
@@ -369,36 +376,31 @@ def build_desktop_metrics_pdf(delin, evidence) -> bytes:
              Paragraph(to_print_safe(dl.get("gnis_name") or "(unnamed reach)"), st["base"]["Heading2"]),
              _site_header_table(delin), Spacer(1, 10),
              _metrics_summary_table(delin, evidence), Spacer(1, 8),
-             Paragraph("Evaluate these metrics from the desktop before the field visit. Pulled "
-                       "values are shown; look up the rest at the linked data sources.",
-                       st["base"]["Italic"])]
+             Paragraph("Available: the value was pulled and is printed beside its function on "
+                       "the field forms. Pending: the STAF site engine is still running. "
+                       "Unavailable: neither engine nor service answered. Local review "
+                       "required and Run cross-section tool: the assessor supplies it. "
+                       "Watershed basis and StreamCat reach above say whose watershed the "
+                       "values describe.", st["small_dim"])]
     doc.build(story)
     return buf.getvalue()
 
 
 # --------------------------------------------------------------------------- #
-# Combined field-forms packet: the five paper worksheet pages (JPEG at exact
-# Letter size) prefilled with derived identity + pulled desktop values, then the
-# desktop-metrics summary as an appendix. One ReportLab document (no PDF merge).
-# Layout rectangles come from data/FieldForm/manifest.json (see
-# scripts/build_fieldform_manifest.py for how they were measured).
+# The field forms: the five-page vector worksheet, served blank (2026-09-07,
+# the assessor's call). It prints once for any site; the pulled desktop values
+# live in the Field Forms dialog and in build_desktop_metrics_pdf, never on
+# the worksheet. Byte for byte the shipped template.
 # --------------------------------------------------------------------------- #
 _FIELDFORM_DIR = config.DATA_DIR / "FieldForm"
-_ff_manifest_cache: dict = {}
-_ff_bytes_cache: dict = {}
+FIELD_FORM_TEMPLATE = "SFARI_Field_Form_v1.0.pdf"
+_ff_template_cache: dict = {}
 
 
-def _load_field_form_manifest() -> dict:
-    if "m" not in _ff_manifest_cache:
-        _ff_manifest_cache["m"] = json.loads(
-            (_FIELDFORM_DIR / "manifest.json").read_text(encoding="utf-8"))
-    return _ff_manifest_cache["m"]
-
-
-def _field_form_bytes(filename: str) -> bytes:
-    if filename not in _ff_bytes_cache:
-        _ff_bytes_cache[filename] = (_FIELDFORM_DIR / filename).read_bytes()
-    return _ff_bytes_cache[filename]
+def _template_bytes() -> bytes:
+    if "pdf" not in _ff_template_cache:
+        _ff_template_cache["pdf"] = (_FIELDFORM_DIR / FIELD_FORM_TEMPLATE).read_bytes()
+    return _ff_template_cache["pdf"]
 
 
 def watershed_basis_label(delin) -> str:
@@ -408,15 +410,25 @@ def watershed_basis_label(delin) -> str:
     eng = (delin or {}).get("siteEngine") or {}
     if basis == "site-engine":
         ver = eng.get("engineVersion")
-        return f"exact watershed (STAF site engine v{ver})" if ver else \
-            "exact watershed (STAF site engine)"
+        return f"HR reach watershed (STAF site engine v{ver})" if ver else \
+            "HR reach watershed (STAF site engine)"
     if basis == "nhdplus-v2-basin-of-surrogate":
-        return "NHDPlus V2 basin of the nearest covered reach (StreamCat lookup engine)"
+        return "NHDPlus V2 basin of the nearest StreamCat reach (StreamCat lookup engine)"
     if eng.get("status") == "ok":
         ver = eng.get("engineVersion")
         tail = f"STAF site engine v{ver}" if ver else "STAF site engine"
-        return f"NHDPlus V2 basin drawn, watershed metrics from the exact watershed ({tail})"
+        return f"NHDPlus V2 basin drawn, watershed metrics from the HR reach watershed ({tail})"
     return "NHDPlus V2 basin (StreamCat lookup engine)"
+
+
+def streamcat_reach_label(delin) -> str:
+    """The reach the StreamCat lookup engine's values describe: ``COMID 9327042
+    (this reach)`` or ``Mink Brook (COMID 9327042), 199 ft downstream``."""
+    from . import comid_anchor
+    anchor = (delin or {}).get("siteAnchor")
+    if not anchor:
+        anchor = comid_anchor.synthetic(((delin or {}).get("delineation") or {}).get("comid"))
+    return comid_anchor.reach_text(anchor)
 
 
 def _reach_id_str(dl: dict) -> str:
@@ -440,272 +452,36 @@ def _coords_str(dl: dict) -> str:
     return ""
 
 
-def field_forms_filename(delin) -> str:
-    """Download filename: ``sfari-field-forms-comid-<id>.pdf`` or a safe
-    hemisphere-based coordinate fallback when COMID is absent."""
+def _site_slug(delin) -> str:
+    """``nhdplusid-<id>``, ``comid-<id>``, a hemisphere-based coordinate pair, or
+    empty: the site part of an export filename."""
     dl = (delin or {}).get("delineation", {})
     if dl.get("network") == "nhdplus-hr" and dl.get("nhdplus_id") not in (None, "", "None"):
-        return f"sfari-field-forms-nhdplusid-{dl['nhdplus_id']}.pdf"
+        return f"nhdplusid-{dl['nhdplus_id']}"
     comid = dl.get("comid")
     if comid not in (None, "", "None"):
-        return f"sfari-field-forms-comid-{comid}.pdf"
+        return f"comid-{comid}"
     lat, lon = dl.get("snapped_lat"), dl.get("snapped_lon")
     if lat is not None and lon is not None:
         ns = "n" if float(lat) >= 0 else "s"
         ew = "e" if float(lon) >= 0 else "w"
-        return f"sfari-field-forms-{ns}{abs(float(lat)):.5f}-{ew}{abs(float(lon)):.5f}.pdf"
+        return f"{ns}{abs(float(lat)):.5f}-{ew}{abs(float(lon)):.5f}"
+    return ""
+
+
+def field_forms_filename(delin=None) -> str:
+    """The blank worksheet does not depend on the site."""
     return "sfari-field-forms.pdf"
 
 
-def _rect_pt(rect_px, scale: float, page_h_px: int):
-    """(x, y, w, h) top-left pixels -> (x, y, w, h) PDF points (origin bottom-left)."""
-    x, y, w, h = rect_px
-    return (x * scale, (page_h_px - y - h) * scale, w * scale, h * scale)
+def desktop_metrics_filename(delin) -> str:
+    """``sfari-desktop-metrics-nhdplusid-<id>.pdf`` (or comid, or coordinates)."""
+    slug = _site_slug(delin)
+    return f"sfari-desktop-metrics-{slug}.pdf" if slug else "sfari-desktop-metrics.pdf"
 
 
-def _fit_size(c, text, font, max_w, start=8.0, floor=5.5):
-    from reportlab.pdfbase.pdfmetrics import stringWidth
-    size = start
-    while size > floor and stringWidth(text, font, size) > max_w:
-        size -= 0.25
-    return size
-
-
-def _desktop_entries_by_function(evidence) -> dict:
-    """{functionId: [compact print entries]} for desktop metrics with successful
-    evidence only. Prefers ``field_value_text``; falls back to a bounded value_text."""
-    evidence = evidence or {}
-    out: dict = {}
-    for m in config.desktop_metrics():
-        ev = evidence.get(m["metricId"]) or {}
-        if ev.get("status") != "ok":
-            continue
-        entry = ev.get("field_value_text") or ""
-        if not entry:
-            vt = ev.get("value_text") or ""
-            entry = vt if len(vt) <= 30 else (vt[:27] + "...")
-        if entry:
-            out.setdefault(m["functionId"], []).append(to_print_safe(entry))
-    return out
-
-
-def _pack_desktop_line(c, entries, font, size, max_w, max_lines):
-    """Greedily pack ``DESKTOP: e1 | e2 | ...`` into <= max_lines lines without
-    breaking mid-entry. Returns (lines, overflow_count)."""
-    from reportlab.pdfbase.pdfmetrics import stringWidth
-    prefix = "DESKTOP: "
-    lines, cur = [], prefix
-    for i, e in enumerate(entries):
-        cand = cur + (" | " if cur not in (prefix,) else "") + e
-        if stringWidth(cand, font, size) <= max_w:
-            cur = cand
-        else:
-            if cur not in (prefix,):
-                lines.append(cur)
-            cur = e
-            if len(lines) >= max_lines:
-                return lines, len(entries) - i
-    lines.append(cur)
-    return lines, 0
-
-
-def _draw_notes_overlay(c, rect_pt, entries):
-    """White-fill the Notes cell interior, redraw its border, print the pulled desktop
-    values, then a NOTES writing line. 6-6.5 pt; overflow -> '+N values - see appendix'."""
-    from reportlab.pdfbase.pdfmetrics import stringWidth
-    x, y, w, h = rect_pt
-    font = "Helvetica"
-    c.saveState()
-    # interior white-out (inset so the ruled border survives) + crisp redraw of border
-    c.setFillGray(1.0)
-    c.rect(x + 1.5, y + 1.5, w - 3.0, h - 3.0, stroke=0, fill=1)
-    c.setLineWidth(0.6)
-    c.setStrokeGray(0.15)
-    c.rect(x, y, w, h, stroke=1, fill=0)
-
-    pad = 3.0
-    usable_w = w - 2 * pad
-    size = 6.5
-    leading = 7.5
-    notes_reserve = 8.5                      # bottom band for the NOTES writing line
-    avail_h = h - notes_reserve - 2.0
-    max_lines = max(1, int(avail_h // leading))
-    lines, overflow = _pack_desktop_line(c, entries, font, size, usable_w, max_lines)
-    if overflow:
-        tag = f"  +{overflow} values - see appendix"
-        if lines:
-            # trim the last line until the overflow tag fits
-            last = lines[-1]
-            while last and stringWidth(last + tag, font, size) > usable_w:
-                last = last[:-1]
-            lines[-1] = last + tag
-
-    c.setFillGray(0.0)
-    c.setFont(font, size)
-    ty = y + h - pad - size
-    for ln in lines:
-        c.drawString(x + pad, ty, ln)
-        ty -= leading
-
-    # NOTES: label + a horizontal writing line along the bottom of the cell
-    c.setFont(font, 6.0)
-    c.setFillGray(0.25)
-    ny = y + 2.5
-    c.drawString(x + pad, ny, "NOTES:")
-    lx = x + pad + stringWidth("NOTES:", font, 6.0) + 4
-    c.setLineWidth(0.3)
-    c.setStrokeGray(0.55)
-    c.line(lx, ny + 0.5, x + w - pad, ny + 0.5)
-    c.restoreState()
-
-
-def _draw_metadata(c, delin, manifest):
-    """Prefill the Page-1 Reach ID / Reach length / Coordinates blanks."""
-    dl = (delin or {}).get("delineation", {})
-    scale = manifest["pdf_scale"]
-    page_h = manifest["page_px"][1]
-    baseline_pt = (page_h - manifest["metadata_baseline_px"]) * scale
-    rlen = dl.get("reach_length_ft")
-    values = {
-        "reach_id": _reach_id_str(dl),
-        "reach_length": (f"{rlen} ft" if rlen not in (None, "", "None") else ""),
-        "coordinates": _coords_str(dl),
-    }
-    c.saveState()
-    c.setFillGray(0.0)
-    font = "Helvetica"
-    for key, rect_px in manifest["metadata_rects_px"].items():
-        text = to_print_safe(values.get(key, ""))
-        if not text:
-            continue
-        x, _, w, _ = _rect_pt(rect_px, scale, page_h)
-        size = _fit_size(c, text, font, w - 2, start=8.5, floor=5.5)
-        c.setFont(font, size)
-        c.drawString(x + 1, baseline_pt, text)
-    c.restoreState()
-
-
-def _draw_form_page(c, page, delin, evidence, manifest):
-    from reportlab.lib.pagesizes import letter
-    from reportlab.lib.utils import ImageReader
-    scale = manifest["pdf_scale"]
-    page_h = manifest["page_px"][1]
-    pw_pt, ph_pt = letter
-    c.drawImage(ImageReader(io.BytesIO(_field_form_bytes(page["filename"]))),
-                0, 0, width=pw_pt, height=ph_pt)
-    # mask the baked-in "Page 1 of 1" footer
-    mx, my, mw, mh = _rect_pt(manifest["footer_mask_px"], scale, page_h)
-    c.saveState()
-    c.setFillGray(1.0)
-    c.rect(mx, my, mw, mh, stroke=0, fill=1)
-    c.restoreState()
-    if page["order"] == 1:
-        _draw_metadata(c, delin, manifest)
-    by_fn = _desktop_entries_by_function(evidence)
-    for nr in page["notes_rows"]:
-        entries = by_fn.get(nr["functionId"])
-        if entries:
-            _draw_notes_overlay(c, _rect_pt(nr["rect"], scale, page_h), entries)
-
-
-def _draw_furniture(c, total_pages, ident):
-    """Running header (identity) + footer (coords + Page X of Y) on every page."""
-    from reportlab.lib.pagesizes import letter
-    from reportlab.pdfbase.pdfmetrics import stringWidth
-    pw_pt, ph_pt = letter
-    left = 101 * 0.36                          # align with the form's table edges
-    right = 1555 * 0.36
-    c.saveState()
-    c.setFillGray(0.35)
-    c.setFont("Helvetica", 8)
-    c.drawString(left, ph_pt - 24, "SFARI Field Packet")
-    hr = ident["header_right"]
-    while hr and stringWidth(hr, "Helvetica", 8) > (right - left - 110):
-        hr = hr[:-1]
-    c.drawRightString(right, ph_pt - 24, hr)
-    if ident.get("footer_left"):
-        c.drawString(left, 24, ident["footer_left"])
-    c.drawRightString(right, 24, f"Page {c._pageNumber} of {total_pages}")
-    c.restoreState()
-
-
-def _numbered_canvas(ident):
-    """Two-pass canvas: capture each page, then stamp header/footer with the final
-    total page count so 'Page X of Y' is continuous across forms + appendix."""
-    from reportlab.pdfgen import canvas
-
-    class _NumberedCanvas(canvas.Canvas):
-        def __init__(self, *args, **kwargs):
-            canvas.Canvas.__init__(self, *args, **kwargs)
-            self._saved_states = []
-
-        def showPage(self):
-            self._saved_states.append(dict(self.__dict__))
-            self._startPage()
-
-        def save(self):
-            total = len(self._saved_states)
-            for state in self._saved_states:
-                self.__dict__.update(state)
-                _draw_furniture(self, total, ident)
-                canvas.Canvas.showPage(self)
-            canvas.Canvas.save(self)
-
-    return _NumberedCanvas
-
-
-def build_field_forms_pdf(delineation, evidence) -> bytes:
-    """One combined print-ready packet: five prefilled field-worksheet pages followed
-    by the desktop-metrics summary appendix. Returns PDF bytes.
-
-    Form pages draw the original worksheet JPEG at exact US Letter size and overlay the
-    derived site identity (Page 1) plus each function's pulled desktop values into its
-    Notes/Other Metrics row; the appendix lists all 26 desktop metrics once. A two-pass
-    NumberedCanvas gives continuous 'Page X of Y' over the whole document.
-    """
-    from reportlab.lib.pagesizes import letter
-    from reportlab.platypus import (BaseDocTemplate, Frame, NextPageTemplate, PageBreak,
-                                    PageTemplate, Paragraph, Spacer)
-
-    manifest = _load_field_form_manifest()
-    dl = (delineation or {}).get("delineation", {})
-    reach_id = _reach_id_str(dl)
-    stream = to_print_safe(dl.get("gnis_name") or "(unnamed reach)")
-    ident = {"header_right": f"{stream}  ({reach_id})", "footer_left": _coords_str(dl)}
-    title = to_print_safe(f"SFARI Field Forms - {reach_id}")
-
-    pw_pt, ph_pt = letter
-    buf = io.BytesIO()
-    pages = sorted(manifest["pages"], key=lambda p: p["order"])
-    templates = []
-    for i, page in enumerate(pages):
-        frame = Frame(0, 0, pw_pt, ph_pt, id=f"formframe{i}",
-                      leftPadding=0, rightPadding=0, topPadding=0, bottomPadding=0)
-
-        def _onpage(c, doc, _page=page):
-            _draw_form_page(c, _page, delineation, evidence, manifest)
-
-        templates.append(PageTemplate(id=f"form{i}", frames=[frame], onPage=_onpage))
-    # appendix frame kept inside the running header/footer band
-    templates.append(PageTemplate(id="appendix",
-                                  frames=[Frame(36, 44, pw_pt - 72, ph_pt - 44 - 52,
-                                                id="appendixframe", leftPadding=0, rightPadding=0)]))
-
-    doc = BaseDocTemplate(buf, pagesize=letter, title=title, author="STAF SFARI",
-                          pageTemplates=templates)
-
-    st = _ff_styles()
-    story = []
-    for i in range(1, len(pages)):
-        story += [NextPageTemplate(f"form{i}"), PageBreak()]
-    story += [NextPageTemplate("appendix"), PageBreak(),
-              Paragraph("Desktop Metrics Summary", st["h1"]),
-              Paragraph(f"{stream} - {reach_id}", st["small_dim"]),
-              Paragraph("Watershed basis: "
-                        + to_print_safe(watershed_basis_label(delineation)), st["small_dim"]),
-              Spacer(1, 6), _metrics_summary_table(delineation, evidence), Spacer(1, 8),
-              Paragraph("All 26 desktop-supportable metrics. Available values are also printed "
-                        "in each function's Notes row on the form pages; unavailable and "
-                        "manual-review metrics appear only here.", st["small_it"])]
-    doc.build(story, canvasmaker=_numbered_canvas(ident))
-    return buf.getvalue()
+def build_field_forms_pdf(delineation=None, evidence=None) -> bytes:
+    """The blank field forms: the five vector worksheet pages, untouched. The
+    arguments are accepted for the callers' symmetry with the desktop metrics
+    PDF and ignored."""
+    return _template_bytes()

@@ -1,13 +1,13 @@
 """The STAF site engine bridge for DEEP.
 
 Everything DEEP asks of the vendored engine goes through here: availability,
-one ``compute_site`` per site with the five watershed families (the
+one ``compute_site`` per site with the six watershed families (the
 cross-section family is skipped, DEEP runs 3DEP itself on the engine reach),
 the flattened metric values, the labels, and a geometry-stripped record for
 the session file. The desktop adapters in ``metrics/computed.py`` reuse the
 record the app computed, so the engine never runs twice for one site.
 
-Never raises; an unavailable engine simply means no exact-watershed values.
+Never raises; an unavailable engine simply means no HR reach watershed values.
 """
 from __future__ import annotations
 
@@ -56,22 +56,21 @@ def engine_label(version: Optional[str] = None) -> str:
         return f"STAF site engine v{version or engine_version() or 'unknown'}"
 
 
-def anchor_label(anchor: Optional[dict]) -> str:
-    """The reach a COMID-keyed value describes (empty on covered sites)."""
+def _positive(value: Any) -> bool:
+    """True for a finite number above zero (a typed reach length)."""
     try:
-        from deep._vendor.site_engine import naming
-        return naming.anchor_label(anchor)
-    except Exception:  # noqa: BLE001
-        if not anchor or anchor.get("anchorKind") != "hrSurrogate":
-            return ""
-        comid = (anchor.get("scoredReach") or {}).get("comid")
-        return f"nearest covered reach, COMID {comid}" if comid else "nearest covered reach"
+        return float(value) > 0
+    except (TypeError, ValueError):
+        return False
 
 
-def run_engine(lat: float, lon: float, *, families: Optional[list[str]] = None,
+def run_engine(lat: float, lon: float, *, reach_length_ft: Optional[float] = None,
+               families: Optional[list[str]] = None,
                include_geometry: bool = True,
                progress: Optional[Callable[[dict], Any]] = None) -> dict:
-    """One ``compute_site`` at the point with the interactive budget.
+    """One ``compute_site`` at the point with the interactive budget and the
+    assessment reach length the assessor typed (the engine's 1,000 ft when
+    none; until 2026-09-07 the typed length never reached the engine).
 
     Returns the engine record (``status`` ok | refused | failed) or a small
     failed record when the engine is not available here. Never raises.
@@ -86,6 +85,8 @@ def run_engine(lat: float, lon: float, *, families: Optional[list[str]] = None,
 
         cfg = {**INTERACTIVE_CONFIG, "includeGeometry": bool(include_geometry),
                "metricFamilies": list(families or DEEP_FAMILIES)}
+        if _positive(reach_length_ft):
+            cfg["reachLengthFt"] = float(reach_length_ft)
         return compute_site(float(lat), float(lon), cfg, progress=progress)
     except Exception as exc:  # noqa: BLE001 - the bridge never raises
         return {"status": "failed", "reason": f"engine error: {exc}",
@@ -101,14 +102,14 @@ def engine_metrics(record: Optional[dict]) -> dict[str, Any]:
 
 
 def engine_source(record: Optional[dict]) -> str:
-    return f"{engine_label((record or {}).get('engineVersion'))} (exact watershed)"
+    return f"{engine_label((record or {}).get('engineVersion'))} (HR reach watershed)"
 
 
 def engine_note(record: Optional[dict]) -> str:
     ws = (record or {}).get("watershed") or {}
     area = ws.get("areaSqkm")
     agreement = ws.get("areaAgreement")
-    parts = ["True point watershed on the full-resolution NHD"]
+    parts = ["Watershed of the clicked NHD reach, HR catchments aggregated"]
     if area is not None:
         parts.append(f"{area} km2")
     if agreement is not None:

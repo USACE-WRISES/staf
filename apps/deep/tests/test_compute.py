@@ -65,3 +65,32 @@ def test_measure_compute_metrics_only_merge_shape(monkeypatch):
     assert out == {"m1": {"value": 7.0, "na": False, "note": "",
                           "origin": "desktop", "source": "StreamCat",
                           "engine": False, "basis": ""}}
+
+
+def test_reach_geom_uses_the_vendored_transect_code(monkeypatch):
+    # DEEP's cross-section ratios come from the site engine's EASI extract (nine
+    # sections along the reach, reach-median ER and BHR); DEEP keeps no transect
+    # code of its own since 2026-09-06.
+    import importlib
+    threedep = importlib.import_module("deep._vendor.site_engine._extracted.threedep")
+    seen = {}
+
+    def fake(reach_geojson, da, **kw):
+        seen.update(kw)
+        return {"entrenchment_ratio": 1.47, "bank_height_ratio": 2.0,
+                "bankfull_width_m": 10.0, "bankfull_depth_m": 0.5,
+                "reach": {"n": 9}, "n_transects": 9}
+
+    monkeypatch.setattr(threedep, "reach_geomorphology", fake)
+    monkeypatch.setattr(computed, "site_engine_available", lambda: True)
+    ctx = AnalysisContext.from_inputs({"lat": 44.0, "lon": -123.0, "comid": 1,
+                                       "drainage_area_sqkm": 5.0})
+    ctx.reach_geojson = {"type": "FeatureCollection", "features": []}
+    out = computed.compute_for(["floodplain-connectivity-entrenchment-ratio-er",
+                                "channel-and-floodplain-dynamics-bank-height-ratio-bhr",
+                                "channel-evolution-width-depth-ratio"], ctx)
+    er = out["floodplain-connectivity-entrenchment-ratio-er"]
+    assert er.value == 1.47 and "reach median" in er.source and er.engine is False
+    assert out["channel-and-floodplain-dynamics-bank-height-ratio-bhr"].value == 2.0
+    assert out["channel-evolution-width-depth-ratio"].value == 20.0
+    assert "bankfull" in seen and "division" in seen      # DEEP's own Bieger estimate rides along

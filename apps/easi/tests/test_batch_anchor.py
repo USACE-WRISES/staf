@@ -155,9 +155,9 @@ def test_policy_reaches_delineate(monkeypatch):
     assert seen == ["streamcat-legacy", "auto"]
 
 
-def _stub_engine_pipeline(monkeypatch, *, declined: bool):
-    anchor = _hr_anchor(declined=declined)
-    anchor["routing"]["declineMessage"] = "past the limit"
+def _stub_engine_pipeline(monkeypatch, *, ratio: float = 5.48):
+    anchor = _hr_anchor()
+    anchor["routing"]["daRatio"] = ratio
 
     async def fake_delineate(lat, lon, reach_ft, comid=None, **kw):
         return {"status": "ok",
@@ -184,27 +184,29 @@ def _stub_engine_pipeline(monkeypatch, *, declined: bool):
              "name": "Impervious", "discipline": "Hydrology",
              "functionId": "catchment-hydrology", "functionName": "Catchment hydrology",
              "rating": "Good", "index": 0.85, "functionScore": 13, "status": "ok",
-             "engine": "site-engine", "anchorLabel": "exact watershed (STAF site engine)"},
+             "engine": "site-engine", "anchorLabel": "HR reach watershed (STAF site engine)"},
             {"metricId": "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity",
              "name": "Low Flow", "discipline": "Hydraulics",
              "functionId": "low-flow", "functionName": "Low flow",
-             "rating": None, "index": None, "functionScore": None,
-             "status": "unavailable", "note": "past the limit",
-             "engine": "unavailable",
-             "anchorLabel": "unavailable past the substitution limit"}]
+             "rating": "Fair", "index": 0.545, "functionScore": 8, "status": "ok",
+             "note": "Landscape-integrity fallback.", "engine": "streamcat",
+             "anchorLabel": "nearest covered reach (COMID 5215053, 291 ft downstream)"}]
         return {"status": "ok", "report": rep, "huc12": "x"}
     monkeypatch.setattr(api.pipeline, "delineate_only", fake_delineate)
     monkeypatch.setattr(api.pipeline, "assess_only", fake_assess)
     monkeypatch.setattr("easi.batch.runner._RETRY_BACKOFF_S", 0.0)
 
 
-def test_declined_under_auto_is_partial_not_failed(monkeypatch):
-    _stub_engine_pipeline(monkeypatch, declined=True)
+def test_routed_past_the_bound_still_scores_under_auto(monkeypatch):
+    # The ratio is provenance, never a gate (2026-09-06): the covered reach
+    # supplies the COMID-keyed metrics, so nothing is unavailable for it.
+    _stub_engine_pipeline(monkeypatch, ratio=37.2)
     res = api.run_batch_sync(C.BatchRequest(sites=[C.SiteRequest("A", 40.1, -83.0)]))
     site = res.sites[0]
-    assert site.state == "partial"
     assert not [i for i in site.issues if i.severity == "error"]
-    assert site.anchor["routing"]["declined"] is True
+    assert not [i for i in site.issues if i.code == "metric_unavailable"]
+    assert site.anchor["routing"]["declined"] is False
+    assert site.anchor["routing"]["daRatio"] == 37.2
     assert site.watershed_engine["status"] == "ok"
     assert site.delineation.watershed_source == "site-engine"
     back = C.BatchResult.from_dict(res.to_dict())
@@ -212,10 +214,17 @@ def test_declined_under_auto_is_partial_not_failed(monkeypatch):
     assert back.sites[0].delineation.watershed_source == "site-engine"
     engines = {m.metric_id: m.engine for m in back.sites[0].metrics}
     assert engines["catchment-hydrology-impervious-surface-cover"] == "site-engine"
+    low = next(m for m in back.sites[0].metrics
+               if m.metric_id == "low-flow-and-baseflow-dynamics-low-flow-wetted-connectivity")
+    assert low.engine == "streamcat" and low.availability == "available"
+    assert low.anchor == "nearest covered reach (COMID 5215053, 291 ft downstream)"
+    rows = list(csv.reader(io.StringIO(exports._summary_csv(res))))
+    data = dict(zip(rows[0], rows[1]))
+    assert data["comid_evidence"] == "nearest covered reach" and data["da_ratio"] == "37.2"
 
 
 def test_summary_csv_engine_columns(monkeypatch):
-    _stub_engine_pipeline(monkeypatch, declined=False)
+    _stub_engine_pipeline(monkeypatch)
     res = api.run_batch_sync(C.BatchRequest(sites=[C.SiteRequest("HR", 40.1, -83.02)]))
     rows = list(csv.reader(io.StringIO(exports._summary_csv(res))))
     header = rows[0]
@@ -230,4 +239,4 @@ def test_summary_csv_engine_columns(monkeypatch):
     metrics = list(csv.reader(io.StringIO(exports._metrics_csv(res))))
     assert "engine" in metrics[0]
     engine_col = metrics[0].index("engine")
-    assert {r[engine_col] for r in metrics[1:]} == {"site-engine", "unavailable"}
+    assert {r[engine_col] for r in metrics[1:]} == {"site-engine", "streamcat"}

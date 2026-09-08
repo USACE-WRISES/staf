@@ -48,13 +48,15 @@ def _summary_csv(batch: BatchResult) -> str:
                 "partial_evidence",
                 # Routing provenance (empty for covered-network sites): which
                 # stream was clicked vs which reach was scored, and the policy
-                # numbers behind the substitution or refusal.
+                # numbers behind the substitution (the ratio is provenance under
+                # auto and the refusal bound under streamcat-legacy).
                 "anchor_kind", "clicked_stream", "clicked_nhdplusid",
                 "clicked_da_sqkm", "routed_distance_ft", "da_ratio",
                 "da_ratio_limit",
                 # Watershed engine provenance (empty for covered-network sites):
                 # which engine answered the watershed metrics, how the STAF site
-                # engine run went, and whether COMID-keyed evidence was withheld.
+                # engine run went, and which reach supplied the COMID-keyed
+                # evidence (withheld only on a streamcat-legacy refusal).
                 "watershed_engine", "engine_status", "engine_version",
                 "engine_reaches", "engine_hops", "engine_area_sqkm",
                 "comid_evidence"])
@@ -72,6 +74,8 @@ def _summary_csv(batch: BatchResult) -> str:
             engine_name = ("site-engine" if d.watershed_source == "site-engine"
                            else ("unavailable" if d.watershed_source == "not-calculated"
                                  else "streamcat"))
+            # ``declined`` survives only on the partial anchor of a
+            # streamcat-legacy refusal (a failed site); auto never declines.
             comid_evidence = ("withheld" if routing_info.get("declined")
                               else "nearest covered reach")
         else:

@@ -2,10 +2,11 @@
 score.
 
 One batched StreamCat request per site, the site engine -> StreamCat -> NLCD
-layering under the auto-pull gate (all eight ids from the engine since 0.3.0
-brought base flow index and road-stream crossings), the anchor label on a
-routed site, the end-to-end ``compute_metrics_only`` shape, and the pairing
-rule on a mixed bundle. Fully offline."""
+layering under the auto-pull gate (every id from the engine since 0.3.0 brought
+base flow index and road-stream crossings), the combined wetland id that sums
+two classes on each layer, the anchor label on a routed site, the end-to-end
+``compute_metrics_only`` shape, and the pairing rule read per metric on a mixed
+bundle. Fully offline."""
 from __future__ import annotations
 
 import json
@@ -19,22 +20,27 @@ from deep import config, curves, measure
 from deep.metrics import computed
 from deep.metrics.base import AnalysisContext
 
-EIGHT = ["spring-pctimp2019ws", "spring-pctcrop2019ws", "spring-pctwdwet2019ws",
-         "spring-pcthbwet2019ws", "spring-rddensws", "spring-damdensws",
-         "spring-bfiws", "spring-rdcrsws"]
-ENGINE_SIX = EIGHT[:6]
-STREAMCAT_ONLY = EIGHT[6:]
+# nine since 2026-09-07: the combined wetland column joined the two classes
+# it sums (older bundles keep scoring those, so their adapters stay)
+NINE = ["spring-pctimp2019ws", "spring-pctcrop2019ws", "spring-pctwet2019ws",
+        "spring-pctwdwet2019ws", "spring-pcthbwet2019ws", "spring-rddensws",
+        "spring-damdensws", "spring-bfiws", "spring-rdcrsws"]
+EIGHT = NINE
+ENGINE_SIX = [m for m in NINE if m not in ("spring-bfiws", "spring-rdcrsws")]
+STREAMCAT_ONLY = ["spring-bfiws", "spring-rdcrsws"]
 
 # A real StreamCat row (COMID 5214461, 2026-09-02). The zeros are real values.
 SC = {"pctimp2019ws": 2.91, "pctcrop2019ws": 75.32, "pcthay2019ws": 8.3,
       "pctwdwet2019ws": 0.07, "pcthbwet2019ws": 0.0, "rddensws": 2.0611,
       "damdensws": 0.0, "bfiws": 21.4496, "rdcrsws": 0.0058}
 SC_VALUES = {"spring-pctimp2019ws": 2.91, "spring-pctcrop2019ws": 75.32,
+             "spring-pctwet2019ws": 0.07,          # 0.07 woody + 0.0 herbaceous
              "spring-pctwdwet2019ws": 0.07, "spring-pcthbwet2019ws": 0.0,
              "spring-rddensws": 2.0611, "spring-damdensws": 0.0,
              # bfi keeps two decimals, the densities and crossings four
              "spring-bfiws": 21.45, "spring-rdcrsws": 0.0058}
 ENGINE_VALUES = {"spring-pctimp2019ws": 12.3, "spring-pctcrop2019ws": 40.0,
+                 "spring-pctwet2019ws": 1.5,      # 1.5 woody + 0.0 herbaceous
                  "spring-pctwdwet2019ws": 1.5, "spring-pcthbwet2019ws": 0.0,
                  "spring-rddensws": 1.2345, "spring-damdensws": 0.0,
                  "spring-bfiws": 48.0, "spring-rdcrsws": 0.9844}
@@ -132,7 +138,8 @@ def test_streamcat_answers_all_eight_when_the_gate_is_closed(monkeypatch):
 def test_engine_answers_all_eight_when_the_gate_is_open(monkeypatch):
     calls = _fake_engine(monkeypatch, _engine_record())
     _sc_patch(monkeypatch)
-    out = computed.compute_for(EIGHT, _ctx(allow_engine=True))
+    out = computed.compute_for(EIGHT, _ctx(allow_engine=True,
+                                           site_engine_prefetched=_engine_record()))
     assert set(out) == set(EIGHT) == set(ENGINE_VALUES)
     for mid, want in ENGINE_VALUES.items():
         cv = out[mid]
@@ -142,7 +149,8 @@ def test_engine_answers_all_eight_when_the_gate_is_open(monkeypatch):
     assert "base-flow index grid" in out["spring-bfiws"].source
     assert "NHDPlus HR" in out["spring-rdcrsws"].source
     assert "100 times" not in out["spring-rdcrsws"].source   # the engine's own scale
-    assert calls["n"] == 1                              # one run, cached on ctx
+    # the app hands the record over; the adapters never run the engine (2026-09-07)
+    assert calls["n"] == 0
 
 
 # --------------------------------------------------------------------------- #
@@ -154,7 +162,8 @@ def test_bfi_and_crossings_fall_to_streamcat_only_when_the_engine_lacks_them(mon
     older["metrics"].pop("baseflowIndexPct"); older["metrics"].pop("roadCrossingDensity")
     _fake_engine(monkeypatch, older)
     _sc_patch(monkeypatch)
-    out = computed.compute_for(STREAMCAT_ONLY, _ctx(allow_engine=True))
+    out = computed.compute_for(STREAMCAT_ONLY, _ctx(allow_engine=True,
+                                                    site_engine_prefetched=older))
     assert out["spring-bfiws"].value == 21.45
     assert out["spring-rdcrsws"].value == 0.0058
     assert all(cv.engine is False and cv.basis == "streamcat" for cv in out.values())
@@ -175,19 +184,49 @@ def test_crossings_keep_the_served_units_and_carry_the_caution(monkeypatch):
 
 
 # --------------------------------------------------------------------------- #
-# (e) (f) the anchor: labeled on a routed site, NLCD when routing is declined
+# (e) (f) the anchor: labeled on a routed site at any ratio, NLCD only when no
+# StreamCat reach is known
 # --------------------------------------------------------------------------- #
 def test_anchor_labels_the_density_on_a_routed_site(monkeypatch):
     _sc_patch(monkeypatch)
-    hr_only = {"anchorKind": "hrSurrogate", "scoredReach": {"comid": 5214461},
+    hr_only = {"anchorKind": "hrSurrogate",
+               "scoredReach": {"comid": 5214461, "gnisName": "Sugar Run"},
                "routing": {"routedDistanceFt": 1240.0, "daRatio": 1.8, "declined": False}}
     cv = computed._road_density(_ctx(site_anchor=hr_only))
     assert cv.value == 2.0611 and cv.basis == "streamcat"
     assert cv.source.startswith(
-        "StreamCat lookup engine rddens (watershed), describes the nearest covered reach")
+        "StreamCat lookup engine rddens (watershed), describes the nearest StreamCat reach")
+    assert cv.source.endswith("Sugar Run (COMID 5214461), 1,240 ft downstream, "
+                              "which drains 1.8 times this stream")
 
 
-def test_declined_routing_falls_back_to_nlcd_for_land_cover_only(monkeypatch):
+def test_a_declined_routing_still_pulls_streamcat_at_the_reported_ratio(monkeypatch):
+    # the engine's routing flags a reach past the 10x bound as declined; DEEP
+    # reports the ratio and never withholds (SFARI's rule, 2026-09-07)
+    monkeypatch.setattr(computed, "site_engine_available", lambda: False)
+    sc_calls = []
+    _stub_datasource(monkeypatch, "streamcat",
+                     metrics_by_comid=lambda *a, **k: sc_calls.append(a) or dict(SC))
+
+    def no_nlcd(gj):
+        raise AssertionError("NLCD must not run while StreamCat has the values")
+    _stub_datasource(monkeypatch, "nlcd", watershed_landcover=no_nlcd)
+    declined = {"anchorKind": "hrSurrogate", "scoredReach": {"comid": 5214461},
+                "routing": {"routedDistanceFt": 9000.0, "daRatio": 14.0, "declined": True,
+                            "declineCode": "da-ratio"}}
+    ctx = _ctx(site_anchor=declined, watershed_basis="site-engine")
+    ctx.watershed_geojson = {"type": "FeatureCollection", "features": []}
+    out = computed.compute_for(EIGHT, ctx)
+    assert len(sc_calls) == 1 and sc_calls[0][0] == 5214461
+    assert set(out) == set(EIGHT)
+    assert {cv.basis for cv in out.values()} == {"streamcat"}
+    assert {cv.value for cv in out.values()} == set(SC_VALUES.values())
+    for cv in out.values():
+        assert "which drains 14 times this stream" in cv.source
+        assert "declined" not in cv.source and "limit" not in cv.source
+
+
+def test_no_streamcat_reach_falls_back_to_nlcd_for_land_cover_only(monkeypatch):
     monkeypatch.setattr(computed, "site_engine_available", lambda: False)
     sc_calls = []
     _stub_datasource(monkeypatch, "streamcat",
@@ -195,12 +234,11 @@ def test_declined_routing_falls_back_to_nlcd_for_land_cover_only(monkeypatch):
     _stub_datasource(monkeypatch, "nlcd", watershed_landcover=lambda gj: {
         "impervious_pct": 3.3, "crop_pct": 61.0, "woody_wetland_pct": 0.4,
         "herb_wetland_pct": 0.0})
-    declined = {"anchorKind": "hrSurrogate", "scoredReach": {"comid": 5214461},
-                "routing": {"declined": True, "daRatio": 14.0}}
-    ctx = _ctx(site_anchor=declined, watershed_basis="site-engine")
+    ctx = _ctx(watershed_basis="site-engine")
+    ctx.comid = None                                    # no StreamCat reach was found
     ctx.watershed_geojson = {"type": "FeatureCollection", "features": []}
     out = computed.compute_for(EIGHT, ctx)
-    assert sc_calls == []                               # no COMID-keyed lookup at all
+    assert sc_calls == []                               # no COMID, no lookup
     assert set(out) == {"spring-pctimp2019ws", "spring-pctcrop2019ws",
                         "spring-pctwdwet2019ws", "spring-pcthbwet2019ws"}
     assert {cv.basis for cv in out.values()} == {"nlcd"}
@@ -208,7 +246,7 @@ def test_declined_routing_falls_back_to_nlcd_for_land_cover_only(monkeypatch):
     assert out["spring-pctcrop2019ws"].value == 61.0
     assert out["spring-pctwdwet2019ws"].value == 0.4
     assert out["spring-pcthbwet2019ws"].value == 0.0    # a real zero survives
-    assert all("exact watershed polygon, STAF site engine" in cv.source
+    assert all("HR reach watershed polygon, STAF site engine" in cv.source
                for cv in out.values())
 
 
@@ -297,6 +335,32 @@ def test_pairing_rule_on_a_mixed_bundle():
     assert "reference only" in curves.metric_warning(mv, spec)
 
 
+def test_compute_metrics_only_gates_the_engine_per_metric(monkeypatch):
+    # a mixed bundle: the re-sourced curve takes the engine value, the curve
+    # StreamCurves left StreamCat-fitted takes the StreamCat value, and the
+    # pairing rule withholds neither (2026-09-07; the bundle-level gate used
+    # to hand every adapter an engine value the scoring layer then refused)
+    calls = _fake_engine(monkeypatch, _engine_record())
+    _sc_patch(monkeypatch)
+    bundle = _mixed_bundle()
+    ci = {"lat": 40.31125, "lon": -83.05615, "comid": 5214461}
+    out = measure.compute_metrics_only(ci, ["spring-pctimp2019ws", "spring-bfiws"],
+                                       assessment=bundle, engine_record=_engine_record())
+    imp, bfi = out["spring-pctimp2019ws"], out["spring-bfiws"]
+    assert imp["engine"] is True and imp["basis"] == "site-engine"
+    assert imp["value"] == ENGINE_VALUES["spring-pctimp2019ws"]
+    assert bfi["engine"] is False and bfi["basis"] == "streamcat"
+    assert bfi["value"] == SC_VALUES["spring-bfiws"]
+    assert calls["n"] == 0
+    # both score, and no metric reads as reference only
+    _sc, fres = curves.score_site(bundle, measure.measured_from_state(out))
+    assert fres["catchment-hydrology"].metric_indices["spring-pctimp2019ws"] is not None
+    assert fres["streamflow-regime"].metric_indices["spring-bfiws"] is not None
+    for fid in ("catchment-hydrology", "streamflow-regime"):
+        for warn in (fres[fid].metric_warnings or {}).values():
+            assert "reference only" not in (warn or "")
+
+
 # --------------------------------------------------------------------------- #
 # (i) every spring-*ws id the shipped bundles score has an adapter
 # --------------------------------------------------------------------------- #
@@ -309,5 +373,51 @@ def test_every_regional_landscape_id_in_the_bundles_has_an_adapter():
                 mid = str(m.get("metricId") or "")
                 if re.fullmatch(r"spring-[a-z0-9]+ws", mid):
                     found.add(mid)
-    assert found == set(EIGHT)
+    # every id the shipped bundles score has an adapter; the combined wetland id
+    # has one before any bundle carries it (2026-09-07), so this is containment
     assert found <= computed.computable_ids()
+    assert found == set(NINE) - {"spring-pctwet2019ws"}
+    assert "spring-pctwet2019ws" in computed.computable_ids()
+
+
+# --------------------------------------------------------------------------- #
+# (j) the combined wetland id: both classes required on every layer
+# --------------------------------------------------------------------------- #
+def test_combined_wetland_sums_two_classes_and_needs_both(monkeypatch):
+    # the engine's two keys sum
+    _sc_patch(monkeypatch)
+    out = computed.compute_for(["spring-pctwet2019ws"],
+                               _ctx(allow_engine=True,
+                                    site_engine_prefetched=_engine_record(
+                                        herbWetlandPctWatershed={"value": 0.4})))
+    cv = out["spring-pctwet2019ws"]
+    assert cv.value == 1.9 and cv.engine is True and cv.basis == "site-engine"
+    assert "woody plus herbaceous" in cv.source
+
+    # one engine class missing: the StreamCat sum answers instead, labeled
+    partial = _engine_record()
+    partial["metrics"].pop("herbWetlandPctWatershed")
+    out = computed.compute_for(["spring-pctwet2019ws"],
+                               _ctx(allow_engine=True, site_engine_prefetched=partial))
+    cv = out["spring-pctwet2019ws"]
+    assert cv.value == 0.07 and cv.engine is False and cv.basis == "streamcat"
+
+    # one StreamCat column missing: NLCD's own total stands in
+    _sc_patch(monkeypatch, {k: v for k, v in SC.items() if k != "pcthbwet2019ws"})
+    _stub_datasource(monkeypatch, "nlcd",
+                     watershed_landcover=lambda geo: {"wetland_pct": 3.25})
+    out = computed.compute_for(["spring-pctwet2019ws"], _ctx())
+    cv = out["spring-pctwet2019ws"]
+    assert cv.value == 3.25 and cv.basis == "nlcd"
+
+
+def test_combined_wetland_keeps_a_real_zero_and_caps_at_100(monkeypatch):
+    _sc_patch(monkeypatch, {"pctwdwet2019ws": 0.0, "pcthbwet2019ws": 0.0})
+    out = computed.compute_for(["spring-pctwet2019ws"], _ctx())
+    assert out["spring-pctwet2019ws"].value == 0.0        # a real zero, not missing
+    out = computed.compute_for(["spring-pctwet2019ws"],
+                               _ctx(allow_engine=True,
+                                    site_engine_prefetched=_engine_record(
+                                        woodyWetlandPctWatershed={"value": 70.0},
+                                        herbWetlandPctWatershed={"value": 45.0})))
+    assert out["spring-pctwet2019ws"].value == 100.0

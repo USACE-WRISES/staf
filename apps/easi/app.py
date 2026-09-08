@@ -81,6 +81,50 @@ RATING_COLOR = {"Good": "#c8d9f2", "Fair": "#f5e7a6", "Poor": "#f5b5b5"}
 _DISC_ORDER = ["Hydrology", "Hydraulics", "Geomorphology", "Physicochemistry", "Biology"]
 
 
+# The engine's progress stages as the assessor sees them while a cyan
+# stream's HR reach watershed computes: five steps, the reach count while the
+# upstream trace and the catchment union run, the metric family with its
+# position while the metrics run. Plain words only: "hops" (the walk's query
+# levels) never reach the screen (2026-09-07; the same lines as SFARI and DEEP).
+_ENGINE_STEPS = {"site": (1, "finding the stream"), "walk": (2, "tracing upstream"),
+                 "catchments": (3, "joining catchments"), "union": (3, "joining catchments"),
+                 "geometry": (3, "joining catchments"),
+                 "reach": (4, "marking the assessment reach"),
+                 "metrics": (5, "computing metrics")}
+_ENGINE_STEP_COUNT = 5
+_ENGINE_FAMILY_TEXT = {"baseflow": "base flow", "dams": "dams", "landcover": "land cover",
+                       "roads": "roads", "runoff": "runoff", "soils": "soils",
+                       "xsection": "cross-sections"}
+
+
+def _engine_progress_text(prog: dict, families=None) -> str:
+    """The busy-row line (and the toast) while the STAF site engine runs, from
+    the last progress event: ``Delineating watershed · step 2 of 5 · tracing
+    upstream, 42 reaches``. ``families`` is the metric family list the app
+    requested (the engine runs them sorted), for the ``(3 of 6)`` position."""
+    lead = "Delineating watershed"
+    prog = prog or {}
+    st = prog.get("stage")
+    if st == "done":
+        return f"{lead} · finishing"
+    step = _ENGINE_STEPS.get(st)
+    if step is None:
+        return f"{lead} · starting"
+    n, what = step
+    if n in (2, 3) and prog.get("reaches"):
+        count = int(prog["reaches"])
+        what += f", {count:,} reach" + ("" if count == 1 else "es")
+    if st == "metrics" and prog.get("family"):
+        if families is None:
+            from easi.watershed import ENGINE_FAMILIES
+            families = ENGINE_FAMILIES
+        fam = str(prog["family"])
+        fams = sorted(families)
+        pos = f" ({fams.index(fam) + 1} of {len(fams)})" if fam in fams else ""
+        what += f", {_ENGINE_FAMILY_TEXT.get(fam, fam)}{pos}"
+    return f"{lead} · step {n} of {_ENGINE_STEP_COUNT} · {what}"
+
+
 _FINDING_TEXT = "Finding the stream…"
 _LOCATING_TEXT = "Locating the nearest covered reach…"
 
@@ -282,7 +326,7 @@ def _legend_ui(step, zoomed, mode, scored, routed):
 
     rows = [ui.div("Streams", class_="easi-legend-title"),
             row(FLOWLINE_STYLE["color"], "StreamCat lookup engine", "scores the reach in seconds"),
-            row(HR_FLOWLINE_STYLE["color"], "STAF site engine", "calculates the exact watershed")]
+            row(HR_FLOWLINE_STYLE["color"], "STAF site engine", "calculates the HR reach watershed")]
     note = None
     if not zoomed:
         note = "Zoom in to see streams"
@@ -315,7 +359,7 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=45"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=46"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
                     ui.tags.script(src="legend-dock.js?v=1", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
@@ -530,9 +574,13 @@ def _metric_card_tip(row):
     calc = ((row.get("scoring") or {}).get("equation")
             or config.METRIC_CALCULATIONS.get(mid)
             or "See the Scoring method panel for the equation and breakpoints.")
+    # A routed site's COMID-keyed rows carry ``anchorNote`` (which covered reach
+    # scored them, how far downstream, the drainage-area ratio) ahead of the
+    # adapter's own note.
     tip_html = _metric_tip_html(
         name=row.get("name"), definition=config.METRIC_DEFINITIONS.get(mid, ""),
-        source=row.get("source") or "", note=row.get("note") or "",
+        source=row.get("source") or "",
+        note=" ".join(x for x in (row.get("anchorNote"), row.get("note")) if x),
         calc=calc,
         crit=(row.get("criteriaBands") or _METRICS.get(mid, {}).get("criteria") or {}),
         default=row.get("generatedRating") or "n/a", land_cover=lc,
@@ -858,39 +906,85 @@ def _basin_block(d, rep):
     )
 
 
-def _xs_reach_table_ui(cands, selected, default):
+def _xs_reach_rows(reach):
+    """The reach-median rows for the geometry panels, ``1.47 (1.26 to 2.24, 9
+    sections)`` per ratio; empty when the geometry carries no reach statistics
+    (a legacy single-section result)."""
+    out = []
+    for key, label in (("entrenchment_ratio", "Reach median ER"),
+                       ("bank_height_ratio", "Reach median BHR")):
+        s = (reach or {}).get(key) or {}
+        if s.get("median") is None:
+            continue
+        n = int(s.get("n") or 0)
+        bhr = key == "bank_height_ratio"
+        med = geomorph.fmt_bhr(s["median"], bhr and s.get("median_capped"))
+        hi = geomorph.fmt_bhr(s["max"], bhr and s.get("max_capped"))
+        out.append((label, f"{med} ({s['min']:.2f} to {hi}, "
+                           f"{n} section{'s' if n != 1 else ''})"))
+    return out
+
+
+def _xs_reach_table_ui(cands, selected, default, reach=None):
     """The reach's sampled sections side by side (one column each): station from
     the upstream end, entrenchment ratio, bank-height ratio at the default
-    stages. The shown section is bold, the default carries a median tag."""
+    stages, then a last column with the reach median and range the metrics
+    score on. The shown section is bold, the drawn default carries a tag."""
     if not cands or len(cands) < 2:
         return None
 
     def cell(i, text, tag=False):
-        kids = [text] + ([ui.tags.small(" median", class_="easi-xs-median")] if tag else [])
+        kids = [text] + ([ui.tags.small(" default", class_="easi-xs-median")] if tag else [])
         return ui.tags.td(*kids, style=("font-weight:600;" if i == selected else ""))
 
     def rt(v):
         return f"{v:.2f}" if v is not None else "n/a"
 
+    stats = reach or {}
+    with_med = any((stats.get(k) or {}).get("median") is not None
+                   for k in ("entrenchment_ratio", "bank_height_ratio"))
+
+    def med(key):
+        s = stats.get(key) or {}
+        if s.get("median") is None:
+            return [ui.tags.td("n/a", class_="easi-xs-reach-med")]
+        bhr = key == "bank_height_ratio"
+        hi = geomorph.fmt_bhr(s["max"], bhr and s.get("max_capped"))
+        return [ui.tags.td(geomorph.fmt_bhr(s["median"], bhr and s.get("median_capped")),
+                           ui.tags.small(f" ({rt(s['min'])} to {hi})"),
+                           class_="easi-xs-reach-med")]
+
     head = ui.tags.tr(ui.tags.th("Section"),
                       *[cell(i, c.get("label") or str(i + 1), i == default)
-                        for i, c in enumerate(cands)])
+                        for i, c in enumerate(cands)],
+                      *([ui.tags.th("Reach median", class_="easi-xs-reach-med")]
+                        if with_med else []))
     er = ui.tags.tr(ui.tags.th("Entrenchment ratio"),
-                    *[cell(i, rt(c.get("entrenchment_ratio"))) for i, c in enumerate(cands)])
+                    *[cell(i, rt(c.get("entrenchment_ratio"))) for i, c in enumerate(cands)],
+                    *(med("entrenchment_ratio") if with_med else []))
     bhr = ui.tags.tr(ui.tags.th("Bank-height ratio"),
-                     *[cell(i, rt(c.get("bank_height_ratio"))) for i, c in enumerate(cands)])
+                     *[cell(i, geomorph.fmt_bhr(c.get("bank_height_ratio"), c.get("low_bank_capped")))
+                       for i, c in enumerate(cands)],
+                     *(med("bank_height_ratio") if with_med else []))
+    capped = any(c.get("low_bank_capped") for c in cands)
     return ui.div(
         ui.div("Reach cross-sections", class_="easi-xs-panel-title"),
         ui.tags.table(ui.tags.tbody(head, er, bhr), class_="easi-tbl easi-xs-tbl easi-xs-reach"),
-        ui.p("Stations from the upstream end of the reach. The default is the section "
-             "whose ratios sit at the reach median.", class_="easi-xs-foot"),
+        ui.p("Stations from the upstream end of the reach. Metrics score on the reach "
+             "medians. The default section is the one nearest both medians.",
+             class_="easi-xs-foot"),
+        *([ui.p("≥2.00: no bank found below the floodprone stage, so the low bank is "
+                "capped at twice the bankfull depth.", class_="easi-xs-foot")]
+          if capped else []),
         class_="easi-xs-reach-wrap")
 
 
 def _xs_readonly_block(rep):
-    """Read-only cross-section for the report modal: the geometry summary panel (left)
-    beside the static plot image (right), in the report's usual 300px|1fr grid. No inputs,
-    no live widget; the cross-section is edited in the Assessment worksheet."""
+    """Read-only cross-section for the report modal: the geometry summary panel (left,
+    the shown section's ratios beside the reach medians the metrics scored on) beside
+    the static plot image (right), in the report's usual 300px|1fr grid. No inputs, no
+    live widget, and no per-section table (that stays on the Assessment worksheet,
+    2026-09-07); the cross-section is edited in the worksheet."""
     xs = (rep or {}).get("crossSection") or {}
     if not xs.get("png_b64"):
         return None
@@ -903,11 +997,13 @@ def _xs_readonly_block(rep):
     def wd(m):
         return f"{m * FT_PER_M:.1f} ft" if m is not None else "n/a"
 
+    edited = str(xs.get("caption") or "").startswith("Edited")
     rows = [("Bieger region", block.get("division") or "National curve"),
             ("Bankfull width", wd(block.get("bankfull_width_m"))),
             ("Floodprone width", wd(block.get("flood_prone_width_m"))),
-            ("Entrenchment ratio", _fmt2(er)),
-            ("Bank-height ratio", _fmt2(bhr))]
+            ("Section ER", _fmt2(er)),
+            ("Section BHR", geomorph.fmt_bhr(bhr, block.get("low_bank_capped") and not edited))]
+    rows += _xs_reach_rows(xs.get("reach"))
     table = ui.tags.table(
         ui.tags.tbody(*[ui.tags.tr(ui.tags.th(lbl), ui.tags.td(val)) for lbl, val in rows]),
         class_="easi-tbl easi-xs-tbl")
@@ -915,10 +1011,7 @@ def _xs_readonly_block(rep):
                    table, class_="easi-xs-panel")
     plot = ui.div(ui.tags.img(src=f"data:image/png;base64,{xs['png_b64']}"),
                   class_="easi-xsection")
-    cands = xs.get("candidates") or []
-    sel = min(max(int(xs.get("selected", 0) or 0), 0), max(len(cands) - 1, 0))
-    return ui.TagList(ui.div(panel, plot, class_="easi-xsection-wrap"),
-                      _xs_reach_table_ui(cands, sel, sel))
+    return ui.div(panel, plot, class_="easi-xsection-wrap")
 
 
 def _dl_buttons():
@@ -957,18 +1050,23 @@ def _metric_toolbar():
     return ui.div(*items, class_="easi-metric-toolbar")
 
 
+# The routed-site note (the report banner; the worksheet ribbon was dropped
+# 2026-09-07 to match SFARI) sits in a neutral box: nothing is withheld on such
+# a site (2026-09-06), so it is not the amber warning it used to be.
+NOTE_BOX_STYLE = "background:#eef3f8;border:1px solid #c6d4e3;border-radius:6px;"
+
+
 def _anchor_banner(anchor, d):
-    """The routed-site warning (easi.notices), None on the covered network. The
+    """The routed-site note (easi.notices), None on the covered network. The
     per-source metric lists that used to follow it live in the metric table's
     "Scored at" column (advanced columns) since 2026-09-04."""
-    w = notices.routed_warning(anchor, d)
+    w = notices.routed_notice(anchor, d)
     if not w:
         return None
     return ui.div(
-        ui.div(ui.tags.b(f"\u26a0 {w['title']}")),
+        ui.div(ui.tags.b(w["title"])),
         *[ui.div(line, style="margin-top:.25rem;") for line in w["lines"]],
-        style=("background:#fff7e0;border:1px solid #e6c96b;border-radius:6px;"
-               "padding:.5rem .7rem;margin:0 0 .6rem;font-size:13px;"))
+        style=NOTE_BOX_STYLE + "padding:.5rem .7rem;margin:0 0 .6rem;font-size:13px;")
 
 
 def _report_body(d, rep, notes, downloads, anchor=None):
@@ -1347,7 +1445,7 @@ def server(input, output, session):
             res = routing.route_from_hr(lat, lon, hr_hit)
             anchor = res.get("anchor") or {}
             comid = (anchor.get("scoredReach") or {}).get("comid")
-            if comid is not None and not (anchor.get("routing") or {}).get("declined"):
+            if comid is not None:
                 res["scoredFeature"] = network_display.v2_reach_feature(int(comid))
             return res
 
@@ -1387,23 +1485,20 @@ def server(input, output, session):
                 anchor = res["anchor"]
                 clicked_s = anchor.get("clickedStream") or {}
                 scored = anchor.get("scoredReach") or {}
-                routing_block = anchor.get("routing") or {}
-                # A declined routing is not a refusal under the auto policy:
-                # the exact watershed still comes from the site engine, only
-                # reach-keyed evidence is withheld, and the card's third line
-                # says so (no toast: it repeated the card in warning colors).
+                # The route line joins the clicked stream to the covered reach
+                # that supplies the three reach metrics, whatever it drains
+                # (the auto policy reports the ratio, it never withholds).
                 if (clicked_s.get("snapLat") is not None
-                        and scored.get("snapLat") is not None
-                        and not routing_block.get("declined")):
+                        and scored.get("snapLat") is not None):
                     seg = {"type": "FeatureCollection", "features": [{
                         "type": "Feature", "properties": {},
                         "geometry": {"type": "LineString", "coordinates": [
                             [clicked_s["snapLon"], clicked_s["snapLat"]],
                             [scored["snapLon"], scored["snapLat"]]]}}]}
                     _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
-                                                name="Nearest covered reach"))
+                                                name="Nearest StreamCat reach"))
                 # The pin and the coordinate inputs mark the clicked stream, the
-                # one the exact watershed is computed for (the pipeline reads the
+                # one the HR reach watershed is computed for (the pipeline reads the
                 # covered reach's own snap from the anchor); before 2026-09-02 the
                 # pin jumped to the covered reach, thousands of feet away.
                 s_lat = clicked_s.get("snapLat")
@@ -1413,7 +1508,7 @@ def server(input, output, session):
                 pending_anchor.set(anchor)
                 _apply_snap((s_lat, s_lon, clicked_s.get("snapDistFt") or 0.0,
                              scored.get("comid")),
-                            None if routing_block.get("declined") else res.get("scoredFeature"))
+                            res.get("scoredFeature"))
 
         # ---- typed lat/long -> recenter the map + snap (same path as a click) ----
         @reactive.extended_task
@@ -1507,7 +1602,7 @@ def server(input, output, session):
         routed = pending_anchor() is not None
         ui.update_action_button(
             "delineate", disabled=(snapped_point() is None),
-            label=("Compute exact watershed and reach" if routed
+            label=("Compute watershed and reach" if routed
                    else "Delineate Basin and Reach"))
 
     # ---- staged analysis tasks ----
@@ -1647,37 +1742,24 @@ def server(input, output, session):
         for key in _delin_prog:
             _delin_prog[key] = None
         routed = bool((pending_anchor() or {}).get("anchorKind") == "hrSurrogate")
-        label = ("Calculating the exact watershed…" if routed
+        label = (_engine_progress_text({}) if routed
                  else "Delineating basin & reach…")
         stage.set(label)
-        ui.notification_show(label + " please wait", id="stage",
+        ui.notification_show(label + ", please wait", id="stage",
                              type="message", duration=None)
         delineate_task(lat, lon, float(input.reach_ft()), comid, pending_anchor())
 
-    _ENGINE_STAGE_TEXT = {
-        "site": "locating the stream", "walk": "walking upstream",
-        "catchments": "fetching catchments", "union": "building the polygon",
-        "geometry": "fetching flowlines", "reach": "trimming the reach",
-        "metrics": "computing watershed metrics", "done": "finishing",
-    }
-
     @reactive.effect
     def _delineate_progress_poll():
-        # While a routed site's exact watershed computes, poll the shared engine
-        # progress twice a second and narrate the stage (reaches walked, hops).
+        # While a routed site's HR reach watershed computes, poll the shared
+        # engine progress twice a second and narrate the step (the same
+        # lines SFARI and DEEP show, _engine_progress_text).
         if delineate_task.status() != "running":
             return
         reactive.invalidate_later(0.5)
-        st = _delin_prog.get("stage")
-        if not st:
+        if not _delin_prog.get("stage"):
             return
-        detail = _ENGINE_STAGE_TEXT.get(st, st)
-        if st == "metrics" and _delin_prog.get("family"):
-            detail += f" ({_delin_prog['family']})"
-        if _delin_prog.get("reaches") is not None:
-            detail += (f", {_delin_prog['reaches']} reaches, "
-                       f"{_delin_prog.get('hops') or 0} hops")
-        label = f"Calculating the exact watershed: {detail}"
+        label = _engine_progress_text(_delin_prog)
         stage.set(label)
         ui.notification_show(label + ", please wait", id="stage",
                              type="message", duration=None)
@@ -1730,7 +1812,7 @@ def server(input, output, session):
             _remove_layer("ws")
             guidance = next((w for w in reversed(d.get("warnings") or [])
                              if "SFARI or DEEP" in w), None)
-            ui.notification_show(guidance or "The exact watershed could not be "
+            ui.notification_show(guidance or "The HR reach watershed could not be "
                                  "calculated. Watershed metrics are unavailable.",
                                  type="warning", duration=12)
         delin.set(res)
@@ -1885,21 +1967,22 @@ def server(input, output, session):
                 "a click there. Dark blue stretches are scored by the StreamCat "
                 "lookup engine, which answers the watershed metrics in seconds. "
                 "Cyan stretches are answered by the STAF site engine, which "
-                "calculates the exact watershed at the clicked point, usually "
+                "calculates the HR reach watershed (the drainage area of the "
+                "high-resolution reach the click snaps to), usually "
                 "well under a minute and up to about five minutes on a large "
                 "basin. After a click the scored reach is highlighted on the map. "
                 "On cyan streams the three reach-keyed metrics (low flow, "
                 "substrate, biological integrity) come from the nearest covered "
-                "reach downstream, labeled, and are unavailable when that reach "
-                f"drains more than {int(routing.DA_RATIO_MAX)} times the clicked "
-                "stream's area. Every value in the report says which engine "
-                "produced it.\n"
+                "reach downstream, and each says so with the routed distance "
+                "and the drainage-area ratio. Every value in the report says "
+                "which engine produced it.\n"
                 "2. Adjust the reach length if needed, then click "
                 "**Delineate Basin and Reach**.\n"
                 "3. Review the basin, then click **Run screening**. EASI computes the "
                 "20 metrics and scores them with the STAF rollup.\n"
                 "4. Review each function in the **Assessment**. Adjust ratings, "
-                "notes, or the cross-section as needed.\n"
+                "notes, or the cross-section as needed (nine sections are sampled "
+                "along the reach and the geometry metrics score on their medians).\n"
                 "5. The **report** opens when screening finishes. Download it as PDF, "
                 "CSV, or GeoJSON.\n\n"
                 f"**Batch** runs up to {BATCH_UI_MAX_SITES} sites at once and "
@@ -1997,9 +2080,10 @@ def server(input, output, session):
         _notes.set(cur)
 
     # ---- editable cross-section geometry (bankfull / low-bank heights) + which of
-    #      the candidate transects (upstream / middle / downstream) is selected -------
+    #      the sampled sections (nine stations along the reach) is shown -------------
     _xs_unit_prev = reactive.value("ft")  # tracks the unit for input conversion
     _xs_sel = reactive.value(None)        # selected candidate index; None -> stored default
+    _geom_reason = reactive.value("edited")  # why the xs metrics are owned: edited | scrolled
 
     @reactive.calc
     def _xs_cross():
@@ -2042,6 +2126,14 @@ def server(input, output, session):
             return None
         per_m = FT_PER_M if unit == "ft" else 1.0
         thalweg = block["thalweg"]
+        if not _geom_edited():
+            # untouched inputs: the block's exact stages, so the panel, the plot,
+            # and a scrolled section's re-rating reproduce the stored ratios
+            # digit for digit (the two-decimal inputs are display precision;
+            # 0.01 ft is 3 percent of a 0.14 m bankfull depth, 2026-09-07)
+            return {"block": block, "unit": unit,
+                    "bankfull_stage": block["bankfull_stage"],
+                    "floodplain_stage": block["floodplain_stage"]}
         return {"block": block, "unit": unit,
                 "bankfull_stage": thalweg + float(bf_h) / per_m,
                 "floodplain_stage": thalweg + float(lb_h) / per_m}  # low-bank stage (BHR)
@@ -2066,16 +2158,19 @@ def server(input, output, session):
         lb_def = round((block["floodplain_stage"] - thal) * per_m, 2)
         return abs(float(bf_h) - bf_def) > 0.005 or abs(float(lb_h) - lb_def) > 0.005
 
-    def _set_geom_metrics(block, bankfull_stage, floodplain_stage, own):
+    def _set_geom_metrics(block, bankfull_stage, floodplain_stage, own, reason="edited"):
         """Own (own=True) or release the cross-section-derived metric ratings
         (floodplain access ER, high flow + channel evolution BHR). Shared by geometry
-        edits and candidate switching; ``_geom_text`` carries each row's value text."""
+        edits and candidate switching; ``_geom_text`` carries each row's value text
+        and ``_geom_reason`` whether the heights were edited or a section scrolled."""
         cur = dict(_overrides())
         texts = dict(_geom_text())
         traces = dict(_geom_scoring())
         owned = set(_geom_owned())
         if own and block:
-            derived = assessment.rate_metrics_from_stages(block, bankfull_stage, floodplain_stage)
+            _geom_reason.set(reason)
+            derived = assessment.rate_metrics_from_stages(block, bankfull_stage, floodplain_stage,
+                                                          reason=reason)
             new_owned = set()
             for mid, info in derived.items():
                 if info.get("rating"):
@@ -2107,10 +2202,12 @@ def server(input, output, session):
         if not _xs_block():
             return
         g = current_geometry()
-        own = bool(g and (_geom_edited() or _xs_sel_idx() != _xs_default_sel()))
+        edited = bool(g and _geom_edited())
+        own = bool(g and (edited or _xs_sel_idx() != _xs_default_sel()))
         _set_geom_metrics(g["block"] if g else None,
                           g["bankfull_stage"] if g else None,
-                          g["floodplain_stage"] if g else None, own)
+                          g["floodplain_stage"] if g else None, own,
+                          reason="edited" if edited else "scrolled")
 
     def _select(delta):
         """Cycle the selected candidate cross-section (wrap-around), reset the height
@@ -2126,7 +2223,7 @@ def server(input, output, session):
         ui.update_numeric("xs_bankfull", value=round((block["bankfull_stage"] - thal) * per_m, 2))
         ui.update_numeric("xs_lowbank", value=round((block["floodplain_stage"] - thal) * per_m, 2))
         _set_geom_metrics(block, block["bankfull_stage"], block["floodplain_stage"],
-                          new != _xs_default_sel())
+                          new != _xs_default_sel(), reason="scrolled")
 
     @reactive.effect
     @reactive.event(input.xs_prev)
@@ -2145,16 +2242,21 @@ def server(input, output, session):
             return None
         sc = assessment.rescore(base["report"], dict(current_overrides()))
         owned = _geom_owned()
-        if owned:  # relabel so an edited cross-section doesn't read as a manual override
+        if owned:  # relabel so an edited or scrolled section doesn't read as a manual override
             texts = _geom_text()
             traces = _geom_scoring()
+            scrolled = _geom_reason() == "scrolled"
+            station = (_xs_block() or {}).get("label") or "the shown station"
+            where = f"cross-section at {station}" if scrolled else "edited cross-section"
+            note = (f"scored from the section at {station}, not the reach median" if scrolled
+                    else "recomputed from your bankfull/floodplain heights")
             for row in sc["metricRows"]:
                 mid = row["metricId"]
                 if mid in owned:
                     row["status"] = "xs-derived"
-                    row["source"] = "edited cross-section"
-                    row["valueText"] = texts.get(mid) or f"from edited cross-section: {row['rating']}"
-                    row["note"] = "recomputed from your bankfull/floodplain heights"
+                    row["source"] = where
+                    row["valueText"] = texts.get(mid) or f"from {where}: {row['rating']}"
+                    row["note"] = note
                     # carry the recomputed trace so the Scoring method panel shows the
                     # edited geometry, not the geometry the run started from
                     trace = traces.get(mid)
@@ -2177,15 +2279,21 @@ def server(input, output, session):
                       and _xs_sel_idx() == _xs_default_sel())
         if not g or is_default:
             return base_xs
+        # a re-render keeps the reach context (the sampled sections, the reach
+        # statistics, which section is shown) so the exported report's reach
+        # table and median rows survive a unit switch, a scroll, or an edit
+        carry = {k: base_xs.get(k) for k in ("candidates", "reach", "n_transects")}
+        carry.update({"selected": _xs_sel_idx(), "default": _xs_default_sel()})
         try:
             if _geom_edited():
                 return assessment.cross_section_from_stages(
-                    g["block"], g["bankfull_stage"], g["floodplain_stage"], unit=g["unit"])
+                    g["block"], g["bankfull_stage"], g["floodplain_stage"], unit=g["unit"],
+                    carry=carry)
             # a non-default candidate (or unit switch) at its default stages -> its ER/BHR
             return assessment.cross_section_from_stages(
                 g["block"], g["bankfull_stage"], g["floodplain_stage"], unit=g["unit"],
                 er=g["block"].get("entrenchment_ratio"), bhr=g["block"].get("bank_height_ratio"),
-                edited=False)
+                edited=False, carry=carry)
         except Exception:  # noqa: BLE001
             return base_xs
 
@@ -2303,14 +2411,12 @@ def server(input, output, session):
         anchor_rows = []
         comid_row = row("COMID", d.get("comid"))
         if anchor.get("anchorKind") == "hrSurrogate":
-            r = anchor.get("routing") or {}
             source = d.get("watershed_source") or ""
             eng = d.get("watershed_engine") or {}
             # A lean pane (2026-09-04): the engine that answers, the drainage
-            # area once, and the covered reach only when it supplies evidence.
-            # The walk count, the polygon area, the ratio, and a declined
-            # site's surrogate stay in the snap card's tooltip, the ribbon,
-            # and the report.
+            # area once, and the covered reach that supplies the three reach
+            # metrics. The walk count, the polygon area, and the ratio stay in
+            # the snap card's tooltip, the per-metric notes, and the report.
             if source == "site-engine":
                 anchor_rows = [row("Watershed engine",
                                    f"STAF site engine v{eng.get('engineVersion')}")]
@@ -2320,8 +2426,7 @@ def server(input, output, session):
             else:
                 anchor_rows = [row("Scored at", "surrogate reach")]
             if source in ("site-engine", "not-calculated"):
-                comid_row = (None if r.get("declined")
-                             else row("Evidence reach COMID", d.get("comid")))
+                comid_row = row("Evidence reach COMID", d.get("comid"))
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
             *anchor_rows,
@@ -2330,21 +2435,6 @@ def server(input, output, session):
             comid_row,
             class_="easi-basin-card",
         )
-
-    @render.ui
-    def anchor_ribbon():
-        # One-line persistent reminder in the Assessment worksheet for routed sites.
-        anchor = (delin() or {}).get("siteAnchor") or {}
-        if anchor.get("anchorKind") != "hrSurrogate":
-            return None
-        d = (delin() or {}).get("delineation") or {}
-        w = notices.routed_warning(anchor, d)
-        if not w:
-            return None
-        return ui.div(
-            ui.tags.b(f"\u26a0 {w['title']}: "), " ".join(w["lines"]),
-            style=("background:#fff7e0;border:1px solid #e6c96b;border-radius:6px;"
-                   "padding:.3rem .5rem;margin:.3rem 0;font-size:12px;"))
 
     @render.text
     def busy_text():
@@ -2467,7 +2557,7 @@ def server(input, output, session):
         # front-end zoom. Interactive widget only.
         xs_win_pub = (ui.div(ui.output_text("xs_window_range"), class_="easi-xs-winrange")
                       if _HAS_PLOTLY else None)
-        head = ui.div(ui.span("Representative cross-section", class_="easi-xs-plot-title"),
+        head = ui.div(ui.span("Reach cross-section", class_="easi-xs-plot-title"),
                       switch, xs_win_pub, class_="easi-xs-plot-head")
         plot = (ui.div(output_widget("xsection_plot", height="100%"), class_="easi-xsection")
                 if _HAS_PLOTLY else ui.output_ui("xsection"))
@@ -2485,7 +2575,9 @@ def server(input, output, session):
         return ui.div(
             ui.div(
                 ui.div("EASI · Assessment", class_="easi-pane-head"),
-                ui.output_ui("anchor_ribbon"),
+                # No routed-site note here (2026-09-07, SFARI's worksheet has none):
+                # the Basin card names the StreamCat reach and each borrowed
+                # metric says so in its tooltip and the report's "Scored at" column.
                 ui.div(_stepper(step), class_="sfari-nav-steps"),
                 ui.output_ui("fn_nav"),
                 class_="sfari-nav"),
@@ -2827,7 +2919,8 @@ def server(input, output, session):
 
     @render.ui
     def xs_reach_table():
-        return _xs_reach_table_ui(_xs_candidates(), _xs_sel_idx(), _xs_default_sel())
+        return _xs_reach_table_ui(_xs_candidates(), _xs_sel_idx(), _xs_default_sel(),
+                                  _xs_cross().get("reach"))
 
     @render.ui
     def xs_selector():
@@ -2836,7 +2929,7 @@ def server(input, output, session):
             return None
         i = _xs_sel_idx()
         label = cands[i].get("label") or str(i + 1)
-        tag = " \u00b7 median" if i == _xs_default_sel() else ""
+        tag = " \u00b7 default" if i == _xs_default_sel() else ""
         return ui.span(f"{label}{tag} ({i + 1} of {len(cands)})", class_="easi-xs-switch-lbl")
 
     @render.ui
@@ -2891,8 +2984,10 @@ def server(input, output, session):
                 ("Bankfull width", wd(bf_w)),
                 ("Bankfull XS area", ar(bf_area)),
                 ("Floodprone width", wd(fp_w) + (" †" if edge else "")),
-                ("Entrenchment ratio", rt(er)),
-                ("Bank-height ratio", rt(bhr))]
+                ("Section ER", rt(er)),
+                ("Section BHR", geomorph.fmt_bhr(
+                    bhr, not _geom_edited() and block.get("low_bank_capped")))]
+        rows += _xs_reach_rows(_xs_cross().get("reach"))
         body = [ui.tags.tr(ui.tags.th(lbl), ui.tags.td(val)) for lbl, val in rows]
         out = [ui.tags.table(ui.tags.tbody(*body), class_="easi-tbl easi-xs-tbl")]
         if area_edge:

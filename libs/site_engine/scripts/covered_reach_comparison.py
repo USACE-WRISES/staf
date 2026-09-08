@@ -6,9 +6,10 @@ This is the evidence base for any future migration decision (the engine never
 feeds scoring on covered streams without this study plus the score-level
 equivalence study).
 
-Interpretation caveat recorded per row: the engine watershed is the TRUE HR
-watershed at the exact point, while StreamCat describes the V2 reach-outlet
-watershed, so the drainage-area ratio between the two frames every metric
+Interpretation caveat recorded per row: the engine watershed is the HR reach
+watershed (the outlet is the HR reach the point snaps to), while StreamCat
+describes the V2 reach-outlet watershed, so the drainage-area ratio between
+the two frames every metric
 comparison. Unit conversions: NID storage acre-ft/km2 -> m3/km2 (x 1233.48)
 against StreamCat ``damnrmstorws`` (normal storage) and ``damnidstorws``.
 

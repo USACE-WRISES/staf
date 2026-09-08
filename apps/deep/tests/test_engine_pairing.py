@@ -1,6 +1,6 @@
 """The train/serve pairing rule and the engine auto-pull gating.
 
-Engine-computed values (exact watershed) must never score against curves
+Engine-computed values (HR reach watershed) must never score against curves
 fitted on StreamCat predictors; they score only when the bundle's
 ``predictorSource`` records engine predictors. The rule lives at the scoring
 layer (restored sessions recompute desktop values), the auto-pull gate keeps
@@ -104,36 +104,71 @@ def test_adapters_prefer_engine_only_when_allowed(monkeypatch):
         computed.__dict__, "_streamcat", lambda ctx: {"pctimp2019ws": 7.0})
 
     blocked = AnalysisContext(lat=40.0, lon=-83.0)
+    blocked.extras["site_engine_prefetched"] = _engine_record()
     cv = computed._impervious(blocked)
     assert cv.value == 7.0 and cv.engine is False       # trained source kept
-    assert calls["n"] == 0                              # engine never invoked
 
     allowed = AnalysisContext(lat=40.0, lon=-83.0)
+    allowed.extras["site_engine_prefetched"] = _engine_record()
     allowed.extras["allow_engine"] = True
     cv = computed._impervious(allowed)
     assert cv.value == 12.3 and cv.engine is True
     assert "STAF site engine v0.1.0" in cv.source
     assert cv.basis == "site-engine"
+    # the app runs the engine once at Delineate and hands the record over; the
+    # adapters never run it themselves (2026-09-07)
+    assert calls["n"] == 0
+
+
+def test_adapters_never_run_the_engine_without_a_record(monkeypatch):
+    # the gate is open but the app has no ok record (the engine failed and the
+    # assessor continued with StreamCat values): the StreamCat layer answers
+    # and nothing starts a second engine run on the worker thread
+    calls = _fake_engine(monkeypatch, _engine_record())
+    monkeypatch.setitem(
+        computed.__dict__, "_streamcat", lambda ctx: {"pctimp2019ws": 7.0})
+    ctx = AnalysisContext(lat=40.0, lon=-83.0)
+    ctx.extras["allow_engine"] = True
+    cv = computed._impervious(ctx)
+    assert cv.value == 7.0 and cv.engine is False and cv.basis == "streamcat"
+    assert calls["n"] == 0
 
 
 def test_compute_metrics_only_threads_the_assessment(monkeypatch):
-    _fake_engine(monkeypatch, _engine_record())
+    calls = _fake_engine(monkeypatch, _engine_record())
     monkeypatch.setitem(
         computed.__dict__, "_streamcat", lambda ctx: {"pctimp2019ws": 7.0})
     ids = ["catchment-hydrology-impervious-cover"]
     ci = {"lat": 40.0, "lon": -83.0}
+    rec = _engine_record()
 
     engine_bundle = {"predictorSource": "site-engine v0.1.0"}
-    out = measure.compute_metrics_only(ci, ids, assessment=engine_bundle)
+    out = measure.compute_metrics_only(ci, ids, assessment=engine_bundle, engine_record=rec)
     entry = out["catchment-hydrology-impervious-cover"]
     assert entry["engine"] is True and entry["value"] == 12.3
 
-    out = measure.compute_metrics_only(ci, ids, assessment={})
+    out = measure.compute_metrics_only(ci, ids, assessment={}, engine_record=rec)
     entry = out["catchment-hydrology-impervious-cover"]
     assert entry["engine"] is False and entry["value"] == 7.0
 
     out = measure.compute_metrics_only(ci, ids)          # legacy call shape
     assert out["catchment-hydrology-impervious-cover"]["engine"] is False
+    assert calls["n"] == 0
+
+
+def test_engine_gate_is_decided_per_metric():
+    from deep import assessments
+    bundle = {"predictorSource": "mixed (site-engine v0.2.2 + streamcat)",
+              "metricsByFunction": [
+                  {"functionId": "f1", "metrics": [
+                      {"metricId": "stamped", "predictorSource": "site-engine v0.2.2"},
+                      {"metricId": "unstamped"},
+                      {"metricId": "explicit", "predictorSource": "streamcat"}]}]}
+    gate = assessments.engine_gate_by_metric(bundle)
+    # exactly curves._mismatched_pairing's reading: an absent stamp is StreamCat
+    assert gate == {"stamped": True, "unstamped": False, "explicit": False}
+    assert assessments.engine_gate_by_metric({}) == {}
+    assert assessments.engine_gate_by_metric(None) == {}
 
 
 def test_pipeline_wrapper_threads_the_assessment(monkeypatch):
@@ -256,7 +291,7 @@ def test_report_rows_and_csv_carry_the_advisory():
          "metrics": [{"metricId": "m", "metricName": "Impervious",
                       "curve": {"points": ASC, "layerName": "seed"}}]}]}
     state = {"m": {"value": 0.5, "origin": "desktop", "engine": True, "basis": "site-engine",
-                   "source": "STAF site engine v0.2.0 impervious (exact watershed, NLCD 2021)"}}
+                   "source": "STAF site engine v0.2.0 impervious (HR reach watershed, NLCD 2021)"}}
     rows = list(report._rows(bundle, state))
     assert len(rows) == 1
     _fn, m, val, idx, meta = rows[0]
@@ -290,7 +325,8 @@ def test_label_mode_opens_the_auto_pull_gate(monkeypatch):
     monkeypatch.setitem(computed.__dict__, "_streamcat", lambda ctx: {"pctimp2019ws": 7.0})
     ids = ["catchment-hydrology-impervious-cover"]
     monkeypatch.setattr(curves, "ENGINE_PAIRING_MODE", "label")
-    out = measure.compute_metrics_only({"lat": 40.0, "lon": -83.0}, ids, assessment={})
+    out = measure.compute_metrics_only({"lat": 40.0, "lon": -83.0}, ids, assessment={},
+                                       engine_record=_engine_record())
     assert out["catchment-hydrology-impervious-cover"]["engine"] is True
 
 
@@ -310,14 +346,15 @@ def test_prefetched_record_is_reused_without_a_second_run(monkeypatch):
     assert calls["n"] == 0                              # never ran again
 
 
-def test_streamcat_values_are_labeled_or_withheld_by_the_anchor(monkeypatch):
+def test_streamcat_values_are_labeled_by_the_anchor_at_any_ratio(monkeypatch):
     monkeypatch.setattr(computed, "site_engine_available", lambda: False)
 
     def fake_sc(comid, names, aoi="watershed", timeout=25.0):
         return {"pctimp2019ws": 7.0}
     monkeypatch.setitem(sys.modules, "deep.datasources.streamcat",
                         types.SimpleNamespace(metrics_by_comid=fake_sc))
-    hr_only = {"anchorKind": "hrSurrogate", "scoredReach": {"comid": 5214461},
+    hr_only = {"anchorKind": "hrSurrogate",
+               "scoredReach": {"comid": 5214461, "gnisName": "Sugar Run"},
                "routing": {"routedDistanceFt": 1240.0, "daRatio": 1.8, "declined": False}}
     out = measure.compute_metrics_only(
         {"lat": 40.0, "lon": -83.0, "comid": 5214461, "siteAnchor": hr_only,
@@ -327,15 +364,23 @@ def test_streamcat_values_are_labeled_or_withheld_by_the_anchor(monkeypatch):
     assert entry["basis"] == "streamcat" and entry["value"] == 7.0
     assert entry["source"].startswith(
         "StreamCat lookup engine pctimp2019 (watershed), describes the "
-        "nearest covered reach, COMID 5214461")
+        "nearest StreamCat reach Sugar Run (COMID 5214461), 1,240 ft downstream, "
+        "which drains 1.8 times this stream")
 
-    declined = {**hr_only, "routing": {"declined": True, "daRatio": 14.0}}
+    # past the 10x bound the engine's routing says declined; DEEP reports the
+    # ratio and never withholds (SFARI's rule, 2026-09-07), so NLCD is never asked
+    declined = {**hr_only, "routing": {"routedDistanceFt": 9000.0, "daRatio": 14.0,
+                                       "declined": True, "declineCode": "da-ratio"}}
+
+    def no_nlcd(gj):
+        raise AssertionError("NLCD must not run while StreamCat has the value")
     monkeypatch.setitem(sys.modules, "deep.datasources.nlcd",
-                        types.SimpleNamespace(watershed_landcover=lambda gj: {"impervious_pct": 3.3}))
+                        types.SimpleNamespace(watershed_landcover=no_nlcd))
     out = measure.compute_metrics_only(
         {"lat": 40.0, "lon": -83.0, "comid": 5214461, "siteAnchor": declined,
          "watershedBasis": "site-engine", "watershed_geojson": {"type": "FeatureCollection"}},
         ["catchment-hydrology-impervious-cover"], assessment={})
     entry = out["catchment-hydrology-impervious-cover"]
-    assert entry["basis"] == "nlcd" and entry["value"] == 3.3
-    assert "exact watershed polygon, STAF site engine" in entry["source"]
+    assert entry["basis"] == "streamcat" and entry["value"] == 7.0
+    assert "which drains 14 times this stream" in entry["source"]
+    assert "declined" not in entry["source"] and "limit" not in entry["source"]

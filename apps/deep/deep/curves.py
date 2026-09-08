@@ -158,7 +158,7 @@ def engine_pairing_advisory(measured: Optional[MeasuredValue],
         return None
     return ("engine-computed value shown as reference only: this curve was "
             "fitted on StreamCat predictors, so scoring it against an "
-            "exact-watershed value would mix training and serving sources")
+            "HR reach watershed value would mix training and serving sources")
 
 
 def engine_approximation_advisory(measured: Optional[MeasuredValue],

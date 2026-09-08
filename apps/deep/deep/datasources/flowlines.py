@@ -29,7 +29,8 @@ def _round_bbox(west, south, east, north, ndigits=3):
 @functools.lru_cache(maxsize=64)
 def _fetch(west: float, south: float, east: float, north: float) -> Optional[dict]:
     """Cached NHDPlus V2 flowline pull for a (rounded) bbox -> GeoJSON with
-    ``comid`` per feature (the USGS fabric API; see ``fabric.py``)."""
+    ``comid`` and ``gnis_name`` per feature (the USGS fabric API; see
+    ``fabric.py``). The name labels the StreamCat reach on a covered click."""
     try:
         from . import fabric
         found = fabric.features_in_bbox(west, south, east, north)
@@ -43,12 +44,16 @@ def _fetch(west: float, south: float, east: float, north: float) -> Optional[dic
         if not geom.get("coordinates"):
             continue
         props = {}
-        comid = (f.get("properties") or {}).get("comid")
+        src = f.get("properties") or {}
+        comid = src.get("comid")
         if comid is not None:
             try:
                 props["comid"] = int(comid)
             except (TypeError, ValueError):
                 pass
+        name = src.get("gnis_name")
+        if name:
+            props["gnis_name"] = str(name).strip() or None
         feats.append({"type": "Feature", "properties": props, "geometry": geom})
     return {"type": "FeatureCollection", "features": feats} if feats else None
 

@@ -11,8 +11,9 @@ pctshrb2019,Shrub/scrub (%),Land cover,FALSE
 pctgrs2019,Grassland (%),Land cover,FALSE
 pcthay2019,Hay/pasture (%),Land cover,FALSE
 pctcrop2019,Cultivated crops (%),Land cover,TRUE
-pctwdwet2019,Woody wetland (%),Land cover,TRUE
-pcthbwet2019,Herbaceous wetland (%),Land cover,TRUE
+pctwet2019,Wetland (%),Land cover,TRUE
+pctwdwet2019,Woody wetland (%),Land cover,FALSE
+pcthbwet2019,Herbaceous wetland (%),Land cover,FALSE
 pctow2019,Open water (%),Land cover,FALSE
 pctbl2019,Barren land (%),Land cover,FALSE
 clay,Clay content (%),Soils,FALSE

@@ -6,6 +6,8 @@ only the rows that have data, so missing optional fields never blank the section
 """
 from __future__ import annotations
 
+from typing import Optional
+
 
 def fmt_km2(value) -> str:
     """``12.35 km²`` from a number, ``unknown`` from None or junk. Two
@@ -23,6 +25,19 @@ def fmt_ft(value) -> str:
         return f"{float(value):,.0f} ft"
     except (TypeError, ValueError):
         return "unknown"
+
+
+def fmt_ratio(value) -> Optional[str]:
+    """``32`` at or above ten, ``2.7`` below, None from None or junk: the
+    drainage-area ratio between a covered reach and the clicked stream, as
+    the snap card, the per-metric note, and the legacy banner print it."""
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    if f <= 0:                      # comid_anchor.fmt_ratio's rule (2026-09-07)
+        return None
+    return f"{f:.0f}" if f >= 10 else f"{f:.1f}"
 
 
 def basin_characteristics(ctx) -> dict:
@@ -45,7 +60,7 @@ def basin_characteristics(ctx) -> dict:
         if provider == "site-engine":
             # one area row only: the engine's polygon area and the HR drainage
             # area agree at two decimals and read as a duplicate (2026-09-04);
-            # the CSV keeps "Exact watershed area (km2)" as the record
+            # the CSV keeps "HR reach watershed area (km2)" as the record
             rows.append(["Watershed engine", str(layer.get("label") or "STAF site engine")])
         elif provider is None:
             rows.append(["Watershed engine",

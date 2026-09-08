@@ -88,7 +88,7 @@ class BatchConfig:
     snap_tolerance_ft: float = 150.0
     source_choices: dict[str, str] = field(default_factory=dict)
     # Policy for streams outside the StreamCat lookup network: "auto" (the
-    # STAF site engine computes the exact watershed) or "streamcat-legacy"
+    # STAF site engine computes the HR reach watershed) or "streamcat-legacy"
     # (the historical surrogate routing with the DA-ratio refusal). Additive:
     # CONTRACTS_SCHEMA_VERSION is unchanged and older dicts read as "auto".
     watershed_engine: str = "auto"
@@ -238,7 +238,7 @@ class DelineationSummary:
     reach_length_ft: Optional[float] = None
     warnings: list[str] = field(default_factory=list)
     # Which watershed the metrics describe: nhdplus-v2-basin (the StreamCat
-    # lookup engine's basin), site-engine (the exact watershed) or
+    # lookup engine's basin), site-engine (the HR reach watershed) or
     # not-calculated (the engine failed or refused on a routed site).
     watershed_source: str = ""
 

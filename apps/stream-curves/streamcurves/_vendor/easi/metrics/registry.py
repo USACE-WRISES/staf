@@ -56,7 +56,7 @@ EXTERNAL_SERVICE = {
 # hyporheic); clickedPoint metrics query location services at the true clicked
 # point; surrogateComid metrics ride COMID-keyed evidence (NRSA, EPA modeled
 # indices) on the nearest covered reach; watershed metrics ride the watershed
-# evidence layer (the STAF site engine's exact watershed under the auto policy,
+# evidence layer (the STAF site engine's HR reach watershed under the auto policy,
 # the surrogate's StreamCat summaries under the legacy policy). One dynamic
 # rule in assessment._annotate_anchors: a row that scored via a StreamCat
 # integrity fallback anchors surrogateComid regardless of its entry here.

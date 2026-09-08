@@ -1,15 +1,18 @@
 """The STAF site engine bridge for SFARI.
 
 Everything SFARI asks of the vendored engine goes through here: availability,
-one ``compute_site`` per site with the six watershed families (base flow,
-dams, land cover, roads, runoff, soils; the cross-section family is skipped,
-SFARI has its own Manning tool), the flattened metric values the evidence
+one ``compute_site`` per site with all seven families (base flow, dams, land
+cover with the NLCD 2001 impervious baseline for the land-use change, roads,
+runoff, soils, and since 2026-09-07 the reach cross-sections: the
+entrenchment and bank-height ratios as reach medians of nine 3DEP sections,
+beside SFARI's own Manning tool), the flattened metric values the evidence
 adapters read, the labels, and a geometry-stripped record for the session
-file. The adapters in ``evidence.py`` map the values onto SFARI's metrics; the
-engine is the only watershed source (2026-09-05).
+file. The adapters in ``evidence.py`` map the values onto SFARI's metrics;
+the engine answers every watershed metric first, and the StreamCat lookup
+engine stands in by COMID, labeled, when the engine has no value for it.
 
-Never raises; an unavailable engine means the watershed evidence is
-unavailable, never substituted from another reach.
+Never raises; an unavailable engine means the watershed evidence falls to the
+labeled StreamCat value where the reach has one, else unavailable.
 """
 from __future__ import annotations
 
@@ -22,7 +25,7 @@ _GEO_REQUIREMENTS = ("requests", "shapely", "geopandas")
 
 # The engine has no page of its own; the STAF site documents both engines.
 ENGINE_URL = "https://usace-wrises.github.io/staf/computation-engines/"
-SFARI_FAMILIES = ["baseflow", "dams", "landcover", "roads", "runoff", "soils"]
+SFARI_FAMILIES = ["baseflow", "dams", "landcover", "roads", "runoff", "soils", "xsection"]
 
 
 @lru_cache(maxsize=1)
@@ -58,10 +61,21 @@ def engine_label(version: Optional[str] = None) -> str:
         return f"STAF site engine v{version or engine_version() or 'unknown'}"
 
 
-def run_engine(lat: float, lon: float, *, families: Optional[list[str]] = None,
+def _positive(value: Any) -> bool:
+    """True for a finite number above zero (a typed reach length)."""
+    try:
+        return float(value) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def run_engine(lat: float, lon: float, *, reach_length_ft: Optional[float] = None,
+               families: Optional[list[str]] = None,
                include_geometry: bool = True,
                progress: Optional[Callable[[dict], Any]] = None) -> dict:
-    """One ``compute_site`` at the point with the interactive budget.
+    """One ``compute_site`` at the point with the interactive budget and the
+    assessment reach length the assessor typed (the engine's 1,000 ft when
+    none; until 2026-09-07 the typed length never reached the engine).
 
     Returns the engine record (``status`` ok | refused | failed) or a small
     failed record when the engine is not available here. Never raises.
@@ -75,7 +89,12 @@ def run_engine(lat: float, lon: float, *, families: Optional[list[str]] = None,
         from sfari._vendor.site_engine.provenance import INTERACTIVE_CONFIG
 
         cfg = {**INTERACTIVE_CONFIG, "includeGeometry": bool(include_geometry),
-               "metricFamilies": list(families or SFARI_FAMILIES)}
+               "metricFamilies": list(families or SFARI_FAMILIES),
+               # NLCD 2001 impervious beside 2021: the land-use change baseline
+               # (off in the engine's default config; nobody else needs it)
+               "landcoverBaseline": True}
+        if _positive(reach_length_ft):
+            cfg["reachLengthFt"] = float(reach_length_ft)
         return compute_site(float(lat), float(lon), cfg, progress=progress)
     except Exception as exc:  # noqa: BLE001 - the bridge never raises
         return {"status": "failed", "reason": f"engine error: {exc}",
@@ -91,14 +110,14 @@ def engine_metrics(record: Optional[dict]) -> dict[str, Any]:
 
 
 def engine_source(record: Optional[dict]) -> str:
-    return f"{engine_label((record or {}).get('engineVersion'))} (exact watershed)"
+    return f"{engine_label((record or {}).get('engineVersion'))} (HR reach watershed)"
 
 
 def engine_note(record: Optional[dict]) -> str:
     ws = (record or {}).get("watershed") or {}
     area = ws.get("areaSqkm")
     agreement = ws.get("areaAgreement")
-    parts = ["True point watershed on the full-resolution NHD"]
+    parts = ["Watershed of the clicked NHD reach, HR catchments aggregated"]
     if area is not None:
         parts.append(f"{area} km2")
     if agreement is not None:

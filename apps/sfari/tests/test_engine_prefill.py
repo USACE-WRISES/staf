@@ -1,6 +1,7 @@
 """The STAF site engine bridge: availability, one ``compute_site`` with the
-interactive budget and SFARI's six families, never raising, the flattened
-metric values, the labels, and geometry stripping. Fully offline."""
+interactive budget and SFARI's seven families (the reach cross-sections
+joined on 2026-09-07), never raising, the flattened metric values, the
+labels, and geometry stripping. Fully offline."""
 from __future__ import annotations
 
 import sys
@@ -47,14 +48,29 @@ def _stub_engine(monkeypatch, record=None, *, raise_exc=None):
 def test_run_engine_uses_interactive_budget_and_sfari_families(monkeypatch):
     calls = _stub_engine(monkeypatch, _rec(imperviousPctWatershed=12.3))
     events = []
-    rec = engine_prefill.run_engine(40.0, -83.0, progress=events.append)
+    rec = engine_prefill.run_engine(40.0, -83.0, reach_length_ft=500.0, progress=events.append)
     assert rec["status"] == "ok"
     cfg = calls[0]["config"]
     assert cfg["maxReaches"] == 60 and cfg["maxHops"] == 40
     assert cfg["includeGeometry"] is True
-    assert cfg["metricFamilies"] == ["baseflow", "dams", "landcover", "roads", "runoff", "soils"]
-    assert "xsection" not in cfg["metricFamilies"]      # SFARI has its own Manning tool
+    assert cfg["landcoverBaseline"] is True        # NLCD 2001 beside 2021: land-use change
+    assert cfg["metricFamilies"] == ["baseflow", "dams", "landcover", "roads", "runoff",
+                                     "soils", "xsection"]
+    # the typed assessment reach reaches the engine (2026-09-07; it was always 1,000 ft)
+    assert cfg["reachLengthFt"] == 500.0
+    # the reach cross-sections feed the overbank and peak-capacity metrics; the
+    # Manning tool still refines them by hand
     assert events == [{"stage": "walk", "reaches": 3, "hops": 1}]
+
+
+def test_run_engine_leaves_the_engine_reach_default_alone(monkeypatch):
+    calls = _stub_engine(monkeypatch, _rec())
+    engine_prefill.run_engine(40.0, -83.0)
+    engine_prefill.run_engine(40.0, -83.0, reach_length_ft=None)
+    engine_prefill.run_engine(40.0, -83.0, reach_length_ft=0)
+    engine_prefill.run_engine(40.0, -83.0, reach_length_ft="abc")
+    for call in calls:
+        assert "reachLengthFt" not in call["config"]       # the engine's own 1,000 ft
 
 
 def test_run_engine_never_raises(monkeypatch):
@@ -81,7 +97,7 @@ def test_engine_metrics_flatten_only_ok_records():
 
 def test_labels_name_the_engine():
     rec = _rec()
-    assert engine_prefill.engine_source(rec) == "STAF site engine v0.2.0 (exact watershed)"
+    assert engine_prefill.engine_source(rec) == "STAF site engine v0.2.0 (HR reach watershed)"
     assert engine_prefill.engine_label("0.2.0") == "STAF site engine v0.2.0"
     note = engine_prefill.engine_note(rec)
     assert "12.5 km2" in note and "area agreement 1.0" in note
@@ -107,7 +123,7 @@ def test_engine_url_is_the_staf_site():
 def test_evidence_result_roundtrips_new_fields():
     from sfari.models import EvidenceResult
     e = EvidenceResult("m", origin="engine", engine_version="0.2.0",
-                       anchor_label="nearest covered reach, COMID 1",
+                       anchor_label="nearest StreamCat reach, COMID 1",
                        fallback_reason="", upgrade_pending=True)
     back = EvidenceResult.from_dict(e.to_dict())
     assert back == e

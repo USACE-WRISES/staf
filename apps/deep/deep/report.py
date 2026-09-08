@@ -83,21 +83,53 @@ def _attr(assessment, obj_attr, dict_key, default=""):
 # --------------------------------------------------------------------------- #
 # The two watershed engines in the exports
 # --------------------------------------------------------------------------- #
+_BASIS_WORDS = (("site-engine", "STAF site engine (HR reach watershed)"),
+                ("streamcat", "StreamCat lookup engine (NHDPlus V2 basin)"),
+                ("nlcd", "NLCD (HR reach watershed polygon)"), ("3dep", "3DEP"))
+
+
+def desktop_basis_label(measured) -> str:
+    """One short line on what the desktop values describe, counted by basis:
+    ``STAF site engine (HR reach watershed) 8``, ``StreamCat lookup engine
+    (NHDPlus V2 basin) 5, 3DEP 3``, or ``none``. The watershed row names the
+    delineation; this row names the values (2026-09-07)."""
+    counts: dict[str, int] = {}
+    for rc in (measured or {}).values():
+        if not isinstance(rc, dict) or rc.get("origin") != "desktop":
+            continue
+        basis = str(rc.get("basis") or ("site-engine" if rc.get("engine") else "")) or "other"
+        counts[basis] = counts.get(basis, 0) + 1
+    parts = [f"{words} {counts.pop(key)}" for key, words in _BASIS_WORDS if key in counts]
+    parts += [f"{key} {n}" for key, n in counts.items()]
+    return ", ".join(parts) if parts else "none"
+
+
 def watershed_basis_label(delin) -> str:
-    """Plain words for ``watershedBasis``: which engine's watershed the desktop
-    values describe."""
+    """Plain words for ``watershedBasis``: the watershed the site was
+    delineated on. :func:`desktop_basis_label` and the per-metric Basis
+    column say what each desktop value describes."""
     basis = (delin or {}).get("watershedBasis") or ""
     eng = (delin or {}).get("siteEngine") or {}
     ver = eng.get("engineVersion")
     if basis == "site-engine":
-        return f"exact watershed (STAF site engine v{ver})" if ver else \
-            "exact watershed (STAF site engine)"
+        return f"HR reach watershed (STAF site engine v{ver})" if ver else \
+            "HR reach watershed (STAF site engine)"
     if basis == "nhdplus-v2-basin-of-surrogate":
-        return "NHDPlus V2 basin of the nearest covered reach (StreamCat lookup engine)"
+        return "NHDPlus V2 basin of the nearest StreamCat reach (StreamCat lookup engine)"
     if eng.get("status") == "ok":
         tail = f"STAF site engine v{ver}" if ver else "STAF site engine"
-        return f"NHDPlus V2 basin drawn, exact watershed computed ({tail})"
+        return f"NHDPlus V2 basin drawn, HR reach watershed computed ({tail})"
     return "NHDPlus V2 basin (StreamCat lookup engine)"
+
+
+def streamcat_reach_label(delin) -> str:
+    """The reach the StreamCat lookup engine's values describe: ``COMID 9327042
+    (this reach)`` or ``Mink Brook (COMID 9327042), 446 ft downstream``."""
+    from . import comid_anchor
+    anchor = (delin or {}).get("siteAnchor")
+    if not anchor:
+        anchor = comid_anchor.synthetic(((delin or {}).get("delineation") or {}).get("comid"))
+    return comid_anchor.reach_text(anchor)
 
 
 def _metric_predictor_source(m: dict, assessment) -> str:
@@ -146,7 +178,7 @@ def _rows(assessment, measured):
             yield fn, m, val, idx, meta
 
 
-def _header_pairs(delin, assessment, sc, region=None):
+def _header_pairs(delin, assessment, sc, region=None, measured=None):
     dl = (delin or {}).get("delineation", {})
     si = sc.get("subIndices", {})
     version, status, digest, l3, st = _provenance(assessment, region)
@@ -164,8 +196,11 @@ def _header_pairs(delin, assessment, sc, region=None):
         ("Latitude", dl.get("snapped_lat")), ("Longitude", dl.get("snapped_lon")),
         ("COMID", dl.get("comid")), ("HUC8", dl.get("huc8")),
         ("Drainage area (km2)", dl.get("drainage_area_sqkm")),
+        ("HR reach watershed area (km2)", dl.get("watershed_area_sqkm")),
         ("Reach length (ft)", dl.get("reach_length_ft")),
         ("Watershed basis", watershed_basis_label(delin)),
+        ("Desktop values", desktop_basis_label(measured)),
+        ("StreamCat reach", streamcat_reach_label(delin)),
         ("Ecosystem Condition Index", sc.get("ecosystemConditionIndex")),
         # An export outlives the session, so the index's denominator travels with it:
         # scoring correctly excludes uncovered functions from both numerator and
@@ -208,7 +243,7 @@ def build_csv(delin, assessment, measured, sc, region=None) -> str:
     out = io.StringIO()
     w = csv.writer(out)
     w.writerow(["DEEP Detailed Assessment"])
-    for k, v in _header_pairs(delin, assessment, sc, region):
+    for k, v in _header_pairs(delin, assessment, sc, region, measured):
         w.writerow([k, v])
     w.writerow([])
     w.writerow(["Function", "Discipline", "Metric", "Measured value", "Curve (source)",
@@ -251,6 +286,7 @@ def build_geojson(delin, assessment, sc, region=None, measured=None) -> str:
              "drainage_area_sqkm": dl.get("drainage_area_sqkm"),
              "watershed_basis": (delin or {}).get("watershedBasis") or "nhdplus-v2-basin",
              "engine_values_withheld": withheld,
+             "streamcat_reach": streamcat_reach_label(delin),
              "ecosystem_condition_index": sc.get("ecosystemConditionIndex"),
              "staf_function_coverage": _coverage_label(assessment)}
     for k, v in sc.get("subIndices", {}).items():
@@ -332,9 +368,13 @@ def build_pdf(delin, assessment, measured, sc, region=None) -> bytes:
            ["Drainage area", f"{dl.get('drainage_area_sqkm')} km2"],
            ["Reach length", f"{dl.get('reach_length_ft')} ft"],
            ["Watershed basis", watershed_basis_label(delin)],
+           ["Desktop values", desktop_basis_label(measured)],
+           ["StreamCat reach", streamcat_reach_label(delin)],
            ["Content digest", digest or "(none)"],
            ["Ecosystem Condition Index", f"{sc.get('ecosystemConditionIndex')}"],
            ["STAF function coverage", _coverage_label(assessment)]]
+    if dl.get("watershed_area_sqkm") is not None:
+        hdr.insert(7, ["HR reach watershed area", f"{dl.get('watershed_area_sqkm')} km2"])
     t = Table(hdr, colWidths=[2.3 * inch, 4.4 * inch])
     t.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 9), ("GRID", (0, 0), (-1, -1), 0.3, grid),
                            ("BACKGROUND", (0, 0), (0, -1), head_bg)]))

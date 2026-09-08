@@ -85,7 +85,7 @@ METRIC_STATEMENT_ALIASES = {
 }
 
 # --- Short "reference-good" agreement statements from the paper SFARI Field
-# Worksheet v1.0 (data/FieldForm/Page1-5.jpg), keyed by metricId. These are what
+# Worksheet v1.0 (data/FieldForm/SFARI_Field_Form_v1.0.pdf), keyed by metricId. These are what
 # the assessor agrees/disagrees with in the field; the app shows them next to each
 # metric (the longer metricStatement stays in the "how to score" tooltip). Two
 # 5th-metrics have no row on the paper form and fall back to metricStatement:
@@ -176,35 +176,45 @@ FIELD_STATEMENTS = {
 }
 
 # --- The 26 desktop-supportable metrics (doc Table 22), keyed by metricId. ---
-# client "manual" => no clean national source; the evidence adapter returns
-# status="unavailable" plus the resource deep-link so the user reviews it by hand.
+# ``client`` names what answers the metric in the app (2026-09-07):
+#   engine            the STAF site engine (the HR reach watershed, or the reach's
+#                     nine 3DEP cross-sections)
+#   engine+streamcat  the site engine first; the StreamCat lookup engine's analog by
+#                     NHDPlus V2 COMID, labeled, when the engine has no value for it
+#   nwis | nid | nwi  a direct service, with a StreamCat index beside or behind it
+#   xscalc            the cross-section tool (Manning); the assessor runs it
+#   manual            no clean national source; the adapter returns
+#                     status="unavailable" plus the resource deep-link
+# ``label`` is the "Desktop evidence" column of the Field Forms dialog: one clause
+# naming the method and the engine.
+ENGINE_URL = "https://usace-wrises.github.io/staf/computation-engines/"
 DESKTOP = {
-  "catchment-hydrology-impervious-surface-area": dict(adapter="desktop_hydrology.impervious", client="streamcat", field="pctimp2019ws", label="NLCD 2019 Impervious (MRLC) via Model My Watershed", url="https://modelmywatershed.org/"),
-  "catchment-hydrology-road-density": dict(adapter="desktop_hydrology.road_density", client="streamcat", field="rddens", label="Road density — StreamCat rddens / TIGER roads", url="https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"),
-  "catchment-hydrology-land-use-change": dict(adapter="desktop_hydrology.land_use_change", client="landcover_change", field="pct_converted", label="NLCD land cover change (2001 vs 2019)", url="https://www.mrlc.gov/viewer/"),
-  "catchment-hydrology-impoundments": dict(adapter="desktop_hydrology.impoundments", client="nid_barriers", field="dam_count", label="USACE NID + USGS NABD (upstream dams)", url="https://nid.sec.usace.army.mil/"),
-  "surface-water-storage-wetland-coverage": dict(adapter="desktop_hydrology.wetland_coverage", client="streamcat", field="pctwdwet2019ws+pcthbwet2019ws", label="USFWS NWI over FEMA NFHL; StreamCat wetlands", url="https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper"),
-  "reach-inflow-concentrated-flow-inputs": dict(adapter="desktop_hydrology.concentrated_inputs", client="manual", field="", label="Municipal MS4 outfall GIS layers (local)", url="https://www.epa.gov/npdes/stormwater-discharges-municipal-sources"),
-  "reach-inflow-local-runoff-diversions": dict(adapter="desktop_hydrology.diversions", client="manual", field="", label="State water-rights / diversions GIS", url="https://waterdata.usgs.gov/"),
-  "streamflow-regime-flow-permanence": dict(adapter="desktop_hydrology.flow_permanence", client="nwis", field="zero_flow_days", label="USGS NWIS daily flow (zero-flow days) + NHDPlus HR FCODE", url="https://waterdata.usgs.gov/nwis"),
-  "streamflow-regime-flow-permanence-statistics": dict(adapter="desktop_hydrology.flow_statistics", client="nwis", field="flow_duration", label="USGS NWIS daily flow (flow-duration / IHA)", url="https://waterdata.usgs.gov/nwis"),
-  "streamflow-regime-channel-natural-flow-regime": dict(adapter="desktop_hydrology.natural_flow_regime", client="nwis", field="flow_alteration", label="TNC IHA on NWIS; else StreamCat dam regulation", url="https://www.conservationgateway.org/"),
-  "streamflow-regime-artificial-structures-and-inputs": dict(adapter="desktop_hydrology.artificial_structures", client="aquatic_barriers", field="structures", label="USACE National Levee Database + NID", url="https://levees.sec.usace.army.mil/"),
-  "low-flow-baseflow-dynamics-low-flow-depth": dict(adapter="desktop_hydraulics.low_flow_depth", client="xscalc", field="depth", label="3DEP cross-section + Manning (native XS calc) at low-flow Q", url=""),
-  "low-flow-baseflow-dynamics-low-flow-velocity": dict(adapter="desktop_hydraulics.low_flow_velocity", client="xscalc", field="velocity", label="Manning (native XS calc): low-flow Q, slope, roughness", url=""),
-  "high-flow-dynamics-overbank-flow-frequency": dict(adapter="desktop_hydraulics.overbank_frequency", client="bieger", field="recurrence", label="USGS PeakFQ / regional bankfull-Q regression", url="https://streamstats.usgs.gov/"),
-  "high-flow-dynamics-peak-flow-capacity-morphological-check": dict(adapter="desktop_hydraulics.peak_capacity", client="bieger", field="bankfull_geom", label="Regional bankfull-geometry regressions + 3DEP", url="https://streamstats.usgs.gov/"),
-  "high-flow-dynamics-bed-mobilization-frequency": dict(adapter="desktop_hydraulics.bed_mobilization", client="xscalc", field="shear", label="Shields (D50 + peak Q) via native XS calc shear", url=""),
-  "floodplain-connectivity-lateral-floodplain-inundation": dict(adapter="desktop_hydraulics.lateral_inundation", client="threedep", field="inundation", label="NWI + NAIP + 3DEP DEM/hillshade", url="https://apps.nationalmap.gov/downloader/"),
-  "channel-floodplain-dynamics-bank-migration-and-meander": dict(adapter="desktop_geomorph.bank_migration", client="manual", field="", label="Multi-date NAIP/Google Earth; USGS DSAS / RivMAP; EarthExplorer", url="https://earthexplorer.usgs.gov/"),
-  "channel-floodplain-dynamics-channel-pattern": dict(adapter="desktop_geomorph.channel_pattern", client="delineation", field="sinuosity", label="Historic USGS topo (TopoView) + NAIP + 3DEP LiDAR; sinuosity", url="https://ngmdb.usgs.gov/topoview/"),
-  "sediment-continuity-transport-capacity": dict(adapter="desktop_geomorph.transport_capacity", client="threedep", field="stream_power", label="StreamStats flow + NHDPlus HR slope/length (stream power)", url="https://streamstats.usgs.gov/"),
-  "light-thermal-regime-riparian-canopy-cover": dict(adapter="desktop_physicochem.riparian_canopy", client="enviroatlas", field="canopy_pct", label="NLCD Tree Canopy Cover + EPA EnviroAtlas riparian", url="https://enviroatlas.epa.gov/enviroatlas/interactivemap/"),
-  "carbon-processing-riparian-corridor-width-and-quality": dict(adapter="desktop_physicochem.riparian_corridor", client="enviroatlas", field="corridor", label="EPA EnviroAtlas riparian (15-50 m) + NLCD", url="https://enviroatlas.epa.gov/enviroatlas/interactivemap/"),
-  "nutrient-cycling-vegetated-riparian-corridor-width": dict(adapter="desktop_physicochem.riparian_width", client="enviroatlas", field="width", label="EPA EnviroAtlas riparian", url="https://enviroatlas.epa.gov/enviroatlas/interactivemap/"),
-  "community-dynamics-riparian-communities": dict(adapter="desktop_biology.riparian_communities", client="enviroatlas", field="veg", label="EPA EnviroAtlas riparian; StreamCat; NLCD", url="https://enviroatlas.epa.gov/enviroatlas/interactivemap/"),
-  "watershed-connectivity-upstream-and-downstream-barriers": dict(adapter="desktop_biology.barriers", client="aquatic_barriers", field="barrier_count", label="National Aquatic Barrier Inventory (USFWS/TNC) + USACE NID", url="https://connectivity.sarpdata.com/"),
-  "watershed-connectivity-dewatered-or-intermittent-segments": dict(adapter="desktop_biology.dewatered_segments", client="nwis", field="zero_flow_days", label="USGS NWIS zero-flow days + NHD FCODE + imagery", url="https://waterdata.usgs.gov/nwis"),
+  "catchment-hydrology-impervious-surface-area": dict(adapter="desktop_hydrology.impervious", client="engine+streamcat", field="imperviousPctWatershed", label="Impervious and agricultural cover, NLCD 2021 over the HR reach watershed (STAF site engine); StreamCat by COMID when the engine has no value", url=ENGINE_URL),
+  "catchment-hydrology-road-density": dict(adapter="desktop_hydrology.road_density", client="engine+streamcat", field="roadDensity", label="Road density, TIGERweb roads over the HR reach watershed (STAF site engine); StreamCat rddens by COMID when the engine has no value", url=ENGINE_URL),
+  "catchment-hydrology-land-use-change": dict(adapter="desktop_hydrology.land_use_change", client="engine+streamcat", field="imperviousPct2001Watershed", label="Impervious cover change, NLCD 2001 to 2021 over the HR reach watershed (STAF site engine); StreamCat 2001 to 2019 by COMID when the engine has no value", url=ENGINE_URL),
+  "catchment-hydrology-impoundments": dict(adapter="desktop_hydrology.impoundments", client="engine+streamcat", field="damCount", label="NID dams and their normal storage in the HR reach watershed (STAF site engine); StreamCat dam density by COMID when the engine has no value", url=ENGINE_URL),
+  "surface-water-storage-wetland-coverage": dict(adapter="desktop_hydrology.wetland_coverage", client="engine+streamcat", field="woodyWetlandPctWatershed+herbWetlandPctWatershed", label="Woody and herbaceous wetland, NLCD 2021 over the HR reach watershed (STAF site engine); StreamCat by COMID when the engine has no value", url=ENGINE_URL),
+  "reach-inflow-concentrated-flow-inputs": dict(adapter="desktop_hydrology.concentrated_inputs", client="engine+streamcat", field="roadCrossingDensity", label="Road-stream crossings on the NHDPlus HR network in the HR reach watershed (STAF site engine); StreamCat rdcrs by COMID when the engine has no value. Outfalls and ditches need local MS4 layers", url="https://www.epa.gov/npdes/stormwater-discharges-municipal-sources"),
+  "reach-inflow-local-runoff-diversions": dict(adapter="desktop_hydrology.diversions", client="manual", field="", label="State water-rights and diversions GIS (local review)", url="https://waterdata.usgs.gov/"),
+  "streamflow-regime-flow-permanence": dict(adapter="desktop_hydrology.flow_permanence", client="nwis", field="zero_flow_days", label="USGS NWIS zero-flow days at the nearest comparable gage; StreamCat HYD integrity by COMID when no gage qualifies", url="https://waterdata.usgs.gov/nwis"),
+  "streamflow-regime-flow-permanence-statistics": dict(adapter="desktop_hydrology.flow_statistics", client="nwis", field="flow_duration", label="USGS NWIS daily flow, flow-duration percentiles at the nearest comparable gage", url="https://waterdata.usgs.gov/nwis"),
+  "streamflow-regime-channel-natural-flow-regime": dict(adapter="desktop_hydrology.natural_flow_regime", client="engine+streamcat", field="damStoragePerSqkm", label="Upstream NID normal storage over the HR reach watershed (STAF site engine) with the gage base-flow ratio; StreamCat dam storage by COMID when the engine has no value", url=ENGINE_URL),
+  "streamflow-regime-artificial-structures-and-inputs": dict(adapter="desktop_hydrology.artificial_structures", client="nid", field="structures", label="USACE NID dams within about a mile; levees from the National Levee Database by hand", url="https://levees.sec.usace.army.mil/"),
+  "low-flow-baseflow-dynamics-low-flow-depth": dict(adapter="desktop_hydraulics.low_flow_depth", client="xscalc", field="depth", label="3DEP cross-section and the Manning solver in the cross-section tool at the low-flow discharge", url=""),
+  "low-flow-baseflow-dynamics-low-flow-velocity": dict(adapter="desktop_hydraulics.low_flow_velocity", client="xscalc", field="velocity", label="Manning solver in the cross-section tool at the low-flow discharge", url=""),
+  "high-flow-dynamics-overbank-flow-frequency": dict(adapter="desktop_hydraulics.overbank_frequency", client="engine", field="bankHeightRatio", label="Bank height ratio, reach median of nine 3DEP cross-sections on the assessment reach (STAF site engine)", url=ENGINE_URL),
+  "high-flow-dynamics-peak-flow-capacity-morphological-check": dict(adapter="desktop_hydraulics.peak_capacity", client="engine", field="entrenchmentRatio", label="Bankfull width from the regional regression and the entrenchment ratio, reach median of nine 3DEP cross-sections (STAF site engine)", url=ENGINE_URL),
+  "high-flow-dynamics-bed-mobilization-frequency": dict(adapter="desktop_hydraulics.bed_mobilization", client="xscalc", field="shear", label="Shields comparison of bed shear and critical shear in the cross-section tool (enter D50)", url=""),
+  "floodplain-connectivity-lateral-floodplain-inundation": dict(adapter="desktop_hydraulics.lateral_inundation", client="nwi", field="inundation", label="USFWS NWI wetland features near the reach, with the entrenchment ratio from the 3DEP reach cross-sections (STAF site engine)", url="https://www.fws.gov/program/national-wetlands-inventory/wetlands-mapper"),
+  "channel-floodplain-dynamics-bank-migration-and-meander": dict(adapter="desktop_geomorph.bank_migration", client="manual", field="", label="Multi-date NAIP or Google Earth imagery; USGS DSAS or RivMAP; EarthExplorer (local review)", url="https://earthexplorer.usgs.gov/"),
+  "channel-floodplain-dynamics-channel-pattern": dict(adapter="desktop_geomorph.channel_pattern", client="engine", field="sinuosity", label="Sinuosity of the assessment reach on the NHDPlus HR network (STAF site engine); compare the planform on TopoView and multi-date imagery", url="https://ngmdb.usgs.gov/topoview/"),
+  "sediment-continuity-transport-capacity": dict(adapter="desktop_geomorph.transport_capacity", client="engine+streamcat", field="soilKFactor", label="Channel slope (NHDPlus HR) with agricultural cover and SSURGO soil K over the HR reach watershed (STAF site engine); StreamCat by COMID when the engine has no value", url=ENGINE_URL),
+  "light-thermal-regime-riparian-canopy-cover": dict(adapter="desktop_physicochem.riparian_canopy", client="engine+streamcat", field="forestPctRiparian", label="Forest in the 100 m riparian buffer, NLCD 2021 (STAF site engine); StreamCat riparian forest by COMID when the engine has no value", url=ENGINE_URL),
+  "carbon-processing-riparian-corridor-width-and-quality": dict(adapter="desktop_physicochem.riparian_corridor", client="engine+streamcat", field="riparianNaturalPct", label="Natural vegetation in the 100 m riparian buffer, NLCD forest, shrub, grassland and wetland (STAF site engine); StreamCat by COMID when the engine has no value", url=ENGINE_URL),
+  "nutrient-cycling-vegetated-riparian-corridor-width": dict(adapter="desktop_physicochem.riparian_width", client="engine+streamcat", field="riparianNaturalPct", label="Natural vegetation in the 100 m riparian buffer, NLCD forest, shrub, grassland and wetland (STAF site engine); StreamCat by COMID when the engine has no value", url=ENGINE_URL),
+  "community-dynamics-riparian-communities": dict(adapter="desktop_biology.riparian_communities", client="engine+streamcat", field="riparianNaturalPct", label="Natural vegetation in the 100 m riparian buffer, NLCD forest, shrub, grassland and wetland (STAF site engine); StreamCat by COMID when the engine has no value", url=ENGINE_URL),
+  "watershed-connectivity-upstream-and-downstream-barriers": dict(adapter="desktop_biology.barriers", client="nid", field="barrier_count", label="USACE NID dams within about a mile, with StreamCat CONN integrity by COMID; the National Aquatic Barrier Inventory by hand", url="https://connectivity.sarpdata.com/"),
+  "watershed-connectivity-dewatered-or-intermittent-segments": dict(adapter="desktop_biology.dewatered_segments", client="engine+streamcat", field="fcode", label="NHDPlus HR flow permanence code with StreamCat HYD integrity by COMID and the base-flow index over the HR reach watershed (STAF site engine)", url=ENGINE_URL),
 }
 
 # Online resources catalog (doc Table 23) — surfaced in the UI / report citations.

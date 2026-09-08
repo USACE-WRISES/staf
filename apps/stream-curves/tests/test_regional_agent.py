@@ -117,8 +117,12 @@ def test_landscape_split_scores_condition_metrics_and_keeps_context_as_predictor
     d = ra.load_landscape_directions()
     scored, predictors = ra.select_landscape_codes(d)
     # condition indicators with an unambiguous direction are scored
-    for code in ("pctimp2019", "pctcrop2019", "pctwdwet2019", "bfi", "damdens", "rdcrs"):
+    for code in ("pctimp2019", "pctcrop2019", "pctwet2019", "bfi", "damdens", "rdcrs"):
         assert code in scored
+    # the two wetland classes are pickable but no longer default-selected: one
+    # combined wetland curve scores Surface water storage (2026-09-07, ECO-15)
+    for code in ("pctwdwet2019", "pcthbwet2019"):
+        assert code not in scored
     # climate/scaling context is never scored, but is not discarded either
     for code in ("runoff", "precip8110"):
         assert code in predictors and code not in scored
@@ -330,7 +334,7 @@ def test_uncovered_functions_is_empty_when_everything_is_covered():
 # Reference-tier ladder (REF-01/02/03), screening mocked
 # --------------------------------------------------------------------------- #
 def test_choose_reference_tier_ref01_when_pool_adequate(monkeypatch):
-    def fake(rows, preset, on_event=None, cache_path=None):
+    def fake(rows, preset, on_event=None, cache_path=None, *, comid_mode=None):
         ids = [f"s{i}" for i in range(40)]  # 40 functioning >= floor
         return {"tables": {}, "sites": [], "retained_ids": ids,
                 "counts": {"n_retained": 40}, "preset": preset}
@@ -343,7 +347,7 @@ def test_choose_reference_tier_ref01_when_pool_adequate(monkeypatch):
 def test_choose_reference_tier_ref02_fallback(monkeypatch):
     calls = []
 
-    def fake(rows, preset, on_event=None, cache_path=None):
+    def fake(rows, preset, on_event=None, cache_path=None, *, comid_mode=None):
         calls.append(preset)
         n = 5 if preset == "functional" else 25   # too few functioning -> fallback
         return {"tables": {}, "sites": [], "retained_ids": [f"s{i}" for i in range(n)],

@@ -28,7 +28,7 @@ from shiny import App, reactive, render, ui  # noqa: E402
 
 from sfari import bieger, config, delineation, pipeline, report, scoring, session as session_io, xscalc  # noqa: E402
 from sfari import viewport  # noqa: E402
-from sfari import engine_prefill, hr_site  # noqa: E402
+from sfari import comid_anchor, engine_prefill, hr_site, network_display  # noqa: E402
 from sfari.datasources import flowlines  # noqa: E402
 from sfari.datasources.geocode import geocode_address  # noqa: E402
 from sfari.pipeline import DEFAULT_REACH_FT  # noqa: E402
@@ -47,6 +47,22 @@ except Exception:  # pragma: no cover
 WATERSHED_STYLE = {"color": "#caa700", "weight": 1, "fillColor": "#fdf24a", "fillOpacity": 0.40}
 REACH_STYLE = {"color": "#d6453d", "weight": 4}
 FLOWLINE_STYLE = {"color": "#1f6feb", "weight": 3, "opacity": 0.95}
+# Two stream colors, EASI's rule (2026-09-07): the NHDPlus HR geometry is drawn
+# once and split by the click rule. Dark blue where a click lands within
+# SNAP_TOL_FT of an NHDPlus V2 reach (the StreamCat lookup engine answers by
+# that COMID), cyan elsewhere (the STAF site engine alone answers there, and
+# the COMID-keyed values come from the nearest StreamCat reach downstream,
+# labeled). The split is sfari/network_display.py; every click still snaps to
+# the high-resolution line.
+HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
+# Translucent glow under the NHDPlus V2 reach whose COMID keys the StreamCat values.
+SCORED_REACH_STYLE = {"color": "#1f6feb", "weight": 11, "opacity": 0.3}
+# Dashed connector from a clicked HR-only stream to its nearest StreamCat reach.
+ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
+# LayersControl labels; the legend uses the same engine names.
+LAYER_COVERED = "Streams: StreamCat lookup engine"
+LAYER_UNCOVERED = "Streams: STAF site engine"
+LAYER_SCORED = "StreamCat reach"
 
 USGS_TOPO_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}"
 USGS_IMAGERY_URL = "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}"
@@ -85,18 +101,29 @@ def _point_marker(lat: float, lon: float):
 
 
 def _watershed_engine_text(d_all: dict, es: dict, running: bool) -> str:
-    """The Basin pane's engine row: whose watershed the values describe."""
+    """The Basin pane's engine row: which engine delineated the watershed (the
+    per-value badges say what each value describes)."""
     es = es or {}
     d_all = d_all or {}
     rec = d_all.get("siteEngine") or es.get("record") or {}
     ver = rec.get("engineVersion")
-    if d_all.get("watershedBasis") == "site-engine" or es.get("status") == "ok":
+    basis = d_all.get("watershedBasis")
+    if basis == "site-engine":
         return f"STAF site engine v{ver}" if ver else "STAF site engine"
     if running or es.get("status") == "running":
         return "STAF site engine (calculating)"
-    if d_all.get("watershedBasis") == "nhdplus-v2-basin-of-surrogate":
-        return "StreamCat lookup engine (nearest covered reach basin)"
+    if basis == "nhdplus-v2-basin-of-surrogate":
+        return "StreamCat lookup engine (nearest StreamCat reach basin)"
+    if es.get("status") == "ok":
+        # a session from before 2026-09-07: the V2 basin was drawn and the
+        # engine ran beside it
+        return "StreamCat lookup engine (NHDPlus V2 basin), HR reach watershed computed"
     return "StreamCat lookup engine (NHDPlus V2 basin)"
+
+
+# The Identify busy row while the StreamCat reach resolves in the background
+# (2026-09-07); the engine's progress line replaces it once Delineate runs.
+_FINDING_REACH_TEXT = "Finding the StreamCat reach…"
 
 STEP_IDENTIFY, STEP_BASIN, STEP_REVIEW, STEP_REPORT = "identify", "basin", "review", "report"
 STEP_LABELS = [(STEP_IDENTIFY, "Identify"), (STEP_BASIN, "Basin"),
@@ -331,10 +358,10 @@ if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on w
 # --------------------------------------------------------------------------- #
 # Evidence provenance: which engine or service produced a value
 # --------------------------------------------------------------------------- #
-_EV_BADGE = {"engine": ("exact watershed", "sfari-ev-tag engine"),
+_EV_BADGE = {"engine": ("HR reach watershed", "sfari-ev-tag engine"),
              "streamcat": ("StreamCat", "sfari-ev-tag streamcat"),
              "pull": ("desktop", "sfari-ev-tag")}
-_PENDING_BADGE = ("exact watershed pending", "sfari-ev-tag pending")
+_PENDING_BADGE = ("HR reach watershed pending", "sfari-ev-tag pending")
 
 
 def _ev_badge(edata):
@@ -356,8 +383,6 @@ def _ev_tip(edata):
         tip += "\nDescribes the " + edata["anchor_label"] + "."
     if edata.get("fallback_reason"):
         tip += "\nFallback: " + edata["fallback_reason"]
-    if edata.get("upgrade_pending"):
-        tip += "\nThe STAF site engine is still running. This value is replaced when it finishes."
     if edata.get("note"):
         tip += "\n" + edata["note"]
     return tip
@@ -371,21 +396,44 @@ def _ev_describes(edata):
     return ui.span("describes the " + label, class_="sfari-ev-describes")
 
 
-_ENGINE_STAGE_TEXT = {"site": "locating the stream", "walk": "walking upstream",
-                      "catchments": "collecting catchments", "union": "building the polygon",
-                      "geometry": "fetching the stream network",
-                      "reach": "building the assessment reach",
-                      "metrics": "computing watershed metrics", "done": "finishing"}
+# The engine's progress stages as the assessor sees them: five steps, the
+# reach count while the upstream trace and the catchment union run, the
+# metric family with its position while the metrics run. Plain words only:
+# "hops" (the walk's query levels) never reach the screen (2026-09-07).
+_ENGINE_STEPS = {"site": (1, "finding the stream"), "walk": (2, "tracing upstream"),
+                 "catchments": (3, "joining catchments"), "union": (3, "joining catchments"),
+                 "geometry": (3, "joining catchments"),
+                 "reach": (4, "marking the assessment reach"),
+                 "metrics": (5, "computing metrics")}
+_ENGINE_STEP_COUNT = 5
+_ENGINE_FAMILY_TEXT = {"baseflow": "base flow", "dams": "dams", "landcover": "land cover",
+                       "roads": "roads", "runoff": "runoff", "soils": "soils",
+                       "xsection": "cross-sections"}
 
 
-def _engine_progress_text(prog: dict) -> str:
+def _engine_progress_text(prog: dict, families=None) -> str:
+    """The busy-row line while the STAF site engine runs, from the last
+    progress event: ``Delineating watershed · step 2 of 5 · tracing upstream,
+    42 reaches``. ``families`` is the metric family list the app requested
+    (the engine runs them sorted), for the ``(3 of 7)`` position."""
+    lead = "Delineating watershed"
+    prog = prog or {}
     st = prog.get("stage")
-    detail = _ENGINE_STAGE_TEXT.get(st, "starting")
-    if st in ("walk", "catchments", "union", "geometry") and prog.get("reaches") is not None:
-        detail += f", {prog['reaches']} reaches, {prog.get('hops') or 0} hops"
+    if st == "done":
+        return f"{lead} · finishing"
+    step = _ENGINE_STEPS.get(st)
+    if step is None:
+        return f"{lead} · starting"
+    n, what = step
+    if n in (2, 3) and prog.get("reaches"):
+        count = int(prog["reaches"])
+        what += f", {count:,} reach" + ("" if count == 1 else "es")
     if st == "metrics" and prog.get("family"):
-        detail += f" ({prog['family']})"
-    return f"Calculating the exact watershed: {detail}…"
+        fam = str(prog["family"])
+        fams = sorted(families if families is not None else engine_prefill.SFARI_FAMILIES)
+        pos = f" ({fams.index(fam) + 1} of {len(fams)})" if fam in fams else ""
+        what += f", {_ENGINE_FAMILY_TEXT.get(fam, fam)}{pos}"
+    return f"{lead} · step {n} of {_ENGINE_STEP_COUNT} · {what}"
 
 
 def _engine_line_ui(es: dict, running: bool, prog: dict):
@@ -396,10 +444,57 @@ def _engine_line_ui(es: dict, running: bool, prog: dict):
     if st == "ok":
         return None      # the Watershed engine row says it (2026-09-04)
     if st in ("failed", "refused", "unavailable"):
-        return ui.div(f"STAF site engine {st}: {es.get('reason') or 'no detail'}. Watershed "
-                      "evidence is unavailable. Delineate again to retry.",
-                      class_="sfari-engine-line warn")
+        return ui.div(f"STAF site engine {st}: {es.get('reason') or 'no detail'}. StreamCat "
+                      "values stand in where the reach has them, labeled. Delineate again "
+                      "to retry.", class_="sfari-engine-line warn")
     return None
+
+
+def _legend_ui(step, zoomed, mode, reach, routed):
+    """The map legend card (docked under the layers button by legend-dock.js):
+    which color means which engine, the state of the stream fetch, and the
+    StreamCat reach once it is known. Pure, so its states are tested offline.
+    None outside the Identify and Basin steps. Every string is a plain sentence."""
+    if step not in (STEP_IDENTIFY, STEP_BASIN):
+        return None
+
+    def row(color, label, sub=None, glow=False, fill=False):
+        cls = "easi-legend-sw"
+        if glow:
+            cls += " easi-legend-sw-glow"
+        if fill:
+            cls += " easi-legend-sw-fill"
+        return ui.div(ui.span(class_=cls, style=f"background:{color};"),
+                      ui.div(ui.div(label, class_="easi-legend-label"),
+                             ui.div(sub, class_="easi-legend-sub") if sub else None),
+                      class_="easi-legend-row")
+
+    rows = [ui.div("Streams", class_="easi-legend-title"),
+            row(FLOWLINE_STYLE["color"], "StreamCat lookup engine",
+                "COMID-keyed values from this reach"),
+            row(HR_FLOWLINE_STYLE["color"], "STAF site engine",
+                "the HR reach watershed, every stream")]
+    note = None
+    if not zoomed:
+        note = "Zoom in to see streams"
+    elif mode == "v2-only":
+        note = "Fine streams unavailable here. Zoom in."
+    elif mode == "hr-only":
+        note = "No StreamCat reach in view."
+    elif mode == "empty":
+        note = "No streams in view."
+    if note:
+        rows.append(ui.div(note, class_="easi-legend-note"))
+    if reach:
+        name = reach.get("name") or "unnamed stream"
+        comid = reach.get("comid")
+        what = "Nearest StreamCat reach" if routed else "StreamCat reach"
+        label = f"{what}: {name}" + (f" (COMID {comid})" if comid is not None else "")
+        rows.append(row(SCORED_REACH_STYLE["color"], label, glow=True))
+    if step == STEP_BASIN:
+        rows.append(row(WATERSHED_STYLE["fillColor"], "Watershed", fill=True))
+        rows.append(row(REACH_STYLE["color"], "Assessment reach"))
+    return ui.div(*rows, class_="easi-legend")
 
 
 def staf_topnav():
@@ -411,8 +506,9 @@ def staf_topnav():
 
 
 app_ui = ui.page_fillable(
-    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=19"),
+    ui.head_content(ui.tags.link(rel="stylesheet", href="styles.css?v=21"),
                     ui.tags.script(src="geocode-autocomplete.js", defer=""),
+                    ui.tags.script(src="legend-dock.js?v=1", defer=""),
                     ui.tags.script(src="tooltip.js", defer=""),
                     ui.tags.script(src="coord-entry.js", defer=""),
                     ui.tags.script(src="field-review.js?v=6", defer="")),
@@ -440,6 +536,11 @@ app_ui = ui.page_fillable(
         ),
         ui.output_ui("worksheet"),
         ui.div(ui.output_ui("leftpane"), class_="easi-leftpane"),
+        # Stream legend: legend-dock.js moves this wrapper into the map's
+        # top-right control stack under the layers button. The card look lives
+        # on the rendered content, so an empty output shows nothing.
+        ui.div(ui.output_ui("stream_legend"), id="easi-legend-panel",
+               class_="easi-legend-panel"),
         ui.output_ui("readout"),
         ui.output_ui("flow_loading"),
         ui.output_ui("cursor_style"),
@@ -486,12 +587,18 @@ def server(input, output, session):
     evidence = reactive.value({})          # {metricId: EvidenceResult dict} (desktop pull)
     _pull_prog = {"done": 0, "total": 0}
     xs_geom = reactive.value(None)         # cross-section geometry for the hydraulics popup
-    hr_geojson = reactive.value(None)      # HR-only flowlines in the viewport | None
+    hr_geojson = reactive.value(None)      # NHDPlus HR flowlines in the viewport | None
+    flow_geojson = reactive.value(None)    # NHDPlus V2 flowlines in the viewport | None
+    streams_mode = reactive.value(None)    # network_display mode of the drawn layers | None
+    zoomed_in = reactive.value(False)      # zoom >= FLOW_ZOOM (the legend reads this, not the view)
+    site_anchor = reactive.value(None)     # the StreamCat reach classification of the point | None
+    evidence_reach = reactive.value(None)  # {"comid", "name"} of the glowing V2 reach | None
     engine_state = reactive.value({"status": "idle"})   # the STAF site engine on this site
     _engine_prog = {"stage": None, "reaches": None, "hops": None, "family": None}
+    _no_watershed = {}                     # the pending continuation after an engine failure
 
-    _layers: dict = {"hrflow": None, "marker": None,
-                     "ws": None, "reach": None}
+    _layers: dict = {"flow": None, "hrflow": None, "route": None, "scored": None,
+                     "marker": None, "ws": None, "reach": None}
 
     def _remove_layer(key):
         lyr = _layers.get(key)
@@ -569,6 +676,7 @@ def server(input, output, session):
                 # pixels stays inside it and needs no fetch (2026-09-02).
                 val = viewport.fetch_box(float(c[0]), float(c[1]), float(z))
             view_bbox.set(val)
+            zoomed_in.set(val is not None)     # a bool: repeated sets never invalidate
             view_bounds.set(viewport.view_from_bounds(bounds))
             last_view_change.set(time.monotonic())
 
@@ -580,7 +688,9 @@ def server(input, output, session):
             if bbox is None:
                 with reactive.isolate():
                     fetched_bbox.set(None)
+                    _remove_layer("flow"); flow_geojson.set(None)
                     _remove_layer("hrflow"); hr_geojson.set(None)
+                    streams_mode.set(None)
                 return
             elapsed = time.monotonic() - changed
             if elapsed < 0.5:
@@ -592,26 +702,40 @@ def server(input, output, session):
                 if not viewport.needs_fetch(view_bounds(), fetched_bbox()):
                     return
                 fetched_bbox.set(bbox)
-            if hr_site.hr_available():
-                hr_flow_task(bbox)
+            streams_task(bbox)
 
         @reactive.extended_task
-        async def hr_flow_task(bbox: tuple) -> "dict | None":
-            return await anyio.to_thread.run_sync(lambda: hr_site.hr_flowlines_fc(*bbox))
+        async def streams_task(bbox: tuple) -> dict:
+            # Both networks fetched side by side, then split by the click rule
+            # (sfari.network_display), all on the worker thread.
+            return await anyio.to_thread.run_sync(
+                lambda: network_display.fetch_streams(bbox, tol_ft=SNAP_TOL_FT))
 
         @reactive.effect
-        def _apply_hr_flowlines():
+        def _apply_streams():
             try:
-                fc = hr_flow_task.result()
+                res = streams_task.result()
             except Exception:
                 return
             with reactive.isolate():
-                has = bool(fc and fc.get("features"))
-                created = _set_layer_data("hrflow", fc if has else _EMPTY_FC, FLOWLINE_STYLE,
-                                          "Streams (NHD)")
-                hr_geojson.set(fc if has else None)
-                if created and _layers.get("marker") is not None:
-                    _add_layer("marker", _layers["marker"])   # the point stays on top
+                fetched = fetched_bbox()
+                if fetched is None or tuple(res.get("bbox") or ()) != tuple(fetched):
+                    return                          # torn down or a stale box
+                flow_geojson.set(res.get("v2"))     # raw networks: the click rule's input
+                hr_geojson.set(res.get("hr"))
+                # Cyan first, then dark blue on top; after the first fetch both
+                # update in place (no flash, draw order kept).
+                _set_layer_data("hrflow", res["uncovered"], HR_FLOWLINE_STYLE, LAYER_UNCOVERED)
+                created = _set_layer_data("flow", res["covered"], FLOWLINE_STYLE, LAYER_COVERED)
+                if created:
+                    # Freshly created stream layers land above the pick chrome
+                    # (a zoom out tears the streams down, a zoom in recreates
+                    # them), so the chrome goes back on top.
+                    for key in ("scored", "route", "marker"):
+                        if _layers.get(key) is not None:
+                            _add_layer(key, _layers[key])
+                if streams_mode() != res.get("mode"):
+                    streams_mode.set(res.get("mode"))
 
         # ---- click -> snap or reject (only during the identify step) ----
         @reactive.effect
@@ -626,7 +750,7 @@ def server(input, output, session):
             hit = (flowlines.nearest_point_on_lines(fc, lat, lon, id_prop="nhdplusid")
                    if fc else None)
             if hit and hit[2] <= SNAP_TOL_FT:
-                _apply_snap(hit)
+                _apply_snap(hit, click=(lat, lon))
             else:
                 click_snap_task(lat, lon)
 
@@ -641,15 +765,31 @@ def server(input, output, session):
             ui.update_numeric("lat", value=round(slat, 5))
             ui.update_numeric("lon", value=round(slon, 5))
 
-        def _apply_snap(hit):
+        def _clear_anchor_state():
+            # A new pick invalidates the last StreamCat reach and its map chrome.
+            _remove_layer("route")
+            _remove_layer("scored")
+            site_anchor.set(None)
+            evidence_reach.set(None)
+
+        def _apply_snap(hit, *, click=None):
+            """Pin the HR snap point, then find the StreamCat reach for it in
+            the background (comid_anchor): the V2 line under the click, or the
+            nearest StreamCat reach downstream of the HR snap point."""
             slat, slon, dist, nhdplusid = hit
+            _clear_anchor_state()
             _place_pin(slat, slon)
             snapped_point.set((slat, slon, dist, nhdplusid))
+            lat, lon = click if click and click[0] is not None else (slat, slon)
+            with reactive.isolate():
+                v2_fc = flow_geojson()
+            anchor_task(lat, lon, tuple(hit), v2_fc)
+            stage.set(_FINDING_REACH_TEXT)          # the busy row until the reach lands
 
         def _apply_snap_result(res, *, from_coords=False):
             hit = res.get("hit")
             if hit and hit[2] <= SNAP_TOL_FT:
-                _apply_snap(hit)
+                _apply_snap(hit, click=(res.get("lat"), res.get("lon")))
                 return
             if from_coords:
                 _remove_layer("marker")
@@ -672,6 +812,55 @@ def server(input, output, session):
             except Exception:
                 return
             _apply_snap_result(res)
+
+        # ---- the StreamCat reach for the point (comid_anchor), in the background ----
+        @reactive.extended_task
+        async def anchor_task(lat: float, lon: float, hr_hit: tuple, v2_fc) -> dict:
+            def run():
+                res = comid_anchor.resolve(lat, lon, hr_hit, v2_fc=v2_fc)
+                cid = comid_anchor.comid(res.get("anchor"))
+                if cid is not None:
+                    feat = (network_display.feature_by_id(v2_fc, "comid", cid)
+                            or network_display.v2_reach_feature(int(cid)))
+                    if feat:
+                        res["scoredFeature"] = feat
+                return res
+            return await anyio.to_thread.run_sync(run)
+
+        def _draw_anchor(res: dict):
+            """The StreamCat reach on the map: a glow under the V2 reach and, on
+            a stream outside V2, the dashed route from the pin to it."""
+            _remove_layer("route")
+            _remove_layer("scored")
+            anchor = res.get("anchor")
+            if not anchor:
+                site_anchor.set(None)
+                evidence_reach.set(None)
+                return
+            site_anchor.set(anchor)
+            evidence_reach.set(comid_anchor.legend_reach(anchor))
+            feat = res.get("scoredFeature")
+            if feat and feat.get("geometry"):
+                _add_layer("scored", GeoJSON(
+                    data={"type": "FeatureCollection", "features": [feat]},
+                    style=SCORED_REACH_STYLE, name=LAYER_SCORED))
+            seg = comid_anchor.route_segment(anchor)
+            if seg:
+                _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
+                                            name="Nearest StreamCat reach"))
+            if _layers.get("marker") is not None:
+                _add_layer("marker", _layers["marker"])      # the point stays on top
+
+        @reactive.effect
+        def _anchor_done():
+            try:
+                res = anchor_task.result()
+            except Exception:
+                return
+            with reactive.isolate():
+                _draw_anchor(res)
+                if stage() == _FINDING_REACH_TEXT:   # a running engine owns the row
+                    stage.set("")
 
         @reactive.extended_task
         async def coord_snap_task(lat: float, lon: float) -> dict:
@@ -740,7 +929,7 @@ def server(input, output, session):
     def _toggle_delineate():
         ui.update_action_button("delineate", disabled=(snapped_point() is None))
 
-    # ---- the STAF site engine: the exact watershed and the reach, every site ----
+    # ---- the STAF site engine: the HR reach watershed and the reach, every site ----
     @reactive.extended_task
     async def engine_task(lat: float, lon: float, reach_ft: float) -> dict:
         def _cb(event):
@@ -748,7 +937,7 @@ def server(input, output, session):
                 if k in event:
                     _engine_prog[k] = event[k]
         rec = await anyio.to_thread.run_sync(
-            lambda: engine_prefill.run_engine(lat, lon, progress=_cb))
+            lambda: engine_prefill.run_engine(lat, lon, reach_length_ft=reach_ft, progress=_cb))
         return {"record": rec, "lat": lat, "lon": lon, "reach_ft": reach_ft}
 
     def _launch_engine(lat, lon, reach_ft):
@@ -761,7 +950,7 @@ def server(input, output, session):
         for k in _engine_prog:
             _engine_prog[k] = None
         engine_state.set({"status": "running"})
-        stage.set("Calculating the exact watershed…")
+        stage.set(_engine_progress_text({}))
         engine_task(lat, lon, reach_ft)
 
     @reactive.effect
@@ -807,9 +996,32 @@ def server(input, output, session):
         except Exception:
             ui.notification_show("Set a point first.", type="warning", duration=3)
             return
-        # Every site: the STAF site engine computes the exact watershed and
-        # the assessment reach (2026-09-05). There is no basin to look up.
-        _launch_engine(lat, lon, float(input.reach_ft()))
+        # Every site: the STAF site engine computes the HR reach watershed and
+        # the assessment reach (2026-09-05) at the typed length. There is no
+        # basin to look up.
+        _launch_engine(lat, lon, float(input.reach_ft() or DEFAULT_REACH_FT))
+
+    def _with_anchor(d):
+        """The delineation with the StreamCat reach attached. The reach resolves
+        in the background right after the snap; the engine can finish first,
+        so the pull reads the reach again when the Assessment opens."""
+        with reactive.isolate():
+            a = site_anchor()
+        if not d or not a or d.get("siteAnchor") == a:
+            return d
+        out = dict(d)
+        out["siteAnchor"] = a
+        ci = dict(out.get("ctx_inputs") or {})
+        ci["siteAnchor"] = a
+        cid = comid_anchor.comid(a)
+        if ci.get("comid") is None:
+            ci["comid"] = cid
+        out["ctx_inputs"] = ci
+        dl = dict(out.get("delineation") or {})
+        if dl.get("comid") is None:
+            dl["comid"] = cid
+        out["delineation"] = dl
+        return out
 
     @reactive.effect
     def _engine_done():
@@ -828,14 +1040,60 @@ def server(input, output, session):
                  "record": engine_prefill.strip_geometry(rec) if status == "ok" else None}
         engine_state.set(state)
         if status != "ok":
-            # No substitute from another reach: the site stays on Identify so
-            # Delineate can retry once the service answers.
-            ui.notification_show(
-                "The STAF site engine could not compute the exact watershed "
-                f"({state['reason'] or status}). Delineate again to retry, or pick a "
-                "point farther downstream.", type="warning", duration=12)
+            _offer_no_watershed(state, res)
             return
-        out = pipeline.delineate_from_engine(rec, res["lat"], res["lon"], res["reach_ft"])
+        out = _with_anchor(pipeline.delineate_from_engine(rec, res["lat"], res["lon"],
+                                                          res["reach_ft"]))
+        if not _draw_delineation(out):
+            return
+        delin.set(out)
+        current_step.set(STEP_BASIN)
+
+    def _offer_no_watershed(state: dict, res: dict):
+        """The engine failed or refused. With a StreamCat reach the assessor can
+        continue without a watershed polygon: watershed values then come from
+        the StreamCat lookup engine, labeled with the reach they describe.
+        Without one the site stays on Identify so Delineate can retry."""
+        reason = state.get("reason") or state.get("status") or "no detail"
+        with reactive.isolate():
+            anchor = site_anchor()
+            pt = snapped_point()
+        if comid_anchor.comid(anchor) is None:
+            ui.notification_show(
+                "The STAF site engine could not compute the HR reach watershed "
+                f"({reason}), and no StreamCat reach is known for this point. Delineate "
+                "again to retry, or pick a point farther downstream.",
+                type="warning", duration=12)
+            return
+        _no_watershed.clear()
+        _no_watershed.update({"anchor": anchor, "hr_hit": pt, "lat": res["lat"],
+                              "lon": res["lon"], "reach_ft": res["reach_ft"],
+                              "engine": state})
+        ui.modal_show(ui.modal(
+            ui.markdown(
+                "The STAF site engine could not compute the HR reach watershed for this "
+                f"stream ({reason}).\n\n"
+                "You can continue with the StreamCat lookup engine: the watershed values "
+                f"then describe the NHDPlus V2 basin of {comid_anchor.reach_text(anchor)}, "
+                "every such value says so, and no watershed is drawn. Or Delineate again "
+                "to retry."),
+            title="Watershed not available",
+            footer=ui.TagList(ui.modal_button("Cancel"),
+                              ui.input_action_button("use_streamcat",
+                                                     "Continue with StreamCat values",
+                                                     class_="btn-primary")),
+            easy_close=True))
+
+    @reactive.effect
+    @reactive.event(input.use_streamcat)
+    def _use_streamcat():
+        ui.modal_remove()
+        if not _no_watershed:
+            return
+        o = dict(_no_watershed)
+        _no_watershed.clear()
+        out = pipeline.delineate_without_watershed(o["anchor"], o["lat"], o["lon"],
+                                                   o["hr_hit"], o["reach_ft"], o["engine"])
         if not _draw_delineation(out):
             return
         delin.set(out)
@@ -873,8 +1131,9 @@ def server(input, output, session):
             ui.notification_show("Finish the earlier steps first.", type="message", duration=2)
 
     def _do_reset():
-        for k in ("ws", "reach", "marker", "route"):
+        for k in ("ws", "reach", "marker", "route", "scored"):
             _remove_layer(k)
+        site_anchor.set(None); evidence_reach.set(None); _no_watershed.clear()
         snapped_point.set(None); delin.set(None); stage.set("")
         engine_state.set({"status": "idle"})
         metric_scores.set({}); function_scores.set({}); current_fn.set(0)
@@ -923,9 +1182,15 @@ def server(input, output, session):
                 "function to Likert-score metrics and assign each of 20 stream functions a "
                 "0–15 score. Scores roll up to Physical / Chemical / Biological outcome "
                 "sub-indices and an overall Ecosystem Condition Index.\n\n"
-                "Every watershed value comes from the STAF site engine, which computes the "
-                "exact watershed at the clicked point on the full-resolution NHD. Nothing "
-                "is substituted from a neighboring reach."),
+                "Two watershed engines answer the desktop evidence. The STAF site engine "
+                "computes the HR reach watershed: the drainage area of the high-resolution "
+                "NHD reach the point snaps to, built from NHDPlus HR catchments and checked "
+                "against the reach's published drainage area. The reach, not the point, is "
+                "the outlet. The StreamCat lookup engine answers by NHDPlus V2 COMID: the "
+                "EPA modeled indices that exist only per V2 reach, and a labeled stand-in "
+                "for a watershed value the site engine could not compute. On a stream "
+                "outside V2 that COMID is the nearest StreamCat reach downstream, named with "
+                "the routed distance and the drainage-area ratio on every such value."),
             title="About SFARI", easy_close=True, footer=ui.modal_button("Close")))
 
     @reactive.effect
@@ -934,14 +1199,17 @@ def server(input, output, session):
         ui.modal_show(ui.modal(
             ui.markdown(
                 "1. **Identify**: zoom in and click any stream, or type coordinates, or "
-                "search a place. Set the reach length and click **Delineate**. The STAF site "
-                "engine computes the exact watershed and the assessment reach, usually in "
-                "under a minute.\n"
+                "search a place. Dark blue lines are the NHDPlus V2 reaches the StreamCat "
+                "lookup engine covers; cyan lines are every other NHD stream. Every click "
+                "snaps to the high-resolution NHD. Set the reach length and click "
+                "**Delineate**. The STAF site engine computes the HR reach watershed and "
+                "the assessment reach, usually in under a minute.\n"
                 "2. **Basin**: review the watershed and reach.\n"
                 "3. **Assessment**: for each function, review the pulled evidence, "
                 "Likert-score each metric, and assign the 0–15 function score. "
-                "Each value carries a badge: exact watershed (STAF site engine) or desktop "
-                "(direct services). Some values carry a suggested rating. Every "
+                "Each value carries a badge: HR reach watershed (STAF site engine), StreamCat "
+                "(by COMID, naming the reach it describes) or desktop (direct services). "
+                "Some values carry a suggested rating. Every "
                 "score stays yours to set.\n"
                 "4. **Report**: review the screening report and export.\n\n"
                 "Address search uses OpenStreetMap data (Photon and Nominatim)."),
@@ -994,10 +1262,14 @@ def server(input, output, session):
         pt = snapped_point()
         if not pt:
             return ui.p("No point yet.", class_="easi-snap-note")
-        return ui.TagList(
+        lines = [
             ui.p(f"✓ Snapped to a stream ({pt[2]:.0f} ft away).", class_="easi-snap-note ok"),
-            ui.p("The STAF site engine calculates the exact watershed, usually in under "
-                 "a minute.", class_="easi-snap-note"))
+            ui.p("The STAF site engine calculates the HR reach watershed, usually in under "
+                 "a minute.", class_="easi-snap-note")]
+        reach_line = comid_anchor.snap_line(site_anchor())
+        if reach_line:
+            lines.append(ui.p(reach_line, class_="easi-snap-note"))
+        return ui.TagList(*lines)
 
     @render.ui
     def basin_card():
@@ -1014,7 +1286,11 @@ def server(input, output, session):
                     d_all, engine_state(), engine_task.status() == "running")),
                 row("Drainage area", _fmt_km2(d.get("drainage_area_sqkm"))),
                 row("Reach length", _fmt_ft(d.get("reach_length_ft")))]
-        rows.append(row("NHDPlusID", d.get("nhdplus_id")))
+        if d.get("nhdplus_id") is not None:
+            rows.append(row("NHDPlusID", d.get("nhdplus_id")))
+        rows.append(row("StreamCat reach",
+                        comid_anchor.reach_text(d_all.get("siteAnchor") or site_anchor()
+                                                or comid_anchor.synthetic(d.get("comid")))))
         return ui.div(
             ui.h5(d.get("gnis_name") or "(unnamed reach)"),
             *rows,
@@ -1041,8 +1317,18 @@ def server(input, output, session):
     @render.text
     def busy_text():
         s = stage()
-        running = engine_task.status() == "running"
+        running = (engine_task.status() == "running"
+                   or (_HAS_MAP and anchor_task.status() == "running"))
         return s if (s and running) else ""
+
+    @render.ui
+    def stream_legend():
+        # Reads the zoom flag, the fetch mode, and the reach, never the view
+        # itself, so a pan does not re-render it.
+        if not _HAS_MAP:
+            return None
+        return _legend_ui(current_step(), zoomed_in(), streams_mode(), evidence_reach(),
+                          comid_anchor.is_routed(site_anchor()))
 
     @render.ui
     def readout():
@@ -1059,7 +1345,7 @@ def server(input, output, session):
         if not _HAS_MAP or current_step() != STEP_IDENTIFY:
             return None
         z, _c = _view()
-        fetching = hr_flow_task.status() == "running"
+        fetching = streams_task.status() == "running"
         if z is None or z < FLOW_ZOOM or not fetching:
             return None
         return ui.div(ui.div(class_="easi-spinner"), ui.span("Loading streams…"),
@@ -1177,19 +1463,44 @@ def server(input, output, session):
     @reactive.event(input.to_review)
     def _enter_review():
         current_fn.set(0)
+
+    @reactive.effect
+    def _maybe_pull():
+        """The desktop pull when the Assessment opens (DEEP's ``_maybe_compute``,
+        2026-09-07). The StreamCat reach resolves in the background right after
+        the snap; until it lands the pull would run without a COMID and every
+        COMID-keyed index would come back unavailable for good, so wait for it,
+        attach it, then pull once."""
+        if current_step() != STEP_REVIEW:
+            return
+        d = delin()
+        if not d or not d.get("ctx_inputs"):
+            return
         with reactive.isolate():
-            d = delin()
             already = bool(evidence())
             es = engine_state()
-        if d and d.get("ctx_inputs") and not already:
-            _pull_prog["done"], _pull_prog["total"] = 0, 0
-            pull_task(d["ctx_inputs"], _pull_prog, es)
-            ui.notification_show("Pulling desktop evidence…", id="pull",
-                                 type="message", duration=None)
+            pulling = pull_task.status() == "running"
+        if already or pulling:
+            return
+        if _HAS_MAP and anchor_task.status() == "running":
+            reactive.invalidate_later(0.5)
+            return
+        d2 = _with_anchor(d)
+        if d2 is not d:
+            delin.set(d2)
+            return                                   # re-runs on the anchored delineation
+        _pull_prog["done"], _pull_prog["total"] = 0, 0
+        pull_task(d2["ctx_inputs"], _pull_prog, es)
+        ui.notification_show("Pulling desktop evidence…", id="pull",
+                             type="message", duration=None)
 
     @reactive.effect
     def _pull_poll():
         if pull_task.status() != "running":
+            # The last progress toast outlived the pull when the completion
+            # flush ran this effect after _pull_done's remove (2026-09-07):
+            # the effect that shows the toast also clears it.
+            ui.notification_remove("pull")
             return
         reactive.invalidate_later(0.4)
         done, total = _pull_prog.get("done", 0), _pull_prog.get("total", 0)
@@ -1217,10 +1528,10 @@ def server(input, output, session):
             merged = pipeline.merge_pulled_evidence(cur, res.get("evidence") or {})
             evidence.set(merged)
             # The engine settled while this pull ran: pull once more so the pending
-            # rows pick up the exact-watershed values. A settled state yields no
+            # rows pick up the HR reach watershed values. A settled state yields no
             # pending rows, so this runs at most once.
             settled = es.get("status") in ("ok", "failed", "refused", "unavailable")
-            stale = any(e.get("status") == "pending" or e.get("upgrade_pending")
+            stale = any(e.get("status") == "pending"
                         for e in merged.values() if isinstance(e, dict))
             if settled and stale and d and d.get("ctx_inputs"):
                 _pull_prog["done"], _pull_prog["total"] = 0, 0
@@ -1250,10 +1561,10 @@ def server(input, output, session):
             ui.div(
                 ui.div("SFARI · Assessment", class_="easi-pane-head"),
                 ui.div(_stepper(current_step()), class_="sfari-nav-steps"),
-                ui.tags.button("Get Field Forms",
+                ui.tags.button("Field Forms",
                                {"data-desktop-metrics": "1", "type": "button",
-                                "title": "Print-ready field packet: five blank field-form pages "
-                                         "plus your pulled desktop metrics"},
+                                "title": "The blank field-form pages, and the desktop metrics "
+                                         "PDF with your pulled values"},
                                class_="sfari-btn sfari-nav-desktop"),
                 ui.output_ui("engine_line_ws"),
                 ui.output_ui("fn_nav"),
@@ -1290,7 +1601,8 @@ def server(input, output, session):
             return None
         idx = current_fn()
         ev_map = evidence()
-        pulling = pull_task.status() == "running"
+        pulling = (pull_task.status() == "running"
+                   or (_HAS_MAP and anchor_task.status() == "running"))
         fid = FN_IDS[idx]; f = FN_BY_ID[fid]
         with reactive.isolate():
             ms = metric_scores(); fs = function_scores()
@@ -1309,15 +1621,13 @@ def server(input, output, session):
                                         "title": f"Use the suggested rating ({sug})"},
                                        class_="sfari-suggest-chip") if sug else None)
                 blabel, bcls = _ev_badge(edata)
-                pend = (ui.span(_PENDING_BADGE[0], class_=_PENDING_BADGE[1])
-                        if edata.get("upgrade_pending") else None)
-                ev = ui.div(ui.span(blabel, class_=bcls), pend,
+                ev = ui.div(ui.span(blabel, class_=bcls),
                             ui.tags.b(edata.get("value_text", ""), class_="sfari-ev-val"),
                             _info(_ev_tip(edata)), chip, _ev_describes(edata),
                             class_="sfari-evidence")
             elif edata and edata.get("status") == "pending":
                 ev = ui.div(ui.span(_PENDING_BADGE[0], class_=_PENDING_BADGE[1]),
-                            ui.span("The STAF site engine is computing the exact watershed…",
+                            ui.span("The STAF site engine is computing the HR reach watershed…",
                                     class_="sfari-ev-val muted"),
                             (_info(edata.get("note", "")) if edata.get("note") else None),
                             class_="sfari-evidence pending")
@@ -1714,19 +2024,43 @@ def server(input, output, session):
                           ui.modal_button("Close"),
                           style="display:flex;gap:8px;align-items:center;"))
 
-    # ---- desktop-metrics list (evaluate these before the field day) ----
+    # ---- the Field Forms dialog (2026-09-07) ----
+    # One modal, size xl. The shell is static: the site line, the tab strip with
+    # both downloads, and the Close button never re-render, so the open tab and
+    # the table's scroll position survive every pull update. Three outputs
+    # inside rebuild live: the status line (owns the polling while the engine
+    # or the pull runs), the table (re-renders only when the evidence changes),
+    # and the preview (the blank vector worksheet served inline through a session
+    # route).
     @reactive.effect
     @reactive.event(input.desktop_metrics_evt)
     def _open_desktop_metrics():
         ui.modal_show(_desktop_metrics_modal())
 
     def _desktop_metrics_modal():
-        # Body is a reactive output so it rebuilds live as the pull progresses and as
-        # evidence merges in; the modal shell (title + Close) is static.
         return ui.modal(
-            ui.output_ui("field_forms_body"),
+            ui.output_ui("ff_site"),
+            ui.navset_pill(
+                ui.nav_panel("Desktop metrics",
+                             ui.output_ui("ff_status"),
+                             ui.div(ui.output_ui("ff_table"), class_="ff-table-wrap"),
+                             value="metrics"),
+                ui.nav_panel("Field forms preview", ui.output_ui("ff_preview"),
+                             value="preview"),
+                ui.nav_spacer(),
+                # Each download sits in its own div: Shiny's Bootstrap styles a bare
+                # ``.nav-pills > li > a`` as a nav link (link-blue text, no button
+                # chrome), and the wrapper keeps the anchors real buttons.
+                ui.nav_control(ui.div(ui.download_button("dl_field_forms", "Field forms PDF",
+                                                         class_="btn-sm btn-primary"),
+                                      class_="ff-dl")),
+                ui.nav_control(ui.div(ui.download_button("dl_desktop_metrics",
+                                                         "Desktop metrics PDF",
+                                                         class_="btn-sm btn-primary"),
+                                      class_="ff-dl")),
+                id="ff_tabs", selected="metrics"),
             title="Field Forms", easy_close=True, size="xl",
-            footer=ui.modal_button("Close"))
+            footer=ui.modal_button("Close"), class_="ff-modal-body")
 
     # Field-form readiness status vocabulary, derived per metric from the pulled
     # evidence + the metric's desktop source client.
@@ -1736,7 +2070,6 @@ def server(input, output, session):
         "Unavailable": "#f3d9d9;color:#8a2d2d",
         "Local review required": "#e7ddf3;color:#5b3f8a",
         "Run cross-section tool": "#dce8f5;color:#2c4f7a",
-        "Additional hydraulic estimate required": "#fdf0d6;color:#7a5b12",
     }
 
     def _ff_status(m: dict, ed: dict, pulling: bool) -> str:
@@ -1745,35 +2078,21 @@ def server(input, output, session):
         client = (m.get("desktopSource") or {}).get("client")
         if client == "xscalc":
             return "Run cross-section tool"
-        if client == "bieger":
-            return "Additional hydraulic estimate required"
         if client == "manual":
             return "Local review required"
         if ed.get("status") in ("unavailable", "error"):
             return "Unavailable"
         return "Pending"
 
-    # suspend_when_hidden=False: the output binds while the modal is still
-    # hidden (Bootstrap's fade), and a suspended output never resumes here.
-    @output(suspend_when_hidden=False)
-    @render.ui
-    def field_forms_body():
-        ev_map = evidence()
-        status = pull_task.status()
-        engine_running = engine_task.status() == "running"
-        pulling = status == "running" or engine_running
-        done, total = _pull_prog.get("done", 0), _pull_prog.get("total", 0)
+    def _ff_rows(ev_map: dict, pulling: bool):
+        """The 26 desktop-metric rows and the status counts, pure."""
+        rows, counts = [], {}
         dim = "color:#8a93a3;font-size:11px;"
-
-        rows = []
-        n = 0
-        counts: dict[str, int] = {}
         for cat in CATEGORY_ORDER:
             for f in FNS_BY_CAT.get(cat, []):
                 for m in METRICS_BY_FN.get(f["id"], []):
                     if not m.get("desktopSupportable"):
                         continue
-                    n += 1
                     ds = m.get("desktopSource") or {}
                     ed = ev_map.get(m["metricId"]) or {}
                     st = _ff_status(m, ed, pulling)
@@ -1781,65 +2100,122 @@ def server(input, output, session):
                     badge = ui.span(st, class_="ff-badge",
                                     style=f"background:{_FF_BADGE.get(st, '#eef1f6;color:#5a6478')};")
                     val = (ui.tags.b(ed["value_text"]) if st == "Available"
-                           else ui.span("—", style="color:#8a93a3;"))
+                           else ui.span("\u2014", style="color:#8a93a3;"))
                     src_url = ed.get("source_url") or ds.get("url")
                     src_name = (ed.get("source")
                                 or (urlparse(ds.get("url")).netloc if ds.get("url") else None)
-                                or "—")
+                                or "\u2014")
                     src = (ui.tags.a(src_name, {"href": src_url, "target": "_blank",
                                                 "rel": "noopener"}) if src_url else src_name)
+                    describes = (ui.span("describes the " + ed["anchor_label"], class_="ff-src-sub")
+                                 if ed.get("anchor_label") else None)
+                    fallback = (ui.span(ed["fallback_reason"], class_="ff-src-sub")
+                                if ed.get("fallback_reason") else None)
                     rows.append(ui.tags.tr(
                         ui.tags.td(cat, style=dim),
                         ui.tags.td(f["name"], style=dim),
                         ui.tags.td(m["name"]),
-                        ui.tags.td(ds.get("label") or "—", style="font-size:11px;color:#45506a;"),
+                        ui.tags.td(ds.get("label") or "\u2014", style="font-size:11px;color:#45506a;"),
                         ui.tags.td(badge, style="font-size:11px;"),
                         ui.tags.td(val, style="font-size:11px;color:#2f3a52;"),
-                        ui.tags.td(src, style="font-size:11px;")))
-        table = ui.tags.table(
-            ui.tags.thead(ui.tags.tr(ui.tags.th("Discipline"), ui.tags.th("Function"),
-                                     ui.tags.th("Metric"), ui.tags.th("Desktop evidence"),
-                                     ui.tags.th("Status"), ui.tags.th("Value"),
-                                     ui.tags.th("Data source"))),
-            ui.tags.tbody(*rows), class_="easi-tbl")
+                        ui.tags.td(src, describes, fallback, style="font-size:11px;")))
+        return rows, counts
 
-        # Live progress / summary (announced to assistive tech).
+    def _ff_pulling() -> bool:
+        return (pull_task.status() == "running" or engine_task.status() == "running"
+                or (_HAS_MAP and anchor_task.status() == "running"))
+
+    # suspend_when_hidden=False on every dialog output: they bind while the
+    # modal is still hidden (Bootstrap's fade), and a suspended output never
+    # resumes here.
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def ff_site():
+        d = delin() or {}
+        dl = d.get("delineation") or {}
+        if not dl:
+            return ui.div("Delineate a reach first.", class_="ff-site")
+        parts = [dl.get("gnis_name") or "(unnamed stream)", report._reach_id_str(dl)]
+        coords = report._coords_str(dl)
+        if coords:
+            parts.append(coords)
+        if dl.get("reach_length_ft") not in (None, "", "None"):
+            parts.append(_fmt_ft(dl.get("reach_length_ft")))
+        return ui.div(" \u00b7 ".join(parts), class_="ff-site")
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def ff_status():
+        ev_map = evidence()
+        status = pull_task.status()
+        engine_running = engine_task.status() == "running"
+        pulling = status == "running" or engine_running
+        done, total = _pull_prog.get("done", 0), _pull_prog.get("total", 0)
+        n = len(config.desktop_metrics())
+        _rows, counts = _ff_rows(ev_map, pulling)
         if engine_running:
             reactive.invalidate_later(1.0)
-            progress = ui.div("Preparing field forms… " + _engine_progress_text(_engine_prog),
-                              {"aria-live": "polite"}, class_="easi-instr")
+            text = "Preparing field forms\u2026 " + _engine_progress_text(_engine_prog)
         elif pulling:
-            progress = ui.div(f"Preparing field forms… pulling desktop evidence "
-                              f"({done} of {total}).",
-                              {"aria-live": "polite"}, class_="easi-instr")
+            reactive.invalidate_later(1.0)
+            text = f"Preparing field forms\u2026 pulling desktop evidence ({done} of {total})."
         elif status == "initial":
-            progress = ui.div(f"{n} of the {len(METRICS_BY_ID)} metrics can be evaluated "
-                              "from a desk before the site visit.",
-                              {"aria-live": "polite"}, class_="easi-instr")
+            text = (f"{n} of the {len(METRICS_BY_ID)} metrics can be evaluated from a desk "
+                    "before the site visit.")
         else:
             avail = counts.get("Available", 0)
-            progress = ui.div(f"Field forms ready: {avail} of {n} desktop metrics pulled. "
-                              "The rest are flagged for the field visit below.",
-                              {"aria-live": "polite"}, class_="easi-instr")
+            text = (f"{avail} of {n} desktop metrics pulled. The rest are flagged for the "
+                    "field visit.")
+        retry = None
+        if not pulling and status not in ("initial", "running"):
+            failed = status == "error"
+            try:
+                pull_task.result()
+            except Exception:  # noqa: BLE001
+                failed = True
+            if failed:
+                text = "The desktop evidence pull failed. " + text
+                retry = ui.input_action_button("ff_retry", "Retry pull",
+                                               class_="btn btn-sm btn-outline-secondary")
+        return ui.div(ui.span(text, {"aria-live": "polite"}), retry, class_="ff-status")
 
-        # Controls: a disabled "Preparing…" button while pulling, else Download + Retry.
-        if pulling:
-            controls = ui.tags.button("Preparing field forms…", {"disabled": "disabled"},
-                                      class_="btn btn-sm btn-secondary")
-        else:
-            controls = ui.TagList(
-                ui.download_button("dl_desktop_metrics", "Download Field Forms PDF",
-                                   class_="btn-sm btn-primary"),
-                ui.input_action_button("ff_retry", "Retry pull",
-                                       class_="btn btn-sm btn-outline-secondary ms-2"))
-        return ui.div(progress, table, ui.div(controls, class_="ff-actions mt-2"),
-                      id="sfari-desktop-metrics")
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def ff_table():
+        ev_map = evidence()
+        with reactive.isolate():
+            pulling = _ff_pulling()
+        rows, _counts = _ff_rows(ev_map, pulling)
+        return ui.tags.table(
+            ui.tags.thead(ui.tags.tr(ui.tags.th("Discipline"), ui.tags.th("Function"),
+                                     ui.tags.th("Metric"), ui.tags.th("Method"),
+                                     ui.tags.th("Status"), ui.tags.th("Value"),
+                                     ui.tags.th("Source"))),
+            ui.tags.tbody(*rows), class_="easi-tbl ff-table", id="sfari-desktop-metrics")
+
+    # The preview: the blank worksheet served inline by a session route.
+    def _ff_preview_route(request):
+        from starlette.responses import Response
+        pdf = report.build_field_forms_pdf()
+        return Response(pdf, media_type="application/pdf",
+                        headers={"Content-Disposition": "inline; filename=sfari-field-forms.pdf",
+                                 "Cache-Control": "no-store"})
+
+    _ff_preview_url = session.dynamic_route("field-forms-preview", _ff_preview_route)
+
+    @output(suspend_when_hidden=False)
+    @render.ui
+    def ff_preview():
+        return ui.div(
+            ui.tags.iframe({"src": _ff_preview_url, "title": "Field forms preview"},
+                           class_="ff-preview-frame"),
+            class_="ff-preview")
 
     @reactive.effect
     @reactive.event(input.ff_retry)
     def _ff_retry():
         with reactive.isolate():
-            d = delin()
+            d = _with_anchor(delin())
         ci = (d or {}).get("ctx_inputs")
         if not ci:
             ui.notification_show("Delineate a reach first.", type="warning", duration=3)
@@ -2016,9 +2392,13 @@ def server(input, output, session):
     def dl_pdf():
         yield report.build_pdf(delin() or {}, metric_scores(), function_scores(), evidence(), scored())
 
-    @render.download(filename=lambda: report.field_forms_filename(delin() or {}))
+    @render.download(filename=report.field_forms_filename())
+    def dl_field_forms():
+        yield report.build_field_forms_pdf()
+
+    @render.download(filename=lambda: report.desktop_metrics_filename(delin() or {}))
     def dl_desktop_metrics():
-        yield report.build_field_forms_pdf(delin() or {}, evidence())
+        yield report.build_desktop_metrics_pdf(delin() or {}, evidence())
 
     @reactive.effect
     @reactive.event(input.load_session)
@@ -2039,8 +2419,12 @@ def server(input, output, session):
         evidence.set(st.get("evidence") or {})
         xs_geom.set(st.get("cross_section"))
         se = d.get("siteEngine") if isinstance(d, dict) else None
-        engine_state.set({"status": "ok", "record": se, "reason": None} if se
-                         else {"status": "idle"})
+        engine_state.set({"status": "ok", "record": se, "reason": None}
+                         if se and se.get("status", "ok") == "ok"
+                         else dict(se) if se else {"status": "idle"})
+        anchor = d.get("siteAnchor") if isinstance(d, dict) else None
+        site_anchor.set(anchor)
+        evidence_reach.set(comid_anchor.legend_reach(anchor))
         if _HAS_MAP and d:
             for k in ("ws", "reach", "marker", "route"):
                 _remove_layer(k)

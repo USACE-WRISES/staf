@@ -11,9 +11,11 @@ scored:
     to the nearest covered downstream V2 reach with an NLDI hydrolocation
     raindrop trace, and the substitution is labeled (surrogate reach, routed
     distance, drainage-area ratio) in the UI, the report, and every export.
-  * refusal — when the surrogate drains more than ``DA_RATIO_MAX`` times the
-    clicked stream's area, EASI declines to score. A documented refusal is
-    more defensible than a deterministic wrong answer.
+  * refusal — only under the ``streamcat-legacy`` policy: when the surrogate
+    drains more than ``DA_RATIO_MAX`` times the clicked stream's area, that
+    policy declines to score. The default ``auto`` policy never refuses or
+    withholds (2026-09-06): the ratio rides the payload as provenance and
+    every borrowed metric says which reach it describes.
 
 The policy is fixed by the framework: no user-facing fork ever chooses between
 methods, so the same click produces the same result for every user. Routing
@@ -40,18 +42,20 @@ from .datasources import nhd_hr
 
 ANCHOR_SCHEMA_VERSION = 1
 
-# Published policy constants. DA_RATIO_MAX is provisional until the derivation
-# study (scripts/derive_da_ratio_threshold.py) lands its empirical value; it is
-# stamped into every anchor payload so a later change is visible in provenance.
+# Published policy constants. DA_RATIO_MAX bounds only the streamcat-legacy
+# refusal (2026-09-06): under auto the ratio is reported, never enforced. It is
+# stamped into every anchor payload so a later change is visible in provenance
+# (derivation evidence: scripts/derive_da_ratio_threshold.py).
 DA_RATIO_MAX = 10.0
 HR_SNAP_TOL_FT = 150.0
 ROUTING_METHOD = "nldi-hydrolocation-raindrop"
 
 # Watershed engine policy for streams outside the StreamCat lookup network.
-#   auto             the STAF site engine computes the exact watershed for the
+#   auto             the STAF site engine computes the HR reach watershed for the
 #                    eight watershed metrics; only COMID-keyed evidence rides
-#                    the labeled nearest covered reach, within the DA-ratio
-#                    bound, and the assessment completes either way.
+#                    the labeled nearest covered reach, whatever the DA ratio
+#                    (reported per metric, never enforced), and the assessment
+#                    completes with every metric scored.
 #   streamcat-legacy the pre-2026-09 behavior: every metric rides the nearest
 #                    covered reach and the site is refused past the bound.
 #                    StreamCurves pins its reference screen to this value so
@@ -228,11 +232,14 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
     ``nhd_hr.nearest_point_on_hr_lines``. Returns one of:
 
       * ``{"anchor": payload}`` — routed; ready to delineate. Under the
-        ``auto`` policy this is the answer even past the DA-ratio bound: the
-        payload's ``routing`` then carries ``declined``, ``declineCode`` and
-        ``declineMessage`` and the assessment withholds COMID-keyed evidence.
+        ``auto`` policy this is the answer whatever the DA ratio (and when the
+        ratio is unknown): ``routing`` carries ``daRatio`` and ``daRatioLimit``
+        as provenance with ``declined`` False, and the assessment scores the
+        COMID-keyed metrics from the covered reach, each labeled.
       * ``{"refused": True, "code", "message", "anchor"}`` — the
-        ``streamcat-legacy`` policy's refusal past the bound
+        ``streamcat-legacy`` policy's refusal past the bound (or with the
+        ratio unknown); its ``anchor["routing"]`` carries ``declined`` True
+        with the code and the message
       * ``{"error": "snap_service_error", "detail"}`` — retryable outage
       * ``{"error": "no_stream_found"}`` — the raindrop found no V2 reach
 
@@ -273,6 +280,10 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
         return {"error": "no_stream_found"}
 
     attrs = delineation.flowline_attrs(comid)
+    # A fabric outage leaves no drainage area, which is not the same fact as a
+    # reach that has none: record it (the vendored engine's `attrsError`) and,
+    # under the legacy policy, retry instead of refusing the site for good.
+    attrs_error = attrs.get("_flowline_error")
     scored = {
         "network": "nhdplus-v2", "comid": int(comid),
         "gnisName": attrs.get("gnis_name"),
@@ -294,6 +305,8 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
     routing = {"method": ROUTING_METHOD, "routedDistanceFt": routed_ft,
                "daRatio": da_ratio, "daRatioLimit": DA_RATIO_MAX,
                "declined": False}
+    if attrs_error:
+        routing["attrsError"] = str(attrs_error)
     legacy = policy == POLICY_STREAMCAT_LEGACY
     notes = ([("Scored at the nearest downstream reach of the covered network.")]
              if legacy else
@@ -302,13 +315,22 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
     anchor = _payload("hrSurrogate", clicked_lat, clicked_lon,
                       clicked_stream=clicked_stream, scored_reach=scored,
                       routing=routing, notes=notes)
+    if not legacy:
+        # The auto policy (2026-09-06): the ratio is provenance, never a gate.
+        # The covered reach supplies the COMID-keyed metrics whatever it
+        # drains, and each of those rows names the reach and the ratio.
+        return {"anchor": anchor}
     limit = int(DA_RATIO_MAX) if float(DA_RATIO_MAX).is_integer() else DA_RATIO_MAX
 
-    # Never guess past the bound. Missing drainage area on either side means
-    # the ratio bound cannot be checked. Under the legacy policy the site is
-    # refused with the reason; under auto the routing is declined and only
-    # the COMID-keyed evidence is withheld (the exact watershed still comes
-    # from the site engine).
+    # The legacy policy never guesses past the bound. Missing drainage area on
+    # either side means the ratio bound cannot be checked, and the site is
+    # refused with the reason (the partial anchor rides along, declined, so
+    # exports can say why).
+    if da_ratio is None and attrs_error:
+        # the service did not answer: a retryable error, never the permanent
+        # refusal a reach with no published drainage area earns (2026-09-07)
+        return {"error": "attrs_service_error", "detail": str(attrs_error),
+                "anchor": anchor}
     if da_ratio is None:
         routing["declined"] = True
         routing["declineCode"] = "surrogate_da_unavailable"
@@ -317,14 +339,12 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
             "nearest covered reach, so the substitution limit cannot be "
             "checked. Reach-keyed evidence (low flow, substrate, biological "
             "integrity) is unavailable here.")
-        if legacy:
-            return {"refused": True, "code": "surrogate_da_unavailable",
-                    "message": ("EASI can't check this stream against its "
-                                "substitution limit. Drainage area is unavailable "
-                                "for the clicked stream or the nearest covered "
-                                "reach. Choose a nearby larger stream."),
-                    "anchor": anchor}
-        return {"anchor": anchor}
+        return {"refused": True, "code": "surrogate_da_unavailable",
+                "message": ("EASI can't check this stream against its "
+                            "substitution limit. Drainage area is unavailable "
+                            "for the clicked stream or the nearest covered "
+                            "reach. Choose a nearby larger stream."),
+                "anchor": anchor}
     if da_ratio > DA_RATIO_MAX:
         routing["declined"] = True
         routing["declineCode"] = "surrogate_da_ratio_exceeded"
@@ -332,15 +352,13 @@ def route_from_hr(clicked_lat: float, clicked_lon: float,
             f"The nearest covered reach drains {da_ratio} times the area of "
             f"the clicked stream (limit {limit}). Reach-keyed evidence (low "
             "flow, substrate, biological integrity) is unavailable here.")
-        if legacy:
-            return {"refused": True, "code": "surrogate_da_ratio_exceeded",
-                    "message": (f"EASI can't score this stream. The nearest stream "
-                                f"in the scoring network drains {da_ratio} times "
-                                f"the area of the stream you clicked (limit "
-                                f"{limit}). Choose a larger stream, or use SFARI "
-                                f"or DEEP for this site."),
-                    "anchor": anchor}
-        return {"anchor": anchor}
+        return {"refused": True, "code": "surrogate_da_ratio_exceeded",
+                "message": (f"EASI can't score this stream. The nearest stream "
+                            f"in the scoring network drains {da_ratio} times "
+                            f"the area of the stream you clicked (limit "
+                            f"{limit}). Choose a larger stream, or use SFARI "
+                            f"or DEEP for this site."),
+                "anchor": anchor}
     return {"anchor": anchor}
 
 
@@ -404,8 +422,9 @@ def resolve_anchor(lat: float, lon: float, *,
          points (same endpoint, same comid, same snapped coordinates).
       2. Otherwise, an HR flowline within ``snap_tol_ft`` identifies which
          stream the point is on, and that stream routes via ``route_from_hr``
-         (the DA-ratio policy decides; a same-stream match rides through with
-         a ratio near 1).
+         (the policy decides what a DA ratio past the bound means: legacy
+         refuses, auto reports it; a same-stream match rides through with a
+         ratio near 1).
       3. Otherwise, a raindrop comid with NO mapped line near the point is the
          wide-river / imprecise-coordinate case: no different stream is
          identifiable, so the reach the point drains to is accepted exactly as

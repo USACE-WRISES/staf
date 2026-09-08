@@ -1,6 +1,6 @@
 """Vendor the STAF site computation engine into StreamCurves.
 
-StreamCurves computes exact-watershed predictor columns with the engine in-process (apps never import
+StreamCurves computes HR reach watershed predictor columns with the engine in-process (apps never import
 ``libs/`` at runtime; each Posit deployment must be self-contained). This
 copies ``libs/site_engine/site_engine`` (including the ``_extracted`` modules
 and data) into ``apps/stream-curves/streamcurves/_vendor/site_engine``.

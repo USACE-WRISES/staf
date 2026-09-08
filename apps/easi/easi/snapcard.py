@@ -1,25 +1,22 @@
 """The Identify-step card for a click on a stream outside the StreamCat network.
 
 Pure copy, no Shiny: the app renders the lines and puts the tip behind its
-info icon. Three short lines say what happened, what EASI will do, and the
-one caveat; the network, the numbers (drainage-area ratio, COMID, distance),
-and the reasoning live in the tip so the card never reads as an error. The routing payload is the
-``siteAnchor`` from ``easi.routing.route_from_hr``.
+info icon. Three short lines say what happened, what EASI will do, and which
+reach supplies the reach evidence (one line, the legend's vocabulary); the
+COMID and the drainage-area ratio live in the tip, two sentences, so the card
+never reads as an error (2026-09-07: the tip lost its paragraph about what
+scores at the point). The routing payload is the ``siteAnchor`` from
+``easi.routing.route_from_hr``. Since 2026-09-06 the covered reach supplies
+the three metrics whatever it drains, so the card has no warning line.
 """
 from __future__ import annotations
 
 from html import escape
 from typing import Any
 
+from . import basin
+
 REACH_METRICS = "low flow, substrate, and biological integrity"
-
-
-def _fmt_limit(value: Any) -> Any:
-    try:
-        f = float(value)
-        return int(f) if f.is_integer() else f
-    except (TypeError, ValueError):
-        return value
 
 
 def _ft(value: Any) -> str | None:
@@ -30,59 +27,36 @@ def _ft(value: Any) -> str | None:
 
 
 def hr_snap_card(anchor: dict) -> dict:
-    """``{"lines": [(class, text), ...], "tip_html": str, "declined": bool}``.
+    """``{"lines": [(class, text), ...], "tip_html": str}``.
 
-    ``class`` is the ``easi-snap-note`` modifier (``ok``, ``warn``, or ``""``).
-    Every line is a plain sentence with no em dash and no semicolon.
+    ``class`` is the ``easi-snap-note`` modifier (``ok`` or ``""``). Every
+    line is a plain sentence with no em dash and no semicolon.
     """
     anchor = anchor or {}
     clicked = anchor.get("clickedStream") or {}
     scored = anchor.get("scoredReach") or {}
     routing = anchor.get("routing") or {}
-    declined = bool(routing.get("declined"))
 
     name = clicked.get("gnisName") or "an unnamed stream"
     snap_ft = _ft(clicked.get("snapDistFt"))
     where = f"Snapped to {name} ({snap_ft} away)." if snap_ft else f"Snapped to {name}."
-    line1 = ("ok", f"✓ {where}")
-    line2 = ("", "The STAF site engine calculates the exact watershed, usually in "
+    line1 = ("ok", f"\u2713 {where}")
+    line2 = ("", "The STAF site engine calculates the HR reach watershed, usually in "
                  "under a minute.")
 
     reach_name = scored.get("gnisName") or "an unnamed reach"
     comid = scored.get("comid")
     reach_id = f"{reach_name} (COMID {comid})" if comid is not None else reach_name
     routed = _ft(routing.get("routedDistanceFt"))
-    ratio = routing.get("daRatio")
-    limit = _fmt_limit(routing.get("daRatioLimit") or 10)
+    ratio = basin.fmt_ratio(routing.get("daRatio"))
 
-    if declined:
-        line3 = ("warn", "Three reach metrics are unavailable here.")
-        if routing.get("declineCode") == "surrogate_da_unavailable" or ratio is None:
-            why = ("Drainage area is unknown for the clicked stream or the nearest "
-                   "covered reach, so the substitution limit cannot be checked and "
-                   "the three metrics stay unavailable.")
-        else:
-            why = (f"The nearest covered reach, {reach_id}, drains {ratio} times "
-                   f"this stream. The limit is {limit}, so EASI leaves the three "
-                   "metrics unavailable rather than borrow them from a much larger "
-                   "stream.")
-    else:
-        tail = f", {routed} downstream." if routed else " downstream."
-        line3 = ("", f"Three reach metrics come from {reach_name}{tail}")
-        ratio_txt = (f" It drains {ratio} times this stream (limit {limit})."
-                     if ratio is not None else "")
-        why = (f"They describe {reach_id}"
-               + (f", {routed} downstream" if routed else "")
-               + f", the nearest reach on the StreamCat network.{ratio_txt}")
+    # One line at the pane's width, in the legend's words ("Reach evidence").
+    line3 = ("", f"Reach evidence: {reach_name}, {routed + ' ' if routed else ''}downstream.")
+    metrics = REACH_METRICS[0].upper() + REACH_METRICS[1:]
+    why = (f"{metrics} come from {reach_id}, the nearest StreamCat reach"
+           + (f", {routed} downstream" if routed else "") + "."
+           + (f" It drains {ratio} times this stream." if ratio else ""))
 
-    tip_html = (
-        '<div class="easi-tip-title">Reach-keyed evidence</div>'
-        '<div class="easi-tip-sec">This stream is not on the StreamCat network. Three '
-        f'metrics need a reach that is: {escape(REACH_METRICS)}.</div>'
-        f'<div class="easi-tip-sec">{escape(why)}</div>'
-        '<div class="easi-tip-sec">Everything else scores here: the eight watershed '
-        'metrics from the exact watershed, the reach metrics on the clicked stream, '
-        'and the point metrics at the point. SFARI and DEEP can assess this site in '
-        'full.</div>'
-    )
-    return {"lines": [line1, line2, line3], "tip_html": tip_html, "declined": declined}
+    tip_html = ('<div class="easi-tip-title">Reach evidence</div>'
+                f'<div class="easi-tip-sec">{escape(why)}</div>')
+    return {"lines": [line1, line2, line3], "tip_html": tip_html}

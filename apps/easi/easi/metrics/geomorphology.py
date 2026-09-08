@@ -1,7 +1,7 @@
 """Geomorphology-discipline EASI metric adapters."""
 from __future__ import annotations
 
-from .. import screening_methods, watershed
+from .. import geomorph, screening_methods, watershed
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
 
@@ -45,11 +45,14 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
             note="Artificial channelization is directly identified; current adjustment severity is not measured.",
             scoring=ev.trace)
 
+    source = base.xs_source(geom)
+    reach_n = int((geom.get("reach") or {}).get("n") or 0)
+    bhr_stats = (geom.get("reach") or {}).get("bank_height_ratio") or {}
     ev = screening_methods.evaluate(
         CHANNEL_EVOL_ID, {"bhr": bhr, "er": er, "fcodeContext": ctx.fcode},
         input_meta={
-            "bhr": {"source": "USGS 3DEP representative cross section"},
-            "er": {"source": "USGS 3DEP representative cross section"},
+            "bhr": {"source": source},
+            "er": {"source": source},
             "fcodeContext": {"source": "NHDPlus FCODE"},
         },
         confidence=confidence, source_tier="screening-proxy",
@@ -61,14 +64,21 @@ def channel_evolution(ctx: AnalysisContext) -> MetricResult:
             confidence, scoring=ev.trace)
     note = ("Low-confidence susceptibility proxy; BHR and ER are channel-evolution clues, "
             "not a formal stage assessment. Observed stage evidence supersedes this result.")
+    if reach_n >= 2:
+        note += " " + base.XS_REACH_NOTE
+    cap_note = base.xs_cap_note(bhr_stats)
+    if cap_note:
+        note += " " + cap_note
     if edge:
         note += " Flood-prone width reached the DEM buffer edge; ER may be underestimated."
+    reach_txt = f", reach medians of {reach_n} sections" if reach_n >= 2 else ""
+    bhr_txt = geomorph.fmt_bhr(bhr, bhr_stats.get("median_capped"), words=True)
     return MetricResult(
         CHANNEL_EVOL_ID, value={"bhr": bhr, "er": er},
-        value_text=(f"channel-adjustment susceptibility (BHR {float(bhr):.2f}, "
-                    f"ER {float(er):.2f}), {ev.trace.get('governingInput')} governs"),
+        value_text=(f"channel-adjustment susceptibility (BHR {bhr_txt}, "
+                    f"ER {float(er):.2f}{reach_txt}), {ev.trace.get('governingInput')} governs"),
         rating=ev.rating, confidence=confidence,
-        source="USGS 3DEP representative cross section + NHDPlus FCODE",
+        source=f"{source} + NHDPlus FCODE",
         note=note,
         scoring=ev.trace)
 
@@ -159,9 +169,8 @@ def substrate(ctx: AnalysisContext) -> MetricResult:
     if ev.rating is None:
         return unavailable(
             SUBSTRATE_ID,
-            base.comid_evidence_note(
-                ctx, "eligible NRSA embeddedness and both StreamCat SED components "
-                     "are unavailable"),
+            "eligible NRSA embeddedness and both StreamCat SED components "
+            "are unavailable",
             "L", scoring=ev.trace)
     value = float(ev.combined_value)
     return MetricResult(
@@ -179,9 +188,12 @@ def bank_erosion(ctx: AnalysisContext) -> MetricResult:
     """Low-confidence BHR bank-instability susceptibility fallback."""
     geom = ctx.extras.get("reach_geomorph") or {}
     bhr = geom.get("bank_height_ratio")
+    reach = geomorph.describe_reach(geom.get("reach"), "bank_height_ratio")
+    bhr_stats = (geom.get("reach") or {}).get("bank_height_ratio") or {}
+    source = base.xs_source(geom)
     ev = screening_methods.evaluate(
         BANK_EROSION_ID, {"bhr": bhr},
-        input_meta={"bhr": {"source": "USGS 3DEP representative cross section"}},
+        input_meta={"bhr": {"source": source}},
         confidence="L", source_tier="screening-proxy",
         evidence_family="incision_geometry", used_fallback=True)
     if ev.rating is None:
@@ -190,12 +202,17 @@ def bank_erosion(ctx: AnalysisContext) -> MetricResult:
             "bank-height ratio unavailable for the bank-instability susceptibility proxy",
             "L", scoring=ev.trace)
     warning = " ".join(ev.trace.get("warnings") or [])
+    cap_note = base.xs_cap_note(bhr_stats)
+    bhr_txt = geomorph.fmt_bhr(bhr, bhr_stats.get("median_capped"), words=True)
     return MetricResult(
         BANK_EROSION_ID, value=float(bhr),
-        value_text=f"bank-instability susceptibility from BHR {float(bhr):.2f}",
+        value_text=(f"bank-instability susceptibility from BHR {bhr_txt}"
+                    + (f", {reach}" if reach else "")),
         rating=ev.rating, confidence="L",
-        source="USGS 3DEP representative cross section",
+        source=source,
         note=((warning + " ") if warning else "")
              + ("BHR does not detect armoring or directly measure erosion. Complete observed "
-                "erosion and armoring percentages supersede this proxy."),
+                "erosion and armoring percentages supersede this proxy.")
+             + ((" " + base.XS_REACH_NOTE) if reach else "")
+             + ((" " + cap_note) if cap_note else ""),
         scoring=ev.trace)
