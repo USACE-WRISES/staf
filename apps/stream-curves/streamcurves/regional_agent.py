@@ -1476,6 +1476,20 @@ def metric_annotations(*, intended, curve_rows, metric_config, sample_sizes,
                 "comparison rather than measured function.")
         if cfg.get("caveat"):
             caveats.append(str(cfg["caveat"]))
+        # A flagged curve carries its flag to the scorer (2026-09-08). Coverage
+        # now turns on whether DEEP can interpolate the curve rather than on the
+        # status word, so the status has to travel as prose beside the number.
+        status = str(row.get("curve_status") or "complete")
+        if status == "degenerate_q25":
+            caveats.append(
+                "The reference pool's lower quartile for this metric is at or below "
+                "zero, so the curve is a three-point fallback rather than a fitted "
+                "shape: the bands turn on very small differences and should be read "
+                "as a coarse sort, not a measurement.")
+        elif status != "complete":
+            caveats.append(
+                f"The curve fit flagged this metric ({status}): read the condition "
+                "band, not the point value.")
         conf = confidence_map.get(mk) or {}
         lo, hi = row.get("min_val"), row.get("max_val")
         ref_range = None
@@ -2037,7 +2051,7 @@ def assemble(evidence: dict, *,
             optimum_form=str(metric_config.get(mk, {}).get("curve_form")) == "optimum",
         )
 
-    # --- Bundle (in-scope, complete curves only) ---
+    # --- Bundle (every in-scope curve DEEP can interpolate; SELECT-03) ---
     aid = assessment_id or library.slugify(name)
     a_name = assessment_name or f"{name} reference assessment"
     region = {"kind": "ecoregion", "code": str(l3_code), "name": name}

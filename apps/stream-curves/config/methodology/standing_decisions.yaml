@@ -37,7 +37,10 @@ meta:
   # re-affirmed unchanged under 0.10-provisional: v0.10 moved the reference-panel
   # protocol, the screening COMID mode and the wetland metric, none of
   # which is a review-queue class decision. policy_version stays 1.0.
-  methodology_version: "0.10-provisional"
+  # re-affirmed unchanged under 0.11-provisional: v0.11 moved the function
+  # coverage gate, a publish rule rather than a review-queue class decision.
+  # Accepting a flagged curve stays an owner-only decision, recorded per run.
+  methodology_version: "0.11-provisional"
   approved_on: "2026-08-22"
   authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote."
   rationale_origin: "standing_policy"
