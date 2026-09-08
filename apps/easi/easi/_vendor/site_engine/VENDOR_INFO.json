@@ -1,19 +1,19 @@
 {
  "data_manifest": {
-  "_extracted/EXTRACTS_INFO.json": "84b43b72499389286239180f7be06601c85b2ba5a133252071d4975b9a7d5d79",
+  "_extracted/EXTRACTS_INFO.json": "77683524dc4edb47eac6a0975b8f9ae9f2647d403a1e2bcb7257581bc50ad869",
   "_extracted/data/ecoregions_l3.geojson": "e91f411d4976ef44b4247e3668b09269bd0dbf8e56c5402318b91518d04e865e",
   "_extracted/data/physio_divisions.geojson": "41f147243333c1b37f448ea4cbade3c7411424794899bdaafc1017a4804b1ff7",
   "data/BFI_GRID_INFO.json": "bb3a6bbaa9cc02bc6fa7576291c3b2185f5fc876808facc0a7dd087a874f1ab9",
   "data/bfi48grd.tif": "b7f483bd0de8a4487969cc579f5367953434f06919d5001de04880e2e4dfae87"
  },
- "engine_version": "0.4.0",
+ "engine_version": "0.4.1",
  "manifest": {
-  "__init__.py": "0cc0246cac44c3f7cc01e20fa76115b9adde82a03a7b9e51beb66f12376dd277",
+  "__init__.py": "1b0cbc61c1635d0003d126d8a07e9d7be8300d145d38fb929a468d05c7abea04",
   "_extracted/__init__.py": "6012078cd7102fea6650e5d8b7fbb8b926a431b8e73ad071d0c50bd0774aff18",
   "_extracted/bieger.py": "abbc6c9640e19b5ce28c5dc4acedf9f84ee0483c44df099389309694ad38b10e",
   "_extracted/config.py": "6729cc5c4fc3fef1d851e1f20c9d7fb4ca234d1d3003bd3c08d89d36898fa0fc",
-  "_extracted/geomorph.py": "c1c01766aff49c61fc4c5310cce7a0072be13cfed2440234f8d298335173bad1",
-  "_extracted/threedep.py": "ae36f4c21a6e1c3c32f0ce9edccca0667c3555bb07fb60a8c18d674c83c11122",
+  "_extracted/geomorph.py": "3e1937a91b94758381dcfb931d76f3edc1e7a039f87cc59fe34048dac716075f",
+  "_extracted/threedep.py": "143281de0ab99f5f27fc8cd6aeda5d36065eb01a9d36395f277f72262d0db895",
   "anchor.py": "96958ad4fb615a0048cb6612d78b807f66f981d22de35b4ef2437949cfb5e62e",
   "context.py": "e9e5b47b87ac201e4aa0a102eab902bd341c33b050c6c951c978b2e17e9d8e2e",
   "delineate.py": "adf82f135174374a34c161ee7d9450e350c13e10a725e6b57f1b301fdcb606cf",
@@ -24,7 +24,7 @@
   "metrics/baseflow.py": "34f5136d4a1b93825f97fdbd63138d949787ef8f643ef6a43aa1e24e3a20a612",
   "metrics/common.py": "4222ca8a720c91241ba0c9d91ef8ca67b349544aff6dfbff9d3bfe093d842c83",
   "metrics/dams.py": "13712aa26b8f21e2fc6ff9f2edf78efd1b7dd34aa5ce9111bfe0552d009ba0c9",
-  "metrics/landcover.py": "5790a0e5b59eb5432bc4b3a9bbeaa2c08a9976fcaaeedb51ebad27105a9f2f69",
+  "metrics/landcover.py": "e6b1f786b0f91e4336cbabd3dfb312bc94022f026187eb58798624a46bf915ab",
   "metrics/roads.py": "9042e4956c208c92240762079f7fddc9515b9922f52b9fcdb0b98b497eee5f23",
   "metrics/runoff.py": "175c12266c7b2d4d68b17efaad3f8fc7bc9e62da31b617642330d00a4e9100bd",
   "metrics/soils.py": "16aa41e5facb5322b1e86128c15a21b241d6ab835a2c2e73d55f13df10ebc543",

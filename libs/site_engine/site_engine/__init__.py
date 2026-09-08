@@ -15,7 +15,13 @@ on first use.
 from __future__ import annotations
 
 ENGINE_ID = "site-engine"
-ENGINE_VERSION = "0.4.0"
+# 0.4.1 (2026-09-08): NLCD land cover outside the product's footprint.
+# A watershed straddling the Canadian border raised inside cover_statistics
+# and lost the whole support; one in Alaska or Hawaii raised nothing and
+# reported zero percent of every class. The covered path is unchanged; a
+# second pass scores the covered cells alone and reports the fraction, and
+# a polygon with no covered cell yields no value rather than a zero.
+ENGINE_VERSION = "0.4.1"
 
 from . import naming  # noqa: E402,F401  (pure vocabulary module, cheap import)
 
