@@ -301,16 +301,17 @@ def uncovered_functions_from_mapping(mapping, metric_config,
 
 
 def _completed_metric_candidates_status(cm) -> tuple[bool, bool]:
-    """(has_candidates, has_complete): does a completed_metrics entry hold any
-    curve-row candidate at all, and does any of them count as complete? Mirrors
-    deep_collect_curve_rows' candidate gathering (phase4_curve_rows first, the
-    stratum_results fallback only when those are empty) and its default of
-    "complete" when curve_status is absent/NA."""
+    """(has_candidates, has_exportable): does a completed_metrics entry hold any
+    curve-row candidate at all, and does any of them carry points DEEP can
+    interpolate? Mirrors deep_collect_curve_rows' candidate gathering
+    (phase4_curve_rows first, the stratum_results fallback only when those are
+    empty) and, since 2026-09-08, its export rule: the points decide, not the
+    status. A flagged curve with a usable seed exports and therefore covers; a
+    curve with no points does not, whatever its status says."""
     rows = (cm or {}).get("phase4_curve_rows")
     if isinstance(rows, pd.DataFrame) and len(rows) > 0:
-        if "curve_status" not in rows.columns:
-            return True, True
-        return True, bool((rows["curve_status"].fillna("complete") == "complete").any())
+        return True, any(deep_points_from_row(dict(rows.iloc[i])) is not None
+                         for i in range(len(rows)))
     sr = (cm or {}).get("stratum_results")
     has_candidates = False
     if isinstance(sr, dict):
@@ -321,10 +322,7 @@ def _completed_metric_candidates_status(cm) -> tuple[bool, bool]:
                 continue
             if isinstance(cr, pd.DataFrame) and len(cr) > 0:
                 has_candidates = True
-                if "curve_status" not in cr.columns:
-                    return True, True
-                v = cr.iloc[0].get("curve_status")
-                if _is_na(v) or str(v) == "complete":
+                if deep_points_from_row(dict(cr.iloc[0])) is not None:
                     return True, True
     return has_candidates, False
 
@@ -339,17 +337,16 @@ def function_coverage_quick(completed_metrics, mapping, exceptions=None) -> Opti
     * returns None exactly when ``deep_collect_curve_rows`` would come back
       empty (which makes ``build_bundle_from_state`` raise and the snapshot's
       coverage read None: nothing to judge yet);
-    * a metric covers its mapped functions when any of its candidate rows is
-      complete (missing ``curve_status`` defaults to complete), matching the
-      exporter's pick-then-skip;
+    * a metric covers its mapped functions when any of its candidate rows
+      carries points DEEP can interpolate, which is the exporter's own rule;
     * unmapped or non-canonical function labels add nothing;
     * exceptions run through the same ``function_coverage`` /
       ``validate_coverage_exceptions``, so shape and exclusion semantics are
       identical.
 
-    One documented divergence: curve points are not parsed here, so a complete
-    row whose points fail extraction counts covered. Advisory-only drift; the
-    publish gate (library.publish_version) still judges the real bundle.
+    The divergence this once carried is gone (2026-09-08): points are parsed
+    here too, so a row whose points fail extraction reads uncovered in both.
+    The publish gate (library.publish_version) still judges the real bundle.
     """
     lookup = deep_function_lookup(deep_read_staf_crosswalk())
     by_metric: dict[str, list[str]] = {}
@@ -594,9 +591,14 @@ def build_deep_assessment_bundle(
         if raw_mk is None or _is_na(raw_mk):
             continue
         mk = str(raw_mk)
-        if deep_default(row.get("curve_status"), "complete") != "complete":
-            skipped.append(mk)
-            continue
+        # The points decide, not the status (2026-09-08, owner decision). What
+        # a metric needs in order to score is a curve DEEP can interpolate, and
+        # deep_points_from_row answers exactly that: a flagged three-point seed
+        # answers yes, a curve with no points answers no and is skipped as it
+        # always was. The flag is not lost. It rides on the entry as
+        # ``curveStatus`` and as a caveat, and the curve stays open in
+        # StreamCurves' own review until a reviewer finalizes it by name.
+        status = str(deep_default(row.get("curve_status"), "complete"))
         points = deep_points_from_row(row)
         if points is None:
             skipped.append(mk)
@@ -636,6 +638,12 @@ def build_deep_assessment_bundle(
                 "points": points,
             },
         }
+
+        # A curve the fit flagged says so in the bundle (2026-09-08). Additive,
+        # so an older DEEP ignores it, and inside metricsByFunction, so the same
+        # curve published flagged and unflagged are different statements.
+        if status != "complete":
+            base_entry["curveStatus"] = status
 
         # Train/serve provenance per curve (2026-09-02): a scored landscape
         # column the STAF site engine recomputed carries value_source, and that
@@ -727,7 +735,7 @@ def build_deep_assessment_bundle(
 
     if len(fn_blocks) == 0:
         raise ValueError(
-            "DEEP export: no complete, mappable curves to export. Finalize at least "
+            "DEEP export: no exportable, mappable curves. Finalize at least "
             "one metric and confirm its discipline/function mapping."
         )
 

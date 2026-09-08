@@ -286,7 +286,11 @@ def test_metric_reuse_across_functions_and_block_dedupe():
     assert pop[0]["assignmentOrigin"] == "additional-function"
 
 
-def test_unmapped_and_incomplete_metrics_are_skipped(caplog):
+def test_unmapped_labels_and_pointless_curves_are_skipped(caplog):
+    """What keeps a metric out of the bundle: no function label, a label that is
+    not a canonical STAF function, or a curve with no points. A flagged status
+    does not (methodology 0.11): "notdone" has points, so it exports and carries
+    its flag."""
     rows = {
         "good": mk_row("good", [0, 1], [0, 1], True),
         "nolabel": mk_row("nolabel", [0, 1], [0, 1], True),
@@ -305,8 +309,10 @@ def test_unmapped_and_incomplete_metrics_are_skipped(caplog):
     )
     with caplog.at_level(logging.WARNING, logger="streamcurves"):
         b = build_deep_assessment_bundle(rows, mapping, {}, {})
-    ids = [m["metricId"] for blk in b["metricsByFunction"] for m in blk["metrics"]]
-    assert ids == ["spring-good"]
+    metrics = [m for blk in b["metricsByFunction"] for m in blk["metrics"]]
+    assert [m["metricId"] for m in metrics] == ["spring-good", "spring-notdone"]
+    assert "curveStatus" not in metrics[0]
+    assert metrics[1]["curveStatus"] == "insufficient_data"
     warned = " ".join(r.getMessage() for r in caplog.records)
     assert "not a canonical STAF function" in warned
     assert "nolabel" in warned
@@ -314,12 +320,15 @@ def test_unmapped_and_incomplete_metrics_are_skipped(caplog):
 
 
 def test_no_exportable_curves_raises():
-    rows = {"m": dict(mk_row("m", [0, 1], [0, 1], True), curve_status="insufficient_data")}
+    """Nothing DEEP can interpolate: an empty curve, which is what
+    curve_status degenerate_curve always is."""
+    rows = {"m": dict(mk_row("m", [0, 1], [0, 1], True),
+                      curve_status="degenerate_curve", curve_points=None)}
     mapping = pd.DataFrame(
         {"metric_key": ["m"], "discipline": ["Hydrology"],
          "function_label": ["Catchment hydrology"], "sort_order": [1]}
     )
-    with pytest.raises(ValueError, match="no complete, mappable curves to export"):
+    with pytest.raises(ValueError, match="no exportable, mappable curves"):
         build_deep_assessment_bundle(rows, mapping, {}, {})
 
 
