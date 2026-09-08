@@ -163,6 +163,7 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
                   enable_policies: Optional[list[str]] = None,
                   dataset_id: Optional[str] = None,
                   predictor_source: Optional[str] = None,
+                  reference_frame: Optional[str] = None,
                   reviewer_decisions: Optional[Path | str] = None,
                   coverage_exceptions: Optional[Path | str] = None,
                   source_citation: str = "",
@@ -191,6 +192,10 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
         argv += ["--enable-policy", str(pid)]
     if dataset_id:
         argv += ["--nrsa-dataset", str(dataset_id)]
+    # Always explicit, like the dataset: the frame decides which stations may
+    # enter the reference population (wadeable is stream order 1 to 5), so the
+    # recorded argv has to say which one this run drew from (2026-09-07).
+    argv += ["--reference-frame", str(reference_frame or REFERENCE_FRAME_DEFAULT)]
     if predictor_source and predictor_source != "streamcat":
         argv += ["--predictor-source", str(predictor_source)]
     if reviewer_decisions:
@@ -200,6 +205,70 @@ def stage_command(l3_code: str, name: str, out_dir: Path | str, *,
         # rather than being patched afterwards in the app.
         argv += ["--coverage-exceptions", str(coverage_exceptions)]
     return argv
+
+
+def frame_counts(sites: pd.DataFrame, l3_code: str, *,
+                 max_stream_order: Optional[int] = None) -> dict:
+    """``{"n_total", "n_in_frame", "n_out_of_frame", "by_order"}`` for one region.
+
+    What the reference frame will do to this region's stations, before the build
+    runs, so the count is on the page rather than only in the run log
+    (2026-09-07). Counts stations, never visits, and treats an unresolved order
+    as in frame only when the station's protocol is wadeable, exactly as
+    ``nrsa_dataset`` does.
+    """
+    out = {"n_total": 0, "n_in_frame": 0, "n_out_of_frame": 0, "by_order": {}}
+    if sites is None or not len(sites) or "us_l3code" not in sites.columns:
+        return out
+    rows = sites[sites["us_l3code"].astype(str).str.strip() == str(l3_code).strip()]
+    key = "station_key" if "station_key" in rows.columns else "site_id"
+    if key in rows.columns:
+        rows = rows.drop_duplicates(key)
+    out["n_total"] = int(len(rows))
+    if max_stream_order is None or "comid" not in rows.columns:
+        out["n_in_frame"] = out["n_total"]
+        return out
+    orders = nrsa_dataset.stream_orders()
+    protocols = (rows["protocol"].astype("string").str.upper()
+                 if "protocol" in rows.columns else None)
+    by_order: dict[str, int] = {}
+    n_in = 0
+    for i, (_, rec) in enumerate(rows.iterrows()):
+        order = None
+        try:
+            comid = rec.get("comid")
+            if comid is not None and pd.notna(comid) and int(comid) > 0:
+                order = orders.get(int(comid))
+        except (TypeError, ValueError):
+            order = None
+        if order is not None:
+            keep = order <= float(max_stream_order)
+            label = str(int(order))
+        else:
+            keep = bool(protocols is not None and protocols.iloc[i] == "WADEABLE")
+            label = "unknown"
+        if keep:
+            n_in += 1
+            by_order[label] = by_order.get(label, 0) + 1
+    out["n_in_frame"] = n_in
+    out["n_out_of_frame"] = out["n_total"] - n_in
+    out["by_order"] = by_order
+    return out
+
+
+def frame_summary_text(counts: dict, frame: Optional[str] = None,
+                       max_order: Optional[int] = None) -> str:
+    """One sentence for the builder page under the form."""
+    if str(frame or REFERENCE_FRAME_DEFAULT).lower() == "all":
+        return (f"Reference frame: every stream. All {counts.get('n_total', 0)} "
+                "stations in this region can enter the screen, large rivers included.")
+    order = int(max_order or 5)
+    n_out = int(counts.get("n_out_of_frame") or 0)
+    tail = ("" if not n_out else
+            f" {n_out} station(s) sit above order {order} and will not be screened.")
+    return (f"Reference frame: wadeable, stream order 1 to {order} (rule DATA-10). "
+            f"{counts.get('n_in_frame', 0)} of {counts.get('n_total', 0)} stations "
+            f"in this region are in frame.{tail}")
 
 
 def repo_root() -> Path:
@@ -257,7 +326,34 @@ def restage_args(packet: Optional[dict], manifest: Optional[dict]) -> dict:
     ps = ((manifest.get("inputs") or {}).get("predictor_source") or {})
     if ps.get("requestedFlag") and ps["requestedFlag"] != "streamcat":
         out["predictor_source"] = str(ps["requestedFlag"])
+    # The reference frame, likewise: a run that drew from every stream must not
+    # come back framed (the trap predictor_source fell into), so read it off
+    # the manifest rather than defaulting.
+    out["reference_frame"] = frame_of_manifest(manifest)
     return out
+
+
+#: The frame the app builds with unless the run's own record says otherwise.
+REFERENCE_FRAME_DEFAULT = "wadeable"
+REFERENCE_FRAMES = ("wadeable", "all")
+
+
+def frame_of_manifest(manifest: Optional[dict]) -> str:
+    """``wadeable`` | ``all`` from a run manifest's recorded reference frame.
+
+    A manifest with no ``maxStreamOrder`` is a run that drew from every stream,
+    which is what every version published before methodology 0.10 did.
+    """
+    ds = ((manifest or {}).get("inputs") or {}).get("nrsa_dataset") or {}
+    return REFERENCE_FRAME_DEFAULT if ds.get("maxStreamOrder") else "all"
+
+
+def frame_label(frame: Optional[str], max_order: Optional[int] = None) -> str:
+    """The builder's one-line description of the frame it will draw from."""
+    if str(frame or REFERENCE_FRAME_DEFAULT).lower() == "all":
+        return "every stream, including large rivers"
+    order = int(max_order or 5)
+    return f"wadeable streams, NHDPlus V2 stream order 1 to {order}"
 
 
 #: cmd_stage's exit codes, as sentences rather than numbers.

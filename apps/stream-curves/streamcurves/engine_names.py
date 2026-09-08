@@ -15,7 +15,7 @@ except Exception:  # noqa: BLE001 - the vendored copy is absent only in stripped
 
 SITE_ENGINE = _naming.DISPLAY_NAMES[_naming.SITE_ENGINE_TOKEN] if _naming else "STAF site engine"
 STREAMCAT = _naming.DISPLAY_NAMES[_naming.STREAMCAT_TOKEN] if _naming else "StreamCat lookup engine"
-SITE_ENGINE_DETAIL = "exact watershed"
+SITE_ENGINE_DETAIL = "HR reach watershed"
 # What one uncached training site costs with the 0.2.1 node walk.
 SITE_ENGINE_COST = "usually under a minute per uncached site, up to about five on a large basin"
 
@@ -32,4 +32,4 @@ def predictor_source_display(token: Optional[str]) -> str:
     t = str(token or "streamcat")
     if t == "streamcat":
         return STREAMCAT
-    return f"{SITE_ENGINE} ({t}), exact-watershed values"
+    return f"{SITE_ENGINE} ({t}), HR reach watershed values"

@@ -1,6 +1,6 @@
-"""Dams in the true watershed (USACE NID): count, density, and storage.
+"""Dams in the HR reach watershed (USACE NID): count, density, and storage.
 
-Exact-watershed analogs of the StreamCat dam metrics: NID dam points inside
+HR reach watershed analogs of the StreamCat dam metrics: NID dam points inside
 the watershed polygon, counted (``damdens`` analog per km2), with their
 NORMAL storage (``damnrmstor`` analog: StreamCat's DamNrmStor is NID normal
 storage per unit area) and their NID storage (``damnidstor`` analog) both

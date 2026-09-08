@@ -1,4 +1,4 @@
-"""Layer B: exact-watershed and reach-scale metric computation.
+"""Layer B: HR reach watershed and reach-scale metric computation.
 
 Each metric module registers a compute function; ``compute_all`` runs the
 registry over one Layer A record and returns the ``metrics`` block. A metric

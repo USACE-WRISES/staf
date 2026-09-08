@@ -2,8 +2,9 @@
 
 Invariants: covered runs get neutral labels and NOTHING else changes
 (labels-only enrichment); routed runs label where each row's evidence comes
-from (the exact watershed, the clicked stream, the nearest covered reach, or
-unavailable) and which engine answered it; a StreamCat integrity fallback is
+from (the HR reach watershed, the clicked stream, the nearest covered reach) and
+which engine answered it, and a scored COMID-keyed row carries its borrowing
+note (set, so a second pass is a no-op); a StreamCat integrity fallback is
 COMID-keyed; a failed Phase 2 re-anchor is stated, never papered over."""
 from __future__ import annotations
 
@@ -30,11 +31,11 @@ def _rows():
     ]
 
 
-def _hr_anchor(applied=True, declined=False):
+def _hr_anchor(applied=True, ratio=1.8, name="Big Run"):
     return {"anchorKind": "hrSurrogate",
-            "scoredReach": {"comid": 5214461},
-            "routing": {"routedDistanceFt": 1240.4, "daRatio": 1.8,
-                        "declined": declined},
+            "scoredReach": {"comid": 5214461, "gnisName": name},
+            "routing": {"routedDistanceFt": 1240.4, "daRatio": ratio,
+                        "daRatioLimit": 10.0, "declined": False},
             "reanchored": {"applied": applied, "warnings": []}}
 
 
@@ -65,12 +66,12 @@ def test_covered_run_is_labels_only():
     assert rows[4]["anchor"] == "clickedReach"              # incision geometry stays put
 
 
-def test_routed_run_labels_the_exact_watershed():
+def test_routed_run_labels_the_hr_reach_watershed():
     rows = _rows()
     anchor = _hr_anchor(applied=True)
     assessment._annotate_anchors(rows, anchor, watershed_layer=_ENGINE_LAYER)
     assert rows[0]["anchorLabel"] == "clicked HR reach"
-    assert rows[1]["anchorLabel"] == "exact watershed (STAF site engine)"
+    assert rows[1]["anchorLabel"] == "HR reach watershed (STAF site engine)"
     assert rows[1]["engine"] == "site-engine"
     assert rows[1]["engineLabel"] == "STAF site engine"
     assert rows[2]["anchorLabel"] == "clicked point"
@@ -98,20 +99,42 @@ def test_routed_legacy_labels_the_surrogate_watershed():
     assert rows[1]["anchorLabel"] == "surrogate watershed (StreamCat lookup engine)"
 
 
-def test_declined_routing_withholds_comid_rows():
+def test_routed_comid_rows_carry_the_borrowing_note():
     rows = _rows()
-    assessment._annotate_anchors(rows, _hr_anchor(declined=True),
+    rows[3]["status"] = "ok"
+    assessment._annotate_anchors(rows, _hr_anchor(ratio=32.02),
                                  watershed_layer=_ENGINE_LAYER)
-    assert rows[3]["anchorLabel"] == "unavailable past the substitution limit"
-    assert rows[3]["engine"] == "unavailable"
-    assert rows[1]["anchorLabel"] == "exact watershed (STAF site engine)"
+    assert rows[3]["anchorLabel"] == "nearest covered reach (COMID 5214461, 1,240 ft downstream)"
+    assert rows[3]["engine"] == "streamcat"
+    assert rows[3]["anchorNote"] == ("Scored from the nearest StreamCat reach, Big Run "
+                                     "(COMID 5214461), 1,240 ft downstream, which drains "
+                                     "32 times this stream.")
+    assert rows[1]["anchorLabel"] == "HR reach watershed (STAF site engine)"
+    assert all("anchorNote" not in r for r in rows if r is not rows[3])
+    # a second pass (watershed recompute) is a no-op, never a doubled sentence
+    again = copy.deepcopy(rows)
+    assessment._annotate_anchors(again, _hr_anchor(ratio=32.02),
+                                 watershed_layer=_ENGINE_LAYER)
+    assert again == rows
+
+
+def test_unscored_and_covered_comid_rows_get_no_note():
+    rows = _rows()
+    rows[3]["status"] = "unavailable"
+    assessment._annotate_anchors(rows, _hr_anchor(), watershed_layer=_ENGINE_LAYER)
+    assert "anchorNote" not in rows[3]
+    assert rows[3]["anchorLabel"].startswith("nearest covered reach")
+    rows = _rows()
+    rows[3]["status"] = "ok"
+    assessment._annotate_anchors(rows, None)
+    assert "anchorNote" not in rows[3]
 
 
 def test_unavailable_layer_is_stated():
     rows = _rows()
     assessment._annotate_anchors(rows, _hr_anchor(),
                                  watershed_layer=watershed.unavailable("budget"))
-    assert rows[1]["anchorLabel"] == "unavailable (exact watershed not calculated)"
+    assert rows[1]["anchorLabel"] == "unavailable (HR reach watershed not calculated)"
     assert rows[1]["engine"] == "unavailable"
     assert rows[1]["engineLabel"] == "watershed evidence unavailable"
 
@@ -123,4 +146,4 @@ def test_failed_reanchor_is_stated():
     assert rows[0]["anchorLabel"] == "surrogate reach (HR data unavailable)"
     assert rows[2]["anchorLabel"] == "surrogate reach (HR data unavailable)"
     # watershed metrics never depended on the re-anchor; their label is unchanged
-    assert rows[1]["anchorLabel"] == "exact watershed (STAF site engine)"
+    assert rows[1]["anchorLabel"] == "HR reach watershed (STAF site engine)"

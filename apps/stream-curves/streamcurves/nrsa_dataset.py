@@ -161,6 +161,88 @@ def _legacy_panel(dataset: NrsaDataset, l3_code: Optional[str]) -> pd.DataFrame:
     return panel.reset_index(drop=True)
 
 
+STREAM_ORDER_PATH = NRSA_DIR / "stream_order.csv"
+
+
+@lru_cache(maxsize=1)
+def stream_orders() -> dict[int, float]:
+    """``{comid: NHDPlus V2 stream order}`` from the cached lookup table.
+
+    Built by ``scripts/nrsa/build_stream_order.py`` and committed, so a run
+    resolves the reference frame offline. Empty when the table is absent, which
+    makes every order unknown and hands the frame to the protocol fallback.
+    """
+    path = STREAM_ORDER_PATH
+    if not path.exists():
+        return {}
+    try:
+        df = pd.read_csv(path)
+        out: dict[int, float] = {}
+        for comid, order in zip(df["comid"], df["stream_order"]):
+            if pd.notna(comid) and pd.notna(order):
+                out[int(comid)] = float(order)
+        return out
+    except Exception:  # noqa: BLE001 - a broken table means unknown, never a crash
+        return {}
+
+
+def _apply_stream_frame(in_region: pd.DataFrame, *, max_stream_order: int,
+                        protocols: Optional[Sequence[str]],
+                        keep_stations: Optional[dict] = None,
+                        ) -> tuple[pd.DataFrame, list[dict], list[dict]]:
+    """Keep the stations inside the reference frame; ledger the rest.
+
+    Order decides. Where it cannot be resolved the sampling protocol decides,
+    and where neither is known the station leaves the panel, because it cannot
+    be shown to be in frame.
+
+    ``keep_stations`` (``{station_key: reason}``) is the owner's override: a
+    named station stays in the panel even though it is out of frame, and the
+    override is returned so the run records it, the digest carries it, and the
+    packet shows it. Nothing is ever readmitted silently.
+
+    Returns ``(panel, ledger_rows, override_rows)``.
+    """
+    orders = stream_orders()
+    want_protocol = {str(p).strip().upper() for p in (protocols or ())}
+    keep_named = {str(k): str(v) for k, v in (keep_stations or {}).items()}
+    has_protocol = "protocol" in in_region.columns
+    keep_mask: list[bool] = []
+    rows: list[dict] = []
+    overrides: list[dict] = []
+    for rec in in_region.itertuples():
+        comid = getattr(rec, "comid", None)
+        order = None
+        try:
+            if comid is not None and pd.notna(comid) and int(comid) > 0:
+                order = orders.get(int(comid))
+        except (TypeError, ValueError):
+            order = None
+        if order is not None:
+            keep = order <= float(max_stream_order)
+            reason = (f"stream order {order:.0f} is outside the reference frame "
+                      f"(order 1 to {int(max_stream_order)})")
+        else:
+            protocol = (str(getattr(rec, "protocol", "") or "").strip().upper()
+                        if has_protocol else "")
+            keep = bool(want_protocol) and protocol in want_protocol
+            label = protocol.lower() or "unknown"
+            reason = (f"stream order unknown and the {label} protocol is outside "
+                      "the reference frame")
+        key = str(rec.station_key)
+        if not keep and key in keep_named:
+            keep = True
+            overrides.append({"station_key": key,
+                              "stream_order": None if order is None else float(order),
+                              "out_of_frame_reason": reason,
+                              "reason": keep_named[key], "source": "owner"})
+        keep_mask.append(keep)
+        if not keep:
+            rows.append({"station_key": key, "cycle": "",
+                         "reason": reason, "missing": ""})
+    return (in_region.loc[pd.Series(keep_mask, index=in_region.index)], rows, overrides)
+
+
 def resolve_site_panel(
     l3_code: Optional[str],
     *,
@@ -168,6 +250,9 @@ def resolve_site_panel(
     cycles: Sequence[str] = CYCLES_NEWEST_FIRST,
     policy: str = POLICY_MOST_RECENT,
     require_metrics: Iterable[str] = (),
+    max_stream_order: Optional[int] = None,
+    protocols: Optional[Sequence[str]] = None,
+    keep_stations: Optional[dict] = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """One row per station for a Level III ecoregion, plus a rejection ledger.
 
@@ -181,6 +266,23 @@ def resolve_site_panel(
     A station with no such cycle is excluded and appears in the ledger with the
     cycles that were tried and what was missing from each, so a shrunken pool is
     always explainable.
+
+    ``max_stream_order`` is the reference frame: the curves are fitted on
+    wadeable streams, which the owner defines as Strahler order 1 to 5
+    (2026-09-07), so a station on a larger reach leaves the panel here with its
+    reason in the ledger rather than through a list of per-site exclusions.
+    Order is the NHDPlus V2 ``streamorde`` of the station's COMID, cached in
+    ``data/nrsa/stream_order.csv`` by ``scripts/nrsa/build_stream_order.py``.
+    ``protocols`` is the FALLBACK for a station whose order cannot be resolved
+    (no COMID, or the network has no order for it): its NRSA sampling protocol
+    decides instead. Both ``None`` keeps every station.
+
+    Protocol is deliberately not the primary rule. It is the field crew's call
+    about whether they could wade the reach that day, which is a narrower
+    population: measured across the three pilot ecoregions, every WADEABLE
+    station is order 1 to 5, but 57 of 301 stations of order 1 to 5 were
+    sampled as BOATABLE, and filtering on the protocol alone dropped all of
+    them. A legacy panel has neither column and is never filtered.
 
     Returns ``(panel, ledger)``. The panel carries the columns
     ``data/nrsa_sites.csv`` has, plus ``station_key``, ``source_cycle`` and
@@ -221,9 +323,22 @@ def resolve_site_panel(
         in_region = stations[
             stations["us_l3code"].astype(str).str.strip() == str(l3_code).strip()]
     if in_region.empty:
-        return (pd.DataFrame(columns=PANEL_COLUMNS + ["comid", "protocol", "station_key",
-                                                      "source_cycle", "visit_no"]),
+        return (pd.DataFrame(columns=PANEL_COLUMNS + ["comid", "protocol", "stream_order",
+                                                      "station_key", "source_cycle",
+                                                      "visit_no"]),
                 pd.DataFrame(columns=["station_key", "cycle", "reason", "missing"]))
+
+    frame_rows: list[dict] = []
+    frame_overrides: list[dict] = []
+    if max_stream_order is not None:
+        in_region, frame_rows, frame_overrides = _apply_stream_frame(
+            in_region, max_stream_order=max_stream_order, protocols=protocols,
+            keep_stations=keep_stations)
+        if in_region.empty:
+            return (pd.DataFrame(columns=PANEL_COLUMNS + ["comid", "protocol", "stream_order",
+                                                          "station_key", "source_cycle",
+                                                          "visit_no"]),
+                    pd.DataFrame(frame_rows))
 
     keys = set(in_region["station_key"])
     visits = ds.visits[ds.visits["station_key"].isin(keys)]
@@ -234,7 +349,7 @@ def resolve_site_panel(
     values = ds.values
     have = [m for m in required if m in values.columns]
 
-    ledger_rows: list[dict] = []
+    ledger_rows: list[dict] = list(frame_rows)
     if have:
         chosen = _pick_by_required_metrics(
             in_region, visits, values, have, wanted, ledger_rows)
@@ -243,6 +358,8 @@ def resolve_site_panel(
 
     panel = _build_panel(chosen, in_region)
     ledger = pd.DataFrame(ledger_rows, columns=["station_key", "cycle", "reason", "missing"])
+    # the owner's readmissions ride on the panel so the run can record them
+    panel.attrs["frame_overrides"] = frame_overrides
     return panel, ledger
 
 
@@ -330,7 +447,7 @@ def _build_panel(chosen: pd.DataFrame, in_region: pd.DataFrame) -> pd.DataFrame:
     """The picked visits, shaped like ``data/nrsa_sites.csv`` plus the extras."""
     if chosen is None or len(chosen) == 0:
         panel = pd.DataFrame(
-            columns=PANEL_COLUMNS + ["comid", "protocol", "station_key",
+            columns=PANEL_COLUMNS + ["comid", "protocol", "stream_order", "station_key",
                                      "source_cycle", "visit_no"])
     else:
         picked = chosen
@@ -357,6 +474,11 @@ def _build_panel(chosen: pd.DataFrame, in_region: pd.DataFrame) -> pd.DataFrame:
             "comid": picked["station_key"].map(station_comid),
             "protocol": (picked["station_key"].map(station_protocol)
                          if station_protocol is not None else None),
+            # NHDPlus V2 stream order of the station's reach: the reference
+            # frame (order 1 to 5 is wadeable), cached offline
+            "stream_order": picked["station_key"].map(station_comid).map(
+                lambda c: stream_orders().get(int(c))
+                if pd.notna(c) and int(c) > 0 else None),
             "station_key": picked["station_key"],
             "source_cycle": picked["cycle"],
             "visit_no": picked["visit_no"],

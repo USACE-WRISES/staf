@@ -535,3 +535,28 @@ def test_a_legacy_site_id_still_pulls_its_metrics():
     values = _nrsa_values_for(pd.DataFrame({"site_id": [legacy_only]}))
     assert list(values["site_id"]) == [legacy_only]
     assert values["bent_EPT_NTAX"].notna().all()
+
+
+# --------------------------------------------------------------------------- #
+# The reference frame in the wizard's site picker (2026-09-07)
+# --------------------------------------------------------------------------- #
+def test_the_site_picker_carries_and_shows_the_stream_order():
+    """The picker says which assembled sites a framed build will screen.
+
+    Wadeable is stream order 1 to 5 (rule DATA-10), so a site on a larger river
+    is assembled and mapped but not screened by a framed build. That belongs in
+    front of whoever is choosing sites, not only in the run log.
+    """
+    import pathlib
+
+    import views.import_map as im
+    src = pathlib.Path(im.__file__).read_text(encoding="utf-8")
+    # the assembled NRSA rows carry the order
+    assert 'nrsa_part["stream_order"]' in src
+    assert "nds.stream_orders()" in src
+    # the table shows it, with a plain in-frame answer, and the note is mounted
+    assert '"stream_order", "in_frame"' in src
+    assert "def _with_frame_column(" in src and 'show["in frame"]' in src
+    assert 'ui.output_ui("sites_frame_note")' in src
+    assert "def sites_frame_note():" in src
+    assert 'methodology.threshold("reference_panel.max_stream_order")' in src

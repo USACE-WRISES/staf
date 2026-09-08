@@ -2,15 +2,16 @@
 
 Two roles, both for engine-sourced builds (``--predictor-source site-engine``):
 
-- **Predictors**: exact-watershed predictor columns (``se_*``) computed at the
-  training-site coordinates with the vendored engine, the true point watershed
-  on the full-resolution NHD instead of StreamCat's per-COMID V2 summaries.
+- **Predictors**: HR reach watershed predictor columns (``se_*``) computed at the
+  training-site coordinates with the vendored engine, the watershed of the
+  high-resolution NHD reach each site snaps to instead of StreamCat's per-COMID
+  V2 summaries.
   They replace their StreamCat analogs in the predictor configuration.
 - **Scored landscape metrics** (2026-09-02, all eight since 2026-09-05): the
   StreamCat landscape columns with an engine analog (:data:`SE_METRIC_ANALOGS`)
   keep their column names, and therefore their bundle metric ids and curated
   directions, but their VALUES at every retained site become the engine's
-  exact-watershed values, so the curves are fitted on the same source DEEP
+  HR reach watershed values, so the curves are fitted on the same source DEEP
   will score with. Base-flow index (the USGS grid) and road-stream crossings
   (TIGERweb roads on the NHDPlus HR network) joined with engine 0.3.0. A
   retained site the engine cannot value keeps NaN, never a StreamCat
@@ -44,47 +45,73 @@ _VENDOR_ROOT = "streamcurves._vendor.site_engine"
 _GEO_REQUIREMENTS = ("requests", "shapely", "geopandas")
 _ACRE_FT_PER_KM2_TO_M3_PER_KM2 = 1233.48184
 
+def _first(values: list):
+    """The single-key analog's value."""
+    return values[0] if values else None
+
+
+def _sum_required(values: list):
+    """The sum of every key, or None when ANY is missing.
+
+    Unlike the predictor :func:`_sum`, which coalesces a missing part to zero,
+    a scored column with one class unpublished has an unknown total, not a
+    smaller one (EASI's contract for the same quantity). Capped at 100.
+    """
+    if not values or any(v is None for v in values):
+        return None
+    return round(min(100.0, sum(float(v) for v in values)), 2)
+
+
 # se_* predictor column -> (label, extractor(record) -> value|None).
 # Analog naming mirrors the StreamCat predictors the curves use today.
 SE_PREDICTORS: dict[str, tuple[str, Callable]] = {
-    "se_pctimpws": ("Impervious cover, exact watershed (%)",
+    "se_pctimpws": ("Impervious cover, HR reach watershed (%)",
                     lambda r: _m(r, "imperviousPctWatershed")),
-    "se_agws": ("Agricultural cover, exact watershed (%)",
+    "se_agws": ("Agricultural cover, HR reach watershed (%)",
                 lambda r: _sum(r, "cropPctWatershed", "hayPasturePctWatershed")),
-    "se_rddensws": ("Road density, exact watershed (km/km2)",
+    "se_rddensws": ("Road density, HR reach watershed (km/km2)",
                     lambda r: _m(r, "roadDensity")),
-    "se_kffactws": ("Soil K-factor, exact watershed",
+    "se_kffactws": ("Soil K-factor, HR reach watershed",
                     lambda r: _m(r, "soilKFactor")),
-    "se_damnrmstor": ("Dam storage, exact watershed (m3/km2)",
+    "se_damnrmstor": ("Dam storage, HR reach watershed (m3/km2)",
                       lambda r: _scale(_m(r, "damStoragePerSqkm"),
                                        _ACRE_FT_PER_KM2_TO_M3_PER_KM2)),
     "se_runoffmm": ("Runoff depth, EROM-derived (mm/yr)",
                     lambda r: _m(r, "runoffDepthMm")),
-    "se_wsareasqkm": ("Drainage area, exact watershed (km2)",
+    "se_wsareasqkm": ("Drainage area, HR reach watershed (km2)",
                       lambda r: (r.get("watershed") or {}).get("areaSqkm")),
 }
 
-# Scored StreamCat landscape COLUMN -> (engine record key, transform). Under
-# --predictor-source site-engine the column keeps its name (the bundle metric
-# id spring-<column>, DEEP's adapters, and the curated directions all key on
-# it) and its VALUES become the engine's exact-watershed value at each retained
-# site. Units match on both sides: percent, km/km2, dams/km2. No analog, and
-# therefore StreamCat by design: bfiws, rdcrsws.
-SE_METRIC_ANALOGS: dict[str, tuple[str, Callable]] = {
-    "pctimp2019ws": ("imperviousPctWatershed", lambda v: v),
-    "pctcrop2019ws": ("cropPctWatershed", lambda v: v),
-    "pctwdwet2019ws": ("woodyWetlandPctWatershed", lambda v: v),
-    "pcthbwet2019ws": ("herbWetlandPctWatershed", lambda v: v),
-    "rddensws": ("roadDensity", lambda v: v),
-    "damdensws": ("damDensityPerSqkm", lambda v: v),
-    "bfiws": ("baseflowIndexPct", lambda v: v),
-    "rdcrsws": ("roadCrossingDensity", lambda v: v),
+# Scored StreamCat landscape COLUMN -> (engine record keys, transform over
+# their values, in order). Under --predictor-source site-engine the column
+# keeps its name (the bundle metric id spring-<column>, DEEP's adapters, and
+# the curated directions all key on it) and its VALUES become the engine's HR
+# reach watershed value at each retained site. Units match on both sides:
+# percent, km/km2, dams/km2. Nine columns since 2026-09-07, when the combined
+# wetland column joined the two classes it sums; a default build re-sources
+# seven of them (the two split wetland columns are pickable but no longer
+# default-selected).
+SE_METRIC_ANALOGS: dict[str, tuple[tuple[str, ...], Callable]] = {
+    "pctimp2019ws": (("imperviousPctWatershed",), _first),
+    "pctcrop2019ws": (("cropPctWatershed",), _first),
+    "pctwet2019ws": (("woodyWetlandPctWatershed", "herbWetlandPctWatershed"),
+                     _sum_required),
+    "pctwdwet2019ws": (("woodyWetlandPctWatershed",), _first),
+    "pcthbwet2019ws": (("herbWetlandPctWatershed",), _first),
+    "rddensws": (("roadDensity",), _first),
+    "damdensws": (("damDensityPerSqkm",), _first),
+    "bfiws": (("baseflowIndexPct",), _first),
+    "rdcrsws": (("roadCrossingDensity",), _first),
 }
 
 #: Column-specific sentences appended to the re-sourcing note.
 _COLUMN_NOTES = {
+    "pctwet2019ws": ("Wetland cover is the sum of the engine's woody and "
+                     "herbaceous wetland percentages over the HR reach watershed; "
+                     "both classes are required, and a missing one leaves the "
+                     "total unknown rather than smaller."),
     "bfiws": ("Base-flow index is the mean of the USGS base-flow index grid "
-              "(Wolock 2003, 1 km) over the exact watershed."),
+              "(Wolock 2003, 1 km) over the HR reach watershed."),
     "rdcrsws": ("Road-stream crossings are counted where TIGERweb roads meet the "
                 "NHDPlus HR network, per km2 of watershed, so this curve's scale is "
                 "the engine's and not StreamCat's served rdcrs."),
@@ -232,7 +259,7 @@ def replace_predictors(predictor_config: dict, columns) -> dict:
             "constant": None,
             "expected_range": "",
             "missing_data_rule": "omit",
-            "notes": f"{label}; STAF site engine (exact watershed)",
+            "notes": f"{label}; STAF site engine (HR reach watershed)",
         }
     return out
 
@@ -279,7 +306,7 @@ def annotate_resourced_metric_config(metric_config: dict, columns) -> dict:
     label = engine_source_label()
     ver = engine_identity().get("version") or "unknown"
     note = (f"Values recomputed by the {engine_names.SITE_ENGINE} v{ver} over the "
-            "exact watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow "
+            "HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow "
             "index grid). The StreamCat column name is kept for the metric id.")
     for col in columns or []:
         entry = out.get(col)
@@ -350,15 +377,16 @@ def se_site_record(lat: float, lon: float, *, config: Optional[dict] = None,
         if v is None:
             missing.append(code)
     metric_notes: list[str] = []
-    for col, (key, fn) in SE_METRIC_ANALOGS.items():
-        raw = _m(rec, key)
-        v = None if raw is None else fn(raw)
+    for col, (keys, fn) in SE_METRIC_ANALOGS.items():
+        raws = [_m(rec, k) for k in keys]
+        v = fn(raws)
         values[col] = v
         if v is None:
             missing.append(col)
-            entry = (rec.get("metrics") or {}).get(key) or {}
-            for w in entry.get("warnings") or []:
-                metric_notes.append(str(w))
+            for k in keys:
+                entry = (rec.get("metrics") or {}).get(k) or {}
+                for w in entry.get("warnings") or []:
+                    metric_notes.append(str(w))
     out["values"] = values
     out["missing"] = sorted(missing)
     out["areaSqkm"] = (rec.get("watershed") or {}).get("areaSqkm")

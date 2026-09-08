@@ -29,6 +29,7 @@ import math
 import re
 import time
 import zlib
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -347,7 +348,8 @@ def select_landscape_codes(directions: dict) -> tuple[list[str], list[str]]:
 
 def select_candidates_detailed(
     l3_code: str, sites_path: Path | str | None = None, *,
-    dataset: str | None = None, cycles=None,
+    dataset: str | None = None, cycles=None, max_stream_order=None, protocols=None,
+    keep_stations=None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Candidate sites plus the ledger of stations the panel policy excluded.
 
@@ -356,11 +358,17 @@ def select_candidates_detailed(
     ``nrsa_dataset.resolve_site_panel``, which pools the survey cycles and returns
     one row per station from the most recent cycle that has what the run needs,
     recording every station it left out and why.
+
+    ``max_stream_order`` is the reference frame (order 1 to 5 is wadeable,
+    2026-09-07) and ``protocols`` the fallback where a station's order cannot be
+    resolved; the legacy CSV has neither column, so it is never filtered.
     """
     if dataset and dataset != nrsa_dataset.LEGACY_DATASET_ID:
         return nrsa_dataset.resolve_site_panel(
             l3_code, dataset=dataset,
-            cycles=cycles or nrsa_dataset.CYCLES_NEWEST_FIRST)
+            cycles=cycles or nrsa_dataset.CYCLES_NEWEST_FIRST,
+            max_stream_order=max_stream_order, protocols=protocols,
+            keep_stations=keep_stations)
     return _legacy_candidates(l3_code, sites_path), pd.DataFrame(
         columns=["station_key", "cycle", "reason", "missing"])
 
@@ -586,14 +594,19 @@ def _columns_by_base_code(columns) -> dict[str, str]:
 def attach_comids(data: pd.DataFrame, screening_tables: dict | None = None) -> pd.DataFrame:
     """Add the NHDPlus ``comid`` StreamCat is keyed on.
 
-    Precedence, best first: the EASI screen, which already snapped every retained site
-    to a reach; a ``comid`` the site frame already carries (the multi-cycle panel brings
-    EPA's published one, backfilled across cycles); then the bundled NRSA evidence file
-    (``comid_by_site_id``), so an offline run still enriches.
+    Precedence, best first (2026-09-07): the ``comid`` the site frame carries,
+    which for the multi-cycle panel is the NRSA sample frame's own reach, the
+    one the crew sampled; then the EASI screen's, for a candidate the panel has
+    none for; then the bundled NRSA evidence file (``comid_by_site_id``), so an
+    offline run still enriches.
 
-    A frame that already has the column is filled rather than left alone: the screen's
-    snapped reach is the better answer where it exists, and the panel's value covers the
-    rest.
+    The screen used to win, which meant a site routed to a downstream reach
+    silently replaced the sampled reach as the StreamCat key for curve fitting
+    (9 of 186 NEH candidates, one of them 6,424 ft downstream draining 5.3
+    times the sampled stream). The screen's answer is still recorded, per site,
+    in the screening table's ``routed_comid`` / ``comid_differs`` columns and
+    in the run's ``screening_comids`` summary; it just never overwrites the
+    archive's.
     """
     out = data.copy()
     screened: dict[str, Any] = {}
@@ -616,9 +629,14 @@ def attach_comids(data: pd.DataFrame, screening_tables: dict | None = None) -> p
     resolved = []
     for i, sid in enumerate(out["site_id"]):
         key = str(sid)
-        value = screened.get(key)
+        value = existing.iloc[i] if existing is not None else None
+        if value is not None and not pd.isna(value):
+            try:                            # 0 is the archive's "none published"
+                value = None if int(value) <= 0 else value
+            except (TypeError, ValueError):
+                value = None
         if value is None or pd.isna(value):
-            value = existing.iloc[i] if existing is not None else None
+            value = screened.get(key)
         if value is None or pd.isna(value):
             value = evidence.get(key)
         resolved.append(value)
@@ -743,10 +761,7 @@ def _screen_live(candidate_rows: list[dict], preset: str,
     panels exceed it for four ecoregions (e.g. Northeastern Highlands at 186),
     which single-cycle panels never did. Only the ``sites`` list is merged;
     ``to_screening_tables`` reads nothing else."""
-    try:
-        from streamcurves._vendor.easi.batch.runner import MAX_SITES as _limit
-    except Exception:  # noqa: BLE001 - the vendored constant moving must not break us
-        _limit = 150
+    _limit = _engine_max_sites()
     if len(candidate_rows) <= int(_limit):
         return easi_screening.screen_sites_direct(candidate_rows, preset, on_event=on_event)
     merged: dict | None = None
@@ -759,9 +774,32 @@ def _screen_live(candidate_rows: list[dict], preset: str,
         if merged is None:
             merged = dict(part)
             merged["sites"] = list(part.get("sites") or [])
+            merged["diagnostics"] = dict(part.get("diagnostics") or {})
+            merged["generated_ids"] = list(part.get("generated_ids") or [])
         else:
             merged["sites"] += list(part.get("sites") or [])
+            # the chunks' diagnostics are the run's, summed: reporting chunk 1's
+            # made a 186-site NEH screen print "150 sites, 17 failed" against a
+            # real tally of 38 (2026-09-07)
+            for key, value in (part.get("diagnostics") or {}).items():
+                if isinstance(value, (int, float)) and not isinstance(value, bool):
+                    merged["diagnostics"][key] = merged["diagnostics"].get(key, 0) + value
+            merged["generated_ids"] += list(part.get("generated_ids") or [])
+    if merged is not None:
+        merged["diagnostics"]["n_chunks"] = n_chunks
     return merged or {"sites": []}
+
+
+def _engine_max_sites() -> int:
+    """The vendored batch runner's site limit. It lives in ``batch.api``; the
+    old import from ``batch.runner`` (which only imports it inside a function)
+    always raised, so the hardcoded fallback was what ran (2026-09-07)."""
+    try:
+        from streamcurves._vendor.easi.batch.api import MAX_SITES
+        return int(MAX_SITES)
+    except Exception:  # noqa: BLE001 - the vendored constant moving must not break us
+        logger.info("vendored MAX_SITES not importable; screening in chunks of 150")
+        return 150
 
 
 def _safe_emit(on_event: Optional[Callable], *args) -> None:
@@ -797,7 +835,7 @@ def _narrate(args: tuple, write: Callable[[str], None]) -> None:
         return
     info = args[-1] if isinstance(args[-1], dict) else {}
     if head == "enrich_site_engine":
-        write(f"[engine] computing exact-watershed values at {info.get('n_sites')} "
+        write(f"[engine] computing HR reach watershed values at {info.get('n_sites')} "
               f"retained site(s), {info.get('note') or engine_names.SITE_ENGINE_COST}")
     elif head == "site_engine_site":
         prefix = f"[engine] {info.get('i')}/{info.get('n')} {info.get('site_id')}"
@@ -812,8 +850,18 @@ def _narrate(args: tuple, write: Callable[[str], None]) -> None:
         write(f"[screen] retry pass {info.get('pass')}: {info.get('n')} site(s), "
               f"{info.get('recovered')} recovered")
     elif head == "screening_cache_stale":
-        write(f"[screen] screening cache stale ({info.get('cached_n')} cached, "
-              f"{info.get('candidate_n')} candidates), refetching")
+        write(f"[screen] screening cache ignored: {info.get('reason') or 'stale'} "
+              f"({info.get('cached_n')} cached, {info.get('candidate_n')} candidates), "
+              "refetching")
+    elif head == "reference_frame":
+        extra = (f", {info.get('n_overrides')} readmitted by the owner"
+                 if info.get("n_overrides") else "")
+        write(f"[panel] reference frame: stream order 1 to {info.get('max_stream_order')}; "
+              f"{info.get('n_candidates')} candidates in frame, "
+              f"{info.get('n_out_of_frame')} out of frame{extra}")
+    elif head == "screening_comid_mode":
+        write(f"[screen] comid mode {info.get('mode')}: {info.get('n_archive')} of "
+              f"{info.get('n_candidates')} candidates carry an archive COMID")
     elif head == "site_done" and len(args) >= 2:
         write(f"[screen] site_done {args[1]} {info.get('state') or ''}".rstrip())
 
@@ -871,18 +919,76 @@ def _merge_retry(batch: dict, part: dict) -> dict:
     return out
 
 
-def _write_screen_cache(cache_path: Optional[Path], batch: dict) -> None:
+def _write_screen_cache(cache_path: Optional[Path], batch: dict,
+                        comid_mode: Optional[str] = None) -> None:
+    """Write the batch with the stamps that say what produced it (2026-09-07).
+
+    Until then the file carried no key at all, so a cache written by a
+    pre-routing EASI was reused verbatim while the manifest stamped the current
+    policy. ``to_screening_tables`` ignores these siblings of ``sites``.
+    """
     if cache_path is None:
         return
+    doc = dict(batch)
+    doc["screening_method_version"] = run_state.SCREENING_METHOD_VERSION
+    doc["screening_watershed_engine"] = easi_screening.SCREENING_WATERSHED_ENGINE
+    doc["comid_mode"] = comid_mode or batch.get("comid_mode")
+    doc["easi_vendor_sha"] = easi_screening.easi_vendor_identity().get("vendorSha")
+    doc["written_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     Path(cache_path).parent.mkdir(parents=True, exist_ok=True)
-    Path(cache_path).write_text(json.dumps(batch, default=str), encoding="utf-8")
+    Path(cache_path).write_text(json.dumps(doc, default=str), encoding="utf-8")
+
+
+def _screen_cache_verdict(cached: dict, candidate_rows: list[dict],
+                          comid_mode: str) -> Optional[str]:
+    """``None`` when the cache may be reused, else the reason it is ignored.
+
+    The site-engine cache's rule (:func:`site_engine_source._load_cache`),
+    applied to the screen: the panel, the screening method version, the engine
+    pin, the COMID mode and the per-site archive COMIDs must all match, or the
+    screen runs again. Reads ``cached["sites"]`` directly, never through
+    ``to_screening_tables``.
+    """
+    sites = cached.get("sites") or []
+    want = {str(r.get("site_id") or "") for r in candidate_rows}
+    got = {str(s.get("site_id") or "") for s in sites}
+    if got != want:
+        return f"cached panel of {len(got)} sites is not this panel of {len(want)}"
+    have_version = cached.get("screening_method_version")
+    if have_version != run_state.SCREENING_METHOD_VERSION:
+        return (f"cache screening method {have_version or 'unstamped'} is not "
+                f"{run_state.SCREENING_METHOD_VERSION}")
+    pin = cached.get("screening_watershed_engine")
+    if pin != easi_screening.SCREENING_WATERSHED_ENGINE:
+        return (f"cache watershed engine {pin or 'unstamped'} is not "
+                f"{easi_screening.SCREENING_WATERSHED_ENGINE}")
+    echo = (cached.get("config") or {}).get("watershed_engine")
+    if echo is not None and echo != easi_screening.SCREENING_WATERSHED_ENGINE:
+        return f"cache engine config echo {echo} is not {easi_screening.SCREENING_WATERSHED_ENGINE}"
+    if cached.get("comid_mode") != comid_mode:
+        return f"cache comid mode {cached.get('comid_mode') or 'unstamped'} is not {comid_mode}"
+    want_comids = {str(r.get("site_id") or ""): easi_screening.candidate_comid(r)
+                   for r in candidate_rows}
+    n_diff = 0
+    for s in sites:
+        given = (s.get("input") or {}).get("comid")
+        try:
+            given = int(given) if given is not None else None
+        except (TypeError, ValueError):
+            given = None
+        if given != want_comids.get(str(s.get("site_id") or "")):
+            n_diff += 1
+    if n_diff:
+        return f"archive COMIDs differ from the cache's inputs on {n_diff} sites"
+    return None
 
 
 def screen_pool(candidate_rows: list[dict], preset: str,
                 on_event: Optional[Callable] = None,
                 cache_path: Optional[Path] = None, *,
                 screen_retries: int = 0,
-                screen_retry_wait: float = 0.0) -> dict:
+                screen_retry_wait: float = 0.0,
+                comid_mode: Optional[str] = None) -> dict:
     """Run one real EASI screen at ``preset`` and return honest results.
 
     Returns {tables, sites (rows), retained_ids, counts, preset, from_cache}. Never
@@ -898,16 +1004,15 @@ def screen_pool(candidate_rows: list[dict], preset: str,
     poison the cache; a reused cache goes through the same pass and heals
     (2026-09-02). Zero passes is the plain single screen.
     """
-    want = {str(r.get("site_id") or "") for r in candidate_rows}
+    mode = comid_mode or easi_screening.comid_mode_of(candidate_rows)
     from_cache = False
     cache_stale = False
+    ignored = None
     batch = None
     if cache_path is not None and Path(cache_path).exists():
         cached = json.loads(Path(cache_path).read_text(encoding="utf-8"))
-        cached_ids = {str(r.get("site_id") or "")
-                      for r in easi_screening.to_screening_tables(cached)
-                      .get("easi_screening_sites", [])}
-        if cached_ids == want:
+        ignored = _screen_cache_verdict(cached, candidate_rows, mode)
+        if ignored is None:
             batch = cached
             from_cache = True
         else:
@@ -915,13 +1020,15 @@ def screen_pool(candidate_rows: list[dict], preset: str,
             if on_event is not None:
                 try:
                     on_event("screening_cache_stale", "", {
-                        "cache_path": str(cache_path),
-                        "cached_n": len(cached_ids), "candidate_n": len(want)})
+                        "cache_path": str(cache_path), "reason": ignored,
+                        "cached_n": len(cached.get("sites") or []),
+                        "candidate_n": len(candidate_rows)})
                 except TypeError:
                     pass                      # a caller with another signature
     if batch is None:
         batch = _screen_live(candidate_rows, preset, on_event)
-        _write_screen_cache(cache_path, batch)
+        batch["comid_mode"] = mode
+        _write_screen_cache(cache_path, batch, mode)
     passes = 0
     recovered = 0
     by_id = {str(r.get("site_id") or ""): r for r in candidate_rows}
@@ -943,7 +1050,8 @@ def screen_pool(candidate_rows: list[dict], preset: str,
         diag["screen_retry_passes"] = passes
         diag["n_recovered"] = recovered
         _safe_emit(on_event, "screening_retry", {"pass": k, "n": len(ids), "recovered": got})
-        _write_screen_cache(cache_path, batch)
+        _write_screen_cache(cache_path, batch, mode)
+    batch.setdefault("comid_mode", mode)
     tables = easi_screening.to_screening_tables(batch)
     rows = tables.get("easi_screening_sites", [])
     return {
@@ -956,6 +1064,11 @@ def screen_pool(candidate_rows: list[dict], preset: str,
         "cache_stale_refetched": cache_stale,
         "screen_retry_passes": passes,
         "n_recovered": recovered,
+        "comid_mode": mode,
+        "comids": easi_screening.screening_comid_summary(rows),
+        "cache": {"path": str(cache_path) if cache_path else None,
+                  "from_cache": from_cache, "ignored": ignored},
+        "easi_vendor": easi_screening.easi_vendor_identity(),
     }
 
 
@@ -963,7 +1076,8 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
                           on_event: Optional[Callable] = None,
                           cache_dir: Optional[Path] = None, *,
                           screen_retries: int = 0,
-                          screen_retry_wait: float = 0.0) -> dict:
+                          screen_retry_wait: float = 0.0,
+                          comid_mode: Optional[str] = None) -> dict:
     """Apply REF-01/02/03. Screen at the primary tier (functional by default). If the
     least-disturbed pool is too small to fit curves, fall back to best-available
     (at_risk_or_better), flag it, and stamp the tier. Never silently relaxes; never
@@ -982,8 +1096,9 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
 
     retry_kw = ({"screen_retries": int(screen_retries),
                  "screen_retry_wait": float(screen_retry_wait)} if screen_retries else {})
+    mode = comid_mode or easi_screening.comid_mode_of(candidate_rows)
     primary = screen_pool(candidate_rows, primary_preset, on_event=on_event,
-                          cache_path=_cache(primary_preset), **retry_kw)
+                          cache_path=_cache(primary_preset), comid_mode=mode, **retry_kw)
     n_primary = len(primary["retained_ids"])
     result = {
         "reference_tier": ladder[primary_preset],
@@ -999,7 +1114,8 @@ def choose_reference_tier(candidate_rows: list[dict], primary_preset: str,
         # exploratory. Fall back explicitly. (A pool of 10 to 19 does NOT land
         # here: it stays least-disturbed at DATA-05 exploratory status.)
         fallback = screen_pool(candidate_rows, fallback_preset, on_event=on_event,
-                               cache_path=_cache(fallback_preset), **retry_kw)
+                               cache_path=_cache(fallback_preset), comid_mode=mode,
+                               **retry_kw)
         result.update({
             "reference_tier": TIER_BEST_AVAILABLE,
             "fallback": fallback,
@@ -1386,6 +1502,19 @@ def metric_annotations(*, intended, curve_rows, metric_config, sample_sizes,
 def _panel_summary(panel: pd.DataFrame, ledger: pd.DataFrame) -> dict:
     """How the candidate pool was assembled, in a form a manifest can carry."""
     out = {"nCandidates": int(len(panel)), "nExcluded": int(len(ledger))}
+    if len(ledger) and "reason" in ledger.columns:
+        frame = ledger[ledger["reason"].astype(str).str.contains("reference frame", na=False)]
+        out["nOutOfFrame"] = int(len(frame))
+        if len(frame):
+            out["outOfFrameReasons"] = {str(k): int(v) for k, v
+                                        in frame["reason"].value_counts().items()}
+    overrides = list(panel.attrs.get("frame_overrides") or [])
+    if overrides:                       # absence semantics: an unframed run says nothing
+        out["frameOverrides"] = overrides
+    if "stream_order" in panel.columns and panel["stream_order"].notna().any():
+        counts = panel["stream_order"].value_counts(dropna=False)
+        out["byStreamOrder"] = {("unknown" if pd.isna(k) else str(int(k))): int(v)
+                                for k, v in counts.items()}
     for column, key in (("source_cycle", "byCycle"), ("protocol", "byProtocol")):
         if column in panel.columns:
             counts = panel[column].value_counts(dropna=False)
@@ -1471,7 +1600,10 @@ def run_evidence(l3_code: str, name: str, *,
                  screen_retries: int = 0,
                  screen_retry_wait: float = 60.0,
                  engine_config: Optional[dict] = None,
-                 exclude_sites: Optional[dict] = None) -> dict:
+                 exclude_sites: Optional[dict] = None,
+                 nrsa_max_stream_order: Optional[int] = None,
+                 nrsa_protocols=None,
+                 nrsa_keep_sites: Optional[dict] = None) -> dict:
     """The expensive, decision-free half of a regional run.
 
     Screening, data assembly, the registries, redundancy, the stratifier
@@ -1485,21 +1617,54 @@ def run_evidence(l3_code: str, name: str, *,
     # A headless run must not proceed under a config that misdescribes the engine.
     methodology.verify_mirrors(strict=True)
     directions = load_directions()
+    protocols = tuple(nrsa_protocols) if nrsa_protocols else None
     candidates, panel_ledger = select_candidates_detailed(
-        l3_code, dataset=nrsa_dataset_id, cycles=nrsa_cycles)
+        l3_code, dataset=nrsa_dataset_id, cycles=nrsa_cycles,
+        max_stream_order=nrsa_max_stream_order, protocols=protocols,
+        keep_stations=nrsa_keep_sites or None)
+    frame_overrides = list(candidates.attrs.get("frame_overrides") or [])
+    n_out_of_frame = int(len(panel_ledger[panel_ledger["reason"].astype(str)
+                                          .str.contains("reference frame", na=False)])
+                         if len(panel_ledger) else 0)
+    if nrsa_max_stream_order is not None:
+        _safe_emit(on_event, "reference_frame",
+                   {"max_stream_order": int(nrsa_max_stream_order),
+                    "n_candidates": int(len(candidates)),
+                    "n_out_of_frame": n_out_of_frame,
+                    "n_overrides": len(frame_overrides)})
     n_candidates = len(candidates)
     if n_candidates == 0:
         raise ValueError(f"no NRSA candidate sites for L3 ecoregion {l3_code}")
 
-    candidate_rows = [{"site_id": str(r.site_id), "lat": float(r.lat), "lon": float(r.lon)}
-                      for r in candidates.itertuples()]
+    # The NRSA sample frame is NHDPlus V2, so a candidate's own COMID names the
+    # reach the crew sampled: pass it and the screen reads StreamCat there with
+    # no routing (the vendored pipeline short-circuits on a supplied COMID).
+    # A candidate without one still routes from its coordinate (2026-09-07).
+    has_comid = "comid" in candidates.columns
+    has_source = "comid_source" in candidates.columns
+    candidate_rows = []
+    for r in candidates.itertuples():
+        row = {"site_id": str(r.site_id), "lat": float(r.lat), "lon": float(r.lon)}
+        cid = easi_screening.candidate_comid(
+            {"comid": getattr(r, "comid", None)}) if has_comid else None
+        if cid is not None:
+            row["comid"] = cid
+            if has_source and getattr(r, "comid_source", None):
+                row["comid_source"] = str(getattr(r, "comid_source"))
+        candidate_rows.append(row)
+    comid_mode = easi_screening.comid_mode_of(candidate_rows)
+    n_archive = sum(1 for r in candidate_rows if r.get("comid") is not None)
+    _safe_emit(on_event, "screening_comid_mode",
+               {"mode": comid_mode, "n_archive": n_archive,
+                "n_candidates": len(candidate_rows)})
 
     # --- Reference screening + tier ladder (REF) ---
     if do_screen:
         tier = choose_reference_tier(candidate_rows, screen_preset, on_event=on_event,
                                      cache_dir=cache_dir,
                                      screen_retries=screen_retries,
-                                     screen_retry_wait=screen_retry_wait)
+                                     screen_retry_wait=screen_retry_wait,
+                                     comid_mode=comid_mode)
         screening = tier["screening"]
         retained_ids = set(screening["retained_ids"])
         counts = screening["counts"]
@@ -1555,7 +1720,7 @@ def run_evidence(l3_code: str, name: str, *,
     predictor_config = build_predictor_config(list(data.columns), landscape_directions)
 
     # Engine-sourced recomputation (the recalibration mechanism, 2026-09-02):
-    # exact-watershed values are computed at every retained site and joined by
+    # HR reach watershed values are computed at every retained site and joined by
     # site_id. The se_ predictor columns swap in for their StreamCat predictor
     # analogs, and the SCORED landscape columns with an engine analog take the
     # engine's values under their own names, so the curves are fitted on the
@@ -1680,12 +1845,21 @@ def run_evidence(l3_code: str, name: str, *,
         "n_candidates": n_candidates,
         "screening_method": method,
         "screening_counts": counts,
-        # The fixed watershed-engine policy the reference screen ran under
-        # (the StreamCat lookup engine's legacy routing); recorded, never a
-        # digest key, since it reproduces the behavior every version had.
+        # The fixed watershed-engine policy the reference screen ran under (the
+        # StreamCat lookup engine, by archive COMID where the panel has one and
+        # its legacy routing where it does not). Both this and the COMID mode
+        # join the digest under absence semantics: neither reproduces anything
+        # published, so a change of either must be visible (2026-09-07).
         "screening_watershed_engine": (
             easi_screening.SCREENING_WATERSHED_ENGINE
             if method == "direct_engine" else None),
+        "screening_comid_mode": comid_mode if method == "direct_engine" else None,
+        "screening_comids": (screening.get("comids")
+                             if isinstance(screening, dict) else None),
+        "screening_cache": (screening.get("cache")
+                            if isinstance(screening, dict) else None),
+        "easi_vendor": (screening.get("easi_vendor")
+                        if isinstance(screening, dict) else None),
         "tier": tier,
         "screening": screening,
         "retained_ids": retained_ids,
@@ -1694,6 +1868,12 @@ def run_evidence(l3_code: str, name: str, *,
         "nrsa_cycles": list(nrsa_cycles) if nrsa_cycles else None,
         "nrsa_policy": (None if nrsa_dataset_id == nrsa_dataset.LEGACY_DATASET_ID
                         else nrsa_dataset.POLICY_MOST_RECENT),
+        "nrsa_max_stream_order": nrsa_max_stream_order,
+        "nrsa_protocols": list(protocols) if protocols else None,
+        # stations the owner readmitted despite the frame, and how many the
+        # frame kept out: the rule is never invisible (2026-09-07)
+        "nrsa_frame_overrides": frame_overrides,
+        "nrsa_n_out_of_frame": n_out_of_frame,
         "nrsa_panel_summary": _panel_summary(candidates, panel_ledger),
         "nrsa_panel_ledger": panel_ledger.to_dict("records") if len(panel_ledger) else [],
         "n_retained": len(retained),
@@ -1921,6 +2101,10 @@ def assemble(evidence: dict, *,
         # 2026-09-02, so no published manifest had recorded them.
         "screening": screening,
         "screening_watershed_engine": evidence.get("screening_watershed_engine"),
+        "screening_comid_mode": evidence.get("screening_comid_mode"),
+        "screening_comids": evidence.get("screening_comids"),
+        "screening_cache": evidence.get("screening_cache"),
+        "easi_vendor": evidence.get("easi_vendor"),
         "predictor_source_flag": evidence.get("predictor_source_flag"),
         "predictor_source": evidence.get("predictor_source"),
         "resourced_metrics": list(evidence.get("resourced_metrics") or []),
@@ -1930,6 +2114,10 @@ def assemble(evidence: dict, *,
         "review_flags": tier.get("review_flags", []),
         "retained_site_ids": sorted(retained_ids),
         "nrsa_dataset": evidence.get("nrsa_dataset"),
+        "nrsa_max_stream_order": evidence.get("nrsa_max_stream_order"),
+        "nrsa_protocols": evidence.get("nrsa_protocols"),
+        "nrsa_frame_overrides": evidence.get("nrsa_frame_overrides"),
+        "nrsa_n_out_of_frame": evidence.get("nrsa_n_out_of_frame"),
         "nrsa_cycles": evidence.get("nrsa_cycles"),
         "nrsa_policy": evidence.get("nrsa_policy"),
         "nrsa_panel_summary": evidence.get("nrsa_panel_summary"),

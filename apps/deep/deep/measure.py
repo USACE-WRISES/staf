@@ -47,17 +47,18 @@ def compute_metrics_only(ctx_inputs: dict, metric_ids, *, assessment=None,
     entries (the shape the app's measured-values state uses) for every
     ``metricId`` that has a desktop adapter and yields a value.
 
-    ``assessment`` (a LoadedAssessment or raw bundle) gates the site engine:
-    engine adapters may supply values only when the bundle's curves were fitted
-    on engine predictors (``predictorSource``) or when the pairing mode is
-    ``label``; otherwise the adapters keep the StreamCat/NLCD sources those
-    curves were trained on, and the scoring layer's pairing rule backstops any
-    state that slips past. ``engine_record`` (or ``ctx_inputs["site_engine"]``)
-    is an already computed ok record the app hands over so the adapters never
-    run the engine twice for one site. The site anchor and watershed basis in
-    ``ctx_inputs`` label COMID-keyed values on a stream outside NHDPlus V2.
-    Never raises; the heavy datasource imports are lazy so this module stays
-    importable without the geospatial stack.
+    ``assessment`` (a LoadedAssessment or raw bundle) gates the site engine
+    metric by metric: an engine adapter may supply a value only for a curve
+    fitted on engine predictors (its own ``predictorSource`` stamp; the
+    bundle-level stamp is the default for ids the bundle does not describe)
+    or when the pairing mode is ``label``; every other adapter keeps the
+    StreamCat/NLCD source its curve was trained on, and the scoring layer's
+    pairing rule backstops any state that slips past. ``engine_record`` (or
+    ``ctx_inputs["site_engine"]``) is the ok record the app already computed
+    for the site; the adapters never run the engine themselves. The site
+    anchor and watershed basis in ``ctx_inputs`` label COMID-keyed values on
+    a stream outside NHDPlus V2. Never raises; the heavy datasource imports
+    are lazy so this module stays importable without the geospatial stack.
     """
     from . import assessments, curves
     from .metrics import computed
@@ -70,9 +71,12 @@ def compute_metrics_only(ctx_inputs: dict, metric_ids, *, assessment=None,
     if isinstance(pre, dict) and pre.get("status") == "ok":
         ctx.extras["site_engine_prefetched"] = pre
     if assessment is not None:
+        label_mode = curves.ENGINE_PAIRING_MODE == "label"
         ctx.extras["allow_engine"] = (
-            assessments.predictor_source_of(assessment) != "streamcat"
-            or curves.ENGINE_PAIRING_MODE == "label")
+            assessments.predictor_source_of(assessment) != "streamcat" or label_mode)
+        ctx.extras["allow_engine_by_id"] = {
+            mid: (ok or label_mode)
+            for mid, ok in assessments.engine_gate_by_metric(assessment).items()}
     out: dict[str, dict] = {}
     for mid, cv in computed.compute_for(metric_ids, ctx).items():
         out[mid] = {"value": cv.value, "na": False, "note": "",

@@ -79,6 +79,64 @@ def parse_streamcat_json(j: Any, aoi_suffix: str = "ws") -> pd.DataFrame:
     return df
 
 
+# Columns StreamCat does not publish, summed here from the ones it does. EPA
+# publishes woody and herbaceous wetland separately and no total, but wetland
+# storage is one function: splitting it gave curves whose bands sat in
+# hundredths of a percent of watershed area, below the NLCD wetland class's
+# own accuracy, and cost the Interior Plateau its herbaceous curve entirely
+# (a degenerate Q25 of 0). EASI has always scored the sum
+# (easi/metrics/hydrology.py, method "watershed-wetland-extent"), so this makes
+# the two apps agree. Review item ECO-15 asked for it (2026-09-07).
+DERIVED_METRICS: dict[str, tuple[str, ...]] = {
+    "pctwet2019": ("pctwdwet2019", "pcthbwet2019"),
+}
+_DERIVED_CAP = 100.0
+
+
+def expand_metric_names(metric_names) -> tuple[list[str], dict[str, tuple[str, ...]]]:
+    """``(names to fetch, {derived: sources})`` for a requested list."""
+    if isinstance(metric_names, str):
+        metric_names = [metric_names]
+    wanted = [str(m).lower() for m in metric_names or []]
+    derived = {m: DERIVED_METRICS[m] for m in wanted if m in DERIVED_METRICS}
+    out: list[str] = []
+    for m in wanted:
+        for name in ([m] if m not in derived else derived[m]):
+            if name not in out:
+                out.append(name)
+    return out, derived
+
+
+def derive_metrics(wide: pd.DataFrame, requested, aoi_suffix: str = "ws") -> pd.DataFrame:
+    """Add each requested derived column, then drop any source column that was
+    fetched only to build one.
+
+    Both classes are required and a missing one is never read as zero (EASI's
+    contract): a site with one class unpublished has an unknown total, not a
+    smaller one. The sum is capped at 100 percent of watershed area.
+    """
+    if wide is None or not len(wide):
+        return wide
+    fetch_names, derived = expand_metric_names(requested)
+    if not derived:
+        return wide
+    keep = {f"{m}{aoi_suffix}" for m in (
+        [str(x).lower() for x in ([requested] if isinstance(requested, str) else requested or [])])}
+    out = wide.copy()
+    for name, sources in derived.items():
+        cols = [f"{s}{aoi_suffix}" for s in sources]
+        if not all(c in out.columns for c in cols):
+            continue
+        total = None
+        for c in cols:
+            part = pd.to_numeric(out[c], errors="coerce")
+            total = part if total is None else total + part      # NaN + x is NaN
+        out[f"{name}{aoi_suffix}"] = total.clip(upper=_DERIVED_CAP).round(2)
+    drop = [f"{s}{aoi_suffix}" for sources in derived.values() for s in sources
+            if f"{s}{aoi_suffix}" not in keep and f"{s}{aoi_suffix}" in out.columns]
+    return out.drop(columns=sorted(set(drop)))
+
+
 def streamcat_metrics(
     comids,
     metric_names,
@@ -89,9 +147,13 @@ def streamcat_metrics(
     """StreamCAT metrics for COMIDs. GET to api.epa.gov (JSON), falling back to
     the java mirror (CSV). ``metric_names`` are StreamCAT base names
     (lower-cased here, e.g. "pctimp2019"); columns come back as base+suffix
-    (e.g. "pctimp2019ws"). Never raises; empty frame on total failure."""
+    (e.g. "pctimp2019ws"). A name in :data:`DERIVED_METRICS` is not fetched:
+    its sources are, and the column is summed here. Never raises; empty frame
+    on total failure."""
     if isinstance(metric_names, str):
         metric_names = [metric_names]
+    requested = list(metric_names)
+    metric_names, _derived = expand_metric_names(metric_names)
     # unique(as.integer(comids)) keeping first-occurrence order, NAs dropped
     ids: list[int] = []
     seen: set[int] = set()
@@ -135,8 +197,10 @@ def streamcat_metrics(
         out = _empty_comid_frame()
     else:
         out = pd.concat(frames, ignore_index=True, sort=False)
-    out.attrs["n_chunks"] = len(chunks)
-    out.attrs["failed_chunks"] = failed_chunks
+    n_chunks, failed = len(chunks), failed_chunks
+    out = derive_metrics(out, requested, aoi_suffix)
+    out.attrs["n_chunks"] = n_chunks
+    out.attrs["failed_chunks"] = failed
     return out
 
 

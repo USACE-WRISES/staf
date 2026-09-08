@@ -378,6 +378,31 @@ def predictor_source_of(assessment) -> str:
     return str(value) if value else "streamcat"
 
 
+def engine_gate_by_metric(assessment) -> dict[str, bool]:
+    """``{metricId: True}`` for every metric whose own curve carries an engine
+    ``predictorSource`` stamp, ``False`` for the rest the bundle describes.
+
+    Exactly the reading ``curves._mismatched_pairing`` makes (an absent stamp
+    means StreamCat), so the desktop adapters' engine gate and the scoring
+    layer's pairing rule can never disagree: StreamCurves stamps only the
+    curves it re-sourced, so an unstamped metric on an engine-sourced bundle
+    is a StreamCat-fitted curve and must take the StreamCat value
+    (2026-09-07). Ids the bundle does not describe are absent here and keep
+    the bundle-level default. Accepts a :class:`LoadedAssessment` or a raw
+    bundle dict.
+    """
+    raw = getattr(assessment, "raw", None)
+    if raw is None:
+        raw = assessment if isinstance(assessment, dict) else {}
+    out: dict[str, bool] = {}
+    for fn in (raw or {}).get("metricsByFunction") or []:
+        for m in (fn or {}).get("metrics") or []:
+            mid = (m or {}).get("metricId")
+            if mid:
+                out[str(mid)] = str(m.get("predictorSource") or "streamcat") != "streamcat"
+    return out
+
+
 def validate_bundle(bundle: dict) -> list[str]:
     """Structural checks for an assessment (predefined or uploaded). Empty == OK."""
     problems: list[str] = []

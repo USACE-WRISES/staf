@@ -14,7 +14,10 @@ import os
 import pytest
 import requests
 
+import pandas as pd
+
 import streamcurves.datasources as ds
+from streamcurves.datasources import streamcat as sc
 from streamcurves.datasources import mmw as mmw_mod
 
 # ── mocked session machinery ─────────────────────────────────────────────────
@@ -876,3 +879,39 @@ class TestLive:
     def test_mmw_delineate_live(self):
         geom = ds.mmw_delineate(39.8522, -75.5983)  # MMW's own demo point
         assert geom is None or geom.get("type") in ("Polygon", "MultiPolygon")
+
+
+# --------------------------------------------------------------------------- #
+# Derived StreamCat columns (2026-09-07): the combined wetland metric
+# --------------------------------------------------------------------------- #
+def test_expand_metric_names_fetches_the_sources_of_a_derived_column():
+    names, derived = sc.expand_metric_names(["pctimp2019", "pctwet2019"])
+    assert names == ["pctimp2019", "pctwdwet2019", "pcthbwet2019"]
+    assert derived == {"pctwet2019": ("pctwdwet2019", "pcthbwet2019")}
+    assert sc.expand_metric_names(["pctimp2019"]) == (["pctimp2019"], {})
+    # a source that is also requested in its own right is fetched once
+    names, _ = sc.expand_metric_names(["pctwet2019", "pctwdwet2019"])
+    assert names == ["pctwdwet2019", "pcthbwet2019"]
+
+
+def test_derive_metrics_sums_both_classes_and_needs_both():
+    wide = pd.DataFrame({"comid": [1, 2, 3],
+                         "pctwdwet2019ws": [1.5, None, 70.0],
+                         "pcthbwet2019ws": [0.5, 0.2, 45.0]})
+    out = sc.derive_metrics(wide, ["pctwet2019"])
+    assert out["pctwet2019ws"].tolist()[0] == 2.0
+    assert pd.isna(out["pctwet2019ws"].tolist()[1])       # a missing class is unknown
+    assert out["pctwet2019ws"].tolist()[2] == 100.0       # capped at the domain max
+    # the sources were fetched only to build it, so they do not ride along
+    assert "pctwdwet2019ws" not in out.columns and "pcthbwet2019ws" not in out.columns
+
+
+def test_derive_metrics_keeps_a_source_that_was_requested_too():
+    wide = pd.DataFrame({"comid": [1], "pctwdwet2019ws": [1.5], "pcthbwet2019ws": [0.5]})
+    out = sc.derive_metrics(wide, ["pctwet2019", "pcthbwet2019"])
+    assert set(out.columns) == {"comid", "pctwet2019ws", "pcthbwet2019ws"}
+
+
+def test_derive_metrics_is_a_no_op_without_a_derived_request():
+    wide = pd.DataFrame({"comid": [1], "pctimp2019ws": [2.0]})
+    assert sc.derive_metrics(wide, ["pctimp2019"]).equals(wide)

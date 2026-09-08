@@ -17,7 +17,7 @@ def _html(step="identify", zoomed=True, mode="segmented", scored=None, routed=Fa
 def test_names_both_engines_with_their_colors():
     html = _html()
     assert "StreamCat lookup engine" in html and "scores the reach in seconds" in html
-    assert "STAF site engine" in html and "calculates the exact watershed" in html
+    assert "STAF site engine" in html and "calculates the HR reach watershed" in html
     assert app.FLOWLINE_STYLE["color"] in html and app.HR_FLOWLINE_STYLE["color"] in html
     assert "easi-legend-title" in html and "Zoom in" not in html
 
@@ -62,7 +62,7 @@ def test_copy_is_plain():
 
 def test_dock_script_and_cache_bust_are_wired():
     src = Path(app.__file__).read_text(encoding="utf-8")
-    assert "legend-dock.js" in src and "styles.css?v=45" in src
+    assert "legend-dock.js" in src and "styles.css?v=46" in src
     assert 'id="easi-legend-panel"' in src.replace("'", '"')
     js = (Path(app.__file__).parent / "www" / "legend-dock.js").read_text(encoding="utf-8")
     assert "leaflet-control-layers" in js and "disableClickPropagation" in js

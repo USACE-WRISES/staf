@@ -29,6 +29,7 @@ import pandas as pd
 from shiny import module, reactive, render, ui
 
 from streamcurves import library as lib
+from streamcurves import methodology
 from streamcurves import engine_names
 from streamcurves import nrsa_dataset, region_build as rb
 from streamcurves import rules_view
@@ -189,6 +190,10 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             # Always explicit, so every recorded argv says which data it read.
             dataset_id=dataset,
             predictor_source=(input.build_predictor_source() or "streamcat"),
+            # The reference frame is recorded like the dataset: an explicit flag,
+            # so the run's own argv says which stations it could draw from.
+            reference_frame=(input.build_reference_frame()
+                             or rb.REFERENCE_FRAME_DEFAULT),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None)
         _launch(run_stage(argv, out_dir))
@@ -246,8 +251,10 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             enable_policies=kw["enable_policies"],
             dataset_id=kw["dataset_id"],
             # recovered from the run's manifest by restage_args; without it a
-            # re-stage of an engine build silently reverted to StreamCat
+            # re-stage of an engine build silently reverted to StreamCat, and a
+            # re-stage of an all-streams run came back framed
             predictor_source=kw.get("predictor_source"),
+            reference_frame=kw.get("reference_frame"),
             reviewer_decisions=decisions if decisions.exists() else None,
             coverage_exceptions=gaps if gaps.exists() else None)
         _launch(run_stage(argv, out_dir))
@@ -532,11 +539,23 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                     ui.input_numeric(ns("build_nboot"), "Bootstrap resamples",
                                      value=1000, min=100, max=2000, step=100),
                     title=rb.RESAMPLES_NOTE)),
+                ui.column(3, ui.div(
+                    ui.input_select(
+                        ns("build_reference_frame"), "Reference frame",
+                        {"wadeable": "Wadeable, stream order 1 to 5 (default)",
+                         "all": "Every stream, including large rivers"},
+                        selected=rb.REFERENCE_FRAME_DEFAULT, width="100%"),
+                    title="Which stations may enter the reference population. "
+                          "Wadeable reads the NHDPlus V2 stream order of each "
+                          "station's reach (rule DATA-10); the NRSA sampling "
+                          "protocol decides only where an order cannot be "
+                          "resolved. Every stream is what the versions published "
+                          "before methodology 0.10 drew from.")),
                 ui.column(2, ui.div(
                     ui.input_select(
                         ns("build_predictor_source"), "Predictor source",
                         {"streamcat": f"{engine_names.STREAMCAT} (default)",
-                         "site-engine": f"{engine_names.SITE_ENGINE} (exact watershed)"},
+                         "site-engine": f"{engine_names.SITE_ENGINE} (HR reach watershed)"},
                         selected="streamcat", width="100%"),
                     title="Which engine computes the curve predictors. The "
                           f"{engine_names.SITE_ENGINE} recomputes them at the "
@@ -545,6 +564,7 @@ def region_builder_server(input, output, session, state: AppState, active=None):
                           "rule.")),
             ),
             ui.p(rb.RESAMPLES_HINT, class_="text-muted small mb-2"),
+            ui.output_ui(ns("frame_summary")),
             ui.output_ui(ns("policy_summary")),
             ui.input_action_button(
                 ns("build_run"), ui.TagList(bi("magic"), " Build this region"),
@@ -552,6 +572,37 @@ def region_builder_server(input, output, session, state: AppState, active=None):
             ui.tags.span(" Around 35 minutes. You can leave this page; the build keeps "
                          "running.", class_="text-muted small ms-2"),
             class_="rb-form card card-body mb-3",
+        )
+
+    @render.ui
+    def frame_summary():
+        """What the reference frame will do to the chosen region, before the run.
+
+        The rule decides the reference population before any screening, so the
+        count of stations it keeps out belongs on the page, not only in the run
+        log (2026-09-07).
+        """
+        code = (input.build_region() or "").strip()
+        if not code:
+            return None
+        frame = input.build_reference_frame() or rb.REFERENCE_FRAME_DEFAULT
+        max_order = (None if frame == "all"
+                     else methodology.threshold("reference_panel.max_stream_order"))
+        dataset = input.build_dataset() or nrsa_dataset.default_build_dataset_id()
+        counts = rb.frame_counts(_sites_for(dataset), code,
+                                 max_stream_order=max_order)
+        text = rb.frame_summary_text(counts, frame, max_order)
+        by_order = counts.get("by_order") or {}
+        detail = ", ".join(f"order {k}: {v}" for k, v in sorted(by_order.items()))
+        return ui.div(
+            ui.tags.span(text, class_="small"),
+            (ui.tags.span(f" ({detail})", class_="text-muted small")
+             if detail else None),
+            (ui.tags.span(" Build with every stream to include them, or readmit one "
+                          "station with --include-site in the batch command.",
+                          class_="text-muted small")
+             if counts.get("n_out_of_frame") else None),
+            class_="mb-2",
         )
 
     @render.ui

@@ -25,7 +25,7 @@ class MeasuredValue:
     note: str = ""
     na: bool = False
     stratum: Optional[str] = None   # chosen curve-layer stratum (multi-stratum metrics)
-    # True when the value was computed by the site engine (exact watershed).
+    # True when the value was computed by the site engine (HR reach watershed).
     # Meaningful only for desktop-origin values: a user edit sets origin to
     # "field", which clears the flag on the next load, so an edited value can
     # never carry engine provenance it no longer has. The scoring layer uses

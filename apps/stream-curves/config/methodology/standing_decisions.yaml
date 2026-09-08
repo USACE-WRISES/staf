@@ -34,7 +34,10 @@ meta:
   # Re-affirmed unchanged under 0.9 (2026-08-27): the governance-capture release
   # moved no threshold and added only advisory machinery, so every entry's
   # conditions and rationale templates carry over as approved.
-  methodology_version: "0.9-provisional"
+  # re-affirmed unchanged under 0.10-provisional: v0.10 moved the reference-panel
+  # protocol, the screening COMID mode and the wetland metric, none of
+  # which is a review-queue class decision. policy_version stays 1.0.
+  methodology_version: "0.10-provisional"
   approved_on: "2026-08-22"
   authority: "Owner class decisions at the DEEP project gates (2026-08-21), promoted to standing decisions; confirmed per region at the end review before promote."
   rationale_origin: "standing_policy"

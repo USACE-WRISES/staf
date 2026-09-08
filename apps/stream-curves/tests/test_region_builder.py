@@ -654,6 +654,10 @@ def test_restage_args_recovers_the_run_record_and_adds_exactly_one_flag():
                 "diagnostics": {"nBoot": 1000}}
     kw = rb.restage_args(_refused_packet(enabled=["data03-thin-metric-finalized"]),
                          manifest)
+    # the frame is recovered, never defaulted: this manifest recorded no frame,
+    # so the re-stage draws from every stream exactly as the original run did
+    assert kw["reference_frame"] == "all"
+    kw = {k: v for k, v in kw.items() if k != "reference_frame"}
     assert kw == {"l3_code": "52", "name": "Driftless Area", "n_boot": 1000,
                   "enable_policies": ["data03-thin-metric-finalized",
                                       rb.REF02_POLICY_ID],

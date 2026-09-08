@@ -3,8 +3,9 @@
 The policy invariants under test:
   * identical inputs produce identical payloads (no fallback endpoints);
   * a click resolving to the V2 network short-circuits without touching HR;
-  * the DA-ratio refusal boundary sits exactly at DA_RATIO_MAX;
-  * missing drainage area refuses with a reason instead of guessing;
+  * the legacy DA-ratio refusal boundary sits exactly at DA_RATIO_MAX, and
+    the auto policy never declines (the ratio is provenance, 2026-09-06);
+  * missing drainage area refuses (legacy) with a reason instead of guessing;
   * outages surface as retryable errors, never as a different answer.
 """
 from __future__ import annotations
@@ -87,25 +88,25 @@ def test_missing_da_refuses_with_reason(monkeypatch):
     assert res["anchor"]["routing"]["daRatio"] is None
 
 
-def test_auto_policy_declines_instead_of_refusing(monkeypatch):
-    # The default (auto) policy never refuses: past the bound the routing is
-    # declined with a code and a plain message, and the site still proceeds
-    # (the exact watershed comes from the site engine; COMID-keyed evidence
-    # is withheld).
+def test_auto_policy_never_declines(monkeypatch):
+    # The default (auto) policy never refuses or declines (2026-09-06): past
+    # the bound the site proceeds with the covered reach supplying the
+    # COMID-keyed metrics, and the ratio rides the payload as provenance.
     _stub(monkeypatch, hr_rec=_hr_rec(da=1.0), snap=_SNAP_OK,
           attrs={"gnis_name": "Big Run",
                  "drainage_area_sqkm": routing.DA_RATIO_MAX + 0.05})
     res = routing.route_from_hr(40.0, -83.0, _HR_SNAP)
     assert "refused" not in res and "error" not in res
     r = res["anchor"]["routing"]
-    assert r["declined"] is True
-    assert r["declineCode"] == "surrogate_da_ratio_exceeded"
-    assert "limit 10" in r["declineMessage"]
-    assert "low flow" in r["declineMessage"]
+    assert r["declined"] is False
+    assert "declineCode" not in r and "declineMessage" not in r
+    assert r["daRatio"] == round(routing.DA_RATIO_MAX + 0.05, 2)
+    assert r["daRatioLimit"] == routing.DA_RATIO_MAX
 
     _stub(monkeypatch, hr_rec=_hr_rec(da=None), snap=_SNAP_OK, attrs=_ATTRS_OK)
     r = routing.route_from_hr(40.0, -83.0, _HR_SNAP)["anchor"]["routing"]
-    assert r["declined"] is True and r["declineCode"] == "surrogate_da_unavailable"
+    assert r["declined"] is False and r["daRatio"] is None
+    assert "declineCode" not in r
 
 
 def test_policies_share_the_payload_but_not_the_note(monkeypatch):
@@ -289,3 +290,33 @@ def test_the_two_lookups_overlap_and_the_payload_is_unchanged(monkeypatch):
     assert elapsed < 0.36, elapsed
     _stub(monkeypatch, snap=_SNAP_OK, attrs=_ATTRS_OK)
     assert res == routing.route_from_hr(40.0, -83.0, _HR_SNAP)
+
+
+def test_an_attrs_outage_is_retryable_under_legacy_and_recorded_under_auto(monkeypatch):
+    # the fabric service did not answer, so there is no drainage area to compare:
+    # that is a service failure to retry, not the permanent refusal a reach with
+    # no published area earns (2026-09-07)
+    outage = {"_flowline_error": "fabric: the NHDPlus V2 flowline service did not answer",
+              "gnis_name": None, "drainage_area_sqkm": None}
+    _stub(monkeypatch, hr_rec=_hr_rec(da=1.0), snap=_SNAP_OK, attrs=outage)
+    res = routing.route_from_hr(40.0, -83.0, _HR_SNAP, policy=_LEGACY)
+    assert "refused" not in res and res["error"] == "attrs_service_error"
+    assert "did not answer" in res["detail"]
+    assert res["anchor"]["routing"]["attrsError"].startswith("fabric:")
+
+    _stub(monkeypatch, hr_rec=_hr_rec(da=1.0), snap=_SNAP_OK, attrs=outage)
+    auto = routing.route_from_hr(40.0, -83.0, _HR_SNAP)
+    assert "error" not in auto and "refused" not in auto
+    r = auto["anchor"]["routing"]
+    assert r["declined"] is False and r["daRatio"] is None
+    assert r["attrsError"].startswith("fabric:")
+
+
+def test_a_reach_without_a_published_area_still_refuses_under_legacy(monkeypatch):
+    # the service answered and the reach simply has no area: unchanged, and no
+    # attrsError key rides the payload
+    _stub(monkeypatch, hr_rec=_hr_rec(da=1.0), snap=_SNAP_OK,
+          attrs={"gnis_name": "Big Run", "drainage_area_sqkm": None})
+    res = routing.route_from_hr(40.0, -83.0, _HR_SNAP, policy=_LEGACY)
+    assert res["refused"] is True and res["code"] == "surrogate_da_unavailable"
+    assert "attrsError" not in res["anchor"]["routing"]

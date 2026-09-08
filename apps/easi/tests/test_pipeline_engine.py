@@ -1,6 +1,6 @@
 """delineate_only under the auto policy: the STAF site engine computes the
-exact watershed for a routed site and replaces the surrogate basin, an engine
-failure draws no proxy, a declined routing still completes, the legacy policy
+HR reach watershed for a routed site and replaces the surrogate basin, an engine
+failure draws no proxy, a routing past the ratio bound still completes, the legacy policy
 and covered clicks never run the engine. All offline (engine stubbed)."""
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ def _run(monkeypatch, engine, *, policy="auto", anchor=None):
                                        "drainage_area_sqkm": 2.72,
                                        "reach_geojson": None,
                                        "reach_length_ft": 954.0, "_warnings": []})
-    monkeypatch.setattr(watershed, "compute_exact_watershed", engine)
+    monkeypatch.setattr(watershed, "compute_reach_watershed", engine)
     progress: dict = {}
     res = asyncio.run(pipeline.delineate_only(
         40.0962, -83.0203, 1000.0, watershed_engine=policy, progress=progress))
@@ -83,15 +83,14 @@ def test_engine_failure_draws_no_proxy(monkeypatch):
     assert res["ctx_inputs"]["watershedEngine"]["status"] == "refused"
 
 
-def test_declined_routing_still_completes(monkeypatch):
-    declined = _hr_anchor(declined=True, daRatio=37.2,
-                          declineCode="surrogate_da_ratio_exceeded",
-                          declineMessage="past the limit")
-    res, captured, _p = _run(monkeypatch, _engine_ok, anchor=declined)
+def test_routing_past_the_bound_still_completes(monkeypatch):
+    past = _hr_anchor(daRatio=37.2)
+    res, captured, _p = _run(monkeypatch, _engine_ok, anchor=past)
     assert res["status"] == "ok"
-    assert res["siteAnchor"]["routing"]["declined"] is True
+    r = res["siteAnchor"]["routing"]
+    assert r["declined"] is False and r["daRatio"] == 37.2
     assert res["delineation"]["watershed_source"] == "site-engine"
-    assert captured["comid"] == 5215053
+    assert captured["comid"] == 5215053      # the covered reach still keys the evidence
 
 
 def test_legacy_policy_never_calls_the_engine(monkeypatch):
@@ -110,7 +109,7 @@ def test_covered_click_never_calls_the_engine(monkeypatch):
 
     def boom(anchor, *, progress=None):
         raise AssertionError("covered clicks must not run the engine")
-    monkeypatch.setattr(watershed, "compute_exact_watershed", boom)
+    monkeypatch.setattr(watershed, "compute_reach_watershed", boom)
     res = asyncio.run(pipeline.delineate_only(40.0, -83.0, 1000.0, comid=123))
     assert res["status"] == "ok"
     assert res["delineation"]["watershed_source"] == "nhdplus-v2-basin"

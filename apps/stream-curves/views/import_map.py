@@ -37,6 +37,7 @@ from pathlib import Path  # noqa: E402
 
 from streamcurves import easi_screening  # noqa: E402
 from streamcurves import engine_names
+from streamcurves import methodology
 from streamcurves.metric_picker import _SRC_DISPLAY
 from streamcurves import run_state as rs  # noqa: E402
 
@@ -597,7 +598,8 @@ def import_map_ui():
                            if _HAS_MAP else
                            ui.div("Map requires ipyleaflet.", class_="text-muted"),
                            class_="sites-view sites-view-map"),
-                    ui.div(ui.output_data_frame("sites_table"),
+                    ui.div(ui.output_ui("sites_frame_note"),
+                           ui.output_data_frame("sites_table"),
                            class_="sites-view sites-view-table"),
                     ui.output_ui("easi_screening_panel"),
                     class_="step3-live",
@@ -1427,6 +1429,18 @@ def import_map_server(
                 nrsa_part["comid_source"] = np.where(
                     nrsa_part["comid"].isna(), "live_snap",
                     np.where(pd.notna(from_evidence.to_numpy()), "epa_nrsa", "archive"))
+                # The NHDPlus V2 stream order of each station's reach: the
+                # reference frame (wadeable is order 1 to 5, rule DATA-10), so
+                # the picker can show which sites a framed build will screen
+                # (2026-09-07). From the panel when it carries one, else the
+                # cached lookup by COMID.
+                if "stream_order" in nr.columns:
+                    nrsa_part["stream_order"] = nr["stream_order"].to_numpy()
+                else:
+                    orders = nds.stream_orders()
+                    nrsa_part["stream_order"] = [
+                        orders.get(int(c)) if pd.notna(c) and int(c) > 0 else None
+                        for c in nrsa_part["comid"]]
         if upload_part is None and nrsa_part is None:
             _set_sites(None)
             return
@@ -1587,14 +1601,14 @@ def import_map_server(
                     diag["site_failures"]["mmw"] = mmw_fail
 
             if run_se:
-                # Exact-watershed predictors from the vendored site engine.
-                # Slow by design (roughly a minute per site: true point
+                # HR reach watershed predictors from the vendored site engine.
+                # Slow by design (roughly a minute per site: the reach
                 # watershed + zonal statistics); the progress toast names it.
                 for cc in se_codes:
                     sdf[cc] = np.nan
                 se_fail = 0
                 for i in range(n):
-                    await announce(f"{engine_names.SITE_ENGINE} (exact watershed)",
+                    await announce(f"{engine_names.SITE_ENGINE} (HR reach watershed)",
                                    site=i + 1, n_sites=n)
                     try:
                         vals = await asyncio.to_thread(
@@ -1978,7 +1992,7 @@ def import_map_server(
                        _SRC_DISPLAY["streamcat"]: engine_names.STREAMCAT,
                        "StreamStats": "StreamStats", "MMW": "Model My Watershed",
                        _SRC_DISPLAY["site_engine"]:
-                           f"{engine_names.SITE_ENGINE} (exact watershed)"}
+                           f"{engine_names.SITE_ENGINE} (HR reach watershed)"}
         disc_choices = {"": "All disciplines"}
         for d in _DISCIPLINE_ORDER:
             disc_choices[d] = d
@@ -2166,8 +2180,64 @@ def import_map_server(
     def sites_table():
         s = sites()
         req(s is not None)
-        show = s[[c for c in ("site_id", "lat", "lon", ".source", "state") if c in s.columns]]
+        cols = [c for c in ("site_id", "lat", "lon", ".source", "state",
+                            "stream_order", "in_frame") if c in s.columns]
+        show = s[cols] if "in_frame" in s.columns else _with_frame_column(s, cols)
         return render.DataGrid(show.head(100).reset_index(drop=True), height="360px")
+
+    def _with_frame_column(s, cols):
+        """The picker's rows plus a plain in-frame answer per site.
+
+        A framed build screens only stream order 1 to 5 (rule DATA-10), so the
+        picker says which of the assembled sites that is rather than leaving it
+        to be discovered in the run log (2026-09-07).
+        """
+        show = s[cols].copy()
+        if "stream_order" not in show.columns:
+            return show
+        max_order = _frame_max_order()
+        order = pd.to_numeric(show["stream_order"], errors="coerce")
+        show["in frame"] = [
+            "yes" if pd.notna(o) and o <= max_order
+            else ("no, order %d" % int(o)) if pd.notna(o) else "unknown order"
+            for o in order]
+        return show
+
+    def _frame_max_order() -> float:
+        try:
+            return float(methodology.threshold("reference_panel.max_stream_order") or 5)
+        except Exception:  # noqa: BLE001
+            return 5.0
+
+    @render.ui
+    def sites_frame_note():
+        """One line under the picker: how many assembled sites a framed build
+        will screen, and how many it will leave out."""
+        s = sites()
+        if s is None or not len(s) or "stream_order" not in s.columns:
+            return None
+        order = pd.to_numeric(s["stream_order"], errors="coerce")
+        max_order = _frame_max_order()
+        n_in = int((order <= max_order).sum())
+        n_out = int((order > max_order).sum())
+        n_unknown = int(order.isna().sum())
+        if not n_out and not n_unknown:
+            return ui.div(f"All {n_in} sites are inside the reference frame "
+                          f"(stream order 1 to {int(max_order)}).",
+                          class_="text-muted small mb-2")
+        parts = [f"Reference frame (rule DATA-10): {n_in} of {len(s)} sites are "
+                 f"stream order 1 to {int(max_order)}"]
+        if n_out:
+            parts.append(f"{n_out} sit on larger rivers and a framed build will not "
+                         "screen them")
+        if n_unknown:
+            parts.append(f"{n_unknown} have no published order, so the NRSA sampling "
+                         "protocol decides")
+        return ui.div(". ".join(parts) + ".",
+                      ui.tags.span(" Build with every stream, or readmit one site with "
+                                   "--include-site, to include them.",
+                                   class_="text-muted"),
+                      class_="small mb-2")
 
     # ---- EASI reference-condition screening ---------------------------------
     # Two paths: run the vendored engine in-process (local/desktop, direct) or
@@ -2183,8 +2253,11 @@ def import_map_server(
             if lat is None or lon is None or not (np.isfinite(lat) and np.isfinite(lon)):
                 continue
             row = {"site_id": str(r.get("site_id")), "lat": float(lat), "lon": float(lon)}
-            if "comid" in sdf.columns and pd.notna(r.get("comid")):
+            if "comid" in sdf.columns and pd.notna(r.get("comid")) and int(r["comid"]) > 0:
                 row["comid"] = int(r["comid"])
+                if "comid_source" in sdf.columns and pd.notna(r.get("comid_source")):
+                    # rides SiteRequest.metadata and comes back on the result
+                    row["comid_source"] = str(r["comid_source"])
             rows.append(row)
         return rows
 
@@ -2213,13 +2286,19 @@ def import_map_server(
 
     def _persist_screening(tables: dict, *, method: str | None = None) -> None:
         sites_df = pd.DataFrame(tables["easi_screening_sites"])
-        # The engine does not know where a reach came from, but we do: record it
-        # per site so a reviewer can tell a published EPA reach from a live snap.
+        # The screen now reports where each reach came from (archive | snapped |
+        # routed | refused | unresolved), so only fill the blanks a ZIP import
+        # leaves: the engine's own fact wins over the frame's label (2026-09-07).
         s = sites()
         if (s is not None and len(sites_df) and "comid_source" in getattr(s, "columns", [])
                 and "site_id" in sites_df.columns):
             src = dict(zip(s["site_id"].astype(str), s["comid_source"]))
-            sites_df["comid_source"] = sites_df["site_id"].astype(str).map(src)
+            mapped = sites_df["site_id"].astype(str).map(src)
+            if "comid_source" in sites_df.columns:
+                sites_df["comid_source"] = sites_df["comid_source"].where(
+                    sites_df["comid_source"].astype(str).str.len() > 0, mapped)
+            else:
+                sites_df["comid_source"] = mapped
         state.easi_screening_sites.set(sites_df)
         state.easi_screening_metrics.set(pd.DataFrame(tables["easi_screening_metrics"]))
         state.easi_screening_criteria.set(tables["easi_screening_criteria"])

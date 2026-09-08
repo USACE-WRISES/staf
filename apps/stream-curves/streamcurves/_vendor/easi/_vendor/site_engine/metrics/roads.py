@@ -1,6 +1,6 @@
-"""Road density and road-stream crossings over the true watershed.
+"""Road density and road-stream crossings over the HR reach watershed.
 
-The exact-watershed analogs of StreamCat ``rddens`` and ``rdcrs``: TIGER road
+The HR reach watershed analogs of StreamCat ``rddens`` and ``rdcrs``: TIGER road
 features intersecting the watershed are fetched (paged POST polygon queries),
 clipped to the full-resolution polygon locally, and reported as km of road per
 km2; the same clipped roads are intersected with the walked NHDPlus HR

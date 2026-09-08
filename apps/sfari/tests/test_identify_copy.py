@@ -1,8 +1,9 @@
 """The Identify pane after the 2026-09-04 trim (the EASI changes ported to
-SFARI): the pin lands on click, the viewport's HR lines settle a cyan click,
-one short instruction, no credit line, the attribution in Help, short snap
-lines, no cue printed twice, middle dots in the pane titles. The pane is
-Shiny UI, so this reads the source."""
+SFARI) and the 2026-09-07 two-engine map: the pin lands on click, the
+viewport's HR lines settle a click, the StreamCat reach resolves in the
+background, one short instruction, no credit line, the attribution in Help,
+short snap lines, no cue printed twice, middle dots in the pane titles. The
+pane is Shiny UI, so this reads the source."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,15 +16,44 @@ CSS = (Path(app.__file__).parent / "www" / "styles.css").read_text(encoding="utf
 
 
 def test_every_click_snaps_to_the_nhd_and_pins_at_once():
-    # one network, one engine (2026-09-05): the viewport hit or the engine's
-    # HR snap, the pin at once, nothing routed to a covered reach
+    # every click snaps to the HR line and the pin lands at once; the StreamCat
+    # reach (the V2 line under the click, else the nearest StreamCat reach
+    # downstream) resolves in the background and never moves the pin
     assert "def _place_pin(" in SRC
     assert 'nearest_point_on_lines(fc, lat, lon, id_prop="nhdplusid")' in SRC
     assert "hr_site.snap_point(lat, lon)" in SRC
-    for gone in ("anchor_task", "snap_both", "route_from_hr", "pending_anchor",
-                 "_surrogate_offer", "delineate_task", "HR_FLOWLINE_STYLE", "ROUTE_STYLE",
-                 "async def flow_task(", "substitution limit"):
+    assert "async def anchor_task(" in SRC and "comid_anchor.resolve(" in SRC
+    assert "network_display.fetch_streams(bbox, tol_ft=SNAP_TOL_FT)" in SRC
+    for gone in ("snap_both", "route_from_hr", "pending_anchor", "_surrogate_offer",
+                 "delineate_task", "hr_flow_task", "async def flow_task(",
+                 "substitution limit"):
         assert gone not in SRC, gone
+
+def test_delineate_passes_the_typed_reach_length_to_the_engine():
+    # the typed assessment reach reaches the engine (2026-09-07; it was always 1,000 ft)
+    body = SRC.split("def _start_delineate():", 1)[1].split("def _with_anchor(", 1)[0]
+    assert "_launch_engine(lat, lon, float(input.reach_ft() or DEFAULT_REACH_FT))" in body
+    assert "engine_prefill.run_engine(lat, lon, reach_length_ft=reach_ft, progress=_cb)" in SRC
+
+
+def test_the_assessment_waits_for_the_streamcat_reach_before_the_pull():
+    # DEEP's _maybe_compute (2026-09-07): the pull runs once the background
+    # anchor has landed, never before, and the busy cues say so meanwhile
+    assert app._FINDING_REACH_TEXT == "Finding the StreamCat reach…"
+    enter = SRC.split("def _enter_review():", 1)[1].split("def _maybe_pull():", 1)[0]
+    assert "pull_task(" not in enter
+    body = SRC.split("def _maybe_pull():", 1)[1].split("def _pull_poll():", 1)[0]
+    assert 'anchor_task.status() == "running"' in body and "reactive.invalidate_later(0.5)" in body
+    assert 'pull_task(d2["ctx_inputs"], _pull_prog, es)' in body
+    assert 'pull_task.status() == "running"' in body            # never queue a second pull
+    busy = SRC.split("def busy_text():", 1)[1].split("@render", 1)[0]
+    assert "anchor_task.status()" in busy
+    snap = SRC.split("def _apply_snap(hit, *, click=None):", 1)[1].split("def _apply_snap_result", 1)[0]
+    assert "stage.set(_FINDING_REACH_TEXT)" in snap
+    for fn in ("def fn_panel():", "def _ff_pulling() -> bool:"):
+        assert 'anchor_task.status() == "running"' in SRC.split(fn, 1)[1][:600], fn
+    assert "upgrade_pending" not in SRC                            # legacy field, never read
+
 
 def test_the_pane_copy_is_short_and_plain():
     assert "Zoom in and click a stream, search a place, or enter coordinates." in SRC
@@ -42,8 +72,8 @@ def test_the_pane_copy_is_short_and_plain():
 
 def test_the_snap_line_says_what_happens_next():
     body = SRC.split("def snap_status():", 1)[1].split("@render.ui", 1)[0]
-    assert "The STAF site engine calculates the exact watershed" in body
-    assert "anchor" not in body
+    assert "The STAF site engine calculates the HR reach watershed" in body
+    assert "comid_anchor.snap_line(site_anchor())" in body
 
 def test_numbers_are_formatted():
     assert app._fmt_km2(0.9871999900000001) == "0.99 km²"
@@ -53,7 +83,7 @@ def test_numbers_are_formatted():
 
 
 def test_styles_carry_the_tighter_divider_and_the_new_version():
-    assert 'href="styles.css?v=19"' in SRC
+    assert 'href="styles.css?v=21"' in SRC
     assert ".easi-pane-body hr { margin: 8px 0; }" in CSS
     assert ".easi-ac-credit" not in CSS
 
@@ -86,14 +116,20 @@ def test_basin_pane_matches_easi_plus_the_nhdplusid():
                  "none within the substitution limit"):
         assert gone not in card, gone
     for kept in ('row("Watershed engine"', 'row("Drainage area"', 'row("Reach length"',
-                 'row("NHDPlusID"'):
+                 'row("NHDPlusID"', 'row("StreamCat reach"'):
         assert kept in card, kept
     assert app._watershed_engine_text({"watershedBasis": "site-engine",
                                        "siteEngine": {"engineVersion": "0.2.2"}}, {}, False) \
         == "STAF site engine v0.2.2"
     assert app._watershed_engine_text({}, {"status": "running"}, True) == "STAF site engine (calculating)"
+    # a session from before 2026-09-07 drew the V2 basin with the engine beside it (DEEP's rule)
+    assert app._watershed_engine_text({}, {"status": "ok", "record": {"engineVersion": "0.3.0"}}, False) \
+        == "StreamCat lookup engine (NHDPlus V2 basin), HR reach watershed computed"
     assert app._watershed_engine_text({}, {}, False) == "StreamCat lookup engine (NHDPlus V2 basin)"
     assert app._watershed_engine_text({"watershedBasis": "nhdplus-v2-basin-of-surrogate"}, {}, False) \
-        == "StreamCat lookup engine (nearest covered reach basin)"
+        == "StreamCat lookup engine (nearest StreamCat reach basin)"
+    # the NHDPlusID row only when known; a legacy session's bare COMID still names the reach
+    assert 'if d.get("nhdplus_id") is not None' in card
+    assert 'comid_anchor.synthetic(d.get("comid"))' in card
     # the engine summary line is silent once the engine answered
     assert app._engine_line_ui({"status": "ok", "record": {"engineVersion": "0.2.2"}}, False, {}) is None

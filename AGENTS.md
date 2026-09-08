@@ -16,7 +16,7 @@ Primary working areas:
 - `scripts/`: build/transform scripts (for example, metric-library generation)
 - `apps/easi`, `apps/sfari`, `apps/deep`, `apps/stream-curves`: the Shiny apps (each self-contained: own requirements.txt, www/, data/, tests/, `.posit/publish` deploy config)
 - `desktop/`: STAF Desktop shell (C#/.NET 10 + WebView2 + Velopack) that runs the same apps locally; release model in `desktop/RELEASING.md`. Payload/release rules: `desktop-payload-*` and `desktop-current` GitHub releases are ALWAYS prereleases; `desktop/scripts/*.ps1` stay pure ASCII; after changing an app requirements pin, regenerate `desktop/payload/env.lock`
-- `libs/`: shared packages vendored per app, never imported across folders at runtime. `libs/site_engine` is the STAF site engine (the exact point watershed on NHDPlus HR); the StreamCat lookup engine (EPA StreamCat by NHDPlus V2 COMID) is the other watershed engine. Both are defined in `libs/README.md` and `docs/computation-engines.md`
+- `libs/`: shared packages vendored per app, never imported across folders at runtime. `libs/site_engine` is the STAF site engine (the HR reach watershed on NHDPlus HR); the StreamCat lookup engine (EPA StreamCat by NHDPlus V2 COMID) is the other watershed engine. Both are defined in `libs/README.md` and `docs/computation-engines.md`
 
 ## Goals
 1) Keep the site stable, readable, and fast for end users.

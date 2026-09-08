@@ -1,6 +1,6 @@
-"""Base-flow index over the true watershed (the USGS base-flow index grid).
+"""Base-flow index over the HR reach watershed (the USGS base-flow index grid).
 
-The exact-watershed analog of StreamCat ``bfi``: the mean of Wolock's (2003)
+The HR reach watershed analog of StreamCat ``bfi``: the mean of Wolock's (2003)
 1 km base-flow index grid (the percentage of streamflow that is base flow)
 over the watershed polygon. The grid ships with the engine
 (``data/bfi48grd.tif``: EPSG:5070, uint8 percent, nodata 255, 1.3 MB;

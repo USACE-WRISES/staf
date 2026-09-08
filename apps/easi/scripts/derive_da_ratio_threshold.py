@@ -1,8 +1,9 @@
 """Validation study 1: derive the published DA-ratio refusal threshold (gate G2).
 
-The routing policy ships with a provisional ``DA_RATIO_MAX`` of 10. This
-harness produces the empirical evidence to set the final published value. Two
-modes:
+The routing policy ships with ``DA_RATIO_MAX`` of 10. Since 2026-09-06 that
+constant bounds only the ``streamcat-legacy`` refusal; the default ``auto``
+policy reports the ratio per metric and never withholds. This harness produces
+the empirical evidence behind the published value. Two modes:
 
 * Default (cheap, routing-only): sample HR-only reaches across regions, route
   each with the production policy, and report the drainage-area-ratio

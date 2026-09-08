@@ -13,7 +13,7 @@ import csv
 import io
 import json
 
-from . import config, notices
+from . import config, geomorph, notices
 from .scoring import function_score_band_color, index_band_color, index_band_label
 
 RATING_COLOR = {"Good": "#c8d9f2", "Fair": "#f5e7a6", "Poor": "#f5b5b5"}
@@ -77,11 +77,10 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
         source = d.get("watershed_source") or ""
         eng = d.get("watershed_engine") or {}
         if source in ("site-engine", "not-calculated"):
-            # The auto policy: the exact watershed answers the watershed
-            # metrics, the nearest covered reach answers COMID-keyed evidence.
-            comid_reach = ("unavailable past the substitution limit"
-                           if routing_info.get("declined")
-                           else f"COMID {d.get('comid')}")
+            # The auto policy: the HR reach watershed answers the watershed
+            # metrics, the nearest covered reach answers COMID-keyed evidence
+            # whatever it drains (the ratio row below is provenance).
+            comid_reach = f"COMID {d.get('comid')}"
             engine_txt = (f"STAF site engine v{eng.get('engineVersion')}"
                           if source == "site-engine" else
                           f"unavailable ({eng.get('reason') or eng.get('status') or 'not calculated'})")
@@ -93,12 +92,11 @@ def _summary_pairs(result: dict) -> list[tuple[str, str]]:
                 ("Assessed stream drainage area (km2)",
                  shown(clicked.get("drainageAreaSqkm"))),
                 ("Watershed engine", engine_txt),
-                ("Exact watershed area (km2)", shown(eng.get("areaSqkm"))),
-                ("Exact watershed reaches walked", shown(eng.get("nReaches"))),
+                ("HR reach watershed area (km2)", shown(eng.get("areaSqkm"))),
+                ("HR reach watershed reaches walked", shown(eng.get("nReaches"))),
                 ("COMID-keyed evidence reach", comid_reach),
                 ("Routed distance (ft)", shown(routing_info.get("routedDistanceFt"))),
                 ("Drainage area ratio", shown(routing_info.get("daRatio"))),
-                ("Drainage area ratio limit", shown(routing_info.get("daRatioLimit"))),
                 ("Routing method", routing_info.get("method") or ""),
             ]
         else:
@@ -349,6 +347,38 @@ def _summary_plots_png(rep: dict) -> bytes:
     return out.getvalue()
 
 
+def _xs_reach_sentence(xs: Optional[dict]) -> str:
+    """The reach paragraph under the cross-section: the medians the metrics
+    score on with their ranges (from ``xs["reach"]``, else computed from the
+    sections), and which section is drawn. Empty with fewer than two sections
+    (2026-09-06)."""
+    xs = xs or {}
+    cands = xs.get("candidates") or []
+    stats = xs.get("reach") or geomorph.reach_stats(cands)
+    n = int(stats.get("n") or 0)
+    if n < 2:
+        return ""
+    parts = []
+    for key, label in (("entrenchment_ratio", "entrenchment ratio"),
+                       ("bank_height_ratio", "bank-height ratio")):
+        s = stats.get(key) or {}
+        if s.get("median") is not None:
+            bhr = key == "bank_height_ratio"
+            med = geomorph.fmt_bhr(s["median"], bhr and s.get("median_capped"), words=True)
+            hi = geomorph.fmt_bhr(s["max"], bhr and s.get("max_capped"), words=True)
+            parts.append(f"{label} {med} ({s['min']:.2f} to {hi})")
+    text = f"Metrics score on the reach medians of {n} sections"
+    text += (": " + ", ".join(parts) + ".") if parts else "."
+    if cands:
+        sel_i = min(max(int(xs.get("selected", 0) or 0), 0), len(cands) - 1)
+        default_i = int(xs.get("default", sel_i) if xs.get("default") is not None else sel_i)
+        which = "nearest both medians" if sel_i == default_i else "chosen in the worksheet"
+        label = cands[sel_i].get("label")
+        text += (f" The section at {label}, {which}, is shown." if label
+                 else f" The section {which} is shown.")
+    return text
+
+
 def build_pdf(result: dict) -> bytes:
     from reportlab.lib import colors as rc
     from reportlab.lib.pagesizes import letter
@@ -368,9 +398,9 @@ def build_pdf(result: dict) -> bytes:
     story.append(Paragraph(meta, styles["Normal"]))
     story.append(Spacer(1, 8))
     anchor = result.get("siteAnchor") or {}
-    w = notices.routed_warning(anchor, d)
+    w = notices.routed_notice(anchor, d)
     if w:
-        story.append(Paragraph("<b>Warning.</b> " + " ".join(w["lines"]), styles["Normal"]))
+        story.append(Paragraph("<b>Note.</b> " + " ".join(w["lines"]), styles["Normal"]))
         story.append(Spacer(1, 6))
     if rep.get("provisionalCoverage"):
         story.append(Paragraph(
@@ -429,7 +459,7 @@ def build_pdf(result: dict) -> bytes:
     xs = rep.get("crossSection") or {}
     if xs.get("png_b64"):
         import base64
-        story.append(Paragraph("Representative cross-section", styles["Heading4"]))
+        story.append(Paragraph("Reach cross-sections", styles["Heading4"]))
         story.append(Image(io.BytesIO(base64.b64decode(xs["png_b64"])),
                            width=6.0 * inch, height=2.4 * inch))
         geom = xs.get("geom") or {}
@@ -444,35 +474,21 @@ def build_pdf(result: dict) -> bytes:
                     if stage is not None and thal is not None else "n/a")
 
         er, bhr = xs.get("entrenchment_ratio"), xs.get("bank_height_ratio")
+        edited = str(xs.get("caption") or "").startswith("Edited")
+        bhr_txt = geomorph.fmt_bhr(bhr, geom.get("low_bank_capped") and not edited, words=True)
         bka = geom.get("bankfull_area_m2")
         summary = (f"Bieger region: {geom.get('division') or 'National curve'} &middot; "
                    f"Bieger XS area: {bka:.1f} m² &middot; " if bka is not None else "")
         summary += (f"Bankfull width: {_w(geom.get('bankfull_width_m'))} &middot; "
                     f"Floodprone width: {_w(geom.get('flood_prone_width_m'))} &middot; "
-                    f"Entrenchment ratio: {er if er is not None else 'n/a'} &middot; "
-                    f"Bank-height ratio: {bhr if bhr is not None else 'n/a'} &middot; "
+                    f"Section ER: {er if er is not None else 'n/a'} &middot; "
+                    f"Section BHR: {bhr_txt} &middot; "
                     f"Bankfull height: {_h(geom.get('bankfull_stage'))} &middot; "
                     f"Low bank height: {_h(geom.get('floodplain_stage'))}")
         story.append(Paragraph(summary, styles["Normal"]))
-        cands = xs.get("candidates") or []
-        if len(cands) >= 2:
-            # the sampled sections along the reach, so the reader sees the spread
-            # the median default was chosen from (2026-09-04)
-            ers = [c["entrenchment_ratio"] for c in cands
-                   if c.get("entrenchment_ratio") is not None]
-            bhrs = [c["bank_height_ratio"] for c in cands
-                    if c.get("bank_height_ratio") is not None]
-            sel = cands[min(max(int(xs.get("selected", 0) or 0), 0), len(cands) - 1)]
-            parts = [f"{len(cands)} sections along the reach"]
-            if ers:
-                parts.append(f"entrenchment ratio {min(ers):.2f} to {max(ers):.2f} "
-                             f"(median {median(ers):.2f})")
-            if bhrs:
-                parts.append(f"bank-height ratio {min(bhrs):.2f} to {max(bhrs):.2f} "
-                             f"(median {median(bhrs):.2f})")
-            story.append(Paragraph(
-                ", ".join(parts) + f". The section at {sel.get('label') or 'the reach median'} "
-                "is shown.", styles["Normal"]))
+        sentence = _xs_reach_sentence(xs)
+        if sentence:
+            story.append(Paragraph(sentence, styles["Normal"]))
         story.append(Spacer(1, 8))
 
     metric_rows = _ordered_rows(rep)

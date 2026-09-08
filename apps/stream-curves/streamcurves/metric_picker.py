@@ -157,11 +157,11 @@ def build_metric_picker_table(
         label = meta.get("label") if isinstance(meta, dict) else meta
         add_row(key, "mmw", raw_label=label, category="Watershed")
 
-    # Site computation engine — {key: {"label": ...}} (exact-watershed
+    # Site computation engine — {key: {"label": ...}} (HR reach watershed
     # predictors; rows appear only when the vendored engine is available).
     for key, meta in (site_engine or {}).items():
         label = meta.get("label") if isinstance(meta, dict) else meta
-        add_row(key, "site_engine", raw_label=label, category="Exact watershed")
+        add_row(key, "site_engine", raw_label=label, category="HR reach watershed")
 
     if not rows:
         return pd.DataFrame(columns=PICKER_COLUMNS)

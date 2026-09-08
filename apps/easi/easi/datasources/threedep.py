@@ -61,8 +61,10 @@ def reach_geomorphology(reach_geojson: dict | None, da_sqkm: float,
     ``bankfull_area_m2`` = the Bieger regional bankfull cross-sectional area, solved
     for a stage on each sampled profile to set the bankfull line (see
     ``geomorph.summarize_profile``). ``n_transects`` evenly spaced sections
-    (1/8 to 7/8 of the reach by default) are all selectable; the default is the
-    reach median (``geomorph.median_candidate``, 2026-09-04)."""
+    (1/10 to 9/10 of the reach by default) are all selectable; the geometry
+    metrics score on the reach medians of their ratios (``geomorph.reach_stats``)
+    and the drawn default is the section nearest both medians
+    (``geomorph.median_candidate``, 2026-09-06)."""
     if not reach_geojson:
         return {}
     try:
@@ -115,7 +117,7 @@ def reach_geomorphology(reach_geojson: dict | None, da_sqkm: float,
 
         out = geomorph.candidates_from_transects(
             usable, float(line.length), da_sqkm or 1.0, bankfull=bankfull,
-            bankfull_area_m2=bankfull_area_m2, division=division)
+            bankfull_area_m2=bankfull_area_m2, division=division, dem_res_m=dem_res)
         if not out:
             return {}
         out["dem_resolution_m"] = dem_res

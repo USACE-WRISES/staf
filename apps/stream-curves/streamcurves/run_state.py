@@ -22,7 +22,11 @@ from typing import Any, Iterable, Optional
 # nonnegative-scale metrics, so signed-scale metrics (log relative bed
 # stability) build the standard seed. Scoring semantics are unchanged.
 CURVE_METHOD_VERSION = "iqr-seed-2"
-SCREENING_METHOD_VERSION = "easi-batch-1"
+# easi-batch-2 (2026-09-07): an NRSA site is screened by its archive COMID
+# (the reach the crew sampled) instead of being re-snapped from its
+# coordinate, the screening cache is keyed on this version, the engine pin
+# and the COMID mode, and both of those join the inputs digest.
+SCREENING_METHOD_VERSION = "easi-batch-2"
 
 # --------------------------------------------------------------------------- #
 # The guided stages, in order (count them here, nowhere else).

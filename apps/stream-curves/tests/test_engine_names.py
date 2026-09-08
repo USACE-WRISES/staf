@@ -18,7 +18,7 @@ def test_display_names_come_from_the_vendored_vocabulary():
     assert engine_names.predictor_source_display(None) == "StreamCat lookup engine"
     assert engine_names.predictor_source_display("streamcat") == "StreamCat lookup engine"
     assert engine_names.predictor_source_display("site-engine v0.2.0") == (
-        "STAF site engine (site-engine v0.2.0), exact-watershed values")
+        "STAF site engine (site-engine v0.2.0), HR reach watershed values")
 
 
 def test_tokens_are_unchanged():

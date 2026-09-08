@@ -5,11 +5,13 @@ two STAF watershed engines, beside the **StreamCat lookup engine** (token
 `streamcat`). Both are defined, with the per-app policy and the gaps table, in
 [`libs/README.md`](../README.md) and on the docs site's Computation Engines
 page. This package is the site engine: given a point on any NHD High
-Resolution stream, it delineates the TRUE contributing watershed at that exact
-point and computes exact-watershed and reach-scale GIS metrics from source
+Resolution stream, it snaps the point to an HR reach, delineates that reach's
+watershed (the HR reach watershed: the NHDPlus HR catchments upstream of the
+reach, checked against its published drainage area; the reach, not the point,
+is the outlet) and computes watershed and reach-scale GIS metrics from source
 data, with per-metric provenance and pinned data vintages.
 
-- **Identity**: `ENGINE_ID = "site-engine"`, `ENGINE_VERSION` (0.2.2). Display
+- **Identity**: `ENGINE_ID = "site-engine"`, `ENGINE_VERSION` (0.4.0). Display
   names and label helpers live in `site_engine/naming.py`; every consuming app
   imports them from its vendored copy so the four apps share one vocabulary.
 - **Entry point**: `compute_site(lat, lon, config=None, *, progress=None)`.
@@ -43,11 +45,13 @@ data, with per-metric provenance and pinned data vintages.
   routing does (V2 within tolerance, else the HR stream with its nearest
   covered downstream reach, routed distance and drainage-area ratio). It never
   refuses; a routing past the 10x bound is `declined` with a code, and the
-  consumer decides what a declined routing withholds. Payload parity with
-  EASI is tested.
-- **Consumers**: EASI (the exact watershed on streams outside NHDPlus V2),
+  consumer decides what a declined routing withholds (EASI's `auto` policy
+  withholds nothing since 2026-09-06 and reports the ratio per metric; DEEP
+  still withholds its StreamCat values). Payload parity with EASI's
+  `streamcat-legacy` classification is tested.
+- **Consumers**: EASI (the HR reach watershed on streams outside NHDPlus V2),
   SFARI (field-form prefill), StreamCurves (selectable predictor source),
-  DEEP (auto-pull and the exact watershed on HR-only sites). Scoring against
+  DEEP (auto-pull and the HR reach watershed on HR-only sites). Scoring against
   StreamCat-fitted curves follows the train/serve pairing rule; the
   score-level equivalence study (`scripts/score_equivalence_study.py`)
   reported Outcome B on 2026-09-02 (rating agreement 0.84 against a 0.90
@@ -69,6 +73,10 @@ data, with per-metric provenance and pinned data vintages.
 Minor bump when record keys, config keys, vintages, or metric definitions
 change (consumers record `engineVersion` in their provenance and DEEP bundles
 carry `site-engine vX`); patch bump when records stay byte-identical.
+
+0.4.0: the `xsection` family scores on the reach medians of nine evenly spaced sections (1/10 to 9/10 of the reach, one DEM fetch) instead of one representative section; `entrenchmentRatio` and `bankHeightRatio` values and their source label change, so a minor bump (2026-09-06). The bank detector's climb floor is 0.10 m on 1 m lidar (0.30 m stays on 10 m models), each section carries `bankfull_stage_m` and `low_bank_capped`, and a capped bank-height ratio reports as at least 2.0 (2026-09-07).
+
+0.3.0: base-flow index from the shipped USGS grid (`baseflowIndexPct`) and road-stream crossings from TIGERweb roads crossed with the walked HR flowlines (`roadCrossings`, `roadCrossingDensity`); new record keys, so a minor bump.
 
 0.2.2: NHDPlus V2 attributes from the USGS fabric API (OGC API Features), the successor of the retiring WaterData WFS, and a flowtrace fallback for the hydrolocation snap (same raindrop algorithm, separate route). Same record, config, and vintages.
 

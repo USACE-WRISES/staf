@@ -1,13 +1,17 @@
-"""The routed-site warning: one text for the report banner, the worksheet
-ribbon, and the PDF (2026-09-04).
+"""The routed-site note: one text for the report banner and the PDF
+(2026-09-04, a note instead of a warning since 2026-09-06; the Assessment
+worksheet's ribbon was dropped 2026-09-07 to match SFARI, which shows none).
 
-A click outside the StreamCat lookup network used to produce three different
+A click outside the StreamCat network used to produce three different
 paragraphs (modal, ribbon, PDF) with engine version numbers, a ratio, a limit,
-and five lines listing every metric by source. This module says the two things
-a reader needs, marked as a warning: where the watershed metrics come from, and
-which three metrics could not be scored (or which reach scored them). The
-provenance detail stays in the CSV, the PDF rows, and the report table's
-"Scored at" column.
+and five lines listing every metric by source, and until 2026-09-06 it warned
+that three metrics could not be scored past the drainage-area bound. Nothing
+is withheld any more, so this module says the two things a reader needs, as a
+note: where the watershed metrics come from, and which three metrics come from
+the nearest StreamCat reach. The per-metric provenance (the reach, the routed
+distance, the drainage-area ratio) rides each of those rows as ``anchorNote``
+(``borrowed_note``), the CSV, the PDF rows, and the report table's "Scored at"
+column.
 """
 from __future__ import annotations
 
@@ -15,16 +19,9 @@ from typing import Any, Optional
 
 from . import basin
 
-TITLE = "Warning"
-REACH_METRICS = "low flow, substrate, and biological integrity"
-
-
-def _ratio(value: Any) -> Optional[str]:
-    try:
-        f = float(value)
-    except (TypeError, ValueError):
-        return None
-    return f"{f:.0f}" if f >= 10 else f"{f:.1f}"
+TITLE = "Note"
+REACH_METRICS = "Low flow, substrate, and biological integrity"
+OUTSIDE = "This stream is outside the StreamCat network"
 
 
 def _limit(value: Any) -> str:
@@ -42,48 +39,68 @@ def _ft(value: Any) -> Optional[str]:
         return None
 
 
-def routed_warning(anchor: Optional[dict], delineation: Optional[dict]) -> Optional[dict]:
-    """``{"title": "Warning", "lines": [...]}`` for a routed site, None on the
-    covered network. Plain sentences, no engine versions, no em dash, no
-    semicolon; every number a reader acts on is in the line that needs it."""
+def routed_notice(anchor: Optional[dict], delineation: Optional[dict]) -> Optional[dict]:
+    """``{"title": "Note", "lines": [...]}`` for a routed site, None on the
+    covered network. Plain sentences, no engine versions, no ratio, no limit,
+    no em dash, no semicolon; the numbers a reader may want (the reach, the
+    routed distance, the drainage-area ratio) sit on the borrowed rows."""
     anchor = anchor or {}
     if anchor.get("anchorKind") != "hrSurrogate":
         return None
     d = delineation or {}
     r = anchor.get("routing") or {}
-    scored = anchor.get("scoredReach") or {}
     source = d.get("watershed_source") or ""
     eng = d.get("watershed_engine") or {}
     dist = _ft(r.get("routedDistanceFt"))
     dist_txt = f"{dist} downstream" if dist else "downstream"
-    ratio, limit = _ratio(r.get("daRatio")), _limit(r.get("daRatioLimit") or 10)
-    not_in = "This stream is not in the StreamCat lookup network."
 
     if source == "site-engine":
-        first = (f"{not_in} Watershed metrics use the exact watershed from the "
-                 f"STAF site engine ({basin.fmt_km2(eng.get('areaSqkm'))}).")
+        first = (f"{OUTSIDE}. Watershed metrics use the HR reach watershed "
+                 f"({basin.fmt_km2(eng.get('areaSqkm'))}) from the STAF site engine.")
     elif source == "not-calculated":
-        first = (f"{not_in[:-1]}, and the STAF site engine could not calculate its "
+        first = (f"{OUTSIDE}, and the STAF site engine could not calculate its "
                  f"watershed ({eng.get('reason') or 'not calculated'}). Watershed "
                  "metrics are unavailable.")
     else:
-        reach = d.get("gnis_name") or "the nearest covered reach"
+        # The streamcat-legacy policy: every metric rides the covered reach.
+        reach = d.get("gnis_name") or "the nearest StreamCat reach"
+        ratio = basin.fmt_ratio(r.get("daRatio"))
+        limit = _limit(r.get("daRatioLimit") or 10)
         tail = f" (drainage area ratio {ratio}, limit {limit})" if ratio else ""
         return {"title": TITLE,
-                "lines": [f"{not_in} Results describe {reach}, {dist_txt}, not the "
+                "lines": [f"{OUTSIDE}. Results describe {reach}, {dist_txt}, not the "
                           f"clicked stream{tail}."]}
 
-    reach_name = scored.get("gnisName") or "an unnamed reach"
-    comid = scored.get("comid") if scored.get("comid") is not None else d.get("comid")
-    reach_id = f"{reach_name} (COMID {comid})" if comid is not None else reach_name
-    if r.get("declined"):
-        if ratio is None or r.get("declineCode") == "surrogate_da_unavailable":
-            why = "The drainage area needed to check the substitution limit is unknown."
-        else:
-            why = (f"The nearest StreamCat reach drains {ratio} times this stream, "
-                   f"past the limit of {limit}.")
-        second = f"Three metrics could not be scored: {REACH_METRICS}. {why}"
-    else:
-        second = (f"Three metrics come from the nearest StreamCat reach, {reach_id}, "
-                  f"{dist_txt}: {REACH_METRICS}.")
+    second = (f"{REACH_METRICS} come from the nearest StreamCat reach, {dist_txt}."
+              if dist else
+              f"{REACH_METRICS} come from the nearest StreamCat reach downstream.")
     return {"title": TITLE, "lines": [first, second]}
+
+
+def borrowed_note(anchor: Optional[dict]) -> str:
+    """One sentence for a COMID-keyed row on a routed site: which covered reach
+    scored it, how far downstream, and how much more it drains than the
+    clicked stream. Empty on the covered network. Clauses a payload cannot
+    fill (an unnamed reach, an unknown distance or ratio) are left out."""
+    anchor = anchor or {}
+    if anchor.get("anchorKind") != "hrSurrogate":
+        return ""
+    scored = anchor.get("scoredReach") or {}
+    r = anchor.get("routing") or {}
+    name, comid = scored.get("gnisName"), scored.get("comid")
+    if name and comid is not None:
+        reach = f"the nearest StreamCat reach, {name} (COMID {comid})"
+    elif comid is not None:
+        reach = f"the nearest StreamCat reach (COMID {comid})"
+    elif name:
+        reach = f"the nearest StreamCat reach, {name}"
+    else:
+        reach = "the nearest StreamCat reach"
+    parts = [f"Scored from {reach}"]
+    dist = _ft(r.get("routedDistanceFt"))
+    if dist:
+        parts.append(f"{dist} downstream")
+    ratio = basin.fmt_ratio(r.get("daRatio"))
+    if ratio:
+        parts.append(f"which drains {ratio} times this stream")
+    return ", ".join(parts) + "."

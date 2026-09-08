@@ -85,7 +85,7 @@ def test_engine_layer_maps_the_record():
     assert layer["meta"]["areaSqkm"] == 3.78 and layer["meta"]["nReaches"] == 5
     assert layer["label"] == "STAF site engine v0.2.0"
     assert layer["inputSources"]["impervious.impervious"].startswith(
-        "STAF site engine v0.2.0, exact watershed")
+        "STAF site engine v0.2.0, HR reach watershed")
     ctx = _layer_ctx(layer)
     assert base.ag_pct(ctx) == 25.5
     assert base.riparian_forest_pct(ctx) == 40.0
@@ -138,12 +138,24 @@ def test_build_picks_the_provider_from_the_engine_block():
 def test_recompute_watershed_rows_reproduces_the_report(monkeypatch):
     _stub(monkeypatch)
     ctx = _ctx()
+    # A routed site: the COMID-keyed rows carry the borrowing note, which the
+    # second annotation pass must leave identical (set, not appended).
+    ctx.extras["siteAnchor"] = {
+        "anchorKind": "hrSurrogate",
+        "scoredReach": {"comid": 1, "gnisName": "Big Run"},
+        "routing": {"routedDistanceFt": 1240.4, "daRatio": 32.02,
+                    "daRatioLimit": 10.0, "declined": False},
+        "reanchored": {"applied": True, "warnings": []}}
     report = asyncio.run(assessment.assess(ctx))
     again = assessment.recompute_watershed_rows(report, ctx)
     assert _parity_view(again) == _parity_view(report)
     for a, b in zip(report["metricRows"], again["metricRows"]):
         assert a["source"] == b["source"] and a["note"] == b["note"]
         assert a["anchorLabel"] == b["anchorLabel"]
+        assert a.get("anchorNote") == b.get("anchorNote")
+    noted = [r for r in again["metricRows"] if r.get("anchorNote")]
+    assert noted and all(r["anchor"] == "surrogateComid" for r in noted)
+    assert all(r["anchorNote"].count("Scored from") == 1 for r in noted)
     assert again["ecosystemConditionIndex"] == report["ecosystemConditionIndex"]
 
 

@@ -48,8 +48,9 @@ assessment bundles.
 - `deep/metrics/{base,computed}.py` — a registry mapping desktop-derivable
   detailed metricIds to adapters that compute the raw value, reusing EASI's
   datasource code: watershed impervious / land cover (StreamCat, NLCD fallback)
-  and reach geomorphic ratios ER / BHR / W:D (3DEP DEM cross-section + Bieger
-  bankfull, via copied `deep/{geomorph,bieger}.py` + `deep/datasources/threedep.py`).
+  and reach geomorphic ratios ER / BHR / W:D (nine 3DEP DEM cross-sections along
+  the reach, reach-median ER and BHR, Bieger bankfull; the transect code comes
+  from the vendored site engine's EASI extracts, only `deep/bieger.py` is DEEP's).
 - `deep/measure.py` + `deep/pipeline.py` gain a `compute_metrics_only` stage;
   the app runs it on entering **Assessment** and prefills the computable metrics
   with a source badge (values stay editable — editing flips origin to field).
@@ -103,8 +104,8 @@ adversarial review):**
 
 - The STAF site engine (`libs/site_engine`, vendored at `deep/_vendor/site_engine/`
   by `scripts/vendor_site_engine.py`, drift-gated) joins the auto-compute
-  registry: exact-watershed values (impervious, anthropogenic cover, and the
-  engine reach for geomorphic ratios) computed at the assessed point on the
+  registry: HR reach watershed values (impervious, anthropogenic cover, and the
+  engine reach for geomorphic ratios) computed for the assessed reach on the
   full-resolution NHD. Engine adapters run only when the loaded bundle's
   `predictorSource` records engine predictors (or the pairing mode is `label`).
 - `MeasuredValue.engine` marks engine-origin values; a user edit clears it.
@@ -120,40 +121,57 @@ adversarial review):**
 - The regional bundles' landscape metrics auto-pull too (2026-09):
   `spring-pctimp2019ws`, `spring-pctcrop2019ws`, `spring-pctwdwet2019ws`,
   `spring-pcthbwet2019ws`, `spring-rddensws`, `spring-damdensws`,
-  `spring-bfiws`, `spring-rdcrsws`. On a bundle fitted on engine predictors
-  the STAF site engine answers all eight from the exact watershed (base flow
+  `spring-bfiws`, `spring-rdcrsws`. The engine gate is read metric by metric
+  (2026-09-07): a curve whose own `predictorSource` records engine predictors
+  takes the STAF site engine's value from the HR reach watershed (base flow
   index from the USGS base-flow index grid, crossings counted on the NHDPlus
-  HR network, both since engine 0.3.0). On a bundle fitted on StreamCat
-  predictors the StreamCat lookup engine answers all eight. When routing to a
-  covered reach is declined, NLCD over the exact polygon stands in for the
+  HR network, both since engine 0.3.0), and every other curve takes the
+  StreamCat lookup engine's value by COMID, the source it was fitted on, so a
+  mixed bundle scores both and nothing is withheld. The desktop adapters never
+  run the engine themselves: the app runs it once at Delineate and hands the
+  record over. When no StreamCat
+  reach is known, NLCD over the HR reach watershed polygon stands in for the
   land-cover ids. A StreamCat crossings value carries the API units caution
   in its source label.
 
 **Two watershed engines (2026-09):**
 
 - **STAF site engine** (`deep/engine_prefill.py` over the vendored copy): the
-  exact watershed at the clicked point on the full-resolution NHD. It is the
-  watershed itself for any stream outside the NHDPlus V2 network, and the
-  desktop value source for bundles fitted on engine predictors.
+  HR reach watershed, the drainage area of the high-resolution NHD reach the
+  click snaps to (NHDPlus HR catchments aggregated and checked against the
+  reach's published drainage area; the reach, not the point, is the outlet).
+  It is the watershed at every site, and the desktop value source for each
+  metric whose curve carries the engine `predictorSource` stamp.
 - **StreamCat lookup engine**: EPA StreamCat by NHDPlus V2 COMID, the desktop
-  value source for bundles fitted on StreamCat predictors. On a stream outside
-  V2 its values are labeled with the nearest covered reach they describe
-  (`, describes the nearest covered reach, COMID x, ...`) and withheld past a
-  10x drainage-area ratio, in which case NLCD runs over the exact polygon.
+  value source for every metric whose curve carries no engine stamp. On a stream outside
+  V2 its values are labeled with the nearest StreamCat reach they describe
+  (`, describes the nearest StreamCat reach Mink Brook (COMID 9327042), 446 ft
+  downstream, which drains 32 times this stream`); the drainage-area ratio is
+  reported, never enforced (SFARI's rule, 2026-09-07). NLCD over the HR reach
+  watershed polygon answers a land-cover id only when neither engine has a
+  value for it.
 - Every desktop value carries a `basis` (`site-engine` | `streamcat` | `nlcd` |
   `3dep`), shown as a badge beside the Source row, printed in the CSV, the
   PDF, the GeoJSON (`predictor_source`, `watershed_basis`,
   `engine_values_withheld`), and the field-form packet (desktop values in the
   Value cell, `DESKTOP: <source>` in Notes, `reference only` when withheld).
-- **Any NHD stream**: the map draws the V2 network (dark blue, clickable) over
-  the full high-resolution NHD (cyan). An HR-only click is anchored to the
-  nearest covered reach (`deep/hr_site.py`, the engine's shared
-  classification) and Delineate computes the exact watershed and reach with
-  the engine (usually well under a minute, up to about five minutes on a large basin, refused past the interactive reach budget); if
-  the engine fails, the covered reach's V2 basin is offered behind a confirm,
-  labeled as describing that reach. A covered site runs the engine in the
-  background only when its values can enter scoring (an engine-built bundle,
-  or `label` mode), so StreamCat bundles never pay the engine's minutes.
+- **Any NHD stream** (SFARI's map, 2026-09-07): the map draws the
+  high-resolution NHD once and colors each stretch by the engine that answers
+  a click there (`deep/network_display.py`, EASI's split): dark blue within
+  150 ft of an NHDPlus V2 reach, where the StreamCat lookup engine answers by
+  that COMID, cyan everywhere else. A legend under the layers button names the
+  colors. Every click, and every typed point, snaps to the HR line
+  (`deep/hr_site.py`), the point lands at once, the StreamCat reach resolves
+  in the background (`deep/comid_anchor.py`, the vendored engine's shared
+  click rule: a glow under the V2 reach, and on a cyan stream a dashed route
+  to the nearest StreamCat reach downstream), and Delineate runs the STAF site
+  engine for the HR reach watershed and the assessment reach at the length the
+  assessor typed, at every site (usually
+  under a minute, up to about five minutes on a large basin, refused past the
+  interactive reach budget). If the engine fails, the assessor can continue
+  with the StreamCat lookup engine (`pipeline.delineate_without_watershed`):
+  no watershed is drawn, the basis is the StreamCat reach's NHDPlus V2 basin,
+  and every watershed value says so.
 - `deep/curves.py:ENGINE_PAIRING_MODE` is the switch the score-level
   equivalence study governs. It reported Outcome B on 2026-09-02 (rating
   agreement 0.84 pooled against a 0.90 bar, class agreement 0.97, median

@@ -57,14 +57,18 @@ functions:
       - {code: pctimp2019,        source: streamcat,    label: "Impervious surface (%)",       default_selected: true,  role: both}
       - {code: pctcrop2019,       source: streamcat,    label: "Cultivated crops (%)",         default_selected: true,  role: both}
       - {code: mmw_developed_pct, source: mmw,          label: "Developed land (%)",           default_selected: false, role: both}
-      - {code: se_pctimpws,       source: site_engine,  label: "Impervious cover, exact watershed (%)", default_selected: false, role: predictor}
-      - {code: se_agws,           source: site_engine,  label: "Agricultural cover, exact watershed (%)", default_selected: false, role: predictor}
+      - {code: se_pctimpws,       source: site_engine,  label: "Impervious cover, HR reach watershed (%)", default_selected: false, role: predictor}
+      - {code: se_agws,           source: site_engine,  label: "Agricultural cover, HR reach watershed (%)", default_selected: false, role: predictor}
 
   - discipline: Hydrology
     function: Surface water storage
     metrics:
-      - {code: pctwdwet2019,      source: streamcat,    label: "Woody wetland (%)",            default_selected: true,  role: both}
-      - {code: pcthbwet2019,      source: streamcat,    label: "Herbaceous wetland (%)",       default_selected: true,  role: both}
+      # 2026-09-07 (review item ECO-15): one wetland curve by default, the sum
+      # of the two NLCD classes, which is what EASI already scores. The classes
+      # stay pickable for an assessment that wants them apart.
+      - {code: pctwet2019,        source: streamcat,    label: "Wetland (%)",                  default_selected: true,  role: both}
+      - {code: pctwdwet2019,      source: streamcat,    label: "Woody wetland (%)",            default_selected: false, role: both}
+      - {code: pcthbwet2019,      source: streamcat,    label: "Herbaceous wetland (%)",       default_selected: false, role: both}
       - {code: mmw_wetland_pct,   source: mmw,          label: "Wetland (%)",                  default_selected: false, role: both}
 
   - discipline: Hydrology
@@ -81,16 +85,16 @@ functions:
       - {code: precip8110,        source: streamcat,    label: "Mean annual precipitation (mm)", default_selected: true, role: both}
       - {code: DRNAREA,           source: streamstats,  label: "Drainage area (sq mi)",        default_selected: false, role: predictor}
       - {code: mmw_da_sqmi,       source: mmw,          label: "Drainage area (sq mi, MMW)",   default_selected: false, role: predictor}
-      - {code: se_rddensws,       source: site_engine,  label: "Road density, exact watershed (km/sq km)", default_selected: false, role: predictor}
+      - {code: se_rddensws,       source: site_engine,  label: "Road density, HR reach watershed (km/sq km)", default_selected: false, role: predictor}
       - {code: se_runoffmm,       source: site_engine,  label: "Runoff depth, EROM-derived (mm/yr)", default_selected: false, role: predictor}
-      - {code: se_wsareasqkm,     source: site_engine,  label: "Drainage area, exact watershed (sq km)", default_selected: false, role: predictor}
+      - {code: se_wsareasqkm,     source: site_engine,  label: "Drainage area, HR reach watershed (sq km)", default_selected: false, role: predictor}
 
   - discipline: Hydrology
     function: Streamflow regime
     metrics:
       - {code: bfi,               source: streamcat,    label: "Base-flow index (%)",          default_selected: true,  role: both}
       - {code: damdens,           source: streamcat,    label: "Dam density (per sq km)",      default_selected: true,  role: both}
-      - {code: se_damnrmstor,     source: site_engine,  label: "Dam storage, exact watershed (m3/sq km)", default_selected: false, role: predictor}
+      - {code: se_damnrmstor,     source: site_engine,  label: "Dam storage, HR reach watershed (m3/sq km)", default_selected: false, role: predictor}
 
   # ── Hydraulics ──────────────────────────────────────────────────────────────
   - discipline: Hydraulics
@@ -135,7 +139,7 @@ functions:
     metrics:
       - {code: phab_LRBS_use,     source: nrsa,         label: "Relative bed stability (log)", default_selected: true,  role: metric}
       - {code: phab_PCT_SAFN,     source: nrsa,         label: "Sand + fines (%)",             default_selected: true,  role: metric}
-      - {code: se_kffactws,       source: site_engine,  label: "Soil K-factor, exact watershed", default_selected: false, role: predictor}
+      - {code: se_kffactws,       source: site_engine,  label: "Soil K-factor, HR reach watershed", default_selected: false, role: predictor}
 
   - discipline: Geomorphology
     function: Bed composition and bedform dynamics

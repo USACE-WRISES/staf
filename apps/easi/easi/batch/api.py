@@ -43,9 +43,10 @@ def capabilities() -> dict:
         "function_score_bands": [list(b) for b in config.FUNCTION_SCORE_BANDS],
         "defaults": {"reach_length_ft": pipeline.DEFAULT_REACH_FT,
                      "snap_tolerance_ft": routing.HR_SNAP_TOL_FT,
-                     # Published routing policy: COMID-keyed evidence for an
-                     # uncovered click rides the nearest covered downstream
-                     # reach within this drainage-area ratio.
+                     # Published routing constant: the drainage-area ratio
+                     # past which the streamcat-legacy policy refuses a site.
+                     # Under auto the ratio is reported per metric, never
+                     # enforced.
                      "da_ratio_max": routing.DA_RATIO_MAX,
                      # Watershed engine policy for streams outside the
                      # StreamCat lookup network (see easi.routing).
@@ -195,8 +196,8 @@ def _failed_result(site: SiteRequest, delin: dict) -> SiteResult:
                       site_id=site.site_id,
                       retryable=bool(delin.get("retryable", True)),
                       message=delin.get("message", "delineation failed"))],
-        # A routing refusal carries the partial anchor (clicked stream, would-be
-        # surrogate, DA ratio) so exports can say exactly what was declined.
+        # A streamcat-legacy refusal carries the partial anchor (clicked stream,
+        # would-be surrogate, DA ratio) so exports can say exactly what was refused.
         anchor=dict(delin.get("anchor") or {}))
 
 

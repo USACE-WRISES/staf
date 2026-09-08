@@ -1,7 +1,7 @@
 """Hydraulics-discipline EASI metric adapters."""
 from __future__ import annotations
 
-from .. import screening_methods
+from .. import geomorph, screening_methods
 from . import base
 from .base import AnalysisContext, MetricResult, unavailable
 
@@ -30,25 +30,35 @@ def floodplain_engagement(ctx: AnalysisContext) -> MetricResult:
     bhr = geom.get("bank_height_ratio")
     extrapolated = bool(geom.get("bankfull_extrapolated"))
     confidence = "L" if (geom.get("edge_limited") or extrapolated) else "M"
+    reach = geomorph.describe_reach(geom.get("reach"), "bank_height_ratio")
+    bhr_stats = (geom.get("reach") or {}).get("bank_height_ratio") or {}
+    source = base.xs_source(geom)
     ev = screening_methods.evaluate(
         FLOODPLAIN_ENGAGEMENT_ID, {"bhr": bhr},
-        input_meta={"bhr": {"source": "USGS 3DEP representative cross section"}},
+        input_meta={"bhr": {"source": source}},
         confidence=confidence)
     if ev.rating is None:
         return unavailable(
             FLOODPLAIN_ENGAGEMENT_ID,
-            "bank-height ratio unavailable for the representative cross section",
+            "bank-height ratio unavailable for the reach cross-sections",
             confidence, scoring=ev.trace)
     warning = " ".join(ev.trace.get("warnings") or [])
     note = warning or "Direct BHR screen; surveyed cross-section geometry may refine."
+    if reach:
+        note += " " + base.XS_REACH_NOTE
+    cap_note = base.xs_cap_note(bhr_stats)
+    if cap_note:
+        note += " " + cap_note
     if extrapolated:
         note += (" Drainage area is outside the Bieger fit range;"
                  " bankfull is extrapolated.")
+    bhr_txt = geomorph.fmt_bhr(bhr, bhr_stats.get("median_capped"), words=True)
     return MetricResult(
         FLOODPLAIN_ENGAGEMENT_ID, value=round(float(bhr), 3),
-        value_text=f"bank-height ratio {float(bhr):.2f} (low-bank height / max bankfull depth)",
+        value_text=(f"bank-height ratio {bhr_txt} (low-bank height / max bankfull depth)"
+                    + (f", {reach}" if reach else "")),
         rating=ev.rating, confidence=confidence,
-        source="USGS 3DEP representative cross section",
+        source=source,
         note=note,
         scoring=ev.trace)
 
@@ -65,16 +75,20 @@ def floodplain_access(ctx: AnalysisContext) -> MetricResult:
     edge = bool(geom.get("edge_limited"))
     extrapolated = bool(geom.get("bankfull_extrapolated"))
     confidence = "L" if (edge or extrapolated) else "M"
+    reach = geomorph.describe_reach(geom.get("reach"), "entrenchment_ratio")
+    source = base.xs_source(geom)
     ev = screening_methods.evaluate(
         ENTRENCHMENT_ID, {"er": er},
-        input_meta={"er": {"source": "USGS 3DEP representative cross section"}},
+        input_meta={"er": {"source": source}},
         confidence=confidence)
     if ev.rating is None:
         return unavailable(
             ENTRENCHMENT_ID, "3DEP entrenchment ratio unavailable for reach",
             confidence, scoring=ev.trace)
     res = geom.get("dem_resolution_m") or 10
-    note = f"DEM {res} m, bankfull from national curve."
+    note = f"DEM {res} m, bankfull from the Bieger regional curve."
+    if reach:
+        note += " " + base.XS_REACH_NOTE
     if edge:
         note += " Flood-prone width reached the buffer edge and ER may be underestimated."
     if extrapolated:
@@ -83,9 +97,10 @@ def floodplain_access(ctx: AnalysisContext) -> MetricResult:
     return MetricResult(
         ENTRENCHMENT_ID, value=round(float(er), 3),
         value_text=(f"entrenchment ratio {float(er):.2f} "
-                    "(flood-prone width / bankfull width)"),
+                    "(flood-prone width / bankfull width)"
+                    + (f", {reach}" if reach else "")),
         rating=ev.rating, confidence=confidence,
-        source="USGS 3DEP representative cross section",
+        source=source,
         note=note, scoring=ev.trace)
 
 
@@ -142,9 +157,8 @@ def low_flow_connectivity(ctx: AnalysisContext) -> MetricResult:
     if ev.rating is None:
         return unavailable(
             LOW_FLOW_ID,
-            base.comid_evidence_note(
-                ctx, "eligible NRSA wetted-channel evidence and both StreamCat HYD "
-                     "components are unavailable"),
+            "eligible NRSA wetted-channel evidence and both StreamCat HYD "
+            "components are unavailable",
             "L", scoring=ev.trace,
             value_text=f"low-flow evidence unavailable ({regime})")
     value = float(ev.combined_value)

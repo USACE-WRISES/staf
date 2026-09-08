@@ -249,6 +249,40 @@ def test_bank_break_ignores_subarm_flat():
     assert brk == pytest.approx(3.2, abs=0.05)
 
 
+def test_lidar_floor_finds_the_bench_the_coarse_floor_hides():
+    # the same 0.2 m bench on a 0.15 m deep channel (twice bankfull depth is
+    # 0.3 m): the 10 m floor (0.3 m) cannot see it and the default low bank lands
+    # on the floodprone cap; the 1 m lidar floor (0.1 m) reads it as the bank
+    # (2026-09-07)
+    stations = list(range(-60, 61))
+    elevs = []
+    for x in stations:
+        ax = abs(x)
+        if ax <= 2:
+            elevs.append(0.1 * ax)
+        elif ax <= 8:
+            elevs.append(0.2)
+        elif ax <= 14:
+            elevs.append(0.2 + (ax - 8) * 0.5)
+        else:
+            elevs.append(3.2)
+    assert geomorph.bank_break_elev(stations, elevs, d_bf=0.15) == pytest.approx(3.2, abs=0.05)
+    assert geomorph.bank_break_elev(stations, elevs, d_bf=0.15, min_rise_m=0.1) == \
+        pytest.approx(0.2, abs=0.05)
+    assert geomorph.bank_rise_floor(1) == geomorph.BANK_ARM_RISE_FINE_M
+    assert geomorph.bank_rise_floor(10) == geomorph.BANK_ARM_RISE_M
+    assert geomorph.bank_rise_floor(None) == geomorph.BANK_ARM_RISE_M
+    coarse = geomorph.summarize_profile(stations, elevs, 50.0, bankfull=(10.0, 0.15),
+                                        dem_res_m=10)
+    fine = geomorph.summarize_profile(stations, elevs, 50.0, bankfull=(10.0, 0.15),
+                                      dem_res_m=1)
+    assert coarse["low_bank_capped"] is True
+    assert coarse["bank_height_ratio"] == pytest.approx(2.0, abs=0.01)
+    assert fine["low_bank_capped"] is False
+    assert fine["bank_height_ratio"] == pytest.approx(1.33, abs=0.02)
+    assert fine["bankfull_stage_m"] == pytest.approx(fine["thalweg"] + 0.15, abs=1e-9)
+
+
 def test_summarize_profile_low_bank_can_sit_below_bankfull():
     # the bench (0.8 m) sits below the 1 m bankfull depth: the default low bank may
     # now land below the bankfull stage, so the default BHR drops below 1
@@ -257,6 +291,7 @@ def test_summarize_profile_low_bank_can_sit_below_bankfull():
     assert s["low_bank_stage_m"] == pytest.approx(0.8, abs=0.05)
     assert s["bank_height_ratio"] == pytest.approx(0.8, abs=0.05)
     assert s["low_bank_stage_m"] < s["thalweg"] + 1.0            # below bankfull
+    assert s["low_bank_capped"] is False
 
 
 def test_derive_from_stages_bhr_and_depth():
@@ -348,36 +383,6 @@ def test_balanced_profile_guards():
     assert geomorph.balanced_profile(stations, elevs) is None
 
 
-def test_reach_summary_injected_bankfull_overrides_national():
-    stations = list(range(0, 101))
-    elevs = [10.0 if not (40 <= x <= 60) else 6 + abs(x - 50) * 0.4 for x in stations]
-    rs = geomorph.reach_summary([(stations, elevs)], 50.0,
-                                bankfull=(12.0, 1.5), division="Interior Plains")
-    # injected bankfull DEPTH (1.5) sets the curve; bankfull WIDTH is now measured on
-    # the section (edge-of-water at the bankfull stage), not the regional-curve width.
-    assert rs["bankfull_depth_m"] == 1.5
-    assert rs["bankfull_division"] == "Interior Plains"
-    assert rs["bankfull_width_m"] is not None and rs["bankfull_width_m"] > 0
-
-
-def test_reach_summary_widths_match_representative_profile():
-    stations = list(range(0, 101))
-    elevs = [10.0 if not (40 <= x <= 60) else 6 + abs(x - 50) * 0.4 for x in stations]
-    rs = geomorph.reach_summary([(stations, elevs)], 50.0)
-    assert rs.get("flood_prone_width_m") and rs.get("bankfull_width_m")
-    # ER/BHR equal derive_from_stages on the representative profile at the same defaults
-    # (use the raw curve depth reach_summary used internally, not the rounded report value)
-    _, d_bf = geomorph.bankfull_geometry(50.0)
-    thal = rs["thalweg"]
-    low_bank = rs["low_bank_stage_m"]   # the exported default low-bank stage
-    d = geomorph.derive_from_stages(rs["profile"]["stations"], rs["profile"]["elevs"],
-                                    thalweg=thal, bankfull_stage=thal + d_bf,
-                                    floodplain_stage=low_bank)
-    assert rs["entrenchment_ratio"] == d["entrenchment_ratio"]
-    assert rs["bank_height_ratio"] == d["bank_height_ratio"]
-    assert rs["flood_prone_width_m"] == d["flood_prone_width_m"]
-
-
 def test_summarize_profile_matches_derive_from_stages():
     stations = list(range(0, 101))
     elevs = [10.0 if not (40 <= x <= 60) else 6 + abs(x - 50) * 0.4 for x in stations]
@@ -392,6 +397,9 @@ def test_summarize_profile_matches_derive_from_stages():
     assert s["entrenchment_ratio"] == d["entrenchment_ratio"]
     assert s["bank_height_ratio"] == d["bank_height_ratio"]
     assert s["flood_prone_width_m"] == d["flood_prone_width_m"]
+    # the exact stage the ratios were measured at rides along (the rounded
+    # bankfull_depth_m must not be used to rebuild it)
+    assert s["bankfull_stage_m"] == pytest.approx(s["thalweg"] + d_bf, abs=1e-9)
 
 
 def test_summarize_profile_caps_default_low_bank_at_floodprone():
@@ -407,19 +415,7 @@ def test_summarize_profile_caps_default_low_bank_at_floodprone():
     assert 10.0 - 6.0 > 2.0 * d_bf                                # the cap actually binds
     assert s["top_of_bank_m"] == pytest.approx(10.0, abs=0.5)     # raw crest kept
     assert s["bank_height_ratio"] == pytest.approx(2.0, abs=0.01)
-
-
-def test_reach_summary_retains_profile_and_stages():
-    stations = list(range(0, 101))
-    elevs = [10.0 if not (40 <= x <= 60) else 6 + abs(x - 50) * 0.4 for x in stations]
-    rs = geomorph.reach_summary([(stations, elevs)], 50.0)
-    # new representative-profile keys for the hydraulics + cross-section plot
-    assert rs["profile"]["stations"] and rs["profile"]["elevs"]
-    assert rs["thalweg"] == pytest.approx(6.0, abs=1e-6)
-    assert rs["top_of_bank_m"] == pytest.approx(10.0, abs=0.5)
-    assert "fp_stage_m" in rs
-    # existing aggregates unchanged
-    assert "entrenchment_ratio" in rs and "bank_height_ratio" in rs
+    assert s["low_bank_capped"] is True
 
 
 # --- area-at-stage + area-based bankfull (Bieger XS-area inversion) --------------- #

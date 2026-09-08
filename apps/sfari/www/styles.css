@@ -305,9 +305,10 @@ details.easi-rollup[open] > summary.easi-rollup-sum::before { transform: rotate(
 /* --------------------------------------------------------------------------- */
 /* Report modal sizing (target Bootstrap classes — robust across Shiny vers.)   */
 /* --------------------------------------------------------------------------- */
-/* The report (the only size="xl" modal) fills the viewport height and scrolls ONLY in its
-   body. The background page is already locked (html, body overflow:hidden), so this removes
-   the outer modal scrollbar and the wasted space above the popup. */
+/* The size="xl" modals (the report, the Field Forms dialog) fill the viewport height and
+   scroll ONLY in their body. The background page is already locked (html, body
+   overflow:hidden), so this removes the outer modal scrollbar and the wasted space above
+   the popup. */
 .modal-dialog.modal-xl {
   max-width: min(1180px, 96vw);
   height: calc(100vh - 1.5rem);     /* fill the viewport, ~0.75rem gap top + bottom */
@@ -828,8 +829,6 @@ details[open] > summary.easi-cfg-group::before { transform: rotate(90deg); }
 .sfari-progress-bar > span { display: block; height: 100%; background: var(--easi-accent); border-radius: 3px; transition: width .25s; }
 .sfari-evidence.pending { color: #8a93a3; font-style: italic; }
 
-/* desktop-metrics modal: sticky header while scrolling the 26-row table */
-#sfari-desktop-metrics .easi-tbl thead th { position: sticky; top: 0; z-index: 3; }
 
 /* report: condensed per-discipline evidence expanders (collapsed by default) */
 .sfari-rep-tools { display: flex; gap: 12px; margin: 2px 0 6px; }
@@ -884,10 +883,78 @@ summary.sfari-rep-sum { font-family: var(--font-head); font-weight: 600;
   .easi-header .easi-nav { gap: 10px 12px; flex-wrap: wrap; }
 }
 
-/* Field Forms readiness badges + actions (reactive modal) */
+/* Field Forms dialog (2026-09-07): a static tab strip with both downloads, the
+   26-row table scrolling in its own box under a header that stays put, and the
+   vector packet previewed inline. The modal body is a column so the scroll box
+   and the preview take the height the dialog has. */
+.modal-dialog.modal-xl:has(.ff-modal-body) .modal-content { height: 100%; }
+.modal-xl .modal-body.ff-modal-body { display: flex; flex-direction: column; gap: 8px;
+  flex: 1; min-height: 0; overflow: hidden; }
+.ff-modal-body .nav-pills { flex: none; align-items: center; gap: 4px; }
+.ff-modal-body .nav-pills .nav-link { font-size: 12.5px; padding: 4px 12px; }
+.ff-modal-body .nav-pills .bslib-nav-spacer { flex: 1; }
+.ff-modal-body .nav-pills .ff-dl { display: flex; align-items: center; margin-left: 8px; }
+/* the two downloads as the app's primary button (they are equals): explicit
+   colors on every state so no link rule shows through */
+.ff-modal-body .nav-pills .ff-dl .btn { font-size: 12.5px; font-weight: 600; line-height: 1.3;
+  padding: 5px 12px; border-radius: 6px; text-decoration: none; }
+.ff-modal-body .nav-pills .ff-dl .btn-primary { color: #fff; background: var(--easi-accent);
+  border: 1px solid var(--easi-accent); }
+.ff-modal-body .nav-pills .ff-dl .btn-primary:hover,
+.ff-modal-body .nav-pills .ff-dl .btn-primary:focus { color: #fff;
+  background: var(--easi-accent-dark); border-color: var(--easi-accent-dark); }
+.ff-modal-body .tab-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.ff-modal-body .tab-content > .tab-pane.active { flex: 1; min-height: 0; display: flex;
+  flex-direction: column; gap: 8px; }
+.ff-site { font-size: 12.5px; color: #45506a; }
+.ff-status { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 12.5px; color: #2f3a52; }
+.ff-table-wrap { flex: 1; min-height: 0; overflow: auto; border: 1px solid var(--card-border);
+  border-radius: 6px; background: #fff; }
+.ff-table-wrap .ff-table { border-collapse: separate; border-spacing: 0; }
+.ff-table-wrap .ff-table thead th { position: sticky; top: 0; z-index: 3; background: #f4f6fa;
+  border-bottom: none; box-shadow: inset 0 -1px 0 #d7dce5; }
 .ff-badge { display: inline-block; padding: 1px 8px; border-radius: 999px;
   font-size: 10.5px; font-weight: 600; white-space: nowrap; }
-.ff-actions { display: flex; align-items: center; gap: 8px; }
+.ff-src-sub { display: block; font-size: 10.5px; color: #66708a; }
+.ff-preview { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 6px; }
+.ff-preview-frame { flex: 1; min-height: 0; width: 100%; border: 1px solid var(--card-border);
+  border-radius: 6px; background: #fff; }
+
+/* Stream legend (www/legend-dock.js docks #easi-legend-panel under the top-right
+   layers button; the absolute position is the fallback when docking fails). The
+   card look lives on the rendered .easi-legend, so an empty output shows nothing.
+   EASI's rules (2026-09-07). */
+.easi-legend-panel { position: absolute; top: 62px; right: 12px; z-index: 1100; }
+.easi-legend-panel.leaflet-control {
+  position: relative; top: auto; right: auto; z-index: auto; margin: 10px 10px 0 0;
+}
+/* The top-right corner as a column, so the legend keeps its place below the
+   layers button even after ipyleaflet re-appends that control on a layer change
+   (floats are ignored on flex items; the margins still space the controls). */
+.easi-map-wrap .leaflet-top.leaflet-right {
+  display: flex; flex-direction: column; align-items: flex-end;
+}
+.easi-map-wrap .leaflet-top.leaflet-right .leaflet-control { float: none; }
+.easi-map-wrap .leaflet-top.leaflet-right .leaflet-control-layers { order: 1; }
+.easi-map-wrap .leaflet-top.leaflet-right .easi-legend-panel { order: 2; }
+#stream_legend.recalculating { min-height: 0 !important; opacity: 1 !important; }
+#stream_legend.recalculating::after { display: none !important; }
+.easi-legend {
+  display: flex; flex-direction: column; gap: 4px; max-width: 250px;
+  background: rgba(255, 255, 255, .94); border: 1px solid var(--card-border);
+  border-radius: 6px; padding: 6px 9px 7px; font-size: 11px; color: #33415c;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .15);
+}
+.easi-legend-title { font-weight: 700; font-size: 11px; color: var(--easi-accent);
+  text-transform: uppercase; letter-spacing: .03em; }
+.easi-legend-row { display: flex; align-items: center; gap: 7px; line-height: 1.25; }
+.easi-legend-sw { width: 18px; height: 3px; border-radius: 2px; flex: none; }
+.easi-legend-sw-glow { height: 9px; opacity: .3; }
+.easi-legend-sw-fill { width: 12px; height: 12px; border-radius: 2px; opacity: .6;
+  border: 1px solid #caa700; }
+.easi-legend-label { font-weight: 600; }
+.easi-legend-sub, .easi-legend-note { color: #6b7480; }
 
 /* evidence provenance badges: which engine or service produced the value */
 .sfari-ev-tag.engine { color: #1f6b32; background: #e3f3e6; border-color: #bfe0c6; }

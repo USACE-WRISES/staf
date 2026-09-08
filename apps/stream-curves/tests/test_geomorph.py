@@ -32,7 +32,8 @@ DEEP_ROOT = str(Path(__file__).resolve().parents[2] / "deep")
 sys.path.insert(0, DEEP_ROOT)
 try:
     import deep.bieger as deep_bieger
-    import deep.geomorph as deep_geomorph
+    # DEEP's transect code is the vendored site engine's EASI extract (2026-09-06)
+    from deep._vendor.site_engine._extracted import geomorph as deep_geomorph
 except Exception:  # pragma: no cover - depends on the deep app importing
     deep_bieger = deep_geomorph = None
 

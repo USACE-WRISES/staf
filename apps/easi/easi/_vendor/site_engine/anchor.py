@@ -10,7 +10,7 @@ source tree is present):
     snap tolerance. COMID-keyed evidence describes the clicked stream.
   * ``hrSurrogate``: the point sits on an HR-only stream. The nearest covered
     downstream V2 reach is found with an NLDI hydrolocation raindrop trace and
-    recorded with the routed distance and the drainage-area ratio. The exact
+    recorded with the routed distance and the drainage-area ratio. The HR reach
     watershed still comes from the engine; only COMID-keyed evidence rides
     the covered reach, labeled (``naming.anchor_label``).
   * Past ``DA_RATIO_MAX`` (or with a drainage area unknown on either side) the

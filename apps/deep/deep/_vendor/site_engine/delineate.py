@@ -1,4 +1,9 @@
-"""True point-watershed delineation by NHDPlus HR catchment aggregation.
+"""HR reach watershed delineation by NHDPlus HR catchment aggregation.
+
+The watershed is the drainage area of the HR reach the point snaps to: the
+reach, not the point, is the outlet, so a point partway up a reach gets that
+reach's whole upstream area (the union is validated against the reach's
+published ``totdasqkm`` below).
 
 The engine's primary method (spike-selected; see README): walk the upstream
 tree of the anchor reach one BFS level at a time, union the tree's

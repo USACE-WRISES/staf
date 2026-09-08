@@ -1,5 +1,8 @@
 """Reach cross-section metrics (entrenchment ratio, bank-height ratio).
 
+Nine evenly spaced sections along the reach from one DEM fetch; each ratio is
+the reach median of the sampled sections (EASI's rule since 2026-09-06).
+
 Re-anchors the EASI 3DEP transect machinery at the engine's HR reach: the
 ``_extracted`` copies of ``threedep``/``geomorph``/``bieger`` are byte-synced
 from EASI (the sync gate guards parity), so engine and EASI produce identical
@@ -11,7 +14,7 @@ from __future__ import annotations
 from ..provenance import metric_entry
 from . import register
 
-_SRC = "USGS 3DEP representative cross section (engine reach)"
+_SRC = "USGS 3DEP reach cross-sections, median of the sampled sections (engine reach)"
 _VINTAGE = "3DEP 1 m where published, else 10 m; Bieger et al. 2015 bankfull"
 
 

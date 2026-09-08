@@ -12,7 +12,7 @@ from typing import Optional
 
 import anyio
 
-from . import basin, bieger, config, scoring, screening_methods, watershed
+from . import basin, bieger, config, notices, scoring, screening_methods, watershed
 from .datasources import nlcd, nrsa, streamcat, threedep, wbd
 from .metrics import registry
 from .metrics.base import AnalysisContext, MetricResult, unavailable
@@ -28,27 +28,6 @@ async def _to_thread(fn, *args):
 async def _empty() -> dict:
     return {}
 
-
-async def _none():
-    return None
-
-
-def comid_evidence_withheld(ctx: AnalysisContext) -> Optional[str]:
-    """The reason COMID-keyed evidence is withheld on this run, or None.
-
-    A routed site whose nearest covered reach lies past the substitution
-    limit (or has no drainage area to check) keeps its exact watershed but
-    gets no StreamCat or NRSA evidence for that reach: the three COMID-keyed
-    metrics and the StreamCat integrity fallbacks come out unavailable with
-    this reason.
-    """
-    anchor = ctx.extras.get("siteAnchor") or {}
-    routing_block = anchor.get("routing") or {}
-    if anchor.get("anchorKind") != "hrSurrogate" or not routing_block.get("declined"):
-        return None
-    return (routing_block.get("declineMessage")
-            or "The nearest covered reach lies past the substitution limit, so "
-               "reach-keyed evidence is unavailable here.")
 
 
 async def assess(ctx: AnalysisContext, *,
@@ -85,12 +64,11 @@ async def assess(ctx: AnalysisContext, *,
 
     # --- prefetch shared data concurrently (off the event loop) ---
     # The NLCD outage fallback belongs to the StreamCat lookup engine; a run
-    # the STAF site engine answered (or failed to answer) never pulls it. A
-    # declined routing withholds every COMID-keyed pull (StreamCat, NRSA).
-    withheld = comid_evidence_withheld(ctx)
+    # the STAF site engine answered (or failed to answer) never pulls it. The
+    # COMID-keyed pulls (StreamCat, NRSA) always run: on a routed site they
+    # describe the nearest covered reach, labeled per row (2026-09-06).
     sc, lc, huc12, geom, nrsa_record = await asyncio.gather(
-        (_empty() if withheld else
-         _to_thread(streamcat.metrics_by_comid, ctx.comid, registry.STREAMCAT_NAMES)),
+        _to_thread(streamcat.metrics_by_comid, ctx.comid, registry.STREAMCAT_NAMES),
         (_to_thread(nlcd.watershed_landcover, ctx.watershed_geojson)
          if watershed.wants_nlcd_fallback(ctx) else _empty()),
         _to_thread(wbd.huc12_at_point, ctx.lat, ctx.lon),
@@ -98,13 +76,10 @@ async def assess(ctx: AnalysisContext, *,
             ctx.reach_geojson, ctx.drainage_area_sqkm,
             bankfull=(bf["width_m"], bf["depth_m"]), bankfull_area_m2=bf["area_m2"],
             division=bf["division_name"])),
-        (_none() if withheld else
-         _to_thread(nrsa.evidence_for_reach, ctx.comid, ctx.lat, ctx.lon)),
+        _to_thread(nrsa.evidence_for_reach, ctx.comid, ctx.lat, ctx.lon),
     )
     ctx.extras["streamcat"] = sc
     ctx.extras["landcover"] = lc
-    if withheld:
-        ctx.extras["comidEvidence"] = {"withheld": True, "reason": withheld}
     # The watershed evidence layer: which engine answers the eight watershed
     # metrics, with its values and labels (see easi.watershed).
     ctx.extras["watershed"] = watershed.build(ctx, sc)
@@ -303,9 +278,9 @@ _COVERED_LABELS = {
 }
 # Watershed-row labels on routed runs, by the evidence layer's provider.
 _ROUTED_WATERSHED_LABELS = {
-    watershed.SITE_ENGINE: "exact watershed (STAF site engine)",
+    watershed.SITE_ENGINE: "HR reach watershed (STAF site engine)",
     watershed.STREAMCAT: "surrogate watershed (StreamCat lookup engine)",
-    None: "unavailable (exact watershed not calculated)",
+    None: "unavailable (HR reach watershed not calculated)",
 }
 _ENGINE_LABELS = {
     watershed.STREAMCAT: "StreamCat lookup engine",
@@ -323,33 +298,35 @@ def _annotate_anchors(rows: list[dict], site_anchor: Optional[dict], *,
     For covered (v2Direct or unanchored) runs the labels are neutral and
     nothing else changes, so historical results are label-only enriched. For a
     routed site the labels name where each row's evidence comes from: the
-    clicked HR reach, the clicked point, the nearest covered reach (or
-    "unavailable past the substitution limit" when the routing was declined),
-    and the watershed evidence layer's provider (the exact watershed of the
-    STAF site engine, the surrogate watershed of the StreamCat lookup engine
-    under the legacy policy, or unavailable). The StreamCat-integrity
-    fallback rule makes such rows COMID-keyed, and the per-metric table is
-    stamped onto ``siteAnchor["metricAnchors"]`` for the report banner. If
-    Phase 2 re-anchoring did not actually apply (HR data unavailable), every
-    clicked-* label says so rather than claiming a re-anchor that never
-    happened.
+    clicked HR reach, the clicked point, the nearest covered reach, and the
+    watershed evidence layer's provider (the HR reach watershed of the STAF site
+    engine, the surrogate watershed of the StreamCat lookup engine under the
+    legacy policy, or unavailable). A scored COMID-keyed row also gets
+    ``anchorNote`` (``notices.borrowed_note``): one sentence naming the
+    covered reach, the routed distance, and the drainage-area ratio, which
+    the report tooltip shows ahead of the adapter's note. It is set, never
+    appended, so the second pass on a watershed recompute is a no-op. The
+    StreamCat-integrity fallback rule makes such rows COMID-keyed, and the
+    per-metric table is stamped onto ``siteAnchor["metricAnchors"]`` for the
+    report banner. If Phase 2 re-anchoring did not actually apply (HR data
+    unavailable), every clicked-* label says so rather than claiming a
+    re-anchor that never happened.
     """
     anchor = site_anchor or {}
     routed = anchor.get("anchorKind") == "hrSurrogate"
     applied = bool((anchor.get("reanchored") or {}).get("applied"))
     comid = (anchor.get("scoredReach") or {}).get("comid")
     routing_block = anchor.get("routing") or {}
-    declined = bool(routing_block.get("declined"))
     dist = routing_block.get("routedDistanceFt")
     provider = ((watershed_layer or {}).get("provider", watershed.STREAMCAT)
                 if watershed_layer is not None else watershed.STREAMCAT)
-    if routed and declined:
-        comid_label = "unavailable past the substitution limit"
-    elif routed:
+    if routed:
         comid_label = (f"nearest covered reach (COMID {comid}, {dist:,.0f} ft downstream)"
                        if dist is not None else f"nearest covered reach (COMID {comid})")
+        comid_note = notices.borrowed_note(anchor)
     else:
         comid_label = ""
+        comid_note = ""
     table: dict[str, dict] = {}
     for r in rows:
         a = registry.METRIC_ANCHOR.get(r["metricId"], "watershed")
@@ -360,7 +337,7 @@ def _annotate_anchors(rows: list[dict], site_anchor: Optional[dict], *,
         if a == "watershed":
             engine = provider if provider else "unavailable"
         elif a == "surrogateComid":
-            engine = "unavailable" if (routed and declined) else watershed.STREAMCAT
+            engine = watershed.STREAMCAT
         if not routed:
             label = _COVERED_LABELS[a].format(comid=comid)
         elif a in ("clickedReach", "clickedPoint"):
@@ -374,6 +351,8 @@ def _annotate_anchors(rows: list[dict], site_anchor: Optional[dict], *,
         r["anchorLabel"] = label
         r["engine"] = engine
         r["engineLabel"] = _ENGINE_LABELS[engine]
+        if routed and a == "surrogateComid" and r.get("status") in ("ok", "observed"):
+            r["anchorNote"] = comid_note
         table[r["metricId"]] = {"anchor": a, "label": label, "name": r["name"],
                                 "engine": engine}
     if routed:
@@ -386,9 +365,9 @@ def _xsection_caption(er=None, bhr=None, division=None, *, edited=False) -> str:
         return ("Edited cross-section. Floodprone width is measured at 2x max "
                 "bankfull depth (Rosgen). The bank-height ratio uses your low-bank height.")
     reg = f" (Bieger bankfull, {division})" if division else ""
-    return ("Representative 3DEP cross-section" + reg
-            + ". DEM screening estimate (10 m). Edit the bankfull and low-bank "
-            "heights in the table.")
+    return ("3DEP cross-section nearest the reach medians" + reg
+            + ". The metrics score on the medians of all sampled sections. Edit "
+            "the bankfull and low-bank heights in the table.")
 
 
 def _xsection_geom_block(geom: dict, slope, fcode=None) -> Optional[dict]:
@@ -409,8 +388,12 @@ def _xsection_geom_block(geom: dict, slope, fcode=None) -> Optional[dict]:
     return {
         "stations": list(profile["stations"]), "elevs": list(profile["elevs"]),
         "thalweg": thalweg, "slope": slope,
-        "bankfull_stage": thalweg + d_bf,
+        # the exact stage the stored ratios were measured at: rebuilding it from
+        # the display-rounded bankfull_depth_m moved ER by 0.03 and BHR by 0.07
+        # on a 0.14 m deep channel (2026-09-07)
+        "bankfull_stage": geom.get("bankfull_stage_m", thalweg + d_bf),
         "floodplain_stage": lb_stage,
+        "low_bank_capped": bool(geom.get("low_bank_capped")),
         "bankfull_width_m": geom.get("bankfull_width_m"),
         "bankfull_depth_m": geom.get("bankfull_depth_m"),
         "flood_prone_width_m": geom.get("flood_prone_width_m"),
@@ -426,8 +409,9 @@ def _xsection_geom_block(geom: dict, slope, fcode=None) -> Optional[dict]:
 
 def _build_cross_section(geom: dict, slope=None, fcode=None, unit: str = "ft") -> Optional[dict]:
     """Stash an editable geometry block for every candidate transect (the sampled
-    sections along the reach) and render the selected one's PNG (others render on
-    demand when switched in the report)."""
+    sections along the reach), render the drawn default's PNG (others render on
+    demand when switched in the worksheet), and carry the reach statistics the
+    metrics scored on (``reach``: medians and ranges per ratio)."""
     cand_geoms = geom.get("candidates") or [geom]
     res = geom.get("dem_resolution_m")
     src = f"USGS 3DEP {res} m DEM" if res else "USGS 3DEP DEM"
@@ -456,7 +440,8 @@ def _build_cross_section(geom: dict, slope=None, fcode=None, unit: str = "ft") -
             bankfull_depth_m=block["bankfull_depth_m"],
             division=block["division"], unit=unit, source=src)
         return {"png_b64": png_b64, "geom": block, "candidates": blocks, "selected": sel,
-                "entrenchment_ratio": er, "bank_height_ratio": bhr,
+                "default": sel, "entrenchment_ratio": er, "bank_height_ratio": bhr,
+                "reach": geom.get("reach"), "n_transects": geom.get("n_transects"),
                 "caption": _xsection_caption(er, bhr, block["division"])}
     except Exception:  # noqa: BLE001 - resilience by design
         return None
@@ -464,13 +449,16 @@ def _build_cross_section(geom: dict, slope=None, fcode=None, unit: str = "ft") -
 
 def cross_section_from_stages(block: dict, bankfull_stage: float,
                               floodplain_stage: float, *, unit: str = "ft",
-                              er=None, bhr=None, edited: bool = True) -> dict:
+                              er=None, bhr=None, edited: bool = True,
+                              carry: Optional[dict] = None) -> dict:
     """Redraw the cross-section from chosen stages (metres).
 
     With ``edited=True`` (default) ER/BHR are recomputed from the stages and the
     measured profile. Passing ``er``/``bhr`` (with ``edited=False``) redraws with
     the *original* ratios — used to switch units on the untouched default without
-    diverging from the metric table.
+    diverging from the metric table. ``carry`` is the reach context a re-render
+    must not drop (``candidates``, ``reach``, ``n_transects``, ``selected``,
+    ``default``), merged into the result.
     """
     from . import geomorph, xsplot
     st, el, thalweg = block["stations"], block["elevs"], block.get("thalweg")
@@ -489,14 +477,22 @@ def cross_section_from_stages(block: dict, bankfull_stage: float,
         thalweg=thalweg, entrenchment_ratio=er, bank_height_ratio=bhr,
         bankfull_width_m=bf_w, bankfull_depth_m=bf_d,
         division=block.get("division"), unit=unit, source=block.get("dem_source"))
-    return {"png_b64": png_b64, "geom": block,
-            "entrenchment_ratio": er, "bank_height_ratio": bhr,
-            "caption": _xsection_caption(er, bhr, block.get("division"), edited=edited)}
+    out = {"png_b64": png_b64, "geom": block,
+           "entrenchment_ratio": er, "bank_height_ratio": bhr,
+           "caption": _xsection_caption(er, bhr, block.get("division"), edited=edited)}
+    if carry:
+        out.update({k: v for k, v in carry.items() if k not in out})
+    return out
 
 
 def rate_metrics_from_stages(block: dict, bankfull_stage: float,
-                             floodplain_stage: float) -> dict[str, dict]:
+                             floodplain_stage: float, *,
+                             reason: str = "edited") -> dict[str, dict]:
     """Recompute the cross-section-derived metric ratings from user-chosen stages.
+
+    ``reason`` names the section in the value texts: ``"edited"`` (the user's
+    heights, ``edited cross section``) or ``"scrolled"`` (a non-default section
+    at its own default stages, ``section at 700 ft`` from the block's label).
 
     Returns ``{metricId: {"rating", "valueText"}}`` for the four metrics the editable
     cross-section drives: floodplain access (ER), floodplain engagement (BHR),
@@ -510,38 +506,40 @@ def rate_metrics_from_stages(block: dict, bankfull_stage: float,
     from . import geomorph
     from .metrics import geomorphology, hydraulics
     out: dict[str, dict] = {}
+    where = ("edited cross section" if reason != "scrolled"
+             else f"section at {block.get('label') or 'the shown station'}")
     d = geomorph.derive_from_stages(
         block["stations"], block["elevs"], thalweg=block.get("thalweg"),
         bankfull_stage=bankfull_stage, floodplain_stage=floodplain_stage)
     er = d.get("entrenchment_ratio")
     er_ev = screening_methods.evaluate(
         hydraulics.ENTRENCHMENT_ID, {"er": er},
-        input_meta={"er": {"source": "edited cross section"}}, confidence="M")
+        input_meta={"er": {"source": where}}, confidence="M")
     if er_ev.rating:
         out[hydraulics.ENTRENCHMENT_ID] = {
             "rating": er_ev.rating,
             "valueText": f"entrenchment ratio {er} (flood-prone width / bankfull "
-                         f"width, edited cross section)",
+                         f"width, {where})",
             "scoring": er_ev.trace}
     bhr = d.get("bank_height_ratio")
     bhr_ev = screening_methods.evaluate(
         hydraulics.FLOODPLAIN_ENGAGEMENT_ID, {"bhr": bhr},
-        input_meta={"bhr": {"source": "edited cross section"}}, confidence="M")
+        input_meta={"bhr": {"source": where}}, confidence="M")
     if bhr_ev.rating:
         out[hydraulics.FLOODPLAIN_ENGAGEMENT_ID] = {
             "rating": bhr_ev.rating,
-            "valueText": f"bank-height ratio {bhr} (edited cross section)",
+            "valueText": f"bank-height ratio {bhr} ({where})",
             "scoring": bhr_ev.trace}
     bank_ev = screening_methods.evaluate(
         geomorphology.BANK_EROSION_ID, {"bhr": bhr},
-        input_meta={"bhr": {"source": "edited cross section"}},
+        input_meta={"bhr": {"source": where}},
         confidence="L", source_tier="screening-proxy",
         evidence_family="incision_geometry", used_fallback=True)
     if bank_ev.rating:
         out[geomorphology.BANK_EROSION_ID] = {
             "rating": bank_ev.rating,
             "valueText": (f"bank-instability susceptibility from BHR {bhr} "
-                          "(edited cross section)"),
+                          f"({where})"),
             "scoring": bank_ev.trace}
     fcode = block.get("fcode")
     channelized = fcode in geomorphology.CHANNELIZED_FCODES
@@ -551,8 +549,8 @@ def rate_metrics_from_stages(block: dict, bankfull_stage: float,
          else {"bhr": bhr, "er": er, "fcodeContext": fcode}),
         input_meta=(
             {"fcode": {"source": "NHDPlus FCODE"}} if channelized else {
-                "bhr": {"source": "edited cross section"},
-                "er": {"source": "edited cross section"},
+                "bhr": {"source": where},
+                "er": {"source": where},
                 "fcodeContext": {"source": "NHDPlus FCODE"},
             }),
         confidence="M" if channelized else "L",
@@ -567,7 +565,7 @@ def rate_metrics_from_stages(block: dict, bankfull_stage: float,
                 f"canal/ditch classification (NHD FCODE {fcode})"
                 if channelized else
                 f"channel-adjustment susceptibility (BHR {bhr}, ER {er}, "
-                "edited cross section)"),
+                f"{where})"),
             "scoring": channel_ev.trace}
     return out
 

@@ -158,7 +158,7 @@ def test_deep_contract_bands_two_sided_core():
 def test_choose_reference_tier_keeps_an_exploratory_pool_at_tier(monkeypatch):
     calls = []
 
-    def fake_screen(rows, preset, on_event=None, cache_path=None):
+    def fake_screen(rows, preset, on_event=None, cache_path=None, *, comid_mode=None):
         calls.append(preset)
         n = 15 if preset == "functional" else 40
         return {"retained_ids": [f"s{i}" for i in range(n)],

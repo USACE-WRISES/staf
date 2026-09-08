@@ -186,9 +186,8 @@ def biological_integrity(ctx: AnalysisContext) -> MetricResult:
     if ev.rating is None:
         return unavailable(
             BIOINTEGRITY_ID,
-            base.comid_evidence_note(
-                ctx, "measured condition, prG_BMMI, or all twelve ICI/IWI components "
-                     "are required"),
+            "measured condition, prG_BMMI, or all twelve ICI/IWI components "
+            "are required",
             "L", scoring=ev.trace)
     product_values = ev.trace.get("context", {}).get("products") or {}
     return MetricResult(

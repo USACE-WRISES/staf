@@ -1,9 +1,12 @@
-"""The NHD stream network for the map and the click: every stream, one engine.
+"""The NHD stream network for the map and the click.
 
 SFARI draws the full high-resolution NHD from the vendored STAF site engine's
-HR client and snaps every click to it. There is no second network: the
-engine computes the exact watershed for any stream, so the NHDPlus V2 reaches
-are neither drawn nor chosen (2026-09-05). A thin adapter over the vendored
+HR client, split by the click rule into the reaches the StreamCat lookup
+engine covers and every other stream (``network_display``), and snaps every
+click to the HR line. The STAF site engine computes the HR reach watershed
+for any stream; the StreamCat reach for the point (the V2 line under the
+click, else the nearest StreamCat reach downstream) is ``comid_anchor``'s job
+and never blocks the pick (2026-09-07). A thin adapter over the vendored
 engine; the same file lives in DEEP. Never raises.
 """
 from __future__ import annotations

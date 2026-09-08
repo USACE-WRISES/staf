@@ -8,7 +8,7 @@ a StreamCat row directly, so the two engines plug in behind one interface:
   * ``from_streamcat(row)``: the StreamCat lookup engine (token ``streamcat``).
     Today's values and today's source strings, byte for byte.
   * ``from_engine(record)``: the STAF site engine (token ``site-engine``). The
-    exact-watershed values of a ``compute_site`` record, labeled with the
+    HR reach watershed values of a ``compute_site`` record, labeled with the
     engine's own vocabulary and version.
   * ``unavailable(reason)``: no watershed evidence at all (the engine failed
     or refused on a stream outside the StreamCat lookup network). Every value
@@ -17,7 +17,7 @@ a StreamCat row directly, so the two engines plug in behind one interface:
 Sums require every member: a missing class is unknown, never zero (the rule
 in ``metrics/base.py``). The EPA modeled integrity components stay on the
 StreamCat row: they are COMID-keyed and permanently excluded from the engine.
-``compute_exact_watershed`` runs the vendored engine for a routed site and is
+``compute_reach_watershed`` runs the vendored engine for a routed site and is
 the only place EASI calls it.
 """
 from __future__ import annotations
@@ -28,7 +28,9 @@ from typing import Any, Callable, Optional
 STREAMCAT = "streamcat"
 SITE_ENGINE = "site-engine"
 ACRE_FT_PER_KM2_TO_M3_PER_KM2 = 1233.48184
-ENGINE_FAMILIES = ["baseflow", "dams", "landcover", "roads", "runoff", "soils"]
+# No baseflow: EASI scores no metric from baseflowIndexPct, and asking for the
+# family read the shipped grid on every routed click for nothing (2026-09-07).
+ENGINE_FAMILIES = ["dams", "landcover", "roads", "runoff", "soils"]
 
 VALUE_KEYS = (
     "imperviousPct", "cropPct", "hayPct", "woodyWetlandPct", "herbWetlandPct",
@@ -128,11 +130,11 @@ _ENGINE_RESULT_DETAILS = {
 }
 _ENGINE_NOTES = {
     "flowAlteration": ("Runoff is the STAF site engine EROM-derived depth over "
-                       "the exact watershed, not StreamCat RunoffWs."),
+                       "the HR reach watershed, not StreamCat RunoffWs."),
 }
 
 GUIDANCE_UNAVAILABLE = (
-    "Watershed evidence is unavailable for this stream. The exact watershed "
+    "Watershed evidence is unavailable for this stream. The HR reach watershed "
     "could not be calculated ({reason}). Use SFARI or DEEP for this site, or "
     "enter a rating override.")
 
@@ -181,7 +183,7 @@ def from_streamcat(row: Optional[dict]) -> dict:
 
 
 def from_engine(record: dict, *, version: Optional[str] = None) -> dict:
-    """The STAF site engine: exact-watershed values from a compute_site record."""
+    """The STAF site engine: HR reach watershed values from a compute_site record."""
     metrics = (record or {}).get("metrics") or {}
     ver = version or (record or {}).get("engineVersion")
     values = {key: None for key in VALUE_KEYS}
@@ -194,9 +196,9 @@ def from_engine(record: dict, *, version: Optional[str] = None) -> dict:
     ws = (record or {}).get("watershed") or {}
     return {
         "provider": SITE_ENGINE, "label": label, "values": values,
-        "inputSources": {k: f"{label}, exact watershed: {d}"
+        "inputSources": {k: f"{label}, HR reach watershed: {d}"
                          for k, d in _ENGINE_INPUT_DETAILS.items()},
-        "resultSources": {k: f"{label}, exact watershed: {d}"
+        "resultSources": {k: f"{label}, HR reach watershed: {d}"
                           for k, d in _ENGINE_RESULT_DETAILS.items()},
         "notes": dict(_ENGINE_NOTES),
         "meta": {"engineVersion": ver, "areaSqkm": ws.get("areaSqkm"),
@@ -209,7 +211,7 @@ def from_engine(record: dict, *, version: Optional[str] = None) -> dict:
 
 def unavailable(reason: Optional[str]) -> dict:
     """No watershed evidence: every value None, the reason kept."""
-    reason = reason or "the exact watershed could not be calculated"
+    reason = reason or "the HR reach watershed could not be calculated"
     return {"provider": None, "label": "watershed evidence unavailable",
             "values": {key: None for key in VALUE_KEYS},
             "inputSources": {k: "" for k in STREAMCAT_INPUT_SOURCES},
@@ -346,7 +348,7 @@ def engine_available() -> bool:
         return False
 
 
-def compute_exact_watershed(anchor: Optional[dict], *,
+def compute_reach_watershed(anchor: Optional[dict], *,
                             progress: Optional[Callable[[dict], Any]] = None
                             ) -> dict:
     """Run the STAF site engine at a routed site's clicked HR stream.

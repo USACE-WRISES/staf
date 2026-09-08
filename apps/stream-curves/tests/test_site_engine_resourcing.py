@@ -20,8 +20,13 @@ from streamcurves import regional_agent as ra
 from streamcurves import site_engine_source as ses
 from streamcurves.deep_export import build_deep_assessment_bundle
 
-EIGHT = ["bfiws", "damdensws", "pctcrop2019ws", "pcthbwet2019ws", "pctimp2019ws",
-         "pctwdwet2019ws", "rdcrsws", "rddensws"]
+# The scored landscape columns with an engine analog, sorted as the reports
+# print them. Nine since 2026-09-07: the combined wetland column joined the two
+# classes it sums (a default build re-sources seven of the nine, since the two
+# split classes are no longer default-selected).
+NINE = ["bfiws", "damdensws", "pctcrop2019ws", "pcthbwet2019ws", "pctimp2019ws",
+        "pctwdwet2019ws", "pctwet2019ws", "rdcrsws", "rddensws"]
+EIGHT = NINE
 
 
 def _rec(status="ok", reason=None, **over):
@@ -140,7 +145,9 @@ def test_enrich_reports_incomplete_sites_and_missing_predictor_values(tmp_path):
     assert report["status"] == "partial"
     assert len(report["incomplete_sites"]) == 1
     inc = report["incomplete_sites"][0]
-    assert inc["site_id"] == "A" and inc["missing"] == ["pctwdwet2019ws"]
+    # the woody class is missing, so both the class column and the combined one
+    # are unknown (a missing class is never read as zero)
+    assert inc["site_id"] == "A" and inc["missing"] == ["pctwdwet2019ws", "pctwet2019ws"]
     assert "pctwdwet2019ws" in inc["reason"]
     assert report["missing_predictor_values"] == {"se_runoffmm": ["B"]}
     assert values["A"] == {}                           # incomplete never feeds a curve
@@ -190,6 +197,7 @@ def _frame():
         "site_id": ["A", "B", "C"],
         "pctimp2019ws": [1.0, 2.0, 3.0], "pctcrop2019ws": [10.0, 20.0, 30.0],
         "pctwdwet2019ws": [0.1, 0.2, 0.3], "pcthbwet2019ws": [0.01, 0.02, 0.03],
+        "pctwet2019ws": [0.11, 0.22, 0.33],
         "rddensws": [1.1, 2.2, 3.3], "damdensws": [0.0, 0.05, 0.1],
         "bfiws": [40.0, 50.0, 60.0], "rdcrsws": [0.01, 0.02, 0.03],
     })
@@ -197,7 +205,8 @@ def _frame():
 
 def test_resource_metric_columns_swaps_only_the_analog_columns_and_keeps_nan_on_failure():
     values = {"A": {"pctimp2019ws": 12.3, "pctcrop2019ws": 40.0, "pctwdwet2019ws": 1.5,
-                    "pcthbwet2019ws": 0.25, "rddensws": 1.2345, "damdensws": 0.0213,
+                    "pcthbwet2019ws": 0.25, "pctwet2019ws": 1.75,
+                    "rddensws": 1.2345, "damdensws": 0.0213,
                     "bfiws": 48.0, "rdcrsws": 0.9844},
               "B": {}}
     out, resourced = ses.resource_metric_columns(_frame(), values)
@@ -222,7 +231,7 @@ def test_annotate_resourced_metric_config_sets_value_source_and_a_plain_note():
     assert out["pctimp2019ws"]["value_source"] == ses.engine_source_label()
     assert out["pctimp2019ws"]["value_source"].startswith("site-engine v")
     note = out["pctimp2019ws"]["notes"]
-    assert "STAF site engine" in note and "exact watershed" in note
+    assert "STAF site engine" in note and "HR reach watershed" in note
     assert ";" not in note and "—" not in note
     assert "value_source" not in out["bfiws"] and out["bfiws"]["notes"] == "Base-flow index."
     assert "value_source" not in cfg["pctimp2019ws"]            # a copy, never in place
@@ -232,8 +241,9 @@ def test_annotate_resourced_metric_config_sets_value_source_and_a_plain_note():
 # run_evidence end to end (offline)
 # --------------------------------------------------------------------------- #
 _SC_COLS = ["pctimp2019ws", "pctcrop2019ws", "pcthay2019ws", "pctwdwet2019ws",
-            "pcthbwet2019ws", "rddensws", "damdensws", "bfiws", "rdcrsws",
-            "kffactws", "damnrmstorws", "runoffws", "precip8110ws", "elevws"]
+            "pcthbwet2019ws", "pctwet2019ws", "rddensws", "damdensws", "bfiws",
+            "rdcrsws", "kffactws", "damnrmstorws", "runoffws", "precip8110ws",
+            "elevws"]
 
 
 @pytest.fixture(scope="module")
@@ -269,8 +279,15 @@ def test_run_evidence_resources_the_scored_landscape_columns(engine_evidence):
                        100.0 + data["lat"].astype(float), atol=1e-3)
     assert (data["rddensws"] == 1.2345).all() and (data["damdensws"] == 0.0213).all()
     assert data["bfiws"].tolist() != [1.2345] * len(data)     # untouched StreamCat column
-    for col in EIGHT:
-        assert ev["metric_config"][col]["value_source"].startswith("site-engine v")
+    # every re-sourced column that the run actually scores carries the stamp; the
+    # two wetland classes are no longer default-selected, so they have no config
+    # entry even though the engine can still re-source them
+    for col in NINE:
+        cfg = ev["metric_config"].get(col)
+        if cfg is not None:
+            assert cfg["value_source"].startswith("site-engine v"), col
+    assert "pctwet2019ws" in ev["metric_config"]
+    assert "pctwdwet2019ws" not in ev["metric_config"]
     assert ev["metric_config"]["bfiws"]["value_source"].startswith("site-engine v")
     assert ev["predictor_source"].startswith("mixed (site-engine v")
     rep = ev["source_reports"][1]
@@ -429,10 +446,13 @@ def test_the_snap_tolerance_flag_reaches_run_evidence():
     from pathlib import Path as _P
     text = (_P(__file__).resolve().parents[1] / "scripts" / "run_region_batch.py").read_text(encoding="utf-8")
     assert 'add_argument("--engine-snap-tolerance-ft"' in text
-    start = text.index("ra.run_evidence(")
-    assert "engine_config=_engine_config(a)" in text[start:start + 900]
-    ns = text.index("argparse.Namespace(")
-    assert "engine_snap_tolerance_ft=a.engine_snap_tolerance_ft" in text[ns:ns + 900]
-    assert "engine_max_reaches=a.engine_max_reaches" in text[ns:ns + 900]
+    # the whole call, not a fixed window: it grows a keyword every few rounds
+    from tests.test_screen_retry import _call_text
+    call = _call_text(text, "ra.run_evidence(")
+    assert "engine_config=_engine_config(a)" in call
+    ns = _call_text(text, "argparse.Namespace(")
+    assert "engine_snap_tolerance_ft=a.engine_snap_tolerance_ft" in ns
+    assert "engine_max_reaches=a.engine_max_reaches" in ns
+    assert "reference_frame=a.reference_frame" in ns
     assert 'add_argument("--engine-max-reaches"' in text
     assert 'add_argument("--engine-max-hops"' in text

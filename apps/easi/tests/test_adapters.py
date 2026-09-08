@@ -200,13 +200,6 @@ def _geom_ctx(geom, slope=0.004):
     return c
 
 
-def _trapezoid_geom(bank_h, da=50.0):
-    st = list(range(0, 121))
-    cx, half = 60, 10
-    elevs = [(abs(x - cx) / half) * bank_h if abs(x - cx) <= half else bank_h for x in st]
-    return geomorph.reach_summary([(st, elevs)], da)
-
-
 @pytest.mark.parametrize(
     "bhr,expected",
     [(1.0, "Good"), (1.3, "Good"), (1.31, "Fair"), (1.5, "Fair"), (1.51, "Poor")],
@@ -260,6 +253,49 @@ def test_floodplain_access_is_lateral_only():
     entrenched = hydraulics.floodplain_access(_geom_ctx(
         {"entrenchment_ratio": 1.2, "n_transects": 9}))
     assert entrenched.rating == "Poor"
+
+
+def _reach_geom(er=2.5, bhr=2.0, n=9, edge=False):
+    """A geometry the way candidates_from_transects builds it: reach medians on
+    top, the reach statistics beside them."""
+    return {"entrenchment_ratio": er, "bank_height_ratio": bhr, "edge_limited": edge,
+            "n_transects": n, "dem_resolution_m": 1,
+            "reach": {"n": n,
+                      "entrenchment_ratio": {"median": er, "min": 1.26, "max": 3.1, "n": n},
+                      "bank_height_ratio": {"median": bhr, "min": 1.47, "max": 2.0, "n": n}}}
+
+
+def test_geometry_metrics_score_the_reach_medians_and_say_so():
+    ctx = _geom_ctx(_reach_geom())
+    fa = hydraulics.floodplain_access(ctx)
+    assert fa.value == 2.5 and fa.rating == "Good"
+    assert fa.value_text == ("entrenchment ratio 2.50 (flood-prone width / bankfull width), "
+                             "reach median of 9 sections (1.26 to 3.10)")
+    assert fa.source == "USGS 3DEP reach cross-sections (median of 9)"
+    assert "Scored on the reach median" in fa.note and "Bieger regional curve" in fa.note
+    fe = hydraulics.floodplain_engagement(ctx)
+    assert fe.value_text == ("bank-height ratio 2.00 (low-bank height / max bankfull depth), "
+                             "reach median of 9 sections (1.47 to 2.00)")
+    assert fe.source == "USGS 3DEP reach cross-sections (median of 9)"
+    assert "Scored on the reach median" in fe.note
+    be = geomorphology.bank_erosion(ctx)
+    assert be.value_text == ("bank-instability susceptibility from BHR 2.00, "
+                             "reach median of 9 sections (1.47 to 2.00)")
+    assert be.source == "USGS 3DEP reach cross-sections (median of 9)"
+    ce = geomorphology.channel_evolution(ctx)
+    assert "(BHR 2.00, ER 2.50, reach medians of 9 sections)" in ce.value_text
+    assert ce.source == "USGS 3DEP reach cross-sections (median of 9) + NHDPlus FCODE"
+    assert "Scored on the reach median" in ce.note
+
+
+def test_geometry_metrics_keep_the_legacy_wording_without_reach_stats():
+    fa = hydraulics.floodplain_access(_geom_ctx({"entrenchment_ratio": 2.5, "n_transects": 9}))
+    assert fa.value_text == "entrenchment ratio 2.50 (flood-prone width / bankfull width)"
+    assert fa.source == "USGS 3DEP representative cross section"
+    assert "Scored on the reach median" not in fa.note
+    be = geomorphology.bank_erosion(_geom_ctx({"bank_height_ratio": 2.0}))
+    assert be.value_text == "bank-instability susceptibility from BHR 2.00"
+    assert be.source == "USGS 3DEP representative cross section"
 
 
 def test_rate_metrics_from_stages_splits_axes():
@@ -329,20 +365,53 @@ def test_rate_metrics_from_stages_channelized_remains_poor():
     assert hydraulics.FLOODPLAIN_ENGAGEMENT_ID in out   # floodplain metrics still recompute
 
 
-def test_build_cross_section_three_candidates():
-    # crossSection stores one editable block per candidate, with the middle selected
+def test_build_cross_section_nine_candidates_and_reach_stats():
+    # crossSection stores one editable block per sampled section, the drawn
+    # default selected, and the reach statistics the metrics scored on
     from easi import assessment
     st = list(range(0, 101))
     el = [10.0 if not (40 <= x <= 60) else 6 + abs(x - 50) * 0.4 for x in st]
     base = geomorph.summarize_profile(st, el, 50.0, division="Interior Plains")
-    cands = []
-    for lab in ("Upstream", "Middle", "Downstream"):
-        c = dict(base); c["label"] = lab; cands.append(c)
-    geom = dict(base); geom["candidates"] = cands; geom["selected"] = 1
+    labels = [f"{100 * i} ft" for i in range(1, 10)]
+    cands = [dict(base, label=lab, station_ft=100 * (i + 1)) for i, lab in enumerate(labels)]
+    geom = dict(base); geom["candidates"] = cands; geom["selected"] = 4
+    geom["reach"] = geomorph.reach_stats(cands); geom["n_transects"] = 9
     cs = assessment._build_cross_section(geom, slope=0.004, fcode=None)
-    assert cs and len(cs["candidates"]) == 3 and cs["selected"] == 1
-    assert [b["label"] for b in cs["candidates"]] == ["Upstream", "Middle", "Downstream"]
-    assert cs["geom"]["label"] == "Middle" and cs["geom"]["fcode"] is None
+    assert cs and len(cs["candidates"]) == 9 and cs["selected"] == 4 and cs["default"] == 4
+    assert [b["label"] for b in cs["candidates"]] == labels
+    assert cs["geom"]["label"] == "500 ft" and cs["geom"]["fcode"] is None
+    assert cs["reach"] == geom["reach"] and cs["n_transects"] == 9
+    assert "nearest the reach medians" in cs["caption"]
+
+
+def test_cross_section_from_stages_carries_the_reach_context():
+    from easi import assessment
+    st = list(range(0, 101))
+    el = [10.0 if not (40 <= x <= 60) else 6 + abs(x - 50) * 0.4 for x in st]
+    block = assessment._xsection_geom_block(geomorph.summarize_profile(st, el, 50.0), 0.004)
+    carry = {"candidates": [block], "reach": {"n": 1}, "n_transects": 1,
+             "selected": 0, "default": 0}
+    out = assessment.cross_section_from_stages(block, block["bankfull_stage"],
+                                               block["floodplain_stage"], carry=carry)
+    assert out["png_b64"] and out["candidates"] == [block] and out["reach"] == {"n": 1}
+    assert out["selected"] == 0 and out["default"] == 0 and out["n_transects"] == 1
+    plain = assessment.cross_section_from_stages(block, block["bankfull_stage"],
+                                                 block["floodplain_stage"])
+    assert "candidates" not in plain
+
+
+def test_rate_metrics_from_stages_names_a_scrolled_section():
+    from easi import assessment
+    st = list(range(-60, 61, 5))
+    elevs = [min(4.0, abs(x) * 0.5) for x in st]
+    block = {"stations": st, "elevs": elevs, "thalweg": 0.0, "slope": 0.004,
+             "bankfull_stage": 1.0, "floodplain_stage": 1.0, "label": "700 ft"}
+    scrolled = assessment.rate_metrics_from_stages(block, 1.0, 1.2, reason="scrolled")
+    edited = assessment.rate_metrics_from_stages(block, 1.0, 1.2)
+    for mid in (hydraulics.ENTRENCHMENT_ID, hydraulics.FLOODPLAIN_ENGAGEMENT_ID,
+                geomorphology.BANK_EROSION_ID, geomorphology.CHANNEL_EVOL_ID):
+        assert scrolled[mid]["valueText"].endswith("section at 700 ft)")
+        assert edited[mid]["valueText"].endswith("edited cross section)")
 
 
 # --- biological integrity evidence hierarchy ------------------------------- #
@@ -571,8 +640,8 @@ def test_build_cross_section_threads_dem_source():
     st = list(range(0, 101))
     el = [10.0 if not (40 <= x <= 60) else 6 + abs(x - 50) * 0.4 for x in st]
     geom = geomorph.summarize_profile(st, el, 50.0, division="Interior Plains")
-    geom["candidates"] = [dict(geom, label=lab) for lab in ("Upstream", "Middle", "Downstream")]
-    geom["selected"] = 1
+    geom["candidates"] = [dict(geom, label=f"{100 * i} ft") for i in range(1, 10)]
+    geom["selected"] = 4
     geom["dem_resolution_m"] = 1
     cs = assessment._build_cross_section(geom, slope=0.004, fcode=None)
     assert cs["geom"]["dem_resolution_m"] == 1
@@ -742,3 +811,37 @@ def test_riparian_natural_veg_pct_sums_all_groups():
         pctshrb2019wsrp100=5, pctwdwet2019wsrp100=5)))
     assert v == 40.0
     assert base.riparian_natural_veg_pct(_ctx()) is None
+
+
+def test_bhr_metrics_report_the_cap_in_words():
+    geom = _reach_geom(bhr=2.0)
+    geom["reach"]["bank_height_ratio"].update(
+        {"max": 2.0, "capped": 7, "median_capped": True, "max_capped": True})
+    ctx = _geom_ctx(geom)
+    fe = hydraulics.floodplain_engagement(ctx)
+    assert fe.value_text == ("bank-height ratio at least 2.00 (low-bank height / max bankfull "
+                             "depth), reach median of 9 sections (1.47 to at least 2.00)")
+    assert "No bank was found below the floodprone stage on 7 of 9 sections." in fe.note
+    be = geomorphology.bank_erosion(ctx)
+    assert be.value_text.startswith("bank-instability susceptibility from BHR at least 2.00,")
+    assert "7 of 9 sections" in be.note
+    ce = geomorphology.channel_evolution(ctx)
+    assert "(BHR at least 2.00, ER 2.50, reach medians of 9 sections)" in ce.value_text
+    assert "7 of 9 sections" in ce.note
+    # not capped: plain numbers and no cap sentence
+    fe2 = hydraulics.floodplain_engagement(_geom_ctx(_reach_geom(bhr=1.3)))
+    assert "at least" not in fe2.value_text and "No bank" not in fe2.note
+
+
+def test_xsection_geom_block_prefers_the_exact_bankfull_stage():
+    from easi import assessment
+    st = list(range(0, 101))
+    el = [10.0 if not (40 <= x <= 60) else 6 + abs(x - 50) * 0.4 for x in st]
+    geom = geomorph.summarize_profile(st, el, 50.0, division="Interior Plains")
+    block = assessment._xsection_geom_block(geom, 0.004)
+    assert block["bankfull_stage"] == geom["bankfull_stage_m"]
+    assert block["low_bank_capped"] == geom["low_bank_capped"]
+    # a legacy geom without the exact stage rebuilds it from the rounded depth
+    legacy = {k: v for k, v in geom.items() if k != "bankfull_stage_m"}
+    assert assessment._xsection_geom_block(legacy, 0.004)["bankfull_stage"] == \
+        pytest.approx(geom["thalweg"] + geom["bankfull_depth_m"])

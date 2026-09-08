@@ -29,18 +29,20 @@ class EvidenceResult:
     status: str = "ok"                           # ok | unavailable | pending
     note: str = ""
     # Provenance of the entry itself: which engine or service produced it.
-    #   "engine"    the STAF site engine (exact watershed)
-    #   "streamcat" the StreamCat lookup engine (sessions saved before 2026-09-05;
-    #               SFARI no longer produces these)
+    #   "engine"    the STAF site engine (HR reach watershed)
+    #   "streamcat" the StreamCat lookup engine by NHDPlus V2 COMID: the EPA
+    #               modeled indices that exist only per V2 reach, and the
+    #               labeled stand-in for a watershed value the site engine has
+    #               no value for (evidence.py, 2026-09-07)
     #   "pull"      other direct services (NWIS, WQP, NWI, NID, TIGER, NHD VAAs)
     # Cross-section attach entries keep their source-string convention.
     # Additive with safe defaults so saved sessions round-trip unchanged.
     origin: str = "pull"
     engine_version: Optional[str] = None
-    # Legacy provenance from sessions saved before 2026-09-05 (kept so those
-    # files still open): the reach a StreamCat value described, the reason it
-    # stood in for the engine, and the flag that it was about to be replaced.
-    # New entries never set them.
+    # Set on every StreamCat entry: the reach the value describes on a stream
+    # outside NHDPlus V2 (empty on a covered reach) and why StreamCat stood in
+    # for the engine (empty on the COMID-only indices). ``upgrade_pending`` is
+    # legacy (sessions saved before 2026-09-05): never set and never read now.
     anchor_label: str = ""
     fallback_reason: str = ""
     upgrade_pending: bool = False

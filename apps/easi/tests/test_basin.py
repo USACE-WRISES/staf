@@ -63,4 +63,4 @@ def test_basin_rows_use_the_two_decimal_formatter():
     rows = dict((r[0], r[1]) for r in basin.basin_characteristics(ctx)["rows"])
     assert rows["Drainage area"] == "0.99 km²"
     # one area row only (2026-09-04): the engine polygon area reads as a duplicate
-    assert "Exact watershed area" not in rows and rows["Watershed engine"].startswith("STAF")
+    assert "HR reach watershed area" not in rows and rows["Watershed engine"].startswith("STAF")

@@ -13,7 +13,6 @@ Planned modules (Phases 2-3):
   nas              USGS Nonindigenous Aquatic Species (invasives by HUC)
   nid_barriers     USACE NID FeatureServer + bundled NABD/FWS-SARP
   nwi              USFWS National Wetlands Inventory MapServer
-  threedep         USGS 3DEP via py3dep (DEM, slope, transects)
   nlcd             NLCD via pygeohydro (fallback land cover/riparian)
   sda_soils        USDA Soil Data Access post.rest T-SQL (Kfactor/Ksat/HYDGRP)
   tiger_roads      Census TIGERweb roads (road-stream crossings)

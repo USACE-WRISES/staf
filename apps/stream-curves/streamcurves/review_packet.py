@@ -221,7 +221,17 @@ def build_packet(result: dict, doc: dict, policy_result: dict, *, policy_meta: d
         "screening": {"method": result.get("screening_method"), "counts": counts,
                       "n_candidates": result.get("n_candidates"),
                       "n_retained": len(result.get("retained_site_ids") or []),
-                      "pool_disposition": result.get("reference_pool_disposition")},
+                      "pool_disposition": result.get("reference_pool_disposition"),
+                      # the reference frame, what it kept out, and every
+                      # station the owner readmitted (2026-09-07)
+                      "max_stream_order": result.get("nrsa_max_stream_order"),
+                      "n_out_of_frame": result.get("nrsa_n_out_of_frame"),
+                      "frame_overrides": list(result.get("nrsa_frame_overrides") or []),
+                      "panel": result.get("nrsa_panel_summary") or {},
+                      # what the screen keyed on, per site (2026-09-07)
+                      "comid_mode": result.get("screening_comid_mode"),
+                      "comids": result.get("screening_comids") or {},
+                      "cache": result.get("screening_cache") or {}},
         "tier_evaluation": list(result.get("tier_evaluation") or []),
         "policy": {"version": policy_meta.get("policy_version"), "sha256": policy_meta.get("sha256"),
                    "enabled": list(enabled or []), "applied_ids": policy_result.get("applied_ids") or []},
@@ -294,6 +304,86 @@ def source_report_lines(rep: dict) -> list[str]:
     return lines
 
 
+def _reference_frame_lines(s: dict) -> list[str]:
+    """What the reference frame let in, what it kept out, and any readmission.
+
+    The frame decides the reference population before any screening, so a
+    reviewer has to be able to see its effect and reverse it per station
+    (2026-09-07).
+    """
+    order = s.get("max_stream_order")
+    if not order:
+        return ["Reference frame: **every stream**, including large rivers, which is "
+                "what the versions published before methodology 0.10 drew from.", ""]
+    panel = s.get("panel") or {}
+    n_in = int(panel.get("nCandidates") or s.get("n_candidates") or 0)
+    n_out = int(s.get("n_out_of_frame") or panel.get("nOutOfFrame") or 0)
+    by_order = panel.get("byStreamOrder") or {}
+    lines = [f"Reference frame: **wadeable, stream order 1 to {int(order)}** (rule "
+             f"DATA-10). {n_in} stations in frame, **{n_out} out of frame** and not "
+             "screened. Order is the NHDPlus V2 order of each station's reach; the "
+             "NRSA sampling protocol decides only where an order cannot be resolved. "
+             "To draw from every stream, build again with `--reference-frame all`; to "
+             "readmit one station, `--include-site SITE_ID=REASON`.", ""]
+    if by_order:
+        lines += _table(["stream order", "stations in frame"],
+                        [[k, v] for k, v in sorted(by_order.items())])
+        lines.append("")
+    reasons = panel.get("outOfFrameReasons") or {}
+    if reasons:
+        lines += _table(["kept out because", "stations"],
+                        [[k, v] for k, v in sorted(reasons.items())])
+        lines.append("")
+    overrides = s.get("frame_overrides") or []
+    if overrides:
+        lines += [f"**{len(overrides)} station(s) readmitted by the owner**, against "
+                  "the frame:", ""]
+        lines += _table(["station", "stream order", "reason"],
+                        [[o.get("station_key"),
+                          "" if o.get("stream_order") is None else int(o["stream_order"]),
+                          o.get("reason")] for o in overrides])
+        lines.append("")
+    return lines
+
+
+def _screening_comid_lines(s: dict) -> list[str]:
+    """What the screen keyed on, and every site where that is worth reading.
+
+    Pool membership is decided on the sampled reach's NHDPlus V2 basin; an
+    engine-sourced build then fits the curves on HR reach watershed values at
+    those same sites, so the packet says both out loud (2026-09-07).
+    """
+    mode = s.get("comid_mode")
+    if not mode:
+        return []
+    comids = s.get("comids") or {}
+    counts = comids.get("counts") or {}
+    n_archive = int(counts.get("archive") or 0)
+    n_routed = int(counts.get("routed") or 0)
+    n_refused = int(counts.get("refused") or 0)
+    n_snapped = int(counts.get("snapped") or 0)
+    lines = [f"Screened by **{mode}**: {n_archive} sites on the NRSA archive COMID "
+             f"(the reach the crew sampled, no routing), {n_snapped} snapped from the "
+             f"coordinate, {n_routed} routed to a reach downstream, {n_refused} refused "
+             "past the drainage-area bound. Pool membership is decided on that reach's "
+             "NHDPlus V2 basin (StreamCat lookup engine); an engine-sourced build fits "
+             "the curves on HR reach watershed values at the same sites.", ""]
+    rows = [[r.get("site_id"), r.get("routed_comid") or "", r.get("routed_distance_ft") or "",
+             r.get("da_ratio") or "", r.get("final_decision") or ""]
+            for r in (comids.get("routed_sites") or [])]
+    rows += [[r.get("site_id"), r.get("scored_comid") or "", r.get("routed_distance_ft") or "",
+              r.get("da_ratio") or "", f"{r.get('final_decision') or ''} (archive "
+              f"{r.get('archive_comid')})"]
+             for r in (comids.get("differing_sites") or [])]
+    if rows:
+        lines += _table(["site", "scored COMID", "distance ft", "DA ratio", "decision"], rows)
+        lines.append("")
+    ignored = (s.get("cache") or {}).get("ignored")
+    if ignored:
+        lines += [f"The screening cache was ignored and the screen re-run: {ignored}.", ""]
+    return lines
+
+
 def packet_markdown(p: dict) -> str:
     region = p.get("region") or {}
     lines = [f"# End-review packet: {region.get('name')} (EPA Level III {region.get('code')})", ""]
@@ -313,6 +403,8 @@ def packet_markdown(p: dict) -> str:
         lines += [f"- **{n_unresolved} of {counts.get('n_screened')} candidates unresolved by the screen** "
                   "(a service outage or a failed assessment, not a criteria exclusion): the pool is "
                   "smaller than the region's data.", ""]
+    lines += _reference_frame_lines(s)
+    lines += _screening_comid_lines(s)
     lines += owner_exclusion_lines(p)
     lines += [f"Standing-decision policy {p['policy']['version']} ({str(p['policy']['sha256'])[:19]}), "
               f"enabled beyond the defaults: {', '.join(p['policy']['enabled']) or 'none'}. "
