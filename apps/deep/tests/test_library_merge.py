@@ -121,17 +121,20 @@ def test_new_library_assessment_is_appended(libroot):
 
 
 def test_library_wins_over_baked_same_id_no_duplicate(libroot):
+    # The synthetic version has to sit above anything the bake carries, or the
+    # merge rule keeps the baked copy and the test measures the version numbers
+    # instead of the rule. 99 is this file's convention for that.
     target = _baked_ids()[0]
-    _write_library_version(libroot, target, 3, name="Overridden by library", region_name="X")
+    _write_library_version(libroot, target, 99, name="Overridden by library", region_name="X")
     _write_catalog(
         libroot,
         [{"assessmentId": target, "assessmentName": "Overridden by library",
           "region": {"kind": "ecoregion", "code": "55", "name": "X"},
-          "latestVersion": 3, "latestUpdatedAt": "2026-07-07T00:00:00Z"}],
+          "latestVersion": 99, "latestUpdatedAt": "2026-07-07T00:00:00Z"}],
     )
     by_id = config.assessments_by_id()
     assert by_id[target]["assessmentName"] == "Overridden by library"
-    assert by_id[target]["library"]["version"] == 3
+    assert by_id[target]["library"]["version"] == 99
     assert len(config.assessments()) == len(_baked_ids())  # replaced, not appended
 
 

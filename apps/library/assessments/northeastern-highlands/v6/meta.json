@@ -1,0 +1,44 @@
+{
+  "assessmentId": "northeastern-highlands",
+  "assessmentName": "Northeastern Highlands reference assessment",
+  "version": 6,
+  "updatedAt": "2026-09-08T23:03:35Z",
+  "author": "StreamCurves Regional Analysis Agent",
+  "revisionNotes": "Reference tier: least_disturbed (screening preset functional, method direct_engine). Retained 94 of 175 candidates.",
+  "region": {
+    "kind": "ecoregion",
+    "code": "58",
+    "name": "Northeastern Highlands"
+  },
+  "stateCode": "",
+  "stateName": "",
+  "sourceCitation": "USEPA NRSA (L3 ecoregion 58), StreamCurves Regional Analysis Agent",
+  "contentDigest": "sha256:cbed9c9fea159ed4d1a779c43cffa942857021ede4c2fb32d834575ab920e907",
+  "supersedesVersion": 5,
+  "provenance": "present",
+  "portfolioApprovals": [
+    {
+      "functionId": "bed-composition-bedform-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "Substrate size, wood volume, and embeddedness read different aspects of bed condition (NEH v4 recorded approval)"
+    },
+    {
+      "functionId": "low-flow-baseflow-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "standing decision select01-complementary-set (policy 1.0): Complementary set approved under standing decision select01-complementary-set (policy 1.0): the 3 metrics on this function (bfiws, phab_BFWD_RAT, phab_RP100_cm) are the crosswalk's own assignment, and no pair among them reaches the strong redundancy band (largest within-function rank correlation 0.000). The approval is recorded in the publish metadata.",
+      "confirmedAt": "2026-09-08T23:03:35.783572+00:00"
+    },
+    {
+      "functionId": "water-soil-quality",
+      "approvedBy": "gtmenichino",
+      "note": "standing decision select01-complementary-set (policy 1.0): Complementary set approved under standing decision select01-complementary-set (policy 1.0): the 3 metrics on this function (chem_COND, chem_PH, chem_TURB) are the crosswalk's own assignment, and no pair among them reaches the strong redundancy band (largest within-function rank correlation 0.795). The approval is recorded in the publish metadata.",
+      "confirmedAt": "2026-09-08T23:03:35.783572+00:00"
+    },
+    {
+      "functionId": "community-dynamics",
+      "approvedBy": "gtmenichino",
+      "note": "standing decision select01-complementary-set (policy 1.0): Complementary set approved under standing decision select01-complementary-set (policy 1.0): the 3 metrics on this function (bent_EPT_NTAX, bent_HPRIME, bent_TOLRPIND) are the crosswalk's own assignment, and no pair among them reaches the strong redundancy band (largest within-function rank correlation 0.664). The approval is recorded in the publish metadata.",
+      "confirmedAt": "2026-09-08T23:03:35.783572+00:00"
+    }
+  ]
+}

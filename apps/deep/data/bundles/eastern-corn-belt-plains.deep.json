@@ -19,7 +19,7 @@
           "inputType": "proportion",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Cultivated crops (%)",
-          "howToMeasure": "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing.",
+          "howToMeasure": "Watershed cultivated crops (%); row-crop conversion degrades infiltration, soil structure, and runoff timing. Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -27,20 +27,16 @@
             "form": "monotone",
             "points": [
               {
-                "x": 46.506499999999996,
+                "x": 45.334,
                 "y": 1.0
               },
               {
-                "x": 52.2575,
+                "x": 54.64,
                 "y": 1.0
               },
               {
-                "x": 71.42750000000001,
+                "x": 85.66,
                 "y": 0.7
-              },
-              {
-                "x": 96.98750000000003,
-                "y": 0.3
               },
               {
                 "x": 100.0,
@@ -48,18 +44,18 @@
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            25.12,
-            89.57
+            24.07,
+            97.13
           ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
@@ -71,7 +67,7 @@
           "inputType": "proportion",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Impervious surface (%)",
-          "howToMeasure": "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology.",
+          "howToMeasure": "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology. Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -79,39 +75,39 @@
             "form": "monotone",
             "points": [
               {
-                "x": 0.10599999999999987,
+                "x": 0.6455000000000002,
                 "y": 1.0
               },
               {
-                "x": 1.4575,
+                "x": 1.01,
                 "y": 1.0
               },
               {
-                "x": 5.9625,
+                "x": 2.2249999999999996,
                 "y": 0.7
               },
               {
-                "x": 11.969166666666668,
+                "x": 3.844999999999999,
                 "y": 0.3
               },
               {
-                "x": 16.47416666666667,
+                "x": 5.059999999999999,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            0.95,
-            15.69
+            0.43,
+            15.78
           ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
@@ -125,12 +121,12 @@
       "discipline": "Hydrology",
       "metrics": [
         {
-          "metricId": "spring-pcthbwet2019ws",
-          "metricName": "Herbaceous wetland",
+          "metricId": "spring-pctwet2019ws",
+          "metricName": "Wetland",
           "inputType": "proportion",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "Herbaceous wetland (%)",
-          "howToMeasure": "Watershed herbaceous wetland (%); wetlands store surface water and attenuate flow peaks.",
+          "xLabel": "Wetland (%)",
+          "howToMeasure": "Watershed wetland (%), woody plus herbaceous, both classes required; wetlands store surface water and attenuate flow peaks. EASI scores Surface water storage on the same sum (method watershed-wetland-extent). Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id. Wetland cover is the sum of the engine's woody and herbaceous wetland percentages over the HR reach watershed; both classes are required, and a missing one leaves the total unknown rather than smaller.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -142,89 +138,36 @@
                 "y": 0.0
               },
               {
-                "x": 0.007500000000000001,
+                "x": 0.03428571428571429,
                 "y": 0.3
               },
               {
-                "x": 0.0175,
+                "x": 0.08,
                 "y": 0.7
               },
               {
-                "x": 0.2025,
+                "x": 0.96,
                 "y": 1.0
               },
               {
-                "x": 0.258,
+                "x": 1.224,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
-            "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
-            "Reference bands of hundredths of a percent sit below the land-cover product's wetland-class accuracy, and a steep watershed that never held herbaceous wetland reads low without being degraded."
-          ],
-          "confidenceLabel": "Low",
-          "confidenceTotal": 59.0,
-          "referenceRange": [
-            0.0,
-            0.26
-          ],
-          "discipline": "Hydrology",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "best_available"
-        },
-        {
-          "metricId": "spring-pctwdwet2019ws",
-          "metricName": "Woody wetland",
-          "inputType": "proportion",
-          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "Woody wetland (%)",
-          "howToMeasure": "Watershed woody wetland (%); wetlands store surface water and attenuate flow peaks.",
-          "methodContext": "",
-          "curve": {
-            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-            "stratification": "",
-            "form": "monotone",
-            "points": [
-              {
-                "x": 0.0,
-                "y": 0.0
-              },
-              {
-                "x": 0.07499999999999998,
-                "y": 0.3
-              },
-              {
-                "x": 0.175,
-                "y": 0.7
-              },
-              {
-                "x": 0.5,
-                "y": 1.0
-              },
-              {
-                "x": 0.5975,
-                "y": 1.0
-              }
-            ]
-          },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
-          "metricRole": "stressor_surrogate",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
             "Wetland cover follows terrain: a steep watershed that never held wetland reads low on this curve without being degraded."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            0.01,
-            8.82
+            0.0,
+            19.23
           ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
@@ -243,7 +186,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Road density (km/sq km)",
-          "howToMeasure": "Watershed road density; roads concentrate and route runoff to the channel, so higher density means more concentrated inflow pressure. Directional proxy shared with the EASI screening metric; it does not count outfalls.",
+          "howToMeasure": "Watershed road density; roads concentrate and route runoff to the channel, so higher density means more concentrated inflow pressure. Directional proxy shared with the EASI screening metric; it does not count outfalls. Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -251,39 +194,39 @@
             "form": "monotone",
             "points": [
               {
-                "x": 1.397085,
+                "x": 1.616995,
                 "y": 1.0
               },
               {
-                "x": 1.6467749999999999,
+                "x": 1.8262,
                 "y": 1.0
               },
               {
-                "x": 2.479075,
+                "x": 2.52355,
                 "y": 0.7
               },
               {
-                "x": 3.5888083333333336,
+                "x": 3.4533500000000004,
                 "y": 0.3
               },
               {
-                "x": 4.421108333333334,
+                "x": 4.1507000000000005,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            1.0092,
-            3.9889
+            0.7603,
+            4.8962
           ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
@@ -302,7 +245,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Base flow index (%)",
-          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it. Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id. Base-flow index is the mean of the USGS base-flow index grid (Wolock 2003, 1 km) over the HR reach watershed.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -314,36 +257,36 @@
                 "y": 0.0
               },
               {
-                "x": 10.057007142857142,
+                "x": 9.557142857142859,
                 "y": 0.3
               },
               {
-                "x": 23.46635,
+                "x": 22.3,
                 "y": 0.7
               },
               {
-                "x": 32.71095,
+                "x": 32.95,
                 "y": 1.0
               },
               {
-                "x": 35.48433,
+                "x": 36.145,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
             "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            16.1181,
-            39.6583
+            17.0,
+            45.5
           ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
@@ -355,7 +298,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Dam density (per sq km)",
-          "howToMeasure": "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network.",
+          "howToMeasure": "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network. Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -367,35 +310,31 @@
                 "y": 1.0
               },
               {
-                "x": 0.00165,
-                "y": 1.0
-              },
-              {
-                "x": 0.013575,
+                "x": 0.0051,
                 "y": 0.7
               },
               {
-                "x": 0.029475,
+                "x": 0.0119,
                 "y": 0.3
               },
               {
-                "x": 0.0414,
+                "x": 0.017,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
             0.0,
-            0.0677
+            0.3032
           ],
           "discipline": "Hydrology",
           "assignmentOrigin": "canonical",
@@ -414,7 +353,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Base flow index (%)",
-          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it.",
+          "howToMeasure": "Base-flow index (% of streamflow from baseflow); a higher baseflow share indicates a more stable, groundwater-supported flow regime. Moderate confidence: hydrogeology sets the baseline, so a naturally flashy till catchment reads low without being degraded (see the natural-context criterion below). Scored because flow alteration and withdrawal also move it. Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id. Base-flow index is the mean of the USGS base-flow index grid (Wolock 2003, 1 km) over the HR reach watershed.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -426,36 +365,36 @@
                 "y": 0.0
               },
               {
-                "x": 10.057007142857142,
+                "x": 9.557142857142859,
                 "y": 0.3
               },
               {
-                "x": 23.46635,
+                "x": 22.3,
                 "y": 0.7
               },
               {
-                "x": 32.71095,
+                "x": 32.95,
                 "y": 1.0
               },
               {
-                "x": 35.48433,
+                "x": 36.145,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
             "Base-flow index is set largely by hydrogeology: a naturally flashy till catchment reads low on this curve without being degraded."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            16.1181,
-            39.6583
+            17.0,
+            45.5
           ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
@@ -463,10 +402,10 @@
         },
         {
           "metricId": "spring-phab-bfwd-rat",
-          "metricName": "BFWD_RAT",
+          "metricName": "Bankfull width:depth ratio",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "BFWD_RAT",
+          "xLabel": "Bankfull width:depth ratio",
           "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
           "methodContext": "",
           "curve": {
@@ -479,42 +418,42 @@
                 "y": 0.0
               },
               {
-                "x": 4.0474876698874995,
+                "x": 3.0657440662384037,
                 "y": 0.7
               },
               {
-                "x": 10.54847703075,
+                "x": 7.488742828369141,
                 "y": 1.0
               },
               {
-                "x": 29.1227323475,
+                "x": 20.125882148742676,
                 "y": 1.0
               },
               {
-                "x": 35.6237217083625,
+                "x": 24.548880910873415,
                 "y": 0.7
               },
               {
-                "x": 47.69698766425,
+                "x": 32.76302146911621,
                 "y": 0.3
               },
               {
-                "x": 66.271242981,
+                "x": 45.400160789489746,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 38%, resample recurrence 95%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            4.344160509,
-            44.75490465
+            4.274810791015625,
+            41.28059768676758
           ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
@@ -522,10 +461,10 @@
         },
         {
           "metricId": "spring-phab-rp100-cm",
-          "metricName": "RP100_cm",
+          "metricName": "Residual pool depth",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "RP100_cm",
+          "xLabel": "Residual pool depth (cm)",
           "howToMeasure": "Residual pool depth per 100 m; deeper residual pools generally better habitat.",
           "methodContext": "",
           "curve": {
@@ -538,34 +477,34 @@
                 "y": 0.0
               },
               {
-                "x": 8.889543456428571,
+                "x": 4.185161079679217,
                 "y": 0.3
               },
               {
-                "x": 20.742268065,
+                "x": 9.765375852584839,
                 "y": 0.7
               },
               {
-                "x": 65.91743196499999,
+                "x": 23.57692289352417,
                 "y": 1.0
               },
               {
-                "x": 79.46998113499998,
+                "x": 27.720387005805968,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 24,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 25%, resample recurrence 87%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            9.378750648,
-            115.7046338
+            3.5671708583831787,
+            43.48105239868164
           ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
@@ -584,7 +523,7 @@
           "inputType": "proportion",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Impervious surface (%)",
-          "howToMeasure": "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology.",
+          "howToMeasure": "Watershed impervious surface (%); imperviousness drives flashier runoff, reduced infiltration, and degraded catchment hydrology. Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -592,39 +531,39 @@
             "form": "monotone",
             "points": [
               {
-                "x": 0.10599999999999987,
+                "x": 0.6455000000000002,
                 "y": 1.0
               },
               {
-                "x": 1.4575,
+                "x": 1.01,
                 "y": 1.0
               },
               {
-                "x": 5.9625,
+                "x": 2.2249999999999996,
                 "y": 0.7
               },
               {
-                "x": 11.969166666666668,
+                "x": 3.844999999999999,
                 "y": 0.3
               },
               {
-                "x": 16.47416666666667,
+                "x": 5.059999999999999,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            0.95,
-            15.69
+            0.43,
+            15.78
           ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
@@ -639,10 +578,10 @@
       "metrics": [
         {
           "metricId": "spring-phab-bfwd-rat",
-          "metricName": "BFWD_RAT",
+          "metricName": "Bankfull width:depth ratio",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "BFWD_RAT",
+          "xLabel": "Bankfull width:depth ratio",
           "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
           "methodContext": "",
           "curve": {
@@ -655,42 +594,42 @@
                 "y": 0.0
               },
               {
-                "x": 4.0474876698874995,
+                "x": 3.0657440662384037,
                 "y": 0.7
               },
               {
-                "x": 10.54847703075,
+                "x": 7.488742828369141,
                 "y": 1.0
               },
               {
-                "x": 29.1227323475,
+                "x": 20.125882148742676,
                 "y": 1.0
               },
               {
-                "x": 35.6237217083625,
+                "x": 24.548880910873415,
                 "y": 0.7
               },
               {
-                "x": 47.69698766425,
+                "x": 32.76302146911621,
                 "y": 0.3
               },
               {
-                "x": 66.271242981,
+                "x": 45.400160789489746,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 38%, resample recurrence 95%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            4.344160509,
-            44.75490465
+            4.274810791015625,
+            41.28059768676758
           ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "additional-function",
@@ -698,10 +637,10 @@
         },
         {
           "metricId": "spring-phab-xbkf-h",
-          "metricName": "XBKF_H",
+          "metricName": "Bankfull height above channel",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "XBKF_H",
+          "xLabel": "Bankfull height above channel (m)",
           "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
           "methodContext": "",
           "curve": {
@@ -714,42 +653,44 @@
                 "y": 0.0
               },
               {
-                "x": 0.22105681837500002,
-                "y": 0.7
-              },
-              {
-                "x": 0.36113636375,
-                "y": 1.0
-              },
-              {
-                "x": 0.76136363625,
-                "y": 1.0
-              },
-              {
-                "x": 0.901443181625,
-                "y": 0.7
-              },
-              {
-                "x": 1.16159090875,
+                "x": 0.14454543590545654,
                 "y": 0.3
               },
               {
-                "x": 1.56181818125,
+                "x": 0.3150227203965187,
+                "y": 0.7
+              },
+              {
+                "x": 0.4068181812763214,
+                "y": 1.0
+              },
+              {
+                "x": 0.6690909266471863,
+                "y": 1.0
+              },
+              {
+                "x": 0.760886387526989,
+                "y": 0.7
+              },
+              {
+                "x": 0.9313636720180511,
+                "y": 0.3
+              },
+              {
+                "x": 1.193636417388916,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            0.0,
-            2.472727273
+            0.26363635063171387,
+            1.8454545736312866
           ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
@@ -764,10 +705,10 @@
       "metrics": [
         {
           "metricId": "spring-phab-pct-safn",
-          "metricName": "PCT_SAFN",
+          "metricName": "Sand + fines",
           "inputType": "proportion",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "PCT_SAFN",
+          "xLabel": "Sand + fines (%)",
           "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
           "methodContext": "",
           "curve": {
@@ -776,66 +717,15 @@
             "form": "monotone",
             "points": [
               {
-                "x": 18.599025971499998,
+                "x": 16.083334064483644,
                 "y": 1.0
               },
               {
-                "x": 25.227272725,
+                "x": 26.190476417541504,
                 "y": 1.0
               },
               {
-                "x": 47.32142857,
-                "y": 0.7
-              },
-              {
-                "x": 76.78030303,
-                "y": 0.3
-              },
-              {
-                "x": 98.87445887500002,
-                "y": 0.0
-              }
-            ]
-          },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
-          "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
-          "confidenceLabel": "Low",
-          "confidenceTotal": 59.0,
-          "referenceRange": [
-            6.0,
-            95.23809524
-          ],
-          "discipline": "Hydraulics",
-          "assignmentOrigin": "canonical",
-          "referenceTier": "best_available"
-        },
-        {
-          "metricId": "spring-phab-xembed",
-          "metricName": "XEMBED",
-          "inputType": "proportion",
-          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "XEMBED",
-          "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
-          "methodContext": "",
-          "curve": {
-            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-            "stratification": "",
-            "form": "monotone",
-            "points": [
-              {
-                "x": 41.77272727500001,
-                "y": 1.0
-              },
-              {
-                "x": 50.90909091,
-                "y": 1.0
-              },
-              {
-                "x": 81.36363636,
+                "x": 59.880950927734375,
                 "y": 0.7
               },
               {
@@ -844,17 +734,60 @@
               }
             ]
           },
-          "referenceN": 9,
-          "sampleDisposition": "insufficient",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            26.36363636,
-            98.18181818
+            10.0,
+            100.0
+          ],
+          "discipline": "Hydraulics",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-phab-xembed",
+          "metricName": "Embeddedness",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Embeddedness (%)",
+          "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 43.163638496398924,
+                "y": 1.0
+              },
+              {
+                "x": 53.363637924194336,
+                "y": 1.0
+              },
+              {
+                "x": 87.3636360168457,
+                "y": 0.7
+              },
+              {
+                "x": 100.0,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            32.09090805053711,
+            100.0
           ],
           "discipline": "Hydraulics",
           "assignmentOrigin": "canonical",
@@ -869,10 +802,10 @@
       "metrics": [
         {
           "metricId": "spring-phab-bfwd-rat",
-          "metricName": "BFWD_RAT",
+          "metricName": "Bankfull width:depth ratio",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "BFWD_RAT",
+          "xLabel": "Bankfull width:depth ratio",
           "howToMeasure": "Bankfull width-to-depth ratio; both over-widened (very high) and incised (very low) degrade condition. Two-sided curve centered on the reference core.",
           "methodContext": "",
           "curve": {
@@ -885,42 +818,42 @@
                 "y": 0.0
               },
               {
-                "x": 4.0474876698874995,
+                "x": 3.0657440662384037,
                 "y": 0.7
               },
               {
-                "x": 10.54847703075,
+                "x": 7.488742828369141,
                 "y": 1.0
               },
               {
-                "x": 29.1227323475,
+                "x": 20.125882148742676,
                 "y": 1.0
               },
               {
-                "x": 35.6237217083625,
+                "x": 24.548880910873415,
                 "y": 0.7
               },
               {
-                "x": 47.69698766425,
+                "x": 32.76302146911621,
                 "y": 0.3
               },
               {
-                "x": 66.271242981,
+                "x": 45.400160789489746,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 38%, resample recurrence 95%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            4.344160509,
-            44.75490465
+            4.274810791015625,
+            41.28059768676758
           ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
@@ -928,10 +861,10 @@
         },
         {
           "metricId": "spring-phab-xbkf-h",
-          "metricName": "XBKF_H",
+          "metricName": "Bankfull height above channel",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "XBKF_H",
+          "xLabel": "Bankfull height above channel (m)",
           "howToMeasure": "Mean bankfull height; both incision (very high banks) and over-widening (very low) depart from reference. Two-sided curve centered on the reference core.",
           "methodContext": "",
           "curve": {
@@ -944,42 +877,44 @@
                 "y": 0.0
               },
               {
-                "x": 0.22105681837500002,
-                "y": 0.7
-              },
-              {
-                "x": 0.36113636375,
-                "y": 1.0
-              },
-              {
-                "x": 0.76136363625,
-                "y": 1.0
-              },
-              {
-                "x": 0.901443181625,
-                "y": 0.7
-              },
-              {
-                "x": 1.16159090875,
+                "x": 0.14454543590545654,
                 "y": 0.3
               },
               {
-                "x": 1.56181818125,
+                "x": 0.3150227203965187,
+                "y": 0.7
+              },
+              {
+                "x": 0.4068181812763214,
+                "y": 1.0
+              },
+              {
+                "x": 0.6690909266471863,
+                "y": 1.0
+              },
+              {
+                "x": 0.760886387526989,
+                "y": 0.7
+              },
+              {
+                "x": 0.9313636720180511,
+                "y": 0.3
+              },
+              {
+                "x": 1.193636417388916,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            0.0,
-            2.472727273
+            0.26363635063171387,
+            1.8454545736312866
           ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
@@ -994,10 +929,10 @@
       "metrics": [
         {
           "metricId": "spring-phab-sinu",
-          "metricName": "SINU",
+          "metricName": "Sinuosity",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "SINU",
+          "xLabel": "Sinuosity",
           "howToMeasure": "Channel sinuosity; higher generally indicates a more natural planform.",
           "methodContext": "",
           "curve": {
@@ -1010,30 +945,28 @@
                 "y": 0.0
               },
               {
-                "x": 1.066231791,
+                "x": 1.0417797565460205,
                 "y": 0.7
               },
               {
-                "x": 1.404150587,
+                "x": 1.269052505493164,
                 "y": 1.0
               },
               {
-                "x": 1.5055262258,
+                "x": 1.337234330177307,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 9,
-          "sampleDisposition": "insufficient",
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
-          "confidenceTotal": 48.5,
+          "confidenceTotal": 59.0,
           "referenceRange": [
-            1.002636699,
-            2.6200619
+            1.0052025318145752,
+            2.6200618743896484
           ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
@@ -1041,10 +974,10 @@
         },
         {
           "metricId": "spring-phab-xbka",
-          "metricName": "XBKA",
+          "metricName": "Bank angle",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "XBKA",
+          "xLabel": "Bank angle (degrees)",
           "howToMeasure": "Mean bank angle; very steep banks indicate incision and very flat banks an over-widened, aggrading channel, so departure from the reference core in either direction departs from reference. Direction resolved at the Northeastern Highlands review gate (owner decision, 2026-08-21), consistent with the width-to-depth and bankfull-height treatment. low_tail flat added at the adversarial review gate (owner decision, 2026-08-21): a regraded or naturally gentle bank holds at the Functioning edge instead of being penalized, because the flat tail is not symmetric evidence of degradation and the framework's stated use is restoration evaluation.",
           "methodContext": "",
           "curve": {
@@ -1053,46 +986,44 @@
             "form": "optimum",
             "points": [
               {
-                "x": 1.0454545500000059,
+                "x": 2.282468795776367,
                 "y": 0.7
               },
               {
-                "x": 20.320454547,
+                "x": 22.843182468414305,
                 "y": 0.7
               },
               {
-                "x": 24.40909091,
+                "x": 27.204545974731445,
                 "y": 1.0
               },
               {
-                "x": 36.09090909,
+                "x": 39.665584564208984,
                 "y": 1.0
               },
               {
-                "x": 40.179545452999996,
+                "x": 44.026948070526124,
                 "y": 0.7
               },
               {
-                "x": 47.77272726999999,
+                "x": 52.12662315368652,
                 "y": 0.3
               },
               {
-                "x": 59.45454544999999,
+                "x": 64.58766174316406,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 9,
-          "sampleDisposition": "insufficient",
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
-          "confidenceTotal": 44.7,
+          "confidenceTotal": 59.0,
           "referenceRange": [
-            18.5,
-            45.90909091
+            15.590909004211426,
+            52.10454559326172
           ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
@@ -1107,10 +1038,10 @@
       "metrics": [
         {
           "metricId": "spring-phab-lrbs-use",
-          "metricName": "LRBS_use",
+          "metricName": "Relative bed stability",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "LRBS_use",
+          "xLabel": "Relative bed stability (log)",
           "howToMeasure": "Log relative bed stability; departure from the reference core in EITHER direction departs from reference (negative excess fines, positive an armored, sediment-starved bed, the classic below-impoundment failure). The pilot's rising direction scored armored beds 1.0 and left Sediment continuity blind to its textbook failure mode. Two-sided form is an owner decision at the adversarial review gate, 2026-08-21.",
           "methodContext": "",
           "curve": {
@@ -1119,50 +1050,48 @@
             "form": "optimum",
             "points": [
               {
-                "x": -3.602738508,
+                "x": -4.590274412184954,
                 "y": 0.0
               },
               {
-                "x": -2.34473363725,
+                "x": -3.0270268116146326,
                 "y": 0.3
               },
               {
-                "x": -1.5270304712625,
+                "x": -2.010915871243924,
                 "y": 0.7
               },
               {
-                "x": -1.0867287665,
+                "x": -1.4637792110443115,
                 "y": 1.0
               },
               {
-                "x": 0.17127610425,
+                "x": 0.09946838952600956,
                 "y": 1.0
               },
               {
-                "x": 0.6115778090124999,
+                "x": 0.6466050497256219,
                 "y": 0.7
               },
               {
-                "x": 1.429280975,
+                "x": 1.6627159900963306,
                 "y": 0.3
               },
               {
-                "x": 2.68728584575,
+                "x": 3.2259635906666517,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            -2.338748975,
-            1.453444449
+            -2.6466472148895264,
+            1.0186269283294678
           ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
@@ -1170,10 +1099,10 @@
         },
         {
           "metricId": "spring-phab-pct-safn",
-          "metricName": "PCT_SAFN",
+          "metricName": "Sand + fines",
           "inputType": "proportion",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "PCT_SAFN",
+          "xLabel": "Sand + fines (%)",
           "howToMeasure": "Percent sand and fines; higher indicates fine-sediment loading (worse).",
           "methodContext": "",
           "curve": {
@@ -1182,38 +1111,32 @@
             "form": "monotone",
             "points": [
               {
-                "x": 18.599025971499998,
+                "x": 16.083334064483644,
                 "y": 1.0
               },
               {
-                "x": 25.227272725,
+                "x": 26.190476417541504,
                 "y": 1.0
               },
               {
-                "x": 47.32142857,
+                "x": 59.880950927734375,
                 "y": 0.7
               },
               {
-                "x": 76.78030303,
-                "y": 0.3
-              },
-              {
-                "x": 98.87445887500002,
+                "x": 100.0,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            6.0,
-            95.23809524
+            10.0,
+            100.0
           ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
@@ -1228,10 +1151,10 @@
       "metrics": [
         {
           "metricId": "spring-phab-lsub-dmm",
-          "metricName": "LSUB_DMM",
+          "metricName": "Substrate size",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "LSUB_DMM",
+          "xLabel": "Substrate size (log mm)",
           "howToMeasure": "Log mean substrate diameter; coarser substrate generally better, but valley-type dependent.",
           "methodContext": "",
           "curve": {
@@ -1240,38 +1163,36 @@
             "form": "monotone",
             "points": [
               {
-                "x": -1.895673868416667,
+                "x": -4.0604116419951115,
                 "y": 0.0
               },
               {
-                "x": -1.0013428546666667,
+                "x": -2.53393347064654,
                 "y": 0.3
               },
               {
-                "x": 0.19109849699999998,
+                "x": -0.49862924218177795,
                 "y": 0.7
               },
               {
-                "x": 1.08542951075,
+                "x": 1.0278489291667938,
                 "y": 1.0
               },
               {
-                "x": 1.353728814875,
+                "x": 1.4857923805713653,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            -1.673490689,
-            2.745787676
+            -2.110924482345581,
+            2.058612585067749
           ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
@@ -1279,10 +1200,10 @@
         },
         {
           "metricId": "spring-phab-lwdeqvolm100",
-          "metricName": "LWDeqVolM100",
+          "metricName": "Large wood volume",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "LWDeqVolM100",
+          "xLabel": "Large wood volume (m3/100m)",
           "howToMeasure": "Large woody debris volume per 100 m; higher is better.",
           "methodContext": "",
           "curve": {
@@ -1295,34 +1216,32 @@
                 "y": 0.0
               },
               {
-                "x": 0.7966688313214286,
+                "x": 0.0499215376164232,
                 "y": 0.3
               },
               {
-                "x": 1.85889393975,
+                "x": 0.11648358777165413,
                 "y": 0.7
               },
               {
-                "x": 14.734112215,
+                "x": 4.241636514663696,
                 "y": 1.0
               },
               {
-                "x": 18.596677697575,
+                "x": 5.479182392731309,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
             0.0,
-            29.65636364
+            37.37908935546875
           ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "canonical",
@@ -1330,10 +1249,10 @@
         },
         {
           "metricId": "spring-phab-xembed",
-          "metricName": "XEMBED",
+          "metricName": "Embeddedness",
           "inputType": "proportion",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "XEMBED",
+          "xLabel": "Embeddedness (%)",
           "howToMeasure": "Percent embeddedness; higher means interstitial spaces filled with fines (worse).",
           "methodContext": "",
           "curve": {
@@ -1342,15 +1261,15 @@
             "form": "monotone",
             "points": [
               {
-                "x": 41.77272727500001,
+                "x": 43.163638496398924,
                 "y": 1.0
               },
               {
-                "x": 50.90909091,
+                "x": 53.363637924194336,
                 "y": 1.0
               },
               {
-                "x": 81.36363636,
+                "x": 87.3636360168457,
                 "y": 0.7
               },
               {
@@ -1359,17 +1278,15 @@
               }
             ]
           },
-          "referenceN": 9,
-          "sampleDisposition": "insufficient",
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            26.36363636,
-            98.18181818
+            32.09090805053711,
+            100.0
           ],
           "discipline": "Geomorphology",
           "assignmentOrigin": "additional-function",
@@ -1384,10 +1301,10 @@
       "metrics": [
         {
           "metricId": "spring-chem-chla",
-          "metricName": "CHLA",
+          "metricName": "Chlorophyll a",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "CHLA (ug/L)",
+          "xLabel": "Chlorophyll a (ug/L)",
           "howToMeasure": "Chlorophyll a; higher indicates algal enrichment/eutrophication (worse).",
           "methodContext": "",
           "curve": {
@@ -1396,38 +1313,36 @@
             "form": "monotone",
             "points": [
               {
-                "x": 1.87775,
+                "x": 0.5634999036788941,
                 "y": 1.0
               },
               {
-                "x": 3.23,
+                "x": 1.6749999523162842,
                 "y": 1.0
               },
               {
-                "x": 7.737500000000001,
+                "x": 5.380000114440918,
                 "y": 0.7
               },
               {
-                "x": 13.747500000000002,
+                "x": 10.320000330607098,
                 "y": 0.3
               },
               {
-                "x": 18.255000000000003,
+                "x": 14.02500049273173,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            1.08,
-            31.73
+            0.027030302211642265,
+            1326.239990234375
           ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
@@ -1435,10 +1350,10 @@
         },
         {
           "metricId": "spring-phab-xcdenmid",
-          "metricName": "XCDENMID",
+          "metricName": "Canopy density, mid-channel",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "XCDENMID",
+          "xLabel": "Canopy density, mid-channel (%)",
           "howToMeasure": "Mid-channel canopy density; higher shading generally better for thermal/light regime.",
           "methodContext": "",
           "curve": {
@@ -1451,34 +1366,32 @@
                 "y": 0.0
               },
               {
-                "x": 27.55920549857143,
+                "x": 25.255443028041295,
                 "y": 0.3
               },
               {
-                "x": 64.30481283,
+                "x": 58.92936706542969,
                 "y": 0.7
               },
               {
-                "x": 80.61497326,
+                "x": 90.70855331420898,
                 "y": 1.0
               },
               {
-                "x": 85.50802138899999,
+                "x": 100.0,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 9,
-          "sampleDisposition": "insufficient",
+          "referenceN": 31,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 9 reference sites, below the exploratory floor: read the condition band, not the point value."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
-          "confidenceTotal": 52.3,
+          "confidenceTotal": 59.0,
           "referenceRange": [
-            12.1657754,
-            89.57219251
+            0.0,
+            99.73262023925781
           ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
@@ -1493,10 +1406,10 @@
       "metrics": [
         {
           "metricId": "spring-phab-xcmgw",
-          "metricName": "XCMGW",
+          "metricName": "Riparian veg cover, woody",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "XCMGW",
+          "xLabel": "Riparian veg cover, woody (frac)",
           "howToMeasure": "Riparian canopy plus mid-layer plus ground cover; higher is better.",
           "methodContext": "",
           "curve": {
@@ -1509,34 +1422,32 @@
                 "y": 0.0
               },
               {
-                "x": 0.2750405844642857,
+                "x": 0.2532467544078827,
                 "y": 0.3
               },
               {
-                "x": 0.64176136375,
+                "x": 0.5909090936183929,
                 "y": 0.7
               },
               {
-                "x": 1.31505681775,
+                "x": 1.2642518877983093,
                 "y": 1.0
               },
               {
-                "x": 1.5170454539499998,
+                "x": 1.4662547260522842,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            0.061363636,
-            1.993181818
+            0.0,
+            2.081818103790283
           ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
@@ -1551,10 +1462,10 @@
       "metrics": [
         {
           "metricId": "spring-chem-ntl-diss",
-          "metricName": "NTL_DISS",
+          "metricName": "Dissolved nitrogen",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "NTL_DISS (mg N/L)",
+          "xLabel": "Dissolved nitrogen (mg N/L)",
           "howToMeasure": "Dissolved nitrogen; higher indicates nutrient enrichment (worse).",
           "methodContext": "",
           "curve": {
@@ -1563,38 +1474,38 @@
             "form": "monotone",
             "points": [
               {
-                "x": 0.252325,
+                "x": 0.23389996588230133,
                 "y": 1.0
               },
               {
-                "x": 0.87625,
+                "x": 0.9334999620914459,
                 "y": 1.0
               },
               {
-                "x": 2.956,
+                "x": 3.2654999494552612,
                 "y": 0.7
               },
               {
-                "x": 5.728999999999999,
+                "x": 6.374833265940348,
                 "y": 0.3
               },
               {
-                "x": 7.80875,
+                "x": 8.706833253304165,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 7,
+          "sampleDisposition": "insufficient",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+            "Built from 7 reference sites, below the exploratory floor: read the condition band, not the point value."
           ],
           "confidenceLabel": "Low",
-          "confidenceTotal": 59.0,
+          "confidenceTotal": 54.1,
           "referenceRange": [
-            0.52,
-            6.594
+            0.5329999923706055,
+            6.593999862670898
           ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
@@ -1602,10 +1513,10 @@
         },
         {
           "metricId": "spring-chem-ptl",
-          "metricName": "PTL",
+          "metricName": "Total phosphorus",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "PTL (ug/L)",
+          "xLabel": "Total phosphorus (ug/L)",
           "howToMeasure": "Total phosphorus; higher indicates nutrient enrichment (worse).",
           "methodContext": "",
           "curve": {
@@ -1614,38 +1525,36 @@
             "form": "monotone",
             "points": [
               {
-                "x": 17.054000000000002,
+                "x": 30.480000495910645,
                 "y": 1.0
               },
               {
-                "x": 53.11925,
+                "x": 56.10000038146973,
                 "y": 1.0
               },
               {
-                "x": 173.33675,
+                "x": 141.5,
                 "y": 0.7
               },
               {
-                "x": 333.62675,
+                "x": 255.36666615804035,
                 "y": 0.3
               },
               {
-                "x": 453.84425,
+                "x": 340.7666657765707,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            23.849,
-            1055.9
+            20.700000762939453,
+            421.0
           ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
@@ -1660,10 +1569,10 @@
       "metrics": [
         {
           "metricId": "spring-chem-cond",
-          "metricName": "COND",
+          "metricName": "Specific conductivity",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "COND (uS/cm)",
+          "xLabel": "Specific conductivity (uS/cm)",
           "howToMeasure": "Specific conductance; higher indicates ionic disturbance (worse).",
           "methodContext": "",
           "curve": {
@@ -1672,39 +1581,101 @@
             "form": "monotone",
             "points": [
               {
-                "x": 496.8475,
+                "x": 503.64898681640625,
                 "y": 1.0
               },
               {
-                "x": 549.475,
+                "x": 551.4299926757812,
                 "y": 1.0
               },
               {
-                "x": 724.9,
+                "x": 710.7000122070312,
                 "y": 0.7
               },
               {
-                "x": 958.8,
+                "x": 923.0600382486979,
                 "y": 0.3
               },
               {
-                "x": 1134.225,
+                "x": 1082.330057779948,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Specific conductance carries natural carbonate geology as well as disturbance: a pristine stream in a calcareous valley can score low on this curve."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            322.23,
-            979.9
+            349.0,
+            896.0
+          ],
+          "discipline": "Physicochemistry",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
+          "metricId": "spring-chem-ph",
+          "metricName": "pH",
+          "inputType": "continuous",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "pH (Std. Units)",
+          "howToMeasure": "pH degrades condition at BOTH extremes. Two-sided (optimum) curve: scored 1.0 across the reference interquartile core, falling in both tails.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "optimum",
+            "points": [
+              {
+                "x": 7.525000095367432,
+                "y": 0.0
+              },
+              {
+                "x": 7.795000076293945,
+                "y": 0.3
+              },
+              {
+                "x": 7.970500063896179,
+                "y": 0.7
+              },
+              {
+                "x": 8.065000057220459,
+                "y": 1.0
+              },
+              {
+                "x": 8.335000038146973,
+                "y": 1.0
+              },
+              {
+                "x": 8.429500031471253,
+                "y": 0.7
+              },
+              {
+                "x": 8.605000019073486,
+                "y": 0.3
+              },
+              {
+                "x": 8.875,
+                "y": 0.0
+              }
+            ]
+          },
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [
+            "pH carries natural geology (calcareous or naturally acidic waters) as well as disturbance, and a two-sided core narrower than measurement precision is noise rather than condition."
+          ],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            7.619999885559082,
+            8.430000305175781
           ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
@@ -1712,10 +1683,10 @@
         },
         {
           "metricId": "spring-chem-turb",
-          "metricName": "TURB",
+          "metricName": "Turbidity",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "TURB (NTU)",
+          "xLabel": "Turbidity (NTU)",
           "howToMeasure": "Turbidity; higher indicates more suspended sediment (worse).",
           "methodContext": "",
           "curve": {
@@ -1724,38 +1695,36 @@
             "form": "monotone",
             "points": [
               {
-                "x": 1.4829999999999992,
+                "x": 1.3915000081062319,
                 "y": 1.0
               },
               {
-                "x": 4.8325,
+                "x": 3.475000023841858,
                 "y": 1.0
               },
               {
-                "x": 15.9975,
+                "x": 10.420000076293945,
                 "y": 0.7
               },
               {
-                "x": 30.88416666666667,
+                "x": 19.680000146230064,
                 "y": 0.3
               },
               {
-                "x": 42.049166666666665,
+                "x": 26.625000198682148,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            1.73,
-            27.92
+            0.75,
+            44.869998931884766
           ],
           "discipline": "Physicochemistry",
           "assignmentOrigin": "canonical",
@@ -1769,11 +1738,60 @@
       "discipline": "Biology",
       "metrics": [
         {
+          "metricId": "spring-phab-pct-fast",
+          "metricName": "Fast-water / riffle habitat",
+          "inputType": "proportion",
+          "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+          "xLabel": "Fast-water / riffle habitat (%)",
+          "howToMeasure": "Percent fast-water (riffle/run) habitat; more generally better for many biota. Ecoregion-dependent.",
+          "methodContext": "",
+          "curve": {
+            "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
+            "stratification": "",
+            "form": "monotone",
+            "points": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 1.268907564026969,
+                "y": 0.3
+              },
+              {
+                "x": 2.9607843160629272,
+                "y": 0.7
+              },
+              {
+                "x": 21.0,
+                "y": 1.0
+              },
+              {
+                "x": 26.41176470518112,
+                "y": 1.0
+              }
+            ]
+          },
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
+          "metricRole": "response",
+          "curveCaveats": [],
+          "confidenceLabel": "Low",
+          "confidenceTotal": 59.0,
+          "referenceRange": [
+            0.0,
+            40.66666793823242
+          ],
+          "discipline": "Biology",
+          "assignmentOrigin": "canonical",
+          "referenceTier": "best_available"
+        },
+        {
           "metricId": "spring-phab-xfc-nat",
-          "metricName": "XFC_NAT",
+          "metricName": "Natural fish cover",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "XFC_NAT",
+          "xLabel": "Natural fish cover (frac)",
           "howToMeasure": "Natural fish cover; higher is better.",
           "methodContext": "",
           "curve": {
@@ -1786,34 +1804,32 @@
                 "y": 0.0
               },
               {
-                "x": 0.10538961042857142,
+                "x": 0.0804545453616551,
                 "y": 0.3
               },
               {
-                "x": 0.245909091,
+                "x": 0.18772727251052856,
                 "y": 0.7
               },
               {
-                "x": 0.5971590907500001,
+                "x": 0.46590909361839294,
                 "y": 1.0
               },
               {
-                "x": 0.7025340906750001,
+                "x": 0.5493636399507522,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            0.059090909,
-            1.011363636
+            0.09090909361839294,
+            1.131818175315857
           ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
@@ -1828,10 +1844,10 @@
       "metrics": [
         {
           "metricId": "spring-bent-totlntax",
-          "metricName": "TOTLNTAX",
+          "metricName": "Benthic total taxa richness",
           "inputType": "count",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "TOTLNTAX",
+          "xLabel": "Benthic total taxa richness",
           "howToMeasure": "Total benthic taxa richness; higher is better.",
           "methodContext": "",
           "curve": {
@@ -1844,33 +1860,33 @@
                 "y": 0.0
               },
               {
-                "x": 11.785714285714286,
+                "x": 13.5,
                 "y": 0.3
               },
               {
-                "x": 27.5,
+                "x": 31.5,
                 "y": 0.7
               },
               {
-                "x": 37.5,
+                "x": 38.5,
                 "y": 1.0
               },
               {
-                "x": 40.5,
+                "x": 40.6,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 15,
-          "sampleDisposition": "exploratory",
+          "referenceN": 7,
+          "sampleDisposition": "insufficient",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 15 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+            "Built from 7 reference sites, below the exploratory floor: read the condition band, not the point value."
           ],
           "confidenceLabel": "Low",
-          "confidenceTotal": 59.0,
+          "confidenceTotal": 58.3,
           "referenceRange": [
-            12.0,
+            25.0,
             45.0
           ],
           "discipline": "Biology",
@@ -1879,10 +1895,10 @@
         },
         {
           "metricId": "spring-fish-nat-totlntax",
-          "metricName": "NAT_TOTLNTAX",
+          "metricName": "Native fish taxa richness",
           "inputType": "count",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "NAT_TOTLNTAX",
+          "xLabel": "Native fish taxa richness",
           "howToMeasure": "Native fish taxa richness; higher is better.",
           "methodContext": "",
           "curve": {
@@ -1895,34 +1911,34 @@
                 "y": 0.0
               },
               {
-                "x": 5.785714285714286,
+                "x": 3.4285714285714284,
                 "y": 0.3
               },
               {
-                "x": 13.5,
+                "x": 8.0,
                 "y": 0.7
               },
               {
-                "x": 28.25,
+                "x": 23.0,
                 "y": 1.0
               },
               {
-                "x": 32.675,
+                "x": 27.5,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "referenceN": 33,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 37%, resample recurrence 100%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            5.0,
-            37.0
+            0.0,
+            30.0
           ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
@@ -1937,10 +1953,10 @@
       "metrics": [
         {
           "metricId": "spring-bent-ept-ntax",
-          "metricName": "EPT_NTAX",
+          "metricName": "EPT taxa richness",
           "inputType": "count",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "EPT_NTAX",
+          "xLabel": "EPT taxa richness",
           "howToMeasure": "EPT (mayfly/stonefly/caddisfly) taxa richness; more sensitive taxa indicate better condition.",
           "methodContext": "",
           "curve": {
@@ -1953,33 +1969,33 @@
                 "y": 0.0
               },
               {
-                "x": 1.5,
+                "x": 1.0714285714285714,
                 "y": 0.3
               },
               {
-                "x": 3.5,
+                "x": 2.5,
                 "y": 0.7
               },
               {
-                "x": 9.0,
+                "x": 9.5,
                 "y": 1.0
               },
               {
-                "x": 10.65,
+                "x": 11.6,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 15,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 15 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+            "The reference expectation likely varies with DrainageAreaClass (cross-validated improvement 26%, resample recurrence 97%); the curve is unstratified pending a larger reference pool, so sites at either end of that gradient may read as departures that are natural."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            2.0,
+            0.0,
             14.0
           ],
           "discipline": "Biology",
@@ -1988,10 +2004,10 @@
         },
         {
           "metricId": "spring-bent-hprime",
-          "metricName": "HPRIME",
+          "metricName": "Shannon diversity (H')",
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "HPRIME",
+          "xLabel": "Shannon diversity (H')",
           "howToMeasure": "Benthic Shannon diversity; higher diversity indicates better condition.",
           "methodContext": "",
           "curve": {
@@ -2004,34 +2020,32 @@
                 "y": 0.0
               },
               {
-                "x": 1.02,
+                "x": 0.9749999897820609,
                 "y": 0.3
               },
               {
-                "x": 2.38,
+                "x": 2.274999976158142,
                 "y": 0.7
               },
               {
-                "x": 2.95,
+                "x": 2.799999952316284,
                 "y": 1.0
               },
               {
-                "x": 3.1210000000000004,
+                "x": 2.9574999451637267,
                 "y": 1.0
               }
             ]
           },
-          "referenceN": 15,
-          "sampleDisposition": "exploratory",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "response",
-          "curveCaveats": [
-            "Built from 15 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
-          ],
+          "curveCaveats": [],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            1.86,
-            3.3
+            0.7699999809265137,
+            3.25
           ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
@@ -2039,10 +2053,10 @@
         },
         {
           "metricId": "spring-bent-tolrpind",
-          "metricName": "TOLRPIND",
+          "metricName": "Tolerant individuals (%) ~ HBI",
           "inputType": "proportion",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
-          "xLabel": "TOLRPIND",
+          "xLabel": "Tolerant individuals (%) ~ HBI",
           "howToMeasure": "Percent tolerant individuals; a higher share of pollution-tolerant taxa indicates worse condition.",
           "methodContext": "",
           "curve": {
@@ -2051,38 +2065,38 @@
             "form": "monotone",
             "points": [
               {
-                "x": 1.7969999999999988,
+                "x": 2.3215001106262205,
                 "y": 1.0
               },
               {
-                "x": 8.19,
+                "x": 8.170000076293945,
                 "y": 1.0
               },
               {
-                "x": 29.5,
+                "x": 27.664999961853027,
                 "y": 0.7
               },
               {
-                "x": 57.91333333333334,
+                "x": 53.658333142598465,
                 "y": 0.3
               },
               {
-                "x": 79.22333333333333,
+                "x": 73.15333302815756,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 15,
-          "sampleDisposition": "exploratory",
+          "referenceN": 7,
+          "sampleDisposition": "insufficient",
           "metricRole": "response",
           "curveCaveats": [
-            "Built from 15 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error."
+            "Built from 7 reference sites, below the exploratory floor: read the condition band, not the point value."
           ],
           "confidenceLabel": "Low",
-          "confidenceTotal": 59.0,
+          "confidenceTotal": 54.5,
           "referenceRange": [
-            3.03,
-            59.67
+            3.0299999713897705,
+            34.0
           ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
@@ -2101,7 +2115,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Dam density (per sq km)",
-          "howToMeasure": "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network.",
+          "howToMeasure": "Dam density (dams per sq km); impoundment alters the natural flow regime and fragments the network. Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -2113,35 +2127,31 @@
                 "y": 1.0
               },
               {
-                "x": 0.00165,
-                "y": 1.0
-              },
-              {
-                "x": 0.013575,
+                "x": 0.0051,
                 "y": 0.7
               },
               {
-                "x": 0.029475,
+                "x": 0.0119,
                 "y": 0.3
               },
               {
-                "x": 0.0414,
+                "x": 0.017,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
             0.0,
-            0.0677
+            0.3032
           ],
           "discipline": "Biology",
           "assignmentOrigin": "additional-function",
@@ -2153,7 +2163,7 @@
           "inputType": "continuous",
           "sourceCitation": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
           "xLabel": "Road-stream crossings (per sq km)",
-          "howToMeasure": "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage. UNITS CAUTION (2026-08-21): values as served by the EPA StreamCat API sit about two orders of magnitude below the classic StreamCat documentation of crossings per sq km (frame national median 0.0098 vs a documented distribution near 0.5 to 1.5). The frame and the live API agree with each other, so scoring is internally consistent, but a manually computed crossings-per-sq-km value will land far off-curve. Enter API-served values only, pending units reconciliation with EPA.",
+          "howToMeasure": "Road/stream crossing density; crossings fragment aquatic habitat and impede organism passage. UNITS CAUTION (2026-08-21): values as served by the EPA StreamCat API sit about two orders of magnitude below the classic StreamCat documentation of crossings per sq km (frame national median 0.0098 vs a documented distribution near 0.5 to 1.5). The frame and the live API agree with each other, so scoring is internally consistent, but a manually computed crossings-per-sq-km value will land far off-curve. Enter API-served values only, pending units reconciliation with EPA. Values recomputed by the STAF site engine v0.4.1 over the HR reach watershed (NLCD 2021, TIGERweb roads, NID dams, the USGS base-flow index grid). The StreamCat column name is kept for the metric id. Road-stream crossings are counted where TIGERweb roads meet the NHDPlus HR network, per km2 of watershed, so this curve's scale is the engine's and not StreamCat's served rdcrs.",
           "methodContext": "",
           "curve": {
             "layerName": "USEPA NRSA (L3 ecoregion 55), StreamCurves Regional Analysis Agent",
@@ -2161,40 +2171,40 @@
             "form": "monotone",
             "points": [
               {
-                "x": 0.006875,
+                "x": 0.35650499999999985,
                 "y": 1.0
               },
               {
-                "x": 0.009575,
+                "x": 1.0867499999999999,
                 "y": 1.0
               },
               {
-                "x": 0.018575,
+                "x": 3.5209,
                 "y": 0.7
               },
               {
-                "x": 0.030575000000000005,
+                "x": 6.7664333333333335,
                 "y": 0.3
               },
               {
-                "x": 0.039575,
+                "x": 9.200583333333334,
                 "y": 0.0
               }
             ]
           },
-          "referenceN": 16,
-          "sampleDisposition": "exploratory",
+          "predictorSource": "site-engine v0.4.1",
+          "referenceN": 35,
+          "sampleDisposition": "adequate",
           "metricRole": "stressor_surrogate",
           "curveCaveats": [
-            "Built from 16 reference sites (exploratory band, below the automated floor of 20): the point value carries wide sampling error.",
             "Landscape stressor surrogate: the score compares the watershed's footprint with the reference pool's footprint, and the pool was screened on the same kind of variable, so read it as a footprint comparison rather than measured function.",
             "Units caution: enter the StreamCat API value as served. A crossing density computed by hand in crossings per square kilometer lands about 100 times above this curve."
           ],
           "confidenceLabel": "Low",
           "confidenceTotal": 59.0,
           "referenceRange": [
-            0.0051,
-            0.0276
+            0.0,
+            8.9715
           ],
           "discipline": "Biology",
           "assignmentOrigin": "canonical",
@@ -4222,22 +4232,23 @@
     }
   },
   "referenceTier": "best_available",
-  "contentDigest": "sha256:c86f7b22dff315c4a8b98582e658fdfeac7162138e6bf1ab2707615b521f77d0",
+  "predictorSource": "mixed (site-engine v0.4.1 + streamcat)",
+  "contentDigest": "sha256:5132d11345c66628f1ea0fcb16ff92cfda53175aae9d63c838c2dc2ef720492e",
   "library": {
     "libraryId": "eastern-corn-belt-plains",
-    "version": 3,
-    "updatedAt": "2026-08-21T23:32:32Z",
+    "version": 5,
+    "updatedAt": "2026-09-08T23:03:41Z",
     "author": "StreamCurves Regional Analysis Agent",
-    "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 16 of 18 candidates.  REF-02 fallback: only 0 Functioning sites, below the exploratory floor of 10; included Functioning-at-Risk to reach 16. Mandatory review; confidence capped; reference tier = best_available.",
+    "revisionNotes": "Reference tier: best_available (screening preset at_risk_or_better, method direct_engine). Retained 35 of 45 candidates.  REF-02 fallback: only 0 Functioning sites, below the exploratory floor of 10; included Functioning-at-Risk to reach 41. Mandatory review; confidence capped; reference tier = best_available.",
     "region": {
       "kind": "ecoregion",
       "code": "55",
       "name": "Eastern Corn Belt Plains"
     },
-    "contentDigest": "sha256:c86f7b22dff315c4a8b98582e658fdfeac7162138e6bf1ab2707615b521f77d0",
-    "supersedesVersion": 2
+    "contentDigest": "sha256:5132d11345c66628f1ea0fcb16ff92cfda53175aae9d63c838c2dc2ef720492e",
+    "supersedesVersion": 4
   },
-  "version": 3,
+  "version": 5,
   "lifecycle": "preliminary",
-  "assessmentRef": "eastern-corn-belt-plains@v3"
+  "assessmentRef": "eastern-corn-belt-plains@v5"
 }
