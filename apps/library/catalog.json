@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-28T06:14:32Z",
+  "generatedAt": "2026-09-08T23:03:48Z",
   "assessments": [
     {
       "assessmentId": "ak-sqt-adapted",
@@ -56,24 +56,16 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 4,
-      "latestUpdatedAt": "2026-08-28T05:22:43Z",
-      "latestPreliminary": 3,
+      "latestVersion": 5,
+      "latestUpdatedAt": "2026-09-08T23:03:41Z",
+      "latestPreliminary": 5,
       "latestCertified": 0,
       "latestDraft": 4,
-      "defaultVersion": 3,
+      "defaultVersion": 5,
       "defaultStatus": "preliminary",
-      "contentDigest": "sha256:354ae57b2f54d0c15ed06213d0b1866e7a991046de28d491d6e64197d135deb5",
+      "contentDigest": "sha256:5132d11345c66628f1ea0fcb16ff92cfda53175aae9d63c838c2dc2ef720492e",
       "validationState": "unvalidated",
-      "validationSummary": {
-        "kind": "protocol_demonstration",
-        "n_sites": 16,
-        "weighted_kappa_range": [
-          -0.21518987341772153,
-          0.0
-        ],
-        "offset_direction": "curves softer than field crews"
-      },
+      "validationSummary": null,
       "provenanceState": "present"
     },
     {
@@ -86,24 +78,16 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 2,
-      "latestUpdatedAt": "2026-08-28T06:14:32Z",
-      "latestPreliminary": 1,
+      "latestVersion": 3,
+      "latestUpdatedAt": "2026-09-08T23:03:47Z",
+      "latestPreliminary": 3,
       "latestCertified": 0,
       "latestDraft": 2,
-      "defaultVersion": 1,
+      "defaultVersion": 3,
       "defaultStatus": "preliminary",
-      "contentDigest": "sha256:07507d4a7de7087ad31003498326e1a3b5ef019c734c38656f25f3daa7e6176f",
+      "contentDigest": "sha256:f708a8f6d0b24348f7d3d53424ae6528a0b38be35d0597f10f9937b4d71f6389",
       "validationState": "unvalidated",
-      "validationSummary": {
-        "kind": "protocol_demonstration",
-        "n_sites": 15,
-        "weighted_kappa_range": [
-          -0.1999999999999997,
-          0.23076923076923123
-        ],
-        "offset_direction": "mixed: curves softer than the crews on substrate and impervious cover, harsher on canopy cover"
-      },
+      "validationSummary": null,
       "provenanceState": "present"
     },
     {
@@ -182,21 +166,16 @@
       },
       "stateCode": "",
       "stateName": "",
-      "latestVersion": 5,
-      "latestUpdatedAt": "2026-08-28T05:48:37Z",
-      "latestPreliminary": 4,
+      "latestVersion": 6,
+      "latestUpdatedAt": "2026-09-08T23:03:35Z",
+      "latestPreliminary": 6,
       "latestCertified": 0,
       "latestDraft": 5,
-      "defaultVersion": 4,
+      "defaultVersion": 6,
       "defaultStatus": "preliminary",
-      "contentDigest": "sha256:57091c51bdabd4f7c24d639e63fa06eb161dc547210d86d40abd053042814521",
+      "contentDigest": "sha256:cbed9c9fea159ed4d1a779c43cffa942857021ede4c2fb32d834575ab920e907",
       "validationState": "unvalidated",
-      "validationSummary": {
-        "kind": "protocol_demonstration",
-        "n_sites": 4,
-        "weighted_kappa_unique": -0.007263922518159807,
-        "offset_direction": "curves harsher than field scores"
-      },
+      "validationSummary": null,
       "provenanceState": "present"
     },
     {

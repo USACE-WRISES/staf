@@ -373,11 +373,12 @@ def test_every_regional_landscape_id_in_the_bundles_has_an_adapter():
                 mid = str(m.get("metricId") or "")
                 if re.fullmatch(r"spring-[a-z0-9]+ws", mid):
                     found.add(mid)
-    # every id the shipped bundles score has an adapter; the combined wetland id
-    # has one before any bundle carries it (2026-09-07), so this is containment
+    # Every id the shipped bundles score has an adapter. The combined wetland id
+    # had its adapter before any bundle carried it (2026-09-07); the three
+    # engine-sourced regions promoted on 2026-09-08 carry it, so the set is now
+    # complete rather than short by one.
     assert found <= computed.computable_ids()
-    assert found == set(NINE) - {"spring-pctwet2019ws"}
-    assert "spring-pctwet2019ws" in computed.computable_ids()
+    assert found == set(NINE)
 
 
 # --------------------------------------------------------------------------- #
