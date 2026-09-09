@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "method": "Stream Functional Assessment Rapid Index (SFARI)",
-  "count": 82,
+  "count": 80,
   "likertScale": {
     "order": [
       "Strongly Agree",
@@ -1019,43 +1019,6 @@
           "likert": "Strongly Disagree",
           "criteria": "Extreme mismatch",
           "exampleObservation": "( τ) extremely mismatched. Reach-wide degradation or aggradation after moderate flows."
-        }
-      ],
-      "desktopSupportable": false
-    },
-    {
-      "metricId": "high-flow-dynamics-high-flow-velocity-shear-observed",
-      "functionId": "high-flow-dynamics",
-      "category": "Hydraulics",
-      "name": "High-Flow Velocity/Shear (Observed)",
-      "scale": "R",
-      "metricStatement": "High-Flow Velocity/Shear (Observed)",
-      "fieldStatement": "",
-      "likertCriteria": [
-        {
-          "likert": "Strongly Agree",
-          "criteria": "Well matched to substrate",
-          "exampleObservation": "Multi-date imagery shows minor bar reshaping only. Field notes record thin fresh deposits and small, self-healing scars."
-        },
-        {
-          "likert": "Agree",
-          "criteria": "Mild stress in spots",
-          "exampleObservation": "Moderate fresh bars or short bank scarps in a few locations."
-        },
-        {
-          "likert": "Neutral",
-          "criteria": "",
-          "exampleObservation": ""
-        },
-        {
-          "likert": "Disagree",
-          "criteria": "Notable mismatch; frequent instability",
-          "exampleObservation": "Velocity and shear noticeably too high or too low. Bars grow, shift, or scour around structures after moderate flows."
-        },
-        {
-          "likert": "Strongly Disagree",
-          "criteria": "Extreme mismatch; chronic instability",
-          "exampleObservation": "Widespread bank retreat, channel shifts, or large sediment deposits after moderate flows."
         }
       ],
       "desktopSupportable": false
@@ -2637,43 +2600,6 @@
           "likert": "Strongly Disagree",
           "criteria": "Extreme pH or very high conductance.",
           "exampleObservation": "pH 4.8 or 10.2. Conductivity > 2000 µS/cm."
-        }
-      ],
-      "desktopSupportable": false
-    },
-    {
-      "metricId": "water-soil-quality-bank-and-floodplain-soil-condition",
-      "functionId": "water-soil-quality",
-      "category": "Physicochemistry",
-      "name": "Bank & Floodplain Soil Condition",
-      "scale": "R",
-      "metricStatement": "Bank & Floodplain Soil Condition",
-      "fieldStatement": "",
-      "likertCriteria": [
-        {
-          "likert": "Strongly Agree",
-          "criteria": "Natural soils. No contamination indicators.",
-          "exampleObservation": "Intact native soils and vegetation. No odors or staining."
-        },
-        {
-          "likert": "Agree",
-          "criteria": "Minor dumping or localized inputs.",
-          "exampleObservation": "Small dump pile or localized manure near a crossing."
-        },
-        {
-          "likert": "Neutral",
-          "criteria": "",
-          "exampleObservation": ""
-        },
-        {
-          "likert": "Disagree",
-          "criteria": "Known moderate contamination.",
-          "exampleObservation": "Stained soils and debris on banks near former industrial area."
-        },
-        {
-          "likert": "Strongly Disagree",
-          "criteria": "Highly contaminated soils.",
-          "exampleObservation": "Strong petroleum odor, visible seepage, or listed hazardous site on the floodplain."
         }
       ],
       "desktopSupportable": false

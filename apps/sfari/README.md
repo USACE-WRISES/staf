@@ -4,7 +4,7 @@ A Shiny-for-Python web application for applying **SFARI**, a rapid stream
 functional assessment. From a single clicked map point it delineates the upstream
 watershed and an assessment reach, pulls national **desktop GIS evidence** to
 *support* the assessor's scoring (it does **not** auto-score), then walks the user
-**function by function** to Likert-score ~82 metrics and assign each of 20 stream
+**function by function** to Likert-score 80 metrics and assign each of 20 stream
 functions a 0–15 score. Scores roll up to Physical / Chemical / Biological outcome
 sub-indices and an overall **Ecosystem Condition Index**, and out to an EASI-style
 screening report.
@@ -14,7 +14,7 @@ mapping, and report — with scoring authority moved from the system to the user
 
 ## Method structure
 
-- **5 functional categories × 4 functions = 20 functions**; ~82 metrics.
+- **5 functional categories × 4 functions = 20 functions**; **4 metrics each = 80 metrics**.
 - **Metrics** are user-scored on a 5-point **Likert** scale (Strongly Agree … Strongly
   Disagree, + Not Applicable) as *lines of evidence*.
 - **Functions** are user-scored **0–15** by professional judgment (11–15 Functioning,
@@ -22,7 +22,36 @@ mapping, and report — with scoring authority moved from the system to the user
   metrics. An *optional* auto-suggest averages the doc's Likert→numeric values
   (SA=14…SD=2); the user may accept or override.
 - **Rollup:** normalize ÷15 → outcome sub-indices with Direct=1.0 / indirect=0.10
-  weights → ECI = mean(Physical, Chemical, Biological).
+  weights → ECI = mean(Physical, Chemical, Biological). **An unscored function
+  counts as zero**: the denominator is all 20 functions, which is what the SFARI
+  calculator does, so the two report the same number for a partial assessment.
+  The five functional-category chips are the exception and still average only the
+  scored functions, because the calculator's category labels use Excel `AVERAGE`,
+  which skips blanks.
+
+The metric set is 80 rather than the source document's 82: two fifth-metrics are
+excluded so the app matches the four-rows-per-function SFARI calculator (the reason
+and the two ids are in `scripts/build_sfari_data.py`).
+
+## The calculator
+
+The report modal offers the SFARI Excel calculator (`data/calculator/`, draft
+2026-06-29, **pending Eco-PCX certification**) blank or filled from the assessment:
+reach id, coordinates, date, reach length, the 20 function scores on their merge
+anchors, and the 80 Likert values. `sfari/calculator.py` writes it by editing the
+worksheet XML inside the package and copying every other part through untouched,
+because openpyxl cannot round-trip this workbook without destroying 38 of its 64
+parts. Never round-trip the template through a spreadsheet library, and if the
+review board returns a revised workbook, re-read `tests/test_calculator.py` before
+updating the pinned digest: the row map is what keeps a Likert value off the wrong
+metric.
+
+One formula in the shipped copy differs from the owner's master under `notes/`
+(2026-09-08, owner decision). Cell **E72**, the Biology category label, tested
+Physicochemistry's range (`H56:H71`) for its second threshold, so a Biology average
+of 0.5 read as Functioning whenever Physicochemistry reached 0.7. Its second
+`AVERAGE` now reads `H72:H87` like the other four. The master copy still carries the
+bug, so the same fix has to reach whoever re-issues the draft.
 
 ## Desktop evidence sources
 
@@ -92,7 +121,8 @@ Sessions carry `siteAnchor`, `siteEngine` (geometry stripped) and
 ```
 sfari/            Python package (config, scoring, models, evidence, engine_prefill, hr_site, datasources, …)
 sfari/_vendor/    vendored STAF site engine (libs/site_engine), drift-gated
-data/             generated JSONs: sfari-functions, sfari-metrics (82), sfari-outcome-mapping
+data/             generated JSONs: sfari-functions, sfari-metrics (80), sfari-outcome-mapping
+                  calculator/ the draft SFARI Excel calculator shipped for download
 scripts/          build_sfari_data.py (regenerates data/ from docs/SFARI_Clean.docx),
                   vendor_site_engine.py, acceptance.py
 tests/            scoring + likert parity + evidence + engine bridge + HR site tests
