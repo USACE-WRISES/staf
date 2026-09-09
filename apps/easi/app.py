@@ -68,10 +68,12 @@ HR_FLOWLINE_STYLE = {"color": "#22b8cf", "weight": 3, "opacity": 0.9}
 SCORED_REACH_STYLE = {"color": "#1f6feb", "weight": 11, "opacity": 0.3}
 # Dashed connector from a clicked HR-only stream to its covered surrogate reach.
 ROUTE_STYLE = {"color": "#5b6472", "weight": 2, "dashArray": "6,5", "opacity": 0.9}
-# LayersControl labels; the legend uses the same engine names.
-LAYER_COVERED = "Streams: StreamCat lookup engine"
-LAYER_UNCOVERED = "Streams: STAF site engine"
-LAYER_SCORED = "Scored reach"
+# LayersControl labels; they say what the legend says, since the control sits
+# one click from it and naming the engines in one place but not the other would
+# leave the term visible with nowhere left to define it.
+LAYER_COVERED = "Streams: all data from the reach"
+LAYER_UNCOVERED = "Streams: some data from downstream"
+LAYER_SCORED = "Selected reach"
 # === TEMP: MMW comparison overlay (remove later) ===
 MMW_STYLE = {"color": "#7b2cbf", "weight": 2, "dashArray": "5,4",
              "fillColor": "#b388eb", "fillOpacity": 0.18}  # distinct from yellow WATERSHED_STYLE
@@ -307,9 +309,19 @@ if _staf_links_overrides:  # desktop shell rewrites cross-app links; absent on w
 
 def _legend_ui(step, zoomed, mode, scored, routed):
     """The map legend card (docked under the layers button by legend-dock.js):
-    which color means which engine, the state of the stream fetch, and the
-    highlighted reach. Pure, so its states are tested offline. None outside
-    the Identify and Basin steps. Every string is a plain sentence."""
+    what each color means for the data, the state of the stream fetch, and the
+    reach the values come from. Pure, so its states are tested offline. None
+    outside the Identify and Basin steps. Every string is a plain sentence.
+
+    The rows name consequences, not engines (2026-09-08), matching SFARI and
+    DEEP. Which engine answers is not a choice the assessor makes. What differs
+    is where the values come from: on a covered reach every value describes the
+    clicked reach, and on any other stream low flow, substrate and biological
+    integrity come from the nearest reach downstream while the watershed
+    metrics are computed for this stream. The engine names stay on the basin
+    card, the per-row source labels and the exports, where provenance is the
+    question, and the wait on an uncovered stream is reported by the busy row
+    while it happens rather than predicted here."""
     if step not in (STEP_IDENTIFY, STEP_BASIN):
         return None
 
@@ -325,25 +337,25 @@ def _legend_ui(step, zoomed, mode, scored, routed):
                       class_="easi-legend-row")
 
     rows = [ui.div("Streams", class_="easi-legend-title"),
-            row(FLOWLINE_STYLE["color"], "StreamCat lookup engine", "scores the reach in seconds"),
-            row(HR_FLOWLINE_STYLE["color"], "STAF site engine", "calculates the HR reach watershed")]
+            row(FLOWLINE_STYLE["color"], "All data from this reach"),
+            row(HR_FLOWLINE_STYLE["color"], "All data, some from downstream")]
     note = None
     if not zoomed:
         note = "Zoom in to see streams"
     elif mode == "v2-only":
         note = "Fine streams unavailable here. Zoom in."
     elif mode == "hr-only":
-        note = "No StreamCat reach in view."
+        note = "No streams with all data in view."
     elif mode == "empty":
         note = "No streams in view."
     if note:
         rows.append(ui.div(note, class_="easi-legend-note"))
     if scored:
         name = scored.get("name") or "unnamed stream"
-        comid = scored.get("comid")
-        what = "Reach evidence" if routed else "Scored reach"
-        label = f"{what}: {name}" + (f" (COMID {comid})" if comid is not None else "")
-        rows.append(row(SCORED_REACH_STYLE["color"], label, glow=True))
+        # Routed: the highlighted reach is the one downstream that supplies the
+        # borrowed values. Not routed: it is the clicked reach itself.
+        what = "Downstream reach" if routed else "This reach"
+        rows.append(row(SCORED_REACH_STYLE["color"], f"{what}: {name}", glow=True))
     if step == STEP_BASIN:
         rows.append(row(WATERSHED_STYLE["fillColor"], "Watershed", fill=True))
         rows.append(row(REACH_STYLE["color"], "Assessment reach"))
@@ -1496,7 +1508,7 @@ def server(input, output, session):
                             [clicked_s["snapLon"], clicked_s["snapLat"]],
                             [scored["snapLon"], scored["snapLat"]]]}}]}
                     _add_layer("route", GeoJSON(data=seg, style=ROUTE_STYLE,
-                                                name="Nearest StreamCat reach"))
+                                                name="Downstream reach"))
                 # The pin and the coordinate inputs mark the clicked stream, the
                 # one the HR reach watershed is computed for (the pipeline reads the
                 # covered reach's own snap from the anchor); before 2026-09-02 the
@@ -2382,13 +2394,13 @@ def server(input, output, session):
                         style="color:#8a5a00;")
         anchor = pending_anchor()
         if anchor:
-            # Three short lines; the ratio, the COMID, and the reasoning sit
-            # behind the info icon (easi.snapcard, 2026-09-02).
+            # Two short lines; the ratio, the COMID, and the reasoning sit
+            # behind the info icon on the reach line (easi.snapcard).
             card = hr_snap_card(anchor)
             lines = []
             for i, (cls, text) in enumerate(card["lines"]):
                 kids = [text]
-                if i == 2:
+                if i == len(card["lines"]) - 1:
                     kids += [" ", _info(html_tip=card["tip_html"])]
                 lines.append(ui.p(*kids, class_=f"easi-snap-note {cls}".strip()))
             return ui.div(*lines)
@@ -2396,8 +2408,8 @@ def server(input, output, session):
         if not pt:
             return ui.p("No point yet.", class_="easi-snap-note")
         name = (scored_reach() or {}).get("name") or "the stream"
-        return ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away). Scored by the "
-                    "StreamCat lookup engine.", class_="easi-snap-note ok")
+        return ui.p(f"✓ Snapped to {name} ({pt[2]:.0f} ft away).",
+                    class_="easi-snap-note ok")
 
     @render.ui
     def basin_card():

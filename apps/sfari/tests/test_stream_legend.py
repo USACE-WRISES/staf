@@ -1,6 +1,11 @@
-"""The map legend (2026-09-07, EASI's): docked under the layers button,
-always visible on the Identify and Basin steps, naming the two engines, the
-state of the stream fetch, and the StreamCat reach. Pure builder, no session."""
+"""The map legend: docked under the layers button, always visible on the
+Identify and Basin steps, saying what each color means for the data, the state
+of the stream fetch, and which reach the values come from. Pure builder, no
+session.
+
+Since 2026-09-08 the legend names consequences rather than engines, so the
+tests here guard the absence of the engine vocabulary as much as the presence
+of the new copy."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -14,30 +19,48 @@ def _html(step="identify", zoomed=True, mode="segmented", reach=None, routed=Fal
     return str(app._legend_ui(step, zoomed, mode, reach, routed) or "")
 
 
-def test_names_both_engines_with_their_colors():
+def test_the_rows_say_what_each_color_means_for_the_data():
     html = _html()
-    assert "StreamCat lookup engine" in html and "COMID-keyed values from this reach" in html
-    assert "STAF site engine" in html and "the HR reach watershed, every stream" in html
+    assert "All data from this reach" in html
+    assert "All data, some from downstream" in html
     assert app.FLOWLINE_STYLE["color"] in html and app.HR_FLOWLINE_STYLE["color"] in html
     assert app.FLOWLINE_STYLE["color"] != app.HR_FLOWLINE_STYLE["color"]
     assert "easi-legend-title" in html and "Zoom in" not in html
 
 
+def test_no_engine_vocabulary_reaches_the_legend_or_the_layer_control():
+    """The point of the change: an assessor never picks an engine, so the map
+    must not ask them to learn the names. Provenance labels elsewhere still
+    carry them, which is why this asserts only on the legend and the control."""
+    everywhere = "".join([
+        _html(), _html(zoomed=False, mode=None), _html(mode="v2-only"),
+        _html(mode="hr-only"), _html(mode="empty"),
+        _html(step="basin", reach={"comid": 9327042, "name": "Mink Brook"}),
+        _html(reach={"comid": 9327042, "name": None}, routed=True),
+        app.LAYER_COVERED, app.LAYER_UNCOVERED, app.LAYER_SCORED,
+    ])
+    for jargon in ("StreamCat", "STAF site engine", "COMID", "HR reach watershed"):
+        assert jargon not in everywhere, jargon
+
+
 def test_notes_follow_the_zoom_and_the_fetch_mode():
     assert "Zoom in to see streams" in _html(zoomed=False, mode=None)
     assert "Fine streams unavailable here. Zoom in." in _html(mode="v2-only")
-    assert "No StreamCat reach in view." in _html(mode="hr-only")
+    assert "No streams with all data in view." in _html(mode="hr-only")
     assert "No streams in view." in _html(mode="empty")
     assert "easi-legend-note" not in _html(mode=None)          # loading: no note
 
 
-def test_reach_rows():
+def test_reach_rows_name_where_the_values_come_from():
+    """Two states. On a covered reach the highlight is the clicked reach; on any
+    other stream it is the reach downstream the borrowed values come from."""
     html = _html(reach={"comid": 9327042, "name": "Mink Brook"})
-    assert "StreamCat reach: Mink Brook (COMID 9327042)" in html
+    assert "This reach: Mink Brook" in html
     assert "easi-legend-sw-glow" in html and app.SCORED_REACH_STYLE["color"] in html
     html = _html(reach={"comid": 9327042, "name": None}, routed=True)
-    assert "Nearest StreamCat reach: unnamed stream (COMID 9327042)" in html
-    assert "StreamCat reach:" not in _html()
+    assert "Downstream reach: unnamed stream" in html
+    assert "9327042" not in html                     # the COMID stays off the map
+    assert "This reach:" not in _html() and "Downstream reach:" not in _html()
 
 
 def test_basin_step_adds_the_watershed_and_reach_rows():
@@ -65,8 +88,9 @@ def test_dock_script_layers_and_cache_bust_are_wired():
     src = Path(app.__file__).read_text(encoding="utf-8")
     assert "legend-dock.js" in src and "styles.css?v=21" in src
     assert 'id="easi-legend-panel"' in src.replace("'", '"')
-    assert app.LAYER_COVERED == "Streams: StreamCat lookup engine"
-    assert app.LAYER_UNCOVERED == "Streams: STAF site engine"
+    assert app.LAYER_COVERED == "Streams: all data from the reach"
+    assert app.LAYER_UNCOVERED == "Streams: some data from downstream"
+    assert app.LAYER_SCORED == "Selected reach"
     js = (Path(app.__file__).parent / "www" / "legend-dock.js").read_text(encoding="utf-8")
     assert "leaflet-control-layers" in js and "disableClickPropagation" in js
     assert "easi-legend-panel" in js

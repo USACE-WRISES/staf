@@ -70,10 +70,14 @@ def test_the_pane_copy_is_short_and_plain():
         assert notice in SRC
 
 
-def test_the_snap_line_says_what_happens_next():
+def test_the_snap_line_confirms_the_snap_and_nothing_more():
+    """The engine timing note was dropped (2026-09-08): the snap line says the
+    click landed on a stream, and the anchor line says where values come from
+    once it is known. What the engine is doing is not the assessor's concern."""
     body = SRC.split("def snap_status():", 1)[1].split("@render.ui", 1)[0]
-    assert "The STAF site engine calculates the HR reach watershed" in body
+    assert "Snapped to a stream" in body
     assert "comid_anchor.snap_line(site_anchor())" in body
+    assert "STAF site engine" not in body
 
 def test_numbers_are_formatted():
     assert app._fmt_km2(0.9871999900000001) == "0.99 km²"

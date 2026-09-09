@@ -160,7 +160,11 @@ adversarial review):**
   a click there (`deep/network_display.py`, EASI's split): dark blue within
   150 ft of an NHDPlus V2 reach, where the StreamCat lookup engine answers by
   that COMID, cyan everywhere else. A legend under the layers button names the
-  colors. Every click, and every typed point, snaps to the HR line
+  colors by what they mean for the data ("All data from this reach", "All data,
+  some from downstream") rather than by engine, and so do the layer-control
+  entries: the assessor never picks an engine. The engine names stay on the
+  source row, the basis badge and the exports, where the question is
+  provenance. Every click, and every typed point, snaps to the HR line
   (`deep/hr_site.py`), the point lands at once, the StreamCat reach resolves
   in the background (`deep/comid_anchor.py`, the vendored engine's shared
   click rule: a glow under the V2 reach, and on a cyan stream a dashed route

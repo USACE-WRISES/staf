@@ -103,7 +103,12 @@ The map draws the high-resolution NHD once and colors each stretch by the
 engine that answers a click there (`sfari/network_display.py`, EASI's split):
 dark blue within 150 ft of an NHDPlus V2 reach, where the StreamCat lookup
 engine answers by that COMID, cyan everywhere else. A legend under the layers
-button names the colors. Every click, and every typed point, snaps to the HR
+button names the colors by what they mean for the data ("All data from this
+reach", "All data, some from downstream") rather than by engine, and so do the
+layer-control entries: the assessor never picks an engine, and since the site
+engine now runs on both colors, naming them there was misleading as well as
+unusable. The engine names stay on the evidence badges, the basin card and the
+exports, where the question is provenance. Every click, and every typed point, snaps to the HR
 line (`sfari/hr_site.py`, a thin adapter over the vendored engine), the point
 lands at once, the StreamCat reach resolves in the background (a glow under
 the V2 reach, and on a cyan stream a dashed route to the nearest covered

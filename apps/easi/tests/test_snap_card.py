@@ -1,11 +1,13 @@
 """The Identify card for a stream outside the StreamCat network (2026-09-02,
 never a warning since 2026-09-06).
 
-Three short lines, the numbers behind the info icon: the click at Mink Brook
+Two short lines, the numbers behind the info icon: the click at Mink Brook
 read as an error because the card repeated the routing message in a yellow
 box with the ratio and the limit inline. The three reach metrics now always
-come from the nearest covered reach, so the third line names it and the tip
-states the drainage-area ratio without a limit.
+come from the nearest covered reach, so the second line names it and the tip
+states the drainage-area ratio without a limit. The line predicting the
+engine's runtime was dropped on 2026-09-08 with the same note in SFARI and
+DEEP, and the reach line took the legend's new words.
 """
 from __future__ import annotations
 
@@ -25,23 +27,21 @@ def _lines(card):
     return [text for _cls, text in card["lines"]]
 
 
-def test_card_is_three_short_lines_with_the_numbers_in_the_tip():
+def test_card_is_two_short_lines_with_the_numbers_in_the_tip():
     card = hr_snap_card(_anchor())
     classes = [cls for cls, _ in card["lines"]]
     lines = _lines(card)
     assert "declined" not in card
-    assert classes == ["ok", "", ""]
+    assert classes == ["ok", ""]
     assert lines[0] == "\u2713 Snapped to an unnamed stream (3 ft away)."
-    assert lines[1] == ("The STAF site engine calculates the HR reach watershed, usually in "
-                        "under a minute.")
-    # the third line fits the pane on one line, in the legend's words (2026-09-07)
-    assert lines[2] == "Reach evidence: Mink Brook, 1,688 ft downstream."
-    assert len(lines[2]) <= 50
+    # the reach line fits the pane on one line, in the legend's words
+    assert lines[1] == "Downstream reach: Mink Brook, 1,688 ft downstream."
+    assert len(lines[1]) <= 55
     for line in lines:
         assert "31" not in line and "COMID" not in line and "StreamCat" not in line
         assert len(line) < 90
     tip = card["tip_html"]
-    assert tip.startswith('<div class="easi-tip-title">Reach evidence</div>')
+    assert tip.startswith('<div class="easi-tip-title">Downstream reach</div>')
     assert ("Low flow, substrate, and biological integrity come from Mink Brook "
             "(COMID 5214461), the nearest StreamCat reach, 1,688 ft downstream.") in tip
     assert "It drains 32 times this stream." in tip
@@ -54,13 +54,13 @@ def test_card_is_three_short_lines_with_the_numbers_in_the_tip():
 
 def test_within_bound_ratio_keeps_one_decimal():
     card = hr_snap_card(_anchor(ratio=2.69))
-    assert _lines(card)[2] == "Reach evidence: Mink Brook, 1,688 ft downstream."
+    assert _lines(card)[1] == "Downstream reach: Mink Brook, 1,688 ft downstream."
     assert "It drains 2.7 times this stream." in card["tip_html"]
 
 
 def test_unknown_ratio_or_distance_is_left_out():
     card = hr_snap_card(_anchor(ratio=None, routed_ft=None))
-    assert _lines(card)[2] == "Reach evidence: Mink Brook, downstream."
+    assert _lines(card)[1] == "Downstream reach: Mink Brook, downstream."
     assert "drains" not in card["tip_html"]
     assert "Mink Brook (COMID 5214461), the nearest StreamCat reach." in card["tip_html"]
 
@@ -68,7 +68,7 @@ def test_unknown_ratio_or_distance_is_left_out():
 def test_copy_is_plain_and_tolerates_missing_fields():
     for anchor in (_anchor(), _anchor(ratio=None), {"routing": {"declined": True}}, {}):
         card = hr_snap_card(anchor)
-        assert len(card["lines"]) == 3
+        assert len(card["lines"]) == 2
         for _cls, text in card["lines"]:
             assert "\u2014" not in text and ";" not in text
         assert "\u2014" not in card["tip_html"]
