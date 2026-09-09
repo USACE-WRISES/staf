@@ -39,9 +39,12 @@ shared `anchor.hydrolocation_snap` routine makes at most four routing requests:
 one hydrolocation GET (30 seconds), then up to three flowtrace POSTs (60 seconds
 each) after transient failures, with delays of 5, 10, and 15 seconds before the
 successive retries. Progress is emitted before each delay.
+The captured USGS flowtrace HTTP 400 `InvalidParameterValue` response is also
+retryable when its description specifically reports an execution-time read
+timeout from `api.water.usgs.gov:443`; ordinary parameter errors remain terminal.
 Valid empty or malformed responses stop immediately. Current flowtrace
 `nhdFlowline` responses use the supplied COMID and `intersection_point`; legacy Point responses remain
-supported. Endpoint/attempt/status/timing diagnostics go to logs. Optional
+supported. Endpoint/attempt/status/timing and retry-decision diagnostics go to logs. Optional
 source-highlight geometry has no effect on readiness. Existing saved results
 remain readable when an imported assessment needs its source resolved.
 

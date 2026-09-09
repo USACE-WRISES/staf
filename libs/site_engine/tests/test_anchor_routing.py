@@ -19,6 +19,14 @@ FLOWLINE = {"type": "Feature", "id": "nhdFlowline", "properties": {
 PATH = {"type": "Feature", "id": "raindropPath", "properties": {},
         "geometry": {"type": "LineString", "coordinates": [[-83.07, 40.31], [-83.0563, 40.3101]]}}
 SNAP = {"comid": 5214461, "snap_lon": -83.0563, "snap_lat": 40.3101}
+# Captured from the real USGS flowtrace response on 2026-09-09 at EASI's
+# HR-snapped point (43.686393, -72.236916). The outer HTTP400 masks a timeout
+# in the USGS process, rather than invalid coordinates in our request.
+USGS_TIMEOUT = {
+    "type": "InvalidParameterValue",
+    "code": "InvalidParameterValue",
+    "description": "Error executing process: HTTPSConnectionPool(host='api.water.usgs.gov', port=443): Read timed out. (read timeout=5)",
+}
 
 
 def fc(*features):
@@ -129,6 +137,114 @@ def test_fourth_request_recovers_with_progress_before_each_pause(monkeypatch, ca
     for n, record in enumerate(caplog.records, 1):
         assert f"attempt={n}" in record.message
         assert all(key in record.message for key in ("endpoint=", "status=", "elapsed=", "error="))
+    for record, reason in zip(caplog.records[:3], ("http-status", "transport", "http-status")):
+        assert "retryable=True" in record.message
+        assert f"retry_reason={reason}" in record.message
+    assert "retryable=False" in caplog.records[-1].message
+    assert "retry_reason=" in caplog.records[-1].message
+
+
+@pytest.mark.parametrize("recover", [True, False], ids=["fourth-success", "exhausted"])
+def test_usgs_wrapped_read_timeout_uses_remaining_retries(monkeypatch, caplog, recover):
+    final = Response(data=fc(FLOWLINE)) if recover else Response(400, USGS_TIMEOUT)
+    calls, pauses = transport(monkeypatch, [Response(502), Response(400, USGS_TIMEOUT),
+                                          Response(400, USGS_TIMEOUT), final])
+    progress, progress_at_pause = [], []
+
+    def pause(seconds):
+        pauses.append(seconds)
+        progress_at_pause.append((len(calls), dict(progress[-1])))
+
+    monkeypatch.setattr(anchor.time, "sleep", pause)
+    with caplog.at_level(logging.INFO, logger=anchor.__name__):
+        result = anchor.hydrolocation_snap(43.686392666000586, -72.23691610618198,
+                                          progress=progress.append)
+    if recover:
+        assert result == SNAP
+    else:
+        assert result["error"].count("hydrolocation: HTTP 502") == 1
+        assert result["error"].count("flowtrace: HTTP 400") == 3
+        assert result["error"].count("Read timed out.") == 3
+    assert [call[0] for call in calls] == ["GET", "POST", "POST", "POST"]
+    assert [call[2]["timeout"] for call in calls] == [30.0, 60.0, 60.0, 60.0]
+    assert pauses == [5.0, 10.0, 15.0]
+    assert progress == [{"status": "finding", "attempt": 1},
+                        {"status": "retrying", "attempt": 2},
+                        {"status": "retrying", "attempt": 3},
+                        {"status": "retrying", "attempt": 4}]
+    assert progress_at_pause == [(1, {"status": "retrying", "attempt": 2}),
+                                 (2, {"status": "retrying", "attempt": 3}),
+                                 (3, {"status": "retrying", "attempt": 4})]
+    assert len(caplog.records) == 4
+    wrapped = caplog.records[1:3] if recover else caplog.records[1:]
+    for record in wrapped:
+        assert "endpoint=flowtrace" in record.message and "status=400" in record.message
+        assert "retryable=True" in record.message
+        assert "retry_reason=usgs-read-timeout" in record.message
+    if recover:
+        assert "retryable=False" in caplog.records[-1].message
+
+
+@pytest.mark.parametrize("reply", [
+    pytest.param(Response(400, {**USGS_TIMEOUT, "description": "Invalid lat: outside valid range"}),
+                 id="ordinary-parameter-error"),
+    pytest.param(Response(400, {"code": "InvalidParameterValue"}), id="missing-description"),
+    pytest.param(Response(400, {**USGS_TIMEOUT, "description": [USGS_TIMEOUT["description"]]}),
+                 id="nonstring-description"),
+    pytest.param(Response(400, {**USGS_TIMEOUT, "code": "InvalidRequest"}), id="wrong-code"),
+    pytest.param(Response(400, {**USGS_TIMEOUT, "description": USGS_TIMEOUT["description"].replace(
+        "api.water.usgs.gov", "other.water.usgs.gov")}), id="wrong-host"),
+    pytest.param(Response(400, {**USGS_TIMEOUT, "description": USGS_TIMEOUT["description"].replace(
+        "api.water.usgs.gov", "api.water.usgs.gov.example.com")}), id="host-suffix"),
+    pytest.param(Response(400, {**USGS_TIMEOUT, "description": USGS_TIMEOUT["description"].replace(
+        "port=443", "port=4430")}), id="wrong-port"),
+    pytest.param(Response(400, {**USGS_TIMEOUT, "description": USGS_TIMEOUT["description"].replace(
+        "Error executing process:", "Invalid parameter:")}), id="wrong-prefix"),
+    pytest.param(Response(400, {**USGS_TIMEOUT, "description": USGS_TIMEOUT["description"].replace(
+        "Read timed out.", "Connection refused.")}), id="wrong-message"),
+    pytest.param(Response(400, {**USGS_TIMEOUT,
+                              "description": USGS_TIMEOUT["description"] + " Invalid lat."}),
+                 id="additional-message"),
+    pytest.param(Response(400, ValueError("invalid JSON"),
+                          text="<html>" + USGS_TIMEOUT["description"] + "</html>"), id="html-body"),
+    pytest.param(Response(400, [USGS_TIMEOUT]), id="list-body"),
+    pytest.param(Response(400, USGS_TIMEOUT["description"]), id="string-body"),
+    *[pytest.param(Response(status, USGS_TIMEOUT), id=f"http-{status}")
+      for status in (403, 404, 301, 302, 307, 308)],
+])
+def test_other_flowtrace_errors_still_stop_after_first_retry(monkeypatch, caplog, reply):
+    calls, pauses = transport(monkeypatch, [Response(502), reply])
+    result = anchor.hydrolocation_snap(43.686393, -72.236916)
+    assert "error" in result and f"flowtrace: HTTP {reply.status_code}" in result["error"]
+    assert len(calls) == 2 and pauses == [5.0]
+    assert len(caplog.records) == 2
+    terminal = caplog.records[-1].message
+    assert "endpoint=flowtrace" in terminal and "attempt=2" in terminal
+    assert "retryable=False" in terminal and "retry_reason=" in terminal
+    assert "retry_reason=usgs-read-timeout" not in terminal
+
+
+def test_hydrolocation_400_does_not_inherit_flowtrace_timeout_exception(monkeypatch, caplog):
+    calls, pauses = transport(monkeypatch, [Response(400, USGS_TIMEOUT)])
+    result = anchor.hydrolocation_snap(43.686393, -72.236916)
+    assert "hydrolocation: HTTP 400" in result["error"]
+    assert len(calls) == 1 and pauses == []
+    assert len(caplog.records) == 1
+    assert "retryable=False" in caplog.records[0].message
+    assert "retry_reason=" in caplog.records[0].message
+    assert "retry_reason=usgs-read-timeout" not in caplog.records[0].message
+
+
+def test_other_request_url_does_not_inherit_usgs_timeout_exception(monkeypatch, caplog):
+    calls, pauses = transport(monkeypatch, [Response(400, USGS_TIMEOUT)])
+    result, retryable = anchor._request_snap(
+        "flowtrace", 2, "https://example.org/nldi-flowtrace/execution",
+        params={"f": "json"}, body={"inputs": []}, timeout=60.0,
+        parser=anchor.parse_flowtrace)
+    assert "flowtrace: HTTP 400" in result["error"] and retryable is False
+    assert len(calls) == 1 and pauses == []
+    assert "retryable=False" in caplog.records[0].message
+    assert "retry_reason=usgs-read-timeout" not in caplog.records[0].message
 
 
 @pytest.mark.parametrize("first", [Response(408), Response(429), Response(500), Response(503),
